@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-feature-importance: Feature Importance Bar Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: 93/100 | Created: 2026-09-02
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 import { Box, Typography } from "@mui/material";

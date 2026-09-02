@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bar-feature-importance
 created: '2026-09-02T12:54:57Z'
-updated: '2026-09-02T12:59:59Z'
+updated: '2026-09-02T13:14:55Z'
 generated_by: claude-sonnet
 workflow_run: 33631176572
 issue: 2276
@@ -12,50 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-featu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Correct Imprint sequential gradient (brand green → blue via t.seq[0]/t.seq[1])
-    applied through xAxis colorMap keyed to the importance value — the right continuous-data
-    palette choice per the style guide.
-  - Bars sorted descending by importance (highest at top) exactly as the spec requires,
-    with a single-series legend correctly hidden as redundant.
-  - Deterministic, realistic wine-quality random-forest feature-importance data (11
-    features, values summing to ~0.96, plausible relative magnitudes).
-  - Both light and dark renders are correctly theme-adaptive — title/axis/tick text
-    and grid lines stay legible on both surfaces, and the data gradient colors are
-    identical between themes.
-  - 'Idiomatic MUI X usage: band-scale yAxis for horizontal bars, generous left margin
-    (190px) sized for the longest feature name, barLabel with 3-decimal precision,
-    and skipAnimation correctly set for the static screenshot.'
+  - Continuous imprint_seq gradient (brand green → blue) correctly maps importance
+    value to bar color, visually emphasizing the top feature (Alcohol) while staying
+    style-guide compliant for single-polarity continuous data.
+  - Custom EndBarLabel component reads the live x/y scales to precisely place importance-value
+    text at each bar's end, with an outside/inside-end fallback so labels never clip
+    the canvas — directly satisfies the spec's 'text annotations at the end of bars'
+    requirement.
+  - Callout subtitle ('Alcohol leads the ranking at 0.192 — 1.4× the next-highest
+    driver.') adds genuine data storytelling, surfacing the key insight immediately
+    instead of leaving the viewer to find it.
+  - 'Both renders are theme-correct: identical bar colors between light and dark,
+    backgrounds match #FAF8F1/#1A1A17, and all text (title, subtitle, axis, ticks,
+    value labels) stays legible in both themes.'
+  - Clean, deterministic, idiomatic MUI X usage — continuous colorMap, band-scale
+    y-axis, borderRadius, vertical grid, and slots/slotProps are all current community
+    @mui/x-charts API.
   weaknesses:
-  - Value labels (barLabel) are centered inside each bar rather than placed 'at the
-    end of bars' as the spec's Notes section explicitly recommends — right-aligning
-    the labels just past the bar tip (with a small offset, switching to inside-end
-    placement for the longest bar so it doesn't overflow) would better match the spec
-    guidance and read more clearly as a precision annotation rather than a bar-fill
-    label.
-  - Design excellence is solid but fairly close to library defaults — system typography,
-    a single dashed-grid touch, and the colorMap gradient are the only customizations.
-    A more distinctive treatment (e.g. a subtle callout/annotation on the top feature,
-    refined font pairing, or a soft background band separating the top feature) would
-    raise the design ceiling.
-  - The optional std/error-bar feature called out in the spec (valuable for ensemble-method
-    importability) is omitted entirely; not required, but including it (even as a
-    simple errorBar-style overlay) would materially increase data quality/feature
-    coverage for this spec.
+  - The linear color gradient is driven by the raw importance range, so bars from
+    'Total Sulfur Dioxide' down to 'Residual Sugar' render as near-identical teal-green
+    — a perceptually-stretched (e.g. sqrt/log) color scale would differentiate the
+    tail better; minor, not a compliance issue since bar length already encodes rank.
+  - std/error bars for importance variability were not implemented — the spec calls
+    this out as valuable for ensemble methods (optional, so not a hard requirement,
+    but including it would round out DQ-01 feature coverage).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
-      Chrome: Title "bar-feature-importance · javascript · muix · anyplot.ai" in bold dark ink, top-left. X-axis label "Importance Score" and 11 y-axis feature-name tick labels, all in dark, clearly readable. Subtle dashed vertical gridlines aligned to the x-axis ticks (0.00-0.20).
-      Data: 11 horizontal bars sorted descending by importance (Alcohol 0.192 at top down to Residual Sugar 0.041 at bottom). Bar fill follows the Imprint sequential gradient (t.seq[0]=brand green -> t.seq[1]=blue) mapped to the importance value: the top bar (Alcohol) renders distinctly blue, the next two bars are teal, and the remaining shorter bars cluster toward green since their values sit in the lower part of the domain. Each bar has a bold, dark-text value label (e.g. "0.192") centered inside the bar.
-      Legibility verdict: PASS - all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-feature-importance · javascript · muix · anyplot.ai" in bold dark ink, a dark-ink descriptive subtitle callout below it, dark axis title "Importance Score", dark tick labels on both axes, subtle dashed vertical gridlines. All chrome elements are dark-on-light and clearly legible.
+      Data: Horizontal bars sorted descending by importance (Alcohol 0.192 down to Residual Sugar 0.041). First (top) bar is a blue hue, transitioning through teal to brand green (#009E73-ish) for the smaller bars, per the imprint_seq continuous gradient. Bold value labels sit just past each bar's tip, right-aligned outside the bar, with the top bar's label placed close to but fully inside the right canvas edge.
+      Legibility verdict: PASS — all text reads clearly against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black).
-      Chrome: Same title, axis label, and 11 feature tick labels, rendered in light ink (near-white), fully legible against the dark background. Same subtle dashed vertical gridlines, now in a light, low-opacity tone.
-      Data: Same 11 bars in the same sorted order with identical fill colors to the light render (blue top bar down through green lower bars), confirming the data colors are theme-independent. Bar value labels are white/light text centered inside each bar and read clearly against the colored bar fills.
-      Legibility verdict: PASS - no dark-on-dark failures; all title/axis/tick text and bar labels are clearly visible against both the dark page background and the colored bar fills.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title and subtitle now rendered in light/cream ink, axis title and tick labels in light ink, gridlines subtle and visible against the dark surface. No dark-on-dark elements found.
+      Data: Bar colors are identical to the light render (same blue-to-green gradient, same value labels) — only the chrome (background, text, grid) flipped as expected. Value labels remain fully legible against the dark background.
+      Legibility verdict: PASS — all text reads clearly against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,72 +61,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, axis label 16px, ticks/bar-label
-          13-14px); all readable in both themes.
+        comment: All font sizes explicitly set; readable in both themes; title fits
+          comfortably without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; long feature names fit within the 190px
-          left margin.
+        comment: No overlap between text, bars, or value labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 bars, generously spaced band scale, clearly distinguishable.
+        comment: 11 bars well-sized with clear spacing, no crowding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient, no red-green sole signal.
+        comment: CVD-safe imprint_seq gradient; bar length is the primary encoding
+          so color redundancy is not required
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No clipping/overflow, generous margins, nothing cut off in either
-          render.
+        comment: Chart fills the canvas well with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Importance Score'' axis label descriptive; feature names self-explanatory.'
+        comment: '"Importance Score" axis label is descriptive; y-axis uses feature
+          names directly'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (t.seq[0]->t.seq[1]) correctly used for continuous importance
-          mapping; correct theme backgrounds.
+        comment: Continuous data correctly uses imprint_seq (green→blue); background
+          and chrome theme-correct in both renders
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom gradient + typography above default, but overall treatment
-          stays close to library defaults.
+        comment: Thoughtful continuous color mapping plus narrative subtitle; clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Subtle dashed grid and hidden legend are the only refinements; no
-          spine/depth treatment beyond MUI X defaults.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Sort order + gradient create a focal point on the top feature; value
-          labels aid precision.
+        comment: Rounded bar corners, subtle dashed vertical-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Callout subtitle plus color emphasis on the top feature gives the
+          viewer an immediate takeaway
     spec_compliance:
       score: 15
       max: 15
@@ -141,26 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal, sorted bar chart.
+        comment: Horizontal bar chart, sorted descending as required
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted, color-mapped, ranked, value-labeled; labels centered rather
-          than at bar end (see weaknesses).
+        comment: Sorted bars, sequential color gradient, and end-of-bar value annotations
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=importance, Y=feature, matches spec exactly.
+        comment: Importance on x, features on y, all 11 features visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; single-series legend correctly hidden.
+        comment: Title matches mandated format exactly; single-series legend correctly
+          hidden
     data_quality:
       score: 14
       max: 15
@@ -170,19 +165,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Sorting/color-mapping/ranking present; optional std error bars omitted.
+        comment: Realistic decay curve across 11 features; optional std/error bars
+          not included
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible wine-quality RF importances, neutral domain.
+        comment: Wine-quality random forest feature importances — real, neutral, comprehensible
+          domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (0.041-0.192) sum to ~0.96, realistic for RF/GBM importances.
+        comment: Values and ordering are plausible and internally consistent for a
+          random forest importance vector
     code_quality:
       score: 10
       max: 10
@@ -192,57 +190,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single default-exported component, no extra abstractions.
+        comment: Straightforward data → chart component structure, idiomatic for the
+          MUI X React contract
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data.
+        comment: Hardcoded deterministic data arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart, Box, Typography, all used.
+        comment: Only BarChart, chart hooks, and MUI layout primitives, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity.
+        comment: Custom label component is proportionate to the edge-clipping problem
+          it solves; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Sized from window.ANYPLOT_SIZE, skipAnimation set, current colorMap/barLabel
-          API.
+        comment: Default-exports a component per the harness contract, current @mui/x-charts
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Band-scale yAxis, layout='horizontal', valueFormatter, idiomatic
-          BarChart config.
+        comment: Expert use of colorMap, band scale, grid, margin, and slots/slotProps
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Continuous xAxis colorMap tied to data value is a distinctive MUI
-          X capability, used correctly.
-  verdict: REJECTED
+        comment: Continuous colorMap plus a hooks-driven custom barLabel slot (useXScale/useYScale/useDrawingArea)
+          would be significant work to replicate in another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
