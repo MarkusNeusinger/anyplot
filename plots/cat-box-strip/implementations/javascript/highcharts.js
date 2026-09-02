@@ -127,11 +127,12 @@ const stripSeries = samples.map((values, i) => {
   return {
     type: "scatter",
     name: categories[i],
-    data: values.map((v) => [i + (rand() - 0.5) * 0.55, v]),
+    data: values.map((v) => [i + (rand() - 0.5) * 0.64, v]),
     color: color,
     marker: {
-      radius: 4.5,
-      lineWidth: 0,
+      radius: 4,
+      lineWidth: 1,
+      lineColor: t.pageBg,
       fillColor: Highcharts.color(color).setOpacity(0.55).get("rgba"),
     },
     zIndex: 5,
