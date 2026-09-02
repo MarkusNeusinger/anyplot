@@ -85,6 +85,45 @@ const cells = stores.map((site, i) => {
   return { site, polygon: voronoiCell(site, others) };
 });
 
+// --- Adjacency-aware cell coloring -------------------------------------------
+// Two cells are adjacent when they share a clipped bisector edge (the two
+// polygons list that edge as exact reverses of one another). A flat
+// index-mod-palette cycle can land neighboring cells on the same hue; instead
+// run a small greedy graph coloring so every cell differs from its neighbors.
+function pointsClose(a, b, eps = 1e-6) {
+  return Math.abs(a.x - b.x) < eps && Math.abs(a.y - b.y) < eps;
+}
+function edgesOf(poly) {
+  return poly.map((v, idx) => [v, poly[(idx + 1) % poly.length]]);
+}
+function cellsAdjacent(polyA, polyB) {
+  for (const [a1, a2] of edgesOf(polyA)) {
+    for (const [b1, b2] of edgesOf(polyB)) {
+      if (pointsClose(a1, b2) && pointsClose(a2, b1)) return true;
+    }
+  }
+  return false;
+}
+const adjacency = cells.map(() => new Set());
+for (let i = 0; i < cells.length; i++) {
+  for (let j = i + 1; j < cells.length; j++) {
+    if (cellsAdjacent(cells[i].polygon, cells[j].polygon)) {
+      adjacency[i].add(j);
+      adjacency[j].add(i);
+    }
+  }
+}
+const cellColors = cells.map(() => -1);
+cells.forEach((_, i) => {
+  const used = new Set();
+  adjacency[i].forEach((neighbor) => {
+    if (cellColors[neighbor] !== -1) used.add(cellColors[neighbor]);
+  });
+  let colorIdx = 0;
+  while (used.has(colorIdx % t.palette.length)) colorIdx++;
+  cellColors[i] = colorIdx % t.palette.length;
+});
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -109,7 +148,7 @@ Highcharts.chart("container", {
           this.renderer
             .path(path)
             .attr({
-              fill: Highcharts.color(t.palette[i % t.palette.length])
+              fill: Highcharts.color(t.palette[cellColors[i]])
                 .setOpacity(0.4)
                 .get(),
               stroke: t.pageBg,
@@ -132,14 +171,14 @@ Highcharts.chart("container", {
     title: { text: "Distance east (km)", style: { color: t.inkSoft, fontSize: "16px" } },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineColor: t.grid,
+    gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   yAxis: {
     min: BOUNDS.minY,
     max: BOUNDS.maxY,
     title: { text: "Distance north (km)", style: { color: t.inkSoft, fontSize: "16px" } },
-    gridLineColor: t.grid,
+    gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   legend: { enabled: false },
@@ -154,7 +193,7 @@ Highcharts.chart("container", {
       name: "Store location",
       data: stores.map((s) => ({ x: s.x, y: s.y, name: s.label })),
       color: t.ink,
-      marker: { radius: 7, fillColor: t.ink, lineColor: t.pageBg, lineWidth: 2 },
+      marker: { radius: 9, fillColor: t.ink, lineColor: t.pageBg, lineWidth: 2 },
       zIndex: 3,
       dataLabels: {
         enabled: true,
