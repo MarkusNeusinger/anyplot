@@ -1,8 +1,7 @@
 // anyplot.ai
 // calibration-curve: Calibration Curve
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
