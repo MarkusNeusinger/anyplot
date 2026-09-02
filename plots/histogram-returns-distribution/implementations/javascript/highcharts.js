@@ -15,6 +15,9 @@ function makeLcg(seed) {
 }
 const rand = makeLcg(20260215);
 
+// Small math helpers (LCG sampler + normal PDF) are kept top-level since they
+// are pure functions reused by both the data generation and the fitted-curve
+// section below — inlining them would duplicate the Box-Muller/PDF formulas.
 function randNormal() {
   const u1 = Math.max(rand(), 1e-9);
   const u2 = rand();
@@ -83,6 +86,10 @@ for (let i = 0; i <= curvePoints; i++) {
 
 // --- Chart -------------------------------------------------------------
 const title = "histogram-returns-distribution · javascript · highcharts · anyplot.ai";
+const tailSide = skewness < 0 ? "left" : "right";
+const subtitle =
+  "Skews " + (skewness < 0 ? "negative" : "positive") + " (skew " + skewness.toFixed(2) +
+  ") — fat " + tailSide + " tail beyond ±2σ is the story here";
 
 Highcharts.chart("container", {
   chart: {
@@ -93,11 +100,17 @@ Highcharts.chart("container", {
     events: {
       load: function () {
         const chart = this;
+        const row = (label, value, valueColor) =>
+          '<div style="display:flex;justify-content:space-between;gap:18px;">' +
+          '<span style="color:' + t.inkSoft + ';">' + label + "</span>" +
+          '<b style="color:' + (valueColor || t.ink) + ';">' + value + "</b></div>";
         const statsText =
-          "Mean: " + mean.toFixed(2) + "%<br/>" +
-          "Std Dev: " + std.toFixed(2) + "%<br/>" +
-          "Skewness: " + skewness.toFixed(2) + "<br/>" +
-          "Kurtosis: " + kurtosis.toFixed(2);
+          '<div style="font-weight:700;font-size:12px;letter-spacing:0.06em;' +
+          'text-transform:uppercase;color:' + t.ink + ';margin-bottom:6px;">Statistics</div>' +
+          row("Mean", mean.toFixed(2) + "%") +
+          row("Std Dev", std.toFixed(2) + "%") +
+          row("Skewness", skewness.toFixed(2), t.amber) +
+          row("Kurtosis", kurtosis.toFixed(2));
         chart.renderer
           .label(statsText, chart.plotLeft + 12, chart.plotTop + 10, undefined, undefined, undefined, true)
           .css({ color: t.inkSoft, fontSize: "14px", lineHeight: "20px" })
@@ -105,9 +118,10 @@ Highcharts.chart("container", {
             fill: t.elevatedBg,
             stroke: t.inkSoft,
             "stroke-width": 1,
-            padding: 10,
-            r: 4,
+            padding: 12,
+            r: 6,
             zIndex: 5,
+            shadow: { color: "#000000", offsetX: 0, offsetY: 2, opacity: 0.18, width: 6 },
           })
           .add();
       },
@@ -116,6 +130,7 @@ Highcharts.chart("container", {
   credits: { enabled: false },
   colors: t.palette,
   title: { text: title, style: { color: t.ink, fontSize: "21px", fontWeight: "600" } },
+  subtitle: { text: subtitle, style: { color: t.inkSoft, fontSize: "14px" } },
   xAxis: {
     title: { text: "Daily Return (%)", style: { color: t.inkSoft, fontSize: "16px" } },
     lineColor: t.inkSoft,
@@ -128,14 +143,14 @@ Highcharts.chart("container", {
         color: t.inkSoft,
         dashStyle: "ShortDash",
         width: 1,
-        label: { text: "-2σ", style: { color: t.inkSoft, fontSize: "12px" }, y: -6 },
+        label: { text: "-2σ", style: { color: t.inkSoft, fontSize: "14px" }, y: -6 },
       },
       {
         value: tailHi,
         color: t.inkSoft,
         dashStyle: "ShortDash",
         width: 1,
-        label: { text: "+2σ", style: { color: t.inkSoft, fontSize: "12px" }, y: -6 },
+        label: { text: "+2σ", style: { color: t.inkSoft, fontSize: "14px" }, y: -6 },
       },
     ],
   },
@@ -162,7 +177,18 @@ Highcharts.chart("container", {
   },
   series: [
     { name: "Within ±2σ", type: "column", data: bodyData, color: t.palette[0] },
-    { name: "Beyond ±2σ (tail)", type: "column", data: tailData, color: t.amber },
+    {
+      name: "Beyond ±2σ (tail)",
+      type: "column",
+      data: tailData,
+      color: {
+        linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+        stops: [
+          [0, t.amber],
+          [1, Highcharts.color(t.amber).setOpacity(0.55).get("rgba")],
+        ],
+      },
+    },
     {
       name: "Normal Distribution",
       type: "spline",
