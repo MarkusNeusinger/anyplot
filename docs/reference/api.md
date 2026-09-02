@@ -477,24 +477,57 @@ service, which is what makes local development, the test suite and the rollback
 work: remove the variable from the service, promote the resulting revision, and
 the gate is gone.
 
-**Arming and rolling back** are the same two commands with a different first
-flag. The service pins traffic to a named revision, so a `services update`
-alone creates a revision that serves nothing — the promote is what takes
-effect, and it must name the revision the update just made:
+**Arming and rolling back** are the same procedure with one flag changed. Three
+things make it more than two commands, and each of them has bitten a comparable
+rollout somewhere:
 
 ```bash
-# Arm.  (Roll back with --remove-secrets=ORIGIN_SECRET instead.)
+SERVICE=anyplot-api
+LOC="--project=anyplot --region=europe-west4"
+
+# 1. Refuse to act while a candidate revision is in flight. `services update`
+#    clones the service's LATEST template, not the serving one, and the deploy
+#    pipeline deliberately leaves each build's smoked-but-unpromoted candidate
+#    as latest — so arming during a deploy would promote that build's image
+#    along with the gate, and naming the new revision precisely does not change
+#    which image it inherits.
+read -r SERVING LATEST <<<"$(gcloud run services describe "$SERVICE" $LOC --format=json \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); \
+      t=[x for x in d['status']['traffic'] if x.get('percent')==100]; \
+      print(t[0]['revisionName'], d['status']['latestReadyRevisionName'])")"
+test "$SERVING" = "$LATEST" || {
+  echo "latest revision $LATEST is not the serving one ($SERVING): a candidate is in flight."
+  echo "Wait for the pipeline to promote or roll it back, then start again."
+  exit 1
+}
+
+# 2. Pin the secret to a NUMBER, never `:latest`. Cloud Run resolves a
+#    secret-backed variable when each instance starts, so with `:latest` a new
+#    secret version reaches new instances while older ones keep the old value —
+#    and since the edge stamps exactly one value, the difference shows up as
+#    intermittent 403s inside a single revision.
+VERSION=$(gcloud secrets versions list ORIGIN_SECRET --project=anyplot \
+  --filter="state=ENABLED" --sort-by=~createTime --limit=1 --format="value(name)")
+
+# 3. Update, then promote BY NAME. The service pins traffic to a named
+#    revision, so the update alone serves nothing; and `--to-latest` here would
+#    reintroduce exactly the problem step 1 guards against.
 SUFFIX="arm-$(date -u +%Y%m%d%H%M)"
-gcloud run services update anyplot-api --project=anyplot --region=europe-west4 \
-  --update-secrets=ORIGIN_SECRET=ORIGIN_SECRET:latest --revision-suffix="$SUFFIX"
-gcloud run services update-traffic anyplot-api --project=anyplot --region=europe-west4 \
-  --to-revisions="anyplot-api-$SUFFIX=100"
+gcloud run services update "$SERVICE" $LOC \
+  --update-secrets="ORIGIN_SECRET=ORIGIN_SECRET:$VERSION" --revision-suffix="$SUFFIX"
+gcloud run services update-traffic "$SERVICE" $LOC --to-revisions="$SERVICE-$SUFFIX=100"
 ```
 
-**Never `--to-latest` here**, for the reason `api/cloudbuild.yaml` avoids it:
-the deploy pipeline leaves each build's smoked-but-unpromoted candidate as the
-latest revision, so `--to-latest` can promote a concurrent build's untested
-image while you think you are only turning the gate on or off.
+**Rolling back** is the same block with `--remove-secrets=ORIGIN_SECRET` in
+place of `--update-secrets` (step 2 then has nothing to resolve) and a
+`disarm-` suffix.
+
+**Rotating the secret** means changing two sides that must agree, and the gate
+accepts exactly one value — so there is no overlap window. Roll back first,
+rotate the Secret Manager version, the Transform Rule and the Worker binding,
+then arm again on the new version number. The gate is off in between, which is
+the documented safe state; `/health` shows `off-seen` throughout, and `ok` when
+the new value is live on both sides.
 
 **Exempt paths** — exact matches, no prefixes, and only these two:
 
