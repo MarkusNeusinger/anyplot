@@ -11,6 +11,11 @@ const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 const lowTemps = [-3, -2, 1, 4, 9, 12, 14, 13, 10, 6, 2, -1];
 const highTemps = [3, 5, 10, 15, 20, 23, 25, 24, 20, 14, 7, 4];
 
+// Widest low-to-high span gets a callout label — a focal point beyond plain
+// chronological ordering.
+const rangeWidths = months.map((_, i) => highTemps[i] - lowTemps[i]);
+const widestIndex = rangeWidths.indexOf(Math.max(...rangeWidths));
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -28,7 +33,23 @@ function renderRangeBar(params, api) {
     { x: low[0] - halfWidth, y: high[1], width: halfWidth * 2, height: low[1] - high[1] },
     { x: params.coordSys.x, y: params.coordSys.y, width: params.coordSys.width, height: params.coordSys.height }
   );
-  return shape && { type: "rect", shape, style: api.style() };
+  if (!shape) return;
+  const rect = { type: "rect", shape, style: api.style() };
+  if (params.dataIndex !== widestIndex) return rect;
+  const label = {
+    type: "text",
+    style: {
+      text: `Widest range (${rangeWidths[widestIndex]}°C)`,
+      x: low[0],
+      y: high[1] - 14,
+      fill: t.inkSoft,
+      fontSize: 12,
+      align: "center",
+      verticalAlign: "bottom",
+    },
+    z2: 10,
+  };
+  return { type: "group", children: [rect, label] };
 }
 
 // --- Option -------------------------------------------------------------------
@@ -73,15 +94,10 @@ chart.setOption({
     {
       name: "Low / high",
       type: "scatter",
-      data: lowTemps,
-      symbolSize: 9,
-      itemStyle: { color: t.ink, borderColor: t.pageBg, borderWidth: 1.5 },
-      z: 3,
-    },
-    {
-      name: "Low / high",
-      type: "scatter",
-      data: highTemps,
+      data: months.flatMap((_, i) => [
+        [i, lowTemps[i]],
+        [i, highTemps[i]],
+      ]),
       symbolSize: 9,
       itemStyle: { color: t.ink, borderColor: t.pageBg, borderWidth: 1.5 },
       z: 3,
