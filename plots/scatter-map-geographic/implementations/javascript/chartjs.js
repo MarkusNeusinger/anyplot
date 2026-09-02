@@ -23,6 +23,15 @@ function gaussian(mean, std) {
 function clip(v, lo, hi) {
   return Math.min(hi, Math.max(lo, v));
 }
+// Rejection sampling: redraw out-of-range Gaussian tails instead of clamping,
+// so the boundary doesn't accumulate an artificial pile-up of points.
+function gaussianInRange(mean, std, lo, hi) {
+  for (let tries = 0; tries < 50; tries++) {
+    const v = gaussian(mean, std);
+    if (v >= lo && v <= hi) return v;
+  }
+  return clip(gaussian(mean, std), lo, hi);
+}
 
 // --- Geography: simplified Pacific coastline of Tohoku/Kanto, Japan --------
 // [lat, lon] north -> south, deliberately simplified for map context (not
@@ -71,13 +80,16 @@ const MAG_MAX = 7.9;
 
 const earthquakes = [];
 for (let i = 0; i < EVENT_COUNT; i++) {
-  const lat = clip(gaussian((LAT_MIN + LAT_MAX) / 2, 2.1), LAT_MIN + 0.2, LAT_MAX - 0.2);
+  const lat = gaussianInRange((LAT_MIN + LAT_MAX) / 2, 2.1, LAT_MIN + 0.2, LAT_MAX - 0.2);
   const trenchLon = coastLonAtLat(lat) + TRENCH_OFFSET_DEG;
-  const westOfTrench = clip(gaussian(0.55, 1.05), -1.2, 3.6); // + = inland/deeper, - = outer-rise
+  const westOfTrench = gaussianInRange(0.55, 1.05, -1.2, 3.6); // + = inland/deeper, - = outer-rise
+  // Geometric safety net (compound of trenchLon lookup + westOfTrench), not a raw
+  // Gaussian tail, so a hard clip here does not create a boundary pile-up.
   const lon = clip(trenchLon - westOfTrench, LON_MIN, LON_MAX);
-  const depth = clip(15 + Math.max(0, westOfTrench) * 145 + gaussian(0, 10), 8, DEPTH_DOMAIN_MAX);
+  const depthBase = 15 + Math.max(0, westOfTrench) * 145;
+  const depth = gaussianInRange(depthBase, 10, 8, DEPTH_DOMAIN_MAX);
   const isSignificant = rand() < 0.16;
-  const magnitude = clip(gaussian(isSignificant ? 6.5 : 4.9, isSignificant ? 0.55 : 0.5), MAG_MIN, MAG_MAX);
+  const magnitude = gaussianInRange(isSignificant ? 6.5 : 4.9, isSignificant ? 0.55 : 0.5, MAG_MIN, MAG_MAX);
   earthquakes.push({ x: lon, y: lat, depth, magnitude });
 }
 
@@ -106,13 +118,16 @@ const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Custom plugin: sequential depth colorbar --------------------------------
+// Drawn in the reserved right-side layout.padding band (outside chartArea), so
+// it can never overlap a data marker regardless of where events happen to fall.
+const COLORBAR_MARGIN = 22;
 const depthColorbarPlugin = {
   id: "depthColorbar",
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
-    const barW = 26;
+    const barW = 24;
     const barH = 190;
-    const x = chartArea.right - barW - 130;
+    const x = chartArea.right + COLORBAR_MARGIN;
     const y = chartArea.top + 24;
 
     ctx.save();
@@ -126,14 +141,14 @@ const depthColorbarPlugin = {
     ctx.strokeRect(x, y, barW, barH);
 
     ctx.fillStyle = t.ink;
-    ctx.font = "13px sans-serif";
+    ctx.font = "15px sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillText(`${DEPTH_DOMAIN_MAX} km`, x + barW + 8, y);
     ctx.fillText("0 km", x + barW + 8, y + barH);
 
     ctx.save();
-    ctx.translate(x - 8, y + barH / 2);
+    ctx.translate(x - 10, y + barH / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = "center";
     ctx.fillText("Depth", 0, 0);
@@ -153,7 +168,7 @@ const magnitudeLegendPlugin = {
 
     ctx.save();
     ctx.fillStyle = t.inkSoft;
-    ctx.font = "13px sans-serif";
+    ctx.font = "15px sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillText("Magnitude", x - 34, y - (magToRadius(refs[2]) + 26));
@@ -216,7 +231,9 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 8, right: 16, bottom: 8, left: 8 } },
+    // right padding reserves space for the depthColorbarPlugin so it never
+    // overlaps a data marker: COLORBAR_MARGIN + barW + label-text width + margin
+    layout: { padding: { top: 8, right: 130, bottom: 8, left: 8 } },
     plugins: {
       title: {
         display: true,
