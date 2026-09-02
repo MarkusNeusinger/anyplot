@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 130, right: 60, bottom: 60, left: 70 };
+const margin = { top: 130, right: 60, bottom: 66, left: 95 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -22,7 +22,7 @@ const counts = {
 
 const sourceTotals = sources.map((s) => counts[s].Converted + counts[s].Bounced);
 const grandTotal = sourceTotals.reduce((a, b) => a + b, 0);
-const color = d3.scaleOrdinal().domain(outcomes).range([t.palette[0], "#AE3030"]);
+const color = d3.scaleOrdinal().domain(outcomes).range([t.palette[0], t.palette[4]]);
 const LABEL_ON_FILL = "#FFFDF6"; // fixed light label ink for text on saturated data fills, both themes
 
 // --- SVG mount ----------------------------------------------------------------
@@ -51,6 +51,25 @@ const yAxis = g.append("g").call(
 yAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
 yAxis.selectAll("line").attr("stroke", t.grid);
 yAxis.select(".domain").remove();
+
+// --- Y-axis title (identifies the conditional-proportion encoding) -----------
+g.append("text")
+  .attr("transform", `translate(${-64},${ih / 2}) rotate(-90)`)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text("Conversion Rate");
+
+// --- X-axis title (identifies the column-width categorical variable) ---------
+g.append("text")
+  .attr("x", iw / 2)
+  .attr("y", ih + 42)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text("Traffic Source");
 
 // --- Rectangles (heights = conditional proportion within column) -------------
 const gapY = 6;
@@ -130,6 +149,14 @@ for (const col of columns) {
 
 // --- Legend --------------------------------------------------------------------
 const legend = svg.append("g").attr("transform", `translate(${width - margin.right - 220},44)`);
+legend
+  .append("text")
+  .attr("x", 0)
+  .attr("y", -8)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .style("font-weight", "600")
+  .text("Outcome");
 outcomes.forEach((outcome, i) => {
   const row = legend.append("g").attr("transform", `translate(${i * 115},0)`);
   row.append("rect").attr("width", 16).attr("height", 16).attr("rx", 3).attr("fill", color(outcome));
