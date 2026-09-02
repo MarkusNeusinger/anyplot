@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: timeseries-forecast-uncertainty
 created: '2026-09-02T07:35:53Z'
-updated: '2026-09-02T07:39:36Z'
+updated: '2026-09-02T07:49:24Z'
 generated_by: claude-sonnet
 workflow_run: 33604018591
 issue: 3188
@@ -12,51 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'All required spec features present: solid historical line, dashed forecast line,
-    dotted vertical marker at forecast start, and nested 80%/95% confidence bands
-    via alpha-blended fills'
-  - Theme-adaptive chrome correctly threaded through Axis (title, labels, ticks, spines,
-    grid) — both light and dark renders are fully legible with no dark-on-dark or
-    light-on-light failures
-  - 'First series is brand green #009E73 (Historical) with forecast/bands in Imprint
-    blue (#4467A3), consistent color family and CVD-safe per the palette'
-  - Canvas lands exactly on 3200x1800 with px_per_unit=2, title format matches the
-    mandated `{spec-id} · {lang} · {lib} · anyplot.ai` convention
-  - 'Idiomatic Makie usage: band!() for nested intervals, vlines!() for the forecast-start
-    marker, manually positioned/rotated date xticks, axislegend with frame disabled'
-  - 'Realistic synthetic data: 3 years of monthly sales with trend + seasonality +
-    noise, 6-month forecast with growing uncertainty spread — plausible and neutral'
+  - Nested 80%/95% confidence bands with thin edge-stroke lines that clearly distinguish
+    the band boundaries from each other, on top of the semi-transparent fills
+  - Vertical dotted marker plus a 'Forecast start' text callout gives a clean, unambiguous
+    historical/forecast transition point
+  - Uncertainty spread grows realistically with the forecast horizon (spread_80/spread_95
+    scale with horizon), which is the core storytelling requirement of this spec
+  - 'Both renders are theme-correct: warm off-white/near-black backgrounds, all chrome
+    (title, ticks, grid, legend) readable in both themes, data colors identical across
+    themes'
+  - Clean, flat, single-script implementation using idiomatic Makie primitives (band!,
+    lines!, vlines!, text!, axislegend) with the current `size` API rather than the
+    deprecated `resolution` kwarg
+  - Title matches the mandated format exactly and canvas lands precisely on 3200×1800
+    (landscape)
   weaknesses:
-  - '`using Statistics` is imported but never called anywhere in the script (no mean/std/cor
-    usage) — remove the unused import (CQ-03).'
-  - 'Design Excellence is generic: the implementation applies the required theme tokens
-    correctly but adds no bespoke polish beyond that baseline (e.g. no annotation
-    labeling the forecast-start line, no data-driven emphasis at the transition point,
-    bands share a single hue at two alphas rather than any additional visual distinction)
-    — consider a small text annotation near the vlines! marker (e.g. ''Forecast start'')
-    to sharpen the storytelling focal point.'
-  - 'Library Mastery is only baseline-idiomatic: band!/vlines!/axislegend are used
-    correctly but the implementation doesn''t showcase a more distinctive Makie capability
-    (e.g. custom legend entry ordering, annotate!/text! callout, or a two-band stroke
-    to visually separate the 80% and 95% edges) — LM-02 scored low as a result.'
+  - 'Forecast line and both confidence bands use IMPRINT_PALETTE[3] (blue, #4467A3)
+    instead of the canonical second series slot IMPRINT_PALETTE[2] (lavender, #C475FD).
+    Blue-for-forecast isn''t a strong enough widely-shared real-world association
+    (unlike blood→red or sky→blue) to justify skipping the ordinal palette order —
+    switch the forecast line and both band!/lines! calls to IMPRINT_PALETTE[2].'
+  - X-axis label reads 'Month' but the tick labels actually show formatted calendar
+    dates (yyyy-mm) spanning three-plus years — 'Date' would describe the axis more
+    accurately.
+  - 'Design polish is solid but not exceptional: the spine/grid treatment is mostly
+    baseline theme compliance rather than distinctive refinement beyond the nice band
+    edge-stroke touch.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "timeseries-forecast-uncertainty · julia · makie · anyplot.ai" is bold dark ink, clearly visible at top center. Axis labels "Month" (x) and "Sales (units)" (y) are dark ink, readable. Tick labels (dates rotated ~30°, sales values) are medium-gray, clearly legible against the light background. Gridlines are faint gray, subtle but visible. Legend (top-left, frameless) lists "95% interval", "80% interval", "Historical", "Forecast" in readable gray text.
-      Data: First series (Historical) is brand green (#009E73), solid line, 36 months of history with visible trend + seasonal wiggle. Forecast is a dashed blue line (Imprint palette position 3, #4467A3) continuing from the last historical point. Two nested blue-tinted bands (darker inner = 80%, lighter outer = 95%) widen progressively into the forecast horizon. A dotted vertical line marks the historical/forecast boundary.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlaps with data or between legend and gridlines.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "timeseries-forecast-uncertainty · julia · makie · anyplot.ai" in bold dark ink, clearly visible; "Month" x-axis label and "Sales (units)" y-axis label in dark ink; rotated x tick labels (yyyy-mm dates from 2023-01 to 2026-06) and y tick labels (900-1600) in a softer dark gray; horizontal/vertical gridlines are faint but visible; top/right spines removed; legend (top-left, no frame) lists "95% interval", "80% interval", "Historical", "Forecast" in soft dark text.
+      Data: Solid green (#009E73) historical line from 2023-01 through late 2025, a vertical dotted marker with a "Forecast start" callout at the transition, then a dashed blue forecast line with two nested semi-transparent blue bands (darker/narrower 80% band inside a lighter/wider 95% band) that widen progressively toward the end of the 6-month horizon.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title is light/cream-colored ink, clearly visible. Axis labels are light ink, tick labels are light-gray, clearly legible against the dark background. Gridlines are faint light-gray, subtle but visible. Legend text is light-gray, readable against the dark surface with no background swatch clash.
-      Data: Historical line and forecast line/bands use the identical hex values as the light render — brand green historical line, Imprint-blue dashed forecast line and nested confidence bands. No hue shift between themes; only chrome (background, text, grid, spines) flipped as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title now in light/white text, clearly visible; axis labels in light ink; tick labels in a lighter gray-white tone, all legible against the dark background; gridlines remain faint but visible; legend text renders in light gray, readable against the dark panel.
+      Data: Historical line is the identical brand green (#009E73), forecast line and bands use the identical blue (#4467A3) at the same alpha levels as the light render — only the chrome (background, text, grid) flipped, confirming the data-color-consistency requirement.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every title/axis/tick/legend element is clearly visible against the dark panel, and the brand green remains vivid on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,74 +63,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text readable in both themes; explicit
-          font sizes set throughout
+        comment: All titles/labels/ticks readable and appropriately sized in both
+          themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in an empty upper-left region above the historical line
-          values; no collisions
+        comment: No collisions between legend, annotation, ticks, or data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths (3px) and band alphas (0.20/0.38) appropriate for ~42-point
-          monthly series
+        comment: Line widths (3px main, 1px band edges) and band alpha are well chosen
+          for ~42 points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue pairing is CVD-safe, no red-green as sole signal
+        comment: Green/blue combination has good contrast; no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, title within safe width, no overflow or
-          clipping
+        comment: Title ~55-60% width, balanced margins, nothing clipped or overflowing.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: '''Month'' and ''Sales (units)'' descriptive with units; mandated
-          title format used'
+        passed: false
+        comment: X-axis labeled 'Month' but ticks show full calendar dates (yyyy-mm)
+          across years — 'Date' would be more accurate.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73, backgrounds match #FAF8F1/#1A1A17, data colors
-          identical across themes'
+        passed: false
+        comment: First series correctly IMPRINT_PALETTE[1]; forecast/bands use IMPRINT_PALETTE[3]
+          (blue) instead of the canonical second slot IMPRINT_PALETTE[2] (lavender)
+          without a strong enough semantic justification.
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correctly applies required theme tokens but adds no bespoke polish
-          beyond the baseline
+        passed: true
+        comment: Nested bands with distinct edge-stroke lines and a forecast-start
+          annotation show above-default polish.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Top/right spines removed, subtle grid, frameless legend — modest
-          refinement above default
+        passed: true
+        comment: Standard theme-compliant spine/grid treatment plus the band edge-stroke
+          touch; not deeply distinctive.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Vertical marker + color/style split communicate the historical/forecast
-          transition, but no annotation reinforces the focal point
+        passed: true
+        comment: Vertical marker + annotation + widening bands create a clear focal
+          point and narrative of growing uncertainty.
     spec_compliance:
       score: 15
       max: 15
@@ -141,26 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct forecast-with-uncertainty-band time series
+        comment: Correct time series forecast plot with uncertainty bands.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid historical, dashed forecast, forecast-start marker, nested
-          80/95% bands, legend all present
+        comment: Solid historical line, dashed forecast, vertical forecast-start marker,
+          nested 80/95% bands with alpha 0.20/0.38, clear legend — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, sales on y, full series shown
+        comment: X = time (date-labeled), Y = sales units; full historical+forecast
+          range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match series
+        comment: Title matches the mandated format exactly; legend labels are clear
+          and accurate.
     data_quality:
       score: 15
       max: 15
@@ -170,22 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows history, forecast, both interval widths, and the transition
-          point
+        comment: 'All plot-type aspects present: historical, forecast, dual bands,
+          transition marker.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible monthly sales with trend/seasonality/noise, neutral topic
+        comment: Neutral monthly sales data with trend + seasonality + noise reads
+          as plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values ~900-1700 units, sensible domain magnitude
+        comment: Sensible unit scale (~900-1700) with realistically growing uncertainty
+          over the horizon.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,31 +195,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: Single flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42) set.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '`using Statistics` is imported but never used'
+        passed: true
+        comment: CairoMakie, Colors, Random, Dates — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized, no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API
+        comment: Saves plot-$(THEME).png with px_per_unit=2; uses current `size` API
+          instead of deprecated `resolution`.
     library_mastery:
       score: 6
       max: 10
@@ -227,22 +230,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: band!, vlines!, axislegend, manual date xticks used correctly
+        comment: Idiomatic band!/lines!/vlines!/text!/axislegend usage.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: No showcase of a more distinctive Makie-specific capability beyond
-          baseline band!/vlines!
-  verdict: REJECTED
+        comment: Layered band + edge-stroke technique is a nice touch but not a rare/library-unique
+          feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - alpha-blending
+  - grid-styling
