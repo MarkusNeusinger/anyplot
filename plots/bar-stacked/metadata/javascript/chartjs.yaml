@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bar-stacked
 created: '2026-09-02T13:25:59Z'
-updated: '2026-09-02T13:29:59Z'
+updated: '2026-09-02T13:38:22Z'
 generated_by: claude-sonnet
 workflow_run: 33635225001
 issue: 1947
@@ -28,24 +28,27 @@ review:
   - Y-axis-only grid, theme-adaptive ink/inkSoft/grid tokens threaded through title,
     legend, ticks and axis titles in both themes
   weaknesses:
-  - Title spans only ~28% of the 3200px canvas width, well under the 50-70% guideline
-    range — a slightly larger title font (e.g. 26-28px instead of 22px) would give
-    it more visual presence given the available width
+  - Title still spans only ~35% of the 3200px canvas width even after the repair bumped
+    the font from 22px to 27px — well under the ~70-85% expected for the long mandated
+    title string. A further bump (e.g. to ~34-36px) would close the gap without risking
+    overflow.
   - 'Design excellence is solid but conservative: no additional visual-hierarchy device
     (e.g. a callout marking the April crossover where renewables overtake gas) beyond
     the total labels — optional polish, not required'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bar-stacked · javascript · chartjs · anyplot.ai" in bold dark ink, clearly visible; legend (Solar/Wind/Hydro/Natural Gas) in dark text at top; x-axis "Month" and y-axis "Energy Consumption (GWh)" titles in dark ink; tick labels in a slightly softer dark gray; subtle horizontal gridlines on the y-axis only (no x-axis grid). Bold total-value labels ("145 GWh" ... "120 GWh") sit above each stack, fully readable against the light background.
-      Data: Four stacked segments per bar — Solar (green #009E73) at the base, then Wind (lavender), Hydro (blue), Natural Gas (ochre) on top, in consistent order across all six months. Thin light-colored borders separate segments for definition.
-      Legibility verdict: PASS — no light-on-light or illegible text anywhere.
+      Chrome: Bold dark-ink title "bar-stacked · javascript · chartjs · anyplot.ai" clearly visible at the top (now 27px after the repair, up from 22px), with a top legend row (Solar/Wind/Hydro/Natural Gas swatches + labels) and dark-ink axis titles ("Month", "Energy Consumption (GWh)"). Subtle y-axis-only gridlines, no x-axis grid. Tick labels in a softer ink tone, all legible.
+      Data: Four stacked segments per bar in canonical Imprint order — Solar (#009E73 green) at the base, then Wind (lavender), Hydro (blue), Natural Gas (ochre) on top — consistent across all six months (Jan-Jun), each with a thin page-bg border separating segments. Bold total-value labels ("145 GWh" ... "120 GWh") sit above each stack with comfortable clearance from the 180 GWh gridline.
+      Legibility verdict: PASS — all text readable, no overlap, no edge clipping.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis titles now rendered in light/white ink against the dark background; tick labels in a lighter soft gray; gridlines remain subtle and visible. Total-value labels are white and clearly legible above each stack.
-      Data: Colors are pixel-identical to the light render (Solar green, Wind lavender, Hydro blue, Natural Gas ochre) — only the chrome (background, text, grid) flipped to the dark palette, as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly readable against the near-black background.
+      Chrome: Same title/legend/axis titles now render in light ink (#F0EFE8-equivalent), tick labels in soft light gray, gridlines remain subtle at the same low opacity. Total-value labels are light-colored and fully legible against the dark surface.
+      Data: Solar green, Wind lavender, Hydro blue, Natural Gas ochre are pixel-identical to the light render — only chrome (background, text, grid) flipped, as required. No dark-on-dark failures on any text element.
+      Legibility verdict: PASS — all text readable, no overlap, no edge clipping.
+
+    Both renders pass the theme-readability check; the repair's title-font increase (22px -> 27px) is confirmed visually but the title still under-fills the guideline width proportion (see weaknesses).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,45 +59,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, all text reads clearly in both themes
+        comment: All text explicitly sized and readable in both themes; title still
+          under-fills the ~70-85% guideline width for the mandated title string despite
+          the 22px->27px repair bump
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Total labels, legend, and axes all clear of each other
+        comment: No collisions between total labels, legend, ticks, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6 categories x 4 components, all segments clearly distinguishable
+        comment: Bar segments and total labels are clearly visible at this data density
+          (6 categories x 4 series)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe, no red-green-only signal
+        comment: Good contrast, CVD-safe Imprint palette, page-bg segment borders
+          aid separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), no clipping or overflow, balanced
-          axis labels
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (GWh, Month)
+        comment: Descriptive axis titles with units (GWh)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, first series brand green, backgrounds correct
-          in both themes
+        comment: Canonical Imprint order, identical data colors across themes, theme-correct
+          chrome/background
     design_excellence:
       score: 12
       max: 20
@@ -128,27 +135,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True stacked bar via Chart.js stack groups
+        comment: Correct stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, total labels, consistent component
-          order, adequate bar spacing
+        comment: Total labels above stacks, consistent component order, adequate spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Month on x, stacked GWh values on y, all data shown
+        comment: Months on x, stacked GWh values on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match component
-          names
+        comment: Title format exact match, legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -158,20 +163,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 categories, 4 components — within recommended range, shows totals
-          and segments
+        comment: Shows rising/falling components and shifting composition over 6 months
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral monthly energy-mix data
+        comment: Neutral, plausible energy-mix scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible GWh magnitudes for a regional energy mix
+        comment: GWh values and month-over-month trends are realistic
     code_quality:
       score: 10
       max: 10
@@ -181,32 +185,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; the one plugin object is the minimal idiomatic way to
-          draw total labels
+        comment: Linear data -> mount -> plugin -> chart, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded arrays
+        comment: Hardcoded deterministic arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the global Chart/tokens are used
+        comment: No imports; only the provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Clean, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract respected, animation disabled
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API
     library_mastery:
       score: 7
       max: 10
@@ -216,7 +220,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper stack groups, categoryPercentage/barPercentage tuning
+        comment: Correct stack/categoryPercentage/barPercentage usage, idiomatic options
+          structure
       - id: LM-02
         name: Distinctive Features
         score: 3
