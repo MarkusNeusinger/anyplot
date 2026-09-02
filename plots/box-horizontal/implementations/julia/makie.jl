@@ -96,8 +96,22 @@ boxplot!(
     outlierstrokecolor  = INK,
     outlierstrokewidth  = 1,
     markersize          = 10,
-    width               = 0.6,
+    width               = 0.78,
 )
+
+# Annotate each box with its median salary, offset past the whisker tip so
+# the label never collides with the box or outlier markers.
+sorted_medians = medians[sort_order]
+data_range = maximum(salaries) - minimum(salaries)
+label_x = maximum(salaries) + 0.04 * data_range
+text!(
+    ax, fill(label_x, length(sorted_medians)), 1:length(sorted_medians);
+    text      = [string(round(Int, m)) for m in sorted_medians],
+    align     = (:left, :center),
+    fontsize  = 12,
+    color     = INK_SOFT,
+)
+xlims!(ax, minimum(salaries) - 0.05 * data_range, label_x + 0.12 * data_range)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
