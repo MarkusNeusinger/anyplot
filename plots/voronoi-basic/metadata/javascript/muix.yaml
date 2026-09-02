@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: voronoi-basic
 created: '2026-09-02T10:35:21Z'
-updated: '2026-09-02T10:39:40Z'
+updated: '2026-09-02T10:46:40Z'
 generated_by: claude-sonnet
 workflow_run: 33619715301
 issue: 3415
@@ -12,40 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
   - From-scratch Voronoi computation via Sutherland-Hodgman half-plane clipping, correctly
     clipped to the bounding box with no infinite regions
-  - 'Theme-adaptive chrome is implemented correctly: identical data colors in light/dark,
-    exact #FAF8F1/#1A1A17 backgrounds'
+  - 'Attempt-2 fix directly addresses the prior review: cell-border stroke widened
+    (3→4.5) and the legend swatch gained a stroked, rounded-corner treatment, making
+    adjacent similarly-hued cells and the legend read noticeably cleaner'
+  - 'Theme-adaptive chrome is correct: identical data colors in light/dark, exact
+    #FAF8F1/#1A1A17 backgrounds, borders correctly flip to match page background per
+    theme'
+  - Revenue-encoded cell fill via the imprint_seq gradient adds real informational
+    value and a clear focal point beyond a generic tessellation
   - Idiomatic, distinctive use of MUI X's hook-based overlay API (useXScale, useYScale,
-    useDrawingArea) to build a chart type without a native MUI X component
-  - Revenue-encoded cell fill adds real informational value and a clear focal point
-    beyond a generic tessellation
+    useDrawingArea) to build a chart type with no native MUI X component
   - Deterministic data generation, correct square canvas (2400x2400), no clipping
     or overlap issues
   weaknesses:
-  - Some adjacent cells land on visually similar hues from the two-stop imprint_seq
-    gradient (e.g. the two teal-green cells in the upper-left region), relying solely
-    on the thin border stroke for separation - consider a wider perceptual spread
-    between t.seq[0]/t.seq[1] or a slightly heavier/contrasting border to make regional
-    boundaries easier to parse at a glance
-  - Legend/colorbar presentation is functional but plain - minor polish would raise
-    the aesthetic ceiling
-  - Geometry helper functions are numerous for a basic spec-tier plot, though justified
-    by the lack of a native Voronoi primitive in MUI X
+  - A couple of adjacent cells (e.g. the upper-left teal-green cluster) still land
+    on visually close hues from the two-stop imprint_seq gradient; the widened border
+    helps, but a wider perceptual spread between t.seq[0]/t.seq[1] or a subtle categorical
+    accent would make regional boundaries pop even more
+  - Legend/colorbar presentation is functional but still fairly plain relative to
+    the rest of the composition - a value tick mark or subtitle could raise the aesthetic
+    ceiling further
+  - Geometry helper functions (clipHalfPlane, voronoiCell) push code length past a
+    typical basic-tier spec, though justified by the lack of a native Voronoi primitive
+    in MUI X
+  - 'Minor/cosmetic: the source file''s leading comment block is duplicated (pipeline
+    header-rewrite artifact from the orientation directive, not implementation-authored)
+    - doesn''t affect rendering, no action needed from the implementation'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Title "voronoi-basic · javascript · muix · anyplot.ai" in dark ink, centered top, fully legible. Axis titles "X coordinate (km)" / "Y coordinate (km)" and tick labels (0-100) in dark/soft-dark ink, all readable. Legend "Store monthly revenue ($k)" with $43k/$200k endpoints, dark/soft text, readable.
-      Data: 18-point Voronoi tessellation clipped to the 0-100 x 0-100 bounding box. Cell fills follow the imprint_seq two-stop gradient (teal -> slate-blue) encoding store monthly revenue, separated by thin near-white borders. Seed points are solid brand-green (#009E73) circles outlined in the page background color, matching VQ-07's first-series requirement.
+      Chrome: Title "voronoi-basic · javascript · muix · anyplot.ai" in dark ink, centered top, fully legible, comfortably within canvas width. Axis titles "X coordinate (km)" / "Y coordinate (km)" and tick labels (0-100) in dark/soft-dark ink, all readable. Legend "Store monthly revenue ($k)" with a rounded, stroked gradient swatch and $43k/$200k endpoint labels, dark/soft text, readable.
+      Data: 18-point Voronoi tessellation clipped to the 0-100 x 0-100 bounding box. Cell fills follow the imprint_seq two-stop gradient (teal -> slate-blue) encoding store monthly revenue, separated by clearly visible cream-colored borders (stroke widened this attempt from 3px to 4.5px) matching the page background. Seed points are solid brand-green (#009E73) circles outlined in the page background color, matching VQ-07's first-series requirement.
       Legibility verdict: PASS - no light-on-light text, no clipped elements.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title, axis titles, tick labels, and legend text all render in light ink and are clearly legible against the dark surface. Cell borders switch from white (light theme) to near-black (dark theme), matching t.pageBg as intended.
-      Data: Cell fill colors and seed-marker green are pixel-identical to the light render - only chrome (background, borders, text) flips, as required.
+      Chrome: Title, axis titles, tick labels, and legend text all render in light ink and are clearly legible against the dark surface.
+      Data: Cell fill colors and seed-marker green are pixel-identical to the light render - only chrome (background, borders, text) flips, as required. Cell borders switch to near-black (matching t.pageBg in dark theme), clearly visible against the saturated cell fills and providing good separation between adjacent similarly-hued cells.
       Legibility verdict: PASS - no dark-on-dark text, no clipped elements.
   criteria_checklist:
     visual_quality:
@@ -57,7 +65,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title ~55% of canvas width
+        comment: All text readable in both themes; explicit font sizes; title comfortably
+          within canvas width
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -69,8 +78,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: A couple of adjacent cells share similar gradient hues, relying on
-          border stroke alone for separation
+        comment: Widened border stroke (3->4.5px) improves separation of similarly-hued
+          adjacent cells; a couple of upper-left cells still read close in hue
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -98,7 +107,7 @@ review:
         comment: Brand green seed markers, imprint_seq cell fill, correct theme backgrounds,
           identical data colors across themes
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,14 +115,15 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Voronoi geometry with layered SVG overlays; legend/colorbar
-          treatment stays fairly plain
+        comment: Custom Voronoi geometry with layered SVG overlays; solid but not
+          exceptional polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: No grid clutter, generous margins; legend/axis styling largely default
+        comment: Legend swatch now has a rounded, stroked border and cell borders
+          are heavier - clear refinement over attempt 1; still fairly plain legend
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -122,7 +132,7 @@ review:
         comment: Revenue-encoded fill gives a real focal point; similar-hued neighbors
           slightly blunt the read
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,11 +143,11 @@ review:
         comment: Genuine, correctly computed Voronoi diagram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Clipped to bbox, seeds marked, edge-styled cells; adjacent-region
-          color differentiation only partially met
+        comment: Clipped to bbox, seeds clearly marked, edge-styled cells with improved
+          adjacent-region differentiation this attempt
       - id: SC-03
         name: Data Mapping
         score: 3
