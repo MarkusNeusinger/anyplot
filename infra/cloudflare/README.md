@@ -129,10 +129,18 @@ shell builtin, so the token never reaches any argv at all (Copilot review). It
 needs `bash` or `zsh`; under a shell without process substitution, write the
 config line to a `600` temporary file and pass that path.
 
-Then measure before trusting it:
+Then measure before trusting it — and read the answer against where the rollout
+currently stands, because the same command means two different things:
 
 ```bash
-curl -s https://anyplot.ai/api/health   # expect "origin_gate":"ok"
+curl -s https://anyplot.ai/api/health
+#   "off-seen"  gate not yet armed, and the Worker IS stamping — the correct
+#               result right after this deploy, and the state to reach before
+#               arming. Not a failed deployment.
+#   "off"       gate not armed and NOTHING was stamped — the binding is
+#               missing. Arming now would take this route down.
+#   "ok"        gate armed and this Worker's value matches. Only reachable
+#               after the API side is armed.
 ```
 
 Because a script `PUT` replaces the bindings wholesale, omitting one removes it
