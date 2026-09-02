@@ -1,0 +1,262 @@
+library: d3
+language: javascript
+specification_id: logistic-regression
+created: '2026-09-02T02:05:30Z'
+updated: '2026-09-02T02:11:21Z'
+generated_by: claude-sonnet
+workflow_run: 33581404809
+issue: 3550
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Statistically rigorous fit: manual Newton-Raphson/IRLS logistic regression with
+    a proper 95% Wald CI band derived from the Fisher information covariance matrix,
+    transformed through the inverse-logit — not a cosmetic approximation'
+  - 'Every spec requirement is present and correctly tuned: y-jittered points, two
+    distinct classes, solid ~prominent fitted curve, semi-transparent 95% CI band,
+    dashed p=0.5 threshold line with label, and a model-stats annotation (β₀, β₁,
+    accuracy)'
+  - Exact match to the alpha=0.6 point transparency the spec calls for, and marker
+    size/density are well-suited to n=180 points
+  - 'Clean, idiomatic modern D3: scaleLinear + axisBottom/axisLeft, d3.area/d3.line
+    with curveMonotoneX, selection.data().join() pattern, no legacy enter/update/exit
+    boilerplate'
+  - Imprint palette used correctly and identically across themes (green class-0, lavender
+    class-1, blue fit curve/band); both renders are fully theme-correct with no dark-on-dark
+    or light-on-light failures
+  - Deterministic, seeded LCG data generation with no functions/classes — clean top-to-bottom
+    KISS structure
+  weaknesses:
+  - The fitted curve and CI band (blue, palette[2]) have no legend entry — a first-time
+    viewer must infer what the blue elements represent; adding a third legend row
+    (e.g. 'Fitted probability (95% CI)') would remove the ambiguity
+  - Title is the shortest permitted form (no descriptive prefix) and reads visually
+    small relative to the canvas (~30-35% of width) compared to the 50-70% norm for
+    custom titles — not a clipping issue, but there is room to grow the title fontsize
+    slightly for more presence
+  - Legend swatch fill-opacity (0.8) doesn't match the data-point fill-opacity (0.6)
+    — a small inconsistency between the legend key and the actual marks it represents
+  - Design is solid and professional but visually conventional (green/lavender dots,
+    blue curve+band, gray dashed threshold) — there is room for a more distinctive
+    visual identity (e.g. a subtle annotation marking the 50% crossover x-value) to
+    push from 'strong' to 'publication-showcase' polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "logistic-regression · javascript · d3 · anyplot.ai" centered at top in bold dark ink; two-item legend top-left ("No default (y = 0)", "Default (y = 1)") in soft-dark text; model-stats annotation top-right ("β₀ = -4.22 · β₁ = 0.085 · accuracy = 80%"); y-axis gridlines subtle light gray; x-axis "Credit Utilization Rate (%)" and y-axis "Probability of Default" axis titles in dark ink; tick labels in soft-dark gray. All chrome clearly readable against the light background.
+      Data: First class (no default) rendered in brand green #009E73 jittered near y=0; second class (default) rendered in lavender/purple (Imprint palette position 2) jittered near y=1; fitted sigmoid curve and its 95% CI band rendered in Imprint blue (palette position 3), band at low opacity; horizontal dashed threshold line at p=0.5 in soft ink with a right-aligned label.
+      Legibility verdict: PASS — no text is light-on-light, no clipping observed at any canvas edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, legend, and stats annotation, now rendered in light/off-white ink; gridlines and axis domain lines in a light, low-opacity stroke; tick labels and axis titles in light gray/off-white. All chrome clearly readable against the dark background — no dark-on-dark failures found.
+      Data: Green and lavender class colors, and the blue fitted curve/CI band, are pixel-identical to the light render — confirming only chrome (background, text, grid) flipped between themes, as required.
+      Legibility verdict: PASS — all text and data elements are clearly legible; brand green remains vivid on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-22px); readable at full size in
+          both themes; no overflow or overlap
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size (r=7) and alpha (0.6) well-matched to n=180 medium-density
+          scatter; curve/band clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender classes are CVD-safe and high-contrast; not reliant
+          on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Credit Utilization Rate (%)" and "Probability of Default" are descriptive
+          with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; second uses Imprint palette position 2;
+          data colors identical across themes; both backgrounds theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color use and typography, clearly above library defaults,
+          but conventional composition rather than showcase-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, L-shaped implicit frame, generous whitespace;
+          some refinement visible but not maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Threshold line + stats annotation + curve/band create visual hierarchy
+          and guide the reader, though the curve/band lack an explicit legend key
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoid logistic-regression curve plot with all expected
+          subtypes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jittered points, two classes, curve, 95% CI band, p=0.5 threshold
+          line, coefficient/accuracy annotation, alpha=0.6 points — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = utilization %, Y = probability; both fully shown across their
+          domains
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match the two
+          classes
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full x-range covered, both classes represented including realistic
+          overlap near the decision boundary
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible credit-utilization/default scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Utilization 0-100%, coefficients and accuracy are realistic for a
+          synthetic logistic-regression demo
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear data -> fit -> curve -> draw flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: d3 global only, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex manual IRLS fit for the browser runtime; no
+          fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; modern D3 v7 API throughout
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of scales, axes, d3.area/d3.line with curve interpolation,
+          and the modern data().join() pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages D3-specific generator/interpolation and data-join idioms
+          beyond generic charting
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - publication-ready
