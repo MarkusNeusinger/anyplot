@@ -1,0 +1,266 @@
+library: highcharts
+language: javascript
+specification_id: scatter-text
+created: '2026-09-02T06:12:09Z'
+updated: '2026-09-02T06:35:06Z'
+generated_by: claude-sonnet
+workflow_run: 33597161575
+issue: 3482
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Faithful to the spec''s core requirement: markers are fully replaced by dataLabels
+    text rendered at each point''s exact coordinates (marker.enabled: false + dataLabels),
+    never a simulated overlay.'
+  - 'Attempt-1 feedback is fully addressed: the matte-red ''Scripting & ops'' cluster
+    now gets a theme-adaptive ink-colored textOutline on dark (instead of a page-background
+    outline that added no contrast), visibly lifting Bash/Perl/Lua/PowerShell/Groovy
+    off the near-black surface.'
+  - New low-opacity focus-halo behind the 'Data & scientific' cluster gives the chart
+    a genuine single focal point instead of five visually equal groups, directly resolving
+    the prior data-storytelling weakness — and it is drawn first so z-order keeps
+    it beneath every text label in both themes.
+  - Correct canonical Imprint palette assignment across all 5 language-family clusters
+    (green, lavender, blue, ochre, matte red in canonical order), identical data colors
+    between light and dark renders.
+  - 'Clever legend workaround for a marker-free scatter series: since Highcharts draws
+    no swatch when markers are disabled, the legend''s labelFormatter renders each
+    family name in its own series color via useHTML, keeping the color key legible
+    without a fake swatch.'
+  - 'Clean, deterministic, dependency-free code: hardcoded synthetic t-SNE-style embedding
+    data, no functions/classes, idiomatic disable-marker + dataLabels pattern for
+    the ''text instead of point'' technique. All 25 labels are visible with no overlap
+    and no edge clipping in either render.'
+  weaknesses:
+  - 'Data storytelling is still fairly modest: only the single ''Data & scientific''
+    cluster gets the focus-halo treatment, so while there is now one clear focal point,
+    the other 4 clusters remain undifferentiated flat color groups with no secondary
+    hierarchy (e.g. size or weight variation).'
+  - Visual refinement stays close to the style-guide baseline outside of the new halo
+    — subtle grid and generous spacing are present, but no further custom typography,
+    annotation, or chrome touch was added beyond what attempt 1 already had.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-text · javascript · highcharts · anyplot.ai" in dark bold text, axis titles "t-SNE dimension 1" / "t-SNE dimension 2" in soft dark ink, subtle light gray gridlines on both axes, a legend titled "Language family" below the plot with 5 color-coded text entries (no swatches, since the marker-free series draw none). A new soft green focus-halo (low-opacity brand-green circle) sits behind the "Data & scientific" cluster (Python, R, Julia, MATLAB, SAS), giving that group a clear focal point. All chrome is clearly legible against the light background.
+      Data: 25 programming-language names rendered as bold colored text directly at their (x, y) coordinates instead of markers, grouped into 5 clusters: "Data & scientific" in brand green #009E73 (inside the halo), "Web & frontend" (JavaScript, TypeScript, PHP, Ruby, Dart) in lavender, "Systems programming" (C, C++, Rust, Go, Zig) in blue, "JVM & enterprise" (Java, Kotlin, Scala, C#, VB.NET) in ochre, "Scripting & ops" (Bash, Perl, Lua, PowerShell, Groovy) in matte red. First series is confirmed #009E73. No overlapping text, no clipped labels at any canvas edge.
+      Legibility verdict: PASS — all text (title, axis titles, legend, all 25 data labels) is clearly readable against the off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and axis titles now rendered in light ink, gridlines flipped to a light-on-dark subtle tone, legend text and title flipped to light chrome. The focus-halo is now a low-opacity dark-green disc, still visibly distinct from the near-black background behind "Data & scientific". Layout, spacing, and content are otherwise pixel-identical to the light render other than chrome color.
+      Data: The same 25 labels in the same positions with identical data colors to the light render (green, lavender, blue, ochre, matte red) — confirmed no data-color drift between themes. The matte-red "Scripting & ops" labels (Bash, Perl, Lua, PowerShell, Groovy) now carry a visible light ink-colored text outline instead of the previous background-matched outline, clearly lifting them off the near-black surface — this directly fixes the attempt-1 low-contrast weakness. No dark-on-dark failures anywhere.
+      Legibility verdict: PASS — all chrome text and all 5 clusters, including the previously borderline matte-red cluster, are clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 22px, axis titles 16px, data labels 15px/600
+          weight, legend 14px); all readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All 25 labels visible, no collisions with each other, gridlines,
+          the focus-halo, or the legend.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers correctly disabled in favor of text-as-mark per spec; 25
+          points is sparse, and 15px bold text is prominent and appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Attempt-1 fix applied: matte red on dark now uses an ink-colored
+          textOutline instead of a page-background one, visibly lifting contrast above
+          the prior floor.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate not triggered (3200x1800 landscape). Generous margins,
+          no overflow/clipping, balanced axis titles, short title well under 70% width.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles ('t-SNE dimension 1/2'); numeric ticks intentionally
+          omitted, standard practice for arbitrary embedding coordinates.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order for 5 categories (green, lavender, blue,
+          ochre, matte red), identical across themes; backgrounds correctly #FAF8F1
+          / #1A1A17.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: The new focus-halo plus the clever marker-free legend trick lift
+          this above generic-baseline execution.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, no visible spines/tick marks, generous spacing, plus
+          the soft halo treatment; still a fairly restrained overall palette of refinements.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The focus-halo now gives one cluster a clear focal point, directly
+          resolving the attempt-1 'flat hierarchy' weakness; the other 4 clusters
+          remain undifferentiated among themselves.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Exactly a scatter plot with text labels replacing markers, as specified.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Labels positioned at coordinates, no marker glyphs, color used for
+          extra categorical encoding — all spec notes addressed.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly mapped to plot axes; axis min/max cover the full data
+          extent with margin.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'scatter-text · javascript · highcharts · anyplot.ai';
+          legend labels match the 5 cluster names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers the core text-as-mark technique plus multi-cluster categorical
+          coloring; no rotation/alpha-for-density variant shown, but not required
+          at 25 points.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Well-known, neutral, non-controversial domain (programming languages
+          grouped by family).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinate ranges and cluster separation are sensible for a synthetic
+          t-SNE-style embedding.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; flat data arrays and a single chart config.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded, deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed beyond the global Highcharts; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity/UI; the legend labelFormatter and focus-halo
+          are elegant, minimal solutions.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No filesystem writes (harness owns output); animation disabled on
+          chart and series; current Highcharts 12.x API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: marker.enabled:false + dataLabels is the recommended Highcharts pattern
+          for text-as-point charts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The useHTML color-coded legend labelFormatter plus the invisible-marker
+          focus-halo (radius + low-alpha fillColor, enableMouseTracking off) are genuine
+          distinctive touches.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
