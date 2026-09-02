@@ -124,11 +124,8 @@ function ringWallPath(radius, a0, a1) {
   return arcGen({ innerRadius: radius, outerRadius: radius, startAngle: a0, endAngle: a1 });
 }
 
-// --- SVG mount ----------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
-const walls = g.append("g").attr("fill", "none").attr("stroke", t.ink).attr("stroke-width", 4).attr("stroke-linecap", "round");
-
+// --- Wall descriptors: collect first, bind with .data().join() -------------
+const wallData = [];
 for (let r = 0; r < numRings; r++) {
   const count = rows[r].length;
   const angleStep = (2 * Math.PI) / count;
@@ -140,42 +137,55 @@ for (let r = 0; r < numRings; r++) {
     if (count > 1) {
       const cw = { r, i: (i + 1) % count };
       if (!isLinked({ r, i }, cw)) {
-        walls.append("path").attr("d", radialWallPath(rInner, rOuter, (i + 1) * angleStep));
+        wallData.push({ d: radialWallPath(rInner, rOuter, (i + 1) * angleStep) });
       }
     }
 
     // Outward wall(s): true outer boundary, or the boundary with row r+1
     if (r === outerRow) {
       if (i !== entryIndex) {
-        walls.append("path").attr("d", ringWallPath(rOuter, i * angleStep, (i + 1) * angleStep));
+        wallData.push({ d: ringWallPath(rOuter, i * angleStep, (i + 1) * angleStep) });
       }
     } else {
       const childCount = rows[r + 1].length;
       const childAngleStep = (2 * Math.PI) / childCount;
       for (const child of childrenMap[r][i]) {
         if (!isLinked({ r, i }, { r: r + 1, i: child })) {
-          walls
-            .append("path")
-            .attr("d", ringWallPath(rOuter, child * childAngleStep, (child + 1) * childAngleStep));
+          wallData.push({ d: ringWallPath(rOuter, child * childAngleStep, (child + 1) * childAngleStep) });
         }
       }
     }
   }
 }
 
+// --- SVG mount ----------------------------------------------------------
+const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
+const walls = g.append("g").attr("fill", "none").attr("stroke", t.ink).attr("stroke-width", 4).attr("stroke-linecap", "round");
+
+walls
+  .selectAll("path")
+  .data(wallData)
+  .join("path")
+  .attr("d", (d) => d.d);
+
 // --- Goal marker (center) ------------------------------------------------
 g.append("circle").attr("r", 16).attr("fill", t.palette[0]);
 
-// --- Start marker (outer edge gap) ---------------------------------------
+// --- Start marker (outer edge gap): bold inward-pointing arrow -------------
+// Sized to match the goal marker's visual weight so it still reads at
+// mobile-thumbnail scale, per review feedback (the old thin tick vanished).
 const entryAngleStep = (2 * Math.PI) / rows[outerRow].length;
 const entryAngle = (entryIndex + 0.5) * entryAngleStep;
-const [ex0, ey0] = polarPoint(outerRadius, entryAngle);
-const [ex1, ey1] = polarPoint(outerRadius + 22, entryAngle);
+const arrowBaseRadius = outerRadius + 40;
+const arrowTipRadius = outerRadius - 4;
+const arrowHalfWidthAngle = 18 / arrowBaseRadius;
+const [tipX, tipY] = polarPoint(arrowTipRadius, entryAngle);
+const [baseX0, baseY0] = polarPoint(arrowBaseRadius, entryAngle - arrowHalfWidthAngle);
+const [baseX1, baseY1] = polarPoint(arrowBaseRadius, entryAngle + arrowHalfWidthAngle);
 g.append("path")
-  .attr("d", `M${ex0},${ey0}L${ex1},${ey1}`)
-  .attr("stroke", t.palette[0])
-  .attr("stroke-width", 6)
-  .attr("stroke-linecap", "round");
+  .attr("d", `M${tipX},${tipY}L${baseX0},${baseY0}L${baseX1},${baseY1}Z`)
+  .attr("fill", t.palette[0]);
 
 // --- Caption -------------------------------------------------------------
 svg
