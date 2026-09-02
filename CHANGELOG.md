@@ -36,13 +36,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   skill the routing table names exists as `.claude/skills/<name>/SKILL.md` (8 of them; the harness
   skill `/update-config` is excluded by name), and seven rules that must reach both audiences are
   present on both sides. The mirroring pin is keywords rather than a text diff, because the two
-  files address different readers and paraphrase each other. It found one real gap and one dead
-  link, both fixed here: `copilot-instructions.md` described the pipeline's lifecycle but never
-  stated the repository's most consequential rule — never merge a spec or implementation PR by
-  hand, never write the pipeline's files by hand, and put the `approved` label on the issue rather
-  than the PR — which is exactly the rule an agent that opens and edits PRs is most able to break;
-  and `agentic/docs/project-guide.md` linked to `/CLAUDE.md`, which GitHub resolves as a site-root
-  URL and answers with a 404. Same pin as the sibling repo kurrentschrift. (#11210)
+  files address different readers and paraphrase each other — and the keywords carry the
+  prohibition, not just its subject, so a rule cannot be reversed while its pin stays green.
+  Anchors are matched against real headings only: fenced blocks are stripped first, since these
+  guides are full of shell snippets whose `#` comments would otherwise pass as headings. It found
+  one real gap and one dead link, both fixed here: `copilot-instructions.md` described the
+  pipeline's lifecycle but never stated the repository's most consequential rule — never merge a
+  spec or implementation PR by hand, never write the pipeline's files by hand, and put the
+  `approved` label on the issue rather than the PR — which is exactly the rule an agent that opens
+  and edits PRs is most able to break; and `agentic/docs/project-guide.md` linked to `/CLAUDE.md`,
+  which GitHub resolves as a site-root URL and answers with a 404. Same pin as the sibling repo
+  kurrentschrift. (#11210)
 
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public

@@ -49,6 +49,7 @@ AGENT_FILES = [
 _BACKTICKED = re.compile(r"`([^`\n]+)`")
 _MD_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 _HEADING = re.compile(r"^#+\s+(.*)$", re.M)
+_FENCE = re.compile(r"^```.*?^```", re.M | re.S)
 
 # A backticked span is only treated as a path when it looks like one and
 # carries no shell or placeholder syntax. Everything else in backticks is a
@@ -111,6 +112,17 @@ def _candidate_paths(text: str) -> set[str]:
     return {tok for tok in _BACKTICKED.findall(text) if _looks_like_path(tok)}
 
 
+def _headings(text: str) -> set[str]:
+    """The page's real headings, as GitHub anchors.
+
+    Fenced blocks are stripped first. These files are full of shell snippets,
+    and a `# Install uv` comment inside one is not a heading — counting it
+    would let a dead same-page link pass by matching a line GitHub renders as
+    code (Copilot review).
+    """
+    return {_anchor(h) for h in _HEADING.findall(_FENCE.sub("", text))}
+
+
 def _anchor(heading: str) -> str:
     """GitHub's slug for a heading: lowercased, punctuation dropped, spaces to
     hyphens. Enough of the algorithm for the headings these files actually have.
@@ -158,7 +170,7 @@ def test_markdown_links_resolve(agent_file: Path) -> None:
     nowhere, and a reader who follows it concludes the guide is stale.
     """
     text = agent_file.read_text(encoding="utf-8")
-    anchors = {_anchor(h) for h in _HEADING.findall(text)}
+    anchors = _headings(text)
 
     broken: list[str] = []
     for target in _MD_LINK.findall(text):
@@ -212,7 +224,13 @@ MIRRORED_RULES = {
     # The repository's most consequential rule, and the one an agent that opens
     # and edits PRs is most able to break: specs and implementations go through
     # the workflows, and their PRs are merged by `impl-merge`, never by hand.
-    "never merge a pipeline PR by hand": ["manually merge"],
+    #
+    # The keywords carry the PROHIBITION, not just its subject. A bare
+    # "manually merge" would stay green if both guides were rewritten to say
+    # agents may do it — the pin would name the rule while protecting the
+    # opposite of it (Copilot review). Both guides were normalised on "never"
+    # so the negative phrase itself is what is matched.
+    "never merge a pipeline PR by hand": ["never manually merge", "never bypass"],
 }
 
 
@@ -239,6 +257,16 @@ def test_rule_is_mirrored_in_both_guides(rule: str) -> None:
 def test_each_guide_names_the_other_as_its_companion() -> None:
     """The sync claim is what the rest of this file enforces. If it is deleted,
     the mirroring stops being a promise and these tests stop meaning anything.
+
+    Matched on the companion SENTENCE, not on the other file's name: each guide
+    mentions the other elsewhere too — CLAUDE.md in the changelog rule, the
+    Copilot guide in several sections — so a name check would stay green with
+    both opening claims deleted (Copilot review).
     """
-    assert "copilot-instructions.md" in CLAUDE_MD.read_text(encoding="utf-8")
-    assert "CLAUDE.md" in COPILOT_MD.read_text(encoding="utf-8")
+    claude = _flat(CLAUDE_MD.read_text(encoding="utf-8"))
+    copilot = _flat(COPILOT_MD.read_text(encoding="utf-8"))
+
+    assert "companion guide `.github/copilot-instructions.md`" in claude
+    assert "companion guide `claude.md`" in copilot
+    for name, text in (("CLAUDE.md", claude), ("copilot-instructions.md", copilot)):
+        assert "both files must stay in sync" in text, f"{name} dropped the sync claim"

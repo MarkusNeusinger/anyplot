@@ -125,7 +125,7 @@ Known gaps with NO verification loop yet (reason through carefully and say so in
 2. WAIT for the full pipeline to complete:
    impl-generate -> impl-review -> (impl-repair if needed) -> impl-merge
 
-3. DO NOT manually merge PRs!
+3. NEVER manually merge PRs!
    - impl-merge.yml handles merging, metadata creation, and GCS promotion
    - Manual merging breaks: quality_score, review data, GCS images
 ```
