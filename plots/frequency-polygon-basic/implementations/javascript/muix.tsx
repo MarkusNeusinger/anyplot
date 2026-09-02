@@ -1,7 +1,7 @@
 // anyplot.ai
 // frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-02
+// Quality: 88/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
