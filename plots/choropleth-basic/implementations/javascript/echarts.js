@@ -3,10 +3,6 @@
 // Library: echarts 6.1.0 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
-// anyplot.ai
-// choropleth-basic: Choropleth Map with Regional Coloring
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 // ANYPLOT_TOKENS has no "muted" entry — derive it the same way the Python/R
@@ -49,12 +45,17 @@ const STATE_GRID = [
 // A handful of states report no data this cycle -> rendered as muted gray.
 const NO_DATA = new Set(["RI", "DE", "WV"]);
 
+// The south/west "renewable potential" trend now dominates the per-state
+// noise (boost spans ~0-46 vs. +/-9 of random jitter), so the tile colors
+// visibly cluster warm-toward-blue in the south/west and cool-toward-green
+// in the northeast rather than reading as random.
 const stateValues = {};
 STATE_GRID.forEach(([abbr, , row, col]) => {
   if (NO_DATA.has(abbr)) return;
-  const southwestBoost = (12 - col) * 0.7 + row * 0.5; // more solar/wind potential toward the south/west
-  const value = 12 + nextRandom() * 38 + southwestBoost;
-  stateValues[abbr] = Math.round(Math.min(value, 78) * 10) / 10;
+  const southwestBoost = (12 - col) * 1.9 + row * 3.4; // more solar/wind potential toward the south/west
+  const jitter = (nextRandom() - 0.5) * 18; // +/-9 points of per-state noise
+  const value = 14 + southwestBoost + jitter;
+  stateValues[abbr] = Math.round(Math.max(10, Math.min(value, 78)) * 10) / 10;
 });
 
 // --- Build a tile-grid GeoJSON: one padded square polygon per state --------
@@ -78,6 +79,8 @@ echarts.registerMap("usStateTileGrid", { type: "FeatureCollection", features });
 const values = Object.values(stateValues);
 const minValue = Math.min(...values);
 const maxValue = Math.max(...values);
+const highestAbbr = Object.keys(stateValues).find((abbr) => stateValues[abbr] === maxValue);
+const lowestAbbr = Object.keys(stateValues).find((abbr) => stateValues[abbr] === minValue);
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -96,6 +99,20 @@ chart.setOption({
     trigger: "item",
     formatter: (p) => (NO_DATA.has(p.name) ? `${p.name}: no data` : `${p.name}: ${p.value}%`),
   },
+  graphic: [
+    {
+      type: "text",
+      right: 70,
+      top: 74,
+      style: {
+        text: `Highest: ${highestAbbr} ${maxValue}%\nLowest: ${lowestAbbr} ${minValue}%`,
+        fill: t.inkSoft,
+        fontSize: 15,
+        lineHeight: 22,
+        textAlign: "right",
+      },
+    },
+  ],
   visualMap: {
     type: "continuous",
     min: minValue,
@@ -116,7 +133,7 @@ chart.setOption({
       map: "usStateTileGrid",
       roam: false,
       layoutCenter: ["50%", "52%"],
-      layoutSize: "84%",
+      layoutSize: "92%",
       // NaN values fall outside visualMap's dimension and paint with this
       // fallback instead of the sequential ramp — the "gray" missing-data
       // treatment the spec calls for.
