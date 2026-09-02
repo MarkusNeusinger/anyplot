@@ -11,46 +11,121 @@ const t = window.ANYPLOT_TOKENS;
 // conserved population reshuffling between tiers, not independent bars.
 const semesters = ["Semester 1", "Semester 2", "Semester 3", "Semester 4"];
 
-const tiers = [
-  { name: "Honors", color: t.palette[0], values: [30, 45, 65, 90] },
-  { name: "Proficient", color: t.palette[2], values: [60, 70, 75, 80] },
-  { name: "Developing", color: t.palette[1], values: [80, 75, 65, 50] },
-  { name: "Needs Support", color: t.palette[4], values: [70, 50, 35, 20] },
+const tierNames = ["Honors", "Proficient", "Developing", "Needs Support"];
+const tierColors = [t.palette[0], t.palette[1], t.palette[2], t.palette[4]];
+const tierValues = [
+  [30, 45, 65, 90], // Honors
+  [60, 70, 75, 80], // Proficient
+  [80, 75, 65, 50], // Developing
+  [70, 50, 35, 20], // Needs Support
 ];
 
-// --- Flow ribbons: bezier bands linking each tier's segment across columns --
+const tiers = tierNames.map((name, i) => ({
+  name,
+  color: tierColors[i],
+  values: tierValues[i],
+}));
+
+// Per-gap transition matrices: transitions[gap][from][to] = number of students
+// who were in tier `from` at semester `gap` and land in tier `to` at semester
+// `gap + 1`. Movement is restricted to adjacent tiers (a student shifts by at
+// most one rank per semester) and each row/column sums exactly to that tier's
+// column total above, so the flow bands genuinely depict students crossing
+// between tiers rather than each tier's own segment merely resizing.
+const transitions = [
+  // Semester 1 -> Semester 2
+  [
+    [27, 3, 0, 0],
+    [18, 38, 4, 0],
+    [0, 29, 45, 6],
+    [0, 0, 26, 44],
+  ],
+  // Semester 2 -> Semester 3
+  [
+    [43, 2, 0, 0],
+    [22, 45, 3, 0],
+    [0, 28, 42, 5],
+    [0, 0, 20, 30],
+  ],
+  // Semester 3 -> Semester 4
+  [
+    [64, 1, 0, 0],
+    [26, 47, 2, 0],
+    [0, 32, 30, 3],
+    [0, 0, 18, 17],
+  ],
+];
+
+// --- Flow ribbons: bezier bands for each actual tier-to-tier transition -----
 const alluvialFlows = {
   id: "alluvialFlows",
   beforeDatasetsDraw(chart) {
     const { ctx } = chart;
     const numColumns = chart.data.labels.length;
+    const numTiers = tiers.length;
     ctx.save();
-    chart.data.datasets.forEach((dataset, datasetIndex) => {
-      const meta = chart.getDatasetMeta(datasetIndex);
-      ctx.fillStyle = dataset.backgroundColor;
-      ctx.globalAlpha = 0.45;
-      for (let i = 0; i < numColumns - 1; i++) {
-        const left = meta.data[i];
-        const right = meta.data[i + 1];
-        if (!left || !right) continue;
+    ctx.globalAlpha = 0.45;
 
-        const lx = left.x + left.width / 2;
-        const rx = right.x - right.width / 2;
-        const midX = (lx + rx) / 2;
-        const lTop = Math.min(left.y, left.base);
-        const lBot = Math.max(left.y, left.base);
-        const rTop = Math.min(right.y, right.base);
-        const rBot = Math.max(right.y, right.base);
+    for (let gap = 0; gap < numColumns - 1; gap++) {
+      const flowMatrix = transitions[gap];
 
-        ctx.beginPath();
-        ctx.moveTo(lx, lTop);
-        ctx.bezierCurveTo(midX, lTop, midX, rTop, rx, rTop);
-        ctx.lineTo(rx, rBot);
-        ctx.bezierCurveTo(midX, rBot, midX, lBot, lx, lBot);
-        ctx.closePath();
-        ctx.fill();
+      // Pixel span [top, bottom] of every tier's bar segment on both sides
+      // of this gap, read straight from the stacked-bar geometry.
+      const leftSpan = [];
+      const rightSpan = [];
+      for (let tierIdx = 0; tierIdx < numTiers; tierIdx++) {
+        const leftBar = chart.getDatasetMeta(tierIdx).data[gap];
+        const rightBar = chart.getDatasetMeta(tierIdx).data[gap + 1];
+        leftSpan.push([
+          Math.min(leftBar.y, leftBar.base),
+          Math.max(leftBar.y, leftBar.base),
+        ]);
+        rightSpan.push([
+          Math.min(rightBar.y, rightBar.base),
+          Math.max(rightBar.y, rightBar.base),
+        ]);
       }
-    });
+
+      // Running top-of-next-band cursor within each tier's segment, so
+      // multiple sub-bands stack without gaps or overlap.
+      const leftCursor = leftSpan.map(([top]) => top);
+      const rightCursor = rightSpan.map(([top]) => top);
+
+      for (let from = 0; from < numTiers; from++) {
+        const rowTotal = flowMatrix[from].reduce((sum, v) => sum + v, 0);
+        const leftHeight = leftSpan[from][1] - leftSpan[from][0];
+
+        for (let to = 0; to < numTiers; to++) {
+          const amount = flowMatrix[from][to];
+          if (amount === 0) continue;
+
+          const colTotal = flowMatrix.reduce((sum, row) => sum + row[to], 0);
+          const rightHeight = rightSpan[to][1] - rightSpan[to][0];
+
+          const lTop = leftCursor[from];
+          const lBot = lTop + (amount / rowTotal) * leftHeight;
+          const rTop = rightCursor[to];
+          const rBot = rTop + (amount / colTotal) * rightHeight;
+          leftCursor[from] = lBot;
+          rightCursor[to] = rBot;
+
+          const leftBar = chart.getDatasetMeta(from).data[gap];
+          const rightBar = chart.getDatasetMeta(to).data[gap + 1];
+          const lx = leftBar.x + leftBar.width / 2;
+          const rx = rightBar.x - rightBar.width / 2;
+          const midX = (lx + rx) / 2;
+
+          ctx.fillStyle = tiers[from].color;
+          ctx.beginPath();
+          ctx.moveTo(lx, lTop);
+          ctx.bezierCurveTo(midX, lTop, midX, rTop, rx, rTop);
+          ctx.lineTo(rx, rBot);
+          ctx.bezierCurveTo(midX, rBot, midX, lBot, lx, lBot);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
     ctx.restore();
   },
 };
@@ -100,7 +175,6 @@ new Chart(canvas, {
         ticks: { color: t.inkSoft, font: { size: 15 } },
         grid: { display: false },
         border: { color: t.inkSoft },
-        title: { display: true, text: "Semester", color: t.ink, font: { size: 16 } },
       },
       y: {
         stacked: true,
