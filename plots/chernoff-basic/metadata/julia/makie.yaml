@@ -1,0 +1,256 @@
+library: makie
+language: julia
+specification_id: chernoff-basic
+created: '2026-09-02T14:58:28Z'
+updated: '2026-09-02T15:18:55Z'
+generated_by: claude-sonnet
+workflow_run: 33644779662
+issue: 3003
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 96
+review:
+  strengths:
+  - Custom Makie @recipe (ChernoffFace) is genuinely distinctive library usage, directly
+    resolving attempt 1's LM-02 weakness — the face glyph is now a reusable, declarative,
+    attribute-linked plot type instead of an inline poly!/lines!/text! loop
+  - Outlier patient (P05) is flagged with an amber outline and heavier stroke width,
+    giving the reader a clear focal point — directly resolves attempt 1's DE-03 weakness
+    about missing visual emphasis
+  - 8 variables now drive 8 distinct facial features (eye spacing added via body temperature),
+    fully covering the spec's example feature-mapping list and resolving attempt 1's
+    DQ-01/SC-02 note about the fixed eye spacing
+  - Theme-adaptive chrome is flawless in both renders — identical brand-green/amber
+    face outlines, correctly flipped ink/ink_soft tokens for eyes/eyebrows/nose/mouth/labels,
+    no dark-on-dark or light-on-light failures
+  - Realistic, clinically plausible patient vital-sign data (heart rate, BP, cholesterol,
+    BMI, glucose, sleep, respiratory rate, temperature) with physiologically sound
+    ranges and correct min-max normalization to [0,1] before mapping
+  weaknesses:
+  - Title still occupies only ~41% of canvas width even after bumping titlesize from
+    20 to 26 — on the 2400x2400 square canvas it would benefit from a further increase
+    toward the 50-70% guideline for tighter top-of-canvas balance
+  - The custom @recipe + Makie.plot! extension is idiomatic Makie but adds ~75 lines
+    of structural scaffolding beyond a pure top-to-bottom KISS script; a reasonable
+    and rewarded tradeoff for a reusable glyph, but worth trimming if the recipe grows
+    further
+  - Eye pupils are on the smaller side (0.4 * eye_r) — legible at full 2400px resolution
+    but could be nudged slightly larger for extra polish at the 400px thumbnail preview
+    size
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "chernoff-basic · julia · makie · anyplot.ai" centered at top (titlesize=26), clearly readable against the light background (measured ~41% of canvas width). Twelve patient-ID labels ("P01"-"P12") render in soft dark gray beneath each face, all legible.
+      Data: 12 Chernoff faces in a 4x3 grid, drawn via a custom ChernoffFace recipe. 11 faces have a brand-green (#009E73) outline; P05 (the most extreme combined vital-sign profile) has a heavier amber (#DDCC77) outline that pops as a clear focal point. Face fill is a subtle off-white "elevated" tone. Eyes/pupils, eyebrows, nose, and mouth are drawn in dark ink / soft-ink tones, and vary clearly across faces (face width/height, eye size/spacing, eyebrow slant, nose length, mouth curve/width) — pattern recognition and comparison works well.
+      Legibility verdict: PASS — all title text and patient labels are clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title renders in light/off-white text, clearly visible against the dark background. Patient-ID labels render in light gray, all legible.
+      Data: Same 12-face grid with identical brand-green (#009E73) outlines and the same amber (#DDCC77) outlier highlight on P05 as the light render — data/semantic colors are unchanged between themes. Facial features (eyes, eyebrows, nose, mouth) are drawn in light/near-white ink tones, clearly distinguishable against the dark face fill and dark page background.
+      Legibility verdict: PASS — no dark-on-dark failures found; every title, label, and facial-feature stroke is clearly visible. Brand green and amber remain equally visible on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, labels fully readable in both themes; title still modest at
+          ~41% canvas width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between faces, features, or labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Facial elements sized appropriately for 12 faces on a 2400x2400 canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Outlier flagged via color AND stroke-width, not color alone; no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); grid fills a balanced portion of
+          the square with generous margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title fully descriptive and correctly formatted; no traditional axes
+          needed for an icon-grid plot type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 first/only categorical color, amber semantic-caution
+          color for the outlier; theme-correct backgrounds in both renders'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom recipe-based glyph system with restrained, intentional minimalist
+          styling — clearly above configured defaults for a notoriously tricky chart
+          type
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/axes hidden, no grid, generous whitespace between rows, consistent
+          stroke weights
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Outlier patient (P05) highlighted with amber color + heavier stroke
+          gives a clear entry point into the comparison, resolving attempt 1's gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Chernoff-face chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 8 variables mapped to 8 distinct facial features (incl. eye spacing,
+          newly added), all normalized to [0,1], grid layout for comparison
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each observation correctly mapped to one face; all 12 patients shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; single-series legend correctly
+          omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide variation across all 8 mapped features (face shape/size, eyes,
+          eyebrows, nose, mouth) across the 12 faces
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible medical vital-sign scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All vital-sign ranges are physiologically accurate; 12 observations
+          within the spec's 5-50 range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Custom @recipe + Makie.plot! extension is idiomatic and library-encouraged
+          for a reusable glyph, but adds structural scaffolding beyond a pure linear
+          script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriately concise for the plot type
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of the Makie recipe system, DataAspect(), hidedecorations!/hidespines!
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom @recipe with attribute-linked sub-plots is a genuinely Makie-distinctive
+          technique, resolving attempt 1's weakness
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - edge-highlighting
