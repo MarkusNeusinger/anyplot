@@ -9,7 +9,7 @@ const t = window.ANYPLOT_TOKENS;
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Notable earthquake epicenters (illustrative, approximate). Magnitude drives
 // point size, focal depth drives point color (continuous, imprint_seq).
-const EARTHQUAKES = [
+const RAW_EARTHQUAKES = [
   { place: "Tohoku, Japan", lon: 142.37, lat: 38.3, mag: 7.8, depth: 32 },
   { place: "Sumatra, Indonesia", lon: 95.85, lat: 3.3, mag: 8.1, depth: 22 },
   { place: "Sulawesi, Indonesia", lon: 119.85, lat: -0.18, mag: 6.5, depth: 15 },
@@ -54,7 +54,12 @@ const EARTHQUAKES = [
 ];
 
 // --- Basemap: simplified continent silhouettes (rough, low-vertex trace --
-// geographic context only, not a precise survey boundary) -------------------
+// geographic context only, not a precise survey boundary). Rendered as
+// unprojected (equirectangular / plate carrée) lon/lat on the chart's own
+// value axes rather than a Natural Earth/Robinson or Mercator projection:
+// ECharts has no bundled world GeoJSON to register, and reprojecting the
+// data points to match a curved projection without fetching one would need
+// an extra library. Equirectangular is an accepted world-map tradeoff. -----
 const NORTH_AMERICA = [
   [-168, 66], [-155, 71], [-140, 70], [-125, 55], [-124, 46], [-120, 34],
   [-110, 23], [-105, 20], [-97, 16], [-88, 14], [-83, 9], [-79, 8],
@@ -101,8 +106,8 @@ function makeLandRenderer(coords) {
   };
 }
 
-const MAGS = EARTHQUAKES.map((e) => e.mag);
-const DEPTHS = EARTHQUAKES.map((e) => e.depth);
+const MAGS = RAW_EARTHQUAKES.map((e) => e.mag);
+const DEPTHS = RAW_EARTHQUAKES.map((e) => e.depth);
 const MAG_MIN = Math.min(...MAGS);
 const MAG_MAX = Math.max(...MAGS);
 const DEPTH_MIN = Math.min(...DEPTHS);
@@ -116,6 +121,54 @@ function magSize(mag) {
   const ratio = (mag - MAG_MIN) / (MAG_MAX - MAG_MIN);
   return SIZE_MIN + ratio * (SIZE_MAX - SIZE_MIN);
 }
+
+// --- Declutter: nudge apart markers whose rendered circles would overlap ----
+// (magnitude-driven radii can exceed the geographic spacing between nearby
+// epicenters, e.g. Valparaiso/Concepcion, Izmir/Athens). Positions are
+// relaxed in the chart's own pixel space, mirroring the axes/grid below, then
+// converted back to lon/lat; tooltip content (name/mag/depth) is unaffected.
+const GRID = { left: 90, top: 140, width: 1300, height: 580 };
+const LON_RANGE = [-180, 180];
+const LAT_RANGE = [-60, 80];
+function toPx(lon, lat) {
+  return [
+    ((lon - LON_RANGE[0]) / (LON_RANGE[1] - LON_RANGE[0])) * GRID.width,
+    ((LAT_RANGE[1] - lat) / (LAT_RANGE[1] - LAT_RANGE[0])) * GRID.height,
+  ];
+}
+function fromPx(x, y) {
+  return [
+    LON_RANGE[0] + (x / GRID.width) * (LON_RANGE[1] - LON_RANGE[0]),
+    LAT_RANGE[1] - (y / GRID.height) * (LAT_RANGE[1] - LAT_RANGE[0]),
+  ];
+}
+function declutter(points, passes = 6) {
+  const px = points.map((p) => toPx(p.lon, p.lat));
+  for (let pass = 0; pass < passes; pass++) {
+    for (let i = 0; i < points.length; i++) {
+      for (let j = i + 1; j < points.length; j++) {
+        const dx = px[j][0] - px[i][0];
+        const dy = px[j][1] - px[i][1];
+        const dist = Math.hypot(dx, dy) || 0.01;
+        const minDist = magSize(points[i].mag) / 2 + magSize(points[j].mag) / 2 + 3;
+        if (dist < minDist) {
+          const push = (minDist - dist) / 2;
+          const ux = dx / dist;
+          const uy = dy / dist;
+          px[i][0] -= ux * push;
+          px[i][1] -= uy * push;
+          px[j][0] += ux * push;
+          px[j][1] += uy * push;
+        }
+      }
+    }
+  }
+  return points.map((p, i) => {
+    const [lon, lat] = fromPx(px[i][0], px[i][1]);
+    return { ...p, lon, lat };
+  });
+}
+const EARTHQUAKES = declutter(RAW_EARTHQUAKES);
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -177,19 +230,23 @@ chart.setOption({
     top: 140,
     itemHeight: 260,
     calculable: false,
-    text: ["Deep", "Shallow"],
+    text: [`Deep (${DEPTH_MAX} km)`, `Shallow (${DEPTH_MIN} km)`],
     textStyle: { color: t.inkSoft, fontSize: 13 },
     inRange: { color: t.seq },
   },
-  grid: { left: 90, top: 140, width: 1300, height: 580 },
+  grid: GRID,
+  dataZoom: [
+    { type: "inside", xAxisIndex: 0, filterMode: "none" },
+    { type: "inside", yAxisIndex: 0, filterMode: "none" },
+  ],
   xAxis: {
     type: "value",
     name: "Longitude",
     nameLocation: "middle",
     nameGap: 34,
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
-    min: -180,
-    max: 180,
+    min: LON_RANGE[0],
+    max: LON_RANGE[1],
     interval: 30,
     axisLabel: {
       color: t.inkSoft,
@@ -204,8 +261,8 @@ chart.setOption({
     type: "value",
     name: "Latitude",
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
-    min: -60,
-    max: 80,
+    min: LAT_RANGE[0],
+    max: LAT_RANGE[1],
     interval: 30,
     axisLabel: {
       color: t.inkSoft,
