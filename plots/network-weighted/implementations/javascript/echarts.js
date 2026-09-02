@@ -61,6 +61,7 @@ const edges = [
   ["Broad Institute", "Max Planck Chem", 3],
   ["CERN", "MIT CSAIL", 4],
   ["Scripps Research", "Stanford Bio Lab", 6],
+  ["Max Planck Physics", "Max Planck Chem", 5],
 ];
 
 // Weighted degree (sum of incident edge weights) drives node size.
@@ -91,8 +92,7 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "network-weighted · javascript · echarts · anyplot.ai",
-    subtext:
-      "Edge thickness = co-authored papers (2020–2024) · node size = total collaborations",
+    subtext: `Edge thickness = co-authored papers, ${minWeight}–${maxWeight} (2020–2024) · node size = total collaborations`,
     left: "center",
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
     subtextStyle: { color: t.inkSoft, fontSize: 15 },
@@ -109,18 +109,18 @@ chart.setOption({
     {
       type: "graph",
       layout: "force",
-      top: 130,
-      bottom: 140,
+      top: 150,
+      bottom: 170,
       left: 150,
-      right: 260,
+      right: 210,
       roam: false,
       draggable: true,
       categories,
       force: {
         initLayout: "circular",
-        repulsion: 1450,
-        edgeLength: [95, 280],
-        gravity: 0.07,
+        repulsion: 1550,
+        edgeLength: [100, 300],
+        gravity: 0.06,
         friction: 0.6,
         layoutAnimation: false,
       },
@@ -128,7 +128,7 @@ chart.setOption({
         show: true,
         position: "bottom",
         color: t.inkSoft,
-        fontSize: 13,
+        fontSize: 17,
       },
       labelLayout: { moveOverlap: "shiftX" },
       lineStyle: {
