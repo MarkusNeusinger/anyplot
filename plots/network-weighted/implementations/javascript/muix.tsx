@@ -93,9 +93,9 @@ function rand() {
 }
 
 const N = nodes.length;
-const AREA = 4;
+const AREA = 4.5;
 const K = Math.sqrt(AREA / N);
-const ITERATIONS = 400;
+const ITERATIONS = 500;
 
 const positions = nodes.map(() => ({ x: rand() * 2 - 1, y: rand() * 2 - 1 }));
 let temperature = 0.12;
@@ -188,7 +188,7 @@ const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
 // --- Overlay: title drawn in the reserved top margin -------------------------
 function GraphTitle() {
   return (
-    <text x={CANVAS_W / 2} y={44} textAnchor="middle" dominantBaseline="hanging" fontSize={22} fontWeight={500} fill={t.ink}>
+    <text x={CANVAS_W / 2} y={44} textAnchor="middle" dominantBaseline="hanging" fontSize={28} fontWeight={500} fill={t.ink}>
       {TITLE}
     </text>
   );
@@ -258,7 +258,7 @@ function NetworkOverlay({ onHoverChange }) {
               onMouseEnter={() => onHoverChange(tooltip)}
               onMouseLeave={() => onHoverChange(null)}
             />
-            <text x={cx} y={cy - radius - 10} textAnchor="middle" fontSize={14} fontWeight={600} fill={t.ink} style={{ pointerEvents: "none" }}>
+            <text x={cx} y={cy - radius - 10} textAnchor="middle" fontSize={16} fontWeight={600} fill={t.ink} style={{ pointerEvents: "none" }}>
               {node.id}
             </text>
           </g>
@@ -294,7 +294,7 @@ function Legend() {
   const drawingArea = useDrawingArea();
   const rowY = drawingArea.top + drawingArea.height + 55;
   const swatchR = 9;
-  const groupGap = 210;
+  const groupGap = 225;
 
   const weightSamples = [MIN_WEIGHT, Math.round((MIN_WEIGHT + MAX_WEIGHT) / 2), MAX_WEIGHT];
   const weightRowY = rowY + 55;
@@ -307,13 +307,13 @@ function Legend() {
         return (
           <g key={name}>
             <circle cx={x} cy={rowY} r={swatchR} fill={t.palette[i]} />
-            <text x={x + swatchR + 8} y={rowY + 5} fontSize={14} fill={t.inkSoft}>
+            <text x={x + swatchR + 8} y={rowY + 5} fontSize={16} fill={t.inkSoft}>
               {name}
             </text>
           </g>
         );
       })}
-      <text x={weightStartX} y={weightRowY - 14} fontSize={13} fill={t.inkSoft}>
+      <text x={weightStartX} y={weightRowY - 14} fontSize={14} fill={t.inkSoft}>
         Edge width = co-authored papers · node size = weighted degree
       </text>
       {weightSamples.map((w, i) => {
@@ -322,7 +322,7 @@ function Legend() {
         return (
           <g key={w}>
             <line x1={x} y1={lineY} x2={x + 60} y2={lineY} stroke={t.ink} strokeOpacity={0.55} strokeWidth={edgeWidth(w)} strokeLinecap="round" />
-            <text x={x + 30} y={lineY + 22} textAnchor="middle" fontSize={12} fill={t.inkSoft}>
+            <text x={x + 30} y={lineY + 22} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
               {w}
             </text>
           </g>
