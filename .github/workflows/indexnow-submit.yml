@@ -14,9 +14,10 @@ run-name: "IndexNow: ${{ github.event_name == 'workflow_dispatch' && inputs.scop
 #
 # The key is public by design: it only proves the submitter controls the host,
 # and the engines verify it by fetching https://anyplot.ai/<key>.txt. The same
-# key lives in app/public/<key>.txt (what humans and non-bot clients get) and
-# in api/routers/seo.py (what the nginx bot map proxies crawlers to). Keep the
-# three in sync when rotating it.
+# key appears in three places — app/public/<key>.txt (the file itself), the
+# exact-match `location` in app/nginx.conf (so a crawler UA is not proxied to
+# /seo-proxy and a 404), and INDEXNOW_KEY below. Keep all three in sync when
+# rotating it.
 
 on:
   push:
