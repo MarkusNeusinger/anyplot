@@ -1,0 +1,234 @@
+library: chartjs
+language: javascript
+specification_id: flowmap-origin-destination
+created: '2026-09-02T00:38:04Z'
+updated: '2026-09-02T00:52:58Z'
+generated_by: claude-sonnet
+workflow_run: 33575659832
+issue: 3765
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Every weakness from the Review 1 verdict (87/REJECTED) was fixed precisely as
+    requested: a lightweight hand-digitized US outline plugin for geographic context,
+    (°) units on both axis titles, bidirectional hub-to-hub trunk flows showing directional
+    imbalance, and a heaviest-corridor callout for data storytelling.'
+  - The callout box correctly reads theme tokens (t.elevatedBg, t.grid, t.ink) rather
+    than hardcoding colors, so it flips cleanly between light and dark.
+  - Arc midpoints are cached during the draw pass (f.midX/f.midY) instead of recomputed
+    by the callout plugin -- a clean, efficient cross-plugin data-sharing pattern.
+  - Imprint palette stays in correct canonical order across all three hubs, identical
+    between themes.
+  - Deterministic LCG-seeded data; realistic, neutral logistics scenario (distribution
+    hubs shipping to regional retail centers).
+  weaknesses:
+  - The thinnest hub-to-hub trunk arcs are visually faint at the low end of the width
+    range -- acceptable but not fully prominent against the gray basemap outline.
+  - No explicit flow-magnitude legend (a "thin -> thick = low -> high volume" reference)
+    beyond the single heaviest-corridor callout; a viewer can't easily read absolute
+    volumes off other arcs.
+  - Design Excellence, while clearly improved with the callout, still has headroom
+    in DE-01/DE-02 (e.g. a more refined title/legend treatment or corridor-count summary)
+    before reaching top-tier polish.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Title "flowmap-origin-destination · javascript · chartjs · anyplot.ai" top-left in dark ink; top-right legend with three diamond swatches (Memphis Hub / Columbus Hub / Reno Hub); axis titles "Longitude (°)" / "Latitude (°)" with units; faint gray hand-digitized US outline as basemap. All readable.
+      Data: First series (Memphis Hub) is #009E73 brand green; Columbus Hub lavender; Reno Hub blue -- correct canonical Imprint order. Bezier flow arcs, width proportional to flow volume, alpha ~0.5. Hub-to-hub bidirectional trunk arcs present. Callout box "Heaviest: Columbus Hub -> Boston (499/wk)" with light card background and dark text.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Same layout, title/legend/axis/tick text flips to light ink, fully legible; no dark-on-dark failures observed. Basemap outline still faintly visible.
+      Data: Colors identical to light render (#009E73 / lavender / blue) -- only chrome flipped. Callout box correctly flips to dark card with white text (theme tokens, not hardcoded).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or the callout box
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Thinnest hub-to-hub trunk arcs are faint against the basemap outline
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°) / Latitude (°) now carry units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct backgrounds both themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Three custom canvas plugins show real craft; short of top-tier polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, clean two-tier marker hierarchy
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Heaviest-corridor callout is a genuine, well-executed focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct origin-destination flow map
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Basemap/geographic reference now present via custom canvas plugin
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lon/lat mapping correct, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match hubs
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Bidirectional hub-to-hub flows added; no explicit flow-magnitude
+          scale legend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral logistics network
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible crates/week volumes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat, procedural script; plugins are idiomatic Chart.js pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond Chart.js global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, clean helper functions
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter+plugin composition for Chart.js
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Three cooperating beforeDatasetsDraw/afterDatasetsDraw canvas plugins
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
