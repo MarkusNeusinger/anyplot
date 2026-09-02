@@ -10,11 +10,11 @@ const t = window.ANYPLOT_TOKENS;
 // percentage of the yearly total so every stack sums to exactly 100%.
 const years = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
 const rawByCategory = {
-  Android: [750, 780, 800, 815, 825, 835, 845, 850, 853, 855],
-  iOS: [140, 150, 158, 165, 170, 175, 180, 183, 186, 188],
-  "Windows Phone": [60, 40, 25, 12, 5, 2, 1, 0, 0, 0],
-  BlackBerry: [30, 15, 7, 3, 1, 0, 0, 0, 0, 0],
-  Other: [20, 15, 10, 5, 4, 3, 2, 2, 1, 1],
+  Android: [713, 780, 850, 917, 965, 1001, 1027, 1041, 1057, 1072],
+  iOS: [161, 192, 231, 273, 315, 342, 362, 381, 400, 417],
+  "Windows Phone": [161, 120, 81, 39, 13, 3, 0, 0, 0, 0],
+  BlackBerry: [81, 66, 38, 20, 7, 0, 0, 0, 0, 0],
+  Other: [34, 42, 50, 51, 40, 34, 31, 28, 23, 21],
 };
 
 const categories = Object.keys(rawByCategory);
@@ -40,9 +40,12 @@ const datasets = categories.map((cat, i) => ({
   data: shareByCategory[cat],
   backgroundColor: hexToRgba(t.palette[i % t.palette.length], 0.75),
   borderColor: t.palette[i % t.palette.length],
-  borderWidth: 2,
+  // Dominant series (Android) gets a heavier stroke as the focal emphasis.
+  borderWidth: i === 0 ? 3 : 1.5,
   pointRadius: 0,
-  tension: 0.3,
+  // Straight segments guarantee the 100%-stacked bands never overshoot
+  // between the 10 sampled years (a spline could dip below 0 or over 100).
+  tension: 0,
   fill: i === 0 ? "origin" : "-1",
 }));
 
@@ -68,7 +71,14 @@ new Chart(canvas, {
         text: title,
         color: t.ink,
         font: { size: 17, weight: "500" },
-        padding: { bottom: 20 },
+        padding: { bottom: 6 },
+      },
+      subtitle: {
+        display: true,
+        text: "Annual global shipment share across five platforms, 2015-2024",
+        color: t.inkSoft,
+        font: { size: 13, weight: "400", style: "italic" },
+        padding: { bottom: 18 },
       },
       legend: {
         position: "bottom",
@@ -98,7 +108,7 @@ new Chart(canvas, {
           stepSize: 20,
           callback: (value) => `${value}%`,
         },
-        grid: { color: t.grid },
+        grid: { color: t.grid, borderDash: [3, 4] },
       },
     },
   },
