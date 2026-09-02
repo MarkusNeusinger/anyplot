@@ -1,0 +1,263 @@
+library: echarts
+language: javascript
+specification_id: ohlc-bar
+created: '2026-09-02T04:46:03Z'
+updated: '2026-09-02T05:00:45Z'
+generated_by: claude-sonnet
+workflow_run: 33591648064
+issue: 3293
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Idiomatic use of ECharts custom series (renderItem with api.coord/api.size) to
+    build true I-beam OHLC bars — a chart type ECharts has no native series for, correctly
+    avoiding the wrong shortcut of a relabeled candlestick series.
+  - 'Repair correctly addressed the prior VQ-04 finding: bearish bars now use a dashed
+    stroke (lineDash [6,3]) in addition to matte red, so the up/down signal survives
+    for red-green color-vision-deficient viewers — confirmed visibly dashed in both
+    renders, and the legend swatches mirror the same solid-vs-dashed distinction.'
+  - 'Repair added a genuine storytelling layer: the steepest single-day move (rally
+    or drawdown) is computed from the data and annotated with a connector line and
+    label, cleanly placed with no overlap against surrounding bars in either theme.'
+  - Explicit Y-axis title 'Price (USD)' now present in addition to the '$' tick formatter,
+    strengthening axis clarity.
+  - 'Correct semantic color mapping: brand green (#009E73, palette[0]) for bullish,
+    semantic matte red (#AE3030, palette[4]) for bearish, matching the Imprint semantic-exception
+    order.'
+  - Deterministic seeded LCG produces realistic day-to-day OHLC drift with a plausible
+    mild uptrend across 45 trading days; weekends correctly skipped.
+  - Clean theme-adaptive chrome throughout — transparent background, ink/inkSoft/grid
+    tokens correctly threaded through title, legend, axis labels and gridlines; both
+    renders legible with identical data colors.
+  weaknesses:
+  - 'DE-01: The chart is polished and now has a storytelling callout, but the overall
+    visual identity still reads as a competent standard rendering rather than a highly
+    distinctive one — e.g. no subtle background banding or additional annotation layer
+    beyond the single callout.'
+  - The steepest-move callout only marks one event; a light dotted guide connecting
+    it more explicitly to its bar (rather than a plain vertical line) could read slightly
+    cleaner, though the current version is not a defect.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Aurora Robotics · ohlc-bar · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend below shows two swatches: a solid green line labeled "Bullish (close > open)" and a dashed red line labeled "Bearish (close < open)" — the dash pattern is visible directly in the legend swatch itself. Y-axis shows $175-$210 with a "$" prefix and an explicit rotated axis title "Price (USD)"; x-axis shows date labels (Jan 2 through Mar 4) in soft gray, evenly spaced with no overlap. Horizontal gridlines are subtle but visible. A storytelling callout "Steepest rally: +$3.15" with a thin connector line points to the tallest single-day gain near Jan 27, cleanly placed with no overlap against neighboring bars.
+      Data: 45 I-beam OHLC bars — thin vertical high-low line with a left tick (open) and right tick (close) per bar — colored green (#009E73, solid stroke) for up days and matte red (#AE3030, dashed stroke) for down days. The dashed pattern on bearish bars is clearly visible up close, giving CVD viewers a non-color cue. Overall trend drifts upward from ~$182 to ~$199 with visible day-to-day volatility.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, and axis title now rendered in light ink, clearly legible against the dark background. Axis tick labels (both $ price and dates) are light gray and easily readable. Gridlines remain subtle but visible. The "Steepest rally: +$3.15" callout and its connector line are legible in light ink with no overlap.
+      Data: Same 45 OHLC bars with identical green (#009E73, solid) and red (#AE3030, dashed) hues/strokes as the light render — confirmed data colors and dash pattern are unchanged between themes, only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, legend, axis, and callout text remain clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, legend, axis labels, and the new callout text are all explicitly
+          sized and read clearly in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or bar collisions in either render; the new callout is cleanly
+          placed with no overlap against neighboring bars.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar line width (2.6px) and tick length (32% of bar width) are well-proportioned
+          for 45 bars — clearly visible without crowding.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: bearish bars now use a dashed stroke in addition
+          to red, giving CVD viewers a non-color cue confirmed visible in both renders
+          and in the legend swatches.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, title well within bounds, nothing clipped or overflowing;
+          canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Explicit 'Price (USD)' y-axis title now added on top of the '$' tick
+          formatter; x-axis shows formatted dates.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 brand green; bearish uses palette[4] #AE3030,
+          the correct semantic loss/error anchor. Both renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional touches (proportional tick length, refined line weight,
+          dashed bearish stroke, storytelling callout) beyond generic defaults; still
+          short of a highly distinctive visual identity.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis line/ticks hidden, x-axis splitLine hidden, subtle horizontal-only
+          gridlines, generous whitespace via grid margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: computed steepest single-day rally/drawdown
+          is now annotated with a connector line and label, giving the chart a clear
+          focal point.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implemented as I-beam OHLC bars (open tick left, close
+          tick right), not a candlestick.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin high-low line, left/right open/close ticks, up/down color+dash
+          coding, formatted date axis, gridlines all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = trading day/date, Y = price; full OHLC range shown per bar; axes
+          cover the full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; legend labels match the up/down semantics with matching stroke
+          style.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All OHLC facets represented across 45 bars with both up and down
+          days present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fictional company 'Aurora Robotics', neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range ~$179-$206 with realistic daily volatility for an equity.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only helper functions are the seeded RNG and the required renderItem
+          callback — no unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) produces deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a custom-series chart with an added callout;
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'echarts.init(#container) with no explicit size/devicePixelRatio,
+          animation: false set.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ECharts' custom series (renderItem) exactly as the library rules
+          prescribe for chart types with no native series type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: api.coord/api.size-driven custom rendering, the proxy-series legend
+          trick, and chart.convertToPixel-driven graphic callout are genuinely ECharts-specific
+          techniques.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
