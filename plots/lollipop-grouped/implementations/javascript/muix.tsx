@@ -11,17 +11,29 @@ import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ---------------------------------------
-// Quarterly revenue ($M) by product line, across regions.
-const regions = ["North America", "Europe", "Asia-Pacific", "Latin America"];
+// Quarterly revenue ($M) by product line, across regions — sorted by total
+// revenue descending to reveal the regional ranking at a glance. Asia-Pacific
+// (a hardware-manufacturing hub) leads with Hardware rather than Software,
+// so the cross-group comparison isn't a flat repeat of the same ranking.
+const regions = ["North America", "Asia-Pacific", "Europe", "Latin America"];
 const productLines = ["Hardware", "Software", "Services"];
 const revenueByRegion = [
-  [42, 68, 35],
-  [31, 54, 28],
-  [38, 61, 22],
-  [19, 27, 14],
+  [48, 71, 39],
+  [52, 45, 33],
+  [33, 58, 30],
+  [21, 24, 17],
 ];
+const focalRegion = "North America";
 const seriesColors = [t.palette[0], t.palette[1], t.palette[2]];
 const maxRevenue = Math.max(...revenueByRegion.flat());
+
+// --- Focal-region highlight: a subtle band behind the top-revenue region ---
+function FocalHighlight() {
+  const xScale = useXScale();
+  const { top, height } = useDrawingArea();
+  const x0 = xScale(focalRegion) ?? 0;
+  return <rect x={x0} y={top} width={xScale.bandwidth()} height={height} fill={t.palette[0]} opacity={0.07} rx={10} />;
+}
 
 // --- Custom marks: thin stems + circular heads, grouped per category -------
 // MUI X community has no built-in lollipop series, so the stems/markers are
@@ -39,8 +51,9 @@ function Lollipops() {
     <>
       {regions.map((region, ri) =>
         productLines.map((_, si) => {
+          const value = revenueByRegion[ri][si];
           const cx = (xScale(region) ?? 0) + groupPadding + slotWidth * (si + 0.5);
-          const cy = yScale(revenueByRegion[ri][si]);
+          const cy = yScale(value);
           return (
             <g key={`${region}-${si}`}>
               <line
@@ -53,6 +66,9 @@ function Lollipops() {
                 strokeLinecap="round"
               />
               <circle cx={cx} cy={cy} r={12} fill={seriesColors[si]} stroke={t.pageBg} strokeWidth={2.5} />
+              <text x={cx} y={cy - 19} textAnchor="middle" fontSize={12} fill={t.ink}>
+                {`$${value}M`}
+              </text>
             </g>
           );
         }),
@@ -123,6 +139,7 @@ export default function Chart() {
         width={width}
         height={chartHeight}
         series={[]}
+        skipAnimation
         margin={{ top: 20, bottom: 44, left: 92, right: 24 }}
         xAxis={[{ id: "region-axis", scaleType: "band", data: regions, categoryGapRatio: 0.3 }]}
         yAxis={[
@@ -130,11 +147,12 @@ export default function Chart() {
             id: "revenue-axis",
             scaleType: "linear",
             min: 0,
-            max: maxRevenue * 1.15,
+            max: maxRevenue * 1.25,
             valueFormatter: (v) => `$${v}M`,
           },
         ]}
       >
+        <FocalHighlight />
         <ChartsGrid horizontal />
         <ChartsXAxis axisId="region-axis" tickLabelStyle={{ fontSize: 15 }} />
         <ChartsYAxis axisId="revenue-axis" tickLabelStyle={{ fontSize: 14 }} />
