@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: sn-curve-basic
 created: '2026-09-02T06:09:25Z'
-updated: '2026-09-02T06:14:47Z'
+updated: '2026-09-02T06:40:16Z'
 generated_by: claude-sonnet
 workflow_run: 33596706754
 issue: 3826
@@ -12,63 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Both axes correctly use log10 scales, matching the spec's requirement for wide-range
-    fatigue data
+  - 'Full fatigue-region storytelling: low-cycle/high-cycle/infinite-life zones are
+    demarcated with dotted separators and direct labels, plus a callout annotation
+    showing exactly where the Basquin fit crosses the endurance limit (N ≈ 796k)'
   - All three required reference lines (Ultimate Strength, Yield Strength, Endurance
-    Limit) are present with a clear, correctly labeled legend
-  - Basquin power-law fit is properly derived via least-squares regression in log-log
-    space and overlaid on the scatter, exactly as the spec requests
-  - Fatigue parameters are physically realistic for steel (endurance limit/ultimate
-    ratio ~0.42, yield/ultimate ratio ~0.75, Basquin exponent b=-0.09 within the typical
-    -0.05 to -0.12 range) and the generated scatter visibly follows the fit line across
-    all stress levels
-  - Theme-adaptive chrome is threaded correctly through Figure/Axis tokens (PAGE_BG,
-    INK, INK_SOFT) — both light and dark renders are fully readable with identical
-    data colors
-  - Explicit font sizing throughout (titlesize, xlabelsize, ylabelsize, xticklabelsize,
-    yticklabelsize), reproducible via Random.seed!(42), and idiomatic CairoMakie usage
-    (Axis kwargs, hlines!, axislegend, custom ytickformat closure)
+    Limit) are present, correctly ordered, and factually plausible for structural
+    steel
+  - Explicit font sizing on every text element (title, axis, tick, annotation) with
+    correctly threaded theme-adaptive chrome in both renders — no dark-on-dark or
+    light-on-light issues
+  - 'Idiomatic Makie usage: functional log10 scale, closure-based ytickformat, frameless
+    axislegend, spines removed, subtle non-competing grid'
+  - Correct title format and Imprint palette compliance — brand green as the primary
+    series, canonical palette order for reference lines, identical data colors between
+    light and dark
   weaknesses:
-  - 'VQ-07: The three hlines reference-series skip Imprint palette position 2 (lavender)
-    and jump straight to positions 3 (blue, Ultimate Strength) and 4 (ochre, Yield
-    Strength), then use the amber anchor for Endurance Limit — none of these are strong
-    semantic matches (blue isn''t conventionally ''ultimate strength'', ochre isn''t
-    conventionally ''yield''), so this reads as an arbitrary skip of the canonical
-    1→N order rather than a justified semantic exception. Recommend reassigning to
-    canonical order (lavender #C475FD, blue #4467A3, ochre #BD8233) for the three
-    threshold lines, or provide a clearer semantic rationale if keeping non-canonical
-    colors.'
-  - 'DE-03/DQ-01: The spec calls out three distinct fatigue regions (low-cycle plastic,
-    high-cycle elastic, infinite life below the endurance limit) but the chart doesn''t
-    visually demarcate or label them — only the endurance-limit hline hints at the
-    boundary. Consider light region shading or small text callouts to make the three-region
-    story explicit and raise visual hierarchy.'
-  - 'DE-01: Overall styling is solid but still close to ''well-configured defaults''
-    — the log-log Basquin curve is handled well, but there''s no additional refinement
-    (e.g., annotating where the fit crosses each threshold) that would push it into
-    publication-ready territory.'
-  - 'LM-02: Library usage is correct and idiomatic but not maximally distinctive —
-    consider leveraging more Makie-unique features (e.g., text!() annotations at threshold
-    crossings, or minor gridline styling) to better showcase capabilities unique to
-    Makie.'
+  - 'Ultimate Strength (lavender #C475FD) and Endurance Limit (ochre #BD8233) are
+    two of the palette''s lower-WCAG-contrast hues against the cream background, used
+    for safety-critical threshold lines — add the style guide''s optional 1px ink-color
+    stroke (or slightly bump linewidth/opacity) to these two dashed lines so they
+    read unambiguously for low-vision viewers'
+  - Annotation and region-boundary text (fontsize 11) softens noticeably at the ~400px
+    mobile thumbnail scale; acceptable since it's tertiary content but could be nudged
+    up slightly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "sn-curve-basic · julia · makie · anyplot.ai" in bold dark ink at top-center, clearly readable. X-axis label "Cycles to Failure, N" and y-axis label "Stress Amplitude (MPa)" both in dark ink, legible. Tick labels (log-scale powers of 10 on x, 200-700 on y) in a softer grey ink, all legible. Subtle horizontal/vertical gridlines visible but not competing with data. Legend box (top-right, no frame) lists Ultimate Strength (blue dashed), Yield Strength (ochre dashed), Endurance Limit (amber dashed), Basquin fit (grey solid), Test specimens (green dots) — all legible against the light background.
-      Data: 32 green (#009E73) scatter points clustered in groups of ~4 per stress level, following a grey Basquin fit line from upper-left to lower-right in log-log space. Three dashed threshold lines cross the plot horizontally at 600, 450, and 250 MPa.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light failures observed.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "sn-curve-basic · julia · makie · anyplot.ai" centered at top, comfortably fits with generous margins (no clipping). Dark axis labels ("Cycles to Failure, N" / "Stress Amplitude (MPa)") and softer-gray tick labels along log-log axes are all crisp. Subtle vertical dotted separators mark Low-Cycle/High-Cycle/Infinite Life regions with small gray labels near the bottom. Frameless legend (top-right, inside plot bounds) lists Ultimate Strength, Yield Strength, Endurance Limit, Basquin fit, Test specimens — all fully visible, no overlap with data or plot edges. Top/right spines removed, left/bottom spines subtle gray, gridlines faint.
+      Data: Green (#009E73) scatter markers with a light cream stroke for 32 fatigue-test specimens across 8 stress levels, a dark-gray Basquin power-law fit line, and three dashed horizontal threshold lines (lavender = Ultimate Strength at 600 MPa, blue = Yield Strength at 450 MPa, ochre = Endurance Limit at 250 MPa). A small annotation near the endurance-limit line reads "fit crosses endurance limit, N ≈ 796k".
+      Legibility verdict: PASS — all title/axis/tick/legend text is clearly readable against the light background; only the smallest tertiary annotation/region-label text (fontsize 11) softens slightly when the PNG is scaled to mobile width, which is expected for tertiary text.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels rendered in light off-white ink, clearly readable against the dark background. Tick labels in a lighter grey-ish ink, legible. Gridlines are subtle light-toned lines at low opacity, visible without dominating. Legend text is light-colored and fully legible against the dark legend area.
-      Data: Same 32 green (#009E73) scatter points and grey Basquin fit line, confirmed visually identical in hue/saturation to the light render — only the chrome (background, text, grid) flipped. The three dashed threshold lines (blue, ochre, amber) also read as unchanged in hue between renders.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout as the light render with all chrome flipped to light tokens — title and axis labels are light cream/white, tick labels and legend text are light gray, spines/grid are light-gray-on-dark and equally subtle. No dark-on-dark text anywhere; region-boundary labels and the endurance-limit annotation are clearly legible in light gray.
+      Data: Identical data colors to the light render — the same #009E73 green scatter markers (with a dark stroke matching the dark background instead of cream), the same lavender/blue/ochre dashed threshold lines, and the same dark-gray-toned Basquin fit line (rendered slightly lighter to stay visible against the dark background, consistent with the INK_SOFT chrome token). Confirmed: only chrome elements changed, not the categorical data hues.
+      Legibility verdict: PASS — all text is light-colored and clearly readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -76,80 +60,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
-          ticklabelsize=12); readable in both themes. Title occupies a comparatively
-          modest ~22% of plot width for this shorter spec-id — legible but not maximally
-          prominent.
+        comment: All font sizes explicitly set; title/axis/tick labels crisp in both
+          themes and at mobile scale; tertiary annotation/region-label text softens
+          slightly when scaled down
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend/data collisions in either render.
+        comment: No text overlaps other text or data; legend sits clear of scatter
+          and reference lines
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: markersize=16 for 32 sparse points is appropriate; a few points at
-          the same stress level visually cluster tightly but remain distinguishable.
+        comment: 16px markers with light stroke and 2.5-3px reference/fit lines are
+          well-adapted to the 32-point sparse dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Good contrast and CVD-safe hues; no red-green-only encoding.
+        comment: Lavender (Ultimate Strength) and ochre (Endurance Limit) are lower-WCAG-contrast
+          hues used for critical threshold lines without the style guide's optional
+          ink stroke
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large majority of the canvas with balanced margins;
-          legend sits inside the plot near the top-right, not isolated; nothing clipped.
+        comment: Plot fills the vast majority of the 3200x1800 canvas with balanced
+          margins; legend sits inside the plot area near the top; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (MPa); x-axis 'Cycles to Failure, N' is descriptive.
+        comment: Both axis labels are descriptive with units (MPa)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series (test specimens) correctly uses Imprint #009E73 and
-          both renders keep data hues identical with theme-correct chrome/background.
-          However the three hline series skip Imprint position 2 (lavender) and jump
-          to positions 3/4 plus the amber anchor without a strong semantic justification
-          — partial compliance.'
+        passed: true
+        comment: 'Primary series is Imprint #009E73; reference lines use canonical
+          palette positions 2-4; backgrounds and chrome are theme-correct in both
+          renders; data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful use of colored threshold lines and correct log-log framing
-          puts this above a bare default, but it stops short of publication-ready
-          polish.
+        passed: true
+        comment: Region demarcation, endurance-limit crossing annotation, and Imprint
+          palette usage go clearly beyond a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle low-opacity gridlines, generous
-          whitespace, unframed legend.
+        comment: Spines removed, subtle grid, frameless legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The three threshold lines give the reader immediate context for where
-          the curve sits relative to material limits, but the spec's three fatigue
-          regions (low-cycle/high-cycle/infinite-life) aren't explicitly called out
-          or shaded.
+        comment: Labeled fatigue regions plus the callout on where the fit crosses
+          the endurance limit give the viewer a clear, guided insight
     spec_compliance:
       score: 15
       max: 15
@@ -159,53 +139,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct S-N curve: log-log scatter + fitted curve.'
+        comment: 'Correct S-N (Wohler) curve: log-log scatter with power-law fit'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log axes, all three reference lines, Basquin fit, and multi-specimen
-          scatter all present.
+        comment: Log-log axes, all three reference lines, three fatigue regions, multi-specimen
+          scatter, and Basquin fit are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stress on y-axis, cycles on x-axis, matching spec.
+        comment: Cycles on x, stress on y, matching the spec exactly; axes show the
+          full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format 'sn-curve-basic · julia · makie · anyplot.ai' correct;
-          legend labels are descriptive and match the data series.
+        comment: Title matches the mandated format; legend labels correctly describe
+          each series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multi-specimen scatter with realistic log-normal scatter around the
-          fit across the full stress range; the three fatigue regions are implicitly
-          covered by the data range but not explicitly delineated.
+        comment: Shows specimen scatter with realistic test-to-test variance, the
+          fit, and all three engineering thresholds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral steel fatigue-testing scenario.
+        comment: Neutral structural-steel fatigue testing scenario, grounded in the
+          Basquin equation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ultimate/yield/endurance ratios and Basquin exponent are all within
-          realistic ranges for steel; the fit visibly crosses the endurance limit
-          near the highest-cycle data, consistent with real S-N behavior.
+        comment: Ultimate (600 MPa) > Yield (450 MPa) > Endurance limit (250 MPa)
+          and Basquin parameters are all realistic for structural steel
     code_quality:
       score: 10
       max: 10
@@ -215,32 +195,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save, no functions/classes.
+        comment: Linear imports -> data -> plot -> save script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set.
+        comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics all actually used.
+        comment: CairoMakie, Colors, Random, Statistics all actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality.
+        comment: Appropriately concise, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2; uses the current `size=`
-          Figure kwarg rather than the deprecated `resolution=`.
+        comment: Saves plot-$(THEME).png via current Figure(size=...)/save(px_per_unit=...)
+          API
     library_mastery:
       score: 7
       max: 10
@@ -250,25 +230,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Axis kwargs, hlines!/lines!/scatter!, axislegend, xscale/yscale=log10
-          — solid idiomatic CairoMakie usage.
+        comment: Good high-level Axis/scatter!/lines!/hlines!/vlines!/axislegend usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom ytickformat closure and hlines! convenience layer are somewhat
-          distinctive to Makie, though not maximally leveraged.
-  verdict: REJECTED
+        comment: Functional xscale/yscale=log10 and a closure-based ytickformat are
+          distinctly Makie/Julia patterns
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - regression
   styling:
+  - alpha-blending
   - edge-highlighting
+  - grid-styling
