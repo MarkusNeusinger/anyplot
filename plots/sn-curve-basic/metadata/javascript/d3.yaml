@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: sn-curve-basic
 created: '2026-09-02T06:08:01Z'
-updated: '2026-09-02T06:12:34Z'
+updated: '2026-09-02T06:31:34Z'
 generated_by: claude-sonnet
 workflow_run: 33597052654
 issue: 3826
@@ -12,164 +12,149 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/d3/plot-dark.html
-quality_score: 82
+quality_score: 90
 review:
   strengths:
-  - 'Idiomatic log-log D3 implementation: d3.scaleLog on both axes with a clean custom
-    tick formatter that renders proper superscript powers of ten (10³–10⁷) instead
-    of raw exponent notation.'
-  - All three required reference lines (Ultimate strength, Yield strength, Endurance
-    limit) are present as labeled dashed horizontal lines at physically correct MPa
-    values for AISI 4140 steel.
-  - Basquin fit curve is a genuine calculated power-law regression (calibrated through
-    two anchor points) that correctly transitions from the sloped fatigue region into
-    a flat plateau at the endurance limit — this faithfully represents the low-cycle
-    / high-cycle / infinite-life regions described in the spec.
-  - 'Realistic, physically plausible data: 8 stress levels × 3 specimens with log-normal
-    coupon-to-coupon scatter, deterministic LCG seed for reproducibility.'
-  - Correct Imprint palette usage — data points use palette[0] (#009E73), fit line
-    uses palette[1], theme tokens threaded through axis text/ticks/domain/grid for
-    both light and dark renders.
-  - Title format and axis labels are spec-compliant with units (σ in MPa).
+  - Correct log-log S-N curve with all three required reference lines (Ultimate strength,
+    Yield strength, Endurance limit) labeled inline instead of cluttering a separate
+    legend
+  - Custom superscript tick formatting on the log x-axis (10³, 10⁴, …) is a distinctive
+    D3 touch that reads cleanly in both themes
+  - Realistic AISI 4140 material properties with a correctly calibrated Basquin power-law
+    fit that transitions to a flat endurance-limit asymptote beyond ~2×10⁶ cycles
+  - 'Both renders are fully theme-correct: identical Imprint data colors (green markers,
+    lavender fit line), readable chrome, warm off-white/near-black backgrounds'
+  - Legend is dynamically positioned relative to the endurance-limit line so it never
+    collides with data points or reference lines
   weaknesses:
-  - 'Data/axis-domain bug: the x domain is hardcoded to [1e3, 1e7], but the 700 MPa
-    stress level''s base cycle count is exactly 1e3 (basquinN1), and the jitter formula
-    (jitterDecades in [-0.15, 0.15]) pushes roughly half of that level''s 3 specimens
-    below 1e3 cycles — outside the plotted domain. Those circles render at negative/near-zero
-    pixel x, spilling into the left margin and visibly overlapping the y-axis ''700''
-    tick label in BOTH renders (looks like a garbled ''●⊘700'' cluster at the far
-    left edge). Fix: either widen the x domain lower bound (e.g. to ~700 or via d3.extent(data,
-    d => d.cycles) with padding) or clamp/regenerate the jitter so all data cycles
-    stay within [1e3, 1e7].'
-  - The Yield strength reference line (770 MPa) passes directly through the legend
-    block ('Coupon test result' entry sits right on the dashed line) — not unreadable,
-    but a distracting collision; move the legend to a location that doesn't intersect
-    a reference line, or draw the legend behind a subtle background swatch/keep clear
-    of the 770 MPa row.
-  - The three fatigue life regions (low-cycle plastic, high-cycle elastic, infinite
-    life) are only implied by the curve's shape; no visual distinction (shading/labels)
-    separates them, though this is a soft nice-to-have rather than a hard spec requirement.
-  - Y-axis tick formatting mixes SI-prefix style ('1k') with plain numbers ('900',
-    '800' ...) from the d3 '~s' format — minor inconsistency, cosmetic only.
+  - A few coupon markers at the same stress level (650, 550, 500, 470, 440 MPa) sit
+    close enough to visually merge into overlapping blobs — slightly wider jitter
+    spread or a smaller marker radius for tightly clustered levels would improve individual-point
+    legibility
+  - Axis domain (spine) lines are kept on both axes rather than reduced further —
+    acceptable per the L-shaped default, but leaves slightly more chrome than a maximally
+    refined version
+  - The spec's three named fatigue regions (low-cycle plastic / high-cycle elastic
+    / infinite-life) are implied by the curve shape but never explicitly delineated
+    or labeled
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), consistent with the Imprint light theme, not pure white.
-      Chrome: Bold centered title "sn-curve-basic · javascript · d3 · anyplot.ai" in dark ink; x-axis "Cycles to Failure, N" labeled 10^3-10^7 with proper superscript formatting; y-axis "Stress Amplitude, σ (MPa)" labeled 400-1k (log scale) using d3 "~s" format; subtle horizontal-only gridlines; three dashed gray reference lines labeled "Ultimate strength — 950 MPa", "Yield strength — 770 MPa", "Endurance limit — 430 MPa". All chrome text is readable against the light background EXCEPT the leftmost y-axis tick label "700", which is partly obscured by a cluster of data-point circles that spill past the x=1e3 domain edge into the left margin (a real data/domain bug, not a theme issue).
-      Data: Green (#009E73) circles for coupon test results, clustered at 8 stress levels with realistic scatter; a purple/violet (palette[1]) Basquin fit line running through the cloud and flattening at the endurance limit. Legend ("Coupon test result", "Basquin fit: σ = A·N^b") is present but its top entry sits directly on top of the yield-strength dashed line, causing a mild visual collision.
-      Legibility verdict: FAIL — the "700" y-axis tick label is overlapped/garbled by out-of-domain data circles at the left edge.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "sn-curve-basic · javascript · d3 · anyplot.ai" in bold dark text, clearly visible. X-axis "Cycles to Failure, N" with log-scale superscript ticks (10³–10⁷), y-axis "Stress Amplitude, σ (MPa)" with linear-labeled log ticks (400–1,000). Three dashed gray reference lines labeled "Ultimate strength — 950 MPa", "Yield strength — 770 MPa", "Endurance limit — 430 MPa" — all readable. Subtle horizontal grid lines only.
+      Data: First series (coupon test results) rendered as green (#009E73) circles with light-colored strokes; Basquin fit line rendered in lavender/purple (Imprint palette position 2). Legend bottom-right labels both series correctly.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), consistent with the Imprint dark theme, not pure black.
-      Chrome: Same title, axis labels, and reference lines as the light render, now rendered in light ink/inkSoft tones against the dark background — all clearly legible, no dark-on-dark failures observed for title/axis text.
-      Data: Data colors are identical to the light render (green points, purple fit line, dashed gray reference lines) — only chrome flipped, as required.
-      Legibility verdict: FAIL — same left-edge overlap bug as the light render: data circles for the 700 MPa level spill past the x=1e3 domain boundary and overlap the "700" y-axis tick label.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis labels render in light/white text, tick labels and reference-line labels in light gray — all clearly legible against the dark surface. Grid lines subtle and visible. No dark-on-dark failures observed.
+      Data: Confirmed identical to light render — green (#009E73) markers and lavender fit line, unchanged across themes; only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: Title/axis/tick fonts explicitly sized and legible in both themes,
-          but the y-axis '700' tick label is overlapped/garbled by out-of-domain data
-          circles in both renders.
+        passed: true
+        comment: All font sizes explicitly set (15px ticks, 17px axis labels, 22px
+          title, 14px reference labels); readable in both themes and well-proportioned
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Data circles for the 700 MPa level spill past the x=1e3 domain edge
-          and overlap the '700' y-axis tick label; legend also collides with the yield-strength
-          dashed reference line.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (r=8) and fit-line width appropriate for sparse (24-point)
-          scatter.
+        comment: No text overlaps other text, data, or the legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers sized well for sparse data (24 points), but a few same-stress-level
+          coupons overlap into partial blobs
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast in both themes, no red-green-only encoding.
+        comment: Green/purple contrast with white-stroked markers, CVD-safe, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas gate passed (3200x1800). Proportions otherwise good, but data
-          points rendering outside the plotted x-domain into the margin is a layout
-          defect.
+        passed: true
+        comment: Plot fills ~68% of canvas, balanced margins, legend anchored near
+          data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (Cycles to Failure, N; Stress
-          Amplitude, σ (MPa)).
+        comment: Descriptive axis labels with units (N, MPa)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 for data points, palette[1] for fit line, correct
-          theme backgrounds (#FAF8F1 / #1A1A17), identical data colors across themes.'
+        comment: 'First series #009E73, fit line uses canonical position 2 (#C475FD);
+          theme-correct backgrounds and chrome in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Custom log-log tick formatting, labeled reference lines, and a real
-          Basquin regression show intentional design; above the generic default but
-          held back by the overlap bug.
+        passed: true
+        comment: Thoughtful inline reference-line labels, superscript log ticks, and
+          Imprint color use — clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Subtle horizontal-only grid, minimal chrome, generous whitespace;
-          domain lines kept but styled with inkSoft.
+        passed: true
+        comment: Subtle y-only grid, tick marks removed, generous whitespace; domain
+          lines still kept on both axes
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Reference lines + fit line + scatter create a clear engineering narrative
-          (where does the material sit relative to yield/ultimate/endurance).
+        passed: true
+        comment: Reference lines and fit curve create clear visual hierarchy guiding
+          the reader toward the fatigue trend
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct log-log S-N scatter with fit line.
+        passed: true
+        comment: Correct log-log S-N (Wöhler) curve with scatter + fit
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Both log axes, three reference lines, Basquin fit line, multi-specimen
-          scatter all present.
+        passed: true
+        comment: Log-log axes, all three reference lines, multi-specimen scatter,
+          Basquin fit line all present
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        comment: X/Y mapping is conceptually correct, but the axis domain doesn't
-          accommodate all generated data — some points fall outside [1e3, 1e7] and
-          render off-domain.
+        passed: true
+        comment: Stress on y, cycles on x, both log scale, full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai';
-          legend labels match the plotted series.
+        passed: true
+        comment: Title format exact; legend labels match the two series
     data_quality:
       score: 14
       max: 15
@@ -178,18 +163,22 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Covers scatter, fit, and all three reference properties; fatigue
-          regions are only implied by curve shape, not explicitly delineated.
+        passed: true
+        comment: Shows coupon scatter, fit line, and flat endurance region; low-cycle
+          region only minimally represented (3 points near 10^3)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: AISI 4140 steel values are realistic and neutral.
+        passed: true
+        comment: 'Real, neutral engineering scenario: AISI 4140 steel fatigue testing'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Stress/cycle ranges are sensible for steel fatigue testing.
+        passed: true
+        comment: Ultimate/yield/endurance values and transition cycle count are factually
+          plausible for Q&T steel
     code_quality:
       score: 9
       max: 10
@@ -198,58 +187,61 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: A handful of small helper functions (makeLcg, toSuperscript, cyclesAtStress/stressAtCycles)
-          are used, more than a purely declarative skeleton but justified by the log-log
-          math.
+        passed: true
+        comment: A few small helper functions (LCG, Basquin math, superscript formatting)
+          are justified but add structure beyond pure linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG (seed 42).
+        passed: true
+        comment: Deterministic seeded LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only the d3 global is used, no unused imports.
+        passed: true
+        comment: Only the global d3 is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake interactivity, appropriate complexity.
+        passed: true
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, sized from ANYPLOT_SIZE, no manual file
-          writes.
+        passed: true
+        comment: 'Correctly mounts into #container per the D3 harness contract'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: d3.scaleLog, d3.axisBottom/Left, d3.line, d3.range used idiomatically.
+        passed: true
+        comment: Expert use of scaleLog, axisBottom/axisLeft, d3.line(), and modern
+          .data().join() pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Custom superscript tick formatter and piecewise Basquin/endurance
-          function are distinctive touches beyond generic usage.
-  verdict: REJECTED
+        passed: true
+        comment: Custom superscript tickFormat and hand-built grid/legend leverage
+          D3's low-level control distinctively
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
+  - annotations
   - custom-legend
-  - log-log-scale
   patterns:
   - data-generation
-  dataprep:
-  - regression
+  dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
