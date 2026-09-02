@@ -92,7 +92,7 @@ fig = Figure(
     backgroundcolor = PAGE_BG,
 )
 
-Label(fig[0, 1:2], title_str; fontsize = title_size, color = INK, halign = :center)
+Label(fig[0, 1], title_str; fontsize = title_size, color = INK, halign = :center)
 rowsize!(fig.layout, 0, Fixed(70))
 
 ax = Axis(
@@ -115,12 +115,19 @@ const YMIN, YMAX = -8.8, 8.8
 xlims!(ax, XMIN, XMAX)
 ylims!(ax, YMIN, YMAX)
 
-# Column/row proportions must be fixed before the collision-avoidance pass
-# below measures the axis's real screen scale — measuring against a layout
-# that later gets resized by a late `colsize!` would give a scale that no
-# longer matches the saved figure.
-colsize!(fig.layout, 1, Relative(0.85))
-colsize!(fig.layout, 2, Relative(0.15))
+# Single-column layout: DataAspect makes the network narrower than the full
+# figure width (24.6:17.6 data aspect vs. the wider figure cell), so the
+# axis letterboxes with empty margin on both sides automatically. The
+# legend is inset into that existing right-hand margin below, right next to
+# Eastport, instead of claiming a separate column that stranded it far from
+# the diagram.
+#
+# Explicit Relative(1.0) below is required even for this single column/row —
+# Makie's default Auto sizing collapses the cell to a tiny fraction of the
+# figure when the Axis has `aspect = DataAspect()`, instead of expanding to
+# fill the available space.
+colsize!(fig.layout, 1, Relative(1.0))
+rowsize!(fig.layout, 1, Relative(1.0))
 
 # --- Label collision avoidance ----------------------------------------------
 # Every edge label is rotated to align with its edge, so its footprint is a
@@ -287,7 +294,7 @@ for r in routes
     col = KIND_COLOR[r.kind]
     lines!(ax, [x0, x1], [y0, y1]; color = col, linewidth = 2.4)
     arrows!(ax, [x1], [y1], [ux * 0.001], [uy * 0.001];
-            arrowsize = 15, color = col, linewidth = 0)
+            arrowsize = 20, color = col, linewidth = 0)
 
     ang = atan(dy, dx)
     if ang > pi / 2
@@ -356,10 +363,11 @@ for s in stations
           text = s.label, fontsize = 15, color = INK, align = (s.halign, s.valign))
 end
 
-# Legend — route type color key
+# Legend — route type color key, inset into the axis's own letterboxed
+# right margin (next to Eastport) rather than a separate stranded column.
 leg_elements = [LineElement(color = KIND_COLOR[k], linewidth = 3.5) for k in (:express, :regional, :local)]
 Legend(
-    fig[1, 2],
+    fig[1, 1],
     leg_elements,
     ["Express", "Regional", "Local"];
     title           = "Route type",
@@ -368,9 +376,13 @@ Legend(
     titlecolor      = INK,
     labelcolor      = INK_SOFT,
     framevisible    = false,
-    backgroundcolor = PAGE_BG,
+    backgroundcolor = :transparent,
+    tellwidth       = false,
     tellheight      = false,
+    halign          = :right,
+    valign          = :center,
     patchsize       = (26, 10),
+    margin          = (10, 10, 10, 10),
 )
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
