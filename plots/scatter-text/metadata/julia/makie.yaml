@@ -1,0 +1,257 @@
+library: makie
+language: julia
+specification_id: scatter-text
+created: '2026-09-02T05:58:08Z'
+updated: '2026-09-02T06:25:00Z'
+generated_by: claude-sonnet
+workflow_run: 33596463508
+issue: 3482
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - 'All four attempt-1 findings were addressed directly and verifiably: lavender
+    (Healthcare) and ochre (Energy) labels now carry a 1px ink stroke (strokewidth=1.0,
+    strokecolor=INK) restoring WCAG contrast without changing the underlying Imprint
+    hex'
+  - CloudSpire (the clear growth outlier) is now given a strong visual focal point
+    — larger bold fontsize (24 vs 18) plus a dedicated '↑ fastest-growing' callout
+    in tertiary INK_SOFT text, giving the chart genuine data storytelling
+  - The Healthcare cluster was deliberately tightened and paired with a custom pairwise
+    de-overlap pass, per-label rotation jitter (±12°), and softened alpha (0.82) —
+    the implementation now actually demonstrates the density-management techniques
+    ('rotate text', 'use alpha') the spec calls out, instead of avoiding the scenario
+  - 'First categorical series renders as exact Imprint brand green #009E73, with all
+    four sector colors following canonical palette order 1→4 identically across both
+    light and dark renders — correct since sectors are abstract categories with no
+    stronger semantic color pull'
+  - Theme-adaptive chrome (background, spines, grid, tick/label colors, legend) is
+    fully correct and legible in both renders; no dark-on-dark or light-on-light failures
+  - 'KISS code structure: single seed, only used imports, no functions/classes, correct
+    save API (plot-$(THEME).png, px_per_unit=2 → exact 3200×1800 landscape canvas)'
+  weaknesses:
+  - Healthcare-cluster rotation angles are drawn independently per label (rand(-12:12)
+    degrees each), so 'BioNova', 'CarePoint', and 'GenomeWorks' each tilt at a different,
+    unrelated angle — reads as slightly chaotic next to the otherwise perfectly horizontal
+    rest of the chart. A single shared tilt angle (or a small fixed set of alternating
+    angles) for the whole dense cluster would look more deliberate and less like typographic
+    noise.
+  - 'Library Mastery is still solid but not maximal: the two text! calls (plain vs.
+    stroked), manual PolyElement legend, and colsize! ratio are correct and idiomatic,
+    but don''t yet reach for a more Makie-distinctive capability (e.g. a small custom
+    recipe, GridLayout composition beyond a single colsize! call, or per-label callout
+    via annotate-style connectors) that would meaningfully separate this from a competent
+    baseline usage of the text! recipe.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Bold dark-ink title "scatter-text · julia · makie · anyplot.ai" centered top; dark-ink axis labels "Revenue Growth (%)" / "Profit Margin (%)"; soft-dark tick labels on both axes; subtle ~15%-opacity grid on both axes; L-shaped spines (top/right removed); frameless "Sector" legend at right with dark title / soft-dark labels.
+      Data: 28 company-name text labels in place of markers, colored by sector — Technology = brand green #009E73, Healthcare = lavender #C475FD (with a subtle dark ink stroke for contrast), Finance = blue #4467A3, Energy = ochre #BD8233 (also stroked). CloudSpire (Technology) renders larger/bolder as the growth outlier, with a small "↑ fastest-growing" callout beneath it. The tightly-clustered Healthcare labels show visible per-label rotation and slightly reduced alpha to manage density; a de-overlap pass keeps every label legible with no collisions.
+      Legibility verdict: PASS — all title, axis, tick, legend, and data-label text is clearly readable against the light background; the ink stroke on lavender/ochre labels specifically fixes the low-contrast issue flagged in attempt 1.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title/axis/tick/legend chrome flipped to light ink (#F0EFE8 primary, #B8B7B0 secondary), fully legible; grid flips to a light-ink 15%-opacity variant; spines/legend frame consistent with the light render's structure.
+      Data: All four sector colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3 / #BD8233) — only chrome flipped, as required. The ink stroke on Healthcare/Energy labels flips to light-ink, keeping those series legible against the dark surface. CloudSpire's emphasis and callout, the Healthcare rotation/alpha treatment, and the de-overlap spacing all carry over identically.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (including the smaller "↑ fastest-growing" callout) reads clearly against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; bold weight and 18-24pt sizing
+          hold up at full res and scaled down
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom pairwise de-overlap pass keeps even the tightened Healthcare
+          cluster collision-free
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (28 labels) uses prominent bold text; outlier CloudSpire
+          scaled up further
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Attempt-1 WCAG gap fixed: lavender/ochre labels now carry an ink
+          stroke for 3:1+ contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, canvas gate passed (3200x1800)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with % units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical order 1-4, correct theme backgrounds, data colors identical
+          across themes
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, ink-stroke accessibility technique, and outlier emphasis
+          show real polish; not yet fully bespoke composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace; independent random
+          rotation angles in the Healthcare cluster read slightly inconsistent
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear focal point on CloudSpire via size + explicit callout, addressing
+          attempt-1 feedback directly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: text! used exclusively as the marker substitute, per spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha transparency, rotation, and color-encoded category all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=growth, y=margin correctly mapped, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match sector
+          data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now demonstrates the dense-region techniques (rotation, alpha, de-overlap)
+          the spec calls out, closing attempt-1's gap
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral fictional-company competitive-landscape data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible growth/margin percentage ranges for the business domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches canonical API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of text! per-element vectorized attributes (color/fontsize/rotation/stroke
+          arrays), manual Legend/PolyElement, colsize! layout tuning
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom de-overlap algorithm, dual-pass stroke technique, and rotation
+          jitter are a real step up from attempt 1's generic usage, though still short
+          of a fully bespoke Makie technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
