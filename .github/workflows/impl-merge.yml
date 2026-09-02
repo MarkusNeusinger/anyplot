@@ -368,17 +368,35 @@ jobs:
           # Create labels if they don't exist
           gh label create "impl:${LIBRARY}:done" --color "0e8a16" --description "${LIBRARY} implementation merged" 2>/dev/null || true
 
-          # Remove trigger, pending, and any stale failed label from earlier attempts,
-          # then add done. The :failed label is added by impl-generate.yml when an
-          # attempt errors out (e.g. environment setup failure); a later successful
-          # retry merges via this workflow but historically didn't clean up :failed,
-          # leaving the issue with both :done and :failed for the same library.
-          # Single API call (comma-separated) — matches the pattern in
-          # impl-generate.yml and avoids the partial-update window of separate edits.
-          gh issue edit "$ISSUE" \
-            --remove-label "generate:${LIBRARY},impl:${LIBRARY}:pending,impl:${LIBRARY}:failed" \
-            --add-label "impl:${LIBRARY}:done" 2>/dev/null || \
-            gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done"
+          # Add done first — it is the completion signal everything else reads
+          # (the 15/15 auto-close below, monitor_spec.sh, the label sync).
+          gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done"
+
+          # Then clear every label that says this library is still pending or
+          # broken: the generate trigger, the pending marker, the :failed label
+          # impl-generate.yml sets at its retry cap, and the watchdog's
+          # per-library retry marker (`watchdog:retried-<lib>`), which would
+          # otherwise keep reporting the pair as "already retried — needs manual
+          # attention" on every scan.
+          #
+          # Only the labels the issue actually carries are removed, one
+          # `gh issue edit` each: `gh` resolves every name against the REPO's
+          # label list before it edits, and a single unknown name
+          # (`impl:<lib>:pending` is only created on demand, `generate:<lib>`
+          # may never have existed) fails a whole comma-separated call. The
+          # previous single-call form did just that, and its fallback only
+          # added :done — so issues #3343 and #3650 kept `impl:<lib>:failed`
+          # next to `impl:<lib>:done` after the rescued implementations merged
+          # (2026-09-02). A removal that fails anyway is reported, not hidden:
+          # the stale label is exactly the state this step exists to clear.
+          PRESENT=$(gh issue view "$ISSUE" --json labels -q '.labels[].name' 2>/dev/null || echo "")
+          for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending" \
+                       "impl:${LIBRARY}:failed" "watchdog:retried-${LIBRARY}"; do
+            if echo "$PRESENT" | grep -qx "$stale"; then
+              gh issue edit "$ISSUE" --remove-label "$stale" \
+                || echo "::warning::Could not remove stale label '$stale' from issue #$ISSUE"
+            fi
+          done
 
       - name: Post success to issue
         if: steps.check.outputs.should_run == 'true' && steps.issue.outputs.number != ''
