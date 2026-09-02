@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: logistic-regression
 created: '2026-09-02T02:00:24Z'
-updated: '2026-09-02T02:04:59Z'
+updated: '2026-09-02T02:16:53Z'
 generated_by: claude-sonnet
 workflow_run: 33581257544
 issue: 3550
@@ -12,111 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Correct Imprint palette compliance: brand green (#009E73) for the primary class,
-    canonical-order lavender for the second class, and a distinct blue for the fitted
-    curve so the model overlay never competes visually with the class colors'
-  - Both light and dark renders are correctly themed with no dark-on-dark or light-on-light
-    failures, and no title/tick/legend text is clipped at any canvas edge
+  - The fitted curve is now a genuine gradient-descent logistic regression fit on
+    the plotted (standardized-x) points rather than a reuse of the data-generating
+    constants, fully resolving the prior review's SC-02 weakness
+  - The new subtitle surfaces the fitted model equation and classification accuracy
+    directly on the chart, resolving the prior review's DE-03 annotation weakness
+    and adding real analytical depth
+  - 'Correct Imprint palette compliance: brand green for class 0, canonical-order
+    lavender for class 1, and a distinct blue for the fitted curve so the model overlay
+    never competes visually with the class colors'
+  - Both light and dark renders are correctly themed with no dark-on-dark/light-on-light
+    failures and no title/tick/legend text clipped at any canvas edge
   - 'Idiomatic Chart.js technique: mixed dataset types (scatter + line) in one chart,
-    and the fill:0 fill-between-datasets pattern to render the shaded 95% confidence
-    band'
+    plus the fill:0 fill-between-datasets pattern for the shaded 95% confidence band,
+    whose width now correctly derives from the fitted midpoint'
   - 'All spec-required elements present: y-jittered binary points, a smooth ~2.5px
-    logistic curve, semi-transparent CI shading, a dashed p=0.5 decision threshold
+    fitted logistic curve, semi-transparent CI shading, a dashed p=0.5 decision threshold
     line, and clearly labeled axes with units'
-  - Realistic, neutral domain (fasting glucose vs. diabetes risk) with clinically
-    plausible value ranges (70-200 mg/dL) and deterministic LCG-seeded data generation
+  - Realistic, neutral clinical domain (fasting glucose vs. diabetes risk) with plausible
+    value ranges (70-200 mg/dL) and deterministic LCG-seeded data generation
   - Legend correctly filters out the unlabeled internal helper dataset (the confidence
     band's upper-bound line), keeping only the 5 meaningful entries visible
   weaknesses:
-  - The "fitted" logistic curve reuses the exact same SLOPE/MIDPOINT constants used
-    to generate the class labels rather than being derived from the plotted binary
-    points (e.g. via a simple gradient-descent/MLE fit) - it renders the ground-truth
-    generating function, not a genuine fit, which slightly undercuts the spec's "fitted
-    logistic curve representing predicted probabilities" framing
-  - No annotation of model coefficients or accuracy metrics - the spec explicitly
-    suggests considering this as an optional enhancement that would have added analytical
-    depth
-  - Styling is polished but fairly standard for a Chart.js scatter+line composition
-    - no distinctive flourish beyond the confidence-band shading (e.g. no callout
-    annotations, no custom legend iconography)
+  - Styling remains polished but fairly standard for a Chart.js scatter+line composition
+    beyond the confidence-band shading and new subtitle annotation - no further distinctive
+    flourish (e.g. no callout pointing at the threshold crossing, no custom legend
+    iconography)
+  - Library mastery is solid but not pushed further with additional Chart.js-specific
+    features (plugins, custom tooltips/interaction callbacks) beyond the fill-between-datasets
+    technique already used
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Title "logistic-regression · javascript · chartjs · anyplot.ai" in dark ink, clearly bold and legible. Legend row (5 items: 95% Confidence Interval, No Diabetes (y=0), Diabetes (y=1), Fitted Probability, Decision Threshold) fully readable in dark text, no wrapping or overlap. Axis titles "Fasting Glucose Level (mg/dL)" and "Predicted Probability of Diabetes" both dark and legible. Tick labels (70-200 on x, 0-1.0 on y) legible in soft gray-ink. Grid lines subtle light gray, visible but non-competing.
-      Data: First class (No Diabetes, y=0) rendered in brand green #009E73 jittered near y=0; second class (Diabetes, y=1) in lavender jittered near y=1.0 - correct Imprint canonical order. Fitted S-curve in distinct blue (#4467A3), 2.5px, clearly visible against both point clusters. Confidence band is a light blue-gray semi-transparent shade, widest at the x-extremes and narrowest near the curve's midpoint (statistically sensible). Dashed black horizontal line at p=0.5 clearly visible crossing the curve around x=140.
+      Background: warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "logistic-regression · javascript · chartjs · anyplot.ai" in bold dark ink, fully legible. Subtitle "Fitted model: p = sigmoid(-11.77 + 0.083 · glucose) · Accuracy: 86%" in soft ink, clearly readable below the title. Legend row (95% Confidence Interval, No Diabetes (y=0), Diabetes (y=1), Fitted Probability, Decision Threshold (p=0.5)) fully readable on one line, no wrapping or overlap. Axis titles ("Fasting Glucose Level (mg/dL)", "Predicted Probability of Diabetes") and tick labels legible in dark/soft-ink tones. Grid lines subtle but visible.
+      Data: brand green (#009E73) jittered points clustered near y=0 for "No Diabetes", lavender (#C475FD) jittered points clustered near y=1.0 for "Diabetes" - correct Imprint canonical order. The fitted S-curve is a distinct blue (#4467A3), ~2.5px, clearly visible against both point clusters and now genuinely fit via gradient descent on the plotted points (not the ground-truth generator constants). The confidence band is light blue-gray, widest at the x-extremes and narrowest near the fitted midpoint. A black dashed line at p=0.5 crosses the curve near x=143.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Title in off-white ink, fully legible. Legend text in light ink, all 5 entries readable with no dark-on-dark issues. Axis titles and tick labels rendered in light/soft-light ink tones, clearly legible against the dark surface. Grid lines subtle light gray at low opacity, visible without competing with data.
-      Data: Identical hues to the light render - brand green for No Diabetes, lavender for Diabetes, blue fitted curve, confirming palette identity is preserved across themes. Confidence band shading and dashed threshold line (now white-dashed for contrast) both clearly visible.
+      Background: warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, subtitle, legend, axis titles, and tick labels all rendered in light/off-white ink - no dark-on-dark failures anywhere. Grid lines subtle but visible against the dark surface.
+      Data: colors (brand green, lavender, blue curve) are identical to the light render, confirming only chrome flips with theme. The decision-threshold line is white-dashed for contrast against the dark background instead of black. The confidence band remains clearly visible as a slightly lighter navy shade.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at sizes matching the chartjs style
-          guide
+        comment: All text readable in both themes at full size; still legible when
+          scaled to ~400px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 5-item legend fits on one row with no collisions; no text overlaps
-          data
+        comment: No collisions between text, legend, and data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, curve, band, and threshold line all clearly visible; density-appropriate
-          marker size and alpha for 150 points
+        comment: 150 points at alpha 0.6 with radius 6 - appropriate density handling
+          for jittered class clusters
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette, not a red-green-only encoding
+        comment: Green/lavender classes plus a distinct blue curve - no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, no clipping at any edge (verified
-          via crop inspection)
+        comment: Canvas dimension gate passed; balanced title/axis proportions, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units
+        comment: Descriptive axis titles with units (mg/dL)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series is brand green, canonical order for second class, correct
-          theme backgrounds in both renders
+        comment: Canonical Imprint order (palette[0] green, palette[1] lavender, palette[2]
+          blue curve); correct theme-adaptive backgrounds
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Distinct curve color and CI shading show intentional design, but
-          overall composition is a fairly standard scatter+line layout
+        comment: Distinct curve color, CI shading, and the new model-equation subtitle
+          show real intent
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -125,13 +127,13 @@ review:
         comment: No boxed frame, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Curve + band + threshold create a clear focal narrative, but the
-          optional coefficient/accuracy annotation suggested by the spec is missing
+        comment: Curve + band + threshold + fitted-equation/accuracy subtitle now
+          form a complete analytical narrative
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,27 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct logistic regression curve visualization
+        comment: Correct scatter+line logistic regression composition
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All required features present, but the "fitted" curve reuses the
-          data-generating constants directly rather than being fit from the plotted
-          points
+        comment: Curve is now genuinely fit via gradient descent on the plotted points,
+          resolving the prior review's weakness; all other required elements present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x, binary y (jittered), and probability all mapped correctly
+        comment: X/Y correct, axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title format; legend labels match the data
+        comment: Title matches required format exactly; legend labels match datasets
     data_quality:
       score: 15
       max: 15
@@ -169,20 +170,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows jittered points, curve, CI band, and threshold - all logistic
-          regression essentials
+        comment: Points, curve, CI band, and threshold all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fasting glucose vs. diabetes risk is plausible and neutral
+        comment: Plausible, neutral clinical glucose/diabetes-risk scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 70-200 mg/dL matches real-world fasting glucose ranges
+        comment: 70-200 mg/dL range and 86% accuracy are clinically sensible
     code_quality:
       score: 10
       max: 10
@@ -192,7 +192,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Minimal helper functions (sigmoid, hexToRgba), no over-engineering
+        comment: Helper functions (sigmoid, fit, hexToRgba) are justified by the genuine
+          regression fit, kept minimal
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,19 +205,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only browser globals
+        comment: No unused imports; only ANYPLOT_TOKENS/Chart globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Real client-side gradient-descent fit, appropriately complex, no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract exactly, animation disabled
+        comment: 'Mount-node contract followed; animation: false set'
     library_mastery:
       score: 7
       max: 10
@@ -226,24 +228,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Mixed dataset types (scatter + line) in one chart is idiomatic Chart.js
-          practice
+        comment: Mixed scatter+line dataset types is idiomatic Chart.js practice
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: fill:0 fill-between-datasets technique for the CI band is a genuine
-          Chart.js-specific feature, though not pushed further with plugins/interaction
-          customization
+        comment: fill:0 fill-between-datasets technique for the CI band; legend filter
+          to hide the helper dataset
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - custom-legend
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
+  - edge-highlighting
