@@ -1,0 +1,251 @@
+library: chartjs
+language: javascript
+specification_id: choropleth-basic
+created: '2026-09-02T15:42:50Z'
+updated: '2026-09-02T16:01:26Z'
+generated_by: claude-sonnet
+workflow_run: 33647965470
+issue: 3069
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/chartjs/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses were addressed directly: continent-outline basemap
+    adds geographic context, sequential color direction now runs green-for-high, and
+    axis bounds are tightened to the real data extent'
+  - 'Excellent theme-adaptive rendering: data tile colors are pixel-identical between
+    light and dark renders, while chrome correctly flips with no dark-on-dark or light-on-light
+    failures'
+  - Highly realistic, factually accurate renewable-electricity-share data for 32 countries
+    spanning every continent
+  - Honest, well-documented handling of Chart.js's lack of native geo/polygon support
+    - no chartjs-chart-geo plugin, no fake interactivity
+  - 'Missing-data handling implemented exactly per spec: two countries render as muted
+    gray No data tiles with a dedicated legend entry'
+  - Per-tile text color chosen via luminance check so every country code stays legible
+    regardless of the underlying fill color
+  weaknesses:
+  - 'SC-01/SC-02: Still not a literal choropleth - no filled region polygons or map
+    projection, though this is a genuine Chart.js core limitation and the basemap
+    is the right compensating move'
+  - 'CQ-01: The half-dozen small helper functions (hexToRgb, lerp, seqRgb, toCss,
+    luminance, binIndex) push slightly past pure KISS, though each is justified by
+    the binned-continuous-scale requirement'
+  - Continent outlines are stylized/approximate rather than accurate coastlines -
+    acceptable given the constraints, but worth noting as a simplification
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "Renewable Electricity Share · choropleth-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top, clearly legible. Bottom legend with six horizontal swatches and dark-ink labels, all readable. A lightweight continent-outline graticule (thin gray strokes, no fill) sits behind the tiles for geographic context.
+      Data: 32 country tiles (square markers) positioned by longitude/latitude, filled with the Imprint sequential scale (imprint_seq) binned into 5 buckets. Direction is correct: high-renewable countries (Norway, Brazil, Colombia, Kenya, New Zealand) render brand green #009E73; low-renewable countries (Saudi Arabia, South Africa, South Korea) render blue. 2 muted-gray "No data" tiles (NG, ID) with a dedicated legend entry. Each tile carries a legible 2-letter country code.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title and legend render in light ink, clearly visible. Continent outlines remain visible (stroked in the theme's grid color) against the dark background.
+      Data: Tile fill colors are pixel-identical to the light render - confirmed, only chrome flipped. In-tile country-code text colors remain legible per-tile via luminance-based logic; no dark-on-dark failures on any tile, including the muted-gray "No data" tiles.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title scales with length and is clearly legible; legend at 16px;
+          in-tile 12px country codes are small but legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping tiles, labels, legend entries, or basemap strokes
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Uniform 20px-radius tiles clearly visible for 32 points; size doesn't
+          vary with value
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance-based per-tile text color plus redundant country-code labels
+          avoid hue-only signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Axis bounds now tightened to the real data extent, removing excess
+          margin flagged in attempt 1
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cartesian axes intentionally unlabeled for map style; legend carries
+          descriptive labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Built from imprint_seq, direction now correct (green = high); identical
+          data colors across themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Continent-outline basemap meaningfully improves polish; still a positioned-tile
+          map, not a filled-region choropleth
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Basemap strokes read as a map graticule; tiles remain crisply edge-highlighted
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Green-for-high/blue-for-low now matches reader intuition; geographic
+          layout creates clear narrative
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Not a true choropleth (no filled polygons), but the continent-outline
+          basemap closes the gap given Chart.js core's limitations
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Legend, missing-data handling, and geographic basemap context present;
+          no real map projection or region boundaries
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=longitude, Y=latitude, color=value; all 32 points correctly visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels correctly describe bins + no-data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 1%-98% range, all continents represented, includes missing data
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Renewable electricity share is a real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values closely track real-world figures (Norway 98%, Brazil 84%,
+          Saudi Arabia 1%, South Korea 9%)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear flow, but several small helper functions for the binned
+          continuous scale and basemap
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-bin datasets for automatic legend, tooltip callbacks, documented
+          plugin lifecycle hook
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom plugin for label drawing plus line-dataset basemap is Chart.js-specific
+          composition, though tile-map substitution itself isn't unique to the library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - publication-ready
