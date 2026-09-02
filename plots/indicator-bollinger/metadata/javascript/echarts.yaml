@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: indicator-bollinger
 created: '2026-09-02T01:33:39Z'
-updated: '2026-09-02T01:39:07Z'
+updated: '2026-09-02T01:49:43Z'
 generated_by: claude-sonnet
 workflow_run: 33579257541
 issue: 3237
@@ -12,86 +12,84 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - 'Idiomatic ECharts band-fill technique: two stacked, symbol-less line series with
-    a transparent lower boundary and a 15%-opacity fill for the spread, giving a clean
-    semi-transparent envelope between the bands as the spec requests'
+  - Y-axis now auto-scales to the data range (padded ~10% beyond the close/band extremes)
+    instead of the fixed $0-$100 range from attempt 1, so the price and band lines
+    fill the full canvas height and the squeeze/expansion pattern is far more legible
+  - Band color moved to t.palette[1] (#C475FD, canonical position 2), fixing the palette-order
+    skip flagged in the previous review; first series remains the correct Imprint
+    brand green (#009E73), and theme chrome is fully correct and readable in both
+    renders
+  - New 'Tightest squeeze' markLine annotation locates the genuine minimum band-spread
+    bar (search starts after two full periods to avoid the SMA warm-up edge) and labels
+    it directly, giving the chart a clear focal point and turning the core Bollinger
+    Band insight into an explicit visual story
+  - 'Idiomatic ECharts band-fill technique preserved: two stacked, symbol-less line
+    series with a transparent lower boundary and 15%-opacity fill for the spread,
+    producing a clean semi-transparent envelope between the bands as the spec requests'
   - Helper fill series ('... (band fill)') are correctly excluded from the legend
-    and filtered out of the tooltip formatter, keeping the UI clean
-  - Correct Imprint brand green (#009E73) on the Close price line in both renders;
-    theme chrome (background, title, legend, axis text, gridlines) is fully correct
-    and readable in both plot-light.png and plot-dark.png
+    and filtered out of the tooltip formatter
   - SMA rendered as a dotted neutral-ink line and bands as dashed, giving three visually
     distinct line styles that stay legible without relying on hue alone
-  - Deterministic in-memory data via a tiny seeded LCG + Box-Muller gaussian, matching
-    the echarts library guide's recommendation for the browser runtime
-  - Title and legend exactly match the required format and data labels; canvas is
-    the correct 3200x1800 landscape size with no edge clipping
-  - Data shows both a clear volatility expansion (Feb, band widens) and contraction/squeeze
-    (Mar-Apr, band narrows), covering the two key Bollinger Band patterns called out
-    in the spec
+  - Deterministic in-memory data via a tiny seeded LCG + Box-Muller gaussian; title/legend
+    exactly match the required format; correct 3200x1800 landscape canvas with no
+    edge clipping
   weaknesses:
-  - Y-axis is fixed to $0-$100 while the data lives entirely in the $60-$85 range,
-    so roughly half the vertical canvas is empty whitespace and the band-width squeeze/expansion
-    patterns are compressed into a narrow horizontal strip. Auto-scale the y-axis
-    to the data range (e.g. yAxis.scale = true, or explicit min/max a few dollars
-    beyond the min/max of lowerBand/upperBand) so the volatility patterns read clearly
-    at full canvas height.
-  - Upper/Lower Band color uses t.palette[2] (#4467A3, canonical position 3, blue),
-    skipping t.palette[1] (#C475FD lavender, canonical position 2) without an explicit
-    semantic justification. Either use palette[1] for the second series per the canonical-order
-    default, or keep blue only if there's a stated semantic reason (e.g. 'blue = statistical
-    envelope' convention) noted in a comment.
-  - 'Design excellence is only moderate: the chart is well-executed but visually reads
-    as a competent default rather than a piece with strong visual hierarchy — consider
-    emphasizing the squeeze/expansion zones or the relationship between price and
-    the bands more deliberately (e.g. subtle shading intensity tied to band width,
-    or a small annotation marking the tightest squeeze) to create a clearer focal
-    point.'
-  - SMA line uses the theme-adaptive 'ink' chrome token rather than a palette color;
-    this is a defensible convention (neutral reference line distinct from data series)
-    but blurs the line between 'chrome' and 'data series' color usage — worth a one-line
-    justification in review notes if kept.
+  - Example data still never shows the price line clearly piercing outside a band
+    (a genuine breakout moment) -- it approaches the upper band around Jan 30 but
+    doesn't cross it. Not required by the spec, but a brief overshoot would round
+    out the 'overbought/oversold' feature coverage mentioned in the spec's Applications
+    section.
+  - SMA line still uses the theme-adaptive 'ink' chrome token rather than a palette
+    color -- a defensible convention for a neutral reference line, but it remains
+    a minor blur between 'chrome' and 'data series' color usage worth a one-line code
+    comment if kept long-term.
+  - 'Design excellence is strong but not yet at the ''excellent, immediately obvious''
+    tier: only one annotation is used to convey the squeeze/expansion story -- an
+    additional cue (e.g. subtle shading intensity that tracks band width, or a second
+    annotation on the Feb widening) would push the storytelling further.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "indicator-bollinger · javascript · echarts · anyplot.ai" in bold dark ink, centered top. Legend below it ("Close", "SMA (20)", "Upper Band", "Lower Band") in dark text. Y-axis titled "Price (USD)" with $-prefixed tick labels ($0-$100). X-axis shows sparse date ticks (Jan 2 through Jun 4-ish) in medium-gray. Subtle horizontal gridlines only, no vertical gridlines. All chrome text is clearly legible against the light background.
-      Data: Close price is a solid brand-green (#009E73) line, prominent and thick. SMA (20) is a black dotted line, clearly distinguishable. Upper/Lower Band lines are a muted blue, dashed, with a light gray-blue semi-transparent fill between them. The band visibly widens in mid-February (volatility expansion) and narrows around March-April (squeeze) before widening again in May. The data occupies roughly the upper-middle third of the vertical axis range ($60-$85 within a $0-$100 axis), leaving a large empty band of whitespace below the chart lines.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "indicator-bollinger · javascript · echarts · anyplot.ai" in bold dark ink, centered top, occupying ~33% of canvas width (well within bounds, no clipping). Legend below it ("Close", "SMA (20)", "Upper Band", "Lower Band") in dark text. Y-axis titled "Price (USD)" with $-prefixed tick labels now auto-scaled to roughly $58-$87 (tight around the data range instead of a fixed $0-$100). X-axis shows sparse date ticks (Jan 2 through Jun-ish) in medium-gray, no overlap. Subtle horizontal gridlines only, no vertical gridlines. A vertical dashed "Tightest squeeze" annotation sits cleanly in whitespace above the plot, over an April date, with no overlap with the legend or any data line (verified via pixel crop). All chrome text is clearly legible against the light background.
+      Data: Close price is a solid brand-green (#009E73) line, prominent (3px) and thick relative to SMA/bands. SMA (20) is a black dotted line, clearly distinguishable. Upper/Lower Band lines are now light purple/lavender (#C475FD, canonical Imprint position 2 -- corrected from the previous attempt's blue), dashed, with a matching semi-transparent (15% opacity) fill between them. The band visibly widens in mid-February (volatility expansion) and narrows sharply around the annotated April squeeze before widening again into May-June. Because the y-axis is now data-scaled, the price/band lines occupy nearly the full vertical extent of the plot area -- a major improvement over attempt 1's compressed strip.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend text, now rendered in white/light gray, fully readable against the dark background. Axis labels and tick labels are light gray, gridlines are subtle and still visible. No dark-on-dark text anywhere.
-      Data: Close line remains the identical brand green (#009E73) — confirmed unchanged from the light render. SMA (20) flips to a white dotted line (theme-adaptive ink token), still clearly visible against the dark background. Upper/Lower Band lines and fill remain the same blue hue as light mode (data colors unchanged, only the chrome flipped). The same volatility expansion/squeeze pattern is visible in the same locations.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title and legend text, rendered in white/light gray, fully readable against the dark background. Axis labels and tick labels are light gray, gridlines are subtle and still visible. The "Tightest squeeze" annotation label and dashed line are light-colored and equally legible against the dark background, with no dark-on-dark text anywhere.
+      Data: Close line remains the identical brand green (#009E73) -- confirmed unchanged from the light render. SMA (20) flips to a white dotted line (theme-adaptive ink token), still clearly visible. Upper/Lower Band lines and fill remain the same lavender/purple hue as light mode (data colors unchanged, only chrome flipped, as required). The same volatility expansion/squeeze pattern is visible in the same locations, filling the full canvas height identically to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, legend 16, axis labels 14);
-          readable in both themes with no overlap or clipping
+        comment: All font sizes explicitly set (title 22, legend 16, axis labels 14,
+          annotation 12); title measured at ~33% canvas width, no overflow or clipping;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No text or element collisions in either render, including the new
+          squeeze annotation (verified via pixel crop)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Lines well-differentiated (solid/dotted/dashed) and appropriately
-          weighted for 120 points, but band-width detail is somewhat compressed by
-          the unscaled y-axis
+          weighted for a 120-point series; auto-scaled y-axis now lets band-width
+          detail read clearly
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -101,12 +99,12 @@ review:
           series)
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot area well-proportioned and nothing cut off, but the fixed $0-$100
-          y-range wastes roughly half the vertical canvas on empty space below the
-          data
+        comment: Y-axis auto-scale fix from attempt 1 now fills the vertical canvas
+          well (~80% of height used); balanced margins, legend adjacent to plot, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -115,40 +113,37 @@ review:
         comment: Y-axis has descriptive label with unit ('Price (USD)')
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73 and chrome is theme-correct in both
-          renders, but the band color uses palette[2] (#4467A3), skipping canonical
-          position 2 (#C475FD) without a stated semantic reason'
+        passed: true
+        comment: 'Band color corrected to t.palette[1] (#C475FD, canonical position
+          2); first series correctly #009E73; chrome theme-correct in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean, professional line/dash/dot differentiation and correct palette
-          usage, but reads as a well-configured default rather than publication-level
-          polish
+        comment: Corrected palette order, full-height data-scaled axis, and a deliberate
+          squeeze annotation lift this clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle single-axis gridlines and no chartjunk, but the unused vertical
-          whitespace below the data undercuts the refinement
+        comment: Subtle single-axis gridlines, no spines/chartjunk, and the previously-flagged
+          wasted whitespace is now eliminated by the auto-scaled y-axis
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Color and line-style contrast create some hierarchy (green price
-          vs. neutral SMA vs. shaded band), but the squeeze/expansion story is muted
-          by the compressed y-range and there's no explicit emphasis on the volatility
-          pattern
+        comment: The new 'Tightest squeeze' markLine directly labels the core Bollinger
+          Band insight, giving the chart a clear focal point beyond color/line-style
+          hierarchy alone
     spec_compliance:
       score: 15
       max: 15
@@ -166,24 +161,22 @@ review:
         max: 4
         passed: true
         comment: Prominent close line, same-color semi-transparent band fill, dotted
-          middle band, and standard 20-period/2-stddev params labeled; band-width
-          secondary indicator was explicitly optional ('consider') and its absence
-          is not penalized
+          middle band, standard 20-period/2-stddev params labeled; optional band-width
+          secondary indicator not penalized
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Dates on x, price on y, all series aligned correctly; SMA/bands correctly
-          start blank for the first 19-period warm-up
+          start blank for the 19-period warm-up
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; legend labels (Close, SMA
-          (20), Upper Band, Lower Band) match the data, helper fill series correctly
-          hidden from legend
+        comment: Title exactly matches required format; legend labels match the data;
+          helper fill series correctly hidden from legend
     data_quality:
       score: 14
       max: 15
@@ -193,9 +186,9 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows both volatility expansion (Feb) and squeeze (Mar-Apr), plus
-          a warm-up gap; price never clearly pierces a band, so a genuine breakout
-          moment is missing
+        comment: Shows both volatility expansion (Feb) and a clearly annotated squeeze
+          (Apr); price approaches but never clearly pierces a band, so a genuine breakout
+          moment is still missing
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -208,7 +201,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Price range ($60-$85) and daily volatility are realistic for an equity
+        comment: Price range ($60-$87) and daily volatility are realistic for an equity
     code_quality:
       score: 10
       max: 10
@@ -218,8 +211,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; the lcg/gaussian helpers are the library-guide-recommended
-          pattern for a seeded browser RNG, not over-engineering
+        comment: Linear script; lcg/gaussian helpers and the new squeeze-search loop
+          are appropriately scoped, no functions/classes beyond the required RNG helper
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -237,8 +230,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a multi-series indicator chart, no fake
-          UI
+        comment: Appropriate complexity for a multi-series indicator chart with auto-scaling
+          and annotation logic; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -255,22 +248,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of the stack + transparent-line ECharts idiom for a range-band
-          fill, correct z-ordering across the five series, and a tooltip formatter
-          that filters helper series
+        comment: Expert use of the stack + transparent-line ECharts band-fill idiom,
+          correct z-ordering across five series, tooltip formatter filtering helper
+          series, and idiomatic markLine for the squeeze annotation
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: The stacked invisible-line band-fill trick is a genuine ECharts-specific
-          technique, though the overall chart could be approximated in other libraries
-          with similar effort
-  verdict: REJECTED
+        comment: Stacked invisible-line band-fill trick plus markLine annotation are
+          genuine ECharts-specific techniques, though the overall chart could be approximated
+          in other libraries with similar effort
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
+  - area-fill
   patterns:
   - data-generation
   dataprep:
