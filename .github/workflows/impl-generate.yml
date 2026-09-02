@@ -874,6 +874,7 @@ jobs:
       # Upload to GCS Staging
       # ========================================================================
       - name: Authenticate to GCP
+        id: gcp_auth
         if: steps.pr.outputs.pr_exists == 'true'
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
         with:
@@ -881,6 +882,7 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: Set up Cloud SDK
+        id: gcloud
         if: steps.pr.outputs.pr_exists == 'true'
         uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
 
@@ -980,6 +982,7 @@ jobs:
           gh issue comment "$ISSUE" --body "$BODY"
 
       - name: Trigger review workflow
+        id: review_dispatch
         if: steps.pr.outputs.pr_exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -1021,8 +1024,56 @@ jobs:
           # well under an hour) with room for a stalled tail, without letting
           # last month's failures veto today's retries.
           CAMPAIGN_WINDOW_H: '12'
+          # Step outcomes, to tell an infrastructure failure (provider incident,
+          # cloud auth, GitHub API) from the agent's own — only the latter counts
+          # toward the 3-attempt cap. Only the retry step is inspected: it runs
+          # solely when the first Claude step failed, so its failure means both
+          # runs died (the first step has continue-on-error and never fails the
+          # job by itself).
+          CLAUDE_RETRY_OUTCOME: ${{ steps.claude_retry.outcome }}
+          CLAUDE_EXEC_FILE: ${{ steps.claude_retry.outputs.execution_file }}
+          GCP_AUTH_OUTCOME: ${{ steps.gcp_auth.outcome }}
+          GCLOUD_OUTCOME: ${{ steps.gcloud.outcome }}
+          GCS_OUTCOME: ${{ steps.gcs.outcome }}
+          PR_OUTCOME: ${{ steps.pr.outcome }}
+          REVIEW_DISPATCH_OUTCOME: ${{ steps.review_dispatch.outcome }}
+          # Infrastructure failures are retried without spending the pair's
+          # budget, but not forever: after this many in the window the pair is
+          # parked WITHOUT `impl:<lib>:failed` (it is not a capability verdict)
+          # and left for the next dispatch.
+          INFRA_WINDOW_CAP: '5'
         run: |
           echo "::notice::Handling generation failure for $LIBRARY/$SPEC_ID"
+
+          # Classify the failure. The retry cap exists to stop re-running a pair
+          # the model cannot solve; a provider incident, a cloud token refresh
+          # or a GitHub 5xx says nothing about the pair. During the Claude
+          # outage of 2026-09-02 (03:15–03:45 UTC) every run failed with
+          # `is_error:true` + "Internal error", 27 pairs burned all three
+          # attempts in twenty minutes, and for the next twelve hours each
+          # re-dispatch ran without any auto-retry because the markers counted.
+          #
+          # Infrastructure = both Claude runs ended in the action's own error
+          # path with a provider-side signature (the execution log is checked,
+          # so an agent that gave up — max turns, refused — still counts), or
+          # the GCP auth / Cloud SDK / GCS upload / PR creation / review
+          # dispatch step failed. "Implementation file not found" and a missing
+          # theme render are the agent's own and keep counting.
+          INFRA_CAUSE=""
+          if [ "${CLAUDE_RETRY_OUTCOME}" = "failure" ]; then
+            if [ -n "${CLAUDE_EXEC_FILE}" ] && [ -f "${CLAUDE_EXEC_FILE}" ] \
+               && grep -qiE 'Internal error|overloaded|rate.?limit|too many requests|ECONNRESET|ETIMEDOUT|"status": *5[0-9][0-9]' "${CLAUDE_EXEC_FILE}"; then
+              SNIPPET=$(grep -oiE 'Internal error[^"]{0,60}|overloaded[^"]{0,40}|rate.?limit[^"]{0,40}|too many requests|ECONNRESET|ETIMEDOUT|"status": *5[0-9][0-9]' "${CLAUDE_EXEC_FILE}" | head -1)
+              INFRA_CAUSE="Claude Code action error: ${SNIPPET:-provider-side error, see the execution log}"
+            fi
+          elif [ "${GCP_AUTH_OUTCOME}" = "failure" ] || [ "${GCLOUD_OUTCOME}" = "failure" ] || [ "${GCS_OUTCOME}" = "failure" ]; then
+            INFRA_CAUSE="Google Cloud auth/upload step failed"
+          elif [ "${PR_OUTCOME}" = "failure" ] || [ "${REVIEW_DISPATCH_OUTCOME}" = "failure" ]; then
+            INFRA_CAUSE="GitHub API step failed (PR creation or review dispatch)"
+          fi
+          if [ -n "${INFRA_CAUSE}" ]; then
+            echo "::notice::Classified as infrastructure failure: ${INFRA_CAUSE}"
+          fi
 
           # Count previous failures via hidden marker comments (more reliable than workflow runs).
           # Paginate so the marker is found even on issues with >30 comments
@@ -1053,15 +1104,90 @@ jobs:
           # on the very next manual dispatch, and 87 pairs parked repo-wide.
           # A generation campaign is minutes long, so a window of hours is
           # generous while still letting stale history age out on its own.
+          #
+          # INFRASTRUCTURE-AWARE: a marker that also carries INFRA_TAG records a
+          # failure that was not the agent's (see the classification above).
+          # Those are counted separately: they never spend the 3-attempt budget
+          # and are bounded by INFRA_WINDOW_CAP instead.
           MARKER="<!-- impl-fail:${SPEC_ID}:${LIBRARY} -->"
+          INFRA_TAG="<!-- impl-fail-cause:infra -->"
           CAMPAIGN_CUTOFF=$(date -u -d "${CAMPAIGN_WINDOW_H} hours ago" +%Y-%m-%dT%H:%M:%SZ)
-          if FAILURE_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | length" \
-            | awk '{ sum += $1 } END { print sum + 0 }'); then
-            echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID} since ${CAMPAIGN_CUTOFF}: $FAILURE_COUNT"
+          # One paginated call, two numbers per page ("<genuine> <infra>"), summed by awk.
+          if COUNTS=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
+            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | \"\(map(select(.body | contains(\"$INFRA_TAG\") | not)) | length) \(map(select(.body | contains(\"$INFRA_TAG\"))) | length)\"" \
+            | awk '{ g += $1; i += $2 } END { print (g + 0) " " (i + 0) }'); then
+            FAILURE_COUNT=${COUNTS% *}
+            INFRA_COUNT=${COUNTS#* }
+            echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID} since ${CAMPAIGN_CUTOFF}: $FAILURE_COUNT (plus $INFRA_COUNT infrastructure failures, not counted)"
           else
             echo "::warning::Failure-count API call failed — failing closed (treating retry cap as reached, no auto-retry)"
             FAILURE_COUNT=999
+            INFRA_COUNT=999
+          fi
+
+          # Retry dispatch, shared by both branches below. Forwards
+          # `change_request` so cross-library divergence hints from daily-regen
+          # pre-flight survive the retry — otherwise the first attempt has the
+          # hint but the retry doesn't, defeating the audit. CHANGE_REQUEST is
+          # read from env to keep raw quotes/$/backticks inside the hint from
+          # breaking shell parsing.
+          dispatch_retry() {
+            gh workflow run impl-generate.yml \
+              -f specification_id="${SPEC_ID}" \
+              -f library="${LIBRARY}" \
+              -f issue_number="${ISSUE}" \
+              -f model="${MODEL}" \
+              -f change_request="${CHANGE_REQUEST}"
+            if [ -n "${CHANGE_REQUEST}" ]; then
+              echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} ($1, model=${MODEL}, change_request=present)"
+            else
+              echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} ($1, model=${MODEL}, change_request=none)"
+            fi
+          }
+
+          if [ -n "${INFRA_CAUSE}" ]; then
+            INFRA_ATTEMPT=$((INFRA_COUNT + 1))
+            if [ "${INFRA_COUNT}" -ge $((INFRA_WINDOW_CAP - 1)) ]; then
+              # Parked, not failed: nothing here says the pair is impossible.
+              # No `impl:<lib>:failed`, so the watchdog does not treat it as a
+              # capability verdict either; the next backfill dispatch picks it
+              # up with a clean budget once the markers age out.
+              echo "::warning::Parking $LIBRARY/$SPEC_ID after ${INFRA_ATTEMPT} infrastructure failures in the last ${CAMPAIGN_WINDOW_H}h (cap: ${INFRA_WINDOW_CAP}) — not marked failed, no auto-retry"
+              # One label per call: a name `gh` cannot resolve fails a whole
+              # comma-separated edit and would leave both labels in place.
+              for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
+                gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
+              done
+              gh issue comment "$ISSUE" --body "${MARKER}
+          ${INFRA_TAG}
+          ## :pause_button: ${LIBRARY} Paused (infrastructure failures)
+
+          The **${LIBRARY}** implementation for \`${SPEC_ID}\` hit ${INFRA_ATTEMPT} infrastructure failures in the last ${CAMPAIGN_WINDOW_H}h (cap: ${INFRA_WINDOW_CAP}) and is paused. This is **not** a capability verdict — the pair keeps its 3-attempt budget.
+
+          **Last cause:** ${INFRA_CAUSE}
+
+          To retry once the incident is over:
+          \`\`\`
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}
+          \`\`\`
+
+          ---
+          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+            else
+              gh issue comment "$ISSUE" --body "${MARKER}
+          ${INFRA_TAG}
+          ## :cloud: ${LIBRARY} Infrastructure Failure (${INFRA_ATTEMPT}/${INFRA_WINDOW_CAP} in window)
+
+          **Cause:** ${INFRA_CAUSE}
+
+          Not counted toward the 3-attempt cap. Automatically retrying...
+
+          ---
+          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+              gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
+              dispatch_retry "infrastructure retry ${INFRA_ATTEMPT}/${INFRA_WINDOW_CAP}"
+            fi
+            exit 0
           fi
 
           # FAILURE_COUNT counts marker comments BEFORE this run.
@@ -1089,10 +1215,13 @@ jobs:
             gh label create "impl:${LIBRARY}:failed" --color "d73a4a" \
               --description "${LIBRARY} implementation failed" 2>/dev/null || true
 
-            # Remove stale labels and add failed
-            gh issue edit "$ISSUE" \
-              --remove-label "generate:${LIBRARY},impl:${LIBRARY}:pending" \
-              --add-label "impl:${LIBRARY}:failed" 2>/dev/null || true
+            # Add failed first, then drop the stale labels one per call: a
+            # name `gh` cannot resolve fails a whole comma-separated edit, and
+            # the old single call could leave the pair marked pending forever.
+            gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:failed" 2>/dev/null || true
+            for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
+              gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
+            done
 
             # Post final failure comment with marker
             gh issue comment "$ISSUE" --body "${MARKER}
@@ -1123,22 +1252,5 @@ jobs:
             # Clean up generate label before retry
             gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
 
-            # Automatic retry via workflow_dispatch.
-            # Forward `change_request` so cross-library divergence hints from
-            # daily-regen pre-flight survive the retry — otherwise the first
-            # attempt has the hint but the retry doesn't, defeating the audit.
-            # CHANGE_REQUEST is read from env to keep raw quotes/$/backticks
-            # inside the hint from breaking shell parsing.
-            gh workflow run impl-generate.yml \
-              -f specification_id="${SPEC_ID}" \
-              -f library="${LIBRARY}" \
-              -f issue_number="${ISSUE}" \
-              -f model="${MODEL}" \
-              -f change_request="${CHANGE_REQUEST}"
-
-            if [ -n "${CHANGE_REQUEST}" ]; then
-              echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)), model=${MODEL}, change_request=present)"
-            else
-              echo "::notice::Triggered automatic retry for ${LIBRARY}/${SPEC_ID} (attempt $((ATTEMPT + 1)), model=${MODEL}, change_request=none)"
-            fi
+            dispatch_retry "attempt $((ATTEMPT + 1))"
           fi

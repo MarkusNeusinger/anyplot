@@ -28,6 +28,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Infrastructure failures no longer spend a pair's generation budget** — the
+  3-attempt cap in `impl-generate.yml` counted every failed run alike, so the Claude
+  outage of 2026-09-02 (03:15–03:45 UTC, every run ending in `is_error:true` with an
+  "Internal error") burned all three attempts of 27 pairs in twenty minutes, and for the
+  rest of the 12-hour window each re-dispatch ran without any auto-retry. The failure
+  handler now classifies the run from the step outcomes: both Claude runs dying with a
+  provider-side signature in the execution log, a Google Cloud auth/SDK/upload failure,
+  or a GitHub API failure at PR creation or review dispatch is an infrastructure failure.
+  Those are recorded with an extra `<!-- impl-fail-cause:infra -->` tag, excluded from the
+  genuine count, and retried on a separate cap of 5 per window, after which the pair is
+  paused without `impl:<lib>:failed` (an incident is not a capability verdict). "Agent
+  reports success but writes no file" and a missing theme render still count as before.
+  (#11199)
 - **A merged implementation now clears its `impl:<lib>:failed` label and the watchdog's
   retry marker** — impl-merge removed the stale labels in one comma-separated
   `gh issue edit`, and `gh` rejects the whole call when any name in the list is not a
