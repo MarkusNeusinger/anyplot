@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: box-horizontal
 created: '2026-09-02T13:21:16Z'
-updated: '2026-09-02T13:25:23Z'
+updated: '2026-09-02T13:38:28Z'
 generated_by: claude-sonnet
 workflow_run: 33634910499
 issue: 2548
@@ -12,45 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 79
 review:
   strengths:
-  - Categories sorted descending by median salary (Data Scientist at top, Customer
-    Support Rep at bottom) — a thoughtful implementation of the spec's suggestion,
-    making cross-category comparison immediate
-  - All four statistical elements (median, IQR box, whiskers, outliers) are present
-    and correctly rendered
+  - Categories remain sorted descending by median salary (Data Scientist at top, Customer
+    Support Rep at bottom), keeping cross-category comparison immediate
+  - All four required statistical elements (median line, IQR box, whiskers, outliers)
+    are present and correctly rendered in both themes
   - 'Theme-adaptive chrome is threaded correctly: INK/INK_SOFT/PAGE_BG flip between
-    renders while the brand-green data color (#009E73) stays identical'
-  - Correct canvas size (3200×1800 landscape), correct mandated title format, x-axis
-    has units in its label
-  - Clean, reproducible, KISS-structured code
+    renders while the brand-green data color (#009E73) stays pixel-identical'
+  - Outlier points are now visibly bolder (outlier.size=2.6, outlier.alpha=0.85 vs.
+    the previous attempt's 1.8/0.6), improving at-a-glance visibility
+  - Correct canvas size (3200x1800 landscape), correct mandated title format, x-axis
+    has units, clean/reproducible/KISS-structured code
   weaknesses:
-  - Aesthetic sophistication is minimal — a single flat brand-green fill at fixed
-    alpha is the only stylistic decision; nothing elevates it past a stock geom_boxplot()
-    call (e.g. no refined outlier treatment, no subtle emphasis on the top/bottom
-    performers)
-  - No distinctive ggplot2-specific feature is leveraged to showcase library mastery
-    — consider a mean marker via stat_summary(), or lightly emphasizing the extremes
-    of the sorted list
-  - Outlier points (outlier.size = 1.8, outlier.alpha = 0.6) are on the small/faint
-    side for a generously sized 3200×1800 canvas — could be a touch bolder for at-a-glance
-    visibility
+  - 'The new stat_summary(fun = mean, geom = "point", shape = 23, ...) mean-marker
+    layer does not render anywhere in either theme. Pixel-level inspection of every
+    box in both plot-light.png and plot-dark.png shows the median line''s width is
+    perfectly uniform (11px, unchanged) across the box''s full vertical extent, with
+    zero additional gap or bulge -- no diamond is drawn. Likely cause: stat_summary()
+    defaults to summarizing y-over-x (vertical orientation); since this is a horizontal
+    boxplot (continuous x = salary_k, discrete y = job_title), the call needs an explicit
+    orientation = "y" argument, otherwise the per-category mean is computed against
+    the wrong axis and the resulting point never appears where expected. Fix: add
+    orientation = "y" to stat_summary() and visually confirm a diamond appears centered
+    in each box before resubmitting.'
+  - 'The new plot.caption ("◆ marks the mean; box marks the median and interquartile
+    range") is completely absent from both renders -- not partially clipped, entirely
+    missing, checked all the way to the canvas''s bottom edge. plot.margin has b =
+    12, too small to fit the caption''s 7pt text plus its margin(t = 10) below the
+    x-axis title, so the caption row gets squeezed out of the saved PNG entirely.
+    Fix: increase plot.margin(b = ...) substantially (e.g. b = 40) or otherwise free
+    vertical space so the caption actually prints in the saved image.'
+  - Because neither the mean marker nor its explanatory caption render, this repair
+    attempt did not deliver the distinctive-feature / aesthetic-sophistication improvement
+    requested by the previous review -- Library Mastery (LM-02) and Design Excellence
+    (DE-01/DE-03) remain at the same low baseline as attempt 1, and the caption bug
+    is a net-new regression versus attempt 1's clean layout.
+  - With both new elements invisible, the stat_summary + caption code currently has
+    zero visual effect -- it is effectively dead code until the orientation and margin
+    issues above are fixed.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 target.
-      Chrome: Title "box-horizontal · r · ggplot2 · anyplot.ai" in dark ink; category labels (job titles) on y-axis and tick labels (60/90/120/150) on x-axis all dark-on-light and clearly readable; x-axis title "Annual Salary (thousands USD)" present with units.
-      Data: Boxes filled brand green (#009E73) at ~75% alpha with dark borders and dark median line; whiskers and outlier points (Data Scientist, Product Manager, Customer Support Rep) in matching green. First/only series correctly uses #009E73.
-      Legibility verdict: PASS
+      Chrome: Title "box-horizontal · r · ggplot2 · anyplot.ai" in dark ink at top; y-axis category labels (job titles) and x-axis tick labels (60/90/120/150) all dark-on-light and clearly readable; x-axis title "Annual Salary (thousands USD)" present with units. No plot.caption text is visible anywhere below the x-axis title, all the way to the canvas's bottom edge -- pixel inspection confirms it never renders.
+      Data: Boxes filled brand green (#009E73) at ~75% alpha with dark borders and a dark median line; whiskers and 3 outlier points (Data Scientist, Product Manager, Customer Support Rep) in matching green, now noticeably bolder than the prior attempt. Pixel-level scan of every box's full height shows the dark median line has a perfectly constant width top-to-bottom -- no diamond mean-marker is present anywhere in the image despite stat_summary() being added to the code.
+      Legibility verdict: PASS (all rendered text is readable; the caption and mean marker are not a legibility failure, they are simply absent from the render)
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 target.
-      Chrome: Same title, category labels, and tick labels, now light-on-dark (off-white/light-gray text); gridlines faint but visible against dark surface. No dark-on-dark issues observed.
-      Data: Box fill, median line color (now light), and outlier point color confirmed identical brand green (#009E73) to the light render — only chrome (ink/background) flipped as required.
-      Legibility verdict: PASS
+      Chrome: Same title, category labels, and tick labels, now light-on-dark (off-white text); gridlines faint but visible against the dark surface. No dark-on-dark issues. Same as light render, the plot.caption text is entirely absent -- no trace of it anywhere in the canvas.
+      Data: Box fill, median line, and outlier point colors confirmed identical brand green (#009E73) to the light render -- only chrome flipped as required. Same pixel-scan method applied to the dark render confirms no diamond mean-marker renders here either.
+      Legibility verdict: PASS (readable text is fine in this theme too; the missing elements are a rendering/layout bug, not a contrast/theme failure)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -58,7 +74,7 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; sizes explicitly set
+        comment: All rendered text readable in both themes, explicit sizes set
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -70,8 +86,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Boxes and whiskers clearly visible; outlier points a bit small but
-          visible
+        comment: Boxes, whiskers, and now-bolder outlier points all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -80,10 +95,11 @@ review:
         comment: Good contrast, single-hue encoding, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Correct 3200x1800 canvas, title well within bounds, no overflow
+        passed: false
+        comment: plot.caption is entirely squeezed off the saved PNG by an undersized
+          bottom margin -- content cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -97,7 +113,7 @@ review:
         passed: true
         comment: 'First series #009E73, identical between themes; backgrounds correct'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -105,20 +121,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Single flat brand-green fill at fixed alpha; no further polish beyond
-          stock geom_boxplot()
+        comment: Intended new embellishment (mean diamond) does not render; still
+          a flat brand-green fill, no visible polish added
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: y-gridlines/ticks removed, subtle x-only grid, generous margins
+        passed: false
+        comment: Caption/margin bug shows reduced attention to detail versus attempt
+          1's clean layout
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Descending sort by median salary creates a clear visual staircase
+        comment: Descending sort by median salary still creates a clear visual staircase
     spec_compliance:
       score: 15
       max: 15
@@ -156,7 +173,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All box-plot elements shown with visible outliers across categories
+        comment: All box-plot elements shown with visible outliers and varied spreads
+          across categories
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -170,7 +188,7 @@ review:
         passed: true
         comment: Sensible salary ranges for the named roles
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -193,10 +211,11 @@ review:
         comment: ggplot2, dplyr, ragg all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: stat_summary + caption block currently has zero visual effect due
+          to the orientation/margin bugs -- effectively dead code as shipped
       - id: CQ-05
         name: Output & API
         score: 1
@@ -218,14 +237,17 @@ review:
         score: 1
         max: 5
         passed: false
-        comment: Relies entirely on stock geom_boxplot() defaults
+        comment: stat_summary() mean marker was added but does not render, so no distinctive
+          feature is actually visible
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   - groupby-aggregation
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
