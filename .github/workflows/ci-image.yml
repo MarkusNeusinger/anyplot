@@ -84,23 +84,39 @@ jobs:
           FORCE_RUN: ${{ inputs.force_run }}
         run: |
           set -uo pipefail
+          # A diff that cannot be computed says NOTHING about the image, so it
+          # must never read as "nothing changed" — that is a gate which passes
+          # by failing. On a PR or a merge group the refs are guaranteed present
+          # (fetch-depth: 0), so a failure there is a real problem and stops the
+          # job; on a push whose parent is unreachable the job builds instead.
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA")
+            if ! CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA"); then
+              echo "::error::could not diff $PR_BASE_SHA..$PR_HEAD_SHA — refusing to decide whether the image needs building"
+              exit 1
+            fi
           elif [[ "$EVENT_NAME" == "merge_group" ]]; then
-            CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA")
-          else
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+            if ! CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA"); then
+              echo "::error::could not diff $MG_BASE_SHA..$MG_HEAD_SHA — refusing to decide whether the image needs building"
+              exit 1
+            fi
+          elif ! CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD); then
+            echo "::warning::no parent commit to diff against — building the image rather than skipping the gate"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
           # What can change what the image contains or how it boots: the two
-          # Dockerfiles, the dependency lock, and the source the runtime stage
-          # copies. plots/ is copied too but nothing reads it at runtime (the
-          # implementations are served from Postgres), so the plot pipeline's
-          # PRs must not each pay for a container build.
-          IMAGE_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(api/|core/|pyproject\.toml$|uv\.lock$|app/Dockerfile$|\.github/workflows/ci-image\.yml$)' || true)
+          # Dockerfiles, the dependency lock, the source the runtime stage
+          # copies, README.md (the builder copies it next to pyproject.toml, so
+          # a rename breaks the install) and a root .dockerignore, which decides
+          # what a `context: .` build can see at all. plots/ is copied too but
+          # nothing reads it at runtime (the implementations are served from
+          # Postgres), so the plot pipeline's PRs must not each pay for a
+          # container build.
+          IMAGE_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(api/|core/|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|app/Dockerfile$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the image"
