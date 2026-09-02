@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: indicator-ema
 created: '2026-09-02T01:43:34Z'
-updated: '2026-09-02T01:47:47Z'
+updated: '2026-09-02T01:56:16Z'
 generated_by: claude-sonnet
 workflow_run: 33580171047
 issue: 3652
@@ -12,53 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Correctly overlays two EMA periods (12, 26) on the close price, with EMA lines
-    visibly thinner (2.2px) than the price line (3px), matching the spec's guidance
-    to avoid visual clutter
+  - Both EMA colors and the crossover-marker colors now reference t.palette tokens
+    exclusively (palette[0]/palette[1]/palette[4]) — no hardcoded hex literals remain,
+    resolving the prior attempt's VQ-07/CQ-04 findings
+  - Canonical Imprint palette order is now used for the two categorical EMA series
+    (palette[0] for the short EMA, palette[1] for the long EMA), with the Close price
+    line correctly left on the neutral ink token as the underlying context line
   - Highlights golden-cross/death-cross points with distinct green/matte-red markers
     with a page-background stroke for definition — a genuine data-storytelling touch
-    that draws the eye to the actionable trading signal instead of leaving it a flat
-    triple-line chart
-  - 'Deterministic fixed-seed LCG data generation, clean mount-node contract usage
-    (single canvas append, animation: false), and idiomatic use of Chart.js dataset
-    `order` to control both z-index layering and legend grouping'
-  - Both light and dark renders are fully legible with correctly themed chrome (title/axis/tick
-    colors from tokens); data colors (ink price line, green/blue EMAs) are identical
-    across themes as required
-  - Y-axis tick callback formats values as currency ($165) and axis titles are descriptive
-    with units (Price (USD), Trading Date)
+    tied directly to the spec's 'highlighting crossover points' note
+  - Deterministic fixed-seed LCG data generation, clean mount-node contract usage,
+    idiomatic use of Chart.js `order` for z-index and legend grouping
+  - Both light and dark renders are fully legible with correctly themed chrome; data
+    colors are identical across themes, only chrome flips
   weaknesses:
-  - The two EMA series use palette[0] (green, short) and palette[2] (blue, long),
-    skipping palette[1] (lavender) — deviates from the Imprint canonical 'positions
-    1→N in order' default for categorical series. Either use palette[0]/palette[1]
-    in canonical order, or keep the blue-for-slower-EMA convention but note it's an
-    intentional finance-convention exception
-  - The death-cross marker color is hardcoded as the literal string "#AE3030" instead
-    of referencing `t.palette[4]`, which already holds that exact matte-red value
-    — the token should be the single source of truth so the hex can't drift out of
-    sync with the palette
-  - Legend order renders as 'EMA 12, EMA 26, Close' (reversed from a reader's expected
-    primary-first order) because the `order` field used for z-index also reorders
-    the legend — consider setting `order` only via a dedicated legend `labels.sort`
-    or accepting the current order is a minor readability nit, not a defect
+  - Legend order renders as 'EMA 12, EMA 26, Close' because the `order` field used
+    for z-index also reorders the legend — a reader typically expects the primary
+    price series first; consider a dedicated `legend.labels.sort` or reordering only
+    `order` for draw z-index while leaving dataset array order for legend purposes
+  - Design excellence is still fairly conventional beyond the crossover-marker treatment
+    — a triple-line overlay with default legend styling; a subtler legend box, refined
+    typography weight variance, or a light fill under the price line could lift visual
+    refinement
+  - Library Mastery is solid but not deeply distinctive — per-point radius/color arrays
+    for crossover highlighting is a nice touch, but doesn't otherwise showcase a hallmark
+    Chart.js feature (e.g. annotation plugin patterns, fill-between bands, or scriptable
+    options beyond per-point arrays)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "indicator-ema · javascript · chartjs · anyplot.ai" in bold dark ink, centered top, comfortably under ~50% of plot width. Legend top-right reads "EMA 12 — EMA 26 — Close" in dark ink with line-style swatches. X-axis labeled "Trading Date" with tick labels ("Jan 2", "Jan 18", ... "May 31") in medium-gray, horizontal, no rotation. Y-axis labeled "Price (USD)" with dollar-formatted ticks ($145–$170) in medium-gray. Subtle horizontal gridlines only. All chrome text is clearly legible against the light background.
-      Data: Close price is a bold black/ink line (thickest, most prominent, ~120 points, Jan–Jun). EMA 26 (long) is a blue line (#4467A3, palette[2]). EMA 12 (short) is a green line (#009E73, palette[0]), both visibly thinner than the price line. A green dot marks an early golden cross (short crosses above long) near the start of the series; a red/matte-red dot marks a death cross (short crosses below long) around mid-May, both with a light page-background stroke for definition.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlaps.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "indicator-ema · javascript · chartjs · anyplot.ai" in bold dark ink, centered top, ~30% of plot width (expected for this shorter, non-prefixed title — no deduction). Legend top-right reads "EMA 12 — EMA 26 — Close" with line-style swatches. X-axis "Trading Date" with horizontal, unrotated date ticks and no vertical gridlines (decluttered); Y-axis "Price (USD)" with dollar-formatted ticks and subtle horizontal gridlines. All title/axis/tick text renders in dark ink and is clearly readable against the light background.
+      Data: Close price is a bold black/ink line (order 3, thickest at 3px); EMA 26 (long) is lavender/violet, exactly t.palette[1]; EMA 12 (short) is brand green, exactly t.palette[0], both visibly thinner (2.2px) than the price line per spec guidance. A green dot near the chart's start and a red/matte dot near mid-May mark golden-cross and death-cross points respectively, each with a light page-background stroke for definition.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend, now in light/off-white text (#F0EFE8-ish), clearly visible against the dark background. Axis labels, tick labels, and gridlines flip to light-gray tones as expected. Layout is otherwise identical to the light render.
-      Data: Close price line flips to white/off-white (ink token, theme-adaptive) while EMA 26 (blue) and EMA 12 (green) retain the exact same hex values as the light render — correct Imprint-palette behavior (only chrome flips, data colors stay constant). The same golden-cross (green) and death-cross (red) markers appear at the same positions, now stroked with the dark page background.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text is light-on-dark and clearly readable, data lines remain distinguishable from the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, and axis text flip to light/off-white and remain clearly legible; layout is otherwise identical to the light render. No dark-on-dark failures observed — no title/axis/tick text is rendered dark-on-dark.
+      Data: Close price line flips to the light ink token (white), while EMA 26 (lavender, palette[1]) and EMA 12 (green, palette[0]) retain the exact same hex values as the light render — correct Imprint-palette behavior confirming only chrome flips, not data colors. The same crossover markers (green/red dots) appear at the same positions with the same page-background stroke, now against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,49 +63,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; title/axis/tick
-          fonts appropriate for 3200x1800 canvas
+        comment: Explicit font sizes throughout, readable in both themes; no proportional
+          violations
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No collisions between text, data, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line thickness appropriate for 120-point density; crossover markers
-          stand out clearly
+        comment: Lines without markers appropriate for 120 points; crossover markers
+          sized (radius 7) to stand out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green crossover markers follow the style guide's sanctioned finance
-          semantic exception (profit/up=green, loss/down=red), with redundant positional
-          encoding
+        comment: Green/lavender/ink lines plus position-encoded crossover markers;
+          red/green dots are reinforced by crossing-line position, not sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Title ~40% width, well within range; no overflow or clipping; canvas
-          gate passed
+        comment: Canvas dimension gate passed; no clipping or overflow; title proportion
+          appropriate for its length
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Trading Date'', ''Price (USD)'''
+        comment: Descriptive 'Trading Date' and 'Price (USD)' axis titles with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: EMA series skip palette[1] (uses palette[0] and palette[2]); death-cross
-          marker hardcodes '#AE3030' instead of referencing t.palette[4]
+        passed: true
+        comment: 'Fixed from attempt 1: EMA series now use t.palette[0]/t.palette[1]
+          in canonical order, death-cross marker now references t.palette[4] instead
+          of a hardcoded hex literal; backgrounds correct in both themes'
     design_excellence:
       score: 12
       max: 20
@@ -117,23 +114,22 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Thoughtful color choices and crossover-marker treatment, but overall
-          a fairly conventional triple-line indicator layout
+        passed: false
+        comment: Thoughtful crossover-marker treatment, but a fairly conventional
+          triple-line layout overall
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Subtle single-axis grid, generous whitespace, clean minimal chart.js
-          chrome; nothing beyond the basics
+        passed: false
+        comment: Clean but minimal customization beyond the basics
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Crossover markers create clear focal points highlighting the actionable
-          trading signal; price line has visual priority via thickness/color
+        comment: Crossover markers create clear focal points on the actionable trading
+          signal
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EMA overlay line chart
+        comment: Correct line-overlay EMA indicator chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price line + EMA overlays + crossover highlighting + legend labels
-          with periods, all present
+        comment: Price line prominent, two EMA periods overlaid, thinner than price
+          line, crossover highlighting, legend labels with periods
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, price on y-axis, all 120 periods shown
+        comment: Date on X, price on Y, full series range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels 'EMA 12'/'EMA
-          26'/'Close' correctly identify each series
+        comment: Title matches mandated format; legend labels match dataset semantics
+          ('EMA 12', 'EMA 26', 'Close')
     data_quality:
       score: 15
       max: 15
@@ -173,24 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows close price plus both required EMA periods (12, 26) matching
-          the spec's data columns
+        comment: Price, two EMA periods, and crossover events all represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral stock-price range ($145-170) with no real company/ticker
-          references
+        comment: Plausible, neutral stock-price random walk with drift regimes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 trading days over ~5 months, sensible price range for linear
-          y-axis
+        comment: 120 trading days, prices in a sensible $145-$170 band
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -198,32 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; single small ema() helper is necessary and justified
+        comment: No unnecessary classes/functions beyond the small `ema()` helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG, deterministic date generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Chart, as required by the harness contract
+        comment: No imports beyond the provided Chart.js global
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded '#AE3030' literal instead of t.palette[4] token reference
+        passed: true
+        comment: 'Fixed from attempt 1: death-cross color now references t.palette[4]
+          instead of the hardcoded ''#AE3030'' literal'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, animation: false set, current Chart.js
-          4.x API'
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          v4 API
     library_mastery:
       score: 5
       max: 10
@@ -233,23 +227,23 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Solid idiomatic Chart.js line-chart usage: dataset order for z-index/legend,
-          interaction mode ''index'', tension'
+        comment: Solid use of dataset `order`, interaction mode 'index', line tension
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Per-point pointRadius/pointBackgroundColor arrays to spotlight crossover
-          events is a nice distinctive touch, but not deeply unusual
+        passed: false
+        comment: Per-point radius/color arrays to spotlight crossovers is a nice touch,
+          not deeply unusual
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
-  - edge-highlighting
+  - grid-styling

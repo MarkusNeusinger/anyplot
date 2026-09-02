@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-09-02
+// Quality: 86/100 | Created: 2026-09-02
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
