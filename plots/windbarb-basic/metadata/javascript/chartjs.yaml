@@ -1,0 +1,270 @@
+library: chartjs
+language: javascript
+specification_id: windbarb-basic
+created: '2026-09-02T10:31:22Z'
+updated: '2026-09-02T10:37:22Z'
+generated_by: claude-sonnet
+workflow_run: 33619255771
+issue: 3694
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Domain-accurate wind barb notation implemented from scratch via a Chart.js afterDatasetsDraw
+    plugin: correct staff/feather/pennant geometry with half barbs (5kt), full barbs
+    (10kt), and filled-triangle pennants (50kt), verified by zooming into individual
+    barbs at the high-speed vortex points.'
+  - Calm-wind convention (< 2.5 kt shown as an open circle without a staff) is correctly
+    implemented and clearly visible at the vortex center in both renders.
+  - 'Synthetic data tells a real story: a Rankine-vortex cyclonic low-pressure system
+    centered in the domain, so the barb rotation pattern visibly conveys circulation
+    instead of being random noise.'
+  - 'Theme handling is clean: identical brand-green (#009E73) barbs in both renders,
+    correct warm off-white / near-black surfaces, all chrome (title, axis labels,
+    ticks, grid) readable in both themes with no dark-on-dark or light-on-light failures.'
+  - Axis tick labels append °E/°N units via a callback, a nice touch for geographic
+    data readability.
+  - Grid spacing (2° lon/lat) keeps all 30 barbs well separated with no overlap between
+    neighboring stations.
+  - 'Clean mount-node contract usage: animation disabled, single canvas appended,
+    no stray DOM, deterministic in-memory data generation.'
+  weaknesses:
+  - All four chart borders are drawn (a closed rectangle), not the style guide's default
+    L-shaped left+bottom spines — visible at every corner of both renders. Set grid.drawBorder
+    appropriately or hide the top/right axis lines so only left/bottom remain.
+  - At the two highest-speed vortex points, the pennant triangle and the trailing
+    full barb are packed very tightly at the staff tip and nearly touch/overlap at
+    native zoom — accurate to real synoptic notation, but consider a hair more spacing
+    (bump BARB_SPACING or PENNANT_WIDTH by 1-2px) so the barb count stays unambiguous
+    at small preview sizes.
+  - No small legend/key decodes the barb notation (half barb = 5kt, full barb = 10kt,
+    pennant = 50kt) — not required by the spec, but wind barbs are a niche symbology
+    and a compact caption or legend would make the chart accessible to a general audience.
+  - Design excellence is mostly technical accuracy rather than added aesthetic polish
+    beyond the single brand-green hue — fine given the plot type, but there's room
+    for a touch more visual refinement (e.g. subtle station dot beneath calm/data
+    points, refined grid opacity).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Title "windbarb-basic · javascript · chartjs · anyplot.ai" in bold dark ink, centered top. Axis titles "Longitude"/"Latitude" in dark ink. Tick labels ("-1.5°E" ... "11.5°E", "38.5°N" ... "49.5°N") in medium-grey, all clearly legible. Subtle light-grey gridlines at every 2° step, visible but not competing with data. A full four-sided border rectangle is drawn around the plot area (confirmed via corner crop) rather than the style-guide default L-shaped left+bottom spines.
+      Data: 30 stations on a 6x5 lon/lat grid. 29 render as wind barbs in brand green (#009E73): a staff from the station in the direction the wind blows from, with half/full barbs and filled-triangle pennants sized to wind speed (verified via zoomed crops at (2,42), (6,42), (2,46), (6,46) — each shows a correctly formed pennant triangle plus a trailing full-barb line, consistent with speeds ~60kt exceeding the 50kt pennant threshold). One station at the vortex center (4°E, 44°N) renders as a small open circle with no staff, correctly representing the calm-wind case (<2.5kt). The barb pattern visibly spirals counterclockwise around the center, reading as a cyclonic vortex.
+      Legibility verdict: PASS — all title/axis/tick text is clearly readable against the light background, no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Title in white/light ink, axis titles in light ink, tick labels in light grey — all clearly legible against the dark surface. Gridlines are subtle light-grey at low opacity. Same four-sided border rectangle present as in the light render (consistent, but same DE-02 spine issue carries over).
+      Data: Identical brand-green (#009E73) barbs, same staff/feather/pennant geometry and positions as the light render — confirms data colors are unchanged between themes, only chrome flipped. The calm-wind open circle at the vortex center is clearly visible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, tick labels) is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, and tick labels are explicitly sized and clearly
+          readable in both themes; no dark-on-dark or light-on-light issues.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/data collisions between stations; at the two highest-speed
+          points the pennant triangle and trailing full-barb line are packed very
+          tightly and nearly touch at native zoom.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Barb elements are clearly visible for a sparse 30-point grid; tightly-spaced
+          feathers at high-speed points are legible but leave little margin at small
+          preview sizes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green hue, high contrast on both surfaces, no red-green
+          reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed, no clipping or overflow at any edge,
+          generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Longitude'/'Latitude' axis titles; tick labels carry
+          °E/°N units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series uses #009E73, identical in both themes; backgrounds
+          match Imprint light/dark surfaces.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom-built wind barb glyph system is technically sophisticated,
+          but visual polish is largely single-hue functional accuracy rather than
+          added aesthetic flourish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid is subtle and whitespace generous, but a full four-sided border
+          rectangle is drawn around the plot instead of the default L-shaped left+bottom
+          spines (confirmed via corner crop, both themes).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The Rankine-vortex data genuinely tells a story — the barb rotation
+          visibly conveys cyclonic circulation with a calm eye at center, not just
+          scattered arbitrary values.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine wind barb plot with staff/feather/pennant/calm-circle notation,
+          not a stand-in chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Half barb (5kt), full barb (10kt), pennant (50kt), and calm circle
+          (<2.5kt) all present and verified via zoomed crops; staff points from the
+          wind-source direction as specified.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly map to longitude/latitude; u/v drive barb direction
+          and speed decomposition.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          for a single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All wind barb notation elements are exercised: calm, half barb,
+          full barb, and pennant.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Rankine-vortex synthetic data models a plausible cyclonic low-pressure
+          system over a real-world lon/lat domain, neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds (0-65kt) and spatial domain (10deg lon x 8deg lat) are
+          sensible for a regional synoptic wind field.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (rotate, decomposeKnots, attach) are minimal and
+          justified by the geometry the custom notation requires; no unnecessary classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses provided globals (window.ANYPLOT_TOKENS, Chart).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hand-rolled meteorological notation; no
+          fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly follows the mount-node contract; animation disabled; current
+          Chart.js API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the scatter type plus an afterDatasetsDraw plugin — the idiomatic
+          Chart.js way to draw custom glyphs since no native windbarb chart type exists.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom canvas plugin drawing full meteorological wind barb symbology
+          is a genuinely distinctive, non-generic use of Chart.js's plugin architecture.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-plugin
+  - vector-field
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
