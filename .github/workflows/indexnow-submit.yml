@@ -51,7 +51,9 @@ env:
 jobs:
   submit:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Worst case: 8 min waiting for the key file + 10 min of verification
+    # retries + the curl timeouts, with room to spare.
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -179,8 +181,8 @@ jobs:
                 -H "Content-Type: application/json; charset=utf-8" \
                 --data @body.json) || code="000"
               if [ "$code" = 403 ] && grep -q SiteVerificationNotCompleted response.txt 2>/dev/null; then
-                echo "::notice::IndexNow has not finished verifying the key file yet (try ${try}/10); waiting 60 s"
-                sleep 60
+                echo "::notice::IndexNow has not finished verifying the key file yet (try ${try}/10)"
+                [ "$try" -lt 10 ] && sleep 60
                 continue
               fi
               break
