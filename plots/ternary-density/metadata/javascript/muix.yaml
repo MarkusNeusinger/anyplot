@@ -1,0 +1,275 @@
+library: muix
+language: javascript
+specification_id: ternary-density
+created: '2026-09-02T07:37:51Z'
+updated: '2026-09-02T07:59:52Z'
+generated_by: claude-sonnet
+workflow_run: 33603671073
+issue: 3696
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Sophisticated custom ternary-diagram implementation built entirely from MUI X's
+    low-level primitives (ChartContainer, ScatterPlot, useXScale/useYScale/useDrawingArea
+    hooks) — a genuinely distinctive use of the library's composability, since MUI
+    X has no native ternary/simplex axis type
+  - Gaussian KDE density surface is computed correctly on a triangular barycentric
+    lattice and clipped precisely to the simplex boundary via an SVG clipPath
+  - Theme-correct chrome in both light and dark renders; Imprint imprint_seq gradient
+    (brand green -> blue) is identical across themes; a page-background-colored halo
+    drawn behind the dashed reference grid keeps it visible even over the darkest
+    density peaks
+  - Clear vertex labeling (Sand/Silt/Clay), percentage tick labels on all three triangle
+    edges, correct mandated title format, and a tooltip valueFormatter that surfaces
+    exact Sand/Silt/Clay composition plus % of peak density per lattice cell
+  - Deterministic, seeded data generation (fixed-seed LCG + Erlang-distributed Dirichlet-like
+    clusters) with a realistic, neutral USDA soil-texture scenario (sand/silt/clay)
+  weaknesses:
+  - 'The three synthetic soil-texture clusters (sandy, loamy, clay-rich) are not equally
+    visible in the rendered density heatmap: the tight sandy cluster near the Sand
+    vertex reads as a strong, distinct blue hotspot, but the loamy cluster (n=220,
+    the single largest class) and the clay-rich cluster (n=170) are only extremely
+    faint tints, nearly indistinguishable from the plain-green baseline (sampled pixels:
+    sand hotspot approx RGB(88,130,169) vs. loamy/clay centers approx RGB(53,157,145)/(61,151,150),
+    essentially the same as the background green). This undercuts the plot''s core
+    purpose of ''identifying clusters, modes, and patterns'' since a viewer only perceives
+    one mode. Lower COLOR_GAMMA (currently 1.7) toward ~1.0-1.2, or renormalize so
+    each cluster''s local peak reaches comparable color intensity, so all three modes
+    read as visible hotspots.'
+  - At close zoom, the discrete scatter markers used to approximate the continuous
+    KDE surface create a faint hexagonal/scalloped 'quilted' texture rather than a
+    perfectly smooth gradient, most visible on the density peak; increasing marker
+    overlap relative to the GRID_N lattice spacing (larger markerSize or finer grid)
+    would smooth this out
+  - No contour lines at key density levels, which the specification explicitly suggested
+    ('Consider showing contour lines...') for easier interpretation — optional, but
+    would have helped communicate the secondary modes that the color encoding currently
+    under-represents
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Soil Texture Density · ternary-density · javascript · muix · anyplot.ai" in bold dark ink at top, clearly readable. Bold "Sand" label above the triangle apex, "Silt" and "Clay" bold labels below the bottom-left/bottom-right vertices. Percentage tick labels (20/40/60/80%) run along all three triangle edges in medium-gray ink. A dashed reference grid (parallel to each edge) is visible under the density fill; a second higher-contrast dashed overlay keeps the grid visible over the density peaks. Below the triangle, a horizontal gradient legend bar ("Relative sample density", "Low"/"High") sits centered with generous whitespace beneath it.
+      Data: A green-to-blue continuous fill covers the whole simplex (imprint_seq colormap). A clearly distinct blue hotspot sits near the Sand vertex (~70-80% sand). Two additional, much fainter blue-green tints are present near the triangle center (loamy composition) and lower-right area (clay-rich composition), but they are barely distinguishable from the surrounding green field.
+      Legibility verdict: PASS — all text (title, vertex labels, tick labels, legend) is clearly readable against the light background, no overlap, no clipping at any canvas edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, vertex labels, and tick labels now rendered in light ink, clearly legible against the dark background. Grid lines and halo overlay remain visible using the same theme-adaptive dashed styling. Legend text and gradient bar are unchanged in shape, with light-colored "Relative sample density"/"Low"/"High" text.
+      Data: The green-to-blue imprint_seq gradient is visually identical to the light render — same brand green at the low end, same blue at the high end. The same single dominant hotspot near the Sand vertex is visible; the loamy and clay-rich modes remain only faintly perceptible, matching the light render.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all chrome flipped correctly while data colors stayed constant between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title fontsize scales with a length
+          formula; everything readable in both themes at full size and proportionally
+          balanced
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions found in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Sand-cluster hotspot is clearly visible, but the loamy and clay-rich
+          modes are nearly invisible in the color mapping, and close inspection shows
+          a faint scalloped marker-quilting texture instead of a fully smooth gradient
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue ramp, no red-green-only signal, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Triangle plus legend fill the majority of the 2400x2400 canvas with
+          balanced margins; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels (Sand/Silt/Clay) plus percentage edge ticks fully describe
+          the three compositional axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (brand green -> blue) used correctly for single-polarity
+          continuous density data; identical data colors across themes; theme-correct
+          chrome in both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong, clearly above-defaults design: fully custom ternary chrome
+          built from MUI X primitives, intentional visual hierarchy; slight quilting
+          keeps it below full publication polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid with contrast halo, generous whitespace, clean
+          legend placement; the marker-quilted density texture is a minor blemish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color hierarchy guides the eye to a clear focal point, but the under-represented
+          loamy/clay-rich modes weaken the intended multi-modal story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ternary diagram with KDE density overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertex labels, semi-transparent grid beneath density, perceptually-uniform
+          (Imprint-compliant) continuous colormap all present; contour lines were
+          only a 'consider' suggestion
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Barycentric-to-Cartesian projection is mathematically correct; all
+          three components represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; density legend
+          labels are correct
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 3
+        max: 6
+        passed: true
+        comment: Underlying data has three distinct clusters, but the rendered density
+          mapping only clearly shows one of the three modes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: USDA-style sand/silt/clay soil texture is a real, neutral, comprehensible
+          scientific scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cluster mean compositions (sandy/loamy/clay-rich) are plausible real-world
+          soil texture classes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Function-component structure is the idiomatic React/MUI X pattern
+          for custom chart overlays, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG RNG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import (ChartContainer, ScatterPlot, ChartsTooltip, hooks)
+          is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom ternary chart type; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exported Chart component, skipAnimation set, sized from window.ANYPLOT_SIZE
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ChartContainer plus useXScale/useYScale/useDrawingArea
+          hooks — exactly the composable pattern the library's own docs recommend
+          for chart types MUI X doesn't natively support
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: zAxis continuous colorMap combined with scale hooks to build a ternary/simplex
+          chart is genuinely distinctive to MUI X's architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - grid-styling
