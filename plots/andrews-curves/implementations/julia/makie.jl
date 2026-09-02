@@ -53,6 +53,14 @@ for j in 2:n_features
 end
 curves = X_scaled * basis'  # (n_cars, length(t))
 
+# Outlier detection: the car whose normalized feature vector sits farthest
+# from the group centroid produces the most visually distinct curve.
+distances = vec(sqrt.(sum(X_scaled .^ 2; dims = 2)))
+outlier_idx = argmax(distances)
+outlier_model = cars.Model[outlier_idx]
+outlier_t = t[argmax(abs.(curves[outlier_idx, :]))]
+outlier_y = curves[outlier_idx, argmax(abs.(curves[outlier_idx, :]))]
+
 # --- Plot -------------------------------------------------------------------
 fig = Figure(size = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
 
@@ -89,13 +97,39 @@ ax = Axis(
 )
 
 for i in 1:size(curves, 1)
+    i == outlier_idx && continue
     lines!(
         ax, t, curves[i, :];
         color = IMPRINT_PALETTE[group_idx[i]],
         linewidth = 3.0,
-        alpha = 0.55,
+        alpha = 0.4,
     )
 end
+
+# Draw the outlier last with a soft ink halo underneath so it reads as a
+# distinct focal curve against the dense overlapping cluster.
+lines!(ax, t, curves[outlier_idx, :]; color = (INK, 0.5), linewidth = 6.0)
+lines!(
+    ax, t, curves[outlier_idx, :];
+    color = IMPRINT_PALETTE[group_idx[outlier_idx]],
+    linewidth = 3.0,
+    alpha = 1.0,
+)
+scatter!(
+    ax, [outlier_t], [outlier_y];
+    color = IMPRINT_PALETTE[group_idx[outlier_idx]],
+    strokecolor = INK,
+    strokewidth = 1.5,
+    markersize = 14,
+)
+text!(
+    ax, outlier_t, outlier_y;
+    text = "Outlier: $(outlier_model)",
+    color = INK,
+    fontsize = 13,
+    align = (:left, :bottom),
+    offset = (8, 8),
+)
 
 # Legend proxies — one representative line per cylinder class
 for (idx, label) in enumerate(group_labels)
