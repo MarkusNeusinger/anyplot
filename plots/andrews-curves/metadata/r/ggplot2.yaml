@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: andrews-curves
 created: '2026-09-02T11:08:31Z'
-updated: '2026-09-02T11:12:18Z'
+updated: '2026-09-02T11:21:14Z'
 generated_by: claude-sonnet
 workflow_run: 33622758364
 issue: 2859
@@ -12,51 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 75
 review:
   strengths:
-  - Mathematically correct Andrews curve Fourier basis (x1/√2 + x2 sin(t) + x3 cos(t)
-    + x4 sin(2t) + ...), verified term-by-term against the standard formula.
-  - 'Follows the spec''s data-prep notes precisely: z-score normalization via scale()
-    before transformation, and alpha=0.35 (< 0.5) for the dense overlapping curves.'
-  - Both themes render correctly with proper token-driven chrome flip; data colors
-    (green/lavender/blue for setosa/versicolor/virginica) are identical between light
-    and dark.
-  - 'Palette compliance: first categorical series is #009E73, canonical Imprint order
-    used for the 3-species mapping.'
-  - Clean KISS-structured code — no functions/classes, only used imports, correct
-    ggsave/ragg output as plot-{THEME}.png.
-  - Custom π-based x-axis tick labels (-π, -π/2, 0, π/2, π) match the domain convention
-    the spec calls out.
+  - Correct Andrews-curves Fourier basis construction (x1/sqrt(2), sin/cos harmonics)
+    via a clean matrix multiplication, matching the specification's math.
+  - Variables are z-score normalized (scale()) before the Fourier expansion, exactly
+    as the specification's 'Notes' section requires to avoid one dimension dominating.
+  - 'Correct Imprint palette mapping — setosa (first factor level) gets #009E73, and
+    light/dark renders share identical data colors with only chrome (background, grid,
+    ink) flipping between #FAF8F1 and #1A1A17.'
+  - Theme-adaptive chrome is threaded through consistently (title, axis text, tick
+    text, grid, legend) and both renders are fully legible with no dark-on-dark or
+    light-on-light failures.
+  - Idiomatic tidyverse data pipeline (pivot_longer, dplyr chain) and correct ragg::agg_png
+    save at the mandated 8x4.5in/400dpi landscape canvas.
   weaknesses:
-  - Panel grid uses the full INK color (not a softened/desaturated token) at linewidth=0.15
-    — in the light render the gridlines read slightly more prominent than a truly
-    subtle grid; consider a fainter grey token.
-  - With 150 overlapping observations across 3 species and alpha=0.35, the plot becomes
-    a dense hairball in the t≈0 overlap region — inherent to the technique, but a
-    slightly lower alpha (~0.25) or thinner lines would improve clarity in the busiest
-    zone.
-  - 'Design Excellence is at default/generic level: theme_minimal + Imprint palette
-    with no distinctive ggplot2-specific technique (e.g. facet_wrap by species to
-    make the per-cluster shape comparison easier) to lift it beyond a standard treatment.'
-  - Axis labels are bare math notation ('t', 'f(t)') with no units/description — acceptable
-    given this is the domain-standard notation for Andrews curves, but a caption noting
-    the Fourier-transformed nature would aid a first-time viewer.
+  - 'CRITICAL MISMATCH: the committed script (plots/andrews-curves/implementations/r/ggplot2.R,
+    from commit 32ef711a2 ''fix(ggplot2): address review feedback'') adds `facet_wrap(~species,
+    nrow = 1)` plus a comment claiming it ''splits the overlaid Fourier bands into
+    per-species small multiples'' to fix the previous attempt''s cluster-legibility
+    feedback. But BOTH plot-light.png and plot-dark.png show a single overlaid panel
+    — one shared x-axis, one legend, no per-species strip labels, no panel-spacing
+    gaps. The faceting that this fix commit was specifically written to add is not
+    present in the rendered artifacts. Either the images shipped for this review are
+    stale (not regenerated from the current script) or facet_wrap is silently failing
+    to apply — either way the previous review''s requested fix did not actually land
+    in the shipped output. This must be resolved (force a clean re-render and confirm
+    3 side-by-side per-species panels appear) before this can be trusted for the catalog.'
+  - Without the facets actually rendering, the dense overlap zone (t roughly 0 to
+    pi/2 where all three species' curves cross) remains a busy hairball — color alone
+    only partially resolves cluster separation there, which is the exact problem the
+    fix commit was meant to solve.
+  - The code comment above the facet_wrap call describes a visual effect (small-multiples
+    cluster legibility) that the shipped PNGs do not exhibit, which is misleading
+    for future maintainers reading the script next to the rendered output.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: title "andrews-curves · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible, not clipped. Axis titles "t" (x) and "f(t)" (y) and tick labels (-π, -π/2, 0, π/2, π on x; -5.0 to 5.0 on y) render in dark/soft-dark ink, all legible. Grid lines are thin dark lines, visible but not overly dominant. Legend "Species" with entries setosa/versicolor/virginica on the right, dark text, fully within canvas.
-      Data: three color groups — setosa in brand green #009E73, versicolor in lavender #C475FD, virginica in blue #4467A3 — matching the Imprint palette canonical order (first series = green). ~150 semi-transparent (alpha 0.35) overlapping Fourier curves per observation, colored by species, forming distinguishable wave-band clusters (setosa low/negative band, virginica upper band, versicolor central/flatter band) with overlap in the middle.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — correct, not pure white.
+      Chrome: Title "andrews-curves · r · ggplot2 · anyplot.ai" in dark ink top-left; x-axis labeled "t" with tick labels -π, -π/2, 0, π/2, π; y-axis labeled "f(t)" with ticks -5.0 to 5.0; a "Species" legend on the right listing setosa/versicolor/virginica. All text is dark ink on the light surface and clearly readable. Grid lines are subtle, faint horizontal/vertical rules.
+      Data: ~150 semi-transparent curves colored by species — setosa green (#009E73), versicolor lavender (#C475FD), virginica blue (#4467A3) — all overlaid in a SINGLE panel (no faceting despite facet_wrap(~species) being present in the source code).
+      Legibility verdict: PASS (all chrome text readable; no light-on-light).
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: title in light/near-white ink, fully visible, not clipped. Axis titles and tick labels render in light ink, all legible against the dark background. Grid lines are thin light lines, visible but subtle. Legend "Species" with the same three entries, light text, fully within canvas, no dark-on-dark failures observed.
-      Data: identical colors to the light render — green (#009E73, setosa), lavender (#C475FD, versicolor), blue (#4467A3, virginica) — confirming only chrome flipped between themes, not data colors. Same curve density and alpha as the light render.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark or unreadable elements found.
+      Background: Warm near-black, matches #1A1A17 — correct, not pure black.
+      Chrome: Same title, axis labels, tick labels, and legend, now in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark surface. All clearly legible, no dark-on-dark failures.
+      Data: Same green/lavender/blue curve colors as the light render, confirming data colors are held constant across themes — only chrome flipped, as required.
+      Legibility verdict: PASS (all chrome text readable; no dark-on-dark).
+
+    Cross-render note: Both renders show ONE overlaid panel, not the three per-species facet panels that the current committed script's facet_wrap(~species, nrow = 1) call is supposed to produce. This is flagged as a critical weakness — the rendered artifacts do not appear to reflect the fix that was specifically written to address the prior review's cluster-legibility feedback.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -64,49 +71,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all title/axis/tick/legend text readable
-          in both themes
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-text or text-data collisions observed
+        comment: No text collisions; curve overlap is inherent to the plot type
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: alpha=0.35 correctly applied for dense curves, but the t≈0 overlap
-          region still reads as a busy hairball
+        comment: Alpha=0.3 appropriate for ~150 curves, but the central crossing zone
+          is still a dense hairball since the facet mitigation isn't visible in the
+          render
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue trio is distinguishable, no red-green sole signal
+        comment: Imprint palette, CVD-safe hues
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas gate passed; title ~45% width, nothing clipped or
-          overflowing
+        comment: Canvas gate passed; no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: t / f(t) is the domain-standard notation for Andrews curves
+        comment: t / f(t) are the correct domain-standard labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct light/dark
-          backgrounds, data colors identical across themes'
+        comment: First species = brand green; correct theme-adaptive backgrounds
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -114,24 +119,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Standard theme_minimal + Imprint palette, no strikingly custom aesthetic
-          beyond the default treatment
+        comment: Clean theme_minimal customization but nothing beyond expected defaults
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Spines removed and whitespace generous, but grid uses full INK color
-          rather than a softened token
+        comment: Spines removed, subtle grid, but generic layout
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 1
         max: 6
         passed: false
-        comment: Color-by-species reveals cluster separation (spec's stated goal),
-          but dense overlap in the middle region dilutes the focal point
+        comment: The small-multiples device meant to create per-species visual hierarchy
+          is not present in the shipped render, leaving no resolved focal point in
+          the dense crossing region
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,60 +143,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews curve Fourier transform via geom_line
+        comment: Correct Andrews-curves Fourier construction
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Multivariate-to-curve transform, category color coding, normalization,
-          alpha per spec notes
+        comment: Normalization, alpha<0.5, category coloring, t in [-pi,pi] all present;
+          cluster-separation aid (facets) doesn't render
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=t, y=f(t), color=species — correct
+        comment: t vs f(t) correctly mapped, full domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match species
-          names
+        comment: Title format correct; legend labels match species
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Full technique shown: transform, per-observation curves, category
-          coloring, cluster separation'
+        comment: 4-dimensional iris data, all 3 species shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic iris dataset — real-world plausible and neutral
+        comment: Classic neutral real-world dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: f(t) range (-5 to 5) sensible for z-score-normalized inputs
+        comment: Normalized before transform, sensible f(t) range
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, but the facet_wrap call/comment implies behavior
+          the output doesn't show
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,19 +207,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, tidyr, ragg all actually used
+        comment: All imports (ggplot2, dplyr, tidyr, scales, ragg) used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate matrix-based basis construction, no fake UI
+        passed: false
+        comment: Comment describing facet_wrap's visual benefit doesn't match the
+          shipped render
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct canvas size
+        comment: Correct plot-{THEME}.png via ragg::agg_png
     library_mastery:
       score: 5
       max: 10
@@ -226,19 +230,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_line/scale_color_manual/theme_minimal usage, clean
-          tidyr pivot_longer reshape
+        comment: Idiomatic tidyverse pivot_longer/dplyr chain, scale_x_continuous
+          custom breaks
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage — no ggplot2-distinctive feature (e.g. facet_wrap)
-          exploited
-  verdict: APPROVED
+        comment: facet_wrap is the one distinctive feature added, but it isn't observably
+          working in the shipped render
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - faceting
   - manual-ticks
   patterns:
   - dataset-loading
@@ -246,5 +251,7 @@ impl_tags:
   - wide-to-long
   dataprep:
   - normalization
+  - fourier-series
   styling:
   - alpha-blending
+  - grid-styling
