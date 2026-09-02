@@ -1,7 +1,7 @@
 // anyplot.ai
 // candlestick-volume: Stock Candlestick Chart with Volume
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 91/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 const upColor = t.palette[0]; // #009E73 brand green — bullish (close >= open)
