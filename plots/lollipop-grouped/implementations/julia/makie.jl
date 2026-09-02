@@ -37,6 +37,11 @@ revenue = [
 n_regions = length(regions)
 n_series = length(product_lines)
 
+# Discrete Makie colormap built from the Imprint palette — series are colored
+# by mapping their integer index through this colormap (colorrange = (1,
+# n_series)) rather than indexing IMPRINT_PALETTE[j] by hand at each call.
+series_cmap = cgrad(IMPRINT_PALETTE[1:n_series]; categorical = true)
+
 # Category band centers (top-to-bottom = first-to-last region) with a
 # small side-by-side offset per series inside each band.
 category_y = collect(n_regions:-1:1)
@@ -51,8 +56,8 @@ fig = Figure(
 
 ax = Axis(
     fig[1, 1];
-    title = "lollipop-grouped · julia · makie · anyplot.ai",
-    titlesize = 20,
+    title = "Quarterly Revenue by Region and Product Line · lollipop-grouped · julia · makie · anyplot.ai",
+    titlesize = 15,
     titlecolor = INK,
     xlabel = "Quarterly Revenue (\$M)",
     xlabelsize = 14,
@@ -82,20 +87,35 @@ for j in 1:n_series
     xs = [revenue[i, j] for i in 1:n_regions]
 
     for i in 1:n_regions
-        lines!(ax, [0.0, xs[i]], [ys[i], ys[i]]; color = IMPRINT_PALETTE[j], linewidth = 3)
+        lines!(
+            ax, [0.0, xs[i]], [ys[i], ys[i]];
+            color = j, colormap = series_cmap, colorrange = (1, n_series),
+            linewidth = 3,
+        )
     end
 
     scatter!(
         ax, xs, ys;
-        color = IMPRINT_PALETTE[j],
+        color = fill(j, n_regions),
+        colormap = series_cmap,
+        colorrange = (1, n_series),
         markersize = 26,
         strokewidth = 1.5,
         strokecolor = PAGE_BG,
-        label = product_lines[j],
     )
 end
 
-axislegend(ax; position = :rb, framevisible = false, labelcolor = INK_SOFT, labelsize = 13)
+# Manual legend: colormap-mapped scatter/lines don't expose a per-series
+# solid color for axislegend to sample, so the swatches are built explicitly
+# from the same Imprint palette slots used for the plotted series.
+legend_elements = [
+    MarkerElement(; color = IMPRINT_PALETTE[j], marker = :circle, markersize = 18)
+    for j in 1:n_series
+]
+axislegend(
+    ax, legend_elements, product_lines;
+    position = :rb, framevisible = false, labelcolor = INK_SOFT, labelsize = 13,
+)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
