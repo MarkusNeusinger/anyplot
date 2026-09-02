@@ -1,8 +1,7 @@
 // anyplot.ai
 // mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 93/100 | Created: 2026-09-02
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
