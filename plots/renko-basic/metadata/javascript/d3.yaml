@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: renko-basic
+created: '2026-09-02T05:30:43Z'
+updated: '2026-09-02T05:47:43Z'
+generated_by: claude-sonnet
+workflow_run: 33594391430
+issue: 3294
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/d3/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Direct fix of the prior review''s VQ-04 weakness: a diagonal SVG hatch pattern
+    now provides a redundant non-color cue on bearish bricks, so direction no longer
+    relies solely on green/red hue'
+  - Distinctive d3-shape close-price trace (d3.line().curve(curveMonotoneX)) drawn
+    beneath the bricks, only peeking through inter-brick gaps — a genuinely d3-specific
+    touch that raises Library Mastery beyond a generic rect-join bar pattern
+  - Peak-brick callout (circle + label) gives the chart a clear focal point and visual
+    hierarchy, directly answering the prior review's Design Excellence feedback
+  - Correct Imprint semantic-finance color exception (bullish=#009E73 brand green,
+    bearish=#AE3030 matte red) with an explicit legend spelling out the mapping
+  - Theme-adaptive chrome threaded correctly through every non-data element in both
+    renders — backgrounds, title, axis text, ticks, and grid all flip correctly while
+    brick and trace colors stay pixel-identical
+  - Deterministic four-phase LCG random walk (uptrend, consolidation, downtrend, recovery)
+    gives full feature coverage of bullish runs, bearish runs, and choppy reversals
+  - 'Idiomatic modern d3 v7 patterns throughout: scaleBand/scaleLinear, selection.data().join(),
+    y-axis-only subtle gridlines, L-shaped spines'
+  weaknesses:
+  - The dashed close-price trace is intentionally subtle (opacity 0.45, dash 2,3)
+    so it reads as a background accent rather than a strong data layer — fine as designed,
+    but a hair more contrast would make the reinforcement easier to spot at a glance
+  - Aesthetic execution is polished and clearly above a library default, but still
+    reads as a refined take on the standard brick/axis/legend layout rather than a
+    wholly distinctive composition — there is a bit more headroom in Aesthetic Sophistication
+    before this would be publication-ready at the very top tier
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Bold dark title "renko-basic · javascript · d3 · anyplot.ai" centered at top; top-left legend with green "Bullish (Up)" and red-hatched "Bearish (Down)" swatches; dark "Price ($)" and "Brick Index" axis titles (bolder weight than tick labels); dark-gray tick labels on both axes; subtle light horizontal y-axis gridlines only. All chrome text is clearly readable against the light background.
+      Data: ~39 uniform bricks with small gaps trace a W-shaped price path from ~$145 up through a choppy plateau near $156-162, down to a mid-$150s trough, then a strong climb to a peak of $177 (marked with a circle + "Peak: $177" label). Bullish bricks are brand green #009E73; bearish bricks are matte red #AE3030 with a diagonal hatch overlay for a redundant non-color direction cue. A faint dashed line traces brick midpoints beneath the bricks.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title, legend, and axis labels rendered in light/white ink; tick labels light gray; gridlines subtle light-on-dark. No dark-on-dark failures observed anywhere.
+      Data: Brick sequence, hatch pattern, peak callout, and trace line are pixel-identical in color to the light render (#009E73 / #AE3030) — only chrome (background, text, grid) flipped, exactly as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set in px; readable in both themes, well-proportioned
+          title and axis labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; peak label and legend both clear of data/axes
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Brick sizing well adapted to ~39 bricks across the canvas width
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diagonal hatch overlay on bearish bricks fixes the prior review's
+          hue-only direction cue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, good canvas utilization, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price ($) and Brick Index are descriptive with units where relevant
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint semantic-finance exception (green=up, matte red=down);
+          theme-correct chrome in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: hatch texture, trace line, and typographic hierarchy
+          clearly above default, short of top-tier publication polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, L-shaped spines, generous margins, brick
+          separation strokes
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak callout plus the four-phase trend shape gives a clear focal
+          point and narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine Renko brick construction from price crossing fixed brick-size
+          thresholds
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bullish/bearish colors, uniform bricks with gaps, brick-index x-axis,
+          subtle price-level grid
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=brick index, Y=price, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match semantic
+          colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Uptrend, consolidation chop, downtrend, and recovery all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible stock-price scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range and $3 brick size are realistic for a mid-cap stock
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot structure; the LCG helper is the library-recommended
+          seeded-RNG pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity for brick construction
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 join API, no animation
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scaleBand/scaleLinear, axisBottom/axisLeft, selection.data().join()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG defs pattern for hatching plus a d3-shape line generator
+          overlay — meaningfully beyond a generic rect-join bar chart
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
