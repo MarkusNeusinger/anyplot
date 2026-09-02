@@ -50,11 +50,31 @@ function movingAverage(values, period) {
 }
 
 const series = [
-  { key: "close", label: "Close", values: closes, color: t.palette[0], width: 2 },
-  { key: "sma20", label: "SMA 20", values: movingAverage(closes, 20), color: t.palette[1], width: 3 },
-  { key: "sma50", label: "SMA 50", values: movingAverage(closes, 50), color: t.palette[2], width: 3 },
-  { key: "sma200", label: "SMA 200", values: movingAverage(closes, 200), color: t.palette[3], width: 3 },
+  { key: "close", label: "Close", values: closes, color: t.palette[0], width: 3.5 },
+  { key: "sma20", label: "SMA 20", values: movingAverage(closes, 20), color: t.palette[1], width: 2.5 },
+  { key: "sma50", label: "SMA 50", values: movingAverage(closes, 50), color: t.palette[2], width: 2.5 },
+  { key: "sma200", label: "SMA 200", values: movingAverage(closes, 200), color: t.palette[3], width: 2.5 },
 ];
+
+// --- Crossover detection (SMA 20 x SMA 50, D3-computed golden/death cross) --
+function findCrossover(a, b) {
+  for (let i = 1; i < a.length; i++) {
+    if (a[i - 1] === null || b[i - 1] === null || a[i] === null || b[i] === null) continue;
+    const prevDiff = a[i - 1] - b[i - 1];
+    const currDiff = a[i] - b[i];
+    if (prevDiff === 0) continue;
+    if ((prevDiff < 0 && currDiff >= 0) || (prevDiff > 0 && currDiff <= 0)) {
+      const frac = prevDiff / (prevDiff - currDiff);
+      return {
+        date: new Date(dates[i - 1].getTime() + frac * (dates[i].getTime() - dates[i - 1].getTime())),
+        value: a[i - 1] + frac * (a[i] - a[i - 1]),
+        bullish: prevDiff < 0,
+      };
+    }
+  }
+  return null;
+}
+const crossover = findCrossover(series[1].values, series[2].values);
 
 // --- Scales -------------------------------------------------------------
 const x = d3.scaleTime().domain(d3.extent(dates)).range([0, iw]);
@@ -114,8 +134,44 @@ for (const s of series) {
     .attr("stroke-width", s.width)
     .attr("stroke-linejoin", "round")
     .attr("stroke-linecap", "round")
-    .attr("opacity", s.key === "close" ? 0.85 : 1)
+    .attr("opacity", s.key === "close" ? 1 : 0.9)
     .attr("d", line);
+}
+
+// --- Crossover annotation (marks the golden/death cross with a dashed rule,
+// a ringed marker, and a leader-line label) --------------------------------
+if (crossover) {
+  const cx = x(crossover.date);
+  const cy = y(crossover.value);
+  const label = crossover.bullish ? "Golden Cross" : "Death Cross";
+  const labelBelow = cy < ih * 0.3;
+
+  g.append("line")
+    .attr("x1", cx)
+    .attr("x2", cx)
+    .attr("y1", 0)
+    .attr("y2", ih)
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "4,4")
+    .attr("opacity", 0.5);
+
+  g.append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 8)
+    .attr("fill", "none")
+    .attr("stroke", t.ink)
+    .attr("stroke-width", 2);
+
+  g.append("text")
+    .attr("x", cx)
+    .attr("y", labelBelow ? cy + 28 : cy - 18)
+    .attr("text-anchor", "middle")
+    .attr("fill", t.ink)
+    .style("font-size", "15px")
+    .style("font-weight", "600")
+    .text(label);
 }
 
 // --- Title --------------------------------------------------------------
