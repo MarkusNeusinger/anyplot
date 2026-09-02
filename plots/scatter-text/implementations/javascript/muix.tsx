@@ -1,3 +1,7 @@
+// anyplot.ai
+// scatter-text: Scatter Plot with Text Labels Instead of Points
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 // anyplot.ai
 // scatter-text: Scatter Plot with Text Labels Instead of Points
