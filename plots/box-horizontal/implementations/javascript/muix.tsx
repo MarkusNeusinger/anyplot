@@ -167,7 +167,7 @@ function BoxWhiskers() {
               strokeLinecap="round"
             />
             {s.outliers.map((v, j) => (
-              <circle key={j} cx={xScale(v)} cy={center} r={5} fill={t.pageBg} stroke={color} strokeWidth={2} />
+              <circle key={j} cx={xScale(v)} cy={center} r={6.5} fill={t.pageBg} stroke={color} strokeWidth={2} />
             ))}
           </g>
         );
@@ -216,14 +216,16 @@ export default function Chart() {
             id: "role",
             scaleType: "band",
             data: categories,
+            label: "Job Title",
+            labelStyle: { fontSize: 16 },
             tickLabelStyle: { fontSize: 14 },
           },
         ]}
       >
-        <ChartsGrid vertical sx={{ "& .MuiChartsGrid-line": { opacity: 0.55, strokeDasharray: "2 5" } }} />
+        <ChartsGrid vertical sx={{ "& .MuiChartsGrid-line": { opacity: 0.2, strokeDasharray: "2 5" } }} />
         <BoxWhiskers />
         <ChartsXAxis axisId="salary" />
-        <ChartsYAxis axisId="role" />
+        <ChartsYAxis axisId="role" slotProps={{ axisLabel: { x: -190 } }} />
       </ChartContainer>
     </div>
   );
