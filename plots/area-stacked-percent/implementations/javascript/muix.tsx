@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
@@ -26,6 +27,11 @@ const totalByYear = YEARS.map(
 
 const shareValueFormatter = (value, { dataIndex }) =>
   `${Math.round((value / totalByYear[dataIndex]) * 100)}% · ${value.toLocaleString()} TWh`;
+
+// Milestone year where fossil drops below half the generation mix — the
+// clearest single moment in the energy-transition story to call out.
+const milestoneIndex = fossilTWh.findIndex((v, i) => v / totalByYear[i] < 0.5);
+const milestoneYear = YEARS[milestoneIndex];
 
 const TITLE = "area-stacked-percent · javascript · muix · anyplot.ai";
 
@@ -72,7 +78,7 @@ export default function Chart() {
           width={chartWidth}
           height={chartHeight}
           skipAnimation
-          margin={{ bottom: 90 }}
+          margin={{ bottom: 112 }}
           series={[
             {
               id: "solar",
@@ -134,8 +140,10 @@ export default function Chart() {
             {
               data: YEARS,
               scaleType: "point",
+              label: "Year",
               valueFormatter: (year) => `${year}`,
               tickLabelStyle: { fontSize: 14 },
+              labelStyle: { fontSize: 14 },
             },
           ]}
           yAxis={[
@@ -158,11 +166,19 @@ export default function Chart() {
             },
           }}
           sx={{
-            "& .MuiLineElement-root": { strokeWidth: 1.5 },
+            "& .MuiLineElement-root": { strokeWidth: 2.25 },
             "& .MuiAreaElement-root": { fillOpacity: 0.9 },
             "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
           }}
-        />
+        >
+          <ChartsReferenceLine
+            x={milestoneYear}
+            label={`${milestoneYear}: fossil share drops below 50%`}
+            labelAlign="start"
+            lineStyle={{ stroke: t.inkSoft, strokeWidth: 1.5, strokeDasharray: "6 4" }}
+            labelStyle={{ fontSize: 13, fontWeight: 600, fill: t.ink }}
+          />
+        </LineChart>
       </Box>
     </Box>
   );
