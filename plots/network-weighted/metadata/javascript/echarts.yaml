@@ -1,0 +1,253 @@
+library: echarts
+language: javascript
+specification_id: network-weighted
+created: '2026-09-02T04:35:54Z'
+updated: '2026-09-02T04:55:09Z'
+generated_by: claude-sonnet
+workflow_run: 33590334883
+issue: 3290
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses are demonstrably fixed: node label fontSize raised
+    13→17 (clearly more legible at full res and materially better at the 400px thumbnail),
+    the force-layout now spreads the four clusters much more evenly across the 2400x2400
+    square (top strip and far corners no longer empty), and the subtitle now states
+    the explicit numeric weight range ("3–16") satisfying the spec''s weight-scale-annotation
+    suggestion'
+  - 'Correct Imprint palette order across both themes: Biology=#009E73 (first series,
+    brand green), Computer Science=lavender, Physics=blue, Chemistry=ochre — identical
+    data colors light/dark, theme-correct chrome backgrounds'
+  - Realistic, neutral research-collaboration dataset (16 institutions, 4 fields,
+    cross-cluster edges) with both node size (weighted degree) and edge width (pairwise
+    weight) correctly min-max normalized
+  - 'Idiomatic, sophisticated ECharts graph-series usage: tuned force layout (repulsion,
+    edgeLength range, gravity, friction, circular initLayout for determinism), categories
+    wired to legend, emphasis.focus:''adjacency'', labelLayout.moveOverlap'
+  - Clean, deterministic, KISS code with no fake interactivity; follows the mount-node
+    contract exactly (no explicit size/devicePixelRatio, animation:false)
+  weaknesses:
+  - Node labels (fontSize 17) are still small at the ~400px mobile thumbnail — legible
+    with effort but not comfortably so; further increasing to ~19-20px or abbreviating
+    the longest institution names (e.g. 'Wellcome Sanger', 'Tokyo Chem Institute')
+    would help without much room left to push given 16 concurrently-labeled nodes
+  - A thin residual whitespace band remains in the extreme top-left and top-right
+    corners of the square canvas even after the retuned force layout — minor, cosmetic
+    only
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "network-weighted · javascript · echarts · anyplot.ai" centered top in dark ink; subtitle below it in softer ink stating "Edge thickness = co-authored papers, 3–16 (2020–2024) · node size = total collaborations" (explicit numeric weight-scale annotation, added since attempt 1); 4-item category legend (Biology, Computer Science, Physics, Chemistry) centered at the bottom with matching color swatches; node name labels beneath each node in soft ink. All chrome text is clearly readable against the light background.
+      Data: Four force-directed clusters (Biology=teal-green #009E73, Computer Science=lavender, Physics=blue, Chemistry=ochre) spread much more evenly across the square canvas than in attempt 1 — nodes now reach near all four quadrants instead of hugging a diagonal band. Edge thickness visibly varies with weight (thin ~3-weight edges vs. thick ~16-weight edges clearly distinguishable) and node size visibly varies with weighted degree (CERN, MIT CSAIL, Max Planck Chem read as clear hubs).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/legend/label layout, rendered in light ink on the dark surface — no dark-on-dark failures; every label, tick, and legend swatch text is clearly visible.
+      Data: The four category colors (green/lavender/blue/ochre) are pixel-identical to the light render, confirming only chrome flipped and not data colors. Same well-balanced cluster spread as the light render.
+      Legibility verdict: PASS
+
+    Mobile-thumbnail spot check (plot-light_400.png): title, subtitle, and legend remain fully readable at 400px width; node labels are small but present and legible with effort — a real improvement over attempt 1's fontSize:13, though still the tightest-margin item in the review.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Node label fontSize raised 13→17; readable at full res, small but
+          legible at 400px thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Edge widths and node sizes clearly distinguishable across the weight/degree
+          range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, adequate contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Force layout retuned and now spreads clusters far more evenly across
+          the square canvas; a thin whitespace band remains in the extreme top corners
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title plus subtitle explaining both edge-weight and node-size
+          encodings with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (green/lavender/blue/ochre), correct theme-adaptive
+          chrome backgrounds
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Tuned force-layout parameters, weighted node/edge encodings, well-balanced
+          cluster spread
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean legend/label placement, collision-avoidance via labelLayout,
+          near-even whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Node size and edge width create a clear hub/strength hierarchy, though
+          no explicit narrative emphasis beyond the encoding itself
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine weighted network/graph via ECharts graph series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Weight-scale now explicitly annotated in the subtitle ("3–16"), addressing
+          attempt 1's gap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Edge weight → line width, weighted degree → node size, category →
+          color, all correctly wired
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match category
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 16 nodes, 26 weighted edges, 4 categories — covers all plot-type
+          aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral research-collaboration domain (real institution
+          names, no controversial framing)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16-50 node range per spec; weight values (3-16 papers) sensible for
+          the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script with only small computational helper arrow functions,
+          no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global echarts is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mount-node contract followed exactly: no explicit size/devicePixelRatio,
+          animation:false'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: graph series with force layout is the idiomatic ECharts approach
+          for weighted networks
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: emphasis.focus:'adjacency' and labelLayout.moveOverlap are ECharts-distinctive
+          graph features, well applied
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready

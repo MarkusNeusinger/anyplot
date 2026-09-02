@@ -1,0 +1,255 @@
+library: echarts
+language: javascript
+specification_id: network-transport-static
+created: '2026-09-02T04:25:31Z'
+updated: '2026-09-02T04:41:49Z'
+generated_by: claude-sonnet
+workflow_run: 33590221093
+issue: 3463
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Edge labels now render the full route id plus departure/arrival times (e.g. "RE10
+    | 06:20 → 06:38"), satisfying the spec's explicit static-label requirement
+  - '`category` is now assigned per link and a custom `legendselectchanged` handler
+    drives visibility/opacity, so the tier legend actually filters edges in the interactive
+    HTML (fixes the dead legend from attempt 1)'
+  - 'Correct Imprint palette: Regional (primary/most-frequent tier) uses brand green
+    #009E73, Local and Express follow canonical positions 2 and 3, identical between
+    light and dark renders'
+  - 'Idiomatic ECharts graph series (layout: ''none'') with directed edgeSymbol arrows
+    and per-pair curveness offsets so bidirectional/parallel routes stay visually
+    separated'
+  - 'Realistic, neutral regional-rail scenario: hub-and-spoke topology, plausible
+    hourly-morning timetable, 10 stations / 22 routes within spec range'
+  - Clean theme-adaptive chrome in both renders (elevated-background label pills,
+    correct backgrounds, no dark-on-dark or light-on-light failures)
+  - 'Deterministic in-memory data, correct mount-node contract (animation: false,
+    no explicit init size/dpr)'
+  weaknesses:
+  - Edge route/time labels (13px) are still noticeably smaller than node labels (16px)
+    and legend text (15px) — readable at full 3200×1800 size but the first to disappear
+    at the ~400px mobile thumbnail
+  - The hub area around Central Station stays visually dense with six-plus converging
+    curved edges; existing curveness variance helps but doesn't fully declutter the
+    busiest node
+  - 'Design execution is solid but not yet publication-grade: tier coloring and curve
+    offsets create structure, but there''s no additional emphasis (e.g. highlighting
+    the busiest route or station) to give the diagram a clearer focal point'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "network-transport-static · javascript · echarts · anyplot.ai" centered at top in dark ink, fully readable. Three-item legend (Regional/Local/Express) sits just below the title with color swatches matching the edge colors. Ten station nodes render as bordered circles (dark-ink border, page-background fill) with dark-ink labels on light elevated-background pills, positioned to the right of each node. All title/legend/node-label text is clearly readable against the light background.
+      Data: Directed, curved edges connect stations with arrowheads, colored by tier (green #009E73 = Regional, lavender = Local, blue = Express) — first series is confirmed brand green. Each edge carries a label with route id and departure/arrival times (e.g. "RE10 | 06:20 → 06:38"), readable though smaller (13px) than the surrounding chrome. Curveness offsets keep bidirectional/parallel routes between the same station pair visually separated.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title/legend/node layout as light render, now in light-ink text on dark elevated-background pills. No dark-on-dark or light-on-light failures — all chrome text is clearly visible against the dark background.
+      Data: Green/lavender/blue edge colors and route/time edge labels are pixel-identical to the light render — only chrome (background, text, pill fills) flips between themes, as required.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check with no clipped elements at either canvas edge (AR-09 not triggered). The remaining legibility concern shared by both renders is the relatively small edge-label font size (13px) versus the rest of the chrome (15–16px), which affects mobile-thumbnail legibility of the fine-print route/time labels rather than the core diagram structure.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text explicitly sized and readable in both themes; edge
+          route/time labels bumped from 11px to 13px since attempt 1 but still smaller
+          than node/legend text
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text overlap; the hub around Central Station is visually
+          dense with converging curved edges but stays readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Node/line/arrow sizes reasonable for 22 routes; hub not optimally
+          decluttered
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three well-separated Imprint hues, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing clipped, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for graph type; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Regional (primary tier) is brand green #009E73, Local/Express follow
+          canonical order, theme-correct chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Bordered nodes, elevated label pills, and tier legend are above defaults
+          but not fully publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Curved multi-edge offsets and alpha-blended lines show attention
+          to detail; dense hub convergence limits full refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Hub-and-spoke topology and tier coloring create visual hierarchy;
+          no further explicit emphasis on a focal route/station
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Edge labels now show route id AND departure/arrival times as required;
+          directed arrows, curved offsets for multi-route pairs, tier color-coding,
+          tooltips all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Station x/y coordinates correctly drive node positions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels correspond to tier colors
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Directionality, parallel/bidirectional routes, three tiers, and times
+          all shown statically
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible regional-rail scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10 stations / 22 routes within spec range, internally consistent
+          timetable
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for curve-offset and category
+          logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, current API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'graph series with layout: none, edgeSymbol arrows, curveness, and
+          now correctly wired categories with a custom legendselectchanged handler
+          that actually filters edges'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Directed edgeSymbol arrows, per-pair curveness offsets, edge-aware
+          tooltip formatter, and a hand-rolled legend-filter workaround for ECharts'
+          node-only category limitation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - curved-edges
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
