@@ -10,11 +10,12 @@ library(ragg)
 set.seed(42)
 
 # --- Theme tokens -------------------------------------------------------
-THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
-INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-BRAND    <- "#009E73"  # Imprint palette position 1 — always first series
+THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
+INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+BRAND       <- "#009E73"  # Imprint palette position 1 — always first series
 
 # --- Data -----------------------------------------------------------------
 fertilizers <- c("Control", "Nitrogen", "Phosphorus", "Compost")
@@ -47,18 +48,25 @@ title_text <- "cat-box-strip · r · ggplot2 · anyplot.ai"
 p <- ggplot(growth_df, aes(x = fertilizer, y = plant_height)) +
   geom_boxplot(
     color = INK_SOFT,
-    fill = NA,
+    fill = ELEVATED_BG,
     outlier.shape = NA,
-    linewidth = 0.5,
+    linewidth = 0.65,
     width = 0.5
   ) +
   geom_jitter(
     width = 0.15,
     height = 0,
-    size = 2.2,
+    size = 2.6,
     alpha = 0.45,
     color = BRAND,
     stroke = 0
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 18,
+    size = 3.2,
+    color = INK
   ) +
   labs(
     title = title_text,
