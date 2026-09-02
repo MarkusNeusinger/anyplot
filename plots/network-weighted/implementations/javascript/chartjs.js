@@ -8,20 +8,20 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data: annual bilateral trade volume between major economies ($B) ------
 const nodes = [
-  { id: "USA", label: "United States" },
-  { id: "CHN", label: "China" },
-  { id: "DEU", label: "Germany" },
-  { id: "JPN", label: "Japan" },
-  { id: "GBR", label: "United Kingdom" },
-  { id: "FRA", label: "France" },
-  { id: "IND", label: "India" },
-  { id: "BRA", label: "Brazil" },
-  { id: "CAN", label: "Canada" },
-  { id: "KOR", label: "South Korea" },
-  { id: "MEX", label: "Mexico" },
-  { id: "ITA", label: "Italy" },
-  { id: "NLD", label: "Netherlands" },
-  { id: "SGP", label: "Singapore" },
+  { id: "USA" },
+  { id: "CHN" },
+  { id: "DEU" },
+  { id: "JPN" },
+  { id: "GBR" },
+  { id: "FRA" },
+  { id: "IND" },
+  { id: "BRA" },
+  { id: "CAN" },
+  { id: "KOR" },
+  { id: "MEX" },
+  { id: "ITA" },
+  { id: "NLD" },
+  { id: "SGP" },
 ];
 
 const rawEdges = [
@@ -56,21 +56,27 @@ const idIndex = new Map(nodes.map((n, i) => [n.id, i]));
 const links = rawEdges.map(([s, d, w]) => ({ s: idIndex.get(s), d: idIndex.get(d), w }));
 
 const degree = new Array(nodes.length).fill(0);
+const adjacency = nodes.map(() => []);
 links.forEach(({ s, d, w }) => {
   degree[s] += w;
   degree[d] += w;
+  adjacency[s].push(d);
+  adjacency[d].push(s);
 });
 
 // --- Force-directed layout (deterministic: circular seed, no RNG) ----------
 // Fruchterman-Reingold style simulation. Edge weight biases the attractive
 // force so heavily-traded pairs are pulled closer together, per spec notes.
+// A stronger repulsion constant (vs. the textbook sqrt(1/n)) keeps sparsely
+// connected nodes from collapsing into the dense center, so density stays
+// balanced across the square canvas rather than clumping one side.
 const n = nodes.length;
 const pos = nodes.map((_, i) => {
   const angle = (2 * Math.PI * i) / n;
   return { x: Math.cos(angle), y: Math.sin(angle) };
 });
 
-const k = Math.sqrt(6 / n);
+const k = Math.sqrt(9 / n);
 const maxW = Math.max(...links.map((l) => l.w));
 const minW = Math.min(...links.map((l) => l.w));
 let temperature = 0.12;
@@ -138,6 +144,11 @@ function edgeWidth(w) {
   return 2 + norm * 12; // 2 .. 14 CSS px — distinguishable, never extreme
 }
 
+// The single heaviest trade corridor gets a subtle opacity boost (not a hue
+// change, so the single-series CVD-safe encoding is untouched) — a small
+// extra focal point beyond size/thickness alone, per the review's DE-03 note.
+const heaviestW = maxW;
+
 // --- Custom plugin: draws edges beneath nodes, labels + legend above -------
 const networkLayer = {
   id: "networkLayer",
@@ -156,7 +167,7 @@ const networkLayer = {
       ctx.lineWidth = edgeWidth(w);
       ctx.lineCap = "round";
       ctx.strokeStyle = t.ink;
-      ctx.globalAlpha = 0.2 + norm * 0.55;
+      ctx.globalAlpha = w === heaviestW ? 0.9 : 0.2 + norm * 0.55;
       ctx.stroke();
     });
     ctx.restore();
@@ -165,14 +176,46 @@ const networkLayer = {
     const { ctx, scales, chartArea } = chart;
     ctx.save();
 
-    // node id labels
+    // node id labels — anchored in the widest open angular gap between a
+    // node's incident edges (falling back to straight south for isolated
+    // nodes), plus a page-background halo behind the text, so a label never
+    // visually merges with an edge stroke crossing beneath it.
+    const px = pos.map((p) => scales.x.getPixelForValue(p.x));
+    const py = pos.map((p) => scales.y.getPixelForValue(p.y));
+
     ctx.font = "600 15px sans-serif";
-    ctx.fillStyle = t.inkSoft;
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
     nodes.forEach((node, i) => {
-      const px = scales.x.getPixelForValue(pos[i].x);
-      const py = scales.y.getPixelForValue(pos[i].y) + nodeRadius[i] + 20;
-      ctx.fillText(node.id, px, py);
+      const neighbors = adjacency[i];
+      let labelAngle = Math.PI / 2; // default: straight down
+      if (neighbors.length > 0) {
+        const angles = neighbors
+          .map((j) => Math.atan2(py[j] - py[i], px[j] - px[i]))
+          .sort((a, b) => a - b);
+        let bestGap = -Infinity;
+        let bestMid = labelAngle;
+        for (let gi = 0; gi < angles.length; gi++) {
+          const a0 = angles[gi];
+          const a1 = angles[(gi + 1) % angles.length];
+          const gap = ((a1 - a0 + 2 * Math.PI) % (2 * Math.PI)) || 2 * Math.PI;
+          if (gap > bestGap) {
+            bestGap = gap;
+            bestMid = a0 + gap / 2;
+          }
+        }
+        labelAngle = bestMid;
+      }
+      const offset = nodeRadius[i] + 18;
+      const lx = px[i] + Math.cos(labelAngle) * offset;
+      const ly = py[i] + Math.sin(labelAngle) * offset;
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = t.pageBg;
+      ctx.strokeText(node.id, lx, ly);
+      ctx.fillStyle = t.inkSoft;
+      ctx.fillText(node.id, lx, ly);
     });
 
     // edge-weight legend
