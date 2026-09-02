@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: parliament-basic
 created: '2026-09-02T04:57:33Z'
-updated: '2026-09-02T05:03:50Z'
+updated: '2026-09-02T05:15:01Z'
 generated_by: claude-sonnet
 workflow_run: 33592273575
 issue: 2499
@@ -12,136 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliamen
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette: first series is #009E73 (Green Alliance), remaining
-    parties follow canonical positions 2-6 (lavender, blue, ochre, matte red, cyan),
-    identical between light and dark renders'
-  - 'Theme-correct chrome in both renders: warm off-white #FAF8F1 light background,
-    warm near-black #1A1A17 dark background, all text readable in both themes with
-    no dark-on-dark or light-on-light failures'
-  - Majority threshold correctly computed (101 of 200 seats) and clearly annotated
-    with a dashed guideline plus 'Majority · 101' label, directly satisfying the spec's
-    optional majority-line feature
-  - 'Sophisticated custom concentric-arc seat-placement algorithm: row capacities
-    are proportional to radius so seat spacing stays roughly constant, and seats are
-    handed to parties in contiguous left-to-right angular order so each party forms
-    one unbroken wedge'
-  - Legend clearly pairs party name with seat count and a color swatch, matching the
-    underlying data exactly
-  - 'Clean, deterministic, KISS-appropriate code that correctly follows the harness
-    contract: default-exported component, skipAnimation set, sized from window.ANYPLOT_SIZE,
-    no manual mounting'
-  - Legitimate and creative use of MUI X's ChartContainer plus the useXScale/useYScale
-    hooks to build a fully custom mark type — the right call since the MUI X community
-    package has no native hemicycle/parliament chart
+  - Correct Imprint palette order (green, lavender, blue, ochre, matte red, cyan)
+    with identical data colors between light and dark renders, and theme-correct chrome
+    (background, text, dashed guideline) in both
+  - New MajorityHighlight wedge directly addresses the prior review's storytelling
+    feedback, subtly shading the contiguous party blocks that combine to reach the
+    101-seat majority
+  - Title font size increased to 30px per prior feedback and now reads as well-proportioned,
+    fully legible, with no overflow or clipping
+  - Mathematically sound concentric-arc seat-placement algorithm that keeps proportional
+    row spacing and contiguous left-to-right party wedges
+  - Clean, deterministic code that correctly follows the MUI X harness contract (default
+    export, skipAnimation, sized from window.ANYPLOT_SIZE) and uses useXScale/useYScale
+    idiomatically to build a custom mark type not natively offered by MUI X community
+  - Legend clearly pairs party name with seat count using circular swatches consistent
+    with the seat marker style
   weaknesses:
-  - Title occupies only ~30% of canvas width at the current font size, well under
-    the ~50-70% guideline for a short (non-descriptive-prefixed) title — since this
-    title is well under the 67-char threshold that triggers shrinking, increase the
-    title font size (e.g. from 24px to ~28-32px CSS) to strengthen typographic hierarchy
-  - 'Design Excellence is solid but stops short of publication-ready: consider an
-    additional storytelling touch, such as visually distinguishing which contiguous
-    parties would need to combine to reach the 101-seat majority, to push Data Storytelling
-    further'
-  - Layout has noticeable unused vertical whitespace in the title/legend band relative
-    to the seat arc; tightening that padding or growing the chart region slightly
-    would sharpen canvas utilization
-  - No native MUI X high-level chart type is used — series is passed as an empty array
-    and all marks are drawn via custom SVG layers through the scale hooks. This is
-    a reasonable and arguably correct choice given the community package has no hemicycle
-    chart type, but it means idiomatic-usage credit is capped; if a future MUI X release
-    adds point/swarm series support, prefer wiring seats through the series API
+  - The majority-highlight wedge is very subtle (6% fill opacity) — could be nudged
+    slightly more visible without becoming chartjunk so the coalition-math payoff
+    registers immediately
+  - Design is clean and functional but stops just short of top-tier publication polish
+    — no secondary annotation or subtitle reinforces the majority narrative beyond
+    the dashed line and shaded wedge
+  - No native MUI X high-level chart type is used (series={[]}); all marks are hand-built
+    via custom SVG layers — reasonable since MUI X community has no built-in hemicycle/parliament
+    chart, but it still caps idiomatic canned-API credit
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
-      Chrome: Title "parliament-basic · javascript · muix · anyplot.ai" in dark ink text, top-left, clearly readable. Below it a horizontal legend row with 6 colored circular swatches, each paired with a party name and seat count in parentheses (Green Alliance (24), Progress Party (38), Unity Coalition (52), Civic Alliance (46), Heritage Party (28), Reform Movement (12)) — all legible in dark-gray text. Centered above the arc, a "Majority · 101" label sits over a vertical dashed guideline running down through the seat rows. Below the arc, a "200 seats" total label in dark text.
-      Data: ~200 dots arranged in 6 concentric semicircular rows, colored in contiguous left-to-right party blocks: green (Green Alliance), lavender (Progress Party), blue (Unity Coalition — straddling the majority line), ochre (Civic Alliance), matte red (Heritage Party), cyan (Reform Movement). First series is confirmed #009E73 (brand green).
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues observed.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "parliament-basic · javascript · muix · anyplot.ai" top-left in dark ink at 30px, clearly readable. Below it, a horizontal legend row with 6 colored circular swatches paired with party name + seat count (Green Alliance (24), Progress Party (38), Unity Coalition (52), Civic Alliance (46), Heritage Party (28), Reform Movement (12)) in legible dark-gray text. "Majority · 101" label sits above a vertical dashed guideline running through the arc. "200 seats" caption below the arc.
+      Data: 200 dots arranged in 6 concentric semicircular rows, colored in contiguous left-to-right party blocks matching Imprint order (green #009E73, lavender, blue, ochre, matte red, cyan). A faint grey wedge (~6% opacity) shades the region from the leftmost seat to the majority line, highlighting which contiguous party blocks reach the 101-seat majority. First series (Green Alliance) is #009E73.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
-      Chrome: Same layout as the light render, with title, legend text, "Majority · 101" label and "200 seats" total all rendered in light/off-white text, clearly legible against the dark background. The dashed majority guideline is light gray/white and clearly visible.
-      Data: Dot colors are identical to the light render (same green/lavender/blue/ochre/red/cyan hues) — only the chrome (background, text) flipped between themes, as required. First series remains #009E73.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, legend, and annotation text is clearly visible against the dark surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Identical layout to the light render; title, legend text, "Majority · 101" label, and "200 seats" caption all render in light/off-white text, clearly legible against the dark surface. The dashed majority guideline is light gray and clearly visible. No dark-on-dark failures observed.
+      Data: Seat dot colors are pixel-identical to the light render (same green/lavender/blue/ochre/red/cyan hues) — only the chrome (background, text) flipped, as required. The majority-highlight wedge is present and equally subtle.
+      Legibility verdict: PASS — all text clearly readable against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes, but title only fills
-          ~30% of canvas width — under the 50-70% guideline for a short title
+        comment: Explicit font sizes throughout; title increased to 30px per prior
+          feedback, no overflow or clipping, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data overlap in either render
+        comment: No collisions between seat dots, legend, or annotation text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 200 seat markers clearly visible and appropriately sized, adjacent
-          seats within a row sit close but do not overlap
+        comment: 200 seat markers sized adaptively (SEAT_R clamped from row/angular
+          spacing), clearly visible with no overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are CVD-safe and well separated across 6 parties
+        comment: Imprint hues CVD-safe and well separated across 6 parties
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills a large, balanced portion of the canvas; legend near
-          the plot, nothing cut off
+        comment: Chart, legend, and title use a large, balanced portion of the canvas;
+          tight but not clipped margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: No traditional axes needed for a hemicycle chart; legend, majority
-          label, and total-seats label provide the descriptive context
+          label, and total caption supply descriptive context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for remaining 5 parties, theme-correct
-          backgrounds and chrome in both renders'
+        comment: 'First series #009E73, canonical Imprint order for remaining 5 parties,
+          theme-correct chrome in both renders'
     design_excellence:
       score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful custom geometry and coloring, clearly above a configured
-          default, but not yet at FiveThirtyEight-level polish
+        comment: Thoughtful custom geometry, coloring, and highlight layer, clearly
+          above a configured default; not quite FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle dashed majority line, no grid clutter, generous whitespace;
-          some unused vertical space in the title/legend band
+        comment: Subtle dashed majority line, seat stroke matching page background
+          for definition, generous whitespace, consistent legend/marker styling
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Majority threshold line and total-seat count give the viewer an immediate
-          read on coalition math; no further emphasis beyond that
+        comment: Majority line + subtle highlight wedge + total-seat caption give
+          visual hierarchy, but the highlight is faint enough that the insight isn't
+          fully immediate
     spec_compliance:
       score: 15
       max: 15
@@ -157,22 +145,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Semicircular arcs, individual seat dots, legend with names+counts,
-          and the optional majority-threshold line are all present
+        comment: Arcs, individual seat dots, legend with names+counts, and optional
+          majority-threshold line/highlight all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 200 seats mapped and rendered, cumulative party totals match
-          the legend counts
+        comment: All 200 seats mapped, cumulative party totals match legend counts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend labels and counts match
-          the underlying data exactly
+        comment: Title format correct, legend labels/counts match the data exactly
     data_quality:
       score: 13
       max: 15
@@ -182,24 +168,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 parties spanning a wide seat-count range (12-52), majority annotation,
-          and total-seat count show the full feature set of a parliament chart
+        comment: 6 parties spanning 12-52 seats, majority annotation, and total-seat
+          count show the full feature set
       - id: DQ-02
         name: Realistic Context
         score: 3
         max: 5
         passed: true
-        comment: The spec itself mandates party/seat data; the implementation uses
-          entirely fictional, generic party names with no real-world country or divisive
-          framing — the most neutral treatment available for this inherently political
-          chart type
+        comment: Spec inherently requires party/seat data for this chart type; implementation
+          uses entirely fictional, generic party names with no real country or divisive
+          framing — the most neutral treatment available, consistent with attempt
+          1's precedent
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200-seat total with a correctly computed 101-seat majority threshold
-          and realistic individual party sizes
+        comment: 200-seat total, correctly computed 101-seat majority, realistic individual
+          party sizes
     code_quality:
       score: 10
       max: 10
@@ -209,63 +195,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward data -> geometry -> render flow; component functions
-          are the idiomatic React unit, not over-engineering
+        comment: Straightforward top-to-bottom structure; function components are
+          the required React/MUI pattern, not over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic in-memory data, no randomness
+        comment: Deterministic in-memory data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer and the two scale hooks imported, both used
+        comment: Only ChartContainer, useXScale, useYScale imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the custom geometry required; no fake functionality
+        comment: Clean, appropriately complex for the custom geometry, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly follows the harness contract: default export, skipAnimation,
-          sized from window.ANYPLOT_SIZE'
+        comment: 'Follows the harness contract correctly: skipAnimation, sized from
+          ANYPLOT_SIZE, default export'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct usage of ChartContainer and scale hooks, but bypasses the
-          series API entirely (series=[]) rather than leveraging a canned high-level
-          chart component
+        comment: useXScale/useYScale inside ChartContainer is the documented pattern
+          for custom marks; series={[]} means no canned chart component is used at
+          all
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom SVG layers driven by useXScale/useYScale are a genuinely MUI
-          X-distinctive capability, hard to replicate as cleanly in other libraries
-  verdict: REJECTED
+        comment: Scale-hook-driven custom SVG layers are a genuinely MUI X-distinctive
+          capability, hard to replicate as cleanly elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - patches
   - annotations
-  - polar-projection
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - edge-highlighting

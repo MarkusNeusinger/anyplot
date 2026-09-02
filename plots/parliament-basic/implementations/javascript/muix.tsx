@@ -1,7 +1,7 @@
 // anyplot.ai
 // parliament-basic: Parliament Seat Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-02
+// Quality: 91/100 | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
