@@ -64,6 +64,25 @@ for (let i = 1; i < closes.length; i++) {
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
+// Diagonal hatch pattern: a redundant non-color cue for bearish bricks so
+// direction reads correctly for colorblind viewers, not solely via hue.
+svg
+  .append("defs")
+  .append("pattern")
+  .attr("id", "bearish-hatch")
+  .attr("width", 7)
+  .attr("height", 7)
+  .attr("patternUnits", "userSpaceOnUse")
+  .attr("patternTransform", "rotate(45)")
+  .append("line")
+  .attr("x1", 0)
+  .attr("y1", 0)
+  .attr("x2", 0)
+  .attr("y2", 7)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2.5)
+  .attr("stroke-opacity", 0.4);
+
 // --- Scales -------------------------------------------------------------------
 const x = d3
   .scaleBand()
@@ -86,6 +105,25 @@ g.append("g")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
+// --- Close-price trace (d3-shape line generator through brick midpoints) ----
+// A distinctive d3-shape touch beyond the manual rect join: a dashed line
+// tracing each brick's closing level, drawn beneath the bricks so it only
+// peeks through the small inter-brick gaps — reinforcing the underlying price
+// path without competing visually with the brick fills.
+const closeTrace = d3
+  .line()
+  .x((d, i) => x(i) + x.bandwidth() / 2)
+  .y((d) => y(d.close))
+  .curve(d3.curveMonotoneX);
+g.append("path")
+  .datum(bricks)
+  .attr("d", closeTrace)
+  .attr("fill", "none")
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-opacity", 0.45)
+  .attr("stroke-dasharray", "2,3");
+
 // --- Bricks ---------------------------------------------------------------
 // Bullish (up) -> Imprint brand green; Bearish (down) -> Imprint matte red —
 // the semantic finance exception (profit/up -> green, loss/down -> red),
@@ -102,6 +140,47 @@ g.selectAll("rect.brick")
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
 
+// Hatch overlay on bearish bricks only — the redundant non-color direction cue.
+g.selectAll("rect.brick-hatch")
+  .data(bricks.map((d, i) => ({ ...d, i })).filter((d) => !d.up))
+  .join("rect")
+  .attr("class", "brick-hatch")
+  .attr("x", (d) => x(d.i))
+  .attr("width", x.bandwidth())
+  .attr("y", (d) => y(Math.max(d.open, d.close)))
+  .attr("height", (d) => Math.abs(y(d.close) - y(d.open)))
+  .attr("fill", "url(#bearish-hatch)")
+  .attr("pointer-events", "none");
+
+// --- Peak callout: mark the series' single highest brick (data storytelling) ---
+let peakIdx = 0;
+let peakPrice = -Infinity;
+bricks.forEach((d, i) => {
+  const top = Math.max(d.open, d.close);
+  if (top > peakPrice) {
+    peakPrice = top;
+    peakIdx = i;
+  }
+});
+const peakX = x(peakIdx) + x.bandwidth() / 2;
+const peakY = y(peakPrice);
+g.append("circle")
+  .attr("cx", peakX)
+  .attr("cy", peakY)
+  .attr("r", 4.5)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
+const peakLabelAbove = peakY - 16 >= 10;
+g.append("text")
+  .attr("x", Math.min(Math.max(peakX, 70), iw - 70))
+  .attr("y", peakLabelAbove ? peakY - 16 : peakY + 24)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Peak: $${peakPrice.toFixed(0)}`);
+
 // --- Axes -----------------------------------------------------------------
 const tickEvery = Math.max(1, Math.ceil(bricks.length / 12));
 const xTickValues = d3.range(bricks.length).filter((i) => i % tickEvery === 0);
@@ -111,18 +190,19 @@ const xAxis = g
   .call(d3.axisBottom(x).tickValues(xTickValues).tickFormat((i) => i + 1));
 const yAxis = g.append("g").call(d3.axisLeft(y).tickFormat(d3.format("$,.0f")));
 for (const ax of [xAxis, yAxis]) {
-  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
+  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px").style("font-weight", "400");
   ax.selectAll("line").attr("stroke", t.inkSoft);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
 
-// --- Axis labels ------------------------------------------------------------
+// --- Axis labels (bolder weight than tick labels for typographic hierarchy) --
 g.append("text")
   .attr("x", iw / 2)
   .attr("y", ih + 64)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "18px")
+  .style("font-weight", "600")
   .text("Brick Index");
 g.append("text")
   .attr("transform", "rotate(-90)")
@@ -131,6 +211,7 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "18px")
+  .style("font-weight", "600")
   .text("Price ($)");
 
 // --- Legend (semantic color mapping must be explicit) ------------------------
