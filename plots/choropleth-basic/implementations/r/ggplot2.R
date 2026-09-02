@@ -79,6 +79,25 @@ centroids <- df %>%
 df_present <- df %>% filter(!is.na(value))
 df_missing <- df %>% filter(is.na(value))
 
+# Highest/lowest-share countries are named in the caption below (no on-map
+# marker: a per-cell highlight either creates seams across multi-cell
+# countries like Bolivia/Argentina or collides with their centroid label).
+extreme_countries <- df_present %>%
+  distinct(country, value) %>%
+  filter(value == max(value) | value == min(value)) %>%
+  mutate(code = country_code[country])
+
+highest_codes <- extreme_countries %>%
+  filter(value == max(value)) %>%
+  pull(code) %>%
+  paste(collapse = ", ")
+highest_value <- max(extreme_countries$value)
+lowest_codes <- extreme_countries %>%
+  filter(value == min(value)) %>%
+  pull(code) %>%
+  paste(collapse = ", ")
+lowest_value <- min(extreme_countries$value)
+
 # --- Title (fontsize scales with title length, see plot-generator.md) -----
 # No descriptive prefix: the legend title already names the metric, and the
 # square canvas leaves less horizontal room than the landscape default.
@@ -106,12 +125,17 @@ p <- ggplot() +
     low = "#009E73", high = "#4467A3",
     name = "Renewable share\nof electricity",
     labels = label_percent(scale = 1),
-    na.value = INK_MUTED
+    na.value = INK_MUTED,
+    guide = guide_colorbar(frame.colour = INK_SOFT, ticks.colour = INK_SOFT)
   ) +
   coord_fixed(ratio = 1) +
   labs(
-    title   = title_text,
-    caption = "Gray tile: data unavailable (Guyana)"
+    title    = title_text,
+    subtitle = "Schematic tile-map of South America · relative country adjacency preserved, not to scale",
+    caption  = paste0(
+      "Highest: ", highest_codes, " (", highest_value, "%) · lowest: ",
+      lowest_codes, " (", lowest_value, "%)\nGray tile: data unavailable (Guyana)"
+    )
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -122,6 +146,7 @@ p <- ggplot() +
     axis.title        = element_blank(),
     axis.ticks        = element_blank(),
     plot.title        = element_text(size = title_size, color = INK, hjust = 0.5),
+    plot.subtitle     = element_text(size = 7, color = INK_SOFT, hjust = 0.5),
     plot.caption      = element_text(size = 7, color = INK_MUTED, hjust = 0.5),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
     legend.text       = element_text(size = 8, color = INK_SOFT),
