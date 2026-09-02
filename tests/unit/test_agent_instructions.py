@@ -1,0 +1,244 @@
+"""The agent instructions must keep pointing at things that exist.
+
+`CLAUDE.md` and `.github/copilot-instructions.md` both open with the claim that
+they stay in sync, and both are read as binding shorthand — CLAUDE.md is loaded
+into every Claude Code session, copilot-instructions.md into every Copilot
+review. Nothing checked either claim, and both drift the same quiet way: a path
+moves, a link rots, a rule gets tightened in one file and not the other, and
+the guide keeps reading as authoritative while it sends the next agent
+somewhere that no longer exists.
+
+Four cheap pins, none of which needs the database, the network or a checkout of
+anything but this repository:
+
+1. every backtick-quoted repo path in the agent-facing files resolves;
+2. every relative Markdown link resolves, and every same-page anchor points at
+   a heading that is there;
+3. every skill the routing table names exists as `.claude/skills/<name>/SKILL.md`;
+4. the rules that are supposed to be mirrored are present on BOTH sides.
+
+(4) is deliberately a keyword pin, not a text diff: the two files address
+different audiences and paraphrase each other, so requiring byte equality would
+force false uniformity. What it catches is a rule silently living in only one
+of them.
+
+This pins what the guides already say. It is not the place to introduce a rule
+— write the rule in both guides first, then add its keywords here.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import pytest
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
+COPILOT_MD = REPO_ROOT / ".github" / "copilot-instructions.md"
+
+AGENT_FILES = [
+    CLAUDE_MD,
+    COPILOT_MD,
+    REPO_ROOT / "agentic" / "docs" / "project-guide.md",
+    REPO_ROOT / "agentic" / "commands" / "prime.md",
+]
+
+_BACKTICKED = re.compile(r"`([^`\n]+)`")
+_MD_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
+_HEADING = re.compile(r"^#+\s+(.*)$", re.M)
+
+# A backticked span is only treated as a path when it looks like one and
+# carries no shell or placeholder syntax. Everything else in backticks is a
+# command, an identifier, a label, a header name or a value.
+_PATH_SHAPED = re.compile(r"^[\w./@-]+$")
+_FILE_SUFFIXES = {
+    ".cff",
+    ".conf",
+    ".gz",
+    ".html",
+    ".jl",
+    ".js",
+    ".json",
+    ".lock",
+    ".md",
+    ".mjs",
+    ".mts",
+    ".py",
+    ".sh",
+    ".toml",
+    ".ts",
+    ".tsx",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
+
+# Paths the guides name deliberately although they are absent: templates that
+# only exist once a developer copies them, and directories the rules define
+# ahead of the first file that will live in them.
+_KNOWN_ABSENT: set[str] = {".env", "app/.env"}
+
+# Skill-shaped tokens that are NOT repository skills. `/update-config` is a
+# Claude Code harness skill, which CLAUDE.md says in the same breath it names
+# it; `/pull_request` and the other slash names under `agentic/commands/` are
+# commands, resolved by the path pin instead.
+_HARNESS_SKILLS = {"update-config"}
+_SKILL_TOKEN = re.compile(r"`/([a-z][a-z0-9-]+)`")
+
+
+def _looks_like_path(token: str) -> bool:
+    """Only multi-segment paths are checked.
+
+    A bare basename (`CHANGELOG.md`, `conftest.py`) is prose shorthand in these
+    files, not a location claim — pinning those would force every mention to
+    carry a full path and make the guides harder to read, which is the opposite
+    of the point.
+    """
+    if not _PATH_SHAPED.match(token) or token.startswith(("http", "@")):
+        return False
+    if token in _KNOWN_ABSENT:
+        return False
+    normalised = token.strip("/")
+    if "/" not in normalised:
+        return False
+    return token.endswith("/") or Path(token).suffix in _FILE_SUFFIXES
+
+
+def _candidate_paths(text: str) -> set[str]:
+    return {tok for tok in _BACKTICKED.findall(text) if _looks_like_path(tok)}
+
+
+def _anchor(heading: str) -> str:
+    """GitHub's slug for a heading: lowercased, punctuation dropped, spaces to
+    hyphens. Enough of the algorithm for the headings these files actually have.
+    """
+    slug = heading.strip().lower()
+    slug = re.sub(r"[^\w\s-]", "", slug)
+    return re.sub(r"\s", "-", slug)
+
+
+def _flat(text: str) -> str:
+    """Lowercased with runs of whitespace collapsed.
+
+    Both guides hard-wrap their prose, so a rule's phrase is regularly split
+    across two lines; matching the raw text would report a rule as missing
+    purely because of where the line broke.
+    """
+    return re.sub(r"\s+", " ", text).lower()
+
+
+@pytest.mark.parametrize("path", AGENT_FILES, ids=lambda p: p.name)
+def test_agent_file_exists(path: Path) -> None:
+    assert path.is_file(), f"{path} is referenced as an agent instruction file"
+
+
+@pytest.mark.parametrize("agent_file", AGENT_FILES, ids=lambda p: p.name)
+def test_backticked_paths_resolve(agent_file: Path) -> None:
+    """Every backticked repo path in the agent instructions exists.
+
+    A path that has moved makes the instruction actively misleading — the agent
+    follows it, finds nothing, and improvises.
+    """
+    missing = sorted(
+        token
+        for token in _candidate_paths(agent_file.read_text(encoding="utf-8"))
+        if not (REPO_ROOT / token.strip("/")).exists()
+    )
+    assert not missing, f"{agent_file.name} points at paths that do not exist: {missing}"
+
+
+@pytest.mark.parametrize("agent_file", AGENT_FILES, ids=lambda p: p.name)
+def test_markdown_links_resolve(agent_file: Path) -> None:
+    """Relative links land on a file, and same-page anchors on a heading.
+
+    Both forms rot silently: nothing renders an error, the link simply goes
+    nowhere, and a reader who follows it concludes the guide is stale.
+    """
+    text = agent_file.read_text(encoding="utf-8")
+    anchors = {_anchor(h) for h in _HEADING.findall(text)}
+
+    broken: list[str] = []
+    for target in _MD_LINK.findall(text):
+        if target.startswith(("http://", "https://", "mailto:")):
+            continue
+        if target.startswith("#"):
+            if target[1:] not in anchors:
+                broken.append(target)
+            continue
+        # Relative to the linking file, which is also how GitHub resolves it.
+        # A leading slash reads as repo-root-relative to a human but as
+        # site-root to GitHub's renderer, where it 404s — so it is reported,
+        # not resolved generously.
+        relative = target.split("#")[0]
+        if not (agent_file.parent / relative).exists():
+            broken.append(target)
+
+    assert not broken, f"{agent_file.name} links to targets that do not exist: {broken}"
+
+
+def test_every_named_skill_exists() -> None:
+    """The routing table in CLAUDE.md sends work to `.claude/skills/<name>/`.
+
+    A skill named there but never written is worse than no table: the agent
+    invokes it, gets nothing, and proceeds without the verification loop the
+    table promised.
+    """
+    named = set(_SKILL_TOKEN.findall(CLAUDE_MD.read_text(encoding="utf-8"))) - _HARNESS_SKILLS
+    available = {p.name for p in (REPO_ROOT / ".claude" / "skills").iterdir() if p.is_dir()}
+    commands = {p.stem for p in (REPO_ROOT / "agentic" / "commands").glob("*.md")}
+
+    unknown = sorted(named - available - commands)
+    assert not unknown, f"CLAUDE.md names skills or commands that do not exist: {unknown}"
+
+    without_manual = sorted(
+        name for name in named & available if not (REPO_ROOT / ".claude" / "skills" / name / "SKILL.md").is_file()
+    )
+    assert not without_manual, f"skill directories without a SKILL.md: {without_manual}"
+
+
+# Rules that must reach BOTH audiences. Each entry is a human-readable name
+# plus the keywords that identify the rule in either file's own wording; a rule
+# counts as present when every keyword appears (case-insensitively).
+MIRRORED_RULES = {
+    "output is always English": ["always write in english"],
+    "prose follows the Google style guide": ["google style", "docs/reference/style-guide.md"],
+    "every PR updates the changelog": ["[unreleased]", "keep-a-changelog"],
+    "a release is condensed, never copied": ["condensed, never copied", "agentic/commands/release.md"],
+    "never echo secret values": ["never echo secret"],
+    "structural fix over symptomatic fix": ["structural fix over symptomatic fix"],
+    # The repository's most consequential rule, and the one an agent that opens
+    # and edits PRs is most able to break: specs and implementations go through
+    # the workflows, and their PRs are merged by `impl-merge`, never by hand.
+    "never merge a pipeline PR by hand": ["manually merge"],
+}
+
+
+@pytest.mark.parametrize("rule", sorted(MIRRORED_RULES), ids=lambda r: r.replace(" ", "-"))
+def test_rule_is_mirrored_in_both_guides(rule: str) -> None:
+    """A rule the repository relies on must not live in only one of the guides.
+
+    CLAUDE.md never reaches Copilot, and copilot-instructions.md never reaches
+    a Claude Code session; a rule in one file only is a rule half the agents
+    never see.
+    """
+    keywords = MIRRORED_RULES[rule]
+    claude = _flat(CLAUDE_MD.read_text(encoding="utf-8"))
+    copilot = _flat(COPILOT_MD.read_text(encoding="utf-8"))
+
+    missing_in = [
+        name
+        for name, text in (("CLAUDE.md", claude), ("copilot-instructions.md", copilot))
+        if not all(keyword.lower() in text for keyword in keywords)
+    ]
+    assert not missing_in, f"rule {rule!r} is missing from: {', '.join(missing_in)}"
+
+
+def test_each_guide_names_the_other_as_its_companion() -> None:
+    """The sync claim is what the rest of this file enforces. If it is deleted,
+    the mirroring stops being a promise and these tests stop meaning anything.
+    """
+    assert "copilot-instructions.md" in CLAUDE_MD.read_text(encoding="utf-8")
+    assert "CLAUDE.md" in COPILOT_MD.read_text(encoding="utf-8")
