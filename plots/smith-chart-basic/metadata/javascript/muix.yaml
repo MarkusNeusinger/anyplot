@@ -1,0 +1,260 @@
+library: muix
+language: javascript
+specification_id: smith-chart-basic
+created: '2026-09-02T06:17:08Z'
+updated: '2026-09-02T06:44:17Z'
+generated_by: claude-sonnet
+workflow_run: 33597479634
+issue: 3792
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Mathematically correct Smith-chart grid: constant-resistance circles and constant-reactance
+    arcs are derived analytically, with each reactance arc''s angular span found by
+    walking outward from the open-circuit point until it re-crosses |Gamma|=1 rather
+    than assuming a fixed half-circle'
+  - Careful anti-overlap label placement - grid value labels and frequency waypoint
+    labels are nudged outward along the radial direction from the chart origin, with
+    text-anchor/baseline flipped based on direction; no label collisions found anywhere
+    in the grid across both themes
+  - Fully theme-correct chrome in both renders, with the brand-green locus color identical
+    between light and dark
+  - Idiomatic use of ChartContainer + useXScale/useYScale composition hooks to sync
+    custom SVG geometry to the container's coordinate system - the documented MUI
+    X pattern for chart types the built-in components don't cover
+  - Deterministic, realistic antenna-feed RLC dataset producing a full 1-6 GHz sweep
+    that visibly crosses resonance
+  weaknesses:
+  - 'Stale duplicate header block: lines 1-4 are a leftover header (stale Quality:
+    89/100 score, mismatched ''Library: muix 7.29.1 | JavaScript 22.23.2'' line) sitting
+    above the //# anyplot-orientation: square directive, followed by a second canonical
+    header block. The directive must be the very first line of the file - strip the
+    stale first 4-line block entirely.'
+  - Title occupies only ~45-50% of the plotting-area width at the current 22px size
+    - on the low end of the comfortable 50-70% range; not a violation but there's
+    room to grow it slightly for more visual presence
+  - 'DQ-03: the 1 GHz waypoint''s reactance swing (~-366 ohms unnormalized) is quite
+    extreme for an illustrative matched-network sweep; a gentler L/C pairing would
+    keep the locus a bit more centered while still crossing resonance clearly'
+  - Several standalone geometry helpers (circlePoints, reactanceArcPoints, pathFromPoints)
+    add structure beyond a flat imports-to-data-to-plot layout; justified by the chart's
+    math, but worth keeping in check in future repair passes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 - not pure white, not dark
+      Chrome: black unit-reflection boundary circle, dark horizontal resistance axis, thin gray constant-resistance circles and constant-reactance arcs at ~55% opacity; title "smith-chart-basic · javascript · muix · anyplot.ai" centered above in dark ink; grid value labels (0.2/0.5/1/2/5, +-j0.2/+-j0.5/+-j1/+-j2/+-j5) and "Z0" label all in dark/soft-dark ink - all clearly readable, no overlap found in top-right waypoint cluster, bottom-right boundary region, center Z0 marker, axis-label row, or far-right convergence point
+      Data: brand-green (#009E73) impedance locus with six labeled frequency waypoints (1-6 GHz), green dots with pageBg-colored stroke, dark waypoint-label text
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 - not pure black, not light
+      Chrome: boundary circle and axis line render near-white, grid arcs stay muted light gray, title and all labels render in light ink - confirmed no dark-on-dark failures in the same regions inspected on the light render (top-right waypoints, center Z0 marker)
+      Data: locus color confirmed identical #009E73 green to the light render via side-by-side crop comparison of the 5/6 GHz waypoints and Z0 marker
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (13/14/15/22px); readable in both themes;
+          title stays well under overflow threshold
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions found across grid labels, frequency waypoints, or title
+          in either theme
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Locus stroke width 3.5 and 9px waypoint markers with contrast stroke
+          are well sized for a sparse, labeled dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue locus against neutral grid with pageBg marker outline;
+          no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart circle fills roughly 70-75% of the square canvas with balanced
+          margins derived to keep the drawing area a perfect square
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Domain-standard Smith-chart resistance/reactance value labels convey
+          units per RF convention
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Locus uses t.palette[0] (#009E73), identical across themes; backgrounds
+          and chrome are theme-correct in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom-derived grid geometry and radial label-placement algorithm
+          well above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid opacity, minimal chrome, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear trajectory and matched-center emphasis via color and labeling,
+          but no explicit callout of the resonance crossing
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Geometrically accurate Smith chart with correct constant-R circles
+          and constant-X arcs
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid, normalized impedance, locus, frequency labels, boundary, and
+          matched center all present; VSWR circles optionally omitted
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Gamma real/imag correctly mapped to x/y via scale hooks
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; no legend needed for the single directly-labeled
+          series
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full 1-6 GHz sweep crossing resonance, good but not exhaustive edge-case
+          coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Antenna feed impedance sweep - real, neutral engineering scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Plausible but the 1 GHz reactance swing is quite extreme for an illustrative
+          sweep
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessary geometry helper functions beyond a flat script, justified
+          by chart math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic formula-based data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer, ChartsText, useXScale, useYScale imported and
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Stale duplicate header block (old Quality score, mismatched library
+          line) left in the file above the canonical header
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation and disableAxisListener set; current hooks API; harness
+          owns file output
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses MUI X's documented composition pattern (ChartContainer + scale
+          hooks) to extend beyond built-in chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale hooks are a MUI X-specific mechanism not easily
+          replicated in other libraries without equivalent APIs
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - publication-ready
