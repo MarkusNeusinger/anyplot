@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: ternary-density
 created: '2026-09-02T07:27:19Z'
-updated: '2026-09-02T07:31:57Z'
+updated: '2026-09-02T07:43:07Z'
 generated_by: claude-sonnet
 workflow_run: 33603031418
 issue: 3696
@@ -12,53 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Genuine ternary coordinate geometry (equilateral-triangle projection) computed
-    correctly for all sample points, grid lines, and vertex labels
-  - Uses d3.contourDensity for real browser-side KDE — the spec's core 'density overlay'
+  - 'Both Attempt 1 weaknesses are cleanly fixed: density fill-opacity reduced to
+    0.7 with a second grid pass redrawn on top (0.55 opacity, clipped to the triangle)
+    so the ternary grid now reads through the colored density regions in both themes'
+  - Legend repositioned to anchor off the triangle's own right edge instead of a fixed
+    canvas margin, eliminating the previous unbalanced whitespace
+  - Genuine ternary coordinate geometry (equilateral-triangle barycentric projection)
+    computed correctly for sample points, grid lines, and vertex labels
+  - d3.contourDensity gives a real browser-side KDE — the spec's core density-overlay
     requirement is implemented with the library's distinctive statistical-contour
     module, not faked
-  - 'Imprint sequential colormap (#009E73 → #4467A3) applied correctly and identically
-    across both themes; backgrounds and chrome are theme-correct in both renders'
-  - Data is a realistic, neutral geoscience scenario (sand/silt/clay soil texture)
-    matching the spec's own application list, normalized so components sum to 100%
-  - Density legend is a proper gradient swatch with axis ticks and a 'Density' label,
-    not just a bare color scale
-  - Fully reproducible via a fixed-seed LCG (no dependency on browser Math.random)
+  - Imprint sequential colormap applied correctly and identically across both themes;
+    backgrounds/chrome are theme-correct in both renders
+  - Fully reproducible via a fixed-seed LCG; realistic, neutral geoscience data (sand/silt/clay)
+    matching the spec's own application list
   weaknesses:
-  - Density band fill-opacity is 0.9, which is opaque enough to hide the ternary grid
-    lines wherever density is present — the spec explicitly asks for grid lines to
-    remain visible beneath the density layer 'with appropriate transparency'. Lower
-    fill-opacity to roughly 0.65-0.75 (or draw the grid a second time above the density
-    layer at low opacity) so the grid reads through the colored regions.
-  - Noticeable blank gap between the triangle's right edge and the legend column,
-    leaving whitespace unevenly distributed toward the right side of the canvas —
-    tighten margin.right or move the legend closer to the triangle.
-  - 'Design Excellence is solid but not yet top-tier: the single-hue sequential fill
-    and default d3-axis legend ticks read as competent rather than distinctive; consider
-    subtler grid contrast, refined legend typography, or a more deliberate visual
-    hierarchy to push past ''good default''.'
-  - Uses several helper functions (makeRng, sampleCluster, project) rather than a
-    flat imports->data->plot script; justified by the coordinate-projection reuse,
-    but still a deviation from the KISS single-pass structure preferred for simple
-    implementations.
+  - 'Design Excellence is solid but not top-tier: the single-hue sequential fill and
+    default d3-axis legend ticks still read as competent rather than distinctive'
+  - Several helper functions (makeRng, sampleCluster, project, drawGrid) rather than
+    a flat script — reasonably justified by geometry/grid reuse, but a minor KISS
+    deviation
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Soil Texture Composition · ternary-density · javascript · d3 · anyplot.ai" centered at top in dark ink, clearly legible. Vertex labels "Sand" (top), "Silt" (bottom-left), "Clay" (bottom-right) in bold dark text, well separated from the triangle edges. Faint grid lines are visible inside the triangle wherever no density fill is present; ticks and "Density" legend label on the right in dark/soft-ink text.
-      Data: Three overlapping teal-to-blue kernel-density blobs positioned near the Sand vertex and along the Silt-Clay edge, showing three distinct compositional modes. Sequential colormap runs light green (low density) to blue (high density), matching the Imprint imprint_seq stops. Subtle darker outline strokes mark key density levels within each blob.
-      Legibility verdict: PASS — all text (title, vertex labels, legend) is clearly readable against the light background; no light-on-light issues.
+      Chrome: Title "Soil Texture Composition · ternary-density · javascript · d3 · anyplot.ai" centered at top in dark ink, clearly legible. Vertex labels "Sand" (top), "Silt" (bottom-left), "Clay" (bottom-right) bold and dark, well clear of triangle edges. Ternary grid lines visible across the whole triangle, including through the density fill regions (fixed from Attempt 1). Density legend "Density" with gradient swatch and tick labels 0.00-0.03 sits snugly beside the triangle's right edge.
+      Data: Imprint sequential colormap (green -> blue), three kernel-density blobs (one near Sand vertex, two merging along the Silt/Clay base) with concentric contour rings.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, vertex labels, and legend as the light render, all rendered in light/off-white text, clearly legible against the dark background. Triangle frame and grid lines are light gray, faint but visible where not covered by density.
-      Data: Same three density blobs, same green-to-blue color progression — confirmed identical to the light render (only chrome flipped, not data colors).
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/label/tick text is clearly visible against the near-black background.
+      Chrome: Same title, vertex labels, and legend, all rendered in light/off-white text, clearly legible against the dark surface. Grid lines light gray, visible through the density fill at reduced opacity, same as light render.
+      Data: Identical green-to-blue density colors as light render — confirmed no data-color drift between themes.
+      Legibility verdict: PASS (no dark-on-dark failures observed)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,51 +57,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit (title 20px, vertex labels 19px, legend 13-14px);
-          readable in both themes; legend text is a touch small relative to canvas
-          scale
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap in either render
+        comment: No collisions between text, blobs, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Contour density bands clearly visible with distinguishable steps;
-          key-level outlines add definition
+        comment: Density blobs and contour rings clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient, CVD-safe, no red-green reliance
+        comment: Imprint sequential ramp has adequate contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Triangle fills available vertical space, but a noticeable blank gap
-          sits between the triangle's right edge and the legend column
+        comment: Legend now anchored to triangle's right edge, whitespace balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels (Sand/Silt/Clay) clearly identify each ternary axis
-          per spec
+        comment: Vertex labels and title descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 to #4467A3) used correctly; backgrounds and
-          chrome theme-correct in both renders; data colors identical across themes'
+        comment: Imprint sequential used for density; both renders theme-correct
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -118,24 +103,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Sequential gradient and polished legend go beyond a bare default,
-          but overall composition doesn't reach top-tier
+        comment: Competent but not top-tier composition
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, minimal triangle frame, generous margins; density-band
-          strokes add refinement
+        comment: Grid now legible through density fill, subtle contour outlines
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color/density gradient immediately reveals three compositional modes
-          without needing annotations
+        comment: Three compositional modes clearly revealed via density gradient
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,30 +125,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary diagram with KDE density overlay
+        comment: Correct ternary density plot
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Vertex labels, colormap, and key-level contours present, but grid
-          lines are effectively hidden under the opaque (0.9) density fill, missing
-          the spec's explicit 'grid visible beneath density with appropriate transparency'
-          requirement
+        comment: 'Grid visible beneath density (fixed: fill-opacity 0.7 + redrawn
+          grid pass at 0.55 opacity)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sand/Silt/Clay correctly projected to the three vertices; all clusters
-          visible
+        comment: Correct barycentric projection of composition data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches convention; legend clearly labeled 'Density'
-          with tick values
+        comment: Title format matches spec exactly
     data_quality:
       score: 14
       max: 15
@@ -176,21 +154,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Three distinct density modes shown; good multimodal coverage though
-          cluster shapes are fairly uniform
+        comment: Shows density concentration, clusters, contours, legend
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral geoscience scenario (soil texture) matching the spec's
-          own application list
+        comment: Sand/silt/clay soil texture, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages plausible and properly normalized to sum to 100%
+        comment: Proportions sum to 100%, density values reasonable
     code_quality:
       score: 9
       max: 10
@@ -200,33 +176,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Small helper functions (makeRng, sampleCluster, project) used rather
-          than a flat script, though the ternary projection genuinely benefits from
-          centralization
+        comment: Several helper functions, justified by geometry reuse
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used
+        comment: No extraneous imports, d3 global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; complexity matches the visualization's needs
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts to #container per harness contract; modern d3 v7 API'
+        comment: Correct mount-node contract usage
     library_mastery:
       score: 9
       max: 10
@@ -236,25 +210,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic use of d3-contour, d3-geo, d3-scale, d3-axis
+        comment: Idiomatic d3-contour, d3-scale, d3-geo usage
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: d3.contourDensity for true browser-side KDE is a distinctive D3 capability,
-          not easily replicated in other charting libraries
-  verdict: REJECTED
+        comment: d3.contourDensity is a distinctive browser-side KDE capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - kde
   styling:
   - custom-colormap
+  - gradient-fill
   - alpha-blending
-  - grid-styling
