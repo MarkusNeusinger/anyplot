@@ -1,0 +1,247 @@
+library: echarts
+language: javascript
+specification_id: chernoff-basic
+created: '2026-09-02T15:09:25Z'
+updated: '2026-09-02T15:13:52Z'
+generated_by: claude-sonnet
+workflow_run: 33645589425
+issue: 3003
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Genuinely custom-built Chernoff face glyph via ECharts' custom series renderItem
+    (group of circle/line/polyline/bezierCurve shapes) — a distinctive, hard-to-replicate-elsewhere
+    technique, not just a configured built-in chart type
+  - All 8 raw metrics are normalized to 0-1 exactly as the spec requires, then mapped
+    to 8 distinct facial features (face width/height, eye size/spacing, eyebrow slant,
+    nose length, mouth width/curvature)
+  - 'Sector grouping is both color-coded (Imprint palette positions 1-3, first series
+    correctly #009E73) and spatially grouped by row, giving redundant encoding beyond
+    hue alone'
+  - Perfect theme adaptation — data colors identical between light/dark renders, all
+    chrome (ink, inkSoft, elevatedBg) correctly threaded through the custom renderItem,
+    no dark-on-dark or light-on-light failures
+  - Realistic, neutral business scenario (fictional companies across Tech/Retail/Finance)
+    with plausible financial-ratio ranges (revenue growth, profit margin, liquidity
+    ratio, debt-to-equity, etc.)
+  - Manually built graphic legend correctly compensates for the custom series having
+    no native legend support
+  - 'Clean, deterministic, KISS-structured code: seeded LCG, no unused imports, no
+    fake interactivity'
+  weaknesses:
+  - The nose glyph (polyline forming a right-angle bridge+base) visually reads as
+    the letter 'L' printed on the face rather than a nose silhouette — a small curved
+    or triangular nose shape would read more naturally and lift aesthetic polish
+  - Noticeable unused whitespace below the third face row (roughly the bottom ~13%
+    of the canvas) — nudging marginBottom down or growing the grid slightly would
+    tighten canvas utilization
+  - Facial feature differences (especially eyebrow slant) are subtle at this face
+    size — some faces look very similar at a glance; slightly exaggerating the feature-to-fraction
+    mapping ranges would sharpen the 'faces as fingerprints' storytelling effect this
+    technique is known for
+  - Company-name labels (13px) are the smallest text element in the composition and
+    sit close to the axis-label sizing floor — worth a small bump for extra headroom
+    at the 400px mobile thumbnail size
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent with the style guide — not pure white.
+      Chrome: Title "chernoff-basic · javascript · echarts · anyplot.ai" (bold, dark ink) and subtitle "Each face encodes 8 normalized financial-health metrics via facial features, grouped by sector" are both crisp and clearly readable against the light background. A top-right legend lists "Tech sector" / "Retail sector" / "Finance sector" with colored swatch dots (green/purple/blue), also fully legible.
+      Data: 12 Chernoff faces arranged in a 4-column x 3-row grid, one row per sector. Face outlines/strokes use the Imprint palette in canonical order — row 1 (Tech) = brand green #009E73, row 2 (Retail) = lavender #C475FD, row 3 (Finance) = blue #4467A3. Face fills are a slightly elevated off-white (distinct from page background), eyes/eyebrows/nose/mouth render in dark ink. Faces vary visibly in width/height (e.g. Pulsewave Robotics and Silverline Bank are more elongated/oval), mouth curvature (Meridian Mart smiles; several others frown or sit flat), and eye spacing/eyebrow slant. Each face is labeled with its company name below it in dark, legible text.
+      Legibility verdict: PASS — all text (title, subtitle, legend, company labels) is clearly readable on the light surface; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent with the style guide — not pure black.
+      Chrome: Title and subtitle now render in light ink/inkSoft tones and remain fully readable against the dark background. Legend swatches and text are equally legible; no dark-on-dark failures anywhere.
+      Data: Same 12-face grid layout. Face outline colors (green/lavender/blue) are pixel-identical to the light render — only the chrome (background, text, face-fill "elevated" tone) flipped to the dark palette, exactly as required. Eyes/eyebrows/nose/mouth now render in light ink so they remain visible against the darker face fill. Face-to-face feature variation (shape, mouth curvature, eyebrow slant) is preserved identically to the light render.
+      Legibility verdict: PASS — all text and facial detail strokes are clearly visible against the dark surface; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; company-name
+          labels (13px) are the smallest element and worth a small bump for mobile
+          headroom
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 faces sized appropriately for a 4x3 grid on a landscape canvas;
+          all facial features clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sector encoded redundantly via color + row grouping + legend; no
+          red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Balanced margins, legend near plot, nothing cut off; noticeable unused
+          whitespace below the last row
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes for this glyph-grid chart type; title + subtitle
+          + company labels are fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for 3 sectors, correct
+          theme-adaptive backgrounds/chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Fully custom-built glyph chart with intentional layout hierarchy
+          (title/legend/grid); the 'L'-shaped nose glyph slightly undercuts polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Minimal-chrome design (no axes/grid), generous whitespace, consistent
+          color-coded outlines; bottom whitespace slightly uneven
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Sector color-coding plus varying facial expressions creates visual
+          hierarchy and invites face-to-face comparison, the core value proposition
+          of Chernoff faces
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct Chernoff-faces chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: 0-1 normalization, grid layout, and group-membership colorization
+          all present per spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Each of the 8 metrics maps to a distinct, sensible facial feature
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format matches exactly; legend labels ('Tech/Retail/Finance
+          sector') correctly match the grouping
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Faces show varied shape/expression, though some feature differences
+          (eyebrow slant) are subtle at this size
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, plausible business scenario across three sectors
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Financial ratio ranges (growth, margin, liquidity, D/E, etc.) are
+          all realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Flat top-to-bottom script; renderItem callback is required by the
+          ECharts custom-series API, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No extraneous imports; only the pinned echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity for the custom glyph technique, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: echarts.init(#container) with no explicit size/devicePixelRatio,
+          animation:false set
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Custom series + renderItem is exactly ECharts' recommended pattern
+          for building a chart type absent from its built-in catalog
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        comment: Group-of-primitives renderItem (circle/line/polyline/bezierCurve)
+          is a signature ECharts-only capability, not easily replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - bezier-curves
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
