@@ -138,21 +138,21 @@ function clusterStores(xMin, xMax, yMin, yMax) {
     }
     const counts = new Map();
     for (const m of members) counts.set(m.category.name, (counts.get(m.category.name) || 0) + 1);
-    let dominant = members[0].category;
-    let best = -1;
-    for (const cat of CATEGORIES) {
-      const c = counts.get(cat.name) || 0;
-      if (c > best) {
-        best = c;
-        dominant = cat;
-      }
-    }
+    // Canonical CATEGORIES order (not sorted by count) so a cluster's ring
+    // always draws the same category in the same angular slot — comparing
+    // the color mix across clusters at a glance doesn't require re-reading
+    // each one from scratch.
+    const segments = CATEGORIES.map((cat) => ({
+      name: cat.name,
+      color: cat.color,
+      count: counts.get(cat.name) || 0,
+    })).filter((s) => s.count > 0);
     clusters.push({
       x: members.reduce((s, m) => s + m.x, 0) / members.length,
       y: members.reduce((s, m) => s + m.y, 0) / members.length,
       count: members.length,
-      color: dominant.color,
-      breakdown: [...counts.entries()].sort((a, b) => b[1] - a[1]),
+      segments,
+      breakdown: [...segments].sort((a, b) => b.count - a.count).map((s) => [s.name, s.count]),
     });
   }
   return { clusters, singles };
@@ -194,27 +194,55 @@ function seriesFor(xMin, xMax, yMin, yMax) {
       z: 2,
     },
     {
+      // Donut-ring glyph: each cluster's category mix is drawn directly as
+      // ring segments (canonical category order, so the same type always
+      // lands in the same angular slot across clusters) instead of a single
+      // dominant-color dot — the breakdown reads at a glance, no hover
+      // needed. The hole is punched to the page background so the count
+      // label stays legible regardless of which colors sit in the ring.
       name: "Clusters",
-      type: "scatter",
+      type: "custom",
       coordinateSystem: "cartesian2d",
-      data: clusters.map((c) => ({
-        value: [c.x, c.y],
-        count: c.count,
-        breakdown: c.breakdown,
-        itemStyle: { color: c.color },
-      })),
-      encode: { x: 0, y: 1 },
-      symbolSize: (val, params) => clusterSize(params.data.count),
-      itemStyle: { borderColor: t.pageBg, borderWidth: 2, opacity: 0.85 },
-      label: {
-        show: true,
-        formatter: (params) => String(params.data.count),
-        color: "#FFFFFF",
-        textBorderColor: "rgba(0,0,0,0.35)",
-        textBorderWidth: 2,
-        fontSize: 13,
-        fontWeight: "bold",
+      renderItem(params, api) {
+        const [cx, cy] = api.coord([api.value(0), api.value(1)]);
+        const c = clusters[params.dataIndex];
+        const outerR = clusterSize(c.count) / 2;
+        const innerR = outerR * 0.58;
+        const children = [
+          { type: "circle", shape: { cx, cy, r: innerR }, style: { fill: t.pageBg } },
+        ];
+        let angle = -Math.PI / 2;
+        for (const seg of c.segments) {
+          const sweep = (seg.count / c.count) * Math.PI * 2;
+          children.push({
+            type: "sector",
+            shape: { cx, cy, r: outerR, r0: innerR, startAngle: angle, endAngle: angle + sweep, clockwise: true },
+            style: { fill: seg.color, stroke: t.pageBg, lineWidth: 1.5 },
+          });
+          angle += sweep;
+        }
+        children.push({
+          type: "circle",
+          shape: { cx, cy, r: outerR },
+          style: { stroke: t.ink, lineWidth: 1, opacity: 0.12, fill: "none" },
+        });
+        children.push({
+          type: "text",
+          style: {
+            x: cx,
+            y: cy,
+            text: String(c.count),
+            fill: t.ink,
+            fontSize: 13,
+            fontWeight: "bold",
+            align: "center",
+            verticalAlign: "middle",
+          },
+        });
+        return { type: "group", children };
       },
+      data: clusters.map((c) => ({ value: [c.x, c.y], count: c.count, breakdown: c.breakdown })),
+      encode: { x: 0, y: 1 },
       cursor: "pointer",
       z: 3,
     },
@@ -254,7 +282,7 @@ keyGraphics.push({
   left: KEY_X,
   top: 180 + CATEGORIES.length * 30 + 10,
   style: {
-    text: "Circled count = clustered\nstores; color = dominant\ntype in that cluster",
+    text: "Ring segments show the\ncategory mix per cluster;\ncenter number = store count",
     fill: t.inkSoft,
     fontSize: 12,
     lineHeight: 17,
