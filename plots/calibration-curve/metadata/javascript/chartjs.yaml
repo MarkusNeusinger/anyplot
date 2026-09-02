@@ -1,0 +1,257 @@
+library: chartjs
+language: javascript
+specification_id: calibration-curve
+created: '2026-09-02T14:13:12Z'
+updated: '2026-09-02T14:26:31Z'
+generated_by: claude-sonnet
+workflow_run: 33640115163
+issue: 2331
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Repair directly addressed Attempt 1 feedback: a low-alpha fill (`fill: "-1"`,
+    `${t.palette[0]}33`) now shades the region between the model curve and the perfect-calibration
+    diagonal, making the miscalibration gap immediately visible on both renders'
+  - 'Grid tightened to Y-axis only (`grid: { display: false }` on X) for extra visual
+    polish, addressing the prior ''default two-axis grid'' weakness'
+  - 'Uses a genuine Chart.js-specific capability (relative dataset fill via `fill:
+    "-1"`) rather than a generic two-line chart, improving Library Mastery over Attempt
+    1'
+  - Brier score is computed correctly and surfaced directly in the legend label, satisfying
+    the spec's summary-metric requirement without cluttering the canvas
+  - Data is a realistic, verifiably-correct overconfident-classifier scenario (loan
+    default risk); the extremized predicted-probability transform produces a calibration
+    curve properly less steep than the diagonal
+  - Theme-adaptive chrome is fully correct in both renders — identical brand-green
+    (#009E73) data color, readable text, subtle theme-correct grid, warm off-white/near-black
+    backgrounds
+  - 'All font sizes explicitly set; no overlap or edge clipping in either render;
+    markers sized appropriately (pointRadius: 7) for the 10-point aggregated series'
+  weaknesses:
+  - The shaded gap fill uses the same green tone regardless of direction, so it shows
+    'a miscalibration gap exists' but doesn't visually distinguish over-confidence
+    regions (curve below diagonal) from under-confidence regions (curve above diagonal)
+    — a two-tone fill or annotation would sharpen the storytelling further
+  - Design Excellence is now 'good, clearly above default' rather than fully publication-ready
+    — the legend box and layout are still fairly standard; a custom legend treatment
+    or subtle annotation of the largest-gap bin would push this further
+  - Only one distinctive Chart.js technique is used (relative fill); pairing it with
+    a second library-specific touch (e.g. per-point styling scaled by bin sample count)
+    would further raise Library Mastery
+  - Optional spec feature (histogram of predicted-probability distribution as a secondary
+    subplot) is not included — acceptable since it's explicitly optional in the spec,
+    but would round out Feature Coverage if added
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the Imprint light surface spec.
+      Chrome: Title "calibration-curve · javascript · chartjs · anyplot.ai" and both axis titles ("Mean Predicted Probability", "Fraction of Positives") render in dark ink; tick labels in a softer dark gray; subtle light horizontal gridlines on the Y-axis only (X-axis grid is disabled). Legend at bottom lists "Perfect calibration" (dashed black reference line) and "Loan default model (Brier score: 0.174)" (solid brand-green line). All text is clearly readable against the light background — no light-on-light issues.
+      Data: A dashed black diagonal (0,0)→(1,1) marks perfect calibration. A solid brand-green (#009E73) line with 7px circular markers connects 10 binned calibration points, running above the diagonal at low predicted probabilities (under-confident there) and generally below/crossing it in the mid-upper range (overconfident) — the textbook signature of an overconfident classifier. NEW in this attempt: the area between the model line and the diagonal is now filled with a low-alpha brand-green tint (`fill: "-1"`), visually quantifying the calibration gap at every bin.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — matches the Imprint dark surface spec.
+      Chrome: Same title and axis titles now render in light/off-white tones; tick labels in a lighter soft gray; the Y-axis gridlines remain subtly visible; the diagonal reference-line dash flips to white while the model line and its fill stay the identical brand green (#009E73) — confirming only chrome flipped between themes. Legend and all chrome text are clearly readable — no dark-on-dark failures.
+      Data: Same 10-point brand-green calibration curve and shaded gap-fill as the light render, confirming identical data colors across themes; the brand green remains highly visible against the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis titles 16, ticks 14,
+          legend 16); readable in both themes at full and mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: pointRadius 7 and borderWidth 3 well suited to a sparse 10-point
+          aggregated series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe; diagonal reference uses ink/neutral, not
+          a second hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot area well proportioned, legend anchored near
+          plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles (probabilities are inherently unitless)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes; chrome fully theme-correct
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Added shaded fill between model curve and diagonal to visualize the
+          miscalibration gap; thoughtful but not yet publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid reduced to Y-axis only; legend/layout still fairly standard
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Fill communicates that a gap exists and its magnitude, but uses the
+          same tone above and below the diagonal so it doesn't visually distinguish
+          over- vs under-confidence direction
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct calibration curve / reliability diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line, 10 equal-width bins, Brier score summary
+          metric all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = mean predicted probability, Y = fraction of positives, correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match data including Brier score
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the overconfidence pattern clearly across the full probability
+          range; optional histogram subplot / multi-model comparison omitted
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Loan default risk scoring is a realistic, neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Brier score (0.174) and bin values are consistent with a moderately
+          overconfident classifier
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> chart, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed = 42) for deterministic pseudo-randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global Chart is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately concise, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts canvas into #container, animation: false, current Chart.js
+          4 API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct linear-scale line chart usage with proper scale/title/legend
+          config
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Chart.js''s relative dataset fill (`fill: "-1"`) to shade between
+          two series — a real library-specific technique, though the only one used'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
