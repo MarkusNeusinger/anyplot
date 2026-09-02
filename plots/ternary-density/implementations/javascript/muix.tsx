@@ -94,11 +94,21 @@ for (let i = 0; i <= GRID_N; i++) {
     }
     density /= samplePoints.length;
     if (density > maxDensity) maxDensity = density;
-    densityPoints.push({ x, y, z: density, id: `cell-${i}-${j}` });
+    densityPoints.push({ x, y, z: density, rawZ: density, id: `cell-${i}-${j}` });
     sandPct.push(Math.round((i / GRID_N) * 100));
     siltPct.push(Math.round((j / GRID_N) * 100));
     clayPct.push(Math.round((k / GRID_N) * 100));
   }
+}
+
+// Steepen the density -> color mapping with a gamma > 1: this pushes the
+// broad low-density field further toward the green end of imprint_seq while
+// leaving true peaks near the blue end, so the three clusters read as
+// distinct hotspots instead of one uniform green wash. `rawZ` (linear,
+// untouched) still drives the opacity mask below and the tooltip percentage.
+const COLOR_GAMMA = 1.7;
+for (const p of densityPoints) {
+  p.z = Math.pow(p.rawZ / maxDensity, COLOR_GAMMA) * maxDensity;
 }
 
 // --- Reference grid: lines of constant composition, parallel to each edge --
@@ -171,10 +181,49 @@ function DensityLayer() {
           <path d={clipD} />
         </clipPath>
       </defs>
-      <g clipPath="url(#ternaryTriangleClip)" opacity={0.88}>
+      <g clipPath="url(#ternaryTriangleClip)" opacity={0.85}>
         <ScatterPlot />
       </g>
     </>
+  );
+}
+
+// A second, higher-contrast pass of the reference grid drawn ON TOP of the
+// density layer: a page-background-colored halo "cuts through" the density
+// fill, then the actual dashed grid stroke reads over it — guaranteed
+// visible everywhere (including the high-density peaks that fully occlude
+// the beneath-the-density copy in TriangleGrid) in both themes.
+function GridOverlay() {
+  const xs = useXScale();
+  const ys = useYScale();
+  return (
+    <g>
+      {GRID_SEGMENTS.map((seg, i) => (
+        <line
+          key={`halo-${i}`}
+          x1={xs(seg[0].x)}
+          y1={ys(seg[0].y)}
+          x2={xs(seg[1].x)}
+          y2={ys(seg[1].y)}
+          stroke={t.pageBg}
+          strokeWidth={4}
+          strokeOpacity={0.6}
+          strokeDasharray="6 5"
+        />
+      ))}
+      {GRID_SEGMENTS.map((seg, i) => (
+        <line
+          key={`line-${i}`}
+          x1={xs(seg[0].x)}
+          y1={ys(seg[0].y)}
+          x2={xs(seg[1].x)}
+          y2={ys(seg[1].y)}
+          stroke={t.grid}
+          strokeWidth={1.5}
+          strokeDasharray="6 5"
+        />
+      ))}
+    </g>
   );
 }
 
@@ -330,7 +379,7 @@ export default function Chart() {
           markerSize: 13,
           data: densityPoints,
           valueFormatter: (_value, ctx) =>
-            `Sand ${sandPct[ctx.dataIndex]}% · Silt ${siltPct[ctx.dataIndex]}% · Clay ${clayPct[ctx.dataIndex]}% — ${Math.round((densityPoints[ctx.dataIndex].z / maxDensity) * 100)}% of peak density`,
+            `Sand ${sandPct[ctx.dataIndex]}% · Silt ${siltPct[ctx.dataIndex]}% · Clay ${clayPct[ctx.dataIndex]}% — ${Math.round((densityPoints[ctx.dataIndex].rawZ / maxDensity) * 100)}% of peak density`,
         },
       ]}
       xAxis={[{ scaleType: "linear", min: X_MIN, max: X_MAX }]}
@@ -347,6 +396,7 @@ export default function Chart() {
     >
       <TriangleGrid />
       <DensityLayer />
+      <GridOverlay />
       <EdgeTicks />
       <VertexLabels />
       <DensityLegend />
