@@ -54,7 +54,7 @@ for (let s = 0; s < SEGMENTS; s++) {
   pathSegments.push({
     type: "line",
     name: `Segment ${s}`,
-    data: path.slice(startIdx, endIdx + 1).map((p) => [p.lon, p.lat]),
+    data: path.slice(startIdx, endIdx + 1).map((p) => ({ x: p.lon, y: p.lat, seq: p.sequence })),
     color: interpolateHex(t.seq[0], t.seq[1], s / (SEGMENTS - 1)),
     lineWidth: 3.5,
     marker: { enabled: false, states: { hover: { enabled: true, radius: 5 } } },
@@ -106,7 +106,7 @@ Highcharts.chart("container", {
   },
   tooltip: {
     formatter() {
-      return `Waypoint ${this.point.index}<br/>Lon: ${this.x.toFixed(4)}°<br/>Lat: ${this.y.toFixed(4)}°`;
+      return `Waypoint ${this.point.seq}<br/>Lon: ${this.x.toFixed(4)}°<br/>Lat: ${this.y.toFixed(4)}°`;
     },
   },
   legend: {
@@ -121,7 +121,7 @@ Highcharts.chart("container", {
     {
       type: "scatter",
       name: "Start",
-      data: [{ x: start.lon, y: start.lat }],
+      data: [{ x: start.lon, y: start.lat, seq: start.sequence }],
       color: t.palette[0],
       marker: { symbol: "circle", radius: 11, lineColor: t.pageBg, lineWidth: 2 },
       dataLabels: {
@@ -135,7 +135,7 @@ Highcharts.chart("container", {
     {
       type: "scatter",
       name: "Finish",
-      data: [{ x: finish.lon, y: finish.lat }],
+      data: [{ x: finish.lon, y: finish.lat, seq: finish.sequence }],
       color: "#AE3030",
       marker: { symbol: "square", radius: 10, lineColor: t.pageBg, lineWidth: 2 },
       dataLabels: {
