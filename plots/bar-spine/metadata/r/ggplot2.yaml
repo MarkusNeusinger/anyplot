@@ -1,0 +1,258 @@
+library: ggplot2
+language: r
+specification_id: bar-spine
+created: '2026-09-02T12:37:13Z'
+updated: '2026-09-02T12:48:02Z'
+generated_by: claude-sonnet
+workflow_run: 33630482883
+issue: 5249
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Genuine spine-plot construction: bar widths proportional to tier marginal totals
+    AND segment heights proportional to conditional status shares, built correctly
+    via geom_rect + dplyr cumsum (not a stacked-bar approximation).'
+  - The previously-flagged visible seam between adjacent bars is fixed - geom_rect(color
+    = NA) now produces a truly continuous, gap-free spine as the spec requires.
+  - Semantic color mapping (green = Retained/good, red = Churned/bad) correctly applies
+    the Imprint style guide's semantic-exception rule, with legend labels literally
+    spelling out 'Retained'/'Churned'.
+  - Percentage labels are placed inside segments with legible white-on-color text,
+    intelligently filtered (prop > 0.06) to avoid clutter on the thin Enterprise 'Churned'
+    sliver.
+  - 'Both themes render correctly: identical Imprint data colors between light/dark,
+    theme-adaptive chrome (background, ink, grid) flips correctly.'
+  - 'Realistic, well-scaled SaaS retention data that tells a genuine business story:
+    larger, cheaper tiers churn more while premium/enterprise tiers retain better.'
+  weaknesses:
+  - 'Design Excellence is competent but not exceptional: DE-01 still relies on a single
+    font weight/family and a fairly standard theme_minimal look; DE-03''s insight
+    (wider/cheaper tiers churn more) is left for the viewer to notice from width+color
+    alone, with no explicit callout or emphasis guiding the eye to the correlation.'
+  - 'LM-02: the geom_rect + custom continuous-scale-with-categorical-breaks technique
+    is a legitimate idiomatic workaround for ggplot2''s lack of a native spine-plot
+    geom, but the same manual-rectangle approach is easily replicated in other plotting
+    libraries, so it doesn''t showcase a feature truly unique to ggplot2.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "Customer Retention by Subscription Tier · bar-spine · r · ggplot2 · anyplot.ai" at top, clearly readable in dark ink. X-axis label "Subscription Tier (bar width ∝ customer base)" and Y-axis label "Share of Customers" both dark and legible. Tick labels (0%/25%/50%/75%/100% on Y; Basic/Standard/Premium/Enterprise on X) rendered in a softer dark gray, fully legible. Subtle horizontal gridlines only (y-axis), no vertical gridlines. Legend "Status" with green "Retained" and red "Churned" swatches sits to the right of the plot, close to the chart, not isolated.
+      Data: Four adjacent bars of varying width (Basic widest, Enterprise narrowest) each split into a green (Retained, #009E73) bottom segment and a red (Churned, matte red) top segment. White bold percentage labels (32%, 68%, 18%, 82%, 8%, 92%, 96%) are placed inside segments large enough to hold them; the tiny ~4% Churned sliver on Enterprise has no label, correctly omitted per the size filter. Bar-to-bar boundaries are now a single continuous fill with no visible seam (geom_rect(color = NA) fix confirmed). First data series (Retained) is the brand green #009E73 as required.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis labels, and tick labels all flip to light ink (off-white for title/axis titles, soft light gray for tick labels and legend text) - fully readable against the dark background. Gridlines remain subtle and visible. Legend box again sits near the plot on the right, readable light text on the dark background.
+      Data: Identical bar geometry and identical data colors to the light render - same green (#009E73) and matte red for Retained/Churned, same percentage labels in white bold text, same widths and proportions, same seamless bar-to-bar boundaries. Only the chrome (background, ink, grid) changed between themes, confirming palette-locked data colors.
+      Legibility verdict: PASS - no dark-on-dark failures; all title, axis, tick, and legend text is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout (title dynamically computed via the length-scaling
+          formula, axis/tick/legend sizes set); readable in both themes, title fits
+          without overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or label collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Solid, well-sized segments; the sub-6% Enterprise 'Churned' sliver
+          correctly omits its label instead of cramming unreadable text.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green pair is semantically justified (bad/good) and backed by
+          a redundant positional cue (Retained always bottom, Churned always top)
+          plus explicit legend text.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend close to the plot, strong canvas utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels are descriptive and explain the encoding (bar width ∝
+          customer base).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; red used via the documented semantic exception
+          for bad/loss; backgrounds and chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful semantic color choice and contrast-tuned label text, but
+          still a fairly standard theme_minimal look without a distinctive typographic
+          hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-only subtle grid, spines removed, generous whitespace, and the
+          previously-flagged visible seam between bars is now gone (geom_rect(color
+          = NA)) - a clean, continuous fill.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Width + color combination inherently tells the retention story, but
+          nothing explicitly calls out the tier-retention correlation for the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine variable-width, normalized-height spine plot (geom_rect +
+          cumulative width/height), not a stacked-bar imitation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present, including the explicit 'no gaps' requirement,
+          now satisfied since the border color was removed and bars render as one
+          continuous fill.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = tier (width-encoded), Y = cumulative status share; correctly
+          mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match the data (Retained/Churned).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both varying marginal widths and varying conditional proportions,
+          including a near-zero segment edge case.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible SaaS business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Retention increasing with tier size/price is a factually plausible
+          real-world SaaS pattern.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, scales, ragg all actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean dplyr pipelines, no fake functionality or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct landscape
+          dimensions; uses linewidth, not deprecated size.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_rect + custom continuous scale with categorical breaks is the
+          canonical ggplot2 pattern for a plot type with no native geom.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Solid custom-scale technique, but the manual-rectangle approach is
+          easily replicated in other libraries, not something uniquely ggplot2.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - cumulative-sum
+  - normalization
+  styling:
+  - publication-ready

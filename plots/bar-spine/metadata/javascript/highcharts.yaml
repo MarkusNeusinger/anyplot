@@ -1,0 +1,235 @@
+library: highcharts
+language: javascript
+specification_id: bar-spine
+created: '2026-09-02T12:53:43Z'
+updated: '2026-09-02T13:07:54Z'
+generated_by: claude-sonnet
+workflow_run: 33631682329
+issue: 5249
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Clever, well-documented workaround for Highcharts core''s missing variwidth series:
+    a stacked step-area chart with epsilon-separated boundaries reproduces true proportional
+    bar widths'
+  - Percentage data labels add a secondary (non-color) channel distinguishing Retained/Churned,
+    suppressed only when a band is too thin to render legibly
+  - Both themes render correctly with identical data colors and correctly adapted
+    chrome - no legibility failures in either render
+  - Realistic, neutral SaaS churn data that clearly tells a story across tiers
+  weaknesses:
+  - The thinnest band (Enterprise churned, 4%) has no percentage label (below the
+    8% threshold), leaving hue as the sole Retained/Churned cue there for color-vision-deficient
+    viewers - consider a minimum-width label exception or a texture/border cue for
+    very thin bands
+  - Title auto-scale ratio renders the mandated title at roughly 40-45% of plot width,
+    below the usual 50-70% target - consider tuning the ratio constant so long titles
+    fill more of that band without overflowing
+  - findSegment/segmentLabelFormatter helpers add moderate structural complexity;
+    acceptable given the missing native series type, but worth noting against the
+    KISS ideal
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Dark bold title "SaaS Subscription Churn by Tier · bar-spine · javascript · highcharts · anyplot.ai" clearly visible; y-axis title "Share of tier (%)" and x-axis title "Subscription tier — width ∝ customer count" in soft ink, fully legible; tick labels (0-100% and Free/Basic/Pro/Enterprise) legible; legend (Retained/Churned swatches) legible.
+      Data: Four variable-width stacked blocks whose widths shrink left-to-right proportional to marginal customer count (Free ~50%, Basic ~31%, Pro ~15%, Enterprise ~4% of total width). First series (Retained) is brand green #009E73 on top; second series (Churned) uses the semantic-red palette slot on the bottom. White percentage labels (70/30, 80/20, 90/10, 96) overlaid where bands are tall enough.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, and legend now render in light ink against the dark background; fully legible; no dark-on-dark failures observed.
+      Data: Green/red segment colors and proportions are identical to the light render; only chrome (background, text, axis lines) flipped as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and legible in both themes; title auto-scale
+          ratio is a bit conservative
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, legend, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segments and boundary dividers clearly visible at this data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Green/red hue is sole cue for the thinnest band (4% churned, no label
+          shown)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73; churned uses justified semantic-red exception;
+          theme backgrounds correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Deliberate semantic color choice, clean typography hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle gridline, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Percentage labels and shrinking churn band tell a clear story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly reproduces spine-plot semantics despite missing native
+          variwidth series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Variable width, 100%-stacking, no gaps, legend, centered labels,
+          percentage labels - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapping correct; all tiers and fill categories represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates both width and height dimensions with clear labeling
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: SaaS tier churn is a plausible, neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Customer counts and churn percentages sensible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few helper functions introduced, justified by the workaround
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on browser globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity proportionate to the problem; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses mount-node contract correctly; animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly avoids unavailable variwidth module, uses core bundle stacked-area
+          API per library guidance
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Epsilon-boundary step technique, custom formatters, semantic color
+          mapping
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
