@@ -84,6 +84,39 @@ const entrySector = Math.floor(rng() * sectorsPerRing[RINGS - 1]);
 const boundary = Array.from({ length: RINGS + 1 }, (_, r) => r);
 const maxRadius = boundary[RINGS];
 
+// Solution path (entry -> center) through the spanning tree, reconstructed
+// from removedWalls via BFS. Used to power a hover-reveal interaction below.
+const cellKey = (r, s) => `${r}:${s}`;
+const adjacency = new Map();
+for (let r = 0; r < RINGS; r++) {
+  for (let s = 0; s < sectorsPerRing[r]; s++) {
+    const key = cellKey(r, s);
+    const carved = neighborsOf(r, s)
+      .filter(({ key: edgeKey }) => removedWalls.has(edgeKey))
+      .map(({ cell }) => cell);
+    adjacency.set(key, carved);
+  }
+}
+const startCell = [RINGS - 1, entrySector];
+const cameFrom = new Map([[cellKey(...startCell), null]]);
+const queue = [startCell];
+while (queue.length > 0) {
+  const cur = queue.shift();
+  if (cur[0] === 0 && cur[1] === 0) break;
+  for (const next of adjacency.get(cellKey(...cur))) {
+    const nk = cellKey(...next);
+    if (!cameFrom.has(nk)) {
+      cameFrom.set(nk, cur);
+      queue.push(next);
+    }
+  }
+}
+const solutionPath = [[0, 0]];
+while (cellKey(...solutionPath[solutionPath.length - 1]) !== cellKey(...startCell)) {
+  solutionPath.push(cameFrom.get(cellKey(...solutionPath[solutionPath.length - 1])));
+}
+solutionPath.reverse();
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -94,8 +127,20 @@ document.getElementById("container").appendChild(canvas);
 // while this plugin draws the rings, radial walls and start/goal markers
 // directly against chart.chartArea — Chart.js's own plugin API, no external
 // chartjs-chart-* package involved.
+// Hover state for the solution-path reveal — driven by Chart.js's own
+// afterEvent hook (native event lifecycle, not a DOM listener bolted on).
+let pathHovered = false;
+
 const circularMazePlugin = {
   id: "circularMaze",
+  afterEvent(chart, args) {
+    const { type } = args.event;
+    const next = type === "mouseout" ? false : type === "mousemove" || type === "mouseenter" ? true : pathHovered;
+    if (next !== pathHovered) {
+      pathHovered = next;
+      args.changed = true;
+    }
+  },
   afterDatasetsDraw(chart) {
     const { ctx, chartArea } = chart;
     const minDim = Math.min(chartArea.width, chartArea.height);
@@ -111,16 +156,28 @@ const circularMazePlugin = {
 
     ctx.save();
 
-    // Maze disc — distinguishes corridor space from the page background.
+    // Maze disc — distinguishes corridor space from the page background, with
+    // a soft drop shadow and a hairline border for a finished, print-ready edge.
+    ctx.save();
+    ctx.shadowColor = t.grid;
+    ctx.shadowBlur = minDim * 0.02;
+    ctx.shadowOffsetY = minDim * 0.006;
     ctx.beginPath();
     ctx.arc(cx, cy, outerRadiusPx, 0, Math.PI * 2);
     ctx.fillStyle = t.elevatedBg;
     ctx.fill();
+    ctx.restore();
+    ctx.beginPath();
+    ctx.arc(cx, cy, outerRadiusPx, 0, Math.PI * 2);
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = Math.max(1.5, minDim * 0.0015);
+    ctx.stroke();
 
     const wallWidth = Math.max(2.5, minDim * 0.0032);
     ctx.strokeStyle = t.ink;
     ctx.lineWidth = wallWidth;
     ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
     // Ring-boundary arcs — one per sector, skipped where a passage was carved.
     for (let r = 1; r < RINGS; r++) {
@@ -175,7 +232,7 @@ const circularMazePlugin = {
     ctx.lineTo(entryInner.x, entryInner.y);
     ctx.stroke();
 
-    const labelSize = Math.round(minDim * 0.018);
+    const labelSize = Math.round(minDim * 0.022);
     ctx.fillStyle = t.palette[0];
     ctx.font = `600 ${labelSize}px sans-serif`;
     ctx.textAlign = "center";
@@ -197,6 +254,34 @@ const circularMazePlugin = {
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillText("GOAL", cx, cy + goalRadiusPx + labelSize * 0.5);
+
+    // Hover-reveal solution path — genuine chart.js interactivity (driven by
+    // the afterEvent hook above), only ever visible in the interactive HTML
+    // view; the static PNG screenshot never carries a hover state.
+    if (pathHovered) {
+      ctx.beginPath();
+      solutionPath.forEach(([r, s], i) => {
+        const n = sectorsPerRing[r];
+        const radiusUnits = (boundary[r] + boundary[r + 1]) / 2;
+        const p = pointAt(radiusUnits, angleAt((s + 0.5) / n));
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.strokeStyle = t.palette[0];
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = wallWidth * 2.2;
+      ctx.lineJoin = "round";
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Hint chrome — tells viewers of the interactive HTML view that hovering
+    // reveals the solution; harmless static text in the static PNG.
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = `400 ${Math.round(labelSize * 0.75)}px sans-serif`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText("Hover to trace the solution path", chartArea.left, chartArea.top);
 
     ctx.restore();
     window.__anyplotReady = true;
