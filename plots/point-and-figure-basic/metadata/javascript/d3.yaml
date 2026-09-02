@@ -1,0 +1,263 @@
+library: d3
+language: javascript
+specification_id: point-and-figure-basic
+created: '2026-09-02T05:11:25Z'
+updated: '2026-09-02T05:26:22Z'
+generated_by: claude-sonnet
+workflow_run: 33593108482
+issue: 3755
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Repair cleanly resolved the attempt-1 trend-line/glyph overlap: the two dashed
+    support/resistance paths are now drawn before the X/O glyph layer, so the glyphs
+    render on top and stay the unobstructed focal point even where the lines cross
+    the densest mid-chart cluster'
+  - New breakout highlight (a soft translucent band behind the single largest box-count
+    column, colored by that column's X/O polarity) gives the chart a clear focal point
+    and directly answers the attempt-1 'no visual hierarchy' feedback
+  - Gridlines thinned to every other box interval, reducing visual competition with
+    the box glyphs while still giving a legible price reference
+  - 'Correctly implements the whole-box reversal method: columns extend while price
+    keeps moving in one direction and only flip once price reverses by the configured
+    3-box amount'
+  - X-axis genuinely represents column index (reversals), not time - ticks are 1..21
+    with an explicit 'Column (price reversal), not time' label
+  - Both 45-degree support and resistance trend lines are drawn from genuine swing
+    low/high points using a real d3.line() generator, not decorative placeholders
+  - 'Imprint palette applied with correct semantic exception: brand green for bullish
+    columns, matte red for bearish columns, matching the finance profit/loss convention,
+    and X/O shape redundantly encodes the signal beyond color alone'
+  - Theme-adaptive chrome correctly threaded through every element in both renders
+    - no dark-on-dark or light-on-light failures
+  - Deterministic, seeded (LCG, seed 42) synthetic price series produces a realistic,
+    neutral mix of bullish/bearish columns of varying lengths
+  weaknesses:
+  - Design still reads as a well-executed default rather than fully bespoke - beyond
+    the breakout band, the axis/grid/legend treatment stays close to the library skeleton;
+    a bolder typographic hierarchy or a secondary annotation (e.g. labeling the breakout
+    column's price target) would push Design Excellence further
+  - The subtitle ('Box size $2 · 3-box reversal', y=82) and the legend row (y=92)
+    sit only 10px apart vertically, separated purely by the legend being left-anchored
+    versus the subtitle being centered - safe today but fragile if either string ever
+    lengthens
+  - 'LM-02 (Distinctive Features) is still moderate: the P&F box-reversal transform
+    and breakout detection are implemented in plain JS/d3-array (d3.min/max/range)
+    rather than leaning on any D3-specific idiom beyond the standard scale/axis/line-generator
+    toolkit already credited in LM-01'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "point-and-figure-basic · javascript · d3 · anyplot.ai" in dark ink at top; subtitle "Box size $2 · 3-box reversal" below it; legend ("X Rising column" in green, "O Falling column" in matte red) top-left. Y-axis "Price ($)" ticked $110-$154 every other $2 box; X-axis "Column (price reversal), not time" ticked 1-21. All text (title, subtitle, legend, axis titles, tick labels) is clearly readable against the light background - dark ink on warm off-white throughout.
+      Data: Bold monospace X/O glyphs in discrete columns - green (#009E73) X's for rising columns, matte red O's for falling columns - matching the first-series-green Imprint convention. A translucent green-tinted highlight band sits behind the single largest (breakout) column near the right edge. Two grey dashed trend lines (support rising, resistance falling) run under the glyph layer, crossing near the mid-chart cluster without obscuring any symbol (glyphs render on top).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, subtitle, legend, and axis labels, now rendered in light ink and fully legible against the dark surface. No dark-on-dark failures - ticks, axis domain lines, and grid all use visibly lighter strokes than the background.
+      Data: X/O glyph colors are identical to the light render (green #009E73 / matte red) - only chrome (background, ink, grid, trend-line stroke, breakout band tint) flipped for the dark surface, as required. The breakout highlight band reads as a subtle dark-green tint against the near-black background, still visible but appropriately understated.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; balanced axis label
+          sizing
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed since attempt 1: glyphs now render after (on top of) the trend-line
+          paths, so no symbol is obscured even where the dashed lines cross the dense
+          mid-chart column cluster'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Glyphs sized proportionally to column bandwidth/cell height, clearly
+          visible at both densities
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: X/O shape redundantly encodes bullish/bearish beyond color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; balanced margins; nothing clipped in either render
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Price ($)'' has units; X-axis label explicitly clarifies columns
+          are not time'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; matte red for bearish (finance semantic exception);
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New breakout highlight band adds intentional emphasis beyond attempt
+          1's generic default look
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Gridlines thinned to every other box interval, reducing clutter;
+          still fairly conventional axis chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Breakout highlight now gives the chart a clear single focal point
+          alongside the two trend lines
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P&F chart with proper column-based X/O construction
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Box size, reversal, single-symbol columns, non-time x-axis, trend
+          lines, price-scale gridlines all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = column index, Y = price; all data visible within the axis domains
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec exactly; legend labels match X/O semantics
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bullish and bearish columns of varying lengths, multiple reversals,
+          both trend lines present
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic stock-price scenario, not tied to a
+          named instrument
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Box size $2, 3-box reversal, $110-154 range are realistic technical-analysis
+          parameters
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script; lcg/trendLine helpers are minimal, non-over-engineered
+          utilities
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 used, no import/require
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the P&F transform, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the D3 mount-node contract correctly, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of scales, axes with custom tickValues/tickFormat, data
+          joins, and d3.line() generator
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Box-reversal transform and breakout detection rely on standard d3-array
+          helpers rather than a more distinctive D3-specific feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
