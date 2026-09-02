@@ -101,7 +101,7 @@ Highcharts.chart("container", {
           align: "right",
           x: -8,
           y: -6,
-          style: { color: t.inkSoft, fontSize: "13px" },
+          style: { color: t.inkSoft, fontSize: "14px" },
         },
       },
     ],
@@ -153,7 +153,7 @@ Highcharts.chart("container", {
       type: "scatter",
       data: converted,
       color: classColor1,
-      marker: { fillColor: markerFill1 },
+      marker: { fillColor: markerFill1, lineColor: t.ink, lineWidth: 1 },
     },
     {
       name: "Fitted probability",
