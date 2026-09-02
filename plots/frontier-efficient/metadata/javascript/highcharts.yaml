@@ -1,0 +1,248 @@
+library: highcharts
+language: javascript
+specification_id: frontier-efficient
+created: '2026-09-02T01:07:41Z'
+updated: '2026-09-02T01:22:00Z'
+generated_by: claude-sonnet
+workflow_run: 33577507902
+issue: 3342
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Subtitle now states the Sharpe ratio range (0.17 low → 0.54 high), giving the
+    static PNG a self-contained decoding aid for the continuous color encoding
+  - Dense 8-14% risk band is visibly thinned (smaller radius, lower opacity) so the
+    efficient frontier line reads clearly against the portfolio cloud
+  - Correct efficient-frontier and Sharpe-ratio math (Pareto upper boundary via sort-and-scan,
+    tangency portfolio via max Sharpe), backed by a deterministic seeded LCG for reproducibility
+  - 'Clear visual hierarchy: thick brand-green frontier line, dashed capital-market
+    line, and distinctly-shaped labeled markers (triangle = min variance, diamond
+    = max Sharpe)'
+  - Theme-adaptive chrome is faithfully implemented — both renders fully legible,
+    data colors identical across themes
+  - Correct Imprint palette usage for both categorical elements and the continuous
+    Sharpe-ratio encoding (imprint_seq)
+  - Title and legend exactly match the mandated format; axis labels are descriptive
+    with units
+  weaknesses:
+  - The "Max Sharpe" data label still sits amid a locally dense part of the scatter
+    cloud (~6.7% risk, just below the thinned 8-14% band) — readable but slightly
+    crowded; consider a small offset or leader line
+  - Five small helper functions (rand, randomWeights, portfolioReturn, portfolioRisk,
+    lerpHex) still push against the literal "no functions" KISS guideline for CQ-01
+    — justified by the portfolio-math domain, but worth flattening where feasible
+  - Continuous Sharpe-ratio coloring is computed manually via a hand-rolled lerpHex/rgba
+    per point rather than Highcharts' native colorAxis/colorKey mechanism — a more
+    idiomatic approach would lean on that library-specific capability for LM-02
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark-ink title "frontier-efficient · javascript · highcharts · anyplot.ai" and a soft-gray subtitle "Simulated 6-asset universe · point color encodes Sharpe ratio (0.17 low → 0.54 high)". Axis titles "Risk (Annualized Std. Dev., %)" and "Expected Return (Annualized, %)" with percentage tick labels on both axes. Legend at bottom lists "Efficient frontier", "Capital market line", "Minimum variance portfolio", "Max Sharpe (tangency) portfolio". All chrome text is clearly readable against the light background.
+      Data: Thick brand-green (#009E73) spline traces the efficient frontier from the min-variance point (~5.4% risk, ~4.1% return) up to ~15% risk / ~8.7% return. A dashed ochre capital market line runs tangent from the 2% risk-free rate through the max-Sharpe portfolio. ~400 scattered portfolio points form a cloud on a green-to-blue imprint_seq gradient encoding Sharpe ratio; the 8-14% risk band (previously heavily clumped) now shows visibly smaller, more transparent markers so the frontier line stands out. A purple triangle labeled "Min Variance" and a navy-blue diamond labeled "Max Sharpe" mark the key portfolios; first categorical series (frontier line) is confirmed #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same layout and content as the light render, with chrome flipped to light-ink title/subtitle/axis labels/tick labels/legend text — all clearly legible. No dark-on-dark issues detected on any text element.
+      Data: Frontier line (green), dashed CML (ochre), Min Variance triangle (purple), Max Sharpe diamond (navy blue), and the green-to-blue Sharpe gradient scatter cloud are all identical in color to the light render — only background/text/grid chrome flipped, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; subtitle/legend
+          text is small but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: '"Max Sharpe" data label sits amid a locally dense part of the scatter
+          cloud, readable but slightly crowded'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8-14% dense risk band now thinned (smaller radius, lower opacity),
+          frontier line reads clearly against the cloud
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe hue+lightness gradient
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, no clipping, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Frontier/CML/markers use Imprint categorical positions; scatter cloud
+          uses imprint_seq gradient for continuous Sharpe encoding; theme-correct
+          backgrounds
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom Sharpe-gradient cloud and intentional line/marker hierarchy
+          show design thought, above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, generous whitespace, unboxed legend - refined but fairly
+          conventional
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear focal point (frontier + labeled extrema); subtitle now states
+          the Sharpe range, giving the static PNG a self-contained decoding aid for
+          the color gradient
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct efficient-frontier scatter/spline chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Frontier curve, portfolio cloud, min-variance/max-Sharpe markers,
+          optional CML, optional Sharpe color-coding all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=risk, Y=return correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Frontier, suboptimal cloud, extrema markers, and CML all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible 6-asset universe with a realistic correlation matrix
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Return/risk magnitudes and correlations align with real-world asset
+          classes
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Five small helper functions, justified by the portfolio-math domain
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Highcharts.chart/series usage overall
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom tooltip formatter, symbol markers, dashStyle are solid but
+          don't reach for deeper Highcharts-specific capability (e.g. native colorAxis
+          instead of manual lerpHex)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
