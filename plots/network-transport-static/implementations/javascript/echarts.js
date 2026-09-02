@@ -98,28 +98,35 @@ const nodes = stations.map((s) => ({
 
 // A bidirectional pair shares one route id — label only the first-seen
 // direction so the two arcs of the same service don't print the id twice
-// on top of each other.
+// on top of each other. Same-pair curves are spread across a small set of
+// curveness values (not just one) so 3+ parallel services at a busy hub
+// stay visually separated instead of bunching into one arc.
 const labeledPairs = new Set();
+const pairSeen = new Map();
 const links = routes.map((r) => {
   const key = [r.source, r.target].sort().join("|");
   const showLabel = !labeledPairs.has(key);
   labeledPairs.add(key);
+  const seenIndex = pairSeen.get(key) || 0;
+  pairSeen.set(key, seenIndex + 1);
+  const curveness = pairCounts.get(key) > 1 ? 0.18 + seenIndex * 0.1 : 0;
   return {
     source: r.source,
     target: r.target,
     route: r.route,
     dep: r.dep,
     arr: r.arr,
+    category: ROUTE_TIERS.indexOf(tierOf(r.route)),
     lineStyle: {
       color: TIER_COLOR[tierOf(r.route)],
       width: 2.5,
-      curveness: pairCounts.get(key) > 1 ? 0.2 : 0,
+      curveness,
       opacity: 0.85,
     },
     label: {
       show: showLabel,
-      formatter: r.route,
-      fontSize: 11,
+      formatter: `${r.route} | ${r.dep} → ${r.arr}`,
+      fontSize: 13,
       color: t.inkSoft,
       backgroundColor: t.pageBg,
       padding: [1, 3],
@@ -173,4 +180,26 @@ chart.setOption({
       edgeLabel: { show: true },
     },
   ],
+});
+
+// ECharts' built-in category filter only applies to graph *nodes*, not
+// edges — and a station here typically carries routes from more than one
+// tier, so tagging nodes with a single category would misrepresent the
+// data. Instead, drive the legend's tier toggle explicitly: hide/show each
+// link by the tier recorded on its own `category` field above.
+chart.on("legendselectchanged", (params) => {
+  chart.setOption({
+    series: [
+      {
+        links: links.map((l) => {
+          const visible = params.selected[ROUTE_TIERS[l.category]];
+          return {
+            ...l,
+            lineStyle: { ...l.lineStyle, opacity: visible ? l.lineStyle.opacity : 0 },
+            label: { ...l.label, show: l.label.show && visible },
+          };
+        }),
+      },
+    ],
+  });
 });
