@@ -9,17 +9,30 @@
 // bundle (with its SVGRenderer) is loaded. So the hierarchy below is packed
 // with a small deterministic relaxation algorithm (index-seeded, no RNG) and
 // drawn natively with `chart.renderer`: a root ring, one ring per directory,
-// and solid circles for the files inside. No other charting library is used.
+// and (for one directory) a nested sub-ring for its files, three levels deep.
+// The same recursive layout/render pair handles every level. No other
+// charting library is used.
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: a small repository's directory sizes (KB), 2 levels deep ----------
+// --- Data: a small repository's directory sizes (KB), up to 3 levels deep ----
+// Most directories hold files directly (2 levels below root); "components/"
+// is further split into named files to exercise a 3rd nesting level.
 const CATEGORIES = [
   {
     id: "src",
     label: "src/",
     children: [
-      { id: "src-components", label: "components/", value: 480 },
+      {
+        id: "src-components",
+        label: "components/",
+        children: [
+          { id: "src-components-table", label: "Table.jsx", value: 150 },
+          { id: "src-components-modal", label: "Modal.jsx", value: 130 },
+          { id: "src-components-form", label: "Form.jsx", value: 120 },
+          { id: "src-components-button", label: "Button.jsx", value: 80 },
+        ],
+      },
       { id: "src-api", label: "api.js", value: 340 },
       { id: "src-store", label: "store.js", value: 210 },
       { id: "src-utils", label: "utils.js", value: 120 },
@@ -102,8 +115,9 @@ function contrastInk(hex) {
 // --- Circle packing: a small deterministic relaxation, applied per level -----
 // Seed circles on a ring (index-based angle, no RNG), then repeatedly resolve
 // overlaps and pull toward the centroid until the group settles into a tight,
-// non-overlapping cluster. The same routine packs files within a directory
-// and directories within the repository — only the input items change.
+// non-overlapping cluster. The same routine packs siblings at every depth —
+// files within a directory, a directory alongside files within its parent,
+// and top-level directories within the repository.
 function packCircles(items, gap) {
   if (items.length === 0) return { placed: [], boundingRadius: 0 };
   if (items.length === 1) {
@@ -163,9 +177,11 @@ function packCircles(items, gap) {
   return { placed: nodes, boundingRadius };
 }
 
-// --- Layout: leaves packed within each directory, directories at the root ----
+// --- Layout: a recursive pack, depth 0 = root, 1 = category, 2+ = nested ----
 // Circle area, not radius, encodes size: radius = sqrt(value) in abstract
 // units; everything is rescaled to pixels once the final plot area is known.
+// Every node below the root inherits its top-level category's colour index,
+// so a nested sub-directory (e.g. "components/") reads as part of "src/".
 const LEAF_GAP = 1.4;
 const RING_PADDING = 6.5;
 const CATEGORY_GAP = 7;
@@ -173,23 +189,37 @@ const ROOT_PADDING = 7;
 
 const leafRadius = (value) => Math.sqrt(value);
 
-const categoryLayouts = CATEGORIES.map((cat) => {
-  const items = cat.children.map((ch) => ({ id: ch.id, r: leafRadius(ch.value) }));
-  const { placed, boundingRadius } = packCircles(items, LEAF_GAP);
-  const totalValue = cat.children.reduce((s, ch) => s + ch.value, 0);
-  const leaves = placed.map((p) => {
-    const src = cat.children.find((ch) => ch.id === p.id);
-    return { label: src.label, value: src.value, x: p.x, y: p.y, r: p.r };
+function layoutNode(node, depth, categoryIndex) {
+  if (!node.children) {
+    return { id: node.id, label: node.label, value: node.value, r: leafRadius(node.value), depth, categoryIndex, leaf: true };
+  }
+  const childLayouts = node.children.map((child, i) => layoutNode(child, depth + 1, depth === 0 ? i : categoryIndex));
+  const gap = depth === 0 ? CATEGORY_GAP : LEAF_GAP;
+  const { placed, boundingRadius } = packCircles(
+    childLayouts.map((cl) => ({ id: cl.id, r: cl.r })),
+    gap,
+  );
+  const totalValue = childLayouts.reduce((s, cl) => s + cl.value, 0);
+  const children = childLayouts.map((cl) => {
+    const p = placed.find((pp) => pp.id === cl.id);
+    return { ...cl, x: p.x, y: p.y };
   });
-  return { id: cat.id, label: cat.label, r: boundingRadius + RING_PADDING, totalValue, leaves };
-});
+  // Padding shrinks with depth so nested rings hug their contents a little
+  // tighter than the outer category rings do.
+  const padding = depth === 0 ? ROOT_PADDING : depth === 1 ? RING_PADDING : RING_PADDING * 0.7;
+  return {
+    id: node.id,
+    label: node.label,
+    value: totalValue,
+    r: boundingRadius + padding,
+    depth,
+    categoryIndex,
+    leaf: false,
+    children,
+  };
+}
 
-const { placed: groupPlaced, boundingRadius: groupsBoundingRadius } = packCircles(
-  categoryLayouts.map((cl) => ({ id: cl.id, r: cl.r })),
-  CATEGORY_GAP,
-);
-const ROOT_R = groupsBoundingRadius + ROOT_PADDING;
-const TOTAL_VALUE = categoryLayouts.reduce((s, cl) => s + cl.totalValue, 0);
+const tree = layoutNode({ id: "root", label: "repository", children: CATEGORIES }, 0, null);
 
 // --- Chart shell (no series — every circle is drawn with the renderer) -------
 const chart = Highcharts.chart("container", {
@@ -222,7 +252,7 @@ const chart = Highcharts.chart("container", {
 const cx = chart.plotLeft + chart.plotWidth / 2;
 const cy = chart.plotTop + chart.plotHeight / 2;
 const radiusMax = Math.min(chart.plotWidth, chart.plotHeight) / 2;
-const finalScale = (radiusMax - 12) / ROOT_R;
+const finalScale = (radiusMax - 12) / tree.r;
 const px = (x) => cx + x * finalScale;
 const py = (y) => cy + y * finalScale;
 const pr = (r) => r * finalScale;
@@ -235,57 +265,72 @@ function addTitle(el, text) {
 
 const g = chart.renderer.g("circle-packing").add();
 
-const rootCircle = chart.renderer
-  .circle(px(0), py(0), pr(ROOT_R))
-  .attr({ fill: "transparent", stroke: t.grid, "stroke-width": 1.5 })
-  .add(g);
-addTitle(rootCircle, `repository — ${formatSize(TOTAL_VALUE)} total`);
+// --- Render: recursive, depth drives stroke weight / fill alpha / labels ----
+// depth 0 = root outline, depth 1 = category ring, depth 2+ = nested rings
+// (subtly thinner stroke, higher fill alpha) or solid leaf circles.
+function renderNode(node, parentX, parentY, pathPrefix) {
+  const x = px(parentX + (node.x ?? 0));
+  const y = py(parentY + (node.y ?? 0));
+  const r = pr(node.r);
 
-categoryLayouts.forEach((cl, ci) => {
-  const gp = groupPlaced.find((p) => p.id === cl.id);
-  const color = categoryColor(ci);
-  const ringX = px(gp.x);
-  const ringY = py(gp.y);
-  const ringR = pr(cl.r);
-
-  const ring = chart.renderer
-    .circle(ringX, ringY, ringR)
-    .attr({ fill: hexToRgba(color, 0.1), stroke: color, "stroke-width": 2.5 })
-    .add(g);
-  addTitle(ring, `${cl.label} — ${formatSize(cl.totalValue)} total`);
-
-  cl.leaves.forEach((lf) => {
-    const leafX = px(gp.x + lf.x);
-    const leafY = py(gp.y + lf.y);
-    const leafR = pr(lf.r);
-
+  if (node.leaf) {
+    const color = categoryColor(node.categoryIndex);
     const leaf = chart.renderer
-      .circle(leafX, leafY, leafR)
+      .circle(x, y, r)
       .attr({ fill: color, stroke: t.pageBg, "stroke-width": 1.5 })
       .add(g);
-    addTitle(leaf, `${cl.label}${lf.label} — ${formatSize(lf.value)}`);
+    addTitle(leaf, `${pathPrefix}${node.label} — ${formatSize(node.value)}`);
 
-    if (leafR >= 24) {
-      const fontSize = Math.max(9, Math.min(12, Math.round(leafR * 0.24)));
-      const maxChars = Math.max(3, Math.floor((leafR * 1.7) / (fontSize * 0.58)));
-      const text = lf.label.length > maxChars ? `${lf.label.slice(0, maxChars - 1)}…` : lf.label;
+    if (r >= 28) {
+      const fontSize = Math.max(10, Math.min(13, Math.round(r * 0.26)));
+      const maxChars = Math.max(3, Math.floor((r * 1.7) / (fontSize * 0.58)));
+      const text = node.label.length > maxChars ? `${node.label.slice(0, maxChars - 1)}…` : node.label;
       chart.renderer
-        .text(text, leafX, leafY + fontSize * 0.35)
+        .text(text, x, y + fontSize * 0.35)
         .attr({ align: "center" })
         .css({ color: contrastInk(color), fontSize: `${fontSize}px`, fontWeight: "500" })
         .add(g);
     }
-  });
-
-  if (ringR >= 55) {
-    const fontSize = Math.max(12, Math.min(16, Math.round(ringR * 0.1)));
-    chart.renderer
-      .text(`${cl.label} · ${formatSize(cl.totalValue)}`, ringX, ringY - ringR + fontSize + 6)
-      .attr({ align: "center" })
-      .css({ color: t.ink, fontSize: `${fontSize}px`, fontWeight: "600" })
-      .add(g);
+    return;
   }
-});
+
+  if (node.depth === 0) {
+    const root = chart.renderer
+      .circle(x, y, r)
+      .attr({ fill: "transparent", stroke: t.grid, "stroke-width": 1.5 })
+      .add(g);
+    addTitle(root, `repository — ${formatSize(node.value)} total`);
+  } else {
+    const isCategory = node.depth === 1;
+    const color = categoryColor(node.categoryIndex);
+    const ring = chart.renderer
+      .circle(x, y, r)
+      .attr({
+        fill: hexToRgba(color, isCategory ? 0.1 : 0.17),
+        stroke: color,
+        "stroke-width": isCategory ? 2.5 : 1.8,
+      })
+      .add(g);
+    addTitle(ring, `${pathPrefix}${node.label} — ${formatSize(node.value)} total`);
+
+    const labelThreshold = isCategory ? 55 : 40;
+    if (r >= labelThreshold) {
+      const fontSize = isCategory ? Math.max(12, Math.min(16, Math.round(r * 0.1))) : Math.max(11, Math.min(13, Math.round(r * 0.12)));
+      chart.renderer
+        .text(`${node.label} · ${formatSize(node.value)}`, x, y - r + fontSize + 6)
+        .attr({ align: "center" })
+        .css({ color: t.ink, fontSize: `${fontSize}px`, fontWeight: "600" })
+        .add(g);
+    }
+  }
+
+  const childPathPrefix = node.depth === 0 ? "" : `${pathPrefix}${node.label}`;
+  const originX = parentX + (node.x ?? 0);
+  const originY = parentY + (node.y ?? 0);
+  node.children.forEach((child) => renderNode(child, originX, originY, childPathPrefix));
+}
+
+renderNode(tree, 0, 0, "");
 
 // Static-frame timing signal for the harness.
 window.__anyplotReady = true;
