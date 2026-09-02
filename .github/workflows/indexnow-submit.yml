@@ -1,0 +1,104 @@
+name: "SEO: IndexNow submit"
+run-name: "IndexNow: ${{ github.event_name == 'workflow_dispatch' && inputs.scope || 'changed' }} URLs"
+
+# Tells the IndexNow engines (Bing, Yandex, Seznam, Naver, Yep) which pages
+# changed, instead of waiting for their next crawl. Google does not take part;
+# it keeps reading the sitemap.
+#
+# On every push to main that touches plots/, the diff is mapped to page URLs:
+#   plots/<spec>/specification.*                  → https://anyplot.ai/<spec>
+#   plots/<spec>/metadata/<lang>/<lib>.yaml        → https://anyplot.ai/<spec>/<lang>/<lib>
+#   plots/<spec>/implementations/<lang>/<lib>.<ext> → same page
+# A deleted implementation is submitted too — IndexNow is "this URL changed",
+# which covers removals.
+#
+# The key is public by design: it only proves the submitter controls the host,
+# and the engines verify it by fetching https://anyplot.ai/<key>.txt. The same
+# key lives in app/public/<key>.txt (what humans and non-bot clients get) and
+# in api/routers/seo.py (what the nginx bot map proxies crawlers to). Keep the
+# three in sync when rotating it.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plots/**'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "'changed' submits the URLs touched by the latest commit on main; 'sitemap' submits every URL in the live sitemap (initial load, or after a long outage)"
+        required: false
+        default: changed
+        type: choice
+        options: [changed, sitemap]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow-submit
+  cancel-in-progress: false
+
+env:
+  HOST: anyplot.ai
+  INDEXNOW_KEY: anyplot-indexnow-ab738f04ea92446a
+  SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.scope || 'changed' }}
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # HEAD~1 is the previous main for a squash merge, which is how every
+          # pipeline PR lands; a rare multi-commit push submits its last commit.
+          fetch-depth: 2
+
+      - name: Collect URLs
+        id: urls
+        run: |
+          set -euo pipefail
+          if [ "$SCOPE" = "sitemap" ]; then
+            curl -sfS "https://${HOST}/sitemap.xml" \
+              | grep -oE '<loc>[^<]+</loc>' | sed -E 's#</?loc>##g' | sort -u > urls.txt
+          else
+            git diff --name-only HEAD~1 HEAD -- plots/ | awk -F/ '
+              $1 != "plots" || NF < 3 { next }
+              $3 ~ /^specification\./ { print "https://'"$HOST"'/" $2; next }
+              ($3 == "metadata" || $3 == "implementations") && NF == 5 {
+                lib = $5; sub(/\.[^.]+$/, "", lib)
+                print "https://'"$HOST"'/" $2
+                print "https://'"$HOST"'/" $2 "/" $4 "/" lib
+              }' | sort -u > urls.txt
+          fi
+          n=$(wc -l < urls.txt)
+          echo "count=$n" >> "$GITHUB_OUTPUT"
+          echo "::notice::${n} URL(s) to submit (scope: ${SCOPE})"
+          head -20 urls.txt
+
+      - name: Submit to IndexNow
+        if: steps.urls.outputs.count != '0'
+        run: |
+          set -euo pipefail
+          # 10,000 URLs per request is the protocol limit; the full sitemap is
+          # under that today (4.6k) but the split keeps this future-proof.
+          split -l 10000 -d urls.txt batch_
+          for f in batch_*; do
+            body=$(jq -n --arg host "$HOST" --arg key "$INDEXNOW_KEY" \
+              --arg loc "https://${HOST}/${INDEXNOW_KEY}.txt" \
+              --rawfile list "$f" \
+              '{host: $host, key: $key, keyLocation: $loc,
+                urlList: ($list | split("\n") | map(select(length > 0)))}')
+            code=$(curl -sS -o response.txt -w '%{http_code}' \
+              -X POST "https://api.indexnow.org/indexnow" \
+              -H "Content-Type: application/json; charset=utf-8" \
+              --data "$body")
+            n=$(grep -c . "$f")
+            case "$code" in
+              200|202) echo "::notice::IndexNow accepted ${n} URL(s) (HTTP ${code})" ;;
+              # 4xx is a protocol or key problem on our side; make it visible.
+              *) echo "::error::IndexNow returned HTTP ${code} for ${n} URL(s): $(head -c 300 response.txt)"; exit 1 ;;
+            esac
+          done

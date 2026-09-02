@@ -499,6 +499,23 @@ onto the seo-proxy path, and `.github/workflows/bot-serving-check.yml` guards it
 daily against the Cloud Run origin (origin, not edge — so it reports on the
 nginx map no matter what the zone policy is, and will never catch edge drift).
 
+## IndexNow
+
+[IndexNow](https://www.indexnow.org/) is the free, open push protocol shared by
+Bing, Yandex, Seznam, Naver and Yep: instead of waiting for a crawl, the site
+posts the URLs that changed. Google does not take part and keeps reading the
+sitemap. Three pieces, kept in sync when the key is rotated:
+
+| Piece | Where | Purpose |
+|-------|-------|---------|
+| Key file | `app/public/<key>.txt` (served by nginx to every client, bots included — an explicit `location =` like `robots.txt`) | Proves the submitter controls `anyplot.ai`; the engines fetch it on every submission. The key is public by design. |
+| Submission workflow | `.github/workflows/indexnow-submit.yml` | On every push to `main` that touches `plots/`, maps the diff to page URLs (`/{spec}` and `/{spec}/{language}/{library}`) and POSTs them to `https://api.indexnow.org/indexnow`, 10,000 per request. A deleted implementation is submitted too — the protocol means "this URL changed". |
+| Manual full load | `gh workflow run indexnow-submit.yml -f scope=sitemap` | Submits every URL of the live sitemap; used once at rollout and after a long outage of the workflow. |
+
+The engines answer `200` or `202` for an accepted batch; `4xx` means a key or
+payload problem and fails the run so it is visible. Bing Webmaster Tools shows
+the received submissions under *IndexNow*.
+
 ## Discoverability for assistants
 
 Two session protocols of external assistants against the sister project

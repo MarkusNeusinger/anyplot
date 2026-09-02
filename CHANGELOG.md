@@ -26,6 +26,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Added
+
+- **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
+  waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
+  key file (`app/public/<key>.txt`, served by an explicit nginx `location` so crawler UAs
+  are not proxied away from it) proves control of the host, and the new
+  `.github/workflows/indexnow-submit.yml` maps every push to `main` that touches `plots/`
+  onto the affected `/{spec}` and `/{spec}/{language}/{library}` URLs and POSTs them to
+  `api.indexnow.org` (10,000 per request; a deleted implementation is submitted too).
+  `workflow_dispatch` with `scope=sitemap` submits the whole live sitemap for the initial
+  load. Google does not take part and keeps reading the sitemap. The protocol is free.
+
 ### Fixed
 
 - **Infrastructure failures no longer spend a pair's generation budget** — the
