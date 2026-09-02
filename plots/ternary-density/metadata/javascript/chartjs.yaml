@@ -1,0 +1,249 @@
+library: chartjs
+language: javascript
+specification_id: ternary-density
+created: '2026-09-02T07:27:55Z'
+updated: '2026-09-02T07:43:40Z'
+generated_by: claude-sonnet
+workflow_run: 33602828151
+issue: 3696
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Density bubble layer is now correctly clipped to the ternary triangle path (ctx.clip()
+    in beforeDatasetsDraw, restored and outline re-stroked in afterDatasetsDraw),
+    fully resolving the boundary-bleed artifact flagged in the previous review.
+  - Colorbar caption font size increased from 13px to 16px, improving the typographic
+    hierarchy and mobile legibility flagged previously.
+  - Creative, correct use of Chart.js's bubble chart type plus custom plugin hooks
+    (beforeDatasetsDraw/afterDatasetsDraw/afterDraw) to implement a chart type the
+    library has no native support for, without faking interactivity or reaching for
+    another library.
+  - 'Theme-adaptive chrome is fully correct in both renders: warm backgrounds, legible
+    text, identical imprint_seq data colors across themes.'
+  - Three realistic, well-separated sedimentology facies clusters (sandy shoreface,
+    silty mid-shelf, clay-rich basin) produce a genuine multi-modal density surface
+    with a clean simplex boundary.
+  weaknesses:
+  - Contour lines at 1-2 key density levels (explicitly suggested in the specification's
+    Notes) were still not added — would sharpen the read of each facies mode's peak
+    and further showcase Chart.js's plugin drawing capabilities.
+  - Composition remains three separate, similarly-sized blobs; a stronger data-driven
+    hierarchy (e.g. one visually dominant cluster) could deepen the storytelling.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "ternary-density · javascript · chartjs · anyplot.ai" in bold dark ink at top. Vertex labels "Sand" (bottom-left), "Silt" (bottom-right), "Clay" (top) in bold dark ink. Subtle grey ternary grid lines at the 20/40/60/80% levels, dark triangle outline framing the simplex. Sequential colorbar below the triangle captioned "Low density" / "High density" in soft dark ink at 16px (up from 13px in the previous attempt).
+      Data: Three KDE density blobs using the imprint_seq gradient (#009E73 -> #4467A3): one skewed toward the Clay vertex, two along the Sand/Silt base. The density layer is now clipped to the triangle path — no bleed past the simplex boundary near the Clay vertex (the defect flagged in Attempt 1 is fixed).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title, vertex labels, grid, outline, and colorbar layout, rendered in light ink/stroke — clearly legible, no dark-on-dark text anywhere.
+      Data: Identical imprint_seq colors and cluster positions as the light render — only chrome flipped, confirmed. Density layer is likewise cleanly clipped to the triangle with no boundary bleed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; colorbar caption
+          now 16px, balanced with the 20px vertex labels and 26px title.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Density bubbles now clipped to the triangle path; no bleed past the
+          simplex boundary near the Clay vertex.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient has good contrast and is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correctly sized; triangle well-proportioned;
+          colorbar attached below; nothing clipped at the canvas edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels (Sand/Silt/Clay) and colorbar captions are descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used correctly for continuous density data; backgrounds
+          match #FAF8F1/#1A1A17; both renders theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom ternary chrome, gradient colorbar, and now-clean clipped boundary
+          lift this above chartjs defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Hidden scales, subtle grid, generous whitespace; boundary bleed from
+          Attempt 1 is fixed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three clearly separated modes create visual hierarchy, but no additional
+          emphasis (e.g. contour lines) was added over Attempt 1.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ternary + KDE-density chart via a legitimate bubble+plugin
+          technique.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertex labels, grid beneath density, perceptually-uniform colormap
+          all present; optional contour lines (spec says 'consider') not included,
+          no penalty.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct barycentric-to-Cartesian mapping for all three components.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; colorbar clearly labeled Low/High density.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three distinct facies clusters show multi-modal density well; very-low-density
+          background is hidden by the density floor, slightly narrowing the shown
+          range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Sediment composition (sand/silt/clay facies) is a real, neutral geoscience
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cluster centers reflect realistic sedimentology facies proportions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow; helper functions are necessary for the math and plugin
+          API, not over-abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No external imports beyond the global Chart object.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount contract, animation: false set.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's plugin-hook extension model and bubble dataset idiomatically
+          to work around missing native ternary support.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Plugin-based custom drawing with clipping is chartjs-specific, but
+          contour lines suggested in Attempt 1 were still not added.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - minimal-chrome
