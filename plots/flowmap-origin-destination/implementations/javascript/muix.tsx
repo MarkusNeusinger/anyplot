@@ -2,6 +2,7 @@
 // flowmap-origin-destination: Origin-Destination Flow Map
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-02
+import { useState } from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -67,6 +68,21 @@ flows.forEach((f) => {
 const throughputValues = Object.values(throughputByPort);
 const MIN_THROUGHPUT = Math.min(...throughputValues);
 const MAX_THROUGHPUT = Math.max(...throughputValues);
+
+// Top hub ports get bolder, larger labels so the busiest nodes read as a
+// clear typographic tier above the rest, sharpening the hierarchy.
+const HUB_COUNT = 4;
+const hubCodes = new Set(
+  Object.entries(throughputByPort)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, HUB_COUNT)
+    .map(([code]) => code),
+);
+
+// Flows are drawn largest-last so the dominant corridors stay on top of the
+// pile-up around hub ports, and rendered with per-arc bow sign/magnitude so
+// arcs sharing a hub fan out instead of stacking on one identical curve.
+const sortedFlows = [...flows].sort((a, b) => a.volume - b.volume);
 
 // Manual label nudges so the closely clustered European ports don't collide
 // — markers stay at their true coordinates, only the text shifts.
@@ -159,13 +175,13 @@ function WorldOutline() {
 }
 
 // --- Overlay: origin-destination flow arcs, direction arrows, port nodes ----
-function FlowOverlay() {
+function FlowOverlay({ onHoverChange }) {
   const xScale = useXScale();
   const yScale = useYScale();
 
   return (
     <g>
-      {flows.map((flow, i) => {
+      {sortedFlows.map((flow, i) => {
         const origin = ports[flow.from];
         const dest = ports[flow.to];
         const x1 = xScale(origin.lon);
@@ -179,9 +195,13 @@ function FlowOverlay() {
         const midX = (x1 + x2) / 2;
         const midY = (y1 + y2) / 2;
         // Perpendicular bow approximates a great-circle arc on the flat projection.
+        // Sign/magnitude vary per arc so flows sharing a hub fan out instead of
+        // stacking on one identical curve through the hub circle.
         const ux = -dy / dist;
         const uy = dx / dist;
-        const bow = dist * 0.14;
+        const bowSign = i % 2 === 0 ? 1 : -1;
+        const bowMagnitude = 0.09 + ((i * 53) % 7) * 0.015;
+        const bow = dist * bowMagnitude * bowSign;
         const controlX = midX + ux * bow;
         const controlY = midY + uy * bow;
 
@@ -197,6 +217,13 @@ function FlowOverlay() {
         const arrowY = 0.25 * y1 + 0.5 * controlY + 0.25 * y2;
         const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
 
+        const flowTooltip = {
+          label: `${origin.name} → ${dest.name}`,
+          detail: `${flow.volume.toLocaleString()} thousand TEU/year`,
+          x: arrowX,
+          y: arrowY,
+        };
+
         return (
           <g key={`${flow.from}-${flow.to}-${i}`}>
             <path
@@ -206,6 +233,16 @@ function FlowOverlay() {
               strokeWidth={strokeWidth}
               strokeOpacity={strokeOpacity}
               strokeLinecap="round"
+            />
+            {/* Wider transparent hit path: the visible stroke is often too thin to hover reliably. */}
+            <path
+              d={`M ${x1},${y1} Q ${controlX},${controlY} ${x2},${y2}`}
+              fill="none"
+              stroke="transparent"
+              strokeWidth={Math.max(strokeWidth, 16)}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() => onHoverChange(flowTooltip)}
+              onMouseLeave={() => onHoverChange(null)}
             />
             <polygon
               points="-7,-4.5 7,0 -7,4.5"
@@ -219,18 +256,65 @@ function FlowOverlay() {
       {Object.entries(ports).map(([code, port]) => {
         const cx = xScale(port.lon);
         const cy = yScale(port.lat);
-        const throughputRatio = ((throughputByPort[code] || 0) - MIN_THROUGHPUT) / (MAX_THROUGHPUT - MIN_THROUGHPUT || 1);
+        const throughput = throughputByPort[code] || 0;
+        const throughputRatio = (throughput - MIN_THROUGHPUT) / (MAX_THROUGHPUT - MIN_THROUGHPUT || 1);
         const radius = 8 + throughputRatio * 20;
         const nudge = labelNudge[code] || { dx: 0, dy: -(radius + 10) };
+        const isHub = hubCodes.has(code);
+        const portTooltip = {
+          label: port.name,
+          detail: `Throughput: ${throughput.toLocaleString()} thousand TEU/year`,
+          x: cx,
+          y: cy - radius - 8,
+        };
         return (
           <g key={code}>
-            <circle cx={cx} cy={cy} r={radius} fill={t.palette[0]} stroke={t.pageBg} strokeWidth={2.5} />
-            <text x={cx + nudge.dx} y={cy + nudge.dy} textAnchor="middle" fontSize={14} fontWeight={500} fill={t.ink}>
+            <circle
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill={t.palette[0]}
+              stroke={t.pageBg}
+              strokeWidth={2.5}
+              style={{ cursor: "pointer" }}
+              onMouseEnter={() => onHoverChange(portTooltip)}
+              onMouseLeave={() => onHoverChange(null)}
+            />
+            <text
+              x={cx + nudge.dx}
+              y={cy + nudge.dy}
+              textAnchor="middle"
+              fontSize={isHub ? 16 : 14}
+              fontWeight={isHub ? 700 : 500}
+              fill={t.ink}
+              style={{ pointerEvents: "none" }}
+            >
               {code}
             </text>
           </g>
         );
       })}
+    </g>
+  );
+}
+
+// --- Overlay: hover tooltip for flow arcs and port circles ------------------
+function HoverTooltip({ hover }) {
+  if (!hover) return null;
+  const charWidth = 7.2;
+  const width = Math.max(hover.label.length, hover.detail.length) * charWidth + 20;
+  const height = 44;
+  const x = hover.x - width / 2;
+  const y = hover.y - height - 12;
+  return (
+    <g style={{ pointerEvents: "none" }}>
+      <rect x={x} y={y} width={width} height={height} rx={6} fill={t.elevatedBg} stroke={t.inkSoft} strokeOpacity={0.4} />
+      <text x={hover.x} y={y + 18} textAnchor="middle" fontSize={13} fontWeight={600} fill={t.ink}>
+        {hover.label}
+      </text>
+      <text x={hover.x} y={y + 34} textAnchor="middle" fontSize={12} fill={t.inkSoft}>
+        {hover.detail}
+      </text>
     </g>
   );
 }
@@ -276,6 +360,7 @@ function Legend() {
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
+  const [hover, setHover] = useState(null);
   return (
     <ChartContainer
       width={window.ANYPLOT_SIZE.width}
@@ -307,13 +392,16 @@ export default function Chart() {
         },
       ]}
     >
-      <ChartsGrid horizontal vertical />
+      {/* Horizontal-only reference lines: the continent silhouettes already carry
+          geographic context, so a vertical grid would just compete with the arcs. */}
+      <ChartsGrid horizontal />
       <WorldOutline />
-      <FlowOverlay />
+      <FlowOverlay onHoverChange={setHover} />
       <ChartsXAxis />
       <ChartsYAxis />
       <MapTitle />
       <Legend />
+      <HoverTooltip hover={hover} />
     </ChartContainer>
   );
 }
