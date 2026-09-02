@@ -19,6 +19,11 @@ const revenueByProduct = {
 const offsetStep = 0.22;
 const seriesOffsets = seriesNames.map((_, i) => (i - (seriesNames.length - 1) / 2) * offsetStep);
 
+// Standout data point (single highest value) gets a subtle focal-point
+// emphasis — a larger radius and a bolder ink ring — to give the chart a
+// point of visual hierarchy beyond the raw category comparison.
+const globalMax = Math.max(...seriesNames.flatMap((name) => revenueByProduct[name]));
+
 // Each lollipop is a 2-point segment (baseline -> value) followed by a null
 // gap, so a single "line" series draws every stem for that product line
 // without connecting across categories.
@@ -28,8 +33,13 @@ const series = seriesNames.map((name, si) => {
   categories.forEach((_, ci) => {
     const x = ci + x0;
     const value = revenueByProduct[name][ci];
+    const isFocal = value === globalMax;
     data.push({ x, y: 0, marker: { enabled: false } });
-    data.push({ x, y: value, marker: { enabled: true } });
+    data.push({
+      x,
+      y: value,
+      marker: isFocal ? { enabled: true, radius: 10, lineWidth: 3, lineColor: t.ink } : { enabled: true },
+    });
     data.push({ x, y: null });
   });
   return {
@@ -38,7 +48,7 @@ const series = seriesNames.map((name, si) => {
     data,
     color: t.palette[si],
     lineWidth: 2.5,
-    marker: { enabled: true, radius: 7, lineColor: t.pageBg, lineWidth: 1.5 },
+    marker: { enabled: true, radius: 7, symbol: "circle", lineColor: t.pageBg, lineWidth: 1.5 },
   };
 });
 
@@ -49,7 +59,7 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "lollipop-grouped · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "26px", fontWeight: "700" },
   },
   xAxis: {
     categories,
