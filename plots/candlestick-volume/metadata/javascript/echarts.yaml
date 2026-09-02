@@ -1,0 +1,263 @@
+library: echarts
+language: javascript
+specification_id: candlestick-volume
+created: '2026-09-02T14:22:44Z'
+updated: '2026-09-02T14:28:40Z'
+generated_by: claude-sonnet
+workflow_run: 33640879087
+issue: 3068
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Idiomatic dual-grid/dual-axis ECharts pattern with axisPointer.link synchronizing
+    the crosshair across the price and volume panes — a genuine distinctive-feature
+    use rather than a generic default.
+  - 'Correct Imprint semantic-exception mapping: brand green (#009E73) for gains,
+    matte red (#AE3030, palette position 5) for losses, applied consistently to both
+    candlestick bodies and volume bars as the spec requires.'
+  - Deterministic, realistic OHLC random-walk data (mulberry32 seeded PRNG) with plausible
+    price ($147-$159) and volume (700K-1.6M) ranges over 60 weekday-only trading dates.
+  - 'Clean value formatting: ''$'' prefix on price ticks, custom K/M suffix formatter
+    on volume ticks.'
+  - Both renders pass the theme-readability check — no dark-on-dark or light-on-light
+    failures, chrome correctly flips while data colors stay identical.
+  weaknesses:
+  - 'The price pane''s bottom axis line (xAxis[0].axisLine, gridIndex 0) renders at
+    full-opacity t.inkSoft, creating a bold horizontal divider that lands right at
+    the $144 gridline position — much heavier than the 15%-opacity t.grid split lines
+    used everywhere else in both panes. It reads visually like a bold data gridline,
+    which the style guide explicitly disallows (''Never: Bold grid lines... very subtle'').
+    Hide it (axisLine: {show:false}) or match it to the same low-opacity grid token
+    — the pane separation is already implied by the vertical whitespace gap between
+    grid[0] and grid[1].'
+  - Up/down encoding for both candlesticks and volume bars relies solely on green
+    (#009E73) vs. matte red (#AE3030) hue — a classic red-green confusion pair for
+    deuteranopia/protanopia readers. This is an accepted finance convention and the
+    spec explicitly requests the shared up/down color scheme, so it's not a blocker,
+    but a redundant cue (e.g. a thin ink-colored outline on down bars, per the style
+    guide's optional outline pattern) would strengthen CVD accessibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "Tech Stock 2024 · candlestick-volume · javascript · echarts · anyplot.ai" is centered, dark ink, clearly readable. "Price ($)" and "Volume" axis names sit above their respective panes in soft ink. Y-axis tick labels ($147-$162, 0K-1.8M) and rotated 45° date labels along the bottom (2024-01-02 through late March) are all legible dark-gray text against the light background. Value gridlines are thin and subtle (~15% opacity); one bolder horizontal line (the price pane's implicit x-axis line) sits at the pane boundary near the $144 position — noted as a weakness below.
+      Data: First-series green is #009E73 (up candles/volume bars), down candles/volume bars are matte red #AE3030 — consistent between the two panes. Candlestick wicks and bodies are clearly distinguishable; volume bars beneath align with the same dates.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title, axis names, and tick labels now render in light ink/gray tones, clearly visible against the dark background. Gridlines remain subtle (low-opacity light gray); the same bold pane-divider line is present, now rendered as a lighter gray line, equally prominent relative to the subtle gridlines.
+      Data: Candlestick and volume colors are pixel-identical to the light render — #009E73 green and #AE3030 red — confirming only chrome (not data colors) flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, axis names, and tick labels are explicitly sized (title 20px,
+          axis names 13px, ticks 12-14px) and fully readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions; rotated date labels use interval:6 to
+          avoid crowding.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 60 candles with 70%-width volume bars are appropriately sized for
+          this data density — bodies and wicks are clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Up/down relies solely on green-vs-red hue (classic red-green CVD
+          confusion pair) with no redundant shape/outline cue, though this is a standard
+          finance convention explicitly requested by the spec.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: false
+        comment: Price/volume pane split (~73%/25%) matches the spec's 70-75%/25-30%
+          guidance and nothing is clipped, but the price pane's bottom axisLine renders
+          bold/full-opacity, contradicting the 'subtle grid' rule.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches the mandated format exactly with an optional descriptive
+          prefix; 'Price ($)' carries units, 'Volume' ticks carry K/M unit suffixes.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; loss/down color is the correct semantic-exception
+          matte red #AE3030; backgrounds are theme-correct #FAF8F1/#1A1A17; data colors
+          identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional dual-pane technical-analysis layout with linked crosshair
+          and formatted price/volume ticks; solid but follows a well-known ECharts
+          idiom rather than a highly novel treatment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Value-axis spines removed, grid subtle, generous whitespace between
+          panes, but the bold pane-divider axisLine undercuts the refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded up/down movement and the volume pane beneath it let readers
+          correlate price swings with trading activity; clear overall trend arc (dip,
+          rally, pullback, rally).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-pane candlestick + volume chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shared/synchronized x-axis, matching up/down colors between panes,
+          ~70/25 pane split, and a linked crosshair (axisPointer.link) are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, top Y=OHLC price, bottom Y=volume; full 60-period range shown
+          on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; no legend needed since color already encodes the single up/down
+          semantic per the convention.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full OHLC via wick/body geometry, volume bars, and a realistic up/down/consolidation
+          price cycle across 60 trading days.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Generic 'Tech Stock 2024' framing avoids naming a real company/ticker
+          while remaining plausible; price and volume trajectories look like real
+          market data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range ($147-$159) and volume range (700K-1.6M shares) are sensible
+          for a mid-cap tech stock.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script; only small deterministic helper functions
+          (mulberry32, formatVolume), no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed mulberry32(42) PRNG makes the data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; echarts is the pre-loaded global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a dual-pane chart; no simulated/fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init() with no explicit size/devicePixelRatio, animation:false
+          — correct mount-node contract.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid/multi-axis layout with gridIndex/xAxisIndex/yAxisIndex
+          wiring is the canonical ECharts pattern for a candlestick+volume dual pane.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: axisPointer.link for cross-pane crosshair and per-item volume itemStyle
+          coloring are genuine ECharts-specific capabilities well applied.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - publication-ready
