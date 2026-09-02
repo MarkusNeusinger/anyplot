@@ -1,0 +1,266 @@
+library: d3
+language: javascript
+specification_id: circlepacking-basic
+created: '2026-09-02T15:41:56Z'
+updated: '2026-09-02T16:06:53Z'
+generated_by: claude-sonnet
+workflow_run: 33649304850
+issue: 2498
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Directly fixes both attempt-1 weaknesses: leaf-label font now floors at 13px
+    (was 10px) via d.r/3 clamped [13,16], and the label-eligibility radius rose from
+    r>24 to r>34, so only genuinely large leaf circles carry text - a real improvement
+    to mobile-thumbnail legibility.'
+  - 'Non-leaf (depth 1-2) circles now get a t.grid stroke (previously stroke: none),
+    sharpening cluster-boundary containment in both themes - the second attempt-1
+    weakness is resolved.'
+  - 'Correct Imprint palette in canonical order: src/ (first category) renders in
+    brand green #009E73, remaining categories follow palette positions 2-5 (lavender,
+    blue, ochre, matte red).'
+  - 'Idiomatic d3-hierarchy usage: d3.stratify() builds the tree from flat parent/id
+    rows, d3.pack() lays it out with depth-based padding (12/7/3), and selection.data().join()
+    is used throughout.'
+  - Realistic, neutral dataset (repository storage breakdown) with a deterministic
+    LCG (seed=42) for reproducibility; 68 nodes across 4 hierarchy levels with plausible
+    file-size ranges.
+  - Root boundary circle with padding correctly encompasses all children per the spec's
+    notes; opacity-by-depth (0.16/0.4/0.9) gives a clean, theme-adaptive layered look
+    without a separate light/dark branch for category-label contrast.
+  weaknesses:
+  - Even with the raised floor, leaf labels on the largest circles (~16px at 2400px
+    canvas) shrink to roughly 2-3px when scaled to a ~400px mobile thumbnail - inherent
+    to a dense 68-node pack layout, but still worth a further look if this spec is
+    revisited.
+  - Design remains a well-executed but fairly conventional color-by-category + opacity-by-depth
+    D3 pack treatment; no explicit focal-point emphasis (e.g. highlighting the single
+    largest file) beyond the size encoding itself.
+  - Data coverage is solid but could add one more edge case (e.g. a near-empty folder)
+    for full DQ-01 marks.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "circlepacking-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered top, fully visible and not clipped. Five bold cluster labels ("assets/", "docs/", "config/", "src/", "tests/") sit near the top rim of each depth-1 circle in dark ink against pale-tinted backgrounds - all clearly readable. A thin light-gray outline circle encloses the whole packed layout (the root boundary). New in this attempt: every depth-1 and depth-2 circle now carries a thin grid-colored stroke, giving nested clusters a crisper boundary than the unstroked look from the previous attempt.
+      Data: Five color clusters - src/ is brand green (#009E73), assets/ is lavender, docs/ is blue, tests/ is ochre, config/ is matte red - matching Imprint canonical palette order with the first category correctly in brand green. Circle area encodes file/folder size; the five largest leaf circles inside assets/ (logo.png, og-image.png, hero.png, avatar.png, banner.p...) show near-white text labels at a larger, more legible size than the previous attempt. Smaller leaf circles across all clusters are now left unlabeled (the label threshold rose from r>24 to r>34), avoiding clutter and tiny illegible text.
+      Legibility verdict: PASS - all title, category, and eligible leaf labels are readable against the light background; no dark-on-dark or light-on-light failures observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title and all five cluster labels ("assets/", "docs/", "config/", "src/", "tests/") render in light ink, clearly legible against the dark page background and against the correspondingly darker-tinted depth-1 circle fills. The root boundary outline remains visible as a faint light-gray circle, and the new grid-colored strokes on non-leaf circles are visible as subtle light outlines separating clusters - a clear improvement over the stroke-less depth-1/2 circles from the previous attempt, which read as soft, low-contrast blobs in dark mode.
+      Data: The five cluster colors (green, lavender, blue, ochre, matte red) are visually identical to the light render - only the chrome (background, ink text, root outline, non-leaf strokes) has flipped/adapted. Leaf labels use the theme's page-background color over the saturated leaf fills, remaining legible since the leaf circles keep their opacity-0.9 saturation regardless of theme.
+      Legibility verdict: PASS - no dark-on-dark failures found; all readable text stays readable in this theme, and the new non-leaf stroke noticeably improves cluster-boundary legibility in dark mode specifically.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Leaf-label font floor raised to 13px (from 10px) and eligibility
+          threshold raised to r>34 (from r>24) directly fixes the prior mobile-legibility
+          weakness; title and category labels remain explicitly sized and readable
+          in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlap; ellipsis truncation keeps
+          long filenames inside their circles.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circle sizes adapt to value via d3.pack(); label-eligibility thresholds
+          sensibly hide labels that would be unreadably small.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Five distinct Imprint hues used, no red-green-only encoding, adequate
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Packed layout fills a well-balanced majority of the square canvas
+          with generous, even margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes for this chart type; mandated title format present and descriptive
+          cluster labels double as category identification.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First category (src/) is #009E73; remaining categories follow canonical
+          Imprint order; backgrounds and chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color-by-category + opacity-by-depth scheme, now sharpened
+          with non-leaf strokes; still a fundamentally conventional D3 pack treatment
+          rather than a truly distinctive publication-ready design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Prior weakness (non-leaf circles lacking a stroke) is fixed - all
+          circles now carry a theme-adaptive t.grid stroke, sharpening cluster containment
+          in both themes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size variation naturally highlights the largest files (logo.png,
+          og-image.png, hero.png) as a focal point within the largest category; no
+          explicit annotation-based emphasis added.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct circle packing chart via d3.pack().
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Efficient packing, color by category, labels on larger circles, area-proportional
+          sizing, and a padded root boundary are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Hierarchy correctly built via d3.stratify() with value summed up
+          the tree; circle area reflects node value.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; no separate legend needed
+          since cluster labels identify each category in place.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 68 nodes across 4 hierarchy levels with meaningfully varied file
+          sizes; could include a near-empty folder for full edge-case coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Repository storage breakdown is a real, neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: File size ranges (image assets larger than source/test files) are
+          factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Straightforward top-to-bottom flow: data, hierarchy/pack, color,
+          mount, circles, labels, title; small arrow-function helpers are proportionate
+          to the task.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed = 42) makes file sizes deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a hierarchical pack layout; no fake UI
+          or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a single svg into #container sized from window.ANYPLOT_SIZE
+          per the mount-node contract; current d3 API (stratify/pack) used throughout.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Textbook idiomatic d3-hierarchy usage: stratify -> sum -> sort ->
+          pack, with data joins via selection.data().join().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.stratify()/d3.pack() hierarchical layout is a feature genuinely
+          distinctive to D3's low-level flexibility, not easily replicated in higher-level
+          chart libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hierarchical-layout
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
