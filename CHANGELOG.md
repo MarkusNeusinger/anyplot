@@ -35,7 +35,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `.github/workflows/codeql.yml` keeps the same languages and weekly schedule but ignores
   `plots/**` both as a trigger and inside the analysis, so pipeline PRs no longer start
   a scan. Default setup has to be switched off in the repository settings for the
-  workflow's uploads to be accepted.
+  workflow's uploads to be accepted. (#11200)
 
 ### Fixed
 
