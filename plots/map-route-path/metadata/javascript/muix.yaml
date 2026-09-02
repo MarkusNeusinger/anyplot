@@ -1,0 +1,256 @@
+library: muix
+language: javascript
+specification_id: map-route-path
+created: '2026-09-02T03:05:54Z'
+updated: '2026-09-02T06:12:23Z'
+generated_by: claude-sonnet
+workflow_run: 33584564320
+issue: 3768
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/muix/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Correct, idiomatic MUI X composition API (ChartContainer + LinePlot/ScatterPlot
+    + hooks) with a continuous imprint_seq color-mapped scatter accurately encoding
+    time progression
+  - Start (green circle) / End (red square) markers exactly match the spec's own suggested
+    convention, implemented via a hook-positioned custom SVG overlay at true chart
+    coordinates
+  - Honest, well-documented trade-off note about the basemap limitation instead of
+    silently omitting it or faking tile rendering
+  - Realistic, geographically plausible Amsterdam commute route, monotonic by construction
+    so the path never self-crosses
+  - Theme-correct chrome and identical data colors across both light and dark renders
+  weaknesses:
+  - 'The compass rose is pinned to a fixed pixel position in the drawing area''s top-right
+    corner, which collides with the End marker because the route''s endpoint is, by
+    construction, always near that same corner. In both themes, the compass''s arrowhead
+    and ''N'' label are drawn under/merged with the End marker, leaving only a meaningless
+    bare arrow shaft. Fix: derive the compass position from (or offset it away from)
+    the actual endpoint pixel position, or move it to a corner not used by the route''s
+    termination.'
+  - Scatter markers (size 7) sit close enough together at 140 points that adjacent
+    path points visually clump into overlapping beads rather than reading as a crisp
+    line - consider a slightly smaller marker size or thinning the point count for
+    a cleaner path.
+  - No basemap or geographic reference beyond the lon/lat graticule (acknowledged
+    MUI X limitation, but still a partial gap versus the spec's explicit request for
+    street/terrain/satellite context).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "map-route-path · javascript · muix · anyplot.ai" centered top, subtitle caption about missing basemap below it, "Longitude (°)" / "Latitude (°)" axis labels with 3-decimal tick labels, subtle graticule grid, discrete "Start"/"End" legend top-left, continuous "Early"/"Late" color legend bottom-left. All dark ink text, fully readable against the cream background.
+      Data: Route path drawn as overlapping circular markers connected by a thin gray line, colored with the imprint_seq green-to-blue gradient encoding time progression. Green circle marks Start (#009E73), red square marks End (#AE3030). Defect: a small gray compass-rose arrow (intended to show "N") sits in the same top-right corner as the End marker; its arrowhead and "N" label are hidden behind/merged into the red End square, leaving only a stray vertical arrow shaft visible.
+      Legibility verdict: PASS (all text legible; the compass defect is a layout/overlap issue, not a legibility issue)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same composition as light render, with light gray/white title, axis labels, and tick labels - all clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Route path, gradient, Start/End marker colors are pixel-identical to the light render, confirming only chrome adapted to the theme. The same compass-rose/End-marker collision reproduces identically here.
+      Legibility verdict: PASS (all text legible; compass defect reproduces identically to the light render)
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized, readable in both themes; title/axis/legend
+          proportions are sensible
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Compass-rose arrowhead + 'N' label render underneath/merged with
+          the End marker square in both themes, leaving a meaningless stray arrow.
+          Core data/axis/legend text is unaffected.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers visible and reasonably sized for 140 points, though adjacent
+          markers touch/clump along the path
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Start/End distinguished by shape as well as color; sequence gradient
+          doesn't rely on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the large majority of the canvas, margins balanced, nothing
+          clipped at the canvas border
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°) / Latitude (°) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Start = #009E73, End = #AE3030 (matches spec''s own start=green/end=red
+          convention), sequence uses imprint_seq, identical across themes, theme-correct
+          chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful continuous color-encoding of time + custom shaped end
+          markers, undercut somewhat by the compass/marker collision
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, minimal spines, generous whitespace; the unresolved
+          compass overlap is a polish miss
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Green-to-blue gradient plus distinct start/end shapes create a clear
+          journey narrative at a glance
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly a connected, sequential route path, not a discrete scatter
+          map
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Sequence connection, distinct start/end markers, time-gradient coloring
+          all present; basemap honestly omitted with documented library-limitation
+          caption
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon->X, lat->Y, axes show the full route extent
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match the data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows sequential connection, direction (start/end), and time progression
+          via gradient
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral Amsterdam cycling-commute scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinates, route length, and point spacing are geographically sound
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small helper components are idiomatic for MUI X's hooks-driven custom-overlay
+          pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Fixed-pixel CompassRose position doesn't account for the guaranteed
+          collision with the route's endpoint - a real logic oversight
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct harness contract (skipAnimation, sized from window.ANYPLOT_SIZE),
+          current MUI X composition API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ChartContainer + LinePlot/ScatterPlot composition with hooks is the
+          recommended pattern for custom multi-series/overlay charts
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Continuous z-axis colorMap + ContinuousColorLegend for time-encoded
+          scatter, plus hook-positioned custom SVG overlays, are genuinely MUI X-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - patches
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

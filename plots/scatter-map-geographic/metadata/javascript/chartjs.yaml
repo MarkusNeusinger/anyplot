@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: scatter-map-geographic
+created: '2026-09-02T05:56:37Z'
+updated: '2026-09-02T06:12:05Z'
+generated_by: claude-sonnet
+workflow_run: 33596238147
+issue: 3617
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Geophysically-grounded synthetic data: shallow thrust events near the trench
+    and progressively deeper Wadati-Benioff events inland, generated via a deterministic
+    seeded LCG + rejection-sampled Gaussian (no boundary pile-up artifacts)'
+  - Correct semantic use of imprint_seq (brand green -> blue) for the single-polarity
+    'depth' variable, with a custom afterDraw colorbar plugin drawn entirely outside
+    chartArea so it can never collide with a data marker
+  - Custom afterDraw magnitude-size legend with reference circles (M4.5/M6.0/M7.5)
+    gives the reader a concrete decoding key for point size, matching the spec's size-legend
+    requirement
+  - Basemap context via two mixed line datasets (coastline + approximate Japan Trench)
+    with a custom generateLabels legend, giving real geographic anchoring beyond bare
+    lat/lon points
+  - 'Both renders are theme-correct: warm off-white / near-black backgrounds, all
+    chrome (title, axis labels, ticks, legend, colorbar text) readable in both themes,
+    and the Imprint data colors are pixel-identical between light and dark'
+  - Rich tooltip with magnitude, depth, and lat/lon per epicenter — good use of interactivity
+    that doesn't need to show up in the static PNG
+  weaknesses:
+  - No zoom/pan is enabled to explore point clusters as the spec's interactivity note
+    suggests — likely acceptable since core Chart.js has no built-in zoom/pan and
+    the pinned bundle doesn't include chartjs-plugin-zoom, but worth confirming that's
+    truly unavailable before ruling it out permanently.
+  - In the densest cluster (~37-38.5°N, 141-143°E) many mid-sized markers fully occlude
+    smaller ones despite alpha=0.78 and the pageBg point-border halo — a touch more
+    transparency or slightly smaller radii floor in that band would help separate
+    overlapping shallow events.
+  - The 'basemap' is a single simplified coastline polyline rather than a filled landmass/terrain
+    context — adequate for orienting the reader but thinner geographic context than
+    the spec's 'basemap showing country boundaries, coastlines, or terrain' suggests;
+    a filled land polygon (even a rough one) would read more like a map and less like
+    an abstract scatter.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Title "Tohoku-Oki Earthquakes · scatter-map-geographic · javascript · chartjs · anyplot.ai" in bold dark ink, clearly readable. "Coastline"/"Japan Trench (approx.)" line-style legend readable below the title. Axis titles "Longitude (°E)" / "Latitude (°N)" and numeric tick labels all dark-on-cream and legible. Grid lines are faint light-gray, visible but not competing with data. Right-side "Depth" colorbar (green->blue gradient, "0 km"/"600 km" labels) and bottom-right "Magnitude" size legend (M4.5/M6.0/M7.5 outlined circles) both render in dark ink, fully legible.
+      Data: ~160 circular epicenter markers colored on a green (shallow) to blue (deep, ~600 km) sequential ramp, radius scaled to magnitude (M3.8-7.9), thin cream-colored halo around each marker for separation, solid dark coastline and dashed trench line for context. First/only continuous series correctly uses imprint_seq, no categorical palette misuse.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, not pure black, not light.
+      Chrome: Title, "Coastline"/"Japan Trench" legend, axis titles, tick labels, colorbar labels, and magnitude legend text all render in light off-white ink against the near-black background — all clearly legible, no dark-on-dark failures observed. Grid lines are faint light gray on black, subtle but visible. Coastline/trench lines switch to a light stroke so they stay visible on dark (correct theme-adaptive chrome).
+      Data: Same green->blue depth ramp and magnitude-scaled radii as the light render — colors are pixel-identical between themes, only chrome (background, ink, grid, stroke colors) flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark or light-on-dark legibility failures found in title, axes, ticks, legend, or colorbar text.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (18px scaled title, 16px axis/legend,
+          14-15px ticks/colorbar); readable in both themes; slightly small colorbar/legend
+          labels at full mobile scale-down
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/legend collisions; some dense marker clusters around 37-38.5N/141-143E
+          fully occlude smaller nearby points
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker radii (4-23px) scale with magnitude and alpha=0.78 combats
+          overplotting for 160 points, but densest cluster still has heavy occlusion
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq sequential ramp is CVD-safe; no red-green-as-sole-signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar/legend reserved in dedicated right padding band, nothing
+          clipped, good proportions, title fits comfortably
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°E) / Latitude (°N) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used for single-polarity depth; correct theme
+          backgrounds; both renders theme-correct
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorbar + size-legend plugins, physically-motivated data,
+          coherent geographic composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous right-side whitespace for legends, restrained
+          styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Trench/coastline context plus depth-color and magnitude-size gradients
+          tell a clear subduction-zone story
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct geographic scatter map with lat/lon positioning
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Color + size encoding, basemap context, color+size legends, alpha
+          for density all present; no zoom/pan (core Chart.js limitation) and basemap
+          is a line-only coastline rather than filled land
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=longitude, y=latitude correct, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated pattern with descriptive prefix; legend labels
+          match dataset semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: lat/lon/value(depth)/size(magnitude)/label(tooltip) all covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world plausible, neutral natural-hazard geoscience data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude 3.8-7.9 and depth 8-600km both plausible for a subduction-zone
+          dataset
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (LCG, gaussian, clip, coastLonAtLat, hexToRgb,
+          seqColor, magToRadius) - justified by reproducible synthetic-geoscience
+          generation and custom plugin math, but more functions than a minimal scatter
+          plot needs
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity, appropriate complexity for the encoding
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container, animation:false set, current Chart.js API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed scatter+line datasets, plugin hooks, generateLabels override
+          — idiomatic advanced Chart.js
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw colorbar and size-legend plugins are genuinely distinctive,
+          going beyond built-in legend/scale options
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - gradient-fill
+  - custom-colormap
