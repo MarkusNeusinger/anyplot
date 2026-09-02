@@ -100,11 +100,28 @@ const cellH = Math.abs(y(minBox) - y(minBox + 1));
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-// --- Gridlines at box-size price intervals ------------------------------
+// --- Breakout highlight: a soft band behind the single largest column ----
+// (the biggest box-count swing), giving the chart one clear focal point
+// instead of every column reading with equal weight.
+const columnSizes = columns.map((c) => c.high - c.low + 1);
+const breakoutIdx = columnSizes.indexOf(d3.max(columnSizes));
+const breakoutColumn = columns[breakoutIdx];
+
+g.append("rect")
+  .attr("x", x(breakoutIdx) - (x.step() - x.bandwidth()) / 2)
+  .attr("y", 0)
+  .attr("width", x.step())
+  .attr("height", ih)
+  .attr("fill", breakoutColumn.type === "X" ? t.palette[0] : t.palette[4])
+  .attr("opacity", 0.08);
+
+// --- Gridlines at box-size price intervals (every other box, kept light
+// so the box-structure glyphs stay the primary read) -----------------------
 const boxTicks = d3.range(minBox, maxBox + 1);
+const gridTicks = boxTicks.filter((_, i) => i % 2 === 0);
 g.append("g")
   .selectAll("line")
-  .data(boxTicks)
+  .data(gridTicks)
   .join("line")
   .attr("x1", 0)
   .attr("x2", iw)
@@ -148,16 +165,18 @@ g.append("path")
   .datum(trendLine(supportStart, minLow, 1))
   .attr("fill", "none")
   .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 2.5)
-  .attr("stroke-dasharray", "10,6")
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "9,7")
+  .attr("opacity", 0.5)
   .attr("d", lineGen);
 
 g.append("path")
   .datum(trendLine(resistanceStart, earlyHigh, -1))
   .attr("fill", "none")
   .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 2.5)
-  .attr("stroke-dasharray", "10,6")
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "9,7")
+  .attr("opacity", 0.5)
   .attr("d", lineGen);
 
 // --- Columns of X's (rising) and O's (falling) ---------------------------
