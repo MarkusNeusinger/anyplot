@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: area-stacked-percent
 created: '2026-09-02T12:00:06Z'
-updated: '2026-09-02T12:04:45Z'
+updated: '2026-09-02T12:15:24Z'
 generated_by: claude-sonnet
 workflow_run: 33627224342
 issue: 2647
@@ -12,45 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Idiomatic use of Highcharts'' plotOptions.area.stacking: "percent" for a correct,
-    native 100% stacked area chart with all 5 categories summing to 100% at every
-    quarter.'
-  - 'Full Imprint palette compliance: Equities renders in brand green (#009E73), the
-    remaining four series follow canonical palette order, and both light and dark
-    renders use theme-correct backgrounds, text, and grid colors.'
-  - Clean, legible typography with explicit font sizes (22px title, 16px axis title,
-    14px ticks/legend) that stay readable in both themes with no overlap, overflow,
-    or edge clipping.
-  - Realistic quarterly portfolio-allocation dataset across 5 asset classes with genuinely
-    different trend shapes (equities rising, bonds and cash declining, commodities
-    rise-then-fall) that exercises the plot type well.
+  - 'Directly addresses the prior review''s main feedback: adds a distinctive end-of-series
+    data label (per-point marker + dataLabels using point.percentage) that highlights
+    the equities-share growth story - exactly the guided-insight technique requested
+    last attempt.'
+  - 'Idiomatic native Highcharts stacking: "percent" implementation; all 5 categories
+    sum to 100% at every quarter.'
+  - 'Full Imprint palette and theme-adaptive chrome compliance in both renders - first
+    series is brand green #009E73, canonical order for the rest, no dark-on-dark or
+    light-on-light failures.'
+  - Clean, legible typography with explicit font sizes; realistic quarterly portfolio-allocation
+    dataset with genuinely differentiated trend shapes (equities rising, bonds/cash
+    declining, commodities rise-then-fall).
   weaknesses:
-  - Design Excellence sits at library-default level — palette and font sizing are
-    correctly themed, but there is no distinctive visual treatment (e.g., no zone
-    highlighting, no emphasis on the equities trend, no end-of-series data label)
-    beyond the base stacked-area rendering.
-  - No deliberate visual hierarchy beyond the stacking itself — consider a subtle
-    end label or callout on the final quarter to make the equities-share growth an
-    explicit, guided insight rather than something the viewer has to infer from the
-    shapes alone.
-  - Library Mastery is generic — the implementation doesn't lean on any Highcharts-distinctive
-    capability (e.g., dataLabels on the last point, zone-based coloring, or the accessibility
-    module) that would set it apart from a same-looking stacked-area chart built in
-    another library.
+  - Beyond the single end-point callout, there's no further visual hierarchy (e.g.
+    zone shading on the equities band, a subtitle framing the growth story, differentiated
+    line weights) to distinguish the chart from a plain library default.
+  - Only one Highcharts-distinctive capability is used (dataLabels + point.percentage);
+    consider layering in plotOptions.area.zones or the accessibility module for a
+    richer showcase of library mastery.
+  - The end-of-series marker sits exactly on the 100% gridline using the same brand-green
+    fill as the Equities area it sits on top of - it reads clearly today only because
+    of the thin page-bg stroke; a touch more visual separation would make the annotation
+    unambiguous even at small/mobile sizes.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "area-stacked-percent · javascript · highcharts · anyplot.ai" in bold dark ink, fully visible with generous margin above and no clipping. Y-axis title "Share of portfolio (%)" and tick labels (0%–100%) in medium-gray ink, clearly legible. X-axis quarter labels (2022 Q1 … 2024 Q4) evenly spaced with no overlap. Legend centered below the plot with 5 readable swatches/labels. Horizontal gridlines are subtle and do not compete with the data.
-      Data: Five stacked areas from bottom to top — Cash (matte red), Commodities (ochre), Real estate (blue), Bonds (lavender), Equities (brand green #009E73) — separated by thin page-background-colored strokes for definition. First series (Equities) is the Imprint brand green as required; the other four follow canonical Imprint order.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "area-stacked-percent · javascript · highcharts · anyplot.ai" in bold dark ink, fully visible with generous margin above and no clipping. Y-axis title "Share of portfolio (%)" and tick labels (0%-100%) in medium-gray ink, clearly legible. X-axis quarter labels (2022 Q1 ... 2024 Q4) evenly spaced with no overlap. Legend centered below the plot with 5 readable swatches/labels. Horizontal gridlines are subtle and do not compete with the data. New: a small green anchor marker at the top of the final quarter with a bold "62%" data label calling out Equities' ending share.
+      Data: Five stacked areas from bottom to top - Cash (matte red), Commodities (ochre), Real estate (blue), Bonds (lavender), Equities (brand green #009E73) - separated by thin page-background-colored strokes for definition. First series (Equities) is the Imprint brand green as required; the other four follow canonical Imprint order.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis title, tick labels, and legend all render in light/off-white ink, clearly legible against the dark surface. Gridlines remain subtle. No dark-on-dark text anywhere.
-      Data: Same five stacked areas in the identical hues as the light render — Equities is still #009E73 brand green, and the other four categories match their light-render colors exactly. Only the chrome (background, text, grid) flipped, as required.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis title, tick labels, and legend all render in light/off-white ink, clearly legible against the dark surface. Gridlines remain subtle. No dark-on-dark text anywhere. The "62%" end-label and its marker remain equally legible here.
+      Data: Same five stacked areas in the identical hues as the light render - Equities is still #009E73 brand green, and the other four categories match their light-render colors exactly. Only the chrome (background, text, grid) flipped, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -69,13 +67,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No overlapping text or data elements in either render, including
+          the new end-label.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked areas clearly visible and separated by thin page-bg strokes.
+        comment: Stacked areas clearly visible and separated by thin page-bg strokes;
+          new marker visible via pageBg outline.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -88,14 +88,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the large majority of the canvas with balanced margins;
-          legend sits close to the plot.
+        comment: spacingRight added to accommodate the new end-label without clipping;
+          balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis "Share of portfolio (%)" is descriptive with units; x-axis
+        comment: Y-axis 'Share of portfolio (%)' is descriptive with units; x-axis
           quarter labels are self-explanatory.
       - id: VQ-07
         name: Palette Compliance
@@ -105,30 +105,31 @@ review:
         comment: 'First series is #009E73; canonical order for the rest; theme-correct
           backgrounds and chrome in both renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Looks like a well-configured library default — correct palette and
-          sizing but no distinctive visual treatment.
+        comment: One distinctive end-point callout added, but overall still reads
+          mostly as a well-configured default.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle horizontal-only grid and page-bg separator strokes show some
-          refinement, but axis lines/ticks are otherwise default.
+        comment: Grid/separator-stroke refinement unchanged from last attempt; axis
+          lines/ticks remain default.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data is displayed but not interpreted — no callout, label, or emphasis
-          technique guides the viewer to the equities-growth story.
+        comment: New end-of-series marker + 62% label gives an explicit focal point
+          for the equities-growth story, a clear improvement over no emphasis last
+          attempt.
     spec_compliance:
       score: 15
       max: 15
@@ -193,7 +194,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data-then-chart script, no functions/classes.
+        comment: Flat data-then-chart script; the new per-point label uses a simple
+          ternary map, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -220,7 +222,7 @@ review:
         comment: 'Mounts to #container with no explicit width/height; animation disabled
           on chart and series.'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -232,16 +234,19 @@ review:
           Highcharts pattern for this chart type.'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic usage — no Highcharts-distinctive feature (dataLabels, zones,
-          accessibility module) is leveraged.
-  verdict: REJECTED
+        comment: Now leverages per-point dataLabels driven by the stacking engine's
+          point.percentage - a real, library-specific feature, up from none last attempt;
+          zones/accessibility module still unused.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
-  patterns: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending
