@@ -87,14 +87,26 @@ jobs:
             echo "::notice::push carries ${commits} commits; submitting the full list instead of a diff"
             full_list | sort -u > urls.txt
           else
-            git diff --name-only HEAD~1 HEAD -- plots/ | awk -F/ '
-              $1 != "plots" || NF < 3 { next }
-              $3 ~ /^specification\./ { print "https://'"$HOST"'/" $2; next }
-              ($3 == "metadata" || $3 == "implementations") && NF == 5 {
-                lib = $5; sub(/\.[^.]+$/, "", lib)
-                print "https://'"$HOST"'/" $2
-                print "https://'"$HOST"'/" $2 "/" $4 "/" lib
-              }' | sort -u > urls.txt
+            # A changed specification touches every page of that spec: the
+            # implementation pages render the spec's title and description
+            # too. A changed implementation or metadata file touches its own
+            # page and the hub that lists it.
+            impl_pages() {
+              git ls-tree -r --name-only HEAD "plots/$1/metadata/" | awk -F/ '
+                NF == 5 { lib = $5; sub(/\.[^.]+$/, "", lib); print "https://'"$HOST"'/" $2 "/" $4 "/" lib }'
+            }
+            git diff --name-only HEAD~1 HEAD -- plots/ | while IFS=/ read -r top spec third fourth fifth rest; do
+              [ "$top" = plots ] && [ -n "$spec" ] && [ -n "$third" ] || continue
+              case "$third" in
+                specification.*)
+                  echo "https://${HOST}/${spec}"
+                  impl_pages "$spec" ;;
+                metadata|implementations)
+                  [ -n "$fifth" ] && [ -z "$rest" ] || continue
+                  echo "https://${HOST}/${spec}"
+                  echo "https://${HOST}/${spec}/${fourth}/${fifth%.*}" ;;
+              esac
+            done | sort -u > urls.txt
           fi
           n=$(wc -l < urls.txt)
           echo "count=$n" >> "$GITHUB_OUTPUT"
@@ -105,6 +117,21 @@ jobs:
         if: steps.urls.outputs.count != '0'
         run: |
           set -euo pipefail
+          # The engines validate a submission by fetching the key file. It is
+          # served by the app deploy, which a rollout or a key rotation may
+          # still have in flight — wait for it (up to ~8 min), but submit
+          # either way: a runner behind Cloudflare's bot management may see a
+          # 403 that Bing's own fetch does not, and IndexNow verifies itself.
+          for i in $(seq 1 16); do
+            if curl -fsS --max-time 15 -o /dev/null "https://${HOST}/${INDEXNOW_KEY}.txt"; then
+              echo "::notice::key file reachable"; break
+            fi
+            if [ "$i" -eq 16 ]; then
+              echo "::warning::key file not confirmed reachable after 8 min; submitting anyway"
+            else
+              sleep 30
+            fi
+          done
           # 10,000 URLs per request is the protocol limit; the full sitemap is
           # under that today (4.6k) but the split keeps this future-proof.
           split -l 10000 -d urls.txt batch_
