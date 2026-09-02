@@ -1,0 +1,249 @@
+library: highcharts
+language: javascript
+specification_id: ternary-density
+created: '2026-09-02T07:41:15Z'
+updated: '2026-09-02T07:54:17Z'
+generated_by: claude-sonnet
+workflow_run: 33603458687
+issue: 3696
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Repair successfully replaced the discrete 6-band density fill with continuous
+    per-cell color interpolation and raised grid resolution from 64 to 96 columns,
+    eliminating the blocky/stair-stepped color edges flagged in the prior review —
+    the gradient now reads as smooth and professional in both renders
+  - Correct, spec-faithful ternary density visualization built natively from Highcharts
+    core primitives (barycentric geometry, Gaussian KDE grid, marching-squares contours,
+    custom colorbar) since no ternary/heatmap add-on module is loaded
+  - Both light and dark renders pass the theme-readability checklist — identical data
+    colors, fully legible chrome, no dark-on-dark or light-on-light failures
+  - Real Highcharts tooltip interactivity via a subsampled hover layer with a proper
+    formatter, not a simulated overlay
+  weaknesses:
+  - Colorbar remains unitless (High/Low labels only) — a numeric relative-density
+    scale would add precision, though it is acceptable for normalized density
+  - KDE uses a single global bandwidth (BANDWIDTH=0.06) rather than per-cluster/adaptive
+    bandwidth — fine for the three similarly-spread synthetic clusters shown, but
+    would over/under-smooth a real dataset with heterogeneous cluster tightness
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "ternary-density · javascript · highcharts · anyplot.ai" and gray subtitle at top; dark triangle outline; subtle gray ternary gridlines at 20/40/60/80; bold dark vertex labels (Clay top, Sand bottom-left, Silt bottom-right); small soft-dark edge tick numbers (20/40/60/80) on all three edges; vertical colorbar at right labeled "Sample density" with "High"/"Low" endpoints, all in soft-dark ink. All chrome text is clearly legible against the light background.
+      Data: Continuous (non-banded) KDE heatmap using imprint_seq (green low-density -> blue high-density), three distinct compositional clusters near the Clay vertex, the Sand/Silt-ish bottom-left, and the Sand/Silt-ish bottom-right, each with concentric contour rings at the 0.25/0.5/0.75 density levels. The density fill now blends smoothly cell-to-cell with no visible stair-stepping. No categorical series is present (density-only plot), so the brand-green-first-series rule does not apply; imprint_seq is used correctly for single-polarity data.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same elements as the light render, all flipped to light ink — white title, light-gray subtitle, light triangle outline, light vertex labels, light tick numbers, light colorbar text — all clearly legible against the dark background. No dark-on-dark text found anywhere (title, ticks, vertex labels, and colorbar labels were specifically checked).
+      Data: Heatmap fill colors and contour line colors are pixel-identical to the light render (same green-to-blue imprint_seq gradient and cluster positions), confirming only chrome flipped between themes as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text readable in both themes; edge tick labels are small
+          (13px) but consistent and legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, heatmap, grid, contours, or colorbar
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Density fill and contour rings are clearly visible; continuous interpolation
+          (fixed from banded fill) removed the prior blocky edges
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq is CVD-safe; no red-green used as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas passes the dimension gate; good proportions,
+          nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertices clearly labeled (Clay/Sand/Silt), descriptive title and
+          subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct imprint_seq for single-polarity density; correct #FAF8F1/#1A1A17
+          theme surfaces; identical data colors across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Real design intent (custom colorbar, contours, edge ticks); the smooth
+          continuous fill (fixed from banded) reads noticeably more polished
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, and the stair-stepped band edges
+          from the prior attempt are gone — fill now blends smoothly
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three clusters with contour rings give a clear, readable multi-modal
+          story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine ternary diagram with KDE density overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid beneath density, vertex labels, contour lines at key levels,
+          perceptually-uniform sequential colormap all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct barycentric mapping; all three components represented and
+          clamped to sum to 1
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; colorbar appropriately labeled (no
+          separate legend needed for a single density series)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Multi-modal clustering and contour levels present; a single global
+          KDE bandwidth is used across all clusters
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Clay/sand/silt soil-texture composition is realistic, domain-appropriate,
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1,280 points within the spec's 100-5000 range; plausible cluster
+          spreads and centroids
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions needed for ternary geometry, KDE, and marching-squares
+          math; justified by the inherent complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG PRNG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser/Highcharts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, real tooltip interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract; animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.renderer-based custom drawing is the correct approach given
+          no ternary/heatmap module is loaded in the core bundle
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Strong renderer-based custom SVG layers (gridlines, density cells,
+          contours, colorbar) plus a real native tooltip formatter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
