@@ -5,9 +5,6 @@
 
 using CairoMakie
 using Colors
-using Random
-
-Random.seed!(42)
 
 # --- Theme tokens -------------------------------------------------------
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
@@ -65,6 +62,14 @@ seat_x = seat_radii .* cos.(seat_angles)
 seat_y = seat_radii .* sin.(seat_angles)
 seat_colors = reduce(vcat, [fill(c, n) for (n, c) in zip(seats, party_colors)])
 
+# Majority-threshold angle: the ray through the (total_seats/2 + 1)-th seat
+# in left-to-right order marks the 50%+1 split of the whole assembly.
+majority_seats  = div(total_seats, 2) + 1
+threshold_angle = seat_angles[majority_seats]
+
+# Plurality leader, called out in the legend.
+plurality_idx = argmax(seats)
+
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
     resolution      = (1600, 900),
@@ -85,9 +90,28 @@ hidespines!(ax)
 xlims!(ax, -row_radii[end] - 1, row_radii[end] + 1)
 ylims!(ax, -0.5, row_radii[end] + 1)
 
-scatter!(ax, seat_x, seat_y; color = seat_colors, markersize = 22, strokewidth = 0)
+scatter!(
+    ax, seat_x, seat_y;
+    color = seat_colors, markersize = 22,
+    strokewidth = 1.0, strokecolor = INK,
+)
 
-legend_labels = ["$p ($s)" for (p, s) in zip(parties, seats)]
+# Majority-threshold indicator: dashed radial line + label at 50%+1 seats.
+line_len = row_radii[end] + 0.6
+lines!(
+    ax, [0.0, line_len * cos(threshold_angle)], [0.0, line_len * sin(threshold_angle)];
+    color = INK_SOFT, linewidth = 1.5, linestyle = :dash,
+)
+text!(
+    ax, line_len * cos(threshold_angle), line_len * sin(threshold_angle);
+    text = "Majority ($majority_seats)", color = INK_SOFT, fontsize = 12,
+    align = (threshold_angle < π / 2 ? :left : :right, :bottom),
+)
+
+legend_labels = [
+    "$p ($s)$(i == plurality_idx ? "  ★ largest" : "")"
+    for (i, (p, s)) in enumerate(zip(parties, seats))
+]
 legend_markers = [MarkerElement(color = c, marker = :circle, markersize = 18) for c in party_colors]
 Legend(
     fig[1, 2], legend_markers, legend_labels;
