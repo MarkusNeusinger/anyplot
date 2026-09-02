@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: indicator-sma
 created: '2026-09-02T01:58:24Z'
-updated: '2026-09-02T02:03:36Z'
+updated: '2026-09-02T02:15:05Z'
 generated_by: claude-sonnet
 workflow_run: 33581135903
 issue: 3651
@@ -12,43 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Correct Imprint palette compliance (green Close, canonical purple/blue/ochre SMAs)
-    with theme-correct chrome in both light and dark renders
-  - Explicit font sizing throughout (title 22px, axis titles 16px, ticks/legend 14px)
-    with no overlap or overflow in either theme
-  - SMA math is correct (rolling-window average) and null-gaps appear exactly where
-    windows haven't filled yet (SMA 200 starts ~Oct 2023), matching the spec's note
-    about longer SMAs having more initial nulls
-  - Realistic, neutral stock-price data with visible uptrends/downtrends and multiple
-    SMA crossovers (golden/death cross moments visible around Jul 2023 and Jan 2024)
-  - Deterministic seeded LCG + Box-Muller data generation, clean imports, no fake
-    interactivity
+  - 'Directly addresses the attempt-1 headline weakness: xAxis.plotLines now spotlight
+    the golden-cross / death-cross moments the spec calls the primary application,
+    computed dynamically from the actual generated SMA-50/SMA-200 series so the label
+    always matches what the lines really do'
+  - 'Distinctive Highcharts usage: declarative plotLines with styled labels plus a
+    custom shared tooltip formatter that reports each SMA''s percent delta versus
+    Close, not just raw values'
+  - Thoughtful semantic color use for the crossover markers -- golden cross uses brand
+    green (bullish), death cross uses the amber anchor (cautionary) rather than an
+    arbitrary palette slot
+  - Visual depth hierarchy added via line width and zIndex layering (Close thickest
+    and frontmost at zIndex 4, SMAs progressively behind) plus distinct dash styles
+    per SMA period
+  - Imprint palette compliance and theme-correct chrome preserved in both renders
+    (identical data colors, correct backgrounds, all text legible)
+  - SMA math remains correct with null-gaps appearing exactly where each window hasn't
+    filled, deterministic seeded data generation, clean code with no fake interactivity
   weaknesses:
-  - Design Excellence sits at "well-configured default" level — grid, spines, and
-    legend only meet the mandatory theme baseline with no bespoke polish beyond the
-    required tokens
-  - No visual hierarchy/storytelling calls out the golden-cross / death-cross moments
-    that the spec's Applications section names as the primary use case — consider
-    a plotLine/annotation at 1-2 crossover dates to spotlight the trend signal
-  - Library Mastery doesn't leverage a Highcharts-distinctive feature — the current
-    option set (colors, xAxis/yAxis, legend, series) would translate almost 1:1 to
-    Chart.js or ECharts; consider xAxis.plotBands for a notable trend regime or a
-    richer custom tooltip formatter
+  - Only a Death Cross plotLine appears in this generated series (no Golden Cross
+    occurs in the 300-period window), so the golden-cross styling path is never visually
+    demonstrated -- acceptable since it's data-driven and honest, but the chart only
+    tells half of the spec's headline story
+  - Design Excellence is still closer to an enhanced default than a bespoke composition
+    -- grid, spacing, and typography are unchanged from the baseline theme tokens
+    beyond the new crossover callout and line hierarchy
+  - The tooltip's SMA-vs-Close delta formatter is a nice touch but is invisible in
+    the static PNG preview -- it only pays off in the HTML detail view
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "indicator-sma · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; y-axis title "Closing Price (USD)" and tick labels in dark gray, all readable; subtle horizontal gridlines on the y-axis only; legend below the plot (Close, SMA 20, SMA 50, SMA 200) in dark gray text with color swatches, fully legible.
-      Data: Close line in brand green (#009E73), SMA 20 in lavender/purple, SMA 50 in blue, SMA 200 in ochre/tan — matches canonical Imprint palette order. Close line is visually prominent (thicker, foreground z-index) with the three SMA lines layered beneath, showing clear crossovers around Jul 2023 and Jan 2024.
-      Legibility verdict: PASS — no light-on-light or illegible text found anywhere in the render.
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Title "indicator-sma · javascript · highcharts · anyplot.ai" in bold dark ink is fully legible; y-axis title "Closing Price (USD)" and tick labels in dark gray are readable; subtle horizontal gridlines on the y-axis only; legend below the plot (Close, SMA 20, SMA 50, SMA 200) with color swatches is fully legible; a dashed amber vertical plotLine near Dec 2023 is labeled "Death Cross" in dark bold text, clearly readable and not overlapping any other element.
+      Data: Close renders in brand green (#009E73), SMA 20 in lavender, SMA 50 in blue (dotted/short-dash), SMA 200 in ochre (long-dash) -- matching canonical Imprint order. Close is visually prominent (thicker line, highest zIndex) over the three SMA lines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis title, tick labels, and legend text all rendered in light gray/off-white, clearly legible against the dark background; gridlines subtle and visible.
-      Data: Same four series colors as the light render — brand green Close, lavender SMA 20, blue SMA 50, ochre SMA 200 — confirming data colors are identical across themes; only chrome (background, text) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data lines are clearly distinguishable from the near-black background.
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Title, axis title, tick labels, and legend text all render in light gray/off-white, clearly legible against the dark background; gridlines remain subtle but visible; the "Death Cross" plotLine label renders in light text against the dark background, fully readable -- no dark-on-dark failure.
+      Data: Colors are identical to the light render (green/lavender/blue/ochre and the amber plotLine) -- confirming only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,73 +64,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
-          14px); readable in both themes, no overflow, well-balanced
+        comment: All font sizes explicit (title 22px, axis titles 16px, ticks/legend
+          14px); readable in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlap, including the new Death Cross plotLine label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers disabled for ~300-point dense series, line widths appropriately
-          thin (2/1.5px); appropriate for medium-density time series
+        comment: Line thickness/dash styles well-differentiated for 300-point daily
+          series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are CVD-safe and distinguishable without relying
-          on hue alone
+        comment: Distinct hues plus dash-style redundant encoding for the 4 series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; legend close
-          to plot; nothing cut off
+        comment: Balanced margins, canvas well-utilized, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Closing Price (USD)' is descriptive with units
+        comment: Y-axis labeled 'Closing Price (USD)' with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Close = #009E73, SMAs use canonical Imprint order (lavender/blue/ochre);
-          backgrounds and chrome theme-correct in both renders'
+        comment: 'First series #009E73, canonical order for SMAs, amber anchor used
+          semantically for the bearish signal, theme-correct chrome in both renders'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Looks like a well-configured library default — correct Imprint tokens
-          applied but no bespoke visual treatment beyond that
+        comment: Semantic color choice for crossover markers (green=golden/bullish,
+          amber=death/cautionary) shows design intent beyond a configured default,
+          but overall typography/composition is unchanged
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Grid, spines, and legend only meet the mandatory theme baseline;
-          no extra refinement beyond required tokens
+        comment: New depth hierarchy via line width + zIndex layering and per-SMA
+          dash styles; grid/spacing otherwise still baseline
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: No emphasis or annotation on the golden-cross / death-cross moments
-          that are the spec's headline use case; data displayed but not interpreted
+        comment: Death Cross plotLine creates a clear focal point tied to the spec's
+          headline application, guiding the reader to the actual trend-change signal
     spec_compliance:
       score: 15
       max: 15
@@ -135,26 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line overlay chart for SMA indicator
+        comment: Correct multi-line SMA overlay chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close line, 3 SMAs, legend with periods, y-axis grid all present
+        comment: Close + SMA 20/50/200, crossover detection, correct null-gaps per
+          window
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=closing price, all periods shown
+        comment: Date on x, price on y, all series fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels 'Close, SMA 20, SMA 50, SMA 200'
-          match spec suggestions
+        comment: Title matches mandated format; legend labels match series names
     data_quality:
       score: 15
       max: 15
@@ -164,21 +168,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows uptrend, downtrend, sideways ranging, and multiple SMA crossovers
-          (golden/death cross)
+        comment: Uptrends, downtrends, and a real death-cross event all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible stock-price scenario
+        comment: Realistic, neutral stock-price scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct rolling-window SMA math, realistic drift/volatility for equity
-          daily returns
+        comment: Plausible price range and volatility for a daily equity series
     code_quality:
       score: 10
       max: 10
@@ -188,35 +190,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports->Data->Plot flow; helper functions (LCG, gaussian, sma) are
-          necessary utility, not over-engineering
+        comment: Linear data -> compute -> chart flow; helper functions are the JS-necessary
+          equivalent of vectorized numpy ops
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the Highcharts global is used
+        comment: Only the Highcharts global, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: No fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct Highcharts.chart() mount-node usage, animation disabled,
-          current API
+        comment: Highcharts.chart('container', ...) with animation disabled, current
+          API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -224,19 +226,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic Highcharts.chart() options structure, datetime xAxis, proper
-          tooltip formatting
+        comment: Idiomatic options-object configuration, shared tooltip, plotLines
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
         passed: false
-        comment: Generic multi-line usage — zIndex ordering and xDateFormat are common
-          to most JS charting libs, nothing Highcharts-specific leveraged
-  verdict: REJECTED
+        comment: Data-driven xAxis.plotLines with styled labels plus a custom formatter
+          computing per-series deltas -- genuinely Highcharts-idiomatic, not a trivial
+          port to another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
