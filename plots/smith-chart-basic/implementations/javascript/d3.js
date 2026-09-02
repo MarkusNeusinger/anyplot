@@ -58,35 +58,70 @@ const boundaryPoint = (x) => {
 
 // SVG mount
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-svg.append("clipPath").attr("id", "smith-boundary")
+const defs = svg.append("defs");
+defs.append("clipPath").attr("id", "smith-boundary")
   .append("circle").attr("cx", cx).attr("cy", cy).attr("r", radius);
+defs.append("marker")
+  .attr("id", "locus-arrow")
+  .attr("viewBox", "0 0 10 10")
+  .attr("refX", 7).attr("refY", 5)
+  .attr("markerWidth", 7).attr("markerHeight", 7)
+  .attr("orient", "auto-start-reverse")
+  .append("path")
+  .attr("d", "M0,0 L10,5 L0,10 Z")
+  .attr("fill", t.palette[0]);
 
 // Grid — constant-resistance circles and constant-reactance arcs, clipped to
-// the unit circle since only the arcs' interior segments are meaningful
+// the unit circle since only the arcs' interior segments are meaningful.
+// The r=1 / x=1 circles are the Smith chart's "major" reference curves, so
+// they render slightly bolder than the rest to establish visual hierarchy.
 const grid = svg.append("g").attr("clip-path", "url(#smith-boundary)");
 const resistanceValues = [0.2, 0.5, 1, 2, 5];
 const reactanceValues = [0.2, 0.5, 1, 2, 5];
+const reactanceCircles = reactanceValues.flatMap((x) => [1, -1].map((sign) => ({ x, sign })));
 
 grid.append("line")
   .attr("x1", cx - radius).attr("y1", cy).attr("x2", cx + radius).attr("y2", cy)
   .attr("stroke", t.grid).attr("stroke-width", 1.5);
 
-resistanceValues.forEach((r) => {
-  grid.append("circle")
-    .attr("cx", cx + (r / (r + 1)) * radius).attr("cy", cy)
-    .attr("r", (radius / (r + 1)))
-    .attr("fill", "none").attr("stroke", t.grid).attr("stroke-width", 1.5);
-});
+grid.selectAll(".resistance-circle")
+  .data(resistanceValues)
+  .join("circle")
+  .attr("class", "resistance-circle")
+  .attr("cx", (r) => cx + (r / (r + 1)) * radius)
+  .attr("cy", cy)
+  .attr("r", (r) => radius / (r + 1))
+  .attr("fill", "none")
+  .attr("stroke", t.grid)
+  .attr("stroke-width", (r) => (r === 1 ? 2.25 : 1.5))
+  .attr("opacity", (r) => (r === 1 ? 0.9 : 0.55));
 
-reactanceValues.forEach((x) => {
-  [1, -1].forEach((sign) => {
-    const xs = sign * x;
-    grid.append("circle")
-      .attr("cx", cx + radius).attr("cy", cy - (radius / xs))
-      .attr("r", Math.abs(radius / xs))
-      .attr("fill", "none").attr("stroke", t.grid).attr("stroke-width", 1.5);
-  });
-});
+grid.selectAll(".reactance-circle")
+  .data(reactanceCircles)
+  .join("circle")
+  .attr("class", "reactance-circle")
+  .attr("cx", cx + radius)
+  .attr("cy", (d) => cy - radius / (d.sign * d.x))
+  .attr("r", (d) => Math.abs(radius / (d.sign * d.x)))
+  .attr("fill", "none")
+  .attr("stroke", t.grid)
+  .attr("stroke-width", (d) => (d.x === 1 ? 2.25 : 1.5))
+  .attr("opacity", (d) => (d.x === 1 ? 0.9 : 0.55));
+
+// Optional constant-VSWR circle — the load's |gamma| stays fixed as a lossless
+// line's electrical length rotates its phase, so the swept locus below is one
+// arc of this full circle. Dashed and low-opacity to read as context, not data.
+const vswrRadius = gammaLoadMag * radius;
+svg.append("circle")
+  .attr("cx", cx).attr("cy", cy).attr("r", vswrRadius)
+  .attr("fill", "none").attr("stroke", t.palette[0])
+  .attr("stroke-width", 1.5).attr("stroke-dasharray", "6 5")
+  .attr("opacity", 0.35);
+svg.append("text")
+  .attr("x", cx).attr("y", cy - vswrRadius - 12)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "12px").style("font-style", "italic")
+  .text(`constant |Γ| ≈ ${gammaLoadMag.toFixed(2)} (full VSWR loop)`);
 
 // Boundary circle |gamma| = 1 — total reflection, drawn crisp on top of the grid
 svg.append("circle")
@@ -96,33 +131,36 @@ svg.append("circle")
 // Matched-condition marker at the chart center (Z = Z0, gamma = 0)
 svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 4).attr("fill", t.muted);
 
-// Resistance-circle labels along the real axis
-resistanceValues.concat([0]).forEach((r) => {
-  const [px, py] = toPixel((r - 1) / (r + 1), 0);
-  svg.append("text")
-    .attr("x", px).attr("y", py + 24)
-    .attr("text-anchor", "middle")
-    .attr("fill", t.inkSoft).style("font-size", "13px")
-    .text(r);
-});
+// Resistance-circle labels along the real axis, offset below their tangent
+// point with extra padding so the r=0 label clears the boundary circle.
+svg.selectAll(".resistance-label")
+  .data(resistanceValues.concat([0]))
+  .join("text")
+  .attr("class", "resistance-label")
+  .attr("x", (r) => toPixel((r - 1) / (r + 1), 0)[0])
+  .attr("y", (r) => toPixel((r - 1) / (r + 1), 0)[1] + 30)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "13px")
+  .text((r) => r);
 
 // Reactance-arc labels just outside the boundary, at each arc's exit point
-reactanceValues.forEach((x) => {
-  [1, -1].forEach((sign) => {
-    const xs = sign * x;
-    const [gx, gy] = boundaryPoint(xs);
-    const angle = Math.atan2(gy, gx);
-    const lx = cx + Math.cos(angle) * radius * 1.06;
-    const ly = cy - Math.sin(angle) * radius * 1.06;
-    svg.append("text")
-      .attr("x", lx).attr("y", ly)
-      .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
-      .attr("fill", t.inkSoft).style("font-size", "13px")
-      .text(`${xs > 0 ? "+" : "-"}j${x}`);
-  });
+const reactanceLabelData = reactanceCircles.map((d) => {
+  const [gx, gy] = boundaryPoint(d.sign * d.x);
+  const angle = Math.atan2(gy, gx);
+  return { ...d, lx: cx + Math.cos(angle) * radius * 1.1, ly: cy - Math.sin(angle) * radius * 1.1 };
 });
 
-// Impedance locus — the frequency-swept trajectory across the reflection plane
+svg.selectAll(".reactance-label")
+  .data(reactanceLabelData)
+  .join("text")
+  .attr("class", "reactance-label")
+  .attr("x", (d) => d.lx).attr("y", (d) => d.ly)
+  .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "13px")
+  .text((d) => `${d.sign > 0 ? "+" : "-"}j${d.x}`);
+
+// Impedance locus — the frequency-swept trajectory across the reflection
+// plane, with an arrowhead marking the sweep direction (low to high frequency)
 const lineGen = d3.line()
   .x((d) => toPixel(d.re, d.im)[0])
   .y((d) => toPixel(d.re, d.im)[1])
@@ -134,20 +172,29 @@ svg.append("path")
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 4)
   .attr("stroke-linejoin", "round")
+  .attr("marker-end", "url(#locus-arrow)")
   .attr("d", lineGen);
 
 // Frequency markers at the sweep endpoints and two intermediate points
 const markerIndices = [0, Math.round((pointCount - 1) / 3), Math.round((2 * (pointCount - 1)) / 3), pointCount - 1];
-markerIndices.forEach((i) => {
-  const [px, py] = toPixel(locus[i].re, locus[i].im);
-  svg.append("circle")
-    .attr("cx", px).attr("cy", py).attr("r", 7)
-    .attr("fill", t.palette[0]).attr("stroke", t.pageBg).attr("stroke-width", 2);
-  svg.append("text")
-    .attr("x", px + 16).attr("y", py - 12)
-    .attr("fill", t.ink).style("font-size", "15px").style("font-weight", "600")
-    .text(`${(impedanceData[i].frequency / 1e9).toFixed(1)} GHz`);
-});
+const markerData = markerIndices.map((i) => ({ ...locus[i], frequency: impedanceData[i].frequency }));
+
+const markers = svg.selectAll(".freq-marker")
+  .data(markerData)
+  .join("g")
+  .attr("class", "freq-marker");
+
+markers.append("circle")
+  .attr("cx", (d) => toPixel(d.re, d.im)[0])
+  .attr("cy", (d) => toPixel(d.re, d.im)[1])
+  .attr("r", 7)
+  .attr("fill", t.palette[0]).attr("stroke", t.pageBg).attr("stroke-width", 2);
+
+markers.append("text")
+  .attr("x", (d) => toPixel(d.re, d.im)[0] + 20)
+  .attr("y", (d) => toPixel(d.re, d.im)[1] - 18)
+  .attr("fill", t.ink).style("font-size", "15px").style("font-weight", "600")
+  .text((d) => `${(d.frequency / 1e9).toFixed(1)} GHz`);
 
 // Title + subtitle
 const title = "smith-chart-basic · javascript · d3 · anyplot.ai";
