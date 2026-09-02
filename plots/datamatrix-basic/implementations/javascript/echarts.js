@@ -33,7 +33,11 @@ for (let i = 0; i < content.length; i += 1) {
 const rand = mulberry32(seed);
 
 const indices = Array.from({ length: gridSize }, (_, i) => String(i));
-const modules = [];
+// Structural modules (finder + timing pattern) are the fixed orientation/
+// reference border; payload modules are the ECC 200 stand-in interior. Split
+// into two groups so structure and data read as visually distinct regions.
+const structuralModules = [];
+const payloadModules = [];
 for (let row = 0; row < gridSize; row += 1) {
   for (let col = 0; col < gridSize; col += 1) {
     const sRow = row - quietZone;
@@ -45,6 +49,7 @@ for (let row = 0; row < gridSize; row += 1) {
     const onBottomFinder = sRow === 0;
     const onTopTiming = sRow === symbolSize - 1;
     const onRightTiming = sCol === symbolSize - 1;
+    const onStructure = onLeftFinder || onBottomFinder || onTopTiming || onRightTiming;
 
     let dark;
     if (onLeftFinder || onBottomFinder) {
@@ -54,7 +59,8 @@ for (let row = 0; row < gridSize; row += 1) {
     } else {
       dark = rand() < 0.5; // ECC 200 payload stand-in
     }
-    if (dark) modules.push([String(col), String(row)]);
+    if (!dark) continue;
+    (onStructure ? structuralModules : payloadModules).push([String(col), String(row)]);
   }
 }
 
@@ -90,14 +96,37 @@ chart.setOption({
   },
   series: [
     {
-      // Modules render in ink/page-background rather than the Imprint
-      // categorical palette: a Data Matrix is a binary contrast pattern
-      // (structural chrome), not multi-category data, so "high contrast
-      // black on white" per the spec's readability requirement takes
-      // priority here while staying theme-adaptive.
+      // Finder + timing pattern (fixed orientation/reference border) render
+      // in the Imprint brand green (palette[0]), a theme-independent accent
+      // that gives the reader a visual hierarchy cue distinguishing the
+      // symbol's structural chrome from its encoded payload.
       type: "custom",
       coordinateSystem: "cartesian2d",
-      data: modules,
+      data: structuralModules,
+      renderItem: (params, api) => {
+        const center = api.coord([api.value(0), api.value(1)]);
+        const size = api.size([1, 1]);
+        return {
+          type: "rect",
+          shape: {
+            x: center[0] - size[0] / 2,
+            y: center[1] - size[1] / 2,
+            width: size[0],
+            height: size[1],
+          },
+          style: { fill: t.palette[0] },
+          silent: true,
+        };
+      },
+      z: 1,
+    },
+    {
+      // Payload modules stay in ink/page-background: the spec mandates
+      // "high contrast black on white for maximum readability" for the
+      // encoded ECC 200 data region.
+      type: "custom",
+      coordinateSystem: "cartesian2d",
+      data: payloadModules,
       renderItem: (params, api) => {
         const center = api.coord([api.value(0), api.value(1)]);
         const size = api.size([1, 1]);
