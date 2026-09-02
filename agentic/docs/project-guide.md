@@ -1027,6 +1027,42 @@ gcloud builds submit --config=app/cloudbuild.yaml --project=YOUR_PROJECT_ID
 - **`app/cloudbuild.yaml`**: Frontend build + deploy
 - **`app/Dockerfile`**: Multi-stage build (Node -> nginx)
 
+Both cloudbuild files deploy through a **candidate revision**: `gcloud run deploy
+--no-traffic --tag=candidate --revision-suffix=b$BUILD_ID`, a smoke step against the
+candidate's tag URL, then `gcloud run services update-traffic --to-revisions=…=100`. A
+revision that fails its smoke therefore never takes **live traffic** — the only requests
+it ever answers are the smoke's own, sent deliberately to its tag URL. (For the app that
+holds even with two builds in flight; for the API it holds for one build at a time — see
+the candidate-tag recheck below.) The app's smoke
+covers both halves of the crawler split (browser UA -> SPA shell, Googlebot ->
+prerendered page via `@seo_proxy`) plus the `location =` bypasses for `robots.txt` and
+`llms.txt`; the API's covers `/health`, the public read paths and the fail-closed admin
+gate.
+
+The two chains differ in two places, both on the app's side:
+
+- **`:latest`.** `app/cloudbuild.yaml` pushes it only after the promotion, so the tag
+  cannot name an image that was never rolled out; `api/cloudbuild.yaml` still pushes it
+  alongside the deploy. Neither pipeline *reads* `:latest` — both deploy `:$BUILD_ID` — so
+  the tag is a convenience for humans, and with two overlapping builds the later push wins
+  regardless.
+- **The candidate-tag recheck.** `candidate` is a shared tag, so a concurrent build of the
+  same service can move it mid-smoke. `app/cloudbuild.yaml` re-asserts after its probes
+  that the tag still names this build's revision and refuses to promote otherwise; a
+  competing build only ever tags its own revision and never ours back, so matching at both
+  ends means the tag was never re-assigned during the smoke. `api/cloudbuild.yaml` checks
+  only before its probes, so two overlapping API builds can still promote a revision that
+  was not the one smoked — the same four lines would close it there.
+
+Both checks read `status.traffic`, which is the **control-plane tag assignment** and not
+proof of which revision answered a given request: because `candidate` is reused across
+builds, a probe issued while a re-assignment is still propagating can reach the previous
+revision. Closing that gap needs either a build-unique tag (tag URLs then accumulate on
+the service without bound) or a build id the served response itself carries. Neither is in
+place, and the residual is narrow: it needs the previous candidate to pass every probe as
+well, so the worst case is promoting a revision that was believed smoked, not shipping a
+page known to be broken.
+
 ## Debugging Tips
 
 ### Database Connection Issues
