@@ -15,19 +15,25 @@ function lcg(seed) {
 }
 const rand = lcg(42);
 
-const numPeriods = 260; // ~1 trading year of business days
+const numPeriods = 460; // ~1.8 trading years of business days
 const dates = [];
-const cursor = new Date("2024-01-02T00:00:00Z");
+const cursor = new Date("2023-01-02T00:00:00Z");
 while (dates.length < numPeriods) {
   const day = cursor.getUTCDay();
   if (day !== 0 && day !== 6) dates.push(new Date(cursor));
   cursor.setUTCDate(cursor.getUTCDate() + 1);
 }
 
-let price = 148;
+// Three regimes so the SMAs actually cross: a steady climb (SMA200 builds
+// history), a sustained slide (death cross: fast SMAs fall below SMA200),
+// then a recovery rally (golden cross: fast SMAs climb back above SMA200).
+let price = 140;
 const close = dates.map((_, i) => {
-  const drift = 0.06 + 0.05 * Math.sin(i / 45);
-  const noise = (rand() - 0.5) * 4.2;
+  let drift;
+  if (i < 220) drift = 0.32; // climb
+  else if (i < 340) drift = -0.34; // slide
+  else drift = 0.4; // recovery rally
+  const noise = (rand() - 0.5) * 3.6;
   price = Math.max(30, price + drift + noise);
   return Number(price.toFixed(2));
 });
@@ -50,6 +56,21 @@ const closeSeries = toSeries(close);
 const smaShortSeries = toSeries(smaShort);
 const smaMediumSeries = toSeries(smaMedium);
 const smaLongSeries = toSeries(smaLong);
+
+// Flag SMA20/SMA200 crossovers (golden cross = short overtakes long) to
+// annotate with a markLine — an ECharts-distinctive touch that also makes
+// the crossover behavior the spec calls out easy to read at a glance.
+const crossovers = [];
+for (let i = 1; i < dates.length; i++) {
+  if (smaShort[i - 1] === null || smaLong[i - 1] === null || smaShort[i] === null || smaLong[i] === null) continue;
+  const prevDiff = smaShort[i - 1] - smaLong[i - 1];
+  const currDiff = smaShort[i] - smaLong[i];
+  if (prevDiff <= 0 && currDiff > 0) {
+    crossovers.push({ time: dates[i].getTime(), label: "Golden Cross" });
+  } else if (prevDiff >= 0 && currDiff < 0) {
+    crossovers.push({ time: dates[i].getTime(), label: "Death Cross" });
+  }
+}
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -96,8 +117,8 @@ chart.setOption({
       type: "line",
       data: closeSeries,
       showSymbol: false,
-      lineStyle: { color: t.ink, width: 1.5, opacity: 0.55 },
-      itemStyle: { color: t.ink },
+      lineStyle: { color: t.ink, width: 1.75, opacity: 0.75 },
+      itemStyle: { color: t.ink, opacity: 0.75 },
       z: 1,
     },
     {
@@ -109,6 +130,13 @@ chart.setOption({
       lineStyle: { color: t.palette[0], width: 3 },
       itemStyle: { color: t.palette[0] },
       z: 3,
+      markLine: {
+        symbol: "none",
+        animation: false,
+        label: { color: t.inkSoft, fontSize: 12, formatter: "{b}" },
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        data: crossovers.map((c) => ({ name: c.label, xAxis: c.time })),
+      },
     },
     {
       name: "SMA 50",
