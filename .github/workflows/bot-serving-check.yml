@@ -105,21 +105,57 @@ jobs:
           # Bot path: prerendered per-route HTML from the seo-proxy.
           #
           # The routes are the API's own bot pages — every
-          # `@router.get("/seo-proxy/<literal>")` in api/routers/seo.py is a page
-          # a crawler must be able to reach. Reading them from the source means
-          # a page added there is swept the moment it lands, and no list here can
-          # go stale. (The three parameterised decorators — /{spec_id},
-          # /{spec_id}/{language} and /{spec_id}/{language}/{library} — are
-          # excluded by the `[^"{]` class and each probed separately below.)
+          # `@router.get("/seo-proxy/…")` in api/routers/seo.py is a page a
+          # crawler must be able to reach. Reading them from the source means a
+          # page added there is swept the moment it lands, and no list here can
+          # go stale.
+          #
+          # The extraction parses the AST rather than grepping for a literal
+          # spelling: a decorator written with single quotes, wrapped over two
+          # lines, or carrying kwargs would be silently skipped by a regex, and
+          # a silently short list is exactly the failure this file is trying to
+          # stop making. The parameterised routes (paths containing `{`) cannot
+          # be swept generically and are each probed by hand below, so their
+          # COUNT is returned too and checked against what this file probes —
+          # a fourth one added to seo.py fails the run instead of going
+          # unnoticed.
           #
           # The assertion is the canonical link, not a title: it is GENERATED
           # from the route, so it can never drift on a copy change, and it
           # proves both halves at once — the SPA shell carries no
           # `<link rel="canonical">` at all, so a match means the bot hop ran,
           # and the href names the route, so it means the right page came back.
-          routes=$(grep -oE '@router\.get\("/seo-proxy/[^"{]*"\)' api/routers/seo.py \
-            | sed -E 's|@router\.get\("/seo-proxy||; s|"\)$||' \
-            | sed 's|^$|/|' | sort -u)
+          seo_decorators=$(python3 - <<'PY'
+          import ast
+
+          SRC = "api/routers/seo.py"
+          static, templated = set(), 0
+          for node in ast.walk(ast.parse(open(SRC, encoding="utf-8").read())):
+              for dec in getattr(node, "decorator_list", []):
+                  if not isinstance(dec, ast.Call):
+                      continue
+                  fn = dec.func
+                  if not (isinstance(fn, ast.Attribute) and fn.attr == "get"):
+                      continue
+                  if not (isinstance(fn.value, ast.Name) and fn.value.id == "router"):
+                      continue
+                  if not dec.args or not isinstance(dec.args[0], ast.Constant):
+                      continue
+                  path = dec.args[0].value
+                  if not isinstance(path, str) or not path.startswith("/seo-proxy"):
+                      continue
+                  if "{" in path:
+                      templated += 1
+                  else:
+                      static.add(path.removeprefix("/seo-proxy") or "/")
+          for route in sorted(static):
+              print("route " + route)
+          print("templated %d" % templated)
+          PY
+          )
+          routes=$(printf '%s\n' "$seo_decorators" | sed -n 's/^route //p')
+          templated=$(printf '%s\n' "$seo_decorators" | sed -n 's/^templated //p')
+
           swept=0
           while IFS= read -r route; do
             [ -n "$route" ] || continue
@@ -127,14 +163,22 @@ jobs:
             check "$GOOGLEBOT" "$ORIGIN$route" "<link rel=\"canonical\" href=\"https://anyplot.ai$route\" />"
           done <<< "$routes"
 
-          # A checkout that silently produced nothing, or a refactor that moves
-          # those decorators out of reach of the grep, would otherwise pass the
-          # whole sweep by checking zero routes.
+          # A checkout that silently produced nothing, a parse error, or a
+          # refactor that moves the decorators somewhere this cannot see would
+          # otherwise pass the whole sweep by checking zero routes.
           if [ "$swept" -lt 1 ]; then
-            echo "::error::no bot routes found in api/routers/seo.py — the sweep asserted nothing"
+            echo "::error::no static bot routes found in api/routers/seo.py — the sweep asserted nothing"
             fail=1
           else
             echo "swept $swept derived bot route(s)"
+          fi
+
+          # The parameterised routes are probed one by one below: /{spec_id},
+          # /{spec_id}/{language} and /{spec_id}/{language}/{library}. Bump this
+          # number only together with a new probe for the new route.
+          if [ "$templated" != "3" ]; then
+            echo "::error::api/routers/seo.py has $templated parameterised /seo-proxy route(s); this monitor probes 3 by hand — add a probe for the new one and update this guard"
+            fail=1
           fi
 
           # The spec page's expected title comes from the spec file, not from a
@@ -164,17 +208,25 @@ jobs:
           # nginx, arrives back at this route and redirects forever — Googlebot
           # logged 48 "Redirect error" URLs before the target was sanitised. The
           # loop signature is a target that still carries /seo-proxy.
-          lang_target=$(curl -sS --max-time 30 -o /dev/null -A "$GOOGLEBOT" \
-            -w '%{redirect_url}' "$ORIGIN/$SPEC/python")
-          case "$lang_target" in
-            *"/seo-proxy"*)
-              echo "::error::/$SPEC/python redirects into the internal proxy path: $lang_target"
-              fail=1 ;;
-            "$ORIGIN/$SPEC") echo "OK: /$SPEC/python -> $lang_target" ;;
-            *)
-              echo "::error::/$SPEC/python should 301 to $ORIGIN/$SPEC, got '$lang_target'"
-              fail=1 ;;
-          esac
+          # The STATUS is part of the contract, not only the target: a 302/307/308
+          # to the same hub would consolidate nothing, and the endpoint documents
+          # a permanent redirect.
+          read -r lang_code lang_target <<< "$(curl -sS --max-time 30 -o /dev/null \
+            -A "$GOOGLEBOT" -w '%{http_code} %{redirect_url}' "$ORIGIN/$SPEC/python")"
+          if [ "$lang_code" != "301" ]; then
+            echo "::error::/$SPEC/python answered HTTP $lang_code (expected a permanent 301 onto the hub)"
+            fail=1
+          else
+            case "$lang_target" in
+              *"/seo-proxy"*)
+                echo "::error::/$SPEC/python redirects into the internal proxy path: $lang_target"
+                fail=1 ;;
+              "$ORIGIN/$SPEC") echo "OK: /$SPEC/python -> 301 $lang_target" ;;
+              *)
+                echo "::error::/$SPEC/python should 301 to $ORIGIN/$SPEC, got '$lang_target'"
+                fail=1 ;;
+            esac
+          fi
 
           # AI assistants take the same prerendered path (nginx $is_bot). These
           # checks hit the ORIGIN, so they verify the nginx map independently of
@@ -287,8 +339,15 @@ jobs:
       # this monitor: a first failure opens it, every further failure comments
       # on it (so a long outage is one thread, not one issue per night), and
       # the first green run closes it again.
+      #
+      # Only from the default branch. The schedule always runs there, but
+      # workflow_dispatch can pick any branch that carries this file — and a
+      # branch experimenting with the derived expectations must not be able to
+      # raise, or silently close, a repository-wide production incident. Off
+      # main the checks still run and still red the job; only the issue is left
+      # alone.
       - name: Raise the alarm
-        if: failure()
+        if: failure() && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -329,7 +388,7 @@ jobs:
           gh issue create --title "$ALARM_TITLE" --label bug --label infrastructure --body "$body"
 
       - name: Stand the alarm down
-        if: success()
+        if: success() && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}

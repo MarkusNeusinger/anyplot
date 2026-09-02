@@ -35,18 +35,23 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   comments and closes it. Until now the check could only go red in the Actions tab, which is
   exactly how it sat red for ten consecutive nights unnoticed — caused by the other half of
   this change: hard-coded expectations. The swept routes now come from the
-  `@router.get("/seo-proxy/…")` decorators in `api/routers/seo.py` (10 today, and a new bot
-  page is covered the moment it lands) and the expected spec title from
+  `@router.get("/seo-proxy/…")` decorators in `api/routers/seo.py` — read off the parsed
+  AST, so a decorator in single quotes, wrapped over two lines or carrying kwargs is not
+  silently skipped the way a regex skips it (10 routes today, and a new bot page is covered
+  the moment it lands) — and the expected spec title from
   `plots/<spec>/specification.yaml`, so a copy change can no longer make the alarm lie. The
   per-route assertion is the generated `<link rel="canonical">` — the SPA shell carries none
   at all and the href names the route, so one match proves both that the bot hop ran and
-  that the right page came back. A watchdog fails the run if the sweep found no routes or
-  the spec file no title, so an empty sweep can never pass by asserting nothing. The
-  consolidated middle tier `/{spec}/{language}` gained a probe of its own — it must 301 to
-  the hub, and a target still carrying `/seo-proxy` is the redirect loop that once cost 48
-  Googlebot "Redirect error" URLs. A `concurrency` group keeps a manual dispatch from racing
-  the nightly run over the same issue. Timeout recomputed to 62 min by the file's own
-  formula (36 checks x 90 s + five non-retried probes). (#11209)
+  that the right page came back. Two watchdogs stop a silent no-op: the run fails if the
+  sweep found no routes or the spec file no title, and it fails if `seo.py` grows a fourth
+  parameterised route beyond the three this file probes by hand. The middle of those three,
+  the consolidated `/{spec}/{language}`, gained a probe of its own — it must answer 301, and
+  a target still carrying `/seo-proxy` is the redirect loop that once cost 48 Googlebot
+  "Redirect error" URLs. A `concurrency` group keeps a manual dispatch from racing the
+  nightly run over the same issue, and the two issue-mutating steps run only on the default
+  branch, so a dispatch from a feature branch can never raise or close a production
+  incident. Timeout recomputed to 62 min by the file's own formula (36 checks x 90 s + five
+  non-retried probes). (#11209)
 
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
