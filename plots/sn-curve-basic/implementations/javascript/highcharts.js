@@ -31,8 +31,10 @@ function stressForCycles(cycles) {
   return Math.max(FATIGUE_STRENGTH_COEFF * Math.pow(2 * cycles, FATIGUE_STRENGTH_EXP), ENDURANCE_LIMIT);
 }
 
-// Test specimens at 9 stress levels, 5 specimens each (steel coupon fatigue tests)
-const stressLevels = [380, 340, 305, 275, 250, 225, 205, 190, 180];
+// Test specimens at 11 stress levels, 5 specimens each (steel coupon fatigue tests).
+// The top two levels (480, 450 MPa) sit above yield strength, giving the
+// low-cycle/plastic region alongside the high-cycle/elastic and infinite-life ones.
+const stressLevels = [480, 450, 380, 340, 305, 275, 250, 225, 205, 190, 180];
 const specimensPerLevel = 5;
 const testData = [];
 stressLevels.forEach((stress) => {
@@ -79,6 +81,7 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
+    gridLineWidth: 1,
     labels: {
       style: { color: t.inkSoft, fontSize: "14px" },
       formatter: function () {
@@ -97,6 +100,8 @@ Highcharts.chart("container", {
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     min: 150,
     max: 700,
+    startOnTick: false,
+    endOnTick: false,
     plotLines: [
       {
         value: ULTIMATE_STRENGTH,
@@ -149,7 +154,7 @@ Highcharts.chart("container", {
   tooltip: { enabled: false },
   plotOptions: {
     series: { animation: false },
-    scatter: { marker: { radius: 5, fillColor: t.palette[0] } },
+    scatter: { marker: { radius: 5, fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 1.5 } },
     line: { marker: { enabled: false }, lineWidth: 2.5 },
   },
   series: [
