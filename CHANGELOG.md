@@ -28,6 +28,35 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **A merged implementation now clears its `impl:<lib>:failed` label and the watchdog's
+  retry marker** — impl-merge removed the stale labels in one comma-separated
+  `gh issue edit`, and `gh` rejects the whole call when any name in the list is not a
+  repository label (`impl:<lib>:pending` only exists on demand), so the fallback added
+  `impl:<lib>:done` and left `impl:<lib>:failed` in place. Issues #3343 and #3650 ended
+  the 2026-09-02 outage rescue with both labels for the same libraries, and every
+  watchdog scan since reported those pairs as "already retried — needs manual
+  attention". The labels are now removed one at a time, each call tolerated, and
+  `watchdog:retried-<lib>` goes with them. (#11197)
+- **The watchdog now rescues a repair that crashed after a rejection** — a PR carrying
+  `ai-rejected` and `ai-attempt-N` is the state impl-review leaves behind when it
+  dispatches a repair that then dies (its crash-retry exhausted). Case 2 excluded
+  `ai-rejected` and case 4 required no attempt label, so the state matched nothing:
+  after the Claude outage of 2026-09-02 (03:15–03:45 UTC) three PRs sat in it for hours
+  until a human re-dispatched the repair. New case 2b re-dispatches `impl-repair` with
+  the highest attempt number, bounded by the same `watchdog:repair-rescued-<N>` marker.
+  (#11198)
+- **Watchdog generation retries go straight to `impl-generate` and are marked only once
+  the run exists** — the issue scan dispatched `bulk-generate.yml`, which serialises on
+  one global concurrency group; GitHub keeps a single pending run per group and cancels
+  the older pending run whenever a newer one queues. Nine rescues fired 5 s apart on
+  2026-09-02 produced two runs and seven silent `cancelled`s, yet every pair had already
+  been labelled `watchdog:retried-<lib>` and so dropped out of all future scans. The
+  rescue now dispatches `impl-generate.yml` (concurrency group per pair, `issue_number`
+  passed through), waits up to 60 s for the run to appear, and sets the marker only
+  then. Every rescue marker moves behind its dispatch the same way, and `dispatch()`
+  reports the outcome after the attempt and returns non-zero instead of aborting the
+  scan under `set -e`, so one failed `gh workflow run` no longer leaves every later PR
+  unscanned. (#11198)
 - **The API image installs `libraqm0`, which is what actually restores text shaping —
   and unblocks a deploy pipeline that has been red since 2026-08-30** — #10813 added a
   build-time assertion on `features.check('raqm')` on the understanding that the locked
@@ -52,6 +81,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **CodeQL moves to an advanced-setup workflow that skips `plots/**`** — the default
+  setup scanned five languages on every push to an `implementation/*` branch and every
+  impl-* pull request; during the 4-slot backfill of 2026-09-02 up to 23 CodeQL runs
+  waited in the runner queue at once, ahead of the pipeline's own jobs. The new
+  `.github/workflows/codeql.yml` keeps the same languages and weekly schedule but ignores
+  `plots/**` both as a trigger and inside the analysis, so pipeline PRs no longer start
+  a scan. Default setup has to be switched off in the repository settings for the
+  workflow's uploads to be accepted. (#11200)
 - **The API image is built in two stages and drops two thirds of its weight** — the
   single-stage `api/Dockerfile` produced a 1.6 GB image (502 MB compressed in Artifact
   Registry) of which 277 MB compressed was ballast in two layers: `build-essential`,
