@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: network-weighted
 created: '2026-09-02T04:21:27Z'
-updated: '2026-09-02T04:26:48Z'
+updated: '2026-09-02T04:43:07Z'
 generated_by: claude-sonnet
 workflow_run: 33589833398
 issue: 3290
@@ -12,62 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-w
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Correct Imprint palette usage across both themes: USA (Americas) renders in brand
-    green #009E73, Europe/Asia use canonical positions 2-3, identical data colors
-    between light and dark renders'
-  - Clean, purpose-built two-group Legend (Region + Trade volume) explaining both
-    the color and edge-width encodings, exactly matching the spec's 'consider a legend
-    explaining the weight scale' note
-  - Node size encodes weighted degree (sum of connected trade volume) in addition
-    to the required edge-thickness weight encoding - goes beyond the spec minimum
-  - Hand-rolled Fruchterman-Reingold force-directed layout with weight-scaled attraction,
-    since NetworkLayout.jl is unavailable in the CI runtime - a legitimate, well-documented
-    workaround rather than a fallback to another library
-  - 'Theme-adaptive chrome is fully correct in both renders: dark render has light
-    text/labels, light render has dark text, no dark-on-dark or light-on-light failures'
-  - 'Efficient, idiomatic Makie technique: batched linesegments! call with a per-segment
-    linewidth vector draws all 24 edges in one call instead of looping'
-  - Background-colored node strokes (strokecolor = PAGE_BG) create a clean visual
-    cutout where edges converge on nodes
-  - No fake interactivity, no edge/label clipping at the canvas border in either render,
-    title and legend fully visible with generous margins
+  - Trade-volume magnitudes now match real-world bilateral trade figures (USA-China
+    at $575B) while preserving the realistic partner ranking — directly addresses
+    the Attempt 1 Data Quality feedback
+  - 'Explicit visual focal point: the strongest trade corridor (USA-China) is highlighted
+    with a bolder brand-green line plus a "Top corridor: $575B" annotation, giving
+    the chart a clear data-storytelling anchor'
+  - Curved (bowed) edges via a batched linesegments! call reduce line overlap at busy
+    hub nodes while staying a single efficient draw call
+  - Node size encodes weighted degree and color encodes region, in addition to the
+    required edge-thickness weight encoding — goes beyond the spec minimum
+  - Purpose-built two-group Legend (Region colors + Trade-volume line-width samples)
+    explains both encodings clearly
+  - Theme-adaptive chrome is fully correct in both renders — identical data colors,
+    correctly flipped backgrounds/text, no clipping at any edge
+  - Hand-rolled, weight-scaled Fruchterman-Reingold layout is a legitimate, well-documented
+    workaround for NetworkLayout.jl being unavailable in CI, per the makie library
+    rules
+  - Clean KISS script structure, explicit reproducible seed, only used imports, no
+    fake functionality
   weaknesses:
-  - 'DQ-03: absolute trade-volume magnitudes are understated versus real-world bilateral
-    trade figures (e.g. USA-China here is $130B vs. real ~$575B annual trade, USA-Mexico
-    $105B vs. real ~$780B) - the relative ranking (China/Canada/Mexico as USA''s top
-    partners) is realistic, but scale up the absolute $B values for better factual
-    alignment.'
-  - 'Design Excellence / storytelling: the plot displays the network clearly but doesn''t
-    call out the single strongest corridor (USA-China, $130B) with any emphasis beyond
-    its edge width - a subtle annotation or highlighted stroke on the top 1-2 edges
-    would sharpen the focal point per DE-03.'
-  - 'VQ-01 mobile legibility: country-name text! labels are fontsize=12 (24 source-px
-    after px_per_unit=2), which is comparatively small next to the fontsize=20 title
-    - consider bumping to 13-14 for better legibility when the PNG is scaled to ~400px
-    mobile width.'
-  - 'VQ-05/DE-02: canvas whitespace is unevenly distributed - the top-left and bottom-right
-    quadrants are almost entirely empty while nodes cluster centrally-left (USA/China
-    hub) and lower-right (Europe cluster); tuning the force-directed layout''s repulsion/bounds
-    or the final normalization could spread nodes more evenly across the canvas.'
-  - Per the spec's 'avoid edge overlap where possible' note, several near-parallel
-    edges converge almost on top of each other at the USA-China hub (e.g. the USA-China
-    and China-adjacent edges), making individual weights harder to distinguish at
-    that junction - minor additional jitter or curved edges could help.
+  - Several edges to/through the USA-China hub area still run close together (the
+    curve offset is subtle at 0.028 of normalized space) — individual weights in that
+    busy junction are still somewhat harder to isolate than the rest of the graph;
+    a slightly larger curvature or increased spring repulsion near hubs would help
+  - Canvas whitespace is still a little uneven (upper-left near India and the far-right
+    legend column are sparser than the central cluster) — minor, but a touch more
+    spread in the force-directed layout bounds would balance it further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "Global Trade Network · network-weighted · julia · makie · anyplot.ai" is dark, bold, fully visible at the top with generous margin. Country-name node labels are dark ink text, clearly legible against the cream background. The legend (top-right area) has a subtle frame and off-white "elevated" fill, with bold section headers "Region" and "Trade volume" and clear sample entries.
-      Data: 12 country nodes colored by region - green (Americas: USA, Canada, Mexico, Brazil), lavender (Europe: Germany, UK, Netherlands, France), blue (Asia: China, Japan, South Korea, India). USA and China render as the largest nodes (highest weighted degree), consistent with them being trade hubs. Edges (gray, alpha-blended) vary in thickness from thin (~$15-20B) to thick (~$130B), converging heavily at the USA/China hub. Node markers have a thin background-colored stroke for a clean cutout look.
-      Legibility verdict: PASS - all text (title, node labels, legend) is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Global Trade Network · network-weighted · julia · makie · anyplot.ai" centered at top with generous margin. Twelve country labels in dark ink below their nodes, all clearly legible. A framed legend on the right (warm elevated-white fill) lists "Region" (3 color swatches) and "Trade volume" (3 line-width samples: $90B/$300B/$550B).
+      Data: Nodes colored by region — green (#009E73, Americas: USA, Canada, Mexico, Brazil), lavender (Europe: Germany, UK, Netherlands, France), blue (Asia: China, Japan, South Korea, India). USA and China render as the largest nodes (highest weighted degree). Gray, alpha-blended curved edges vary from thin (~$65-95B) to thick (~$520-575B). The single strongest corridor, USA-China ($575B), is highlighted with a bolder brand-green line and a "Top corridor: $575B" text annotation placed just above the line, not overlapping it.
+      Legibility verdict: PASS — all text (title, country labels, legend text, annotation) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title and all node labels render in light/white text, clearly visible against the dark background. Legend background flips to the dark "elevated" surface (#242420-equivalent) with light text and a subtle light-toned frame.
-      Data: Node and edge colors are visually identical to the light render - same green/lavender/blue region colors, same edge gray tone and same relative thicknesses. USA and China remain the largest nodes. No color shift in the data layer, confirming the palette is theme-independent.
-      Legibility verdict: PASS - all text is light-colored on the near-black background; no dark-on-dark failures observed anywhere (title, node labels, or legend).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, country labels, and legend text flip to light/off-white and remain fully legible. The legend box flips to the dark elevated surface (#242420-consistent).
+      Data: Node region colors, edge grays, edge widths, and the green top-corridor highlight are visually identical to the light render — only the chrome (background, text, legend fill) has flipped, confirming theme-adaptive tokens are correctly threaded through every chrome element.
+      Legibility verdict: PASS — no dark-on-dark failures found; all text remains high-contrast against the near-black background, including the brand-green annotation text.
+
+    Both renders were inspected in full, including the busy USA-China hub region, the legend, the title, and all four canvas corners — no clipping (AR-09) or fake-interactivity (AR-08) issues found in either render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -75,81 +63,78 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (titlesize dynamic 20->~19 for long
-          title, labelsize 12-13). Well-proportioned, readable in both themes; node-label
-          fontsize=12 is comparatively small next to the title and could be bumped
-          slightly for mobile scaling.
+        comment: Explicit sizes throughout; node-label fontsize bumped to 13 per Attempt
+          1 feedback; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-on-text overlap anywhere, including the dense USA/China hub
-          area (verified via crop inspection).
+        comment: No text-on-text overlap; a few curved edges still run close together
+          at the busy USA-China hub
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node sizes (20-60px) and edge widths (1.4-9.0) scale clearly with
-          weighted degree / trade volume, appropriate for a 12-node/24-edge graph.
+        comment: Node/edge sizing scales clearly with weighted degree and trade volume;
+          highlighted top corridor is unmistakable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Region colors (green/lavender/blue) are CVD-safe Imprint hues, not
-          a red-green pairing; background-matched node strokes add definition at overlaps.
+        comment: CVD-safe region hues, no red-green pairing, background-matched node
+          strokes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Non-background bounding box covers ~83% width / ~90% height of the
-          canvas; legend integrated next to the graph, nothing cut off.
+        comment: Canvas dimension gate passed; nothing cut off; good proportional
+          coverage
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional x/y metric axes (expected for a spatial network layout);
-          title is fully descriptive and legend covers the two encodings.
+        comment: No traditional axes needed for a spatial network layout; title +
+          legend fully descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Americas/USA) is #009E73; canonical Imprint order
-          used for the 3 regions; identical data colors across light/dark; backgrounds
-          match #FAF8F1/#1A1A17 exactly; chrome theme-correct in both renders.'
+        comment: 'First series is #009E73, canonical Imprint order for regions, identical
+          data colors across themes, correct theme backgrounds'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        comment: Custom two-group Legend, weight-scaled sizing on both nodes and edges,
-          background-colored strokes - clearly above a configured default, not yet
-          publication-tier.
+        passed: true
+        comment: Custom force-directed layout, weight & degree encoding, curved edges,
+          highlighted focal corridor
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: No spines, no grid, generous whitespace, subtle framed legend matching
-          elevated surface token; whitespace distribution across canvas quadrants
-          is somewhat uneven.
+        passed: true
+        comment: No spines/grid, generous whitespace, subtle legend frame; distribution
+          slightly denser in the center-right
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Node size (weighted degree) and edge width (trade volume) together
-          create visual hierarchy highlighting USA/China as hubs, but no explicit
-          emphasis/annotation on the single strongest corridor.
+        passed: true
+        comment: Explicit top-corridor highlight + annotation now gives a clear focal
+          point, directly addressing Attempt 1 feedback
     spec_compliance:
       score: 15
       max: 15
@@ -158,50 +143,52 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct weighted network graph with edge thickness encoding weight.
+        passed: true
+        comment: Correct weighted network graph with edge-thickness weight encoding
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Edge-thickness weight encoding, legend explaining the weight scale,
-          optional weighted-degree node sizing, and force-directed layout all present.
+        passed: true
+        comment: Weight-to-thickness mapping, legend for the weight scale, weighted-degree
+          node sizing, force-directed layout, and edge curving to reduce overlap all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: All 12 nodes and 24 edges are visible and correctly connected; no
-          data mapping errors.
+        passed: true
+        comment: All 12 nodes / 24 edges visible and correctly connected
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches '{Descriptive Title} · network-weighted · julia · makie
-          · anyplot.ai'; legend labels (Region names, $B trade-volume samples) match
-          the underlying data.
+        passed: true
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match the data
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Wide range of edge weights (15-130) and node degrees, 3 regions represented;
-          could include a bit more extreme variation (e.g. a lightly-connected outlier)
-          for full coverage.
+        passed: true
+        comment: Wide range of edge weights and node degrees across 3 regions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Real countries and a neutral, comprehensible business scenario (bilateral
-          trade volume).
+        passed: true
+        comment: Real countries, neutral business scenario (bilateral trade)
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        comment: Relative ranking of USA's top trade partners (China/Canada/Mexico)
-          is realistic, but absolute $B figures are understated roughly 4-6x versus
-          real-world bilateral trade totals.
+        passed: true
+        comment: Trade-volume figures now scaled to realistic real-world magnitudes
+          (e.g. USA-China $575B), fixing the Attempt 1 weakness
     code_quality:
       score: 10
       max: 10
@@ -210,60 +197,64 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: 'Straight-line script: theme tokens -> data -> layout -> plot ->
-          save, no functions/classes.'
+        passed: true
+        comment: No functions/classes, linear top-down script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Random.seed!(42) set before layout initialization.
+        passed: true
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: CairoMakie, Colors, Random, Statistics - all used (Statistics for
-          mean).
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: The hand-rolled force-directed loop is justified complexity given
-          NetworkLayout.jl is unavailable in CI; no fake UI or simulated interactivity.
+        passed: true
+        comment: Hand-rolled force-directed layout is justified given NetworkLayout.jl
+          is unavailable in CI; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-$(THEME).png via save(...; px_per_unit=2), current CairoMakie
-          API.
+        passed: true
+        comment: Saves as plot-$(THEME).png
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic Axis/Legend/linesegments!/scatter!/text! usage with correct
-          high-level API; doesn't reach for advanced Makie recipes (e.g. GraphMakie-style
-          abstractions, out of scope here).
+        passed: true
+        comment: Correct, idiomatic high-level API usage (Axis, Legend, linesegments!,
+          scatter!, text!)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Batched linesegments! with a per-segment linewidth vector, and a
-          custom multi-group Legend built from MarkerElement/LineElement - genuinely
-          Makie-specific patterns beyond generic usage.
-  verdict: REJECTED
+        passed: true
+        comment: Batched linesegments! with per-segment linewidth vector and curvature,
+          custom multi-group Legend from MarkerElement/LineElement
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
-  - publication-ready
