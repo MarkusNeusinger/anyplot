@@ -50,6 +50,25 @@ function findSegment(x) {
   );
 }
 
+// Percentage data labels are a secondary, non-color cue for telling the
+// Retained/Churned bands apart (mitigates red-green CVD ambiguity) and
+// satisfy the spec's "consider adding percentage labels when space permits"
+// note. Only the segment's center point (inserted below, between its flat
+// startX/endX run) carries a label, and only when the band's own height
+// leaves enough room to render one legibly.
+const MIN_LABEL_SHARE = 8;
+const labelCenterXs = new Set(segments.map((s) => s.center));
+function segmentLabelFormatter() {
+  if (!labelCenterXs.has(this.x) || this.y < MIN_LABEL_SHARE) return null;
+  return `${Math.round(this.y)}%`;
+}
+const labelStyle = {
+  color: "#FFFFFF",
+  fontSize: "13px",
+  fontWeight: "600",
+  textOutline: "1px rgba(26, 26, 23, 0.55)",
+};
+
 // Retained (good) keeps the brand-green first slot; churned (bad) takes the
 // semantic-red anchor rather than the next ordinal palette position.
 const series = [
@@ -58,6 +77,7 @@ const series = [
     color: t.palette[0],
     data: segments.flatMap((s) => [
       { x: s.startX, y: s.retainedPct },
+      { x: s.center, y: s.retainedPct },
       { x: s.endX, y: s.retainedPct },
     ]),
   },
@@ -66,6 +86,7 @@ const series = [
     color: t.palette[4],
     data: segments.flatMap((s) => [
       { x: s.startX, y: s.churnedPct },
+      { x: s.center, y: s.churnedPct },
       { x: s.endX, y: s.churnedPct },
     ]),
   },
@@ -101,6 +122,7 @@ Highcharts.chart("container", {
     gridLineWidth: 0,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
+    tickLength: 6,
     labels: {
       formatter: function () {
         return findSegment(this.value).name;
@@ -125,6 +147,9 @@ Highcharts.chart("container", {
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
+    symbolRadius: 2,
+    itemDistance: 24,
+    margin: 20,
   },
   tooltip: {
     shared: true,
@@ -151,6 +176,11 @@ Highcharts.chart("container", {
       lineColor: t.pageBg,
       marker: { enabled: false },
       states: { hover: { enabled: false } },
+      dataLabels: {
+        enabled: true,
+        formatter: segmentLabelFormatter,
+        style: labelStyle,
+      },
     },
   },
   series,
