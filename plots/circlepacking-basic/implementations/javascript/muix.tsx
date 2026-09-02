@@ -10,6 +10,7 @@
 // Quality: pending | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
+import { ChartsText } from "@mui/x-charts/ChartsText";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -179,6 +180,25 @@ function truncateLabel(label, maxChars) {
   const lastSpace = clipped.lastIndexOf(" ");
   return lastSpace >= 3 ? `${clipped.slice(0, lastSpace)}…` : `${clipped}…`;
 }
+// Wrap a two-or-more-word label onto the most balanced two lines that both
+// fit `maxCharsPerLine`, so labels like "Corporate Bonds" show in full
+// instead of ellipsis-truncating mid-word. Falls back to truncation for
+// single-word labels or when no split fits.
+function wrapLabel(label, maxCharsPerLine) {
+  if (label.length <= maxCharsPerLine) return [label];
+  const words = label.split(" ");
+  if (words.length < 2) return [truncateLabel(label, maxCharsPerLine)];
+  let best = null;
+  for (let i = 1; i < words.length; i++) {
+    const line1 = words.slice(0, i).join(" ");
+    const line2 = words.slice(i).join(" ");
+    if (line1.length <= maxCharsPerLine && line2.length <= maxCharsPerLine) {
+      const diff = Math.abs(line1.length - line2.length);
+      if (!best || diff < best.diff) best = { line1, line2, diff };
+    }
+  }
+  return best ? [best.line1, best.line2] : [truncateLabel(label, maxCharsPerLine)];
+}
 
 // --- Legend: branch color identity, read once above the packing area so the
 // circles themselves stay uncluttered (no in-circle branch labels fighting
@@ -203,7 +223,12 @@ function Legend({ x, y, width: legendWidth }) {
 }
 
 // --- Circles: root boundary, branch zones (light fill + colored stroke),
-// leaf holdings (solid tint, labeled when large enough). -------------------
+// leaf holdings (solid tint, labeled when large enough). Leaf labels use
+// MUI X's own ChartsText primitive (not a raw <text>) so long names wrap
+// onto two lines via its native "\n"-line-splitting instead of truncating
+// mid-word -- ChartsTooltip/ChartsLegend don't apply here since they key
+// off a `series` data model this hand-rolled packing geometry has none of. -
+
 function CirclePacking() {
   const { left, top, width, height } = useDrawingArea();
   const availableRadius = Math.min(width, height) / 2 - 4;
@@ -238,28 +263,41 @@ function CirclePacking() {
               const valueSize = Math.round(nameSize * 0.82);
               const showName = l.r >= 26;
               const showValue = l.r >= 40;
-              const maxChars = Math.max(4, Math.floor((l.r * 1.7) / (nameSize * 0.55)));
+              const maxCharsPerLine = Math.max(4, Math.floor((l.r * 1.7) / (nameSize * 0.55)));
+              const nameLines = showName ? wrapLabel(leaf.label, maxCharsPerLine) : [];
+              const LINE_HEIGHT_EM = 1.18;
+              const nameHalfHeight = (nameLines.length * nameSize * LINE_HEIGHT_EM) / 2;
+              const valueHalfHeight = (valueSize * LINE_HEIGHT_EM) / 2;
+              const gap = nameSize * 0.3;
+              const nameCenterY = showValue ? l.cy - valueHalfHeight - gap / 2 : l.cy;
+              const valueCenterY = l.cy + nameHalfHeight + gap / 2;
               return (
                 <g key={leaf.id}>
                   <circle cx={l.cx} cy={l.cy} r={l.r} fill={fill} stroke={t.pageBg} strokeWidth={2}>
                     <title>{`${branch.label} / ${leaf.label}: $${leaf.value}K`}</title>
                   </circle>
                   {showName && (
-                    <text
+                    <ChartsText
+                      text={nameLines.join("\n")}
                       x={l.cx}
-                      y={l.cy + (showValue ? -nameSize * 0.3 : nameSize * 0.35)}
-                      textAnchor="middle"
-                      fontSize={nameSize}
-                      fontWeight={600}
-                      fill={ink}
-                    >
-                      {truncateLabel(leaf.label, maxChars)}
-                    </text>
+                      y={nameCenterY}
+                      style={{
+                        fontSize: nameSize,
+                        fontWeight: 600,
+                        fill: ink,
+                        textAnchor: "middle",
+                        dominantBaseline: "central",
+                      }}
+                    />
                   )}
                   {showValue && (
-                    <text x={l.cx} y={l.cy + nameSize * 0.9} textAnchor="middle" fontSize={valueSize} fill={ink} opacity={0.85}>
-                      {`$${leaf.value}K`}
-                    </text>
+                    <ChartsText
+                      text={`$${leaf.value}K`}
+                      x={l.cx}
+                      y={valueCenterY}
+                      opacity={0.85}
+                      style={{ fontSize: valueSize, fill: ink, textAnchor: "middle", dominantBaseline: "central" }}
+                    />
                   )}
                 </g>
               );
