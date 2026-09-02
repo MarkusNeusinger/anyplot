@@ -1,7 +1,7 @@
 # anyplot.ai
 # frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 83/100 | Created: 2026-09-02
+# Quality: 90/100 | Created: 2026-09-02
 
 using CairoMakie
 using Colors
