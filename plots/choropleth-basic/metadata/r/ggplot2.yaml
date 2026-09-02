@@ -1,0 +1,268 @@
+library: ggplot2
+language: r
+specification_id: choropleth-basic
+created: '2026-09-02T15:26:10Z'
+updated: '2026-09-02T15:44:13Z'
+generated_by: claude-sonnet
+workflow_run: 33647412741
+issue: 3069
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - 'Creative, honest solution to ggplot2''s lack of native geographic support: a
+    schematic unit-tile mosaic built purely with geom_tile() that preserves real relative
+    adjacency, transparently labeled as ''schematic ... not to scale'' rather than
+    faking real boundaries'
+  - 'Sequential imprint_seq gradient (#009E73 -> #4467A3) correctly chosen for the
+    single-polarity renewable-share metric, with theme-adaptive chrome (background,
+    ink, legend box) verified identical data colors across both light and dark renders'
+  - Missing data (Guyana) handled gracefully with a distinct muted gray tile plus
+    an explicit caption callout, matching the spec's 'handle missing data gracefully'
+    requirement
+  - 'Realistic, well-researched data: renewable electricity shares per South American
+    country (Paraguay ~100% hydro, Uruguay ~94%, Argentina ~30% gas-heavy, etc.) align
+    closely with real-world figures'
+  - Clean theme-adaptive implementation with explicit font sizes throughout (title
+    formula, subtitle, caption, legend, tile labels) and no clipping or overlap issues
+    in either theme
+  weaknesses:
+  - 'Not a true geographic choropleth: no real region boundaries or map projection
+    (e.g. Robinson/Albers) as suggested in the spec notes — the schematic tile-mosaic
+    is a reasonable native-ggplot2 substitute but caps Spec Compliance (Plot Type)'
+  - A few centroid labels (notably VE, CO) land on the boundary between two tiles
+    rather than centered within a single tile, since country cells span an odd number
+    of rows/columns — purely cosmetic, doesn't break legibility given the similar
+    tile colors
+  - Legend cluster leaves a visible empty margin on the canvas's right edge relative
+    to the irregular map shape on the left — minor canvas-balance opportunity, not
+    a defect
+  - Anonymous lambda inside lapply() for cell_list -> tibble conversion adds a touch
+    more structural complexity than the pure Imports -> Data -> Plot -> Save ideal,
+    though it's justified by the tile-mosaic technique
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "choropleth-basic · r · ggplot2 · anyplot.ai" in dark ink, centered, ~60% of canvas width. Subtitle in medium-gray ink below it explains the schematic nature. Caption at the bottom (also medium/muted gray) calls out highest/lowest countries and the gray-tile convention. Legend box on the right has a light elevated background with a dark border, dark title "Renewable share of electricity", and gray tick labels (100%/80%/60%/40%). All text is clearly readable against the light background — no light-on-light issues.
+      Data: Country tiles form a schematic mosaic shaped like South America, colored on a green (#009E73, low value) to blue (#4467A3, high value) sequential gradient. Guyana is a distinct flat gray tile (missing data). Bold dark country-code labels (VE, CO, EC, PE, BR, BO, PY, CL, AR, UY, SR) sit on their tiles and are legible against the medium-toned fills.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/caption/legend layout, all now rendered in light ink (#F0EFE8 primary, lighter grays for subtitle/caption/legend text) against the dark background. Legend box uses the dark elevated background (#242420) with a light-gray border. No dark-on-dark issues detected anywhere.
+      Data: Identical green-to-blue gradient tile colors and gray Guyana tile as the light render — confirmed the same underlying data hues, only the chrome (background, text, legend box, borders) flipped. Country-code labels are now light/white and remain legible on the same-toned tiles.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title formula, subtitle=7, caption=7,
+          legend=8/10, tile labels=3mm), readable in both themes, title comfortably
+          ~60% of width
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No collisions between text elements; VE/CO centroid labels sit slightly
+          across a tile boundary but remain fully legible
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles are well-sized for the 2400x2400 canvas, clearly distinguishable
+          including the gray missing-data tile
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient is CVD-safe via lightness/chroma,
+          missing data uses a distinct neutral gray rather than hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good use of canvas, no cutoff, legend adjacent to map; some unused
+          whitespace to the right of the legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a map; legend title is descriptive
+          and tick labels carry the % unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq gradient (#009E73 -> #4467A3) correctly used for single-polarity
+          data; identical data colors across both theme-correct renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom tile-mosaic solution, adaptive theming, intentional
+          typographic hierarchy — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/axes/grid clutter, PAGE_BG-colored tile borders for clean
+          separation, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Caption calls out highest/lowest countries and the missing-data convention,
+          gradient itself communicates regional variation
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct choropleth concept (region-colored-by-value) but no true
+          geographic boundaries/projection — ggplot2 has no native geo support, so
+          a schematic tile mosaic substitutes honestly
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color legend with value range, sequential palette, visible-but-subtle
+          region boundaries, graceful missing-data handling all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: region_id and value correctly mapped to tile fill and labels; all
+          12 regions represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'choropleth-basic · r · ggplot2 · anyplot.ai';
+          legend labels match the data (% renewable share)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows a wide value range (30-100%) plus an explicit missing-data
+          example (Guyana)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Renewable electricity share by country is a real, neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values align well with real-world figures (Paraguay ~100% hydro,
+          Uruguay ~94%, Argentina ~30% gas-heavy, Venezuela ~65% hydro-heavy despite
+          being an oil producer)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear Imports->Data->Plot->Save flow; one anonymous lambda
+          inside lapply() for the cell_list->tibble reshape adds minor structural
+          complexity, justified by the tile-mosaic technique
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hand-authored data, no randomness to seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: dplyr, tibble, scales, ragg all actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; appropriate complexity for the chosen technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of geom_tile, scale_fill_gradient, guide_colorbar,
+          coord_fixed, theme_minimal
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Distinctive workaround using geom_tile() as a native substitute for
+          unsupported geographic rendering, with custom colorbar styling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
