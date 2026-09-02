@@ -54,6 +54,13 @@ for i in 2:n_days
     end
 end
 
+# Golden cross (bullish, short EMA moves above long EMA) vs. death cross (bearish)
+golden_idx = filter(i -> diff_ema[i] > 0, crossover_idx)
+death_idx = filter(i -> diff_ema[i] < 0, crossover_idx)
+
+# Trend-regime segments (for band shading): contiguous runs of one sign
+regime_bounds = sort(unique(vcat(1, crossover_idx, n_days + 1)))
+
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
@@ -64,7 +71,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = "indicator-ema · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 24,
     titlecolor        = INK,
     xlabel            = "Trading Date",
     ylabel            = "Closing Price (USD)",
@@ -90,14 +97,35 @@ ax = Axis(
 tick_positions = round.(Int, range(1, n_days; length = 6))
 ax.xticks = (tick_positions, [Dates.format(dates[i], "u d") for i in tick_positions])
 
+# Trend-regime shading: tint the band between the two EMAs by prevailing
+# direction (bullish short-over-long vs. bearish), so the golden/death cross
+# story reads at a glance before you even spot the marker.
+bullish_fill = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.10)
+bearish_fill = RGBAf(IMPRINT_PALETTE[5].r, IMPRINT_PALETTE[5].g, IMPRINT_PALETTE[5].b, 0.10)
+for k in 1:(length(regime_bounds) - 1)
+    seg_start = regime_bounds[k]
+    seg_end = regime_bounds[k + 1] - 1
+    seg_end < seg_start && continue
+    seg = seg_start:seg_end
+    band!(
+        ax, trading_days[seg], ema_long[seg], ema_short[seg];
+        color = diff_ema[seg_start] >= 0 ? bullish_fill : bearish_fill,
+    )
+end
+
 lines!(ax, trading_days, close_price; color = IMPRINT_PALETTE[1], linewidth = 3.0, label = "Close price")
 lines!(ax, trading_days, ema_short; color = IMPRINT_PALETTE[2], linewidth = 2.0, label = "EMA (12)")
 lines!(ax, trading_days, ema_long; color = IMPRINT_PALETTE[3], linewidth = 2.0, label = "EMA (50)")
 
 scatter!(
-    ax, trading_days[crossover_idx], ema_short[crossover_idx];
-    color = INK, markersize = 14, marker = :circle,
-    strokewidth = 2, strokecolor = PAGE_BG, label = "Crossover",
+    ax, trading_days[golden_idx], ema_short[golden_idx];
+    color = IMPRINT_PALETTE[1], markersize = 18, marker = :utriangle,
+    strokewidth = 1.5, strokecolor = PAGE_BG, label = "Golden cross",
+)
+scatter!(
+    ax, trading_days[death_idx], ema_short[death_idx];
+    color = IMPRINT_PALETTE[5], markersize = 18, marker = :dtriangle,
+    strokewidth = 1.5, strokecolor = PAGE_BG, label = "Death cross",
 )
 
 axislegend(ax; position = :lt, framevisible = false, labelcolor = INK, backgroundcolor = :transparent)
