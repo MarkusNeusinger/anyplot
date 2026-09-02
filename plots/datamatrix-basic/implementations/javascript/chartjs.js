@@ -51,26 +51,57 @@ document.getElementById("container").appendChild(canvas);
 // An empty scatter chart provides the theme-aware title/canvas scaffolding;
 // a custom plugin draws the module grid directly onto the chart area so the
 // modules stay perfectly square regardless of the title's reserved height.
+// The card + modules stay fixed black-on-white in BOTH themes (per the spec's
+// "high contrast black on white" note and the qrcode-basic precedent) — only
+// the surrounding page background/title/subtitle/caption follow theme tokens.
+const QUIET = 2; // module-widths of quiet zone around the grid
+const CAPTION_H = 34; // space reserved below the card for the caption line
 const moduleGridPlugin = {
   id: "datamatrixGrid",
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
     const areaWidth = chartArea.right - chartArea.left;
     const areaHeight = chartArea.bottom - chartArea.top;
-    const side = Math.min(areaWidth, areaHeight) * 0.84; // leaves a quiet zone
-    const cell = side / gridSize;
-    const originX = chartArea.left + (areaWidth - side) / 2;
-    const originY = chartArea.top + (areaHeight - side) / 2;
+    const totalModules = gridSize + QUIET * 2;
+    const side = Math.min(areaWidth, areaHeight - CAPTION_H) * 0.86;
+    const cell = side / totalModules;
+    const cardX = chartArea.left + (areaWidth - side) / 2;
+    const cardY = chartArea.top + (areaHeight - CAPTION_H - side) / 2;
+    const gridX = cardX + QUIET * cell;
+    const gridY = cardY + QUIET * cell;
 
     ctx.save();
-    ctx.fillStyle = t.ink;
+
+    // Fixed white card behind the grid (includes the quiet zone).
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(cardX, cardY, side, side);
+
+    // Fixed black modules, identical in both themes.
+    ctx.fillStyle = "#000000";
     for (let row = 0; row < gridSize; row++) {
       for (let col = 0; col < gridSize; col++) {
         if (modules[row][col]) {
-          ctx.fillRect(originX + col * cell, originY + row * cell, cell + 0.6, cell + 0.6);
+          ctx.fillRect(gridX + col * cell, gridY + row * cell, cell + 0.6, cell + 0.6);
         }
       }
     }
+
+    // Brand accent: thin #009E73 border framing the card (theme-adaptive palette token).
+    ctx.strokeStyle = t.palette[0];
+    ctx.lineWidth = 3;
+    ctx.strokeRect(cardX + 1.5, cardY + 1.5, side - 3, side - 3);
+
+    // Caption below the card, theme-adaptive.
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = `14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillText(
+      `${gridSize}×${gridSize} modules · ECC 200 (stylized)`,
+      cardX + side / 2,
+      cardY + side + CAPTION_H / 2
+    );
+
     ctx.restore();
   },
 };
@@ -101,7 +132,7 @@ new Chart(canvas, {
         display: true,
         text: `Encodes "${content}"`,
         color: t.inkSoft,
-        font: { size: 15, style: "normal" },
+        font: { size: 16, style: "normal" },
         padding: { bottom: 20 },
       },
     },
