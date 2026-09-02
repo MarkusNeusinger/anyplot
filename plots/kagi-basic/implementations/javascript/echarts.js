@@ -143,7 +143,7 @@ chart.setOption({
       type: "line",
       data: [],
       showSymbol: false,
-      lineStyle: { color: t.palette[0], width: 7 },
+      lineStyle: { color: t.palette[0], width: 7, cap: "round" },
       itemStyle: { color: t.palette[0] },
     },
     {
@@ -151,7 +151,7 @@ chart.setOption({
       type: "line",
       data: [],
       showSymbol: false,
-      lineStyle: { color: t.palette[4], width: 2.5 },
+      lineStyle: { color: t.palette[4], width: 2.5, cap: "round" },
       itemStyle: { color: t.palette[4] },
     },
     {
@@ -170,9 +170,58 @@ chart.setOption({
         return {
           type: "line",
           shape: { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1] },
-          style: { stroke: color, lineWidth },
+          style: { stroke: color, lineWidth, lineCap: "round" },
         };
       },
+    },
+  ],
+});
+
+// --- Deliberate flourish: callout on the largest single-column reversal -----
+// Marks the column with the biggest shoulder/waist swing so the chart tells a
+// story at a glance instead of leaving every column visually equal-weight.
+let calloutIdx = 0;
+let calloutSwing = 0;
+kagiColumns.forEach((c, i) => {
+  const swing = Math.abs(c.to - c.from);
+  if (swing > calloutSwing) {
+    calloutSwing = swing;
+    calloutIdx = i;
+  }
+});
+const calloutCol = kagiColumns[calloutIdx];
+const calloutPct = Math.round(Math.abs(calloutCol.to / calloutCol.from - 1) * 100);
+const calloutY = Math.max(calloutCol.from, calloutCol.to);
+const [calloutPx, calloutPy] = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [
+  calloutIdx,
+  calloutY,
+]);
+const calloutColor = calloutCol.dir === "up" ? t.palette[0] : t.palette[4];
+const size = window.ANYPLOT_SIZE;
+const calloutLeft = Math.min(Math.max(calloutPx - 70, 130), size.width - 230);
+const calloutTop = Math.max(calloutPy - 34, 172);
+chart.setOption({
+  animation: false,
+  graphic: [
+    {
+      type: "circle",
+      left: calloutPx - 6,
+      top: calloutPy - 6,
+      shape: { cx: 6, cy: 6, r: 6 },
+      style: { fill: "transparent", stroke: calloutColor, lineWidth: 1.5 },
+      z: 10,
+    },
+    {
+      type: "text",
+      left: calloutLeft,
+      top: calloutTop,
+      style: {
+        text: `Largest swing: ${calloutPct}%`,
+        fill: t.ink,
+        fontSize: 13,
+        fontWeight: 600,
+      },
+      z: 10,
     },
   ],
 });
