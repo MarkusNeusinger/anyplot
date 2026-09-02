@@ -1,0 +1,252 @@
+library: highcharts
+language: javascript
+specification_id: smith-chart-basic
+created: '2026-09-02T06:13:54Z'
+updated: '2026-09-02T06:44:23Z'
+generated_by: claude-sonnet
+workflow_run: 33597292006
+issue: 3792
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'All four attempt-1 weaknesses are fixed: reactance arcs now carry +j/-j numeric
+    labels, the matched condition (Z = Z0) is explicitly marked at the chart center,
+    and the r=1 resistance circle plus real axis render heavier than the rest of the
+    grid.'
+  - Physically accurate S11 locus derived from a real series-RLC feedpoint model,
+    correctly normalized to Z0 = 50 ohms, with the resonance crossing near 3.5 GHz
+    matching the code's own tuning comment.
+  - 'Fully theme-correct chrome in both renders: correct warm off-white/near-black
+    backgrounds, all text readable, brand green (#009E73) locus color identical between
+    light and dark.'
+  - Clever geometry-only Smith chart built from plain Cartesian line/scatter series
+    plus a chart.events.load + setExtremes aspect-lock, working around the missing
+    highcharts-more polar module without breaking the 'no add-on modules' rule.
+  - Frequency-labeled locus (2.0-5.0 GHz) gives the impedance sweep a clear narrative
+    progression across both inductive and capacitive regions.
+  weaknesses:
+  - The newly added '1' resistance-circle label sits directly beneath the new Z0 marker
+    and is visually bisected by the vertical r=1 grid line running through it — still
+    legible but cluttered; increase the label's y-offset or nudge it off the r=1 contour
+    so the line doesn't cut through the numeral.
+  - resistanceCircle/reactanceArc/reactanceBoundaryPoint remain small helper functions
+    for the grid math — reasonable given the geometry, but still a departure from
+    the strict KISS 'no functions' guideline (unchanged from attempt 1).
+  - VSWR circles (explicitly optional in the spec) are still omitted, and the resonance
+    point along the locus isn't given extra visual emphasis beyond its frequency label.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title ("smith-chart-basic · javascript · highcharts · anyplot.ai") and subtitle ("Antenna feedpoint S11, 2-5 GHz · Z0 = 50 Ω") in dark ink at top, clearly readable. Resistance-axis numbers (0.2, 0.5, 1, 2, 5), reactance labels (+j0.2 ... +j5, -j0.2 ... -j5), the "Z0" label at chart center, and six frequency labels (2.0-5.0 GHz) along the locus are all dark, legible text. Grid (resistance circles + reactance arcs + boundary circle) renders as a subtle dark-grey line; the r=1 circle and real axis render visibly heavier than the rest of the grid, giving the diagnostically important contours emphasis. Minor issue: the "1" resistance label sits right below the small hollow Z0 marker circle and is bisected by the r=1 grid line passing through it — legible but slightly cluttered.
+      Data: Single S11 impedance locus in Imprint green (#009E73), 3px line width, with 6 filled green marker dots (radius 6) at labeled frequency points. First (and only) series correctly uses palette position 1.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle flip to light text, clearly readable against the dark background. Resistance-axis numbers, reactance labels, the "Z0" label, and frequency labels are all light-colored and fully legible — no dark-on-dark failures observed anywhere. Grid flips to a lighter grey, with the r=1 circle and real axis still visibly heavier than the rest of the grid. The same "1"-label-bisected-by-grid-line issue is present here too, at the same location.
+      Data: S11 locus and markers are the identical #009E73 green as the light render — confirmed unchanged; only chrome (background, text, grid) flipped between themes as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, fully readable in both themes; the '1' resistance
+          label is bisected by the r=1 grid line, a minor legibility ding
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-data collisions, but the '1' label and the new Z0 marker
+          sit tightly stacked on the same grid line
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px locus line and 6px key-point markers clearly visible, curve stays
+          uncluttered
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green locus strong contrast against grey grid on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart precisely centered in the square canvas, boundary circle fills
+          a large majority of it, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Resistance/reactance grid values act as the native Smith-chart scale
+          reference; Z0 units in subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exact #009E73, identical across themes, backgrounds
+          and chrome theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom grid geometry plus the new heavier r=1 circle and explicit
+          Z0 marker show clear technical and visual craft
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, and now a major/minor contour distinction
+          (r=1 and real axis heavier)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Frequency labels narrate the sweep and the explicit matched-condition
+          marker anchors the reader's reference point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct, fully-featured Smith chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Resistance circles, reactance arcs (now labeled), normalized locus,
+          frequency labels, matched center, |Gamma|=1 boundary all present; VSWR circles
+          optional and reasonably omitted
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Locus x/y correctly computed as reflection coefficient from normalized
+          impedance
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; single-series legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Sweep crosses both capacitive/inductive regions; reactance arcs and
+          matched center are now labeled/marked
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral RF-engineering antenna feedpoint scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'L/C values verified: reactance crosses zero near 3.5 GHz as claimed
+          in code comment'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: resistanceCircle/reactanceArc/reactanceBoundaryPoint helpers justified
+          by geometry math but depart from strict no-functions guideline
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports, only ANYPLOT_TOKENS/Highcharts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for the chart type, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart call, animation disabled, credits disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthesizes Smith chart from Cartesian series plus chart.events.load
+          + setExtremes to force equal aspect ratio, given no polar module is loaded
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Aspect-lock via setExtremes is Highcharts-specific, but the core
+          rendering approach is conceptually portable to other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - minimal-chrome
