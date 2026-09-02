@@ -51,6 +51,11 @@ stations[Math.floor(COLS * 1.5)].u = 0.5;
 stations[Math.floor(COLS * 1.5)].v = -0.3;
 stations[stations.length - Math.floor(COLS * 1.5)].u = -0.4;
 stations[stations.length - Math.floor(COLS * 1.5)].v = 0.6;
+// Force one station past 50 kt so the pennant (triangle) glyph actually
+// renders in the data itself, not only in the static notation key.
+const pennantIdx = Math.floor(stations.length / 2);
+stations[pennantIdx].u = 34;
+stations[pennantIdx].v = -38;
 
 const xPad = SPAN_X * 0.12;
 const yPad = SPAN_Y * 0.14;
@@ -64,11 +69,13 @@ const yMax = SPAN_Y + yPad;
 // blows FROM; short barb = 5 kt, full barb = 10 kt, pennant (triangle) = 50 kt,
 // rounded to the nearest 5 kt; calm (< 2.5 kt) draws as a bare open circle.
 // Barbs are attached on a fixed side of the staff (Northern-Hemisphere
-// convention) walking from the tip back toward the station.
+// convention) walking from the tip back toward the station, angled back
+// toward the base like a feather rather than straight perpendicular.
 const SHAFT_LEN = 44;
 const BARB_LEN = 15;
 const BARB_GAP = 8;
 const CALM_RADIUS = 6;
+const BARB_ANGLE = (55 * Math.PI) / 180; // degrees off the reverse-staff direction
 
 function windBarbShapes(cxPx, cyPx, u, v, color) {
   const speedRaw = Math.sqrt(u * u + v * v);
@@ -83,15 +90,27 @@ function windBarbShapes(cxPx, cyPx, u, v, color) {
   const rad = (fromBearing * Math.PI) / 180;
   const ux = Math.sin(rad);
   const uy = -Math.cos(rad);
-  // Fixed perpendicular side for the barbs (consistent across all stations).
+  // Fixed perpendicular side for the barbs (consistent across all stations),
+  // then angled back toward the staff's base for an authentic feather look
+  // instead of a straight 90° tick mark.
   const px = -uy;
   const py = ux;
+  const bpx = -ux * Math.cos(BARB_ANGLE) + px * Math.sin(BARB_ANGLE);
+  const bpy = -uy * Math.cos(BARB_ANGLE) + py * Math.sin(BARB_ANGLE);
 
   const tipX = cxPx + ux * SHAFT_LEN;
   const tipY = cyPx + uy * SHAFT_LEN;
 
   const shapes = [
-    { tag: "path", d: [["M", cxPx, cyPx], ["L", tipX, tipY]], color, fill: "none" },
+    {
+      tag: "path",
+      d: [
+        ["M", cxPx, cyPx],
+        ["L", tipX, tipY],
+      ],
+      color,
+      fill: "none",
+    },
   ];
 
   let speed = Math.round(speedRaw / 5) * 5;
@@ -107,8 +126,8 @@ function windBarbShapes(cxPx, cyPx, u, v, color) {
     const by = cyPx + uy * pos;
     const nx = cxPx + ux * (pos - BARB_GAP);
     const ny = cyPx + uy * (pos - BARB_GAP);
-    const tx = bx + px * BARB_LEN;
-    const ty = by + py * BARB_LEN;
+    const tx = bx + bpx * BARB_LEN;
+    const ty = by + bpy * BARB_LEN;
     shapes.push({
       tag: "path",
       d: [["M", bx, by], ["L", tx, ty], ["L", nx, ny], ["Z"]],
@@ -120,17 +139,33 @@ function windBarbShapes(cxPx, cyPx, u, v, color) {
   for (let i = 0; i < fullBarbs; i++) {
     const bx = cxPx + ux * pos;
     const by = cyPx + uy * pos;
-    const tx = bx + px * BARB_LEN;
-    const ty = by + py * BARB_LEN;
-    shapes.push({ tag: "path", d: [["M", bx, by], ["L", tx, ty]], color, fill: "none" });
+    const tx = bx + bpx * BARB_LEN;
+    const ty = by + bpy * BARB_LEN;
+    shapes.push({
+      tag: "path",
+      d: [
+        ["M", bx, by],
+        ["L", tx, ty],
+      ],
+      color,
+      fill: "none",
+    });
     pos -= BARB_GAP;
   }
   if (halfBarb) {
     const bx = cxPx + ux * pos;
     const by = cyPx + uy * pos;
-    const tx = bx + px * (BARB_LEN / 2);
-    const ty = by + py * (BARB_LEN / 2);
-    shapes.push({ tag: "path", d: [["M", bx, by], ["L", tx, ty]], color, fill: "none" });
+    const tx = bx + bpx * (BARB_LEN / 2);
+    const ty = by + bpy * (BARB_LEN / 2);
+    shapes.push({
+      tag: "path",
+      d: [
+        ["M", bx, by],
+        ["L", tx, ty],
+      ],
+      color,
+      fill: "none",
+    });
   }
 
   return shapes;
@@ -253,7 +288,10 @@ Highcharts.chart("container", {
     max: xMax,
     startOnTick: false,
     endOnTick: false,
-    title: { text: "Longitude (° from reference)", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: {
+      text: "Longitude (° from reference)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
@@ -264,7 +302,10 @@ Highcharts.chart("container", {
     max: yMax,
     startOnTick: false,
     endOnTick: false,
-    title: { text: "Latitude (° from reference)", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: {
+      text: "Latitude (° from reference)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
