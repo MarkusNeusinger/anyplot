@@ -1,0 +1,262 @@
+library: echarts
+language: javascript
+specification_id: timeseries-forecast-uncertainty
+created: '2026-09-02T07:46:16Z'
+updated: '2026-09-02T08:00:11Z'
+generated_by: claude-sonnet
+workflow_run: 33604653416
+issue: 3188
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Correct Imprint palette usage: brand green (#009E73) for the Actual series, lavender
+    (#C475FD, palette[1]) for Forecast and both CI bands, identical data colors across
+    light and dark renders'
+  - Idiomatic ECharts stacked-area technique (invisible floor series + visible span
+    series with stack) cleanly renders nested, non-overlapping 80%/95% confidence
+    bands without a custom plugin
+  - markLine with an 'insideEndTop' label clearly marks the historical/forecast boundary
+    ('Forecast start') as required by the spec
+  - Solid line for historical Actual vs. dashed line for Forecast gives an immediate
+    visual distinction per the spec notes
+  - Y-axis is dynamically scaled to the actual data range (dataMin/dataMax padded
+    to nearest 10) rather than a fixed span, fixing the compressed-band look from
+    attempt 1
+  - Deterministic LCG + Box-Muller Gaussian noise generator keeps the data fully reproducible
+    with no browser RNG dependency
+  - Confidence interval width widens monotonically with forecast horizon (sigma =
+    4 + 2.1*sqrt(h)), which is realistic forecasting behavior
+  - 'Theme-adaptive chrome is threaded through correctly: title/legend/tick colors,
+    grid, and axis lines all use ANYPLOT_TOKENS, backgrounds transparent over the
+    correct page surface'
+  weaknesses:
+  - 95% CI band areaStyle opacity is 0.15, slightly below the spec's suggested 0.2-0.4
+    semi-transparency range for confidence bands — current value still reads clearly
+    against the 80% band but has less margin before becoming hard to see on smaller/mobile
+    renders
+  - X-axis has no explicit axis title (only tick labels like 'Jan 2022'), which is
+    acceptable since dates are self-evident but is asymmetric with the Y-axis's explicit
+    'Revenue ($k)' title
+  - Legend swatch alpha values (0.45/0.85 via hexToRgba) are a reasonable approximation
+    for distinguishing the two CI bands in the legend, but are hardcoded rather than
+    derived from the same 0.15/0.32 opacities used in the chart body — a future maintenance
+    risk if band opacities change without updating the legend swatches in tandem
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "timeseries-forecast-uncertainty · javascript · echarts · anyplot.ai" in bold dark ink, centered top. Legend below title reads "Actual", "Forecast", "80% CI", "95% CI" in dark text with green line swatch, purple dashed-line swatch, and two purple dot swatches (darker for 80%, lighter for 95%). Y-axis titled "Revenue ($k)" with tick labels $90k-$230k in soft dark gray. X-axis tick labels (Jan 2022 ... May 2026) in soft dark gray, evenly spaced with no overlap. Subtle horizontal gridlines. A vertical dashed reference line at the historical/forecast boundary is labeled "Forecast start" in soft dark text.
+      Data: Solid green (#009E73) line for the ~4.5-year historical "Actual" series with clear rises/dips (seasonality + noise visible). At the forecast boundary, a purple dashed "Forecast" line continues, flanked by two nested purple confidence bands (darker/narrower 80% band nested inside a lighter/wider 95% band) that widen with the forecast horizon, dip mid-forecast, then widen further toward the end of the horizon.
+      Legibility verdict: PASS — all title, legend, axis, and tick text is clearly readable against the light background; no light-on-light text observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and legend content, now rendered in light/white text (title bold white, legend labels light gray) against the dark background. Y-axis "Revenue ($k)" and tick labels rendered in light soft-gray. X-axis tick labels also light soft-gray, evenly spaced, no overlap. Gridlines subtle and visible against the dark surface. The "Forecast start" vertical dashed line and its label are rendered in light gray, clearly visible.
+      Data: Data colors are identical to the light render — same green (#009E73) Actual line, same purple/lavender Forecast line and CI bands (80% darker-nested-inside-95%-lighter), confirming only chrome flipped between themes and data-ink stayed constant.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/label/tick text remains clearly legible against the near-black background, and the confidence bands stay visually distinguishable from the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/axis/legend/tick text readable in both themes at appropriate
+          CSS px sizes (title 22px, legend 15px, axis 14px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render; x-axis interval:3 avoids
+          tick label crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths (3.5/3) and band opacities (0.15/0.32) are appropriate
+          for ~54-point medium-density series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. purple hue families are CVD-distinct; no red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good margins, canvas gate passed, no cropping/overflow observed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has descriptive 'Revenue ($k)' label with units; X-axis dates
+          are self-descriptive via tick format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (palette[0]); Forecast/CI use palette[1];
+          correct #FAF8F1/#1A1A17 backgrounds in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Nested translucent confidence bands with layered alpha, dashed forecast
+          styling, labeled reference line show real design intent beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis lines on y-axis, no tick marks, subtle single-axis gridlines,
+          unboxed legend, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Solid/dashed contrast plus the labeled forecast-start marker and
+          widening bands guide the viewer through history-to-uncertainty narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-series forecast with uncertainty bands
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Historical/forecast distinction, forecast-start vertical marker,
+          nested 80%/95% bands, legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date categories, Y=revenue, full range shown with auto-scaled axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels (Actual/Forecast/80%
+          CI/95% CI) match the data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All spec fields (actual, forecast, lower/upper 80/95) represented
+          visually
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral monthly SaaS revenue forecast with trend + seasonality
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values and growth rate are sensible for the stated SaaS-forecast
+          domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script with small utility arrow functions, no classes/unneeded
+          wrapping
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + Box-Muller Gaussian, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the provided echarts global and ANYPLOT_TOKENS are
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Stacked-area band technique is a real, well-known ECharts pattern,
+          not fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init(container) with no explicit size/devicePixelRatio; animation:false
+          set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Stack+areaStyle band technique and markLine are standard, idiomatic
+          ECharts patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markLine label positioning, silent invisible floor series, and layered
+          legend swatch alphas are distinctive ECharts-specific touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - publication-ready
