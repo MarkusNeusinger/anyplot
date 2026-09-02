@@ -1,6 +1,7 @@
 // anyplot.ai
 // ohlc-bar: OHLC Bar Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 84/100 | Created: 2026-09-02
 
 // The core bundle (no highcharts-more / modules/stock) has no "ohlc" series —
@@ -55,13 +56,24 @@ const pad = (Math.max(...allHighs) - Math.min(...allLows)) * 0.08;
 const yMin = Math.floor(Math.min(...allLows) - pad);
 const yMax = Math.ceil(Math.max(...allHighs) + pad);
 
+// The sharpest single-day move becomes the data-storytelling focal point
+// (a dashed xAxis.plotLine + label — core-bundle, no annotations module).
+let sharpest = bars[0];
+for (const b of bars) {
+  if (Math.abs(b.close - b.open) > Math.abs(sharpest.close - sharpest.open)) sharpest = b;
+}
+const sharpestPct = ((sharpest.close - sharpest.open) / sharpest.open) * 100;
+
 // Each bar draws 3 strokes: the high-low range, a left tick at open, a right
 // tick at close — separated by null points so Highcharts breaks the line.
+// The close tick also carries a triangle marker (▲ up / ▼ down) so direction
+// reads from shape, not solely from the red/green hue.
 const tickOffset = dayMs * 0.32;
 function barStrokes(bar) {
   const left = bar.time - tickOffset;
   const mid = bar.time;
   const right = bar.time + tickOffset;
+  const color = bar.bullish ? upColor : downColor;
   return [
     { x: mid, y: bar.low, custom: bar },
     { x: mid, y: bar.high, custom: bar },
@@ -70,7 +82,18 @@ function barStrokes(bar) {
     { x: mid, y: bar.open, custom: bar },
     { x: mid, y: null },
     { x: mid, y: bar.close, custom: bar },
-    { x: right, y: bar.close, custom: bar },
+    {
+      x: right,
+      y: bar.close,
+      custom: bar,
+      marker: {
+        enabled: true,
+        symbol: bar.bullish ? "triangle" : "triangle-down",
+        radius: 5,
+        fillColor: color,
+        lineWidth: 0,
+      },
+    },
     { x: mid, y: null },
   ];
 }
@@ -98,6 +121,22 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Trading Date", style: { color: t.inkSoft, fontSize: "16px" } },
+    crosshair: { width: 1, color: t.inkSoft, dashStyle: "ShortDot" },
+    plotLines: [
+      {
+        value: sharpest.time,
+        color: t.inkSoft,
+        dashStyle: "Dash",
+        width: 1,
+        zIndex: 5,
+        label: {
+          text: `Sharpest move: ${sharpestPct >= 0 ? "+" : ""}${sharpestPct.toFixed(1)}%`,
+          style: { color: t.inkSoft, fontSize: "13px" },
+          rotation: 0,
+          y: -10,
+        },
+      },
+    ],
   },
   yAxis: {
     min: yMin,
@@ -127,7 +166,7 @@ Highcharts.chart("container", {
     },
   },
   plotOptions: {
-    series: { animation: false, marker: { enabled: false }, lineWidth: 2.5 },
+    series: { animation: false, marker: { enabled: false }, lineWidth: 3 },
   },
   series: [
     {
