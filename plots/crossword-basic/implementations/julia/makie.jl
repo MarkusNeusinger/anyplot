@@ -35,10 +35,14 @@ end
 # down entry, scanning left-to-right then top-to-bottom (standard convention).
 numbers = zeros(Int, N, N)
 counter = Ref(1)
+n_across = Ref(0)
+n_down = Ref(0)
 for r in 1:N, c in 1:N
     blocked[r, c] && continue
     starts_across = (c == 1 || blocked[r, c - 1]) && (c < N && !blocked[r, c + 1])
     starts_down = (r == 1 || blocked[r - 1, c]) && (r < N && !blocked[r + 1, c])
+    starts_across && (n_across[] += 1)
+    starts_down && (n_down[] += 1)
     if starts_across || starts_down
         numbers[r, c] = counter[]
         counter[] += 1
@@ -77,29 +81,56 @@ for i in 0:N
     linesegments!(ax, [Point2f(i, 0), Point2f(i, N)]; color = INK_SOFT, linewidth = 1.5)
 end
 
-# Outer frame
+# Outer frame: a heavier ink rule plus a thin inset accent ruled entirely in
+# the surrounding margin (never crossing live cells) gives the grid the
+# double-ruled "matted" border common to printed puzzle books, instead of a
+# single flat outline.
 lines!(
     ax,
     [Point2f(0, 0), Point2f(N, 0), Point2f(N, N), Point2f(0, N), Point2f(0, 0)];
     color = INK,
-    linewidth = 3,
+    linewidth = 4,
+)
+accent = 0.18
+lines!(
+    ax,
+    [
+        Point2f(-accent, -accent), Point2f(N + accent, -accent),
+        Point2f(N + accent, N + accent), Point2f(-accent, N + accent),
+        Point2f(-accent, -accent),
+    ];
+    color = INK_SOFT,
+    linewidth = 1.5,
 )
 
-# Clue-start numbers, top-left corner of each entry cell
+# Clue-start numbers, top-left corner of each entry cell — sized up and
+# bolded so they stay legible on a 2400x2400 canvas at mobile widths.
 for r in 1:N, c in 1:N
     numbers[r, c] == 0 && continue
     x = c - 1
     y = N - r
     text!(
         ax,
-        x + 0.08,
-        y + 1 - 0.1;
+        x + 0.09,
+        y + 1 - 0.08;
         text = string(numbers[r, c]),
-        fontsize = 14,
+        fontsize = 19,
+        font = :bold,
         color = INK_SOFT,
         align = (:left, :top),
     )
 end
+
+# Subtitle: across/down entry counts add a touch of data storytelling below
+# the grid via a second Figure row (Label), beyond the plain grid alone.
+Label(
+    fig[2, 1],
+    "$(N) × $(N) grid · $(n_across[]) across · $(n_down[]) down";
+    fontsize = 15,
+    color = INK_SOFT,
+    tellwidth = false,
+    padding = (0, 0, 0, 14),
+)
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
