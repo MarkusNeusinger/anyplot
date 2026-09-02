@@ -48,8 +48,11 @@ categories.forEach((category, ci) => {
     const factor = difficultyFactor[ci];
     const mean = group === "Novice" ? 680 * factor : 410 * factor;
     const std = group === "Novice" ? 140 * factor : 75 * factor;
-    const values = Array.from({ length: trialsPerCell }, () => randNormal(mean, std));
-    const center = categoryCenters[ci] + (gi === 0 ? -groupOffset : groupOffset);
+    const values = Array.from({ length: trialsPerCell }, () =>
+      randNormal(mean, std),
+    );
+    const center =
+      categoryCenters[ci] + (gi === 0 ? -groupOffset : groupOffset);
     cells.push({ category, group, ci, values, center });
   });
 });
@@ -63,9 +66,15 @@ function kde(values, gridSize) {
   const bandwidth = 1.06 * std * Math.pow(n, -0.2);
   const min = Math.min(...values) - 1.4 * bandwidth;
   const max = Math.max(...values) + 1.4 * bandwidth;
-  const grid = Array.from({ length: gridSize }, (_, i) => min + ((max - min) * i) / (gridSize - 1));
+  const grid = Array.from(
+    { length: gridSize },
+    (_, i) => min + ((max - min) * i) / (gridSize - 1),
+  );
   const rawDensity = grid.map((v) =>
-    values.reduce((acc, xi) => acc + Math.exp(-0.5 * ((v - xi) / bandwidth) ** 2), 0)
+    values.reduce(
+      (acc, xi) => acc + Math.exp(-0.5 * ((v - xi) / bandwidth) ** 2),
+      0,
+    ),
   );
   const peak = Math.max(...rawDensity);
   return { grid, density: rawDensity.map((d) => d / peak) };
@@ -100,8 +109,14 @@ const series = [];
 cells.forEach(({ category, group, ci, values, center }) => {
   const { grid, density } = kde(values, kdeGridSize);
   const color = groupColors[group];
-  const rightEdge = grid.map((v, i) => [v, center + density[i] * maxViolinHalfWidth]);
-  const leftEdge = grid.map((v, i) => [v, center - density[i] * maxViolinHalfWidth]);
+  const rightEdge = grid.map((v, i) => [
+    v,
+    center + density[i] * maxViolinHalfWidth,
+  ]);
+  const leftEdge = grid.map((v, i) => [
+    v,
+    center - density[i] * maxViolinHalfWidth,
+  ]);
 
   series.push({
     type: "area",
@@ -142,7 +157,9 @@ cells.forEach(({ category, group, ci, values, center }) => {
       lineWidth: 0,
     },
     showInLegend: false,
-    tooltip: { pointFormat: `${category} · ${group}<br/>Reaction time: {point.x:.0f} ms` },
+    tooltip: {
+      pointFormat: `${category} · ${group}<br/>Reaction time: {point.x:.0f} ms`,
+    },
   });
 });
 
@@ -157,10 +174,16 @@ Highcharts.chart("container", {
     style: { fontFamily: "inherit" },
   },
   credits: { enabled: false },
-  title: { text: title, style: { color: t.ink, fontSize: "22px", fontWeight: "600" } },
+  title: {
+    text: title,
+    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+  },
   xAxis: {
     reversed: false,
-    title: { text: "Reaction Time (ms)", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: {
+      text: "Reaction Time (ms)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
     gridLineColor: t.grid,
     gridLineWidth: 1,
     lineColor: t.inkSoft,
@@ -169,8 +192,10 @@ Highcharts.chart("container", {
   },
   yAxis: {
     title: { text: "Task Type", style: { color: t.inkSoft, fontSize: "16px" } },
-    min: -1.8,
-    max: categoryCenters[categoryCenters.length - 1] + 1.9,
+    min: -2.1,
+    max: categoryCenters[categoryCenters.length - 1] + 2.2,
+    startOnTick: false,
+    endOnTick: false,
     tickPositions: categoryCenters,
     gridLineWidth: 0,
     lineColor: t.inkSoft,
@@ -183,7 +208,10 @@ Highcharts.chart("container", {
     },
   },
   legend: {
-    title: { text: "Expertise Level", style: { color: t.inkSoft, fontSize: "14px" } },
+    title: {
+      text: "Expertise Level",
+      style: { color: t.inkSoft, fontSize: "14px" },
+    },
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
     symbolRadius: 2,
