@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: crossword-basic
 created: '2026-09-02T00:06:07Z'
-updated: '2026-09-02T00:11:00Z'
+updated: '2026-09-02T00:22:19Z'
 generated_by: claude-sonnet
 workflow_run: 33573218645
 issue: 3805
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 79
 review:
   strengths:
   - Builds the entire crossword grid from a single scatter series with square markers
@@ -21,32 +21,43 @@ review:
   - Correct 180-degree rotational symmetry, generated programmatically by mirroring
     a half-list of blocked cells to (N-1-row, N-1-col) — matches the traditional newspaper
     crossword convention the spec requires.
-  - 'Smart theme-adaptive handling: both the blocked-cell fill and the clue-number
-    color derive from t.ink, so the blocked/entry contrast stays legible in both light
-    and dark renders instead of collapsing to near-invisible black-on-near-black in
-    dark mode.'
   - Correct standard crossword numbering algorithm (numbers a cell when it starts
     an across and/or down entry), and precise 1:1 cell aspect ratio achieved via fixed
     pixel margins independent of Highcharts' auto-layout.
+  - Clue-number font size was bumped from 11px to 13px since the previous attempt,
+    improving legibility in the dense 15x15 grid.
   weaknesses:
-  - Clue numbers are quite small (11px CSS / ~22px native) relative to the dense 15x15
-    grid; scaled down to a ~400px mobile width they risk becoming hard to read — consider
-    bumping to ~13-14px CSS if it still fits without overlapping adjacent cells.
-  - The design is necessarily plain/monochrome per spec, leaving little room for extra
-    design flourish beyond the uniform grid lines — acceptable given the spec's explicit
-    'monochrome design optimized for printing' requirement, not a defect to fix.
+  - 'Blocked-cell fill color is derived from the theme-dependent t.ink token, so the
+    black/white crossword semantic inverts between renders: in plot-light.png blocked
+    cells are near-black (correct), but in plot-dark.png blocked cells become near-white/cream
+    while entry cells go dark — a photonegative of the puzzle rather than a chrome
+    flip. This violates the style-guide rule that data encoding must stay identical
+    between themes (only chrome flips) and diverges from every other implementation
+    of this exact spec (e.g. plots/crossword-basic/implementations/python/plotly.py
+    hardcodes CELL_BLOCK = ''#1A1A17'' with the comment ''Crossword cell colors —
+    fixed regardless of theme (contrast IS the data)''; matplotlib.py keeps CELL_BLACK
+    dark and CELL_WHITE light in both themes too). Fix: give the ''Blocked cells''
+    series a fixed dark fillColor (e.g. a constant near-#1A1A17, not t.ink) so blocked
+    squares stay black in both light and dark renders; if entry-cell contrast against
+    a dark page background is a concern, add an explicit light fill to the entry cells
+    (a third scatter series or a plotBands/annotation layer) rather than letting the
+    block color flip.'
+  - Clue numbers at 13px CSS are still quite small relative to the dense 15x15 grid
+    — legible at full resolution but hard to read once scaled down to the ~400px responsive
+    thumbnail; consider bumping slightly further (14-15px) if it still fits without
+    overlapping adjacent cells.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
       Chrome: Title "crossword-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly readable, comfortably sized above the grid. No axis labels/ticks (correctly omitted — not applicable to a puzzle grid). Thin, subtle light-gray grid lines separate every cell uniformly.
-      Data: A 15x15 crossword grid with black-filled square cells for blocked positions and cream/background cells for letter-entry positions. Small dark clue numbers appear in the top-left corner of cells that start an across or down word. The blocked-cell pattern is visibly 180-degree rotationally symmetric.
+      Data: A 15x15 crossword grid with black-filled square cells for blocked positions and off-white/background cells for letter-entry positions — matches the traditional black-blocks/white-entries crossword convention. Small dark clue numbers (13px) appear in the top-left corner of cells that start an across or down word. The blocked-cell pattern is visibly 180-degree rotationally symmetric.
       Legibility verdict: PASS — title and clue numbers are clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Same title text now in light/off-white ink, clearly readable against the dark background. Grid lines remain thin and subtle. No axis labels/ticks, consistent with the light render.
-      Data: The same 15x15 grid structure. Blocked cells now render as light/off-white squares (ink color flipped for theme contrast) while entry cells show the dark page background — an intentional inversion that preserves strong blocked/entry contrast rather than a literal black-cells-stay-black approach (which would have made blocked cells nearly invisible against the near-black page background). Clue numbers render in light ink, clearly visible on the dark entry cells.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and the blocked/entry distinction remain clearly legible.
+      Data: Same 15x15 grid structure and symmetric pattern, BUT the blocked/entry cell colors are inverted relative to the light render: blocked cells now render as light/cream squares and entry cells render as near-black (matching the dark page background). This is not a valid "chrome flip" — the actual data (which cells are blocked vs. entry) reads as its own photonegative on this render, contradicting the spec's fixed "black cells for blocking, white cells for entry" convention and diverging from every other library's implementation of this same spec. Clue numbers render in light ink and are readable against the (now dark) entry cells.
+      Legibility verdict: PASS for text readability (no dark-on-dark text failures), but FAIL for data-color consistency — the blocked/entry encoding is not identical between the two renders.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -54,12 +65,11 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title and numbers readable in both themes; clue numbers at 11px CSS
-          are small relative to the dense 15x15 grid and may be hard to read at ~400px
-          mobile width.
+        comment: Title and numbers readable in both themes at full resolution; clue
+          numbers bumped to 13px since attempt 1, still small at ~400px mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -72,15 +82,16 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Blocked cells and grid lines clearly visible; +0.5px marker radius
-          overlap avoids anti-aliasing seams between adjacent cells.
+        comment: Blocked cells and grid lines clearly visible in each render; entry
+          cells have no explicit fill and rely entirely on the page background, which
+          contributes to the light/dark inversion issue.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome ink/background contrast is high in both themes; no color-based
-          signal at all, so no CVD concern.
+        comment: Monochrome ink/background contrast is high within each individual
+          render; no color-based signal, so no CVD concern.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -97,12 +108,13 @@ review:
           as not applicable to a puzzle grid.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'Backgrounds match #FAF8F1/#1A1A17; monochrome ink correctly used
-          instead of the Imprint categorical palette, appropriate since the spec mandates
-          a monochrome design.'
+        passed: false
+        comment: Blocked-cell fill uses the theme-dependent t.ink token, so the block/entry
+          pattern inverts between light and dark renders instead of staying identical
+          — violates 'data colors identical, only chrome flips' and diverges from
+          every sibling implementation of this spec.
     design_excellence:
       score: 12
       max: 20
@@ -111,8 +123,9 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Clean, faithful puzzle-grid rendering; polish is inherently limited
-          by the spec's monochrome-for-printing requirement.
+        comment: Clean, faithful puzzle-grid rendering via a creative scatter+dataLabels
+          workaround; polish is inherently limited by the spec's monochrome-for-printing
+          requirement.
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -126,7 +139,7 @@ review:
         comment: Numbered word-start cells create a natural reading hierarchy, but
           the plot type has little room for additional storytelling.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -137,11 +150,12 @@ review:
         comment: Correct crossword grid, built natively within core-bundle constraints.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Numbered word starts, 180-degree symmetric blocking, 1:1 cell aspect
-          ratio, uniform grid lines — all present.
+        passed: false
+        comment: Numbered word starts, 180-degree symmetric blocking, and 1:1 cell
+          aspect ratio are all present, but the spec's explicit 'black cells for blocking,
+          white cells for entry' convention is inverted in the dark render.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -156,7 +170,7 @@ review:
         passed: true
         comment: Title exactly matches the mandated format; legend appropriately omitted.
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
@@ -168,9 +182,11 @@ review:
           data fields.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 3
         max: 5
-        comment: Plausible, neutral newspaper-style symmetric pattern.
+        comment: Light render is a plausible, neutral newspaper-style symmetric pattern;
+          the dark render's inverted blocks don't look like a real-world crossword
+          (which is always black-blocked).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -228,7 +244,7 @@ review:
         max: 5
         comment: dataLabels align/verticalAlign/padding tuned precisely for corner-number
           placement; doesn't showcase more distinctive Highcharts-only features.
-  verdict: APPROVED
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
