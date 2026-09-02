@@ -27,15 +27,33 @@ const companies = [
 const industries = ["Tech", "Retail", "Manufacturing"];
 const industryColor = d3.scaleOrdinal().domain(industries).range(t.palette.slice(0, 3));
 
-// --- Feature scales: metric extent -> facial-feature pixel range ------------
-const faceWidthScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.revenueGrowth)).range([55, 85]);
-const faceHeightScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.profitMargin)).range([65, 95]);
-const eyeSizeScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.liquidityRatio)).range([5, 11]);
-const eyeSpacingScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.rdInvestment)).range([16, 30]);
-const browSlantScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.debtRatio)).range([-8, 24]);
-const noseLengthScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.marketShare)).range([10, 24]);
-const mouthCurveScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.customerSat)).range([-10, 22]);
-const mouthWidthScale = d3.scaleLinear().domain(d3.extent(companies, (d) => d.opEfficiency)).range([20, 40]);
+// --- Explicit 0-1 normalization, then mapped onto a facial-feature pixel range --
+const normalize = (accessor) => {
+  const [lo, hi] = d3.extent(companies, accessor);
+  return (d) => (accessor(d) - lo) / (hi - lo);
+};
+const toRange = (norm, range) => (d) => range[0] + norm(d) * (range[1] - range[0]);
+
+const faceWidthScale = toRange(normalize((d) => d.revenueGrowth), [55, 85]);
+const faceHeightScale = toRange(normalize((d) => d.profitMargin), [65, 95]);
+const eyeSizeScale = toRange(normalize((d) => d.liquidityRatio), [5, 11]);
+const eyeSpacingScale = toRange(normalize((d) => d.rdInvestment), [16, 30]);
+const browSlantScale = toRange(normalize((d) => d.debtRatio), [-8, 24]);
+const noseLengthScale = toRange(normalize((d) => d.marketShare), [10, 24]);
+const mouthCurveScale = toRange(normalize((d) => d.customerSat), [-10, 22]);
+const mouthWidthScale = toRange(normalize((d) => d.opEfficiency), [20, 40]);
+
+// composite risk score (high debt, weak everything else) — flags the one
+// outlier face to receive a dashed amber emphasis ring below
+const riskScore = (d) =>
+  normalize((c) => c.debtRatio)(d) -
+  (normalize((c) => c.revenueGrowth)(d) +
+    normalize((c) => c.profitMargin)(d) +
+    normalize((c) => c.liquidityRatio)(d) +
+    normalize((c) => c.customerSat)(d) +
+    normalize((c) => c.opEfficiency)(d)) /
+    5;
+const weakestCompany = companies.reduce((worst, d) => (riskScore(d) > riskScore(worst) ? d : worst));
 
 // --- Grid layout --------------------------------------------------------------
 const margin = { top: 130, right: 40, bottom: 20, left: 40 };
@@ -46,6 +64,22 @@ const cellH = (height - margin.top - margin.bottom) / rows;
 
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+
+// --- Subtle drop-shadow for face outlines (visual refinement) ---------------
+svg
+  .append("defs")
+  .append("filter")
+  .attr("id", "face-shadow")
+  .attr("x", "-50%")
+  .attr("y", "-50%")
+  .attr("width", "200%")
+  .attr("height", "200%")
+  .append("feDropShadow")
+  .attr("dx", 0)
+  .attr("dy", 3)
+  .attr("stdDeviation", 3)
+  .attr("flood-color", t.ink)
+  .attr("flood-opacity", 0.18);
 
 // --- Title ----------------------------------------------------------------
 svg
@@ -98,18 +132,32 @@ faceG.each(function (d) {
   const g = d3.select(this);
   const color = industryColor(d.industry);
 
-  const faceW = faceWidthScale(d.revenueGrowth);
-  const faceH = faceHeightScale(d.profitMargin);
-  const eyeSize = eyeSizeScale(d.liquidityRatio);
-  const eyeSpacing = eyeSpacingScale(d.rdInvestment);
-  const browSlant = browSlantScale(d.debtRatio);
-  const noseLen = noseLengthScale(d.marketShare);
-  const mouthCurve = mouthCurveScale(d.customerSat);
-  const mouthWidth = mouthWidthScale(d.opEfficiency);
+  const faceW = faceWidthScale(d);
+  const faceH = faceHeightScale(d);
+  const eyeSize = eyeSizeScale(d);
+  const eyeSpacing = eyeSpacingScale(d);
+  const browSlant = browSlantScale(d);
+  const noseLen = noseLengthScale(d);
+  const mouthCurve = mouthCurveScale(d);
+  const mouthWidth = mouthWidthScale(d);
 
   const eyeY = -faceH * 0.12;
   const noseTopY = -faceH * 0.05;
   const mouthY = faceH * 0.42;
+
+  // dashed amber ring flags the single weakest-fundamentals company (high debt,
+  // low growth/margin/liquidity/satisfaction/efficiency) — an emphasis outlier
+  if (d === weakestCompany) {
+    g.append("ellipse")
+      .attr("cx", 0)
+      .attr("cy", 0)
+      .attr("rx", faceW + 9)
+      .attr("ry", faceH + 9)
+      .attr("fill", "none")
+      .attr("stroke", t.amber)
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5 4");
+  }
 
   // face outline — industry color carries the group encoding
   g.append("ellipse")
@@ -119,7 +167,8 @@ faceG.each(function (d) {
     .attr("ry", faceH)
     .attr("fill", t.elevatedBg)
     .attr("stroke", color)
-    .attr("stroke-width", 3.5);
+    .attr("stroke-width", 3.5)
+    .attr("filter", "url(#face-shadow)");
 
   // eyes: white + pupil, mirrored around center
   for (const side of [-1, 1]) {
@@ -162,6 +211,6 @@ faceG.each(function (d) {
     .attr("y", cellH * 0.46)
     .attr("text-anchor", "middle")
     .attr("fill", t.inkSoft)
-    .style("font-size", "14px")
+    .style("font-size", "16px")
     .text(d.name);
 });
