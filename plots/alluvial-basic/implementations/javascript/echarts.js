@@ -46,6 +46,17 @@ const nodes = timePoints.flatMap((_, timeIdx) =>
   }))
 );
 
+// Category index 0 (Advanced) is the best outcome and 3 (Needs Support) the
+// worst, so a transition to a lower index is an improvement. Improving flows
+// get a visibility boost and declining flows recede, so the "students
+// improving over time" story reads immediately instead of requiring the
+// viewer to trace individual bands through the crossing pattern.
+const linkOpacity = (fromIdx, toIdx) => {
+  if (toIdx < fromIdx) return 0.72; // improving
+  if (toIdx > fromIdx) return 0.2; // declining
+  return 0.45; // stable
+};
+
 const links = transitions.flatMap((matrix, k) =>
   matrix.flatMap((row, fromIdx) =>
     row
@@ -55,6 +66,11 @@ const links = transitions.flatMap((matrix, k) =>
         source: nodeName(k, link.fromIdx),
         target: nodeName(k + 1, link.toIdx),
         value: link.value,
+        lineStyle: {
+          color: "source",
+          opacity: linkOpacity(link.fromIdx, link.toIdx),
+          curveness: 0.45,
+        },
       }))
   )
 );
@@ -98,17 +114,17 @@ chart.setOption({
       top: 160,
       bottom: 70,
       nodeWidth: 24,
-      nodeGap: 14,
+      nodeGap: 18,
       nodeAlign: "justify",
       layoutIterations: 64,
       emphasis: { focus: "adjacency" },
       label: {
         position: "top",
         color: t.ink,
-        fontSize: 14,
+        fontSize: 16,
         formatter: (params) => categories[Number(params.name.split("|")[1])],
       },
-      lineStyle: { color: "source", opacity: 0.45, curveness: 0.5 },
+      lineStyle: { color: "source", opacity: 0.45, curveness: 0.45 },
       data: nodes,
       links,
     },
