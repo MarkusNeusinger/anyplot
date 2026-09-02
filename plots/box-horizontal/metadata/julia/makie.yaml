@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: box-horizontal
 created: '2026-09-02T13:26:09Z'
-updated: '2026-09-02T13:30:00Z'
+updated: '2026-09-02T13:40:13Z'
 generated_by: claude-sonnet
 workflow_run: 33635160547
 issue: 2548
@@ -12,46 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Categories sorted by median salary (bottom-to-top ascending), exactly matching
-    the spec's suggestion 'Consider sorting categories by median value for easier
-    comparison' — creates a clear visual hierarchy
-  - Long job-title category labels rendered horizontally and fully legible, demonstrating
-    the actual stated benefit of a horizontal box plot over a vertical one
+  - Categories sorted bottom-to-top by ascending median salary, exactly matching the
+    spec's suggestion to sort by median for easier comparison
+  - Right-of-whisker median-value annotations (139, 125, 120, 101, 82, 68) add a precise
+    numeric anchor to the visual ranking without ever colliding with box, whisker,
+    or outlier geometry — genuinely improves data storytelling over attempt 1
+  - Box width increased from 0.6 to 0.78, fixing the previously flagged overly generous
+    vertical whitespace between rows while keeping labels and outliers uncluttered
   - 'Correct theme-adaptive chrome: PAGE_BG/INK/INK_SOFT tokens threaded through Figure,
-    Axis, spines, gridlines, and boxplot strokes/whiskers; data color (#009E73) identical
-    between light and dark renders'
+    Axis, spines, gridlines, boxplot strokes/whiskers, and the new annotation text;
+    data color (#009E73) identical between light and dark renders'
   - 'Idiomatic Makie usage: native boxplot! recipe with orientation=:horizontal, explicit
-    strokecolor/mediancolor/whiskercolor/outliercolor separation, custom (position,
-    label) yticks tuple for the sorted category mapping'
-  - Canvas exactly 3200x1800 (landscape), clean single-file script with no functions/classes,
-    Random.seed!(42) for reproducibility, only used imports (CairoMakie, Colors, Random,
-    Statistics)
+    strokecolor/mediancolor/whiskercolor/outliercolor separation, custom (positions,
+    labels) yticks tuple for the sorted category mapping'
+  - Canvas exactly 3200x1800 (landscape gate passed), clean single-file script with
+    no functions/classes, Random.seed!(42) for reproducibility, only used imports
+    (CairoMakie, Colors, Random, Statistics)
   weaknesses:
-  - Vertical whitespace between box-plot rows is quite generous (width=0.6 boxes on
-    6 evenly-spaced y positions across the full 1800px canvas height) — a slightly
-    larger box width or tighter row spacing would use the canvas more densely without
-    hurting legibility
-  - Library Mastery is solid but not distinctive beyond the core boxplot! recipe —
-    no Makie-specific feature beyond standard styling kwargs and the (color, alpha)
-    tuple syntax
+  - Library Mastery is still capped by a lack of Makie-distinctive features — the
+    implementation relies on the standard boxplot! recipe, styling kwargs, and a generic
+    text! annotation, none of which showcase something unique to Makie's grammar (e.g.
+    combining recipes, Layoutable-driven small multiples, or a custom Makie theme
+    object)
+  - Aesthetic sophistication is clean and professional but stays within a fairly conventional
+    box-plot form — there is limited visual differentiation beyond the median-value
+    annotation trick, which is a relatively common technique across libraries
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
       Chrome: Bold dark title "box-horizontal · julia · makie · anyplot.ai" centered at top, clearly readable. X-axis label "Annual Salary (thousand USD)" and rotated y-axis label "Job Title" both dark ink, readable. Y tick labels are the six full job-title strings (e.g. "Senior Data Platform Engineer"), rendered horizontally in soft dark gray, fully legible with no truncation or overlap. X tick labels (75/100/125/150/175) in the same soft gray. Subtle vertical gridlines only (y-grid disabled), top/right spines removed.
-      Data: Six horizontal boxes in brand green (#009E73) with dark strokes, dark median lines, gray whiskers, and a few green outlier dots with dark strokes near "Senior Data Platform Engineer" and "UX Research Coordinator". Categories are ordered bottom-to-top by ascending median salary.
-      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+      Data: Six horizontal boxes in brand green (#009E73) with dark strokes, dark median lines, gray whiskers, and green outlier dots with dark strokes near "Senior Data Platform Engineer" (one) and "UX Research Coordinator" (two). Categories are ordered bottom-to-top by ascending median salary. New in this attempt: soft-gray numeric median-value labels (139, 125, 120, 101, 82, 68) sit just past each row's whisker tip, right-aligned and vertically centered on the row, with no collision against boxes, whiskers, or outlier markers.
+      Legibility verdict: PASS — all text, including the new value annotations, is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Same title now in light/white text, clearly readable. Axis labels and tick labels rendered in light gray, clearly visible against the dark background. Gridlines remain subtle vertical lines. Spines and layout identical to the light render.
-      Data: Same six green boxes with the same #009E73 fill (data colors confirmed identical to the light render), now with light-gray strokes/whiskers and light median lines for contrast against the dark background. Outlier dots remain the same brand green with light-toned strokes.
-      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, and tick text remains clearly legible against the near-black surface.
+      Data: Same six green boxes with the same #009E73 fill (data colors confirmed identical to the light render), now with light-gray strokes/whiskers and light median lines for contrast against the dark background. Outlier dots remain the same brand green with light-toned strokes. The median-value annotations are rendered in the same light-gray ink-soft tone as the tick labels, clearly legible against the near-black surface.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, tick, and annotation text remains clearly legible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,14 +62,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; no dark-on-dark
-          or light-on-light issues
+        comment: All text explicitly sized and readable in both themes, including
+          the new median-value annotations; no dark-on-dark or light-on-light issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, boxes, or outlier markers
+        comment: No collisions between labels, boxes, whiskers, outlier markers, or
+          the new value annotations
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -79,14 +83,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Single hue with dark strokes for contrast; no red-green reliance
+        comment: Single hue with dark/light strokes for contrast; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing clipped, canvas exact; vertical whitespace between rows is
-          somewhat generous, could be tightened for density
+        comment: 'Fixed from attempt 1: box width increased 0.6 to 0.78, rows now
+          use canvas height more densely; canvas exact 3200x1800, nothing clipped'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -101,29 +105,30 @@ review:
         comment: 'First series is #009E73; backgrounds correct in both themes; data
           color identical across themes'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean, consistent theming throughout; standard box-plot form limits
-          ceiling
+        comment: Clean, consistent theming plus the new value-annotation detail lifts
+          polish above attempt 1; standard box-plot form still limits ceiling
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, single-axis subtle grid, generous whitespace
+        comment: Top/right spines removed, single-axis subtle grid, generous but no
+          longer excessive whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Median-sorted ordering creates a clear ascending hierarchy that guides
-          comparison
+        comment: Median-sorted ordering plus explicit median-value labels give a clear,
+          precise ascending narrative that guides comparison
     spec_compliance:
       score: 15
       max: 15
@@ -226,13 +231,14 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: No Makie-specific feature beyond standard styling kwargs and (color,
-          alpha) tuple syntax
+        comment: Still no Makie-specific feature beyond standard styling kwargs, (color,
+          alpha) tuple syntax, and a generic text! annotation
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
