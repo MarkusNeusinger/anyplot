@@ -1,0 +1,275 @@
+library: d3
+language: javascript
+specification_id: frequency-polygon-basic
+created: '2026-09-02T00:46:40Z'
+updated: '2026-09-02T01:01:28Z'
+generated_by: claude-sonnet
+workflow_run: 33576316854
+issue: 3418
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct frequency-polygon construction: bin midpoints connected with straight
+    segments, extended to zero at both ends to close the polygon, with bin edges aligned
+    across all three groups via a shared d3.bin().thresholds()'
+  - 'High Load group now carries a secondary right-skewed bump (timeout-prone tail)
+    on top of the base slowdown, directly demonstrating the shape/modality differences
+    a frequency polygon is meant to reveal — this was the #1 weakness in Attempt 1
+    and is now fully addressed'
+  - 'New annotation callout (''High Load: timeout-prone tail stretches response times
+    far past the norm'') is located precisely on the tail bump peak using d3.greatest
+    (d3-array) instead of a hard-coded screen position — both a storytelling improvement
+    and a genuinely distinctive d3-specific technique'
+  - 'Imprint categorical palette in canonical order (#009E73 green, #C475FD lavender,
+    #4467A3 blue), identical data colors between light and dark renders with only
+    chrome flipping'
+  - Distinct line styles (solid / dashed / dotted) plus semi-transparent area fills
+    and a thicker/more-opaque focal treatment on the High Load series give CVD-safe
+    redundant encoding and a clear visual hierarchy
+  - Marker halos (stroke = t.pageBg) keep data points legible where the three polygons
+    overlap heavily around 500-650ms; marker radius increased from 4.5 to 5.5 px vs.
+    Attempt 1
+  - Title now uses bold weight + letter-spacing to better balance against the wide
+    canvas, addressing the previous 'visually light' note
+  - 'Theme-adaptive chrome fully correct in both renders: exact #FAF8F1 / #1A1A17
+    backgrounds verified by pixel sampling, readable ink-soft text, subtle Y-only
+    gridlines, no clipping at canvas edges'
+  - Deterministic, seeded LCG random-normal generator compensates for the browser
+    having no built-in seeded RNG
+  weaknesses:
+  - 'VQ-01: Title has more visual weight now (bold + letter-spacing) but at ~55 chars
+    it still spans only ~35-40% of the 1600px mount width, below the 50-70% comfortable
+    range — a modest fontsize bump would tighten the proportion.'
+  - 'VQ-03: Marker radius (r=5.5 CSS px) is improved from Attempt 1 but still on the
+    moderate side for ~28 bin-midpoint markers per group at 3200px canvas width, especially
+    where three series overlap.'
+  - 'DE-01/DE-02: Aesthetic is polished (focal-series emphasis, marker halos, annotation)
+    but still has headroom versus a fully bespoke composition - e.g. no gradient/emphasis
+    on the fill beneath the focal series'' tail bump.'
+  - 'LM-01: Idiomatic and correct (d3.bin, d3.area/d3.line generators, data-join for
+    markers, d3.greatest for the annotation anchor), but overall usage stays within
+    fairly standard patterns for the library.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1, matching the light-theme spec exactly.
+      Chrome: Title "frequency-polygon-basic · javascript · d3 · anyplot.ai" in bold dark ink with subtle letter-spacing, centered at top. X-axis label "Response Time (ms)" and Y-axis label "Frequency (count)" in dark ink, both unit-labeled. Tick labels in soft ink-gray, fully legible. Subtle Y-axis-only gridlines behind the data. Legend top-right lists "Control" (solid green), "Low Load" (dashed lavender), "High Load" (dotted blue) with matching line-style swatches, positioned clear of any data. A small two-line annotation ("High Load: timeout-prone tail / stretches response times far past the norm") with a thin leader line points precisely at the secondary bump in the High Load curve around x≈810ms. All chrome elements are clearly legible against the light background.
+      Data: Three overlapping frequency polygons with semi-transparent area fills beneath each line, all correctly closing to zero at both ends. First series (Control) renders in Imprint green #009E73 (solid line), second (Low Load) in lavender #C475FD (dashed), third (High Load) in blue #4467A3 (dotted, thicker/more opaque as the focal series) — matches canonical Imprint order. Circular markers with a light halo stroke mark every bin midpoint. Control peaks earliest/narrowest (~450ms), Low Load peaks a bit later and taller (~510ms), High Load is flattest/widest, shifted furthest right, and now shows a distinct secondary bump around 780-850ms representing a timeout-prone tail — a genuine shape/modality difference between groups, not just a mean/sd shift.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17, matching the dark-theme spec exactly (confirmed not pure black).
+      Chrome: Same title, axis labels, legend, and annotation, now rendered in light ink (near-white / soft ink) against the dark background. Gridlines remain subtle but visible. No dark-on-dark or light-on-light failures observed — every title, label, tick, and annotation string is clearly legible.
+      Data: Data colors are pixel-identical to the light render (#009E73 green, #C475FD lavender, #4467A3 blue) — only the chrome (background, text, grid) flipped, as required. Overlap regions render as darker translucent blends, still distinguishable via line style (solid/dashed/dotted).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes; title now
+          bold with letter-spacing but still under the 50-70% width guideline
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the new annotation
+          callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker radius increased to r=5.5 with legibility halos; still moderate
+          for ~28-point-per-group density with heavy overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Line style (solid/dashed/dotted) + fill give redundant encoding beyond
+          hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; balanced margins, nothing clipped at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units (ms, count)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, pixel-verified identical data colors and
+          theme backgrounds across both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Focal-series emphasis (thicker stroke, higher opacity), line-style
+          differentiation, marker halos, and a precisely-anchored annotation go clearly
+          beyond a plain default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle Y-only grid, clean legend, generous whitespace, L-shaped implicit
+          spines; some further polish still possible
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Secondary bump on High Load plus a precisely-placed callout now gives
+          an immediate, explicit insight, addressing the prior 'no shape difference
+          / no callout' weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct frequency polygon connecting bin midpoints
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct line styles, legend, markers, zero-closure, aligned bins
+          across groups, semi-transparent fill — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = response time (continuous), Y = frequency count, full data range
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match group
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now shows both mean/spread shift AND a shape/modality difference
+          (High Load's secondary bump) — the full range of what a frequency polygon
+          reveals
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Response-time-under-load with a retry/timeout tail is a plausible,
+          neutral, well-reasoned experimental scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 250-950ms response times with sensible mean/sd progression and a
+          realistic tail-bump weight (22%) are realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; small RNG/sampling helpers are a necessary and minimal
+          browser adaptation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic including the bump-weighted
+          sampling
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the d3 global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI/interactivity, no animation left enabled
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly builds one <svg> into #container per the mount-node contract'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of d3.bin, d3.area/d3.line shape generators, scales, and
+          data-join for markers
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.greatest (d3-array) locates the tail-bump peak precisely instead
+          of a hard-coded screen position — a genuinely distinctive, non-generic d3
+          technique added since Attempt 1
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
