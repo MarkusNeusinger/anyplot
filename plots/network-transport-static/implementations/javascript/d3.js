@@ -6,7 +6,7 @@
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 100, right: 60, bottom: 110, left: 60 };
+const margin = { top: 90, right: 50, bottom: 95, left: 50 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -55,24 +55,31 @@ const typeLabel = { regional: "Regional", express: "Express", local: "Local" };
 const nodeRadius = 32;
 
 // --- Layout: map data coordinates into the drawing area, aspect preserved --
+// (a single uniform `scale` keeps xScale/yScale slopes equal, so d3.scaleLinear
+// can be used for both axes without distorting the network's shape)
 const stationById = new Map(stations.map((s) => [s.id, s]));
 const xExtent = d3.extent(stations, (d) => d.x);
 const yExtent = d3.extent(stations, (d) => d.y);
 const dataW = xExtent[1] - xExtent[0];
 const dataH = yExtent[1] - yExtent[0];
-const pad = nodeRadius + 70;
+const pad = nodeRadius + 45;
 const scale = Math.min((iw - 2 * pad) / dataW, (ih - 2 * pad) / dataH);
 const offsetX = (iw - dataW * scale) / 2;
 const offsetY = (ih - dataH * scale) / 2;
-const px = (x) => (x - xExtent[0]) * scale + offsetX;
-const py = (y) => (y - yExtent[0]) * scale + offsetY;
+const xScale = d3.scaleLinear().domain(xExtent).range([offsetX, offsetX + dataW * scale]);
+const yScale = d3.scaleLinear().domain(yExtent).range([offsetY, offsetY + dataH * scale]);
 for (const s of stations) {
-  s.cx = px(s.x);
-  s.cy = py(s.y);
+  s.cx = xScale(s.x);
+  s.cy = yScale(s.y);
 }
 
 // --- SVG mount --------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height)
+  .style("font-family", "'Inter', 'Helvetica Neue', Arial, sans-serif");
 const defs = svg.append("defs");
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -96,57 +103,61 @@ for (const [key, color] of Object.entries(typeColor)) {
 // raised above the edges/labels layers at the very end for correct z-order) --
 const nodeLayer = g.append("g").attr("class", "nodes");
 const nodeObstacles = [];
-for (const s of stations) {
-  nodeLayer
-    .append("circle")
-    .attr("cx", s.cx)
-    .attr("cy", s.cy)
-    .attr("r", nodeRadius)
-    .attr("fill", t.elevatedBg)
-    .attr("stroke", t.ink)
-    .attr("stroke-width", 3);
-  nodeObstacles.push({ x: s.cx, y: s.cy, hw: nodeRadius + 10, hh: nodeRadius + 10 });
 
-  const nodeLabelGroup = nodeLayer.append("g").attr("transform", `translate(${s.cx},${s.cy + nodeRadius + 22})`);
-  const nodeLabelText = nodeLabelGroup
-    .append("text")
-    .attr("text-anchor", "middle")
-    .attr("dominant-baseline", "middle")
-    .style("font-size", "15px")
-    .style("font-weight", "600")
-    .style("font-family", "sans-serif")
-    .attr("fill", t.ink)
-    .text(s.label);
-  const nodeLabelBbox = nodeLabelText.node().getBBox();
-  nodeLabelGroup
+const nodeCircles = nodeLayer
+  .selectAll("circle.station")
+  .data(stations)
+  .join("circle")
+  .attr("class", "station")
+  .attr("cx", (d) => d.cx)
+  .attr("cy", (d) => d.cy)
+  .attr("r", nodeRadius)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 3);
+nodeCircles.append("title").text((d) => d.label);
+stations.forEach((s) => nodeObstacles.push({ x: s.cx, y: s.cy, hw: nodeRadius + 10, hh: nodeRadius + 10 }));
+
+const nodeLabelGroups = nodeLayer
+  .selectAll("g.station-label")
+  .data(stations)
+  .join("g")
+  .attr("class", "station-label")
+  .attr("transform", (d) => `translate(${d.cx},${d.cy + nodeRadius + 22})`);
+nodeLabelGroups
+  .append("text")
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "middle")
+  .style("font-size", "15px")
+  .style("font-weight", "600")
+  .attr("fill", t.ink)
+  .text((d) => d.label);
+nodeLabelGroups.each(function (d) {
+  const group = d3.select(this);
+  const bbox = group.select("text").node().getBBox();
+  group
     .insert("rect", "text")
-    .attr("x", nodeLabelBbox.x - 6)
-    .attr("y", nodeLabelBbox.y - 3)
-    .attr("width", nodeLabelBbox.width + 12)
-    .attr("height", nodeLabelBbox.height + 6)
+    .attr("x", bbox.x - 6)
+    .attr("y", bbox.y - 3)
+    .attr("width", bbox.width + 12)
+    .attr("height", bbox.height + 6)
     .attr("rx", 4)
     .attr("fill", t.pageBg)
     .attr("opacity", 0.85);
-  nodeObstacles.push({
-    x: s.cx,
-    y: s.cy + nodeRadius + 22,
-    hw: nodeLabelBbox.width / 2 + 8,
-    hh: nodeLabelBbox.height / 2 + 5,
-  });
-}
+  nodeObstacles.push({ x: d.cx, y: d.cy + nodeRadius + 22, hw: bbox.width / 2 + 8, hh: bbox.height / 2 + 5 });
+});
 
-// --- Group routes by unordered station pair, so parallel routes fan out ----
-const pairGroups = new Map();
-for (const r of routes) {
-  const key = [r.source, r.target].sort().join("|");
-  if (!pairGroups.has(key)) pairGroups.set(key, []);
-  pairGroups.get(key).push(r);
-}
+// --- Group routes by unordered station pair, so parallel routes fan out;
+// trim endpoints so each path (and arrowhead) stops at the node's edge -----
+const trim = (p, towards) => {
+  const vx = towards.x - p.x;
+  const vy = towards.y - p.y;
+  const len = Math.sqrt(vx * vx + vy * vy) || 1;
+  return { x: p.x + (vx / len) * nodeRadius, y: p.y + (vy / len) * nodeRadius };
+};
 
-const edgeLayer = g.append("g").attr("class", "edges");
-const edgeLabelLayer = g.append("g").attr("class", "edge-labels");
-const edgeLabels = [];
-
+const pairGroups = d3.group(routes, (r) => [r.source, r.target].sort().join("|"));
+const routeGeometry = [];
 for (const [key, group] of pairGroups) {
   const [aId, bId] = key.split("|");
   const a = stationById.get(aId);
@@ -163,54 +174,61 @@ for (const [key, group] of pairGroups) {
     const src = stationById.get(route.source);
     const tgt = stationById.get(route.target);
     const mid = { x: (src.cx + tgt.cx) / 2 + nx * offset, y: (src.cy + tgt.cy) / 2 + ny * offset };
-
-    // trim endpoints so the path (and arrowhead) stop at the node's edge
-    const trim = (p, towards) => {
-      const vx = towards.x - p.x;
-      const vy = towards.y - p.y;
-      const len = Math.sqrt(vx * vx + vy * vy) || 1;
-      return { x: p.x + (vx / len) * nodeRadius, y: p.y + (vy / len) * nodeRadius };
-    };
     const start = trim({ x: src.cx, y: src.cy }, mid);
     const end = trim({ x: tgt.cx, y: tgt.cy }, mid);
-
-    edgeLayer
-      .append("path")
-      .attr("d", `M${start.x},${start.y} Q${mid.x},${mid.y} ${end.x},${end.y}`)
-      .attr("fill", "none")
-      .attr("stroke", typeColor[route.type])
-      .attr("stroke-width", 3)
-      .attr("stroke-linecap", "round")
-      .attr("marker-end", `url(#arrow-${route.type})`);
-
     // label anchored at the curve's midpoint (t=0.5 on the quadratic Bezier);
     // exact placement is resolved below by the collision-avoidance pass, since
     // labels from unrelated edges meeting at the same hub can also collide
     const labelPoint = { x: 0.25 * src.cx + 0.5 * mid.x + 0.25 * tgt.cx, y: 0.25 * src.cy + 0.5 * mid.y + 0.25 * tgt.cy };
-
-    const labelGroup = edgeLabelLayer.append("g");
-    const labelText = labelGroup
-      .append("text")
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .style("font-size", "13px")
-      .style("font-family", "sans-serif")
-      .attr("fill", t.inkSoft)
-      .text(`${route.routeId} | ${route.dep} → ${route.arr}`);
-    const bbox = labelText.node().getBBox();
-    labelGroup
-      .insert("rect", "text")
-      .attr("x", bbox.x - 5)
-      .attr("y", bbox.y - 3)
-      .attr("width", bbox.width + 10)
-      .attr("height", bbox.height + 6)
-      .attr("rx", 4)
-      .attr("fill", t.elevatedBg)
-      .attr("opacity", 0.92);
-
-    edgeLabels.push({ el: labelGroup, x: labelPoint.x, y: labelPoint.y, hw: bbox.width / 2 + 6, hh: bbox.height / 2 + 4 });
+    routeGeometry.push({ route, src, tgt, start, mid, end, labelPoint });
   });
 }
+
+const edgeLayer = g.append("g").attr("class", "edges");
+const edgePaths = edgeLayer
+  .selectAll("path.route")
+  .data(routeGeometry)
+  .join("path")
+  .attr("class", "route")
+  .attr("d", (d) => `M${d.start.x},${d.start.y} Q${d.mid.x},${d.mid.y} ${d.end.x},${d.end.y}`)
+  .attr("fill", "none")
+  .attr("stroke", (d) => typeColor[d.route.type])
+  .attr("stroke-width", 3)
+  .attr("stroke-linecap", "round")
+  .attr("marker-end", (d) => `url(#arrow-${d.route.type})`);
+edgePaths
+  .append("title")
+  .text((d) => `${d.route.routeId}: ${d.src.label} → ${d.tgt.label} (${d.route.dep} → ${d.route.arr})`);
+
+const edgeLabelLayer = g.append("g").attr("class", "edge-labels");
+const edgeLabelGroups = edgeLabelLayer
+  .selectAll("g.edge-label")
+  .data(routeGeometry)
+  .join("g")
+  .attr("class", "edge-label");
+edgeLabelGroups
+  .append("text")
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "middle")
+  .style("font-size", "14px")
+  .attr("fill", t.inkSoft)
+  .text((d) => `${d.route.routeId} | ${d.route.dep} → ${d.route.arr}`);
+
+const edgeLabels = [];
+edgeLabelGroups.each(function (d) {
+  const group = d3.select(this);
+  const bbox = group.select("text").node().getBBox();
+  group
+    .insert("rect", "text")
+    .attr("x", bbox.x - 5)
+    .attr("y", bbox.y - 3)
+    .attr("width", bbox.width + 10)
+    .attr("height", bbox.height + 6)
+    .attr("rx", 4)
+    .attr("fill", t.elevatedBg)
+    .attr("opacity", 0.92);
+  edgeLabels.push({ el: group, x: d.labelPoint.x, y: d.labelPoint.y, hw: bbox.width / 2 + 6, hh: bbox.height / 2 + 4 });
+});
 
 // declutter: nudge apart any edge labels whose padded boxes still overlap —
 // happens when several edges from the same hub meet at similar angles — and
@@ -294,7 +312,6 @@ legendItems.forEach((key, i) => {
     .attr("y", legendY)
     .attr("dominant-baseline", "middle")
     .style("font-size", "15px")
-    .style("font-family", "sans-serif")
     .attr("fill", t.inkSoft)
     .text(typeLabel[key]);
 });
@@ -307,6 +324,5 @@ svg
   .attr("text-anchor", "middle")
   .style("font-size", "26px")
   .style("font-weight", "600")
-  .style("font-family", "sans-serif")
   .attr("fill", t.ink)
   .text("network-transport-static · javascript · d3 · anyplot.ai");
