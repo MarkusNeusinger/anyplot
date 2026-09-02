@@ -91,7 +91,7 @@ Highcharts.chart("container", {
         const renderer = this.renderer;
         const cols = 3;
         const rows = 3;
-        const areaTop = 170;
+        const areaTop = 130;
         const legendAreaHeight = 130;
         const cellW = this.chartWidth / cols;
         const cellH = (this.chartHeight - areaTop - legendAreaHeight) / rows;
@@ -120,11 +120,11 @@ Highcharts.chart("container", {
   title: {
     text: "chernoff-basic · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
-    y: 30,
   },
   subtitle: {
     text: "Company financial-health profiles — 8 metrics mapped to facial features, grouped by sector",
     style: { color: t.inkSoft, fontSize: "14px" },
+    y: 55,
   },
   credits: { enabled: false },
   xAxis: { visible: false },
