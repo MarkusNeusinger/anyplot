@@ -1,0 +1,254 @@
+library: echarts
+language: javascript
+specification_id: alluvial-basic
+created: '2026-09-02T11:10:49Z'
+updated: '2026-09-02T11:24:19Z'
+generated_by: claude-sonnet
+workflow_run: 33622447389
+issue: 1878
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Strict alluvial column structure (no cross-generation links) faithfully matches
+    the spec's ordering requirement, unlike a generic Sankey
+  - Link opacity encodes transition direction (0.72 improving, 0.2 declining, 0.45
+    stable) — a genuine data-storytelling device that lets the viewer read the 'students
+    trending upward' narrative without tracing every band
+  - 'Transition matrices are internally consistent: each semester''s inbound totals
+    exactly match the prior semester''s outbound totals (verified by summing rows/columns),
+    giving the data real structural integrity'
+  - Imprint palette applied in canonical order (Advanced=#009E73, Proficient, Developing,
+    Needs Support) and identical across light/dark renders; only chrome flips correctly
+  - Column headers rendered via a custom `graphic` text overlay in addition to per-node
+    category labels, giving both axes of the alluvial (time point + category) clear
+    identification per the spec's labeling note
+  - 'Idiomatic ECharts sankey usage: `lineStyle.color: "source"` gradient coloring,
+    `nodeAlign: "justify"`, `emphasis.focus: "adjacency"` for hover highlighting in
+    the interactive HTML view'
+  - Fully deterministic, hardcoded data with no RNG; clean KISS structure with no
+    unnecessary imports
+  weaknesses:
+  - The mandated title sits around ~35% of plot width — comfortably inside bounds,
+    but on the lower end of expected proportion for the long mandated string; no functional
+    issue, just noted for calibration
+  - No traditional legend swatch list; category identity relies entirely on per-node
+    text labels, which works here but offers no single at-a-glance color key for a
+    reader who lands mid-chart at Semester 3 or 4
+  - Only 4 time points / 4 categories used, at the lower end of the spec's 3-6 time
+    point / 3-8 category range — a wider example would show off more crossing/branching
+    complexity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "alluvial-basic · javascript · echarts · anyplot.ai" centered top in bold dark ink; four bold column headers ("Semester 1"..."Semester 4") sit above each sankey column; per-node category labels ("Advanced", "Proficient", "Developing", "Needs Support") repeat above every node in every column. All text renders in dark ink and is clearly readable against the light background.
+      Data: Four vertically-stacked node columns connected by curved flow bands. First category (Advanced) renders in Imprint green #009E73, followed by purple, blue, and ochre — canonical Imprint order. Flow bands vary in opacity: bands moving toward "Advanced" (improving) are strongly saturated, bands moving toward "Needs Support" (declining) are faint, and same-category (stable) bands sit in between. Band width is visibly proportional to student count.
+      Legibility verdict: PASS — no overlap, no clipping, all labels crisp at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, column headers, and node labels, all re-rendered in light/white ink. Fully legible against the dark background — no dark-on-dark text anywhere.
+      Data: Identical green/purple/blue/ochre band colors and identical opacity encoding as the light render — only the chrome (background, text color) flipped, confirming theme-adaptive tokens were threaded through correctly rather than the data palette.
+      Legibility verdict: PASS — all text and flow bands remain clearly distinguishable from the dark canvas.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (16/22px), readable in both themes;
+          title proportion on the smaller side but not a defect
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Node labels, column headers, and flow bands never collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Flow bands sized proportional to value, clearly visible with well-chosen
+          opacity range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues plus opacity encoding, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, chart fills a large, well-proportioned share of
+          the canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Column headers and node labels are fully descriptive for this chart
+          type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, identical data colors
+          across themes, correct theme backgrounds'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Above a bare default thanks to the opacity-driven improving/declining
+          encoding, but not publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean, uncluttered sankey with curved bands and generous margins;
+          no grid/spine clutter by chart-type nature
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Opacity encoding creates real visual hierarchy toward the 'improving'
+          story, though it's not spelled out with an explicit annotation/legend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Strict justified-column sankey correctly implements the alluvial-diagram
+          constraint (no cross-generation links)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: time_point/category/value/flow all present; consistent per-category
+          colors; flow-proportional widths; opacity for overlap readability; dual
+          labeling
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time points as ordered columns, categories as rows, full data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; per-node category labels serve as the legend
+          for this chart type
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Improving, declining, and stable transitions all present; matrices
+          are internally consistent across every semester boundary
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible academic-performance-tracking scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Student counts are plausible integers; per-semester totals conserve
+          exactly (300 students) across all transitions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, only small pure helper functions (nodeName, linkOpacity)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a multi-column sankey, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled, current setOption
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: nodeAlign justify, lineStyle color:"source", emphasis.focus adjacency
+          — recommended sankey patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Source-gradient link coloring and adjacency-focus hover highlighting
+          are echarts-sankey-specific and not trivially replicated elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
