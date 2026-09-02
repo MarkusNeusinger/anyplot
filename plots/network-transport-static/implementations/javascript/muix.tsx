@@ -1,7 +1,3 @@
-// anyplot.ai
-// network-transport-static: Static Transport Network Diagram
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 // anyplot.ai
 // network-transport-static: Static Transport Network Diagram
@@ -161,7 +157,8 @@ function RouteEdges() {
         const labelY =
           (1 - lt) ** 2 * sy + 2 * (1 - lt) * lt * midY + lt ** 2 * ty + perpY * 24 * sign;
         const text = `${route.route_id} ${route.departure_time}→${route.arrival_time}`;
-        const boxW = text.length * 6.3 + 10;
+        const boxW = text.length * 7.3 + 10;
+        const tooltip = `${route.route_id}: ${source.label} → ${target.label} (${route.departure_time} → ${route.arrival_time}, ${route.type})`;
 
         return (
           <g key={route.route_id}>
@@ -172,17 +169,21 @@ function RouteEdges() {
               strokeWidth={isExpress ? 2.5 : 2}
               strokeDasharray={isExpress ? "9 6" : undefined}
               markerEnd={`url(#arrow-${route.type})`}
-            />
+            >
+              <title>{tooltip}</title>
+            </path>
             <rect
               x={labelX - boxW / 2}
-              y={labelY - 10}
+              y={labelY - 11}
               width={boxW}
-              height={18}
+              height={20}
               rx={3}
               fill={t.elevatedBg}
               opacity={0.94}
-            />
-            <text x={labelX} y={labelY} fontSize={12} fill={t.ink} textAnchor="middle" dominantBaseline="middle">
+            >
+              <title>{tooltip}</title>
+            </rect>
+            <text x={labelX} y={labelY} fontSize={14} fill={t.ink} textAnchor="middle" dominantBaseline="middle">
               {text}
             </text>
           </g>
@@ -226,7 +227,9 @@ function Stations() {
         if (isHub) {
           return (
             <g key={station.id}>
-              <circle cx={cx} cy={cy} r={r} fill={fill} stroke={t.ink} strokeWidth={2} />
+              <circle cx={cx} cy={cy} r={r} fill={fill} stroke={t.ink} strokeWidth={2}>
+                <title>{`${station.label} — major interchange, ${DEGREE[station.id]} connecting routes`}</title>
+              </circle>
               <text x={cx} y={cy} fontSize={19} fontWeight={600} fill={codeColor} textAnchor="middle" dominantBaseline="middle">
                 {station.label}
               </text>
@@ -265,7 +268,9 @@ function Stations() {
 
         return (
           <g key={station.id}>
-            <circle cx={cx} cy={cy} r={r} fill={fill} stroke={t.ink} strokeWidth={2} />
+            <circle cx={cx} cy={cy} r={r} fill={fill} stroke={t.ink} strokeWidth={2}>
+              <title>{`${station.label} (${station.id}) — ${DEGREE[station.id]} connecting route${DEGREE[station.id] === 1 ? "" : "s"}`}</title>
+            </circle>
             <text x={cx} y={cy} fontSize={Math.max(10, r * 0.55)} fontWeight={600} fill={codeColor} textAnchor="middle" dominantBaseline="middle">
               {station.id}
             </text>
@@ -334,7 +339,7 @@ export default function Chart() {
       </ChartContainer>
       <div style={{ height: CAPTION_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: 13, color: t.inkSoft }}>
-          Arrows show travel direction · labels show route ID and scheduled departure {"→"} arrival
+          Arrows show travel direction · labels show route ID and scheduled departure {"→"} arrival · larger circle marks the Central interchange
         </span>
       </div>
     </div>
