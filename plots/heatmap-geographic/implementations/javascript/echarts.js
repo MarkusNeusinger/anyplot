@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-geographic: Geographic Heatmap for Spatial Density
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 78/100 | Created: 2026-09-02
+// Quality: 85/100 | Created: 2026-09-02
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;

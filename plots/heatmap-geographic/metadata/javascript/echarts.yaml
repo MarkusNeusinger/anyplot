@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: heatmap-geographic
 created: '2026-09-02T01:09:19Z'
-updated: '2026-09-02T01:31:55Z'
+updated: '2026-09-02T01:49:32Z'
 generated_by: claude-sonnet
 workflow_run: 33577456350
 issue: 3638
@@ -12,64 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/echarts/plot-dark.html
-quality_score: 78
+quality_score: 85
 review:
   strengths:
-  - Added a simplified SF coastline outline anchoring the density grid to real geography,
-    plus dataZoom (inside) on both axes for zoom/pan - directly responds to the two
-    attempt-1 findings about missing basemap and missing zoom capability
-  - Correct imprint_seq sequential gradient (brand green -> blue), pixel-identical
-    data colors between light and dark renders, fully theme-adaptive chrome with no
-    dark-on-dark/light-on-light issues
-  - 'Deterministic fixed-seed LCG RNG (correct browser-safe reproducibility pattern,
-    no seeded Math.random), correct mount-node contract (animation: false, no explicit
-    size, no devicePixelRatio)'
-  - Correct mandated title format with descriptive prefix; square 2400x2400 canvas
+  - Sunset cluster is now clearly distinguishable from the background baseline, and
+    Downtown/Mission show a visible density valley between them — both HIGH-severity
+    findings from attempt 2 are fixed
+  - Masking low-density grid cells (instead of per-cell opacity) lets the background/coastline
+    show through without the seam artifacts the code comment describes trying and
+    rejecting, satisfying the spec's transparency requirement
+  - Correct imprint_seq sequential gradient, pixel-identical data colors between light
+    and dark renders, fully theme-adaptive chrome with no dark-on-dark/light-on-light
+    issues
+  - dataZoom (inside, both axes) now implemented for interactive zoom exploration
+    per the spec's zoom note
+  - 'Deterministic fixed-seed LCG RNG, correct mount-node contract (animation: false,
+    no explicit size, no devicePixelRatio)'
+  - Correct mandated title format with descriptive prefix; square 2400×2400 canvas
     remains the right orientation choice for this grid-based plot
   - Realistic, neutral SF neighborhood retail-visit scenario with clearly labeled
     cluster markers
   weaknesses:
-  - 'The core weakness from attempt 1 is still unresolved: the Sunset cluster (lowest
-    weightMean of the three) is still nearly indistinguishable from the background
-    baseline color - cropped pixel inspection shows its cell color is barely different
-    from the surrounding zero-density green. The code comment claims the Downtown/Mission
-    spread was ''tightened...so the KDE shows a visible valley between the two peaks,''
-    but the rendered heatmap shows Downtown and Mission still merging into one continuous
-    blue corridor with no visible valley - bandwidthLon/bandwidthLat and the sqrt()
-    compression are unchanged from attempt 1, so this claimed fix did not actually
-    change the visual output. Repair needs a real change (e.g. per-cluster-aware normalization,
-    a steeper compression such as log1p, or narrowing the bandwidth further relative
-    to the ~1.9km Downtown-Mission separation) and must be verified against the rendered
-    PNG, not just asserted in a comment.'
-  - 'Spec explicitly asks for ''a sequential colormap...with transparency to allow
-    the basemap to show through,'' but the heatmap series is fully opaque (itemStyle
-    only sets borderWidth: 0, no alpha/opacity). Because the heatmap paints every
-    cell opaquely, the coastline had to be drawn ON TOP of the heatmap (z:5) instead
-    of underneath as a basemap - this is a reasonable workaround given the constraint,
-    but it means there is no actual basemap showing through a translucent density
-    layer as the spec intends; it reads as a decorative line overlay rather than geographic
-    context underneath the data. Consider adding heatmap opacity (e.g. itemStyle:
-    { opacity: 0.75-0.85 }) so a basemap/coastline drawn beneath can actually show
-    through.'
-  - The synthetic coastline renders as a smooth, abstract dashed oval rather than
-    a recognizable San Francisco shoreline shape - it adds some geographic framing
-    but doesn't read strongly as 'San Francisco' to a viewer; a lower-priority refinement
-    once the hotspot-distinguishability and transparency issues above are fixed.
+  - The masked density grid shows visible blocky/staircase pixel edges around each
+    cluster (a coarse 42x38 categorical grid) rather than a smooth continuous KDE
+    surface — increase nx/ny grid resolution so the density reads as a smooth kernel
+    density estimate instead of a pixelated raster.
+  - The synthetic coastline is still a smooth abstract dashed dome rather than a recognizable
+    San Francisco shoreline shape (flagged as lower-priority in attempt 2, still unaddressed)
+    — more vertices with sharper direction changes would read as an actual coastline
+    rather than a decorative arc.
+  - About half the vertical canvas between the top of the data clusters (~37.785)
+    and the coastline arc (~37.805) is empty background with no data or geographic
+    detail — tightening the mapped extent to the data, or adding more basemap detail
+    (e.g. a bay-side boundary), would use the canvas more purposefully.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1.
-      Chrome: Title "San Francisco Retail Visits · heatmap-geographic · javascript · echarts · anyplot.ai" centered top in dark ink, fully readable. "Longitude"/"Latitude" axis names in soft ink. Rotated (45°) longitude tick labels along the bottom, non-rotated latitude tick labels along the left, both readable. Horizontal colorbar legend ("Low" -> "High visit density") below the plot, readable. Dashed soft-ink coastline arc drawn above the heatmap.
-      Data: Lon/lat categorical-grid heatmap using imprint_seq (green #009E73 -> blue #4467A3). Downtown and Mission render as one continuous merged blue corridor with no visible valley between them despite a code comment claiming otherwise. Sunset is only a very faint tint versus the green baseline - barely distinguishable on close inspection. Three small dark scatter markers labeled "Downtown", "Sunset", "Mission" sit at the neighborhood centers.
-      Legibility verdict: PASS (all text readable; the distinguishability problem is a data/design issue, not a legibility one)
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "San Francisco Retail Visits · heatmap-geographic · javascript · echarts · anyplot.ai" centered top in dark ink, fully readable. "Longitude"/"Latitude" axis names in soft ink; rotated (45°) longitude tick labels along the bottom and upright latitude tick labels along the left, both readable. A horizontal visualMap colorbar ("Low" -> "High visit density") sits below the plot, readable.
+      Data: Two masked KDE heatmap blobs on a lon/lat categorical grid using the imprint_seq gradient (#009E73 green -> #4467A3 blue): a larger blob on the right containing separately-labeled "Downtown" and "Mission" hotspots with a visible lower-density (greener) saddle between their two blue peaks, and a smaller, clearly-visible "Sunset" blob on the left whose center reaches a comparable blue tone to the other two (no longer washed out into the green baseline as in attempt 2). A dashed soft-ink coastline arcs above/around both blobs, drawn first (z:1) so the heatmap masking now lets it show through the low-density gaps. Small dark scatter markers pin each neighborhood label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17.
-      Chrome: Same layout as light render; title, axis names, tick labels, marker labels, legend text, and the coastline all flip to light gray/off-white. No dark-on-dark issues found.
-      Data: Heatmap gradient colors identical to the light render (only chrome flipped); marker positions and labels identical; the same Sunset-washout and Downtown/Mission-merge issues are present here too since the underlying data/scale is unchanged by theme.
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Same layout as light. Title, axis names, tick labels, marker labels, legend text, and the coastline all flip to light gray/off-white. No dark-on-dark issues found — tick labels, title, and marker labels all read clearly against the dark background.
+      Data: Heatmap gradient and marker colors are pixel-identical to the light render — only chrome flipped. Same Sunset-visible / Downtown-Mission-valley pattern confirmed here.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -77,47 +67,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes, no clipping
+        comment: Title fontsize correctly scaled down for the long descriptive-prefixed
+          title; all axis/tick/legend text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text-text or text-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
-        passed: false
-        comment: Sunset cluster is nearly invisible against the background baseline;
-          Downtown/Mission still merge into one blob
+        passed: true
+        comment: Sunset now distinguishable and Downtown/Mission show a valley (fixed
+          from attempt 2), but the masked grid has visible blocky/staircase cell edges
+          instead of a smooth density surface
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe sequential gradient
+        comment: Sequential green-blue ramp, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, correct 2400x2400 canvas
+        comment: Nothing clipped, but roughly half the vertical canvas is empty water/whitespace
+          above the clusters
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive Longitude/Latitude axis names
+        comment: Longitude/Latitude axis names present, mandated title format used
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used correctly, theme-correct chrome, identical data
-          colors across themes
+        comment: imprint_seq used correctly, pixel-identical data colors across themes,
+          correct theme backgrounds
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -125,25 +118,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Coastline adds some geographic framing but reads as an abstract decorative
-          arc rather than recognizable geography; core density presentation is still
-          a generic grid
+        comment: Thoughtful compression/masking iteration, but coarse grid resolution
+          and an abstract dome-shaped coastline keep it from reading as polished
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid clutter, generous whitespace, clean typography
+        comment: Clean chrome, tick marks removed, no grid clutter, but blocky cluster
+          edges reduce refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: One of three named hotspots (Sunset) is effectively invisible and
-          two (Downtown/Mission) merge into a single blob - undermines the plot's
-          core storytelling goal of distinguishing hotspots
+        passed: true
+        comment: All three named hotspots now read as distinguishable with a visible
+          valley between the two largest
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,87 +143,88 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE heatmap over geographic coordinates
+        comment: Genuine KDE-based geographic heatmap
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Zoom now implemented (dataZoom inside); coastline added but heatmap
-          is fully opaque so it does not satisfy the spec's 'transparency to allow
-          the basemap to show through' requirement - the coastline is a decorative
-          overlay drawn on top instead
+        passed: true
+        comment: KDE, sequential colormap with basemap show-through via masking, colorbar,
+          coastline basemap, and dataZoom are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on x, latitude on y, full range shown
+        comment: lon/lat correctly mapped to x/y, value encoded via color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title format, legend labels correct
+        comment: Mandated title format with descriptive prefix; legend/colorbar labeled
+          clearly
     data_quality:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Not all three hotspots are distinguishable on the shared color scale
-          - Sunset is washed out, Downtown/Mission are merged; unchanged from attempt
-          1 despite a comment claiming otherwise
+        passed: true
+        comment: Density variation, weighted points, and all three hotspots now visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral SF retail-visit scenario
+        comment: Plausible, neutral SF retail-visit scenario using real neighborhood
+          coordinates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible lat/lon bounds and visit-weight values
+        comment: Point counts (540-700 per cluster) and visit weights within sensible
+          ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: A few small helper functions for RNG/grid indexing, appropriate for
-          JS
+        comment: No classes; small helper functions (LCG, gaussian) are justified
+          by the browser's lack of a seeded RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG, deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports
+        comment: No unused imports; only the echarts/browser globals are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Well-organized with comments explaining non-obvious tradeoffs (masking
+          vs opacity, compression exponent)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: 'Correct mount-node contract: echarts.init with no explicit size/devicePixelRatio,
+          animation: false'
     library_mastery:
       score: 8
       max: 10
@@ -241,19 +234,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic heatmap + continuous visualMap + scatter overlay + dataZoom
+        comment: 'Standard ECharts pattern: heatmap + continuous visualMap on cartesian2d
+          for a gridded density surface'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Combines continuous visualMap, layered line/scatter series with z-ordering,
-          and dataZoom for a reasonably distinctive ECharts composition
-  verdict: REJECTED
+        comment: z-ordered multi-series composition (line/heatmap/scatter), dataZoom,
+          and a masking technique for basemap show-through
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
@@ -263,3 +258,4 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
+  - minimal-chrome
