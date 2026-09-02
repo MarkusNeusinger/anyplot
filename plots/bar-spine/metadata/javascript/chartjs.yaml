@@ -1,0 +1,259 @@
+library: chartjs
+language: javascript
+specification_id: bar-spine
+created: '2026-09-02T12:53:51Z'
+updated: '2026-09-02T12:59:14Z'
+generated_by: claude-sonnet
+workflow_run: 33630963345
+issue: 5249
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Elegant workaround for Chart.js''s core limitation (no per-bar-width hook on
+    the bar controller): mounts an invisible scatter chart purely for scales/legend/title,
+    then draws pixel-precise proportional rectangles in an `afterDatasetsDraw` plugin
+    using the scales'' own pixel mapping — a genuinely idiomatic use of Chart.js''s
+    documented extension point instead of reaching for another library.'
+  - 'Correct spine-plot semantics: bar widths are exactly proportional to marginal
+    tier size via cumulative edges, segment heights sum to 100% per bar, and bars
+    are flush with no real data gap.'
+  - 'Adaptive segment labels: percentage text is only drawn when the segment is tall
+    enough to hold it legibly (Enterprise''s 4% churn sliver correctly omits its label),
+    avoiding clutter.'
+  - 'Realistic, well-chosen dataset: churn decreases monotonically and plausibly from
+    Free (40%) to Enterprise (4%), telling a clear story at a glance without needing
+    annotations.'
+  - 'Theme-correct in both renders: identical data colors, theme-adaptive text/background,
+    no dark-on-dark or light-on-light issues.'
+  - Semantic red/green choice for Churned/Retained is a deliberate, spec-sanctioned
+    use of the style guide's semantic-exception rule, not an arbitrary color pick.
+  weaknesses:
+  - 'VQ-04: Retained/Churned rely on a green/red hue pair as the primary channel.
+    It''s mitigated by a fixed stacking order and inline percentage labels, but since
+    churn is a critical status signal, a subtle 1px stroke or texture on one segment
+    would make the encoding fully robust for deuteranopia/protanopia readers.'
+  - The 2px page-background divider between adjacent bars is a nice legibility touch
+    but should stay hairline-thin (it already is) so it never reads as an actual gap,
+    since the spec calls for bars to be visually flush.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — not pure white, correct.
+      Chrome: Title "Customer Churn by Subscription Tier · bar-spine · javascript · chartjs · anyplot.ai" in dark ink, clearly legible. Legend ("Retained" green swatch, "Churned" red swatch) in dark text below the title. Y-axis title "Share of customers" and tick labels (0%-100%, step 20%) in soft dark ink, readable. X-axis title "Subscription tier — bar width ∝ customer count" and tier labels (Free, Basic, Pro, Enterprise) centered under each variable-width bar, readable.
+      Data: Four bars of different widths (Free narrowest of the churn-heavy group, Basic widest overall, Pro medium, Enterprise narrowest), each split into a green "Retained" segment (bottom) and red "Churned" segment (top), always summing to 100%. First series is #009E73 brand green as required; second series uses the matte-red semantic anchor (#AE3030) for the loss/churn role. White percentage labels (60%/40%, 78%/22%, 90%/10%, 96%) sit inside each segment large enough to hold them; the thin 4% Enterprise churn sliver correctly omits its label to avoid an unreadable cramped number. Thin off-white divider lines separate segments and adjacent bars for definition.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — not pure black, correct.
+      Chrome: Title, legend text, axis titles, and tick labels all render in light ink (near-white/soft-gray), fully legible against the dark surface. No dark-on-dark failures observed anywhere (title, legend, axis titles, tick labels, tier labels are all clearly visible).
+      Data: Same bar widths and proportions as the light render. Data colors are identical to the light render — green #009E73 and red #AE3030 unchanged; only the chrome (background, text) flipped for the dark theme, confirming palette-position stability across themes.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title scales with length via the 67-char
+          formula; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; thin labels suppressed when
+          segment too small
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Large, clearly visible bar segments; percentage labels adapt to available
+          height
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Retained/Churned uses a red/green hue pair; mitigated by fixed stacking
+          order + inline percentage labels, but a stroke/texture would make it fully
+          CVD-robust for this critical status signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, balanced portion of the canvas; legend sits close
+          to the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles explaining both the width and height encodings
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; red used intentionally for the churn/loss
+          semantic role; theme-correct backgrounds and chrome in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built geometry with deliberate color, label, and divider choices,
+          clearly above a library default
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: No visible grid clutter, generous whitespace, careful hairline dividers
+          between segments and bars
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Monotonic churn decline across tiers is immediately visible through
+          color proportion and bar width, no annotations needed
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implements variable-width, 100%-normalized spine plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportional bar width, conditional segment heights, flush bars,
+          centered labels, percentage labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = subscription tier (cumulative width), Y = share of customers,
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match data (Retained/Churned)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide range of conditional proportions (40% down to 4% churn) shows
+          the association clearly
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral SaaS churn-by-tier scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Churn decreasing with tier price is a realistic, factually plausible
+          pattern
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data, mount, plugin, title, chart; the plugin object
+          is required by Chart.js''s own extension API, not extraneous abstraction'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on the global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a chart type the bar controller can't express;
+          well-commented rationale, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; animation disabled; current Chart.js
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's documented plugin extension point and scale pixel-mapping
+          API, the recommended path for chart types the built-in controllers don't
+          cover
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom plugin + getPixelForValue-driven geometry is a technique fairly
+          distinctive to Chart.js's plugin architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  - normalization
+  styling:
+  - edge-highlighting

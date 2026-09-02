@@ -1,0 +1,252 @@
+library: echarts
+language: javascript
+specification_id: bar-feature-importance
+created: '2026-09-02T12:46:37Z'
+updated: '2026-09-02T12:51:32Z'
+generated_by: claude-sonnet
+workflow_run: 33630698922
+issue: 2276
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Hand-built error-bar renderer (custom series + renderItem) compensates for ECharts
+    having no native error-bar type — low/high caps and connecting line are geometrically
+    correct and clip-free
+  - Continuous visualMap correctly ties bar color to importance magnitude using the
+    Imprint sequential colormap (t.seq), matching the spec's request for a light-to-dark
+    gradient encoding relative contribution
+  - Data is sorted ascending bottom-to-top so the category axis naturally puts the
+    highest-importance feature at the top, exactly as the spec requires
+  - 'Realistic, internally consistent telco-churn feature-importance dataset: importances
+    sum to 1.0, std values scale sensibly with magnitude, and the domain ordering
+    (contract length, tenure, charges dominating) matches real-world churn modeling
+    intuition'
+  - Precision value labels anchored past the high error-bar cap so they never collide
+    with the bar or error whiskers regardless of std width
+  - Theme chrome (background, ink, grid, tick/legend text) is fully token-driven and
+    correctly flips between the light and dark renders while the data gradient stays
+    identical
+  weaknesses:
+  - Design stays close to a conventional horizontal bar layout; beyond the value-driven
+    color gradient there is no additional visual-hierarchy device (e.g. subtitle,
+    callout on the top driver) that would push it into top-tier storytelling
+  - Grid/whitespace refinement is good but not maximal — a touch more breathing room
+    between the visualMap legend and the x-axis title would tighten the bottom margin
+    further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bar-feature-importance · javascript · echarts · anyplot.ai" is bold dark text, centered at top. X-axis title "Relative importance" and percentage tick labels (0%-35%) are dark-gray and clearly legible. Y-axis feature names (Contract Length ... Partner Status) are dark-gray, fully readable, no truncation. Bottom "Low"/"High" visualMap legend labels are dark and legible against the light bar.
+      Data: 12 horizontal bars, sorted descending by importance (Contract Length 27.2% at top down to Partner Status 1.3% at bottom). Bars are colored on a continuous green-to-blue gradient (Imprint sequential palette) keyed to importance magnitude — low bars are brand green (#009E73-ish), high bars shift to blue. Black error-bar whiskers with caps show the std range on every bar, and a precision percentage label sits just past each bar's high cap.
+      Legibility verdict: PASS — no dark-on-light or light-on-light issues anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, tick labels, and the "Low"/"High" legend labels are all rendered in light/off-white text, clearly legible against the dark background. No dark-on-dark text anywhere.
+      Data: Same 12 bars in the same order and same green-to-blue gradient as the light render — the data-color mapping (positions of the sequential scale) is pixel-identical to light; only the chrome (background, text, error-bar stroke color, grid) flipped to light-on-dark. Error-bar whiskers are now white/light-colored for contrast against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; brand-anchored green end of the gradient still reads clearly on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, well-balanced axis/tick sizing, readable
+          in both themes; not raised to 8 because layout is competent rather than
+          flawless
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, bars, error whiskers, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar width, error-bar caps, and value labels all well-sized for 12
+          categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient is CVD-safe, good contrast on both
+          surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot area uses a healthy share of the canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Relative importance" axis title with percentage-formatted ticks;
+          feature names self-descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous data correctly uses imprint_seq (t.seq); theme-correct
+          backgrounds/chrome in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Value-driven continuous color mapping is a genuine design decision
+          above a flat default bar color, but overall composition stays conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle vertical-only gridlines, no axis box/spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending sort plus color gradient by magnitude gives immediate
+          visual hierarchy toward the top drivers
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Horizontal bar chart as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted by importance, sequential gradient color, error bars from
+          std, precision value annotations — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: importance on x, feature on y, all 12 features visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; Low/High visualMap legend
+          is correct for continuous data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide magnitude range (27.2% down to 1.3%) plus per-feature std variability
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible telco-churn feature-importance scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Importances sum to 1.0, std scales sensibly with magnitude, domain
+          ordering is realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> init -> option flow; the renderErrorBar function is
+          a required ECharts custom-series callback, not incidental structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded deterministic arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global echarts is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for a hand-rolled error-bar renderer
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, no explicit size/devicePixelRatio, sets window.__anyplotReady
+          per the mount-node contract
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level grid/xAxis/yAxis/visualMap API combined correctly with
+          a custom series where the library has no built-in primitive
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom renderItem error-bar series and continuous visualMap color-by-value
+          are genuinely ECharts-specific techniques, not trivially portable to other
+          libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - error-bars
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
