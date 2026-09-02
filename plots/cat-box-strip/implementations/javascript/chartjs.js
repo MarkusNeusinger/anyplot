@@ -69,7 +69,7 @@ const stats = groupValues.map((values) => {
 
 const globalMin = Math.min(...groupValues.flat());
 const globalMax = Math.max(...groupValues.flat());
-const medianEpsilon = (globalMax - globalMin) * 0.006;
+const medianEpsilon = (globalMax - globalMin) * 0.01;
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -118,19 +118,44 @@ const stripDatasets = categories.map((category, i) => ({
   type: "scatter",
   label: category,
   data: groupValues[i].map((value) => ({
-    x: i + (nextRandom() - 0.5) * 0.32,
+    x: i + (nextRandom() - 0.5) * 0.36,
     y: value,
   })),
-  backgroundColor: hexToRgba(t.palette[i % t.palette.length], 0.55),
-  pointRadius: 4,
-  pointHoverRadius: 4,
-  pointBorderWidth: 0,
+  backgroundColor: hexToRgba(t.palette[i % t.palette.length], 0.45),
+  pointRadius: 3.5,
+  pointHoverRadius: 3.5,
+  pointBorderWidth: 1,
+  pointBorderColor: t.pageBg,
 }));
+
+// Whisker end caps: short horizontal strokes at whiskerMin/whiskerMax so the
+// range reads unambiguously as a box-plot whisker rather than a plain bar.
+const capDataset = {
+  type: "scatter",
+  label: "Whisker caps",
+  data: stats.flatMap((s, i) => [
+    { x: i, y: s.whiskerMin },
+    { x: i, y: s.whiskerMax },
+  ]),
+  pointStyle: "line",
+  pointRotation: 0,
+  pointRadius: 20,
+  pointBorderColor: (ctx) =>
+    t.palette[Math.floor(ctx.dataIndex / 2) % t.palette.length],
+  pointBorderWidth: 2.5,
+  showLine: false,
+};
 
 new Chart(canvas, {
   type: "bar",
   data: {
-    datasets: [whiskerDataset, boxDataset, medianDataset, ...stripDatasets],
+    datasets: [
+      whiskerDataset,
+      boxDataset,
+      medianDataset,
+      ...stripDatasets,
+      capDataset,
+    ],
   },
   options: {
     responsive: true,
