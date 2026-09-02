@@ -112,8 +112,8 @@ g.selectAll("circle.node")
   .attr("r", (d) => d.r)
   .attr("fill", (d) => color(categoryOf(d).data.id))
   .attr("fill-opacity", (d) => opacityByDepth[d.depth])
-  .attr("stroke", (d) => (!d.children ? t.pageBg : "none"))
-  .attr("stroke-width", (d) => (!d.children ? 1.5 : 0));
+  .attr("stroke", (d) => (!d.children ? t.pageBg : t.grid))
+  .attr("stroke-width", (d) => (!d.children ? 1.5 : 1));
 
 // Labels are drawn in a later pass so every label paints on top of every
 // circle — including a category label that would otherwise sit under its own
@@ -137,9 +137,12 @@ g.selectAll("text.category")
   .style("font-weight", "700")
   .text((d) => fitLabel(d, 17));
 
-// Leaf labels sit centered — leaves have no children to be covered by.
+// Leaf labels sit centered — leaves have no children to be covered by. Only
+// leaves large enough to stay legible once the PNG is scaled down to a
+// mobile-width thumbnail get a label; the font-size floor is raised to match.
+const leafFontSize = (d) => Math.min(16, Math.max(13, d.r / 3));
 g.selectAll("text.leaf")
-  .data(packNodes.filter((d) => !d.children && d.r > 24))
+  .data(packNodes.filter((d) => !d.children && d.r > 34))
   .join("text")
   .attr("class", "leaf")
   .attr("x", (d) => d.x)
@@ -147,8 +150,8 @@ g.selectAll("text.leaf")
   .attr("dy", "0.35em")
   .attr("text-anchor", "middle")
   .attr("fill", t.pageBg)
-  .style("font-size", (d) => `${Math.min(15, Math.max(10, d.r / 3.4))}px`)
-  .text((d) => fitLabel(d, Math.min(15, Math.max(10, d.r / 3.4))));
+  .style("font-size", (d) => `${leafFontSize(d)}px`)
+  .text((d) => fitLabel(d, leafFontSize(d)));
 
 // --- Title --------------------------------------------------------------------
 svg
