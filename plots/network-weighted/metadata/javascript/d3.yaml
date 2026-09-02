@@ -1,0 +1,263 @@
+library: d3
+language: javascript
+specification_id: network-weighted
+created: '2026-09-02T04:24:55Z'
+updated: '2026-09-02T04:40:21Z'
+generated_by: claude-sonnet
+workflow_run: 33590173594
+issue: 3290
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Imprint palette usage: North America green (#009E73, always-first brand
+    color), Europe lavender, Asia blue, applied identically across both themes with
+    theme-correct chrome (warm off-white / warm near-black backgrounds, readable text
+    in both renders)'
+  - Idiomatic, well-tuned d3-force simulation (forceLink with per-edge distance keyed
+    to weight, forceManyBody, forceCollide, forceCenter) converged over 600 synchronous
+    ticks with clamping to keep every node inside the graph band — a genuinely distinctive
+    D3 capability not easily replicated in other charting libraries
+  - Thoughtful dual-encoding of edge weight (both stroke-width via scaleLinear and
+    stroke-opacity) plus weighted-degree-driven node radius (scaleSqrt) and hub emphasis
+    (top-2 nodes by weighted degree get a bolder ring stroke and are drawn last/on
+    top) — creates real visual hierarchy and a clear focal point
+  - Legend explicitly explains both the region color coding and the edge-weight-to-thickness
+    scale (min/max reference lines with 'X papers' labels), exactly as the specification
+    suggests
+  - 'Realistic, neutral research-collaboration dataset (real named universities, 3
+    continents, plausible co-authorship counts) with good structural variety: hub
+    universities, bridge nodes between continents, and light peripheral connections'
+  weaknesses:
+  - Node labels are placed at a fixed offset directly below each node (radius + 18),
+    but several of the highest-weighted-degree hub nodes also have an edge leaving
+    from their lower side, so that edge visually crosses straight through the node's
+    own label text. Confirmed on MIT ('MIT' label sliced by the thick MIT–Stanford
+    edge), Oxford ('Oxford' crossed by the Oxford–Cambridge edge), and ETH Zurich
+    ('ETH Zurich' crossed by the ETH Zurich–EPFL edge) in both renders. Text stays
+    technically legible but looks visually cluttered on exactly the three most important
+    (highest-degree) nodes. Fix by either offsetting each label away from the node's
+    dominant downward edge direction, adding a small text-halo/pill background behind
+    the label so crossing edges disappear behind it, or nudging the label angle per-node
+    based on local edge directions instead of a fixed south offset.
+  - 'Design Excellence is solid but not yet publication-tier: the hub-highlighting
+    and dual edge-weight encoding show real thought, but nothing pushes past ''strong,
+    above-default'' into standout territory (e.g. no data callout on the two hub universities,
+    no subtle depth/shadow treatment distinguishing hub vs. peripheral nodes beyond
+    stroke width).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "network-weighted · javascript · d3 · anyplot.ai" in bold dark ink, clearly visible top-center. 15 university node labels in dark ink below each node. Bottom region-color legend (North America/Europe/Asia) and edge-weight legend (thin "6 papers" line to thick "35 papers" line, plus "Co-authored papers (edge weight)" caption) all in soft dark gray — all comfortably within the canvas with no clipping.
+      Data: 15 nodes colored by continent — green (#009E73) for North America, lavender/purple for Europe, blue for Asia — sized by weighted degree (Oxford, ETH Zurich, and MIT are visibly the largest). 25 edges rendered as gray lines with width and opacity both scaled to edge weight (co-authored paper count), giving a clear strong/weak connection read. Two hub nodes (Oxford, ETH Zurich by weighted degree) have a visibly bolder ring stroke and sit on top of crossing edges.
+      Legibility verdict: PASS overall, with one specific defect — the downward edges leaving MIT, Oxford, and ETH Zurich visually cross directly through those nodes' own labels ("MIT", "Oxford", "ETH Zurich"), confirmed by close-up crop inspection. Text remains readable (letters are not obscured/removed) but the crossing line reduces cleanliness on exactly the three most prominent hub labels.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and legends now in light ink (#F0EFE8 / lighter gray for secondary text) — fully readable against the dark surface, no dark-on-dark failures anywhere (title, node labels, legend text all confirmed legible).
+      Data: Identical node colors and edge weight encoding to the light render — same green/lavender/blue hues, same edge widths and relative opacities, confirming the data-color-identity rule (only chrome flipped, palette positions unchanged).
+      Legibility verdict: PASS, with the same MIT/Oxford/ETH Zurich edge-through-label crossing defect reproduced identically (it's a structural/layout issue independent of theme, not a theme-adaptation bug).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, title scales for length, readable
+          in both themes; minor legibility hit where edges cross hub labels
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Downward edges from MIT, Oxford, and ETH Zurich visually cross straight
+          through those nodes' own labels; text stays readable but looks cluttered
+          on the 3 most important hub nodes
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Edge width (1.5-9px) and node radius (16-42px) well scaled for 15
+          nodes / 25 edges, no overplotting
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 3 clearly distinct hues (green/lavender/blue) from Imprint palette,
+          size + label give redundant encoding beyond hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Graph fills the square canvas well, legend sits close to the graph,
+          balanced margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes for a network graph; edge-weight legend explicitly
+          labeled in units ('papers')
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (North America), canonical Imprint order for
+          Europe/Asia, identical data colors across themes, theme-correct backgrounds/text'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful dual encoding (edge width + opacity) and hub-node emphasis
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean, generous whitespace and no unnecessary chrome, but the label/edge
+          overlap on hub nodes keeps it from 'every detail polished'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Node size by weighted degree plus bolder hub-node strokes and top
+          z-order give a clear visual hierarchy pointing to the most central collaborators
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct weighted network graph with force-directed layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Edge-thickness-by-weight, weight legend, node sizing by weighted
+          degree, and force-directed layout all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Nodes/edges/weights correctly mapped to visual encodings
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; both legends match the underlying data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good range of edge weights (6-35) and node degrees, multi-continent
+          clustering with bridge edges
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real named universities, neutral academic-collaboration scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Co-authorship counts and weighted-degree sums are plausible and internally
+          consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data and simulation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a weighted force-directed graph, no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, current d3 v7 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper data-join pattern, d3-scale usage, idiomatic force simulation
+          setup
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3-force (forceLink/forceManyBody/forceCollide/forceCenter) tuned
+          per-edge by weight is a genuinely distinctive D3 capability
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-directed-layout
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - weighted-degree-computation
+  styling:
+  - alpha-blending
+  - edge-highlighting

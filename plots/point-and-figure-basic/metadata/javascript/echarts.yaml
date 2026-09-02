@@ -1,0 +1,277 @@
+library: echarts
+language: javascript
+specification_id: point-and-figure-basic
+created: '2026-09-02T05:20:50Z'
+updated: '2026-09-02T05:36:18Z'
+generated_by: claude-sonnet
+workflow_run: 33593272708
+issue: 3755
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Fixed the t.muted bug from attempt 1: both trend lines and their legend swatches
+    now correctly reference t.inkSoft, which pixel-sampling confirms renders as a
+    neutral gray (74,74,68 light / 184,183,176 dark) in both themes instead of the
+    previous stray #5070DD blue fallback.'
+  - Resistance trend line (descending highs, 45°) has been added alongside the existing
+    support line, completing the spec's signature support/resistance analytical feature
+    and forming a full price channel.
+  - Y-axis title is now 'Price ($)' with a proper unit suffix, consistent with the
+    $-formatted tick labels.
+  - Y-axis max is now tightly bound to (globalMaxBox + 1) * BOX_SIZE, eliminating
+    the ~15% unused whitespace at the top of the price range flagged in the previous
+    review.
+  - 'Correct point-and-figure construction: box-size quantization ($2/box) and 3-box
+    reversal logic are implemented from scratch and produce a plausible, textbook-looking
+    column pattern.'
+  - Clever use of transparent scatter markers with inside labels to render authentic
+    X/O glyphs instead of faking them with icons or images.
+  - First data series is the correct brand green (#009E73) for rising columns; falling
+    columns correctly use the semantic-red anchor (#AE3030) for the finance loss/bearish
+    convention.
+  - Deterministic LCG-based regime-switching random walk gives realistic multi-week
+    up/down swings, producing genuine trend structure rather than pure noise.
+  - Category-axis gotcha (string category values instead of numeric indices) is explicitly
+    commented and handled correctly.
+  - 'Theme chrome (title, axis labels, ticks, grid, legend) is correctly threaded
+    through ANYPLOT_TOKENS and fully legible in both light and dark renders; pixel
+    sampling confirms backgrounds match #FAF8F1 / #1A1A17 exactly.'
+  weaknesses:
+  - Both trend lines are single anchor-to-end segments from the global high/low rather
+    than a stepped line hugging each successive reversal point — a fine simplification
+    for a 'basic' spec, but a follow-on 'advanced' variant could trace the actual
+    stair-stepped 45° boxes.
+  - 'DE-01/DE-02 are solid but not yet publication-grade: the chart is still fundamentally
+    a styled scatter+line composition without additional polish like annotated breakout
+    callouts or a secondary panel.'
+  - CQ-01 loses a fraction of a point to the multi-branch column-construction loop;
+    it is justified by the genuine complexity of P&F box/reversal logic, but a short
+    comment summarizing the state machine's three branches (start, extend, reverse)
+    would help future readers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white; pixel-sampled at (50,50) = RGB(250,248,241), matching #FAF8F1 exactly.
+      Chrome: Title "point-and-figure-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend row directly beneath ("Rising (X)" green swatch, "Falling (O)" red swatch, "Bullish support (45°)" and "Bearish resistance (45°)" dark-gray swatches) is fully legible. Y-axis title "Price ($)" (unit now included) and X-axis title "Column (price reversal)" both readable in soft ink. Tick labels ($72-$106 on Y in $2 steps, 1-10 on X) all legible; subtle horizontal-only gridlines every $2; top of the price range is now tightly bound to the highest column ($104), eliminating the earlier top-whitespace gap.
+      Data: Ten P&F columns of green "X" (rising) and red "O" (falling) glyphs rendered as transparent scatter markers with inside labels. Pixel sampling in a representative crop shows the X glyph color ≈ (50,176,140)/(43,169,134) (anti-aliased #009E73 on the light background) and the O glyph color ≈ (189,88,86)/(182,81,80) (anti-aliased #AE3030) — both are the correct Imprint brand green and semantic-red anchor. A dashed "Bullish support" line (column 5/$76 → column 10/$86) and a dotted "Bearish resistance" line (column 2/$104 → column 10/$88) are both present, forming a full price channel. Both trend lines sample as neutral gray RGB(74,74,68), confirming the previous t.muted-undefined bug (which rendered them as a stray #5070DD blue) is fixed — they now correctly use the theme-adaptive t.inkSoft token.
+      Legibility verdict: PASS — all title/axis/tick/legend text is fully readable against the light background, no dark-on-light or clipping issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black; pixel-sampled at (50,50) = RGB(26,26,23), matching #1A1A17 exactly.
+      Chrome: Title, legend, and both axis titles render in light ink and are clearly readable against the dark surface — no dark-on-dark failures. Gridlines remain subtle but visible.
+      Data: X/O glyph colors are visually and numerically consistent with the light render (green ≈ (5,131,96)/(11,137,103), red ≈ (144,43,42)/(150,49,49) — the same underlying #009E73 / #AE3030 hexes blended against the dark background instead of the light one), confirming the categorical data colors are theme-independent as required. Both trend lines now sample as light gray RGB(184,183,176) — the theme-flipped counterpart of the light render's (74,74,68), proving the trend lines are genuinely theme-adaptive chrome (t.inkSoft) rather than a static default-color fallback.
+      Legibility verdict: PASS — all chrome text reads cleanly on the dark surface; no dark-on-dark or clipping issues; the previously broken trend-line color bug is confirmed fixed in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, legend 15, axis names 15,
+          tick labels 14, X/O glyphs 26); readable at full size and both themes, no
+          overflow or overlap.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or glyphs; adjacent X/O symbols spaced cleanly
+          at $2 intervals across all 10 columns.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize 30 with fontSize 26 glyph labels are prominent and well-sized
+          for the ~60-symbol data volume.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green pair is redundantly encoded via distinct X/O shapes, avoiding
+          hue-only signaling.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis max now tightly bound to the highest column; the top-whitespace
+          issue from attempt 1 is resolved and canvas utilization is balanced.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Column (price reversal)'' and ''Price ($)'' are both descriptive
+          with units; Y tick labels also carry a $ prefix via formatter.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: X/O series use Imprint brand green (#009E73) and semantic-red anchor
+          (#AE3030); trend lines now correctly reference t.inkSoft and pixel-sample
+          as neutral gray in both themes, fixing the previous undefined-token bug.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Transparent-marker-plus-glyph-label technique for authentic X/O rendering,
+          plus a complete support/resistance channel, is a genuine design idea clearly
+          above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Hidden y-axis line, hidden tick marks, subtle single-axis gridlines,
+          generous margins — clearly above raw defaults but not maximally polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Both support and resistance trend lines are now present, forming
+          a complete price channel that guides the viewer to the trend boundaries
+          — a clear improvement over the support-only version.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine point-and-figure construction: box quantization + 3-box
+          reversal columns, X-axis represents columns not time.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both the support (ascending-low) and resistance (descending-high)
+          45° trend lines are now implemented, along with box-size Y-axis gridlines.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = column index, Y = price in $/box; all columns visible and correctly
+          mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; legend labels clearly
+          describe all four series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows rising and falling columns of varying heights, multiple reversals,
+          and now both trend-line types, fully demonstrating the plot type's analytical
+          features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible mid-cap tech stock price series in a neutral finance context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices ($72-$104), $2 box size, and 3-box reversal are all realistic
+          parameter choices for a real trading instrument.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear data->transform->option flow; small helper functions
+          (makeLcg, priceToBox) and the column-construction loop are justified by
+          the P&F algorithm's genuine complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG, no Math.random().
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the injected echarts global; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The t.muted undefined-reference bug from attempt 1 is fixed; code
+          is clean with no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set, current setOption
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct category/value axis pairing, scatter+line series composition,
+          tooltip valueFormatter, legend swatch overrides — solid idiomatic echarts
+          with no remaining bugs.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Transparent-marker + inside-label glyph technique to render X/O symbols
+          is a creative, echarts-specific use of the label system.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - minimal-chrome

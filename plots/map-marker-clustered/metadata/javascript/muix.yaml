@@ -1,0 +1,256 @@
+library: muix
+language: javascript
+specification_id: map-marker-clustered
+created: '2026-09-02T02:46:36Z'
+updated: '2026-09-02T03:13:23Z'
+generated_by: claude-sonnet
+workflow_run: 33583911593
+issue: 3766
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/muix/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - Deterministic, well-commented clustering pipeline (grid-based spatial binning
+    + an explicit overlap-resolution pass that converts pixel-space bubble separation
+    back through the axis scale) that produces a genuinely non-overlapping, size-accurate
+    cluster map.
+  - Idiomatic use of MUI X's composable chart API and useXScale/useYScale hooks to
+    layer custom SVG (geographic backdrop, count labels) directly in the chart's coordinate
+    space.
+  - Correct Imprint palette usage including a well-judged semantic exception (water
+    -> blue) and a clear, well-organized custom legend explaining both color and size
+    encodings.
+  - Identical data colors and fully legible theme-adaptive chrome across both light
+    and dark renders.
+  weaknesses:
+  - Several x- and y-axis tick labels are duplicated (e.g., '49°N' appears twice,
+    '48°N' appears twice) because valueFormatter's Math.abs(v).toFixed(0) rounds two
+    distinct 0.5°-spaced gridline values to the same integer -- reduce the tick step
+    to whole degrees (or show one decimal) so every rendered label is unique.
+  - The Puget Sound backdrop polygon (PUGET_SOUND array in GeographicBackdrop) renders
+    as a self-intersecting, twisted ribbon shape rather than a recognizable water-body
+    outline -- the listed points don't trace a simple non-self-intersecting perimeter
+    when connected in order; reorder them to follow the actual coastline consistently
+    (e.g., clockwise around the inlet) so the filled polygon doesn't cross itself.
+  - The rotated 'Latitude (°)' axis title sits very close to / slightly overlaps the
+    '47°N' tick label near the vertical center of the y-axis in both renders -- increase
+    the left margin slightly or add axis label offset spacing to separate them.
+  - '''Smooth zoom transitions'' and ''click-to-zoom'' cluster expand/collapse from
+    the spec are not implemented (a fixed single clustering level is shown); acceptable
+    given MUI X community''s lack of an interactive re-clustering framework, but worth
+    a brief code comment acknowledging the trade-off.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Dark title, dark axis titles/tick labels, all clearly readable against the cream background. Legend below the chart (store format colors + cluster size bubbles) also dark/readable.
+      Data: Bubble scatter map of Pacific NW coffee-store locations. First category (Flagship) is #009E73 green, Standard is lavender, Kiosk is blue -- matches canonical Imprint order. Cluster count labels drawn in a cream/off-white fill centered on bubbles, legible against the saturated bubble colors.
+      Legibility verdict: PASS, with two non-legibility defects noted separately: (1) duplicate axis tick labels (e.g. "49°N" appears twice) from integer-rounding of 0.5°-spaced ticks, (2) the Puget Sound backdrop polygon self-intersects and renders as a twisted ribbon shape instead of a coastline outline.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis titles, and tick labels flip to light ink and are fully legible against the dark background. No dark-on-dark failures found anywhere (title, axis labels, ticks, legend all check out).
+      Data: Colors identical to the light render (green/lavender/blue unchanged) -- confirmed via side-by-side comparison. Cluster count labels use fill=t.pageBg, which in dark mode is near-black text sitting on the bright bubble fills; this remains legible because the bubble hues are much lighter than the near-black page background, so it reads correctly despite not being literally "white text".
+      Legibility verdict: PASS. Same duplicate-tick-label and self-intersecting-polygon issues persist identically, confirming both are code/geometry bugs rather than theme-specific rendering failures.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Sizes explicitly set and well-proportioned, but duplicate axis-tick
+          labels undermine axis-content clarity.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Rotated 'Latitude (°)' axis title sits very close to / slightly overlaps
+          the '47°N' tick label.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cluster bubbles well-sized per count tier with overlap-avoidance;
+          individual dots small but visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Solid contrast on both surfaces; no overlap so no alpha-contrast
+          issue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart/title/legend bands use the canvas well; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with degree units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for categories 2-3, correct
+          semantic water-blue exception, theme-correct chrome.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Thoughtful encoding choices let down by the visibly broken Puget
+          Sound shape.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean margins/grid, but the broken polygon reads as an unrefined
+          bug.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size + color + count-label encoding clearly shows density hierarchy
+          across hubs vs rural areas.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct clustered-marker approach; basemap is a documented, library-constrained
+          vector approximation rather than a wrong chart type.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Count display, category coloring, and basemap present; zoom-driven
+          expand/collapse not implemented.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude/latitude correctly mapped to X/Y with full range coverage.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec; both legend rows explain encodings clearly.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Single stores, small and large clusters, multiple categories, urban
+          and rural coverage all shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible coffee-chain scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Geographically and numerically realistic for the Pacific Northwest.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: More structured than a flat script, but each helper is justified
+          by the visualization's needs.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG, no Math.random().
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; clustering and overlap-resolution logic
+          is real and functional.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, harness contract respected.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Composable ChartContainer API used to enable custom SVG overlay layers.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale-driven custom overlays and zAxis ordinal colorMap
+          are MUI X-specific patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
+  - alpha-blending

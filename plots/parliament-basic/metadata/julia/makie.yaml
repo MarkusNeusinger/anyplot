@@ -1,0 +1,230 @@
+library: makie
+language: julia
+specification_id: parliament-basic
+created: '2026-09-02T04:48:39Z'
+updated: '2026-09-02T05:04:54Z'
+generated_by: claude-sonnet
+workflow_run: 33591471120
+issue: 2499
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Both previous-review weaknesses about missing majority-threshold emphasis and
+    CVD-floor color risk are directly fixed: a dashed threshold line + "Majority (176)"
+    label, and a 1px ink stroke on every seat marker'
+  - ★ largest callout on the plurality party in the legend adds a genuine focal point
+    without any fake-UI risk
+  - 'Correct Imprint palette usage retained: brand green first, canonical order, Independents
+    on the theme-adaptive muted anchor'
+  - Fully theme-adaptive chrome, identical data colors between light/dark renders,
+    exact 3200x1800 canvas, no clipping
+  - Cleaner imports after removing the vestigial Random/seed! that had no effect on
+    the hardcoded dataset
+  weaknesses:
+  - Design Excellence is still short of publication level — the majority line/annotation
+    use generic Makie primitives (lines!, text!) rather than a technique distinctive
+    to Makie; consider using the grid-layout system further (e.g. a small total-seats
+    readout box) for a stronger focal point
+  - Visual Refinement (DE-02) hasn't moved since the last review — grid/spine treatment
+    is correct but minimal; no additional polish was added this round
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: bold dark title "parliament-basic · julia · makie · anyplot.ai" top-left of the plot column, clearly legible; legend at right lists all 7 parties with seat counts in soft dark-gray text, fully readable; new dashed "Majority (176)" line + label clearly visible.
+      Data: 9 concentric semicircular arcs of dots running left (Green Alliance, #009E73 brand green) through Progressive Union (lavender), Centrist Coalition (blue), Reform Party (ochre), Conservative Bloc (red), Liberty Party (cyan), to Independents (muted gray) at the far right. Each dot now has a thin dark stroke for definition. Legend flags "Progressive Union (84) ★ largest".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title and legend render in light off-white / light-gray text, clearly legible; no dark-on-dark issues found anywhere; majority line/label legible.
+      Data: identical dot colors, positions, stroke treatment, and annotations to the light render — only background/text chrome flipped, confirming theme-adaptive tokens threaded through correctly.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (titlesize=20, labelsize=14, annotation
+          fontsize=12), fully readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, legend, majority label, and data dots
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize=22 with consistent per-row spacing across all 9 arcs,
+          well-adapted to 350 total seats
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Added 1px ink stroke on every marker addresses the prior CVD-discrimination-floor
+          weakness for n=7 series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exact 3200x1800, plot + legend well balanced, no cut-off
+          content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A axes correctly hidden; legend labels fully descriptive with seat
+          counts and largest-bloc callout
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, remaining parties follow canonical Imprint
+          order, Independents use the muted semantic anchor, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Majority line + star annotation add polish beyond bare defaults,
+          but still short of publication-level composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Spines/decorations fully removed, generous whitespace, frameless
+          legend - unchanged from last review
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Majority-threshold line/label and star largest-bloc callout give
+          an immediate focal point instead of requiring manual counting
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct semicircular parliament seat chart with concentric arcs
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Individual seat dots, party colors, left-to-right arcs, legend with
+          names+counts, and the optional majority-threshold line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Seat counts correctly map to dot counts per party and radial position
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches mandated format exactly; legend labels match party
+          names and seat counts
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: 7 parties spanning a wide range of seat counts (10-84) shows good
+          size variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 3
+        max: 5
+        comment: Fictional, neutral party names avoid real-world political controversy,
+          consistent with other approved implementations of this spec
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Total of 350 seats is a realistic national-assembly size, matching
+          the spec's 50-700 guidance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: No functions/classes, linear imports -> data -> layout -> plot ->
+          save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fully hardcoded/deterministic data; removing the vestigial Random/seed!
+          was correct since no randomness is exercised
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only CairoMakie and Colors remain, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity for the row/angle geometry math, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current Makie API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Figure/Axis grid, colsize!, DataAspect(), hidedecorations!/hidespines!
+          all used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: colsize!, DataAspect(), and MarkerElement-based custom legend leverage
+          Makie's grid-layout system; majority line/annotation use generic lines!/text!
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

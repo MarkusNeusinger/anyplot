@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: maze-circular
+created: '2026-09-02T02:57:40Z'
+updated: '2026-09-02T03:19:37Z'
+generated_by: claude-sonnet
+workflow_run: 33584672358
+issue: 3804
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/muix/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Difficulty parameter is now genuinely wired into the maze generator (CONTINUE_BIAS
+    biases Prim's frontier selection) and surfaced in the caption ('7 rings · medium
+    difficulty'), fixing the attempt-1 weakness where difficulty had no visible effect.
+  - 'Mathematically correct maze: a randomized Prim''s spanning tree over the ring/sector
+    graph guarantees exactly one solvable path (no cycles), regardless of the difficulty
+    bias.'
+  - 'Excellent theme handling: chrome (page background, title) flips correctly between
+    light/dark while the print-style maze ink stays fixed cream-on-black, matching
+    the spec''s own ''black walls on white background for print-friendly output''
+    requirement and the established crossword-basic precedent.'
+  - Clear, well-marked entry (START tick + label) and goal (brand-green center disc),
+    both legible in both themes with no edge clipping.
+  - Rounded-corner frame (rx=20) is a real, if modest, visual-refinement improvement
+    over the plain black-bordered square from attempt 1.
+  - Deterministic, seeded generation (mulberry32) for reproducibility.
+  weaknesses:
+  - 'Library Mastery remains low: the ScatterChart component is still used purely
+    as a sized canvas via a single dummy point plus a slots.scatter override, not
+    for any of MUI X''s actual data-encoding/series capabilities — this attempt did
+    not address that attempt-1 weakness.'
+  - Only one difficulty tier (medium) is ever rendered — the parameter now affects
+    generation and is labeled, but the catalog image still can't show how 'easy' or
+    'hard' visually differ.
+  - Design Excellence is solid but still short of exceptional — beyond the new rounded
+    corners, the frame and wall styling remain fairly plain/utilitarian.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 page background; the maze's own "paper" panel (rounded-corner rect) is the same #FAF8F1 so it blends seamlessly into the page.
+      Chrome: Title "maze-circular · javascript · muix · anyplot.ai" in dark ink at the top, clearly legible. START label (bold black) with a short diagonal entry tick sits just outside the circle at the gap in the outer wall. Caption "7 rings · medium difficulty" in soft ink at bottom-left is legible despite reduced opacity.
+      Data: Maze walls drawn in black (#1A1A17) with rounded caps across 7 concentric rings and 12 sectors, forming a clean radial labyrinth. Goal marker at center is a solid Imprint brand-green (#009E73) disc with a thin cream stroke.
+      Legibility verdict: PASS — no light-on-light text, no overlaps.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 page background; the maze panel keeps its #FAF8F1 cream fill unchanged (intentional print-artifact exception per spec — "black walls on white background for print-friendly output" — matching the crossword-basic precedent), producing a "cream card floating on a dark canvas" effect.
+      Chrome: Title text flips to light ink, fully readable against the dark page background. START label, entry tick, and caption remain black-on-cream inside the maze panel, still fully legible since that panel itself stays light in both themes.
+      Data: Maze wall colors and the brand-green goal marker are pixel-identical to the light render — no unintended color drift between themes.
+      Legibility verdict: PASS — no dark-on-dark text; the fixed-palette maze panel is a deliberate, spec-mandated exception rather than a theme-adaptation bug.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, readable in both themes; caption at 65% opacity
+          is slightly faint but still legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, maze walls, START label, or caption
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wall stroke width visible without dominating; goal marker well sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast black/cream/green, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Maze panel fills the square canvas with balanced margins; nothing
+          cut off; canvas-dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A traditional axes; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Goal uses Imprint #009E73; page chrome exactly #FAF8F1/#1A1A17;
+          fixed maze ink is a spec-mandated print exception'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom polar geometry and markers, above generic default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: New rounded-corner frame (rx=20) improves on attempt 1's plain square
+          border
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Goal/START markers create clear visual hierarchy for the solver
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine circular maze with concentric rings and radial sectors
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Entry, goal, single-solution walls, and now a working difficulty
+          parameter all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Polar geometry correctly maps rings/sectors; rings=7 and difficulty=medium
+          match the spec's own example
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Rings, sectors, walls, entry, goal, and a labeled difficulty tier
+          are all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly generated, solvable, neutral puzzle artifact
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 7 rings within spec's recommended 5-10 range; 12 sectors stay legible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions justified by maze-generation and difficulty-bias
+          algorithm needs
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic mulberry32 PRNG with fixed seed 42
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean implementation of biased Prim's spanning tree over a polar
+          grid graph
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, correct harness contract
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
+        max: 5
+        passed: false
+        comment: ScatterChart is still used only as a sized canvas via a dummy point
+          and slot override, not for real charting — unaddressed from attempt 1
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useDrawingArea() and slots.scatter overrides are genuinely MUI X-specific
+          extensibility mechanisms
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

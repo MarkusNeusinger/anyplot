@@ -1,0 +1,277 @@
+library: muix
+language: javascript
+specification_id: point-and-figure-basic
+created: '2026-09-02T05:18:22Z'
+updated: '2026-09-02T05:33:14Z'
+generated_by: claude-sonnet
+workflow_run: 33593614888
+issue: 3755
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Genuinely custom Point-and-Figure renderer built on ChartContainer + useXScale/useYScale
+    — MUI X has no native P&F series, and this composes the community API (band/linear
+    scales, raw SVG marks) exactly as the library prompt encourages instead of falling
+    back to a generic chart type
+  - 'Correct finance semantic-color exception: rising (X) columns use brand green
+    (#009E73), falling (O) columns use the matte-red semantic anchor (#AE3030) for
+    loss/bearish — matches the style guide''s documented profit/loss convention rather
+    than blind ordinal palette order'
+  - 45-degree support/resistance trend lines are computed algorithmically from column
+    reversals (not hardcoded) and rendered as subtle dashed overlays that don't compete
+    with the X/O data
+  - Legend icons precisely mirror the actual rendered glyphs and line styles (X/O
+    letterforms, dashed line samples with matching color/opacity), so the legend reads
+    as a direct key to the plot
+  - 'Both light and dark renders are fully legible: title, axis labels, tick labels,
+    and legend text all use theme-adaptive tokens with explicit font sizes, and the
+    data colors are pixel-identical between themes'
+  - X-axis is explicitly framed as "Column (price reversal, not time)" — directly
+    reflects the spec's key note that P&F charts are not time-indexed
+  - Deterministic LCG-seeded price series (seed=42) with a realistic $60–$185 mid-cap
+    range over 360 sessions gives good column variety — narrow early consolidation,
+    a clear uptrend, and choppy reversal zones near the end
+  weaknesses:
+  - 'Design Excellence is solid but not exceptional: the grid/spine treatment and
+    overall composition read as ''well-executed'' rather than ''publication-ready''
+    — consider a stronger focal emphasis (e.g. a shaded zone or callout at the most
+    recent breakout) to push Data Storytelling further'
+  - buildColumns/buildTrendLines are correct but fairly dense (~90 combined lines
+    of box-construction and trend-line logic) — a short inline comment on the box-index
+    math (why boxIndex is compared via Math.round(price/boxSize)) would help future
+    maintainers verify correctness at a glance
+  - Title is left-aligned and comparatively small relative to the 3200px canvas width
+    (~35%) while the legend occupies the opposite corner — intentional and legible,
+    but slightly under the 50-70% proportion guideline for non-mandated-length titles;
+    not a defect, just worth noting for consistency with other muix implementations
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "point-and-figure-basic · javascript · muix · anyplot.ai" in bold dark ink, top-left. Legend top-right with four entries (X Rising column / O Falling column / Support / Resistance), each icon matching the actual rendered glyph/line style. X-axis labeled "Column (price reversal, not time)", Y-axis labeled "Price ($)" with dollar-formatted ticks ($142.5–$180.0). Subtle horizontal grid lines at box-size price intervals. All text is dark ink on the light surface and clearly readable.
+      Data: ~30 columns of stacked X (green, #009E73) and O (matte red, #AE3030) glyphs forming a P&F ladder that trends from ~$143 up to ~$183, with a clear consolidation band early on and a choppier alternating zone near the right edge. Two dashed green support lines and one dashed red resistance line overlay the data at ~45-degree angles, anchored to reversal-column lows/highs.
+      Legibility verdict: PASS — no overlapping text, no clipped elements, title/axis/tick/legend text all crisp against the cream background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis labels, now rendered in light ink/off-white text against the dark surface. Grid lines are faint light-colored horizontal rules at the same price intervals. No dark-on-dark text anywhere — every label, tick, and legend string is clearly legible.
+      Data: Identical column layout and identical data colors to the light render — the same #009E73 green X's and #AE3030 red O's, same support/resistance line positions and colors, confirming only chrome (not data hue) flips between themes.
+      Legibility verdict: PASS — full theme-adaptive chrome, no legibility regressions relative to the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis labels 15px, ticks
+          13px, legend 14-16px); fully readable in both themes. Title is on the smaller/left-aligned
+          side rather than 50-70% width, but no overflow or clipping — not a deduction
+          per the proportional-sizing rule.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions; stacked X/O glyphs align
+          cleanly to grid rows even in dense columns.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Glyph font size adapts to column bandwidth and row height (Math.max(10,
+          Math.min(...))); clearly visible at full resolution.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red distinction is redundantly encoded via X vs O letterform
+          shape, not color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart area fills the large majority of the canvas with balanced margins;
+          legend sits near the plot, not isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Price ($)" has units; "Column (price reversal, not time)" is descriptive
+          and spec-aligned.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (X) is #009E73; O uses palette[4] #AE3030 matte-red
+          per the documented finance loss/bearish semantic exception. Backgrounds
+          and chrome are theme-correct in both renders, data colors identical across
+          themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color use and a fully custom P&F rendering (not
+          a stock chart type) put this clearly above library defaults, though it stops
+          short of publication-level polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, minimal L-shaped axis lines, generous whitespace;
+          trend lines are appropriately understated (dashed, low opacity).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Support/resistance overlays and the green/red column coloring create
+          visual hierarchy and guide the eye to trend structure, though there's no
+          explicit callout on the most significant breakout.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Point-and-Figure chart with X/O box columns.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Box size, reversal-boxes logic, pure X-or-O columns, 45-degree support/resistance
+          lines, and box-interval price-scale grid are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = column index (not time), Y-axis = price in box units formatted
+          as dollars; full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches "point-and-figure-basic · javascript · muix
+          · anyplot.ai"; legend labels (Rising/Falling column, Support, Resistance)
+          correctly describe the data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows narrow consolidation, a sustained uptrend, and a choppy alternating-reversal
+          zone — both column directions well represented at varying widths.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral mid-cap stock price series; no sensitive content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range ($60-$185), box size ($1.5) and reversal (3 boxes) are
+          all standard, realistic P&F parameters.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessarily uses helper functions/components (React + custom P&F
+          algorithm require this), but the file is fairly long/dense for what KISS
+          rewards.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) produces deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer/ChartsXAxis/ChartsYAxis/hooks/Box/Typography
+          imported, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom SVG overlay is an appropriate, non-fake solution for a chart
+          type MUI X doesn't natively support.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-exported component contract, skipAnimation set, no
+          manual mount/output code.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ChartContainer + useXScale/useYScale, the documented community
+          pattern for custom overlays when no built-in series type fits.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Directly consuming MUI X's internal band/linear scale hooks to place
+          raw SVG marks is a feature fairly specific to this library's API surface.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - publication-ready

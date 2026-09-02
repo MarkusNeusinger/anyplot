@@ -1,0 +1,266 @@
+library: d3
+language: javascript
+specification_id: parliament-basic
+created: '2026-09-02T04:49:20Z'
+updated: '2026-09-02T05:05:25Z'
+generated_by: claude-sonnet
+workflow_run: 33591789768
+issue: 2499
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Both weaknesses from the attempt-1 review are now fixed: color assignment uses
+    an idiomatic d3.scaleOrdinal().domain(...).range(t.palette) categorical scale
+    instead of raw array indexing, and the Independent bloc is now placed centrist
+    (between Liberal and Conservative) instead of at the ideological edge, with a
+    code comment explaining the rationale.'
+  - 'New governing-coalition overlay directly answers ''which coalition governs?'':
+    the fewest-largest-parties-that-cross-majority algorithm computes the coalition,
+    then draws semi-transparent arc bands over exactly those parties'' wedges plus
+    an explicit ''Governing coalition — X + Y (N seats)'' label — a concrete narrative
+    layered on top of the majority threshold line.'
+  - 'Genuinely bespoke geometric layout: seats-per-row derived from row circumference
+    with largest-remainder rounding so row totals sum exactly to the seat total, and
+    seat radius bounded by the tightest row''s arc length so dots never collide —
+    real D3 flexibility, not a canned arc helper.'
+  - Custom multi-row, auto-wrapping, centered legend (built from measured getBBox
+    widths) correctly handles 6 items without overlap or overflow.
+  - 'Both renders are fully theme-correct: identical data colors, warm off-white/near-black
+    backgrounds, and all chrome (majority line, coalition label, legend text) correctly
+    threaded through inkSoft/ink/pageBg tokens. Content bounding box stays 299-336px
+    inside every canvas edge — no clipping.'
+  weaknesses:
+  - Data topic (party/election seat composition) remains in the content-policy gray
+    area for politics/elections; acceptable only because the spec inherently requires
+    this data shape and the party names are generic archetypal fictional labels with
+    no real-country or partisan-stance framing — DQ-02 still scores as 'plausible
+    but generic' rather than ideal.
+  - 'Design Excellence is solid but not yet publication-tier: the coalition bands
+    and majority line create real hierarchy, but color harmony and typography still
+    read as a well-executed default rather than a fully custom editorial treatment.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "parliament-basic · javascript · d3 · anyplot.ai" at top-center. Below it, an italic "Governing coalition — Conservative Party + Social Democratic Party (217 seats)" line, then an italic "Majority · 201 seats" line next to a vertical dashed threshold line — both in soft ink, clearly separated with no overlap. Legend below the chart: six items (swatch + party name + seat count) in a single centered row, dark ink text, fully legible. Measured content bounding box sits 299-336px inside every canvas edge — nothing clipped.
+      Data: Six concentric semicircular arcs of dots, each dot one seat, grouped into contiguous angular wedges ordered left-to-right along the political spectrum: Green Alliance (brand green, Imprint position 1, #009E73), Social Democratic Party (lavender/purple), Liberal Party (blue), Independent (ochre/tan, now centrist between Liberal and Conservative), Conservative Party (red), Reform Party (cyan) — matching Imprint canonical positions 1-6 via a proper d3.scaleOrdinal categorical scale. Semi-transparent arc bands overlay the Conservative and Social Democratic wedges (the computed governing coalition), rendered above the outer seat row. Seat dots have a thin light stroke separating them from neighbors.
+      Legibility verdict: PASS — all text (title, coalition label, majority label, legend) is clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, coalition label, and majority-line label, now rendered in light ink/soft-ink tones against the dark background, fully legible with the same vertical spacing and no overlap. Legend text is light-colored and readable against the dark background.
+      Data: Identical six-color wedge arrangement and identical hex values to the light render (green, lavender, blue, ochre, red, cyan) and identical coalition-band placement — only the background, title, subtitle, and legend text colors flipped to their dark-theme tokens. No dark-on-dark text found anywhere.
+      Legibility verdict: PASS — all text is clearly readable in dark mode, data colors confirmed identical to the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (14/15/22px), all text readable in both themes,
+          no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, coalition subtitle, and majority label stack cleanly with
+          no collisions; legend wraps without overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Seat radius bounded by tightest row's arc length; dots clearly visible
+          and non-overlapping at 400-seat density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Six distinct Imprint hues, no red-green-only signal, contiguous wedges
+          plus legend give redundant identification
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Content bounding box spans ~80% width and ~77% height of canvas,
+          balanced margins on all sides, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for this radial chart type; title and legend fully
+          identify the data
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First party is #009E73 via d3.scaleOrdinal, remaining 5 follow canonical
+          Imprint order, backgrounds and chrome theme-correct in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bespoke concentric-arc geometry with proportional row allocation
+          plus computed coalition bands, clearly above a library default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/grid needed, generous whitespace, subtle dashed majority
+          line, thin seat strokes, alpha-blended coalition bands
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Majority line plus computed governing-coalition bands and explicit
+          label directly answer 'which coalition governs' — a concrete, immediately
+          visible insight, improved from the prior attempt
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Semicircular parliament seat chart with concentric arcs, correct
+          type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Individual seat dots, party colors, legend with counts, majority
+          threshold line, and coalition highlighting all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All seats mapped by radius/angle, every party's full seat count shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{spec-id} · javascript · d3 · anyplot.ai' exactly;
+          legend labels and counts match the data
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 6 parties spanning a wide seat-count range (36-121), majority threshold
+          and coalition both demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 3
+        max: 5
+        passed: true
+        comment: Plausible fictional legislature with generic archetypal party names,
+          no real-country/partisan framing, but topic is inherently political per
+          general content-policy guidance
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 400 total seats and 201-seat majority threshold are arithmetically
+          correct; Independent now placed centrist rather than at the spectrum edge,
+          fixing the prior data-realism quirk
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom flow, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for a custom radial layout plus coalition-band
+          computation, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses the mount-node contract correctly, d3 selection.data().join()
+          pattern
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses d3.scaleOrdinal for color (fixed from attempt 1's raw array
+          indexing), plus d3-array (d3.sum, d3.range, d3.min) and d3.line() for the
+          coalition bands
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom trigonometric seat-placement algorithm with proportional row
+          allocation and computed angular coalition bands is genuinely D3-distinctive,
+          low-level SVG construction
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
