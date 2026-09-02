@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: datamatrix-basic
+created: '2026-09-02T00:07:41Z'
+updated: '2026-09-02T00:13:15Z'
+generated_by: claude-sonnet
+workflow_run: 33573459047
+issue: 3811
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correctly reproduces the three defining structural regions of an ISO/IEC 16022
+    Data Matrix: solid L-shaped finder pattern on the left/bottom edges, alternating
+    timing (clock) pattern on the top/right edges, and a >=1-module quiet zone, with
+    the finder deliberately drawn last so it wins the shared corners.'
+  - Deterministic pseudo-random interior fill via a tiny content-seeded LCG (hashString
+    + makeRng), exactly the pattern the d3.md library guide recommends for reproducibility
+    in a browser with no seeded RNG.
+  - 'Thoughtful ''physical label'' design: rounded-corner quiet-zone plate with a
+    subtle 15%-opacity ink border, monospace caption for the encoded content string,
+    and a well-justified, documented decision to keep the barcode plate high-contrast
+    dark-on-light in both themes (required for real-world scannability) while the
+    title/caption still correctly flip with the theme tokens.'
+  - Realistic, neutral example data ('PN-88214-REV3', a plausible manufacturing/part-serialization
+    code) matching the spec's stated applications, with a valid ISO symbol size (24x24)
+    and correct ECC 200 labeling.
+  - 'Clean, idiomatic D3 usage: single svg mount sized from window.ANYPLOT_SIZE, canonical
+    selectAll(...).data(...).join(''rect'') data-join for the modules, no animations,
+    no extraneous imports.'
+  weaknesses:
+  - Title ('datamatrix-basic · javascript · d3 · anyplot.ai') fills only ~46% of the
+    plate/canvas width on the square 1200x1200 mount, a bit under the ~50-70% sweet
+    spot for a shorter custom title -- a slightly larger title fontsize would strengthen
+    the visual hierarchy without risking overflow.
+  - The interior payload region is a pseudo-random fill standing in for real ECC 200-encoded
+    data rather than an actual Data Matrix encoding of the content string -- acceptable
+    for a 'basic' representative viz, but a future revision could note in-code that
+    this is intentionally illustrative, not a literal encoder, more prominently for
+    maintainers.
+  - Design excellence is inherently capped by the plot type (binary black/white grid
+    leaves little room for palette or color-hierarchy work) -- consider a very subtle
+    accent (e.g. a small Imprint-green corner marker or legend chip identifying the
+    finder/timing/payload regions) to push Data Storytelling further without harming
+    scannability.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), matches the required light-theme page surface -- not pure white.
+      Chrome: Title "datamatrix-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered top, clearly legible. Caption '"PN-88214-REV3"  ·  24x24 modules · ECC 200' in soft-grey monospace beneath the plate, clearly legible.
+      Data: A centered, rounded-corner off-white "label" plate (same #FAF8F1 tone as the page, distinguished by a subtle 15%-opacity border) holds a 24x24 grid of black/white modules. The left column and bottom row are solid black (L-shaped finder). The top row and right column show a regular alternating black/white timing pattern. The interior is an irregular black/white pseudo-random fill representing the encoded payload + ECC 200 parity. A clear quiet-zone margin of blank modules separates the code from the plate border.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), matches the required dark-theme page surface -- not pure black.
+      Chrome: Title in light/off-white ink, tick/caption text in soft light-grey monospace -- both fully legible against the dark background, no dark-on-dark text anywhere.
+      Data: The same off-white plate (intentionally kept at the fixed light-theme tone, per the in-code rationale that a Data Matrix must stay high-contrast dark-on-light to remain "scannable," like a physical printed label) now stands out as a bright card against the dark page. The black/white module pattern inside -- finder, timing pattern, quiet zone, interior fill -- is pixel-for-pixel identical to the light render, confirming the "data" colors do not change between themes while only the surrounding chrome (title/caption ink, page background) flips.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicit (title 26px/600, caption 18px monospace); both
+          readable in both themes; title fills only ~46% of width, slightly under
+          the 50-70% sweet spot but not a real defect
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, caption, plate, or modules
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 24x24 modules at ~34 CSS px cells are crisp and clearly visible at
+          full size and scaled down
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Pure black-on-off-white contrast is maximal and CVD-safe by construction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plate occupies ~64% of the square canvas with balanced top/bottom/left/right
+          margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for this plot type; title + descriptive caption with
+          content/module-count/ECC info present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Page background correctly flips FAF8F1/1A1A17 between themes; title/caption
+          use theme tokens (t.ink/t.inkSoft); the barcode plate itself is deliberately
+          theme-invariant using the light-theme ink/paper tokens (not raw #000/#fff),
+          a documented and justified exception since the code must stay scannable'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Thoughtful physical-label plate with rounded corners and subtle border,
+          monospace caption differentiating data from chrome -- clearly above defaults
+          though ceiling is limited by the black/white plot type
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Generous whitespace, subtle 15%-opacity border, no chartjunk; some
+          refinement visible but not maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Clear visual hierarchy between finder pattern, timing pattern, quiet
+          zone and payload guides understanding of Data Matrix structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct Data Matrix 2D barcode with L-shaped finder + timing pattern
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Quiet zone, L-shaped finder, alternating clock pattern, high-contrast
+          black/white, ECC 200 label all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: N/A in the traditional X/Y sense; content string is clearly represented
+          via caption and module grid
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title exactly matches '{spec-id} · {language} · {library} · anyplot.ai';
+          no legend needed (single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: 'Shows all defining structural aspects: finder, timing pattern, quiet
+          zone, payload+ECC region'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: '''PN-88214-REV3'' is a plausible, neutral part/serial number matching
+          the spec''s manufacturing-traceability use case'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: 24x24 is a valid ISO/IEC 16022 symbol size; ECC 200 correctly identified
+          as the modern standard
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Data -> layout -> plate -> modules -> title -> caption; the two tiny
+          hash/LCG helpers are the library-recommended pattern for deterministic browser
+          RNG, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Content-seeded deterministic LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only the global d3, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, appropriately complex, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: 'Mounts into #container per the D3 harness contract, no animation,
+          single svg'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Canonical selectAll(...).data(...).join('rect') data-join pattern;
+          correct for a matrix chart with no need for scales/axes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Leverages D3's low-level SVG data-binding to build an arbitrary procedural
+          grid, which is harder to replicate cleanly in higher-level chart libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - publication-ready
