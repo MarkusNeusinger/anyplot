@@ -79,12 +79,59 @@ const bins = [
   { label: "40–65%", max: 65 },
   { label: "≥ 65%", max: Infinity },
 ].map((bin, i, arr) => {
-  const rgb = seqRgb(i / (arr.length - 1));
+  // Highest-renewable bins read as brand green, lowest as blue, so the color
+  // story matches the metric (more green = more renewable).
+  const rgb = seqRgb(1 - i / (arr.length - 1));
   return { ...bin, color: toCss(rgb), textColor: luminance(rgb) > 140 ? LABEL_DARK : LABEL_LIGHT };
 });
 
 const binIndex = (value) => bins.findIndex((bin) => value <= bin.max);
 const mutedTextColor = luminance(hexToRgb(MUTED)) > 140 ? LABEL_DARK : LABEL_LIGHT;
+
+// --- Basemap -----------------------------------------------------------------
+// Chart.js core has no polygon-fill geometry, so this draws a lightweight
+// continent-outline graticule (stroked line datasets, no fill) behind the
+// tiles purely for geographic orientation — it is not a projected basemap.
+const CONTINENTS = [
+  [
+    [-125, 49], [-95, 78], [-75, 68], [-60, 50], [-52, 47], [-65, 44],
+    [-75, 35], [-80, 26], [-97, 26], [-90, 15], [-105, 20], [-115, 29], [-125, 49],
+  ],
+  [
+    [-77, 10], [-60, 10], [-50, 0], [-35, -5], [-40, -20], [-48, -25],
+    [-58, -34], [-68, -47], [-72, -40], [-70, -20], [-79, -5], [-77, 10],
+  ],
+  [
+    [-17, 15], [0, 5], [10, 4], [15, -5], [13, -18], [18, -34], [30, -30],
+    [40, -15], [42, 0], [45, 10], [38, 15], [33, 31], [10, 37], [-17, 15],
+  ],
+  [
+    [-9, 43], [0, 50], [10, 54], [20, 55], [30, 60], [40, 65], [30, 45],
+    [20, 40], [10, 38], [-5, 36], [-9, 43],
+  ],
+  [
+    [26, 40], [40, 45], [60, 55], [80, 55], [100, 50], [120, 50], [140, 55],
+    [145, 45], [130, 35], [120, 25], [105, 10], [95, 5], [80, 10], [70, 20],
+    [60, 25], [50, 30], [35, 30], [26, 40],
+  ],
+  [
+    [113, -22], [122, -18], [135, -12], [145, -16], [153, -28], [150, -38],
+    [140, -38], [130, -32], [115, -34], [113, -22],
+  ],
+];
+const basemapDatasets = CONTINENTS.map((outline, i) => ({
+  type: "line",
+  label: `basemap-${i}`,
+  skipLegend: true,
+  data: outline.map(([lon, lat]) => ({ x: lon, y: lat })),
+  borderColor: t.grid,
+  backgroundColor: "transparent",
+  borderWidth: 1.5,
+  pointRadius: 0,
+  pointHoverRadius: 0,
+  fill: false,
+  tension: 0,
+}));
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -99,6 +146,7 @@ const regionLabelPlugin = {
   afterDatasetsDraw(chart) {
     const { ctx } = chart;
     chart.data.datasets.forEach((dataset, dsIndex) => {
+      if (dataset.skipLegend) return; // basemap outline, not a data tile
       const meta = chart.getDatasetMeta(dsIndex);
       meta.data.forEach((point, i) => {
         const raw = dataset.data[i];
@@ -144,10 +192,14 @@ const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
 new Chart(canvas, {
   type: "scatter",
   data: {
-    datasets: datasets.map((d) => ({
-      ...d,
-      data: d.data.map((c) => ({ x: c.lon, y: c.lat, code: c.code, value: c.value })),
-    })),
+    // Basemap outlines first so tile squares draw on top of them.
+    datasets: [
+      ...basemapDatasets,
+      ...datasets.map((d) => ({
+        ...d,
+        data: d.data.map((c) => ({ x: c.lon, y: c.lat, code: c.code, value: c.value })),
+      })),
+    ],
   },
   plugins: [regionLabelPlugin],
   options: {
@@ -159,9 +211,17 @@ new Chart(canvas, {
       title: { display: true, text: title, color: t.ink, font: { size: titleFontSize, weight: "500" } },
       legend: {
         position: "bottom",
-        labels: { color: t.inkSoft, font: { size: 16 }, boxWidth: 22, boxHeight: 22, padding: 18 },
+        labels: {
+          color: t.inkSoft,
+          font: { size: 16 },
+          boxWidth: 22,
+          boxHeight: 22,
+          padding: 18,
+          filter: (item, data) => !data.datasets[item.datasetIndex].skipLegend,
+        },
       },
       tooltip: {
+        filter: (item) => !item.dataset.skipLegend,
         callbacks: {
           title: () => "",
           label: (ctx) =>
@@ -172,23 +232,26 @@ new Chart(canvas, {
       },
     },
     scales: {
+      // Tightened to the real longitude/latitude extent of the 32 countries
+      // (plus a small margin) rather than the full -180..180/-90..90 globe,
+      // so the canvas isn't dominated by empty ocean.
       x: {
         type: "linear",
-        min: -170,
-        max: 179,
+        min: -118,
+        max: 182,
         display: true,
         border: { display: false },
         ticks: { display: false },
-        grid: { color: t.grid },
+        grid: { display: false },
       },
       y: {
         type: "linear",
-        min: -58,
-        max: 82,
+        min: -48,
+        max: 68,
         display: true,
         border: { display: false },
         ticks: { display: false },
-        grid: { color: t.grid },
+        grid: { display: false },
       },
     },
   },
