@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: map-marker-clustered
 created: '2026-09-02T02:44:48Z'
-updated: '2026-09-02T02:49:50Z'
+updated: '2026-09-02T03:00:57Z'
 generated_by: claude-sonnet
 workflow_run: 33583473151
 issue: 3766
@@ -12,49 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/chartjs/plot-dark.html
-quality_score: 74
+quality_score: 82
 review:
   strengths:
-  - Deterministic, seeded synthetic data generation (LCG) with plausible retail-store
-    scenario and realistic US metro coordinates.
-  - Correct Imprint palette assignment (Flagship=#009E73 always first) and fully theme-correct
-    chrome in both renders — no legibility failures.
-  - Custom beforeDatasetsDraw/afterDatasetsDraw Chart.js plugins produce a serviceable
-    geographic backdrop and in-bubble count labels without any fake/simulated interactivity.
+  - 'Real interaction now implemented via onClick/onHover: clicking a cluster re-runs
+    buildClusters at a tighter CLUSTER_RADIUS_DEG/3 over just that cluster''s members
+    and recentres the view (applyView), and clicking empty space resets to the full
+    continental view — the spec''s zoom-dependent clustering and click-to-expand requirements
+    are genuinely functional in the interactive HTML output, not faked.'
+  - Hover now drives a live spiderLinesPlugin connecting the hovered cluster centroid
+    to every member point, directly matching the spec's 'spider lines when hovering
+    over clusters' suggestion, with a pointer cursor swap for affordance.
+  - US basemap outline is now smoothed via quadratic-curve-through-midpoints instead
+    of raw straight segments, reading as a legitimate basemap rather than a jagged
+    polygon, in both themes.
+  - Axis titles now carry explicit unit suffixes ('Longitude (°)' / 'Latitude (°)')
+    matching the degree-suffixed tick labels.
+  - Deterministic, seeded synthetic data (LCG) with a plausible multi-hub retail scenario;
+    correct Imprint palette assignment (Flagship=#009E73 first, Standard/Outlet following
+    canonical order) and fully theme-correct chrome in both renders.
   weaknesses:
-  - The implementation renders a single static clustering state and never engages
-    Chart.js's onClick/interaction hooks — none of the spec's defining interactive
-    behaviors (zoom-level-dependent re-clustering, smooth zoom transitions, click-to-expand
-    a cluster into its member markers, hover-driven spider lines/convex hull) exist
-    anywhere in the code, even for the interactive HTML detail view. Add a click handler
-    on cluster bubbles that re-runs the existing CLUSTER_RADIUS_DEG-based grouping
-    at a tighter radius (or reveals the underlying stores for that region) so the
-    HTML output demonstrates real cluster-to-marker drill-down, since this is checked
-    in the HTML output, not just the static PNG.
-  - The hand-drawn US outline is visibly polygonal/low-fidelity (jagged, straight-segment
-    coastline) — increase the number of coordinate points or smooth the path for a
-    more convincing basemap, since this is the primary geographic-context element
-    the spec calls for.
-  - Axis titles ('Longitude'/'Latitude') carry no unit text; consider 'Longitude (°)'
-    / 'Latitude (°)' to match VQ-06's full-credit bar, since the current unit hint
-    only lives in the tick formatter.
-  - Title occupies only ~35% of canvas width for a title this length — there is headroom
-    to grow the title fontsize slightly for better visual weight without risking overflow.
+  - Title still occupies only ~35-36% of canvas width at font size 24 for a 55-char
+    string — well under the ~70-85% expected for the mandated title format; grow the
+    title font size for better visual weight (this was flagged in the prior review
+    and not addressed this attempt).
+  - The 'zoom-dependent' clustering is really a discrete click-to-drill re-cluster
+    (radius / 3 per click, reset on empty-space click) rather than a continuous zoom-level
+    response — reasonable given Chart.js has no native map/zoom widget, but it does
+    not literally track a zoom level.
+  - 'DQ-01/DE-03: the static PNG only shows one clustering state, so cluster splitting/merging
+    and the hover spider-lines/click-drill story are only demonstrable in the HTML
+    detail view, not the gallery thumbnail — acceptable per the interactive-library
+    fairness rule, but still limits the at-a-glance storytelling of the static preview.'
+  - Gridlines (0.5px, low alpha) are present across the whole map area and add minor
+    visual clutter over the landmass fill; consider dropping the cartesian grid entirely
+    for a cleaner basemap look.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
-      Chrome: Title "map-marker-clustered · javascript · chartjs · anyplot.ai" in dark ink at top; "Longitude"/"Latitude" axis titles and degree-suffixed tick labels dark-on-light; bottom legend (Flagship/Standard/Outlet) fully readable. All chrome clearly legible.
-      Data: Eight bubbles over a hand-drawn US outline at real metro locations, colored green (#009E73, Flagship), lavender (Standard), or blue (Outlet) by dominant category, each with a bold white count label centered inside (e.g. "35", "65", "80"). First series confirmed #009E73.
+      Background: Warm off-white (#FAF8F1), matches spec - not pure white.
+      Chrome: Title "map-marker-clustered · javascript · chartjs · anyplot.ai" in dark ink at top (though narrow relative to canvas width); "Longitude (°)"/"Latitude (°)" axis titles now carry unit suffixes; degree-suffixed tick labels; bottom legend (Flagship/Standard/Outlet) fully readable. All chrome clearly legible against the light background.
+      Data: Eight bubbles over a smoothed US outline at real metro locations, colored green (#009E73, Flagship), lavender (#C475FD, Standard), or blue (#4467A3, Outlet) by dominant category, each with a bold white count label centered inside (e.g. "35", "65", "80"). First series confirmed #009E73. Bubble radii scale with sqrt(cluster count).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec — not pure black.
-      Chrome: Title, axis titles, tick labels, and legend text all flip to light ink and remain fully readable. US outline renders as a dark charcoal fill with a lighter grey stroke, still distinguishable from the page background. No dark-on-dark failures found.
-      Data: Bubble fill colors (green/lavender/blue) and white count labels are pixel-identical to the light render — only chrome flipped, confirming Imprint palette consistency across themes.
+      Background: Warm near-black (#1A1A17), matches spec - not pure black.
+      Chrome: Title, axis titles (with unit suffixes), tick labels, and legend text all flip to light ink and remain fully readable. US outline renders as a dark charcoal fill with a lighter grey stroke, still distinguishable from the page background. No dark-on-dark failures found.
+      Data: Bubble fill colors (green/lavender/blue) and white count labels are pixel-identical to the light render - only chrome flipped, confirming Imprint palette consistency across themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -62,14 +69,14 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Fonts explicitly set and legible in both themes; title on the smaller
-          side for its length
+        comment: Fonts explicitly set and legible in both themes; title still on the
+          small side (~35% width) for its length, unchanged from attempt 1
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text or data elements
+        comment: No collisions between text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -89,63 +96,68 @@ review:
         max: 4
         passed: true
         comment: Map fills most of canvas, balanced margins; graticule lines slightly
-          busy
+          busy over the landmass
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive but no unit text in axis title labels
+        passed: true
+        comment: 'Axis titles now include unit suffixes: ''Longitude (°)'' / ''Latitude
+          (°)'' - fixed from attempt 1'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: Flagship=#009E73 first, canonical Imprint order, theme-correct chrome
-          both renders
+          in both renders
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Competent Imprint styling but hand-drawn US outline is visibly polygonal/low-fidelity
+        comment: US outline now smoothed via quadratic-curve-through-midpoints instead
+          of raw jagged segments - a real improvement over attempt 1, still not publication-level
+          cartography
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Some care (legend, subtle grid, clean bubble borders) but graticule
-          lines add clutter over the landmass
+        passed: true
+        comment: Legend, subtle grid, clean bubble borders, smoother basemap fill/stroke;
+          graticule still adds some clutter
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Bubble size and per-hub category mix add some hierarchy, but nothing
-          conveys the zoom-dependent clustering story
+        comment: Bubble size and per-hub category mix add hierarchy; the zoom-dependent
+          clustering story now genuinely exists but only surfaces via interaction
+          in the HTML, not the static PNG
     spec_compliance:
-      score: 10
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Reasonable bubble-chart pseudo-map approximation but missing the
-          dynamic zoom-clustering variant that defines this plot type
+        passed: true
+        comment: Bubble-chart pseudo-map now backed by real click-driven re-clustering
+          and hover spider-lines, closely matching the clustered-marker-map pattern
+          within Chart.js's capabilities
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Cluster counts and category coloring present, but zoom-based re-clustering,
-          click-to-zoom expand, smooth transitions, and hover spider-lines are entirely
-          absent
+        passed: true
+        comment: Cluster counts, category coloring, click-to-expand re-clustering,
+          animated zoom transition (HTML), and hover spider-lines are all now implemented
+          - fixed from attempt 1
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -167,8 +179,9 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Varying cluster sizes and mixed dominant categories, but no cluster
-          splitting/merging/overlap shown
+        comment: Varying cluster sizes and mixed dominant categories across hubs;
+          cluster splitting/merging only visible interactively, not in the static
+          PNG
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -190,7 +203,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Straightforward flow with a few justified helper functions for clustering
+        comment: Straightforward flow with a few justified helper functions for clustering/interaction
           logic
       - id: CQ-02
         name: Reproducibility
@@ -209,15 +222,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean greedy clustering, no fake UI/functionality
+        comment: Clean greedy clustering plus real interaction handlers, no fake UI/functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, current bubble API
+        comment: Correct mount-node contract, animation:false at init, current bubble
+          API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -226,15 +240,16 @@ review:
         max: 5
         passed: true
         comment: Correct bubble type plus idiomatic beforeDatasetsDraw/afterDatasetsDraw
-          plugin hooks
+          plugin hooks and onClick/onHover callbacks
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Custom canvas-drawing plugins are Chart.js-specific, but no use of
-          onClick/interaction API for cluster-expand behavior
-  verdict: REJECTED
+        passed: true
+        comment: Custom canvas-drawing plugins combined with onClick/onHover interaction
+          API now drive genuine cluster-expand and spider-line behavior - fixed from
+          attempt 1
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
