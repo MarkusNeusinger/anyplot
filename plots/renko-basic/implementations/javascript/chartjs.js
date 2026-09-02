@@ -60,6 +60,33 @@ const yMax = Math.max(...allPrices) + yPadding;
 const BULLISH = t.palette[0];
 const BEARISH = t.palette[4];
 
+// Thin edge highlight: a darker shade of each brick's own hue for subtle depth.
+function shade(hex, factor) {
+  const r = Math.round(parseInt(hex.slice(1, 3), 16) * factor);
+  const g = Math.round(parseInt(hex.slice(3, 5), 16) * factor);
+  const b = Math.round(parseInt(hex.slice(5, 7), 16) * factor);
+  return `rgb(${r}, ${g}, ${b})`;
+}
+const BULLISH_EDGE = shade(BULLISH, 0.7);
+const BEARISH_EDGE = shade(BEARISH, 0.7);
+
+// Find the longest run of consecutive same-direction bricks - the strongest
+// trend move in the series - to call it out with a bolder ink-color edge.
+let streakStart = 0;
+let streakEnd = 0;
+let runStart = 0;
+for (let i = 1; i <= bricks.length; i++) {
+  if (i === bricks.length || bricks[i].direction !== bricks[i - 1].direction) {
+    if (i - runStart > streakEnd - streakStart + 1) {
+      streakStart = runStart;
+      streakEnd = i - 1;
+    }
+    runStart = i;
+  }
+}
+const streakLength = streakEnd - streakStart + 1;
+const streakLabel = bricks[streakStart].direction === 1 ? "bullish" : "bearish";
+
 // --- Mount -------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -74,7 +101,12 @@ new Chart(canvas, {
         label: "Brick",
         data: values,
         backgroundColor: (ctx) => (bricks[ctx.dataIndex].direction === 1 ? BULLISH : BEARISH),
-        borderWidth: 0,
+        borderColor: (ctx) => {
+          const i = ctx.dataIndex;
+          if (i >= streakStart && i <= streakEnd) return t.ink;
+          return bricks[i].direction === 1 ? BULLISH_EDGE : BEARISH_EDGE;
+        },
+        borderWidth: (ctx) => (ctx.dataIndex >= streakStart && ctx.dataIndex <= streakEnd ? 3 : 1),
         barPercentage: 0.82,
         categoryPercentage: 0.92,
       },
@@ -90,6 +122,13 @@ new Chart(canvas, {
         text: "renko-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22 },
+      },
+      subtitle: {
+        display: true,
+        text: `Brick size: $${BRICK_SIZE} · Longest run: ${streakLength} ${streakLabel} bricks`,
+        color: t.inkSoft,
+        font: { size: 14, style: "italic" },
+        padding: { bottom: 16 },
       },
       legend: {
         display: true,
