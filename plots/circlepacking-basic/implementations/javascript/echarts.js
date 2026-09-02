@@ -1,3 +1,7 @@
+// anyplot.ai
+// circlepacking-basic: Circle Packing Chart
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 // anyplot.ai
 // circlepacking-basic: Circle Packing Chart
