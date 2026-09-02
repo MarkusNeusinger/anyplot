@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: ohlc-bar
+created: '2026-09-02T04:39:45Z'
+updated: '2026-09-02T04:54:59Z'
+generated_by: claude-sonnet
+workflow_run: 33591327152
+issue: 3293
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct, workaround-free OHLC implementation: a floating-bar dataset (data=[low,
+    high]) for the high-low range plus custom beforeDatasetsDraw/afterDatasetsDraw
+    plugin hooks for the open/close ticks, direction glyphs, and period high/low reference
+    lines — respects the library''s "no financial plugin" rule while using only core
+    Chart.js.'
+  - 'Fixed the CVD-accessibility gap flagged in attempt 1: up/down days now carry
+    a redundant non-color cue (a small directional triangle glyph above highs / below
+    lows) in addition to the green/red coloring.'
+  - 'Fixed the data-storytelling gap flagged in attempt 1: dashed period-high/period-low
+    reference lines with inline price labels give the chart a clear contextual anchor
+    and visual hierarchy.'
+  - 'Fixed the visual-refinement gap flagged in attempt 1: legend swatches now carry
+    a thin ink-color stroke border, per the style guide''s optional outline pattern.'
+  - Both renders are theme-correct (warm off-white / near-black backgrounds, theme-adaptive
+    text) with pixel-identical data colors between light and dark; no clipping or
+    overlap found anywhere, including the densest early-March cluster.
+  - Semantic green/red for up/down bars matches the style guide's finance convention
+    (profit/up→green, loss/down→red), and the legend explicitly spells out the close≥open
+    / close<open semantics.
+  - Deterministic seeded data generation (fixed-seed LCG) produces a realistic, gradually-trending
+    45-session weekday crude-oil futures price series with genuine daily volatility
+    and both up and down days.
+  weaknesses:
+  - OHLC range lines remain fairly thin (barThickness=3) for only 45 sparse sessions;
+    could be nudged up slightly (e.g. 4-5px) for even stronger visual presence without
+    crowding the bars.
+  - Data storytelling stops at the period high/low reference lines — there is no explicit
+    callout naming the overall upward drift across the period, so the trend is visible
+    but not narrated.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white, not dark.
+      Chrome: Title "ohlc-bar · javascript · chartjs · anyplot.ai" in bold dark ink, fully visible and centered near the top. Legend below the title with two ink-stroked swatches ("Up ▲ (close ≥ open)" green, "Down ▼ (close < open)" red), both clearly readable. Y-axis title "Price (USD/barrel)" rotated on the left, X-axis title "Date" centered below 45°-rotated date tick labels (Mar 1 → May 2), evenly spaced with no overlap. Two dashed horizontal reference lines label "Period high: $69.56" and "Period low: $60.84" near the right edge, clear of the data. Horizontal grid lines are thin and subtle, spaced every $2 (no vertical grid).
+      Data: 45 OHLC bars left to right, brand green (#009E73) for up sessions and matte red (#AE3030) for down sessions — thin vertical high-low range lines with a left tick (open) and right tick (close), plus a small filled triangle glyph above the high (up days) or below the low (down days) giving a redundant, non-color direction cue. Overall price drifts from ~$62 to ~$69 across the series with visible short-term pullbacks. All elements stay clear of the canvas edges and of each other, even where bars cluster closely (e.g. early March).
+      Legibility verdict: PASS — all title/legend/axis/tick/annotation text is dark-on-light and clearly readable; no overlap or clipping observed at any edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black, not light.
+      Chrome: Same title, legend, axis-label, and reference-line layout, now rendered in light/white ink against the dark surface — fully readable, including the "Period high"/"Period low" text and the rotated date ticks. Grid lines remain subtle, low-opacity light lines on the dark surface.
+      Data: Bar colors and triangle glyphs are pixel-identical to the light render (same green #009E73 / red #AE3030), confirming only chrome flipped between themes, not the data-encoding colors. Glyph outlines (drawn in the theme ink color) switch from dark-on-green/red in light mode to light-on-green/red in dark mode, remaining visible in both.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, legend, axis titles, tick labels, reference-line labels) reads clearly against the near-black background, and both data colors remain vivid and distinguishable from the surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, legend 16px, ticks/axis-title
+          14-16px); readable in both themes, title well-proportioned, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, ticks, glyphs, or bars anywhere, including
+          the densest early-March cluster
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars, ticks, and new direction glyphs are clearly visible; range
+          lines (barThickness=3) are still a touch thin for only 45 sparse points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: up/down now has a redundant triangle-glyph
+          cue in addition to green/red color'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, balanced axis labels, plot fills
+          the canvas well
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels with units: Price (USD/barrel), Date'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73; down bars use the matte-red
+          semantic anchor (finance convention); theme-correct backgrounds in both
+          renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom plugin-drawn ticks, direction glyphs, and period reference
+          lines show thoughtful, above-default design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: legend swatches now have an ink-color stroke;
+          clean Y-only grid and generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: period high/low reference lines create a clear
+          focal point and visual hierarchy, though the overall trend itself is not
+          explicitly narrated'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct OHLC bar chart: thin high-low range with left(open)/right(close)
+          ticks, not a candlestick'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin range lines, open/close ticks, up/down coloring, formatted date
+          axis, and price grid all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=price range, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; legend clearly explains
+          the up/down semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Open, high, low, and close are all incorporated into the bar geometry,
+          with both up and down sessions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Crude-oil futures price series with plausible, neutral, gradual drift
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range ($60-70/barrel) and 45-session weekday span are sensible
+          for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script with a small LCG helper and one plugin object; no unnecessary
+          abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=7) makes the series fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the global Chart.js and DOM APIs
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear comments explain the core-Chart.js-only approach; no fake interactivity
+          or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current Chart.js v4
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Clever core-only technique: floating bar dataset for range + plugin
+          hooks for ticks, glyphs, and reference lines'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Deep use of Chart.js's plugin-hook architecture (beforeDatasetsDraw/afterDatasetsDraw
+          canvas drawing), custom legend generateLabels, and indexed tooltip callbacks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - edge-highlighting
