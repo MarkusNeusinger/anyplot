@@ -79,6 +79,12 @@ const points = cells
   .filter((c) => c.d > DENSITY_FLOOR);
 
 // --- Imprint sequential colormap (brand green -> blue) ----------------------
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 function lerpRGB(hexA, hexB, f) {
   const a = [1, 3, 5].map((i) => parseInt(hexA.slice(i, i + 2), 16));
   const b = [1, 3, 5].map((i) => parseInt(hexB.slice(i, i + 2), 16));
@@ -91,35 +97,136 @@ function densityColor(f, alpha) {
 
 // Radius approximates half the grid spacing so hotspot cells read as a
 // continuous mosaic while sparse cells stay small and let the page bg show.
+// The alpha floor (0.55) keeps low-density edge cells visible against a
+// near-black dark-theme background instead of fading out entirely.
 const CELL_RADIUS = 21;
 const bubbleData = points.map((p) => ({
   x: p.x,
   y: p.y,
-  r: CELL_RADIUS * (0.55 + 0.45 * p.d),
+  r: CELL_RADIUS * (0.6 + 0.4 * p.d),
   d: p.d,
 }));
+
+// --- Simplified Pacific coastline for basemap context (rough, schematic) ---
+// Ocean Beach runs roughly along -122.51 deg; sketched as a gentle
+// north-south curve at the low-longitude edge of the bounding box, well
+// west of every hotspot so it never competes with the density bubbles.
+const COASTLINE = [
+  { lon: -122.508, lat: LAT_MIN },
+  { lon: -122.512, lat: 37.75 },
+  { lon: -122.509, lat: 37.765 },
+  { lon: -122.513, lat: 37.78 },
+  { lon: -122.51, lat: 37.795 },
+  { lon: -122.507, lat: LAT_MAX },
+];
+
+const basemapPlugin = {
+  id: "basemap",
+  beforeDatasetsDraw(chart) {
+    const {
+      ctx,
+      scales: { x, y },
+      chartArea: ca,
+    } = chart;
+    const coastPx = COASTLINE.map((p) => [x.getPixelForValue(p.lon), y.getPixelForValue(p.lat)]);
+
+    ctx.save();
+    ctx.beginPath();
+    coastPx.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
+    ctx.lineTo(ca.left, ca.top);
+    ctx.lineTo(ca.left, ca.bottom);
+    ctx.closePath();
+    ctx.fillStyle = hexToRgba(t.seq[1], 0.1);
+    ctx.fill();
+
+    ctx.beginPath();
+    coastPx.forEach(([px, py], i) => (i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py)));
+    ctx.strokeStyle = hexToRgba(t.ink, 0.3);
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(ca.left + 24, (ca.top + ca.bottom) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.font = "italic 13px sans-serif";
+    ctx.fillStyle = hexToRgba(t.inkSoft, 0.9);
+    ctx.textAlign = "center";
+    ctx.fillText("Pacific Ocean", 0, 0);
+    ctx.restore();
+    ctx.restore();
+  },
+};
+
+// --- Density colorbar (replaces a discrete-band legend with a true scale) --
+const colorbarPlugin = {
+  id: "colorbar",
+  afterDraw(chart) {
+    const { ctx, chartArea: ca } = chart;
+    const barX = ca.right + 24;
+    const barW = 22;
+    const barH = ca.bottom - ca.top;
+
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, ca.bottom, 0, ca.top);
+    grad.addColorStop(0, t.seq[0]);
+    grad.addColorStop(1, t.seq[1]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(barX, ca.top, barW, barH);
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX, ca.top, barW, barH);
+
+    ctx.fillStyle = t.ink;
+    ctx.font = "bold 15px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Density", barX + barW / 2, ca.top - 14);
+
+    const TICK_INSET = 10;
+    const ticks = [
+      { f: 1, label: "High" },
+      { f: 0.5, label: "Medium" },
+      { f: 0, label: "Low" },
+    ];
+    ctx.font = "13px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.strokeStyle = t.inkSoft;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    for (const { f, label } of ticks) {
+      const ty = ca.bottom - TICK_INSET - f * (barH - 2 * TICK_INSET);
+      ctx.beginPath();
+      ctx.moveTo(barX + barW, ty);
+      ctx.lineTo(barX + barW + 5, ty);
+      ctx.stroke();
+      ctx.fillText(label, barX + barW + 8, ty);
+    }
+    ctx.restore();
+  },
+};
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Chart -------------------------------------------------------------------
-new Chart(canvas, {
+const chart = new Chart(canvas, {
   type: "bubble",
   data: {
     datasets: [
       {
         label: "Incident density",
         data: bubbleData,
-        backgroundColor: bubbleData.map((p) => densityColor(p.d, 0.35 + 0.45 * p.d)),
+        backgroundColor: bubbleData.map((p) => densityColor(p.d, 0.5 + 0.4 * p.d)),
         borderWidth: 0,
       },
     ],
   },
+  plugins: [basemapPlugin, colorbarPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: { padding: { right: 110, top: 32, bottom: 4 } },
     plugins: {
       title: {
         display: true,
@@ -127,23 +234,7 @@ new Chart(canvas, {
         color: t.ink,
         font: { size: 22 },
       },
-      legend: {
-        onClick: () => {},
-        labels: {
-          color: t.inkSoft,
-          font: { size: 14 },
-          usePointStyle: true,
-          generateLabels: () =>
-            [0.15, 0.5, 0.85].map((f, i) => ({
-              text: ["Low density", "Medium density", "High density"][i],
-              fillStyle: densityColor(f, 0.8),
-              strokeStyle: densityColor(f, 0.8),
-              pointStyle: "circle",
-              hidden: false,
-              index: 0,
-            })),
-        },
-      },
+      legend: { display: false },
     },
     scales: {
       x: {
@@ -163,3 +254,53 @@ new Chart(canvas, {
     },
   },
 });
+
+// --- Zoom & pan (native wheel/drag, no external plugin) ---------------------
+// The spec asks interactive libraries to let users explore density at
+// different scales; chartjs-plugin-zoom isn't installed in this runtime, so
+// wheel-to-zoom and drag-to-pan are wired directly onto the linear scales.
+canvas.style.cursor = "grab";
+let isPanning = false;
+let lastX = 0;
+let lastY = 0;
+canvas.addEventListener("mousedown", (evt) => {
+  isPanning = true;
+  lastX = evt.offsetX;
+  lastY = evt.offsetY;
+  canvas.style.cursor = "grabbing";
+});
+canvas.addEventListener("mousemove", (evt) => {
+  if (!isPanning) return;
+  const { x: xScale, y: yScale } = chart.scales;
+  const dLon = xScale.getValueForPixel(lastX) - xScale.getValueForPixel(evt.offsetX);
+  const dLat = yScale.getValueForPixel(lastY) - yScale.getValueForPixel(evt.offsetY);
+  xScale.options.min += dLon;
+  xScale.options.max += dLon;
+  yScale.options.min += dLat;
+  yScale.options.max += dLat;
+  lastX = evt.offsetX;
+  lastY = evt.offsetY;
+  chart.update("none");
+});
+["mouseup", "mouseleave"].forEach((evtName) =>
+  canvas.addEventListener(evtName, () => {
+    isPanning = false;
+    canvas.style.cursor = "grab";
+  }),
+);
+canvas.addEventListener(
+  "wheel",
+  (evt) => {
+    evt.preventDefault();
+    const { x: xScale, y: yScale } = chart.scales;
+    const zoomFactor = evt.deltaY < 0 ? 0.9 : 1.1;
+    const cursorLon = xScale.getValueForPixel(evt.offsetX);
+    const cursorLat = yScale.getValueForPixel(evt.offsetY);
+    xScale.options.min = cursorLon + (xScale.min - cursorLon) * zoomFactor;
+    xScale.options.max = cursorLon + (xScale.max - cursorLon) * zoomFactor;
+    yScale.options.min = cursorLat + (yScale.min - cursorLat) * zoomFactor;
+    yScale.options.max = cursorLat + (yScale.max - cursorLat) * zoomFactor;
+    chart.update("none");
+  },
+  { passive: false },
+);
