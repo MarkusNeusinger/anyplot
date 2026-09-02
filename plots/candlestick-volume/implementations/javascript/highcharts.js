@@ -86,8 +86,6 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
-    plotBorderWidth: 1,
-    plotBorderColor: t.grid,
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -107,9 +105,9 @@ Highcharts.chart("container", {
   },
   yAxis: [
     {
-      // Price pane — top 72% of the plot area
+      // Price pane — top 68% of the plot area
       top: "0%",
-      height: "72%",
+      height: "68%",
       min: priceMin,
       max: priceMax,
       reversedStacks: false, // keep the invisible "Floor" series at the bottom of the stack
@@ -119,9 +117,9 @@ Highcharts.chart("container", {
       labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     },
     {
-      // Volume pane — bottom 23%, a 5% gap separates it from the price pane
-      top: "77%",
-      height: "23%",
+      // Volume pane — bottom 27%, a 5% gap separates it from the price pane
+      top: "73%",
+      height: "27%",
       offset: 0,
       min: 0,
       title: { text: "Volume", style: { color: t.inkSoft, fontSize: "16px" } },
@@ -130,7 +128,9 @@ Highcharts.chart("container", {
       labels: {
         style: { color: t.inkSoft, fontSize: "14px" },
         formatter() {
-          return Highcharts.numberFormat(this.value / 1000, 0) + "k";
+          return this.value >= 1000000
+            ? Highcharts.numberFormat(this.value / 1000000, 1).replace(/\.0$/, "") + "M"
+            : Highcharts.numberFormat(this.value / 1000, 0) + "k";
         },
       },
     },
