@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-transport-static: Static Transport Network Diagram
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-02
+// Quality: 88/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
