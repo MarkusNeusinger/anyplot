@@ -7,6 +7,13 @@
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
 
+// Crossword cell colors — fixed regardless of theme (contrast IS the data):
+// blocked squares stay near-black and entry squares stay near-white in both
+// light and dark renders, matching the traditional newspaper-crossword
+// convention instead of flipping with the page chrome.
+const CELL_BLOCK = "#1A1A17";
+const CELL_ENTRY = "#FAF8F1";
+
 // --- Data: symmetric 15x15 crossword grid (180-degree rotational symmetry) -
 const N = 15;
 
@@ -60,6 +67,13 @@ const blockedCells = [...blocked].map((key) => {
   const [row, col] = key.split(",").map(Number);
   return { x: col + 0.5, y: row + 0.5 };
 });
+
+const entryCells = [];
+for (let row = 0; row < N; row += 1) {
+  for (let col = 0; col < N; col += 1) {
+    if (!isBlocked(row, col)) entryCells.push({ x: col + 0.5, y: row + 0.5 });
+  }
+}
 
 const numberPoints = numberedCells.map(({ row, col, number }) => ({
   x: col,
@@ -116,13 +130,25 @@ Highcharts.chart("container", {
   },
   series: [
     {
+      name: "Entry cells",
+      type: "scatter",
+      data: entryCells,
+      marker: {
+        symbol: "square",
+        radius: cellPx / 2 + 0.5,
+        fillColor: CELL_ENTRY,
+        lineWidth: 0,
+      },
+      dataLabels: { enabled: false },
+    },
+    {
       name: "Blocked cells",
       type: "scatter",
       data: blockedCells,
       marker: {
         symbol: "square",
         radius: cellPx / 2 + 0.5,
-        fillColor: t.ink,
+        fillColor: CELL_BLOCK,
         lineWidth: 0,
       },
       dataLabels: { enabled: false },
@@ -144,8 +170,8 @@ Highcharts.chart("container", {
         overflow: "allow",
         allowOverlap: true,
         style: {
-          color: t.ink,
-          fontSize: "13px",
+          color: CELL_BLOCK,
+          fontSize: "14px",
           fontWeight: "600",
           textOutline: "none",
         },
