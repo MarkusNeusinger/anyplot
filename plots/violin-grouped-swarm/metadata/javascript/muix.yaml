@@ -1,0 +1,263 @@
+library: muix
+language: javascript
+specification_id: violin-grouped-swarm
+created: '2026-09-02T09:57:15Z'
+updated: '2026-09-02T10:13:32Z'
+generated_by: claude-sonnet
+workflow_run: 33616139917
+issue: 3529
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Custom per-cell Gaussian KDE (Silverman bandwidth, local grid clipped to each
+    cell's own range) avoids the hairline-tail artifact a shared full-axis grid would
+    produce for narrow-spread cells like Data Entry
+  - Genuine beeswarm packing algorithm in pixel space (sorted, collision-avoidant,
+    capped at maxHalfWidth) rather than jittered/random scatter — points stay inside
+    their violin and don't collide
+  - Data-driven annotation (bracket + label calling out the narrowing Junior/Senior
+    gap on Code Review) is real data storytelling, not decoration, and is placed in
+    the padding zone above Y_MAX so it never collides with violin peaks or swarm points
+  - Custom Y-axis label component correctly sidesteps MUI X's fixed-offset label crowding
+    the 3-digit tick values — a real, documented pain point handled well
+  - First series is brand green (#009E73), second is lavender (#C475FD) — correct
+    canonical Imprint order; identical data colors between light/dark, only chrome
+    flips
+  - Violin alpha (0.45) sits in the spec's 4-0.6 range, keeping swarm points visible
+    through the fill; swarm points carry a pageBg stroke for separation against overlapping
+    violins
+  - Deterministic LCG + Box-Muller data generation, realistic support-ticket domain
+    framing with a plausible Junior/Senior skill-gap narrative
+  weaknesses:
+  - The 'Junior/Senior gap narrows' annotation is set at fontSize 11 (CSS px) — legible
+    at full resolution but effectively unreadable once the plot is scaled down to
+    the ~400px mobile thumbnail; bump to ~13-14px or accept it as a full-size-only
+    affordance
+  - The custom composition (kde, layoutSwarmForCell, GapAnnotation, YAxisLabel, GroupedViolinSwarm)
+    is inherently function-heavy for a from-scratch violin+swarm chart type MUI X
+    doesn't ship — justified by the library gap, but a couple of the smaller helpers
+    (clamp, stdOf) could be inlined to trim surface area
+  - Distinctive-feature usage leans on one custom composition technique (SVG layer
+    over ChartContainer); no additional MUI X-native capability (e.g. tooltip customization,
+    zoom) is layered on top to further showcase the library beyond the base composition
+    pattern
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "violin-grouped-swarm · javascript · muix · anyplot.ai" in dark ink, top-left legend (green "Junior" swatch, purple "Senior" swatch), x-axis "Task Type" with three category labels (Bug Triage, Data Entry, Code Review), y-axis "Resolution Time (s)" with 20-200 tick labels, subtle horizontal grid lines. All chrome text reads clearly dark-on-light.
+      Data: Three grouped violin pairs (green Junior / lavender Senior), each with a dark median line and overlaid swarm points colored to match their violin, plus an italic annotation bracket over the Code Review pair reading "Junior/Senior gap narrows". First series is Imprint brand green (#009E73), second is Imprint lavender — correct canonical order.
+      Legibility verdict: PASS (the small italic annotation text is readable at full resolution; see weaknesses for its behavior at mobile thumbnail scale).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout as light; title, legend text, axis labels, tick labels, and grid lines all flip to light ink/lines against the dark background. No dark-on-dark or illegible text detected anywhere.
+      Data: Violin and swarm colors are identical to the light render (green/lavender), confirming only chrome adapted to theme. Median lines render in light ink so they stay visible against the dark violin fills.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title/axis/tick labels readable in both themes at full size; the
+          11px italic gap annotation is unreadable once scaled to the ~400px mobile
+          thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, violins, swarm points, or the annotation
+          bracket
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 40-point swarms use r=4px markers with pageBg stroke and 0.45 violin
+          alpha — points stay visible through the fill
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pair is CVD-safe per Imprint palette design, no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins, no overflow or
+          clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Resolution Time (s)'' and ''Task Type'' are descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second is canonical-order lavender; backgrounds
+          are theme-correct in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: From-scratch KDE + beeswarm composition with per-cell local grids
+          and a data-driven annotation shows real intentionality beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Ticks disabled, grid subtled to 0.2 opacity, generous whitespace
+          between category bands
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The Code Review gap-narrowing annotation gives the chart a clear
+          focal point and narrative beyond just showing distributions
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Grouped violin with swarm overlay, correctly implemented
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct group colors, clear legend, 0.45 violin alpha, dodged/sized
+          swarm points matching violin hue, adequate inter-violin spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: category on x, value on y, group as hue — correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels (Junior/Senior) match
+          the data groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 3 categories x 2 groups, violin shape + median + swarm all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Support-ticket resolution times by task type/agent level — plausible
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10-220s range and per-cell means/stds are sensible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Many small helper functions/components — largely justified by building
+          violin+swarm from scratch, but a couple (clamp, stdOf) could be inlined
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the MUI X pieces actually used are imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity matches what the chart type
+          requires
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, default-exported component, no manual mount/save
+          calls
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the documented ChartContainer + scale-hook composition pattern
+          for chart types the community package doesn't ship natively
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid custom-composition showcase; doesn't layer on further MUI X-native
+          capabilities beyond the base composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - grid-styling
