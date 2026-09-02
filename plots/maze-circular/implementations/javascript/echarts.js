@@ -40,6 +40,9 @@ function rand() {
 function cellId(ring, sector) {
   return `${ring}_${sector}`;
 }
+function ringOf(node) {
+  return node === "C" ? -1 : Number(node.split("_")[0]);
+}
 function neighborsOf(node) {
   if (node === "C") {
     const out = [];
@@ -61,6 +64,32 @@ function edgeKey(a, b) {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
 
+// DIFFICULTY biases *which* spanning tree the carve picks -- it never adds
+// loops, so the exactly-one-solution guarantee always holds. "easy" favors
+// moves toward the center (short, direct solution path); "hard" favors
+// lateral/outward moves (long, winding solution path with more dead ends).
+const RING_MOVE_WEIGHT = {
+  easy: { inward: 4, lateral: 1, outward: 0.5 },
+  medium: { inward: 1, lateral: 1, outward: 1 },
+  hard: { inward: 0.4, lateral: 1, outward: 2 },
+}[DIFFICULTY];
+
+function pickWeighted(current, options) {
+  const currentRing = ringOf(current);
+  const weights = options.map((node) => {
+    const nodeRing = ringOf(node);
+    if (nodeRing < currentRing) return RING_MOVE_WEIGHT.inward;
+    if (nodeRing > currentRing) return RING_MOVE_WEIGHT.outward;
+    return RING_MOVE_WEIGHT.lateral;
+  });
+  let roll = rand() * weights.reduce((sum, w) => sum + w, 0);
+  for (let i = 0; i < options.length; i++) {
+    roll -= weights[i];
+    if (roll <= 0) return options[i];
+  }
+  return options[options.length - 1];
+}
+
 // Randomized DFS (recursive backtracker) -> spanning tree = exactly one path
 // between any two cells, which is what guarantees a single maze solution.
 const visited = new Set(["C"]);
@@ -73,7 +102,7 @@ while (stack.length > 0) {
     stack.pop();
     continue;
   }
-  const next = options[Math.floor(rand() * options.length)];
+  const next = pickWeighted(current, options);
   passages.add(edgeKey(current, next));
   visited.add(next);
   stack.push(next);
@@ -87,13 +116,11 @@ function angleOf(sector) {
 function ringRadius(ringBoundary) {
   return HUB_RADIUS + ringBoundary * RING_WIDTH;
 }
-function polar(radius, angle) {
-  return [radius * Math.cos(angle), radius * Math.sin(angle)];
-}
 function arcPoints(radius, angleStart, angleEnd, steps) {
   const pts = [];
   for (let k = 0; k <= steps; k++) {
-    pts.push(polar(radius, angleStart + ((angleEnd - angleStart) * k) / steps));
+    const angle = angleStart + ((angleEnd - angleStart) * k) / steps;
+    pts.push([radius * Math.cos(angle), radius * Math.sin(angle)]);
   }
   return pts;
 }
@@ -128,16 +155,21 @@ for (let ring = 0; ring < RINGS; ring++) {
     const present = !passages.has(edgeKey(cellId(ring, prevSector), cellId(ring, sector)));
     if (present) {
       const angle = angleOf(sector);
-      radialWalls.push([polar(innerRadius, angle), polar(outerRadius, angle)]);
+      radialWalls.push([
+        [innerRadius * Math.cos(angle), innerRadius * Math.sin(angle)],
+        [outerRadius * Math.cos(angle), outerRadius * Math.sin(angle)],
+      ]);
     }
   }
 }
 
 // --- Entry marker: an inward-pointing arrow at the outer gap ---------------
 const entryAngle = angleOf(entrySector) + ANGLE_STEP / 2;
-const entryArrowOuter = polar(OUTER_RADIUS + 0.09, entryAngle);
-const entryArrowInner = polar(OUTER_RADIUS + 0.015, entryAngle);
-const entryLabelAt = polar(OUTER_RADIUS + 0.14, entryAngle);
+const entryCos = Math.cos(entryAngle);
+const entrySin = Math.sin(entryAngle);
+const entryArrowOuter = [(OUTER_RADIUS + 0.09) * entryCos, (OUTER_RADIUS + 0.09) * entrySin];
+const entryArrowInner = [(OUTER_RADIUS + 0.015) * entryCos, (OUTER_RADIUS + 0.015) * entrySin];
+const entryLabelAt = [(OUTER_RADIUS + 0.14) * entryCos, (OUTER_RADIUS + 0.14) * entrySin];
 
 // --- Init & render ------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -155,7 +187,10 @@ const option = {
     textStyle: { color: t.ink, fontSize: 22, fontWeight: "bold" },
     subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
-  grid: { left: 150, right: 150, top: 150, bottom: 150 },
+  // top+bottom sums to the same 300px as left+right so the plotting box
+  // stays square (no elliptical distortion); the split is uneven to shift
+  // the box down slightly and balance the whitespace above vs below it.
+  grid: { left: 150, right: 150, top: 170, bottom: 130 },
   xAxis: AX,
   yAxis: AX,
   series: [
