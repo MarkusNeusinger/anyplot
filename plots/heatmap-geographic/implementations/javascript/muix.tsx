@@ -7,6 +7,11 @@ import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
+const SIZE = window.ANYPLOT_SIZE;
+const MARGIN = { top: 90, right: 250, bottom: 90, left: 130 };
+const PLOT_WIDTH = SIZE.width - MARGIN.left - MARGIN.right;
+const PLOT_HEIGHT = SIZE.height - MARGIN.top - MARGIN.bottom;
+
 const TITLE =
   "Bay Area Retail Foot-Traffic Density · heatmap-geographic · javascript · muix · anyplot.ai";
 // Scale the title down once it runs past the ~67-char mandated baseline
@@ -62,51 +67,65 @@ for (let i = 0; i < 90; i += 1) {
   });
 }
 
-// --- Kernel density estimate on a coarse geographic grid --------------------
-// Distances are converted to km so the kernel is isotropic in real space, and
-// truncated at 3*bandwidth so far-away points can't sum into a visible tail —
-// without truncation the whole region reads as one blob instead of distinct
-// hotspots around each city.
-const GRID_COLS = 36;
-const GRID_ROWS = 22;
+// --- Kernel density estimate, rasterized to a smooth image ------------------
+// A discrete-marker scatter approximation leaves scalloped circular edges
+// around each hotspot. Community @mui/x-charts has no native heatmap/image
+// layer, so instead the KDE is sampled onto a raster grid, colour-mapped per
+// pixel (Imprint sequential ramp, alpha fading out below DENSITY_FLOOR), and
+// drawn as one <image>: the browser's own bilinear upscaling then renders a
+// genuinely continuous density field. Distances are converted to km so the
+// kernel is isotropic in real space, and truncated at 3*bandwidth so
+// far-away points can't sum into a visible tail.
 const BANDWIDTH_KM = 4.5;
 const TRUNC_KM_SQ = (3 * BANDWIDTH_KM) ** 2;
-const DENSITY_FLOOR = 0.25; // hides low-density cells so the base map reads through
+const DENSITY_FLOOR = 0.12; // below this the pixel is fully transparent
+const RASTER_W = 400;
+const RASTER_H = Math.round(RASTER_W * (PLOT_HEIGHT / PLOT_WIDTH));
 
-const rawCells = [];
+const rawDensity = new Float32Array(RASTER_W * RASTER_H);
 let maxDensity = 0;
-for (let col = 0; col < GRID_COLS; col += 1) {
-  const lon = LON_MIN + ((col + 0.5) / GRID_COLS) * (LON_MAX - LON_MIN);
-  for (let row = 0; row < GRID_ROWS; row += 1) {
-    const lat = LAT_MIN + ((row + 0.5) / GRID_ROWS) * (LAT_MAX - LAT_MIN);
+for (let py = 0; py < RASTER_H; py += 1) {
+  const lat = LAT_MAX - ((py + 0.5) / RASTER_H) * (LAT_MAX - LAT_MIN);
+  for (let px = 0; px < RASTER_W; px += 1) {
+    const lon = LON_MIN + ((px + 0.5) / RASTER_W) * (LON_MAX - LON_MIN);
     let density = 0;
-    visits.forEach((v) => {
-      const dKmLon = (lon - v.lon) * KM_PER_DEG_LON;
-      const dKmLat = (lat - v.lat) * KM_PER_DEG_LAT;
+    for (let i = 0; i < visits.length; i += 1) {
+      const dKmLon = (lon - visits[i].lon) * KM_PER_DEG_LON;
+      const dKmLat = (lat - visits[i].lat) * KM_PER_DEG_LAT;
       const distKmSq = dKmLon * dKmLon + dKmLat * dKmLat;
       if (distKmSq < TRUNC_KM_SQ) {
         density += Math.exp(-distKmSq / (2 * BANDWIDTH_KM * BANDWIDTH_KM));
       }
-    });
+    }
+    rawDensity[py * RASTER_W + px] = density;
     maxDensity = Math.max(maxDensity, density);
-    rawCells.push({ lon, lat, density });
   }
 }
 
-const densityCells = rawCells
-  .map((c) => ({ lon: c.lon, lat: c.lat, density: c.density / maxDensity }))
-  .filter((c) => c.density > DENSITY_FLOOR)
-  .map((c, index) => ({ id: index, x: c.lon, y: c.lat, z: c.density }));
+const hexToRgb = (hex) => [
+  parseInt(hex.slice(1, 3), 16),
+  parseInt(hex.slice(3, 5), 16),
+  parseInt(hex.slice(5, 7), 16),
+];
+const seqLowRgb = hexToRgb(t.seq[0]);
+const seqHighRgb = hexToRgb(t.seq[1]);
 
-// --- Imprint sequential colormap, translucent so the graticule shows through
-const hexToRgba = (hex, alpha) => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
-const seqLow = hexToRgba(t.seq[0], 0.75);
-const seqHigh = hexToRgba(t.seq[1], 0.88);
+const canvas = document.createElement("canvas");
+canvas.width = RASTER_W;
+canvas.height = RASTER_H;
+const ctx = canvas.getContext("2d");
+const image = ctx.createImageData(RASTER_W, RASTER_H);
+for (let i = 0; i < rawDensity.length; i += 1) {
+  const z = Math.min(1, rawDensity[i] / maxDensity);
+  const o = i * 4;
+  image.data[o] = Math.round(seqLowRgb[0] + (seqHighRgb[0] - seqLowRgb[0]) * z);
+  image.data[o + 1] = Math.round(seqLowRgb[1] + (seqHighRgb[1] - seqLowRgb[1]) * z);
+  image.data[o + 2] = Math.round(seqLowRgb[2] + (seqHighRgb[2] - seqLowRgb[2]) * z);
+  image.data[o + 3] =
+    z <= DENSITY_FLOOR ? 0 : Math.round(((z - DENSITY_FLOOR) / (1 - DENSITY_FLOOR)) * 235);
+}
+ctx.putImageData(image, 0, 0);
+const HEATMAP_URI = canvas.toDataURL("image/png");
 
 // --- Geographic reference graticule (basemap substitute — no map tiles are
 // available in the community package, so a lon/lat grid gives spatial context)
@@ -114,10 +133,9 @@ const latLines = [37.4, 37.6, 37.8];
 const lonLines = [-122.35, -122.15, -121.95];
 
 function MapTitle() {
-  const { width } = window.ANYPLOT_SIZE;
   return (
     <text
-      x={width / 2}
+      x={SIZE.width / 2}
       y={40}
       textAnchor="middle"
       dominantBaseline="hanging"
@@ -133,21 +151,12 @@ function MapTitle() {
 export default function Chart() {
   return (
     <ScatterChart
-      width={window.ANYPLOT_SIZE.width}
-      height={window.ANYPLOT_SIZE.height}
+      width={SIZE.width}
+      height={SIZE.height}
       skipAnimation
       disableVoronoi
-      margin={{ top: 90, right: 250, bottom: 90, left: 115 }}
-      series={[
-        {
-          id: "density",
-          type: "scatter",
-          data: densityCells,
-          markerSize: 34,
-          zAxisId: "density",
-          label: "Relative check-in density",
-        },
-      ]}
+      margin={MARGIN}
+      series={[]}
       xAxis={[
         {
           min: LON_MIN,
@@ -177,11 +186,20 @@ export default function Chart() {
           max: 1,
           // min/max must also live on colorMap itself: ContinuousColorLegend
           // reads colorMap.min/max directly (not the axis-level min/max).
-          colorMap: { type: "continuous", min: 0, max: 1, color: [seqLow, seqHigh] },
+          colorMap: { type: "continuous", min: 0, max: 1, color: [t.seq[0], t.seq[1]] },
         },
       ]}
+      slots={{ noDataOverlay: () => null }}
       slotProps={{ legend: { hidden: true } }}
     >
+      <image
+        href={HEATMAP_URI}
+        x={MARGIN.left}
+        y={MARGIN.top}
+        width={PLOT_WIDTH}
+        height={PLOT_HEIGHT}
+        preserveAspectRatio="none"
+      />
       {latLines.map((lat) => (
         <ChartsReferenceLine
           key={`lat-${lat}`}
