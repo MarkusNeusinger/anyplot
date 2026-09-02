@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -85,6 +86,47 @@ function buildKagiTurningPoints(prices, reversalPct) {
 
 const turningPoints = buildKagiTurningPoints(closingPrices, REVERSAL_PCT);
 
+// Kagi thickness rule: a segment turns yang (thick) once price breaks above
+// the PREVIOUS shoulder (an earlier peak) and yin (thin) once it breaks below
+// the previous waist (an earlier trough) — thickness only flips on those
+// breakouts, not on every reversal. That's what lets a sustained trend render
+// as several consecutive same-thickness columns even while the path itself
+// keeps zig-zagging shoulder/waist to shoulder/waist.
+function classifyKagiThickness(points) {
+  const thickness = [];
+  let priorPeak = null;
+  let priorTrough = null;
+  let current = points[1] > points[0] ? "yang" : "yin";
+  for (let k = 1; k < points.length; k++) {
+    const isPeak = points[k] > points[k - 1];
+    if (isPeak) {
+      if (priorPeak !== null && points[k] > priorPeak) current = "yang";
+      priorPeak = points[k];
+    } else {
+      if (priorTrough !== null && points[k] < priorTrough) current = "yin";
+      priorTrough = points[k];
+    }
+    thickness.push(current);
+  }
+  return thickness;
+}
+
+const segmentThickness = classifyKagiThickness(turningPoints);
+
+// The single largest turning-point move, called out with a reference-line
+// annotation so the chart's standout swing doesn't go unlabeled.
+let breakoutIndex = 1;
+let breakoutMove = turningPoints[1] - turningPoints[0];
+for (let k = 2; k < turningPoints.length; k++) {
+  const move = turningPoints[k] - turningPoints[k - 1];
+  if (Math.abs(move) > Math.abs(breakoutMove)) {
+    breakoutMove = move;
+    breakoutIndex = k;
+  }
+}
+const breakoutLabel = `${breakoutMove >= 0 ? "+" : "-"}$${Math.round(Math.abs(breakoutMove))} move`;
+const startPrice = Math.round(closingPrices[0]);
+
 // Rectilinear Kagi path: each turn contributes a horizontal shoulder/waist
 // (connecting the previous column to the new one) followed by the vertical
 // line itself — the right-angle geometry a Kagi chart is drawn with. The
@@ -99,8 +141,8 @@ const priceMin = Math.min(...turningPoints);
 const priceMax = Math.max(...turningPoints);
 const pricePadding = (priceMax - priceMin) * 0.08;
 
-// Split the rectilinear path into two series by direction so each can carry
-// its own line width (thick yang / thin yin). Null gaps keep unrelated
+// Split the rectilinear path into two series by Kagi thickness so each can
+// carry its own line width (thick yang / thin yin). Null gaps keep unrelated
 // segments apart, while shared boundary vertices let a segment's series
 // also carry the turning point it starts or ends on, so the two colors
 // visually meet exactly at each reversal.
@@ -110,7 +152,7 @@ for (let k = 1; k < turningPoints.length; k++) {
   const startIdx = 2 * (k - 1);
   const midIdx = 2 * k - 1;
   const endIdx = 2 * k;
-  const target = turningPoints[k] > turningPoints[k - 1] ? yangPrice : yinPrice;
+  const target = segmentThickness[k - 1] === "yang" ? yangPrice : yinPrice;
   target[startIdx] = vertices[startIdx].y;
   target[midIdx] = vertices[midIdx].y;
   target[endIdx] = vertices[endIdx].y;
@@ -142,6 +184,7 @@ export default function Chart() {
             valueFormatter: (v) => Math.round(v).toString(),
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
+            tickSize: 0,
           },
         ]}
         yAxis={[
@@ -156,6 +199,7 @@ export default function Chart() {
             tickFontSize: 40,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
+            tickSize: 0,
           },
         ]}
         series={[
@@ -191,7 +235,24 @@ export default function Chart() {
             padding: { top: 16 },
           },
         }}
-      />
+      >
+        <ChartsReferenceLine
+          y={startPrice}
+          label={`Start $${startPrice}`}
+          labelAlign="start"
+          spacing={{ x: 8, y: 6 }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1 }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+        />
+        <ChartsReferenceLine
+          x={breakoutIndex}
+          label={breakoutLabel}
+          labelAlign="start"
+          spacing={{ x: -96, y: 8 }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1 }}
+          labelStyle={{ fontSize: 13, fontWeight: 600, fill: t.ink }}
+        />
+      </LineChart>
     </Box>
   );
 }
