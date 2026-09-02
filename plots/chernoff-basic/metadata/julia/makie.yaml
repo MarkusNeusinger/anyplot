@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: chernoff-basic
 created: '2026-09-02T14:58:28Z'
-updated: '2026-09-02T15:03:26Z'
+updated: '2026-09-02T15:18:55Z'
 generated_by: claude-sonnet
 workflow_run: 33644779662
 issue: 3003
@@ -12,53 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 96
 review:
   strengths:
-  - 'Excellent theme-adaptive chrome — both light and dark renders are fully readable,
-    backgrounds correctly match #FAF8F1/#1A1A17, and every facial-feature ink token
-    flips correctly with no dark-on-dark or light-on-light failures'
-  - 'Faithful, well-executed Chernoff face construction: 7 physiologically distinct
-    variables (heart rate, systolic BP, cholesterol, BMI, glucose, sleep, respiratory
-    rate) mapped to 7 different facial features, each correctly min-max normalized
-    to [0,1] before mapping'
-  - Realistic, neutral patient vital-sign data with medically plausible ranges for
-    every variable
-  - Clean, minimalist 4x3 grid layout with axes/spines hidden, appropriate for an
-    icon-grid plot type; brand green (#009E73) face outline stays identical across
-    both themes
-  - Good facial variety across the 12 patients — eyebrow slant, mouth curvature, and
-    face width/height visibly differ, so pattern recognition and comparison actually
-    works
+  - Custom Makie @recipe (ChernoffFace) is genuinely distinctive library usage, directly
+    resolving attempt 1's LM-02 weakness — the face glyph is now a reusable, declarative,
+    attribute-linked plot type instead of an inline poly!/lines!/text! loop
+  - Outlier patient (P05) is flagged with an amber outline and heavier stroke width,
+    giving the reader a clear focal point — directly resolves attempt 1's DE-03 weakness
+    about missing visual emphasis
+  - 8 variables now drive 8 distinct facial features (eye spacing added via body temperature),
+    fully covering the spec's example feature-mapping list and resolving attempt 1's
+    DQ-01/SC-02 note about the fixed eye spacing
+  - Theme-adaptive chrome is flawless in both renders — identical brand-green/amber
+    face outlines, correctly flipped ink/ink_soft tokens for eyes/eyebrows/nose/mouth/labels,
+    no dark-on-dark or light-on-light failures
+  - Realistic, clinically plausible patient vital-sign data (heart rate, BP, cholesterol,
+    BMI, glucose, sleep, respiratory rate, temperature) with physiologically sound
+    ranges and correct min-max normalization to [0,1] before mapping
   weaknesses:
-  - Library Mastery is generic — the geometry-drawing approach (poly!/lines!/text!
-    inside a plain for-loop) could be replicated in almost any plotting library; consider
-    a Makie-distinctive technique (e.g., a custom Makie recipe/@recipe, or leveraging
-    the GridLayout faceting API more explicitly) to earn distinctive-library credit
-  - Title occupies only ~35% of the plot width at titlesize=20 on the 2400x2400 canvas
-    — could be enlarged slightly for better visual balance against the grid below
-    without risking overflow
-  - No visual emphasis highlights any particular patient (e.g., an outlier profile)
-    — per Data Storytelling, consider a subtle highlight (different stroke weight/color)
-    on the most extreme patient to give the reader a clear entry point into the comparison
-  - Eye spacing is fixed (eye_dx = rx * 0.42) even though the spec lists eye spacing
-    as a common Chernoff feature mapping — an 8th variable could drive it for slightly
-    richer feature coverage
+  - Title still occupies only ~41% of canvas width even after bumping titlesize from
+    20 to 26 — on the 2400x2400 square canvas it would benefit from a further increase
+    toward the 50-70% guideline for tighter top-of-canvas balance
+  - The custom @recipe + Makie.plot! extension is idiomatic Makie but adds ~75 lines
+    of structural scaffolding beyond a pure top-to-bottom KISS script; a reasonable
+    and rewarded tradeoff for a reusable glyph, but worth trimming if the recipe grows
+    further
+  - Eye pupils are on the smaller side (0.4 * eye_r) — legible at full 2400px resolution
+    but could be nudged slightly larger for extra polish at the 400px thumbnail preview
+    size
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "chernoff-basic · julia · makie · anyplot.ai" centered at top, clearly readable against the light background. Twelve patient-ID labels ("P01"-"P12") in soft dark gray below each face, all legible. No axes, no grid (intentionally hidden — appropriate for an icon-grid plot type).
-      Data: 12 Chernoff faces arranged in a 4x3 grid, each an ellipse/circle outlined in brand green (#009E73), with facial features (eyes, pupils, eyebrows, nose, mouth) drawn in dark ink/soft-ink tones. Face fill is a very subtle off-white "elevated" tone, slightly lighter than the page background. Facial proportions (width, height, eyebrow slant, mouth curve, eye size) visibly vary between patients, giving each face a distinct "expression."
+      Chrome: Bold dark title "chernoff-basic · julia · makie · anyplot.ai" centered at top (titlesize=26), clearly readable against the light background (measured ~41% of canvas width). Twelve patient-ID labels ("P01"-"P12") render in soft dark gray beneath each face, all legible.
+      Data: 12 Chernoff faces in a 4x3 grid, drawn via a custom ChernoffFace recipe. 11 faces have a brand-green (#009E73) outline; P05 (the most extreme combined vital-sign profile) has a heavier amber (#DDCC77) outline that pops as a clear focal point. Face fill is a subtle off-white "elevated" tone. Eyes/pupils, eyebrows, nose, and mouth are drawn in dark ink / soft-ink tones, and vary clearly across faces (face width/height, eye size/spacing, eyebrow slant, nose length, mouth curve/width) — pattern recognition and comparison works well.
       Legibility verdict: PASS — all title text and patient labels are clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title renders in light/white text, clearly visible against the dark background. Patient-ID labels render in light gray, all legible. No grid/axes, consistent with the light render.
-      Data: Same 12-face grid with identical brand-green (#009E73) outlines as the light render — data color is unchanged between themes. Facial features (eyes, eyebrows, nose, mouth) are drawn in light/near-white ink tones, clearly distinguishable against the dark face fill and dark page background.
-      Legibility verdict: PASS — no dark-on-dark failures found; every title, label, and facial-feature stroke is clearly visible. Brand green remains equally visible on both surfaces.
+      Chrome: Title renders in light/off-white text, clearly visible against the dark background. Patient-ID labels render in light gray, all legible.
+      Data: Same 12-face grid with identical brand-green (#009E73) outlines and the same amber (#DDCC77) outlier highlight on P05 as the light render — data/semantic colors are unchanged between themes. Facial features (eyes, eyebrows, nose, mouth) are drawn in light/near-white ink tones, clearly distinguishable against the dark face fill and dark page background.
+      Legibility verdict: PASS — no dark-on-dark failures found; every title, label, and facial-feature stroke is clearly visible. Brand green and amber remain equally visible on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,34 +63,34 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set (titlesize=20, fontsize=13-14), readable in
-          both themes; title is slightly small relative to canvas (~35% of width)
+        comment: Title, labels fully readable in both themes; title still modest at
+          ~41% canvas width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between labels, faces, or facial features
+        comment: No collisions between faces, features, or labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Facial elements (eyes, eyebrows, mouth, nose) sized appropriately
-          for 12 faces on a 2400x2400 canvas
+        comment: Facial elements sized appropriately for 12 faces on a 2400x2400 canvas
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome ink features plus brand green outline; no red-green reliance
+        comment: Outlier flagged via color AND stroke-width, not color alone; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Grid fills a good portion of the square canvas with balanced margins;
-          title could be slightly larger for better top-of-canvas balance
+        comment: Canvas gate passed (2400x2400); grid fills a balanced portion of
+          the square with generous margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,19 +103,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 used consistently across both themes; chrome
-          is theme-correct in both renders'
+        comment: 'Brand green #009E73 first/only categorical color, amber semantic-caution
+          color for the outlier; theme-correct backgrounds in both renders'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Restrained, intentional minimalist styling — clearly above a configured
-          default for a notoriously tricky chart type
+        comment: Custom recipe-based glyph system with restrained, intentional minimalist
+          styling — clearly above configured defaults for a notoriously tricky chart
+          type
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -128,11 +126,11 @@ review:
           stroke weights
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Visual hierarchy via face-shape and expression variation lets the
-          reader compare patients at a glance; no explicit outlier callout
+        comment: Outlier patient (P05) highlighted with amber color + heavier stroke
+          gives a clear entry point into the comparison, resolving attempt 1's gap
     spec_compliance:
       score: 15
       max: 15
@@ -148,8 +146,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 7 variables mapped to 7 distinct facial features, normalized to [0,1],
-          grid layout for comparison
+        comment: 8 variables mapped to 8 distinct facial features (incl. eye spacing,
+          newly added), all normalized to [0,1], grid layout for comparison
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -172,8 +170,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide variation in eyebrow slant, mouth curvature, face shape/size
-          across the 12 faces
+        comment: Wide variation across all 8 mapped features (face shape/size, eyes,
+          eyebrows, nose, mouth) across the 12 faces
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -185,18 +183,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: All vital-sign ranges are physiologically accurate
+        comment: All vital-sign ranges are physiologically accurate; 12 observations
+          within the spec's 5-50 range
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes; imports -> data -> plot -> save, with a natural
-          per-face loop
+        comment: Custom @recipe + Makie.plot! extension is idiomatic and library-encouraged
+          for a reusable glyph, but adds structural scaffolding beyond a pure linear
+          script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,23 +222,23 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API
     library_mastery:
-      score: 5
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic use of poly!/lines!/text!, DataAspect(), hidedecorations!/hidespines!
+        comment: Idiomatic use of the Makie recipe system, DataAspect(), hidedecorations!/hidespines!
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 5
         max: 5
-        passed: false
-        comment: Generic geometry-drawing approach — no Makie-specific feature (recipes,
-          GridLayout faceting) leveraged
-  verdict: REJECTED
+        passed: true
+        comment: Custom @recipe with attribute-linked sub-plots is a genuinely Makie-distinctive
+          technique, resolving attempt 1's weakness
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,6 +248,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - normalization
   styling:
