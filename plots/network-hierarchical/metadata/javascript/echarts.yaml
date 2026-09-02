@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: network-hierarchical
 created: '2026-09-02T07:14:40Z'
-updated: '2026-09-02T07:19:07Z'
+updated: '2026-09-02T07:28:26Z'
 generated_by: claude-sonnet
 workflow_run: 33601066037
 issue: 3343
@@ -12,104 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - 'Palette compliance is exact: root (CEO) uses brand green #009E73, and the three
-    descendant levels follow the canonical Imprint order (lavender, blue, ochre) —
-    data colors are pixel-identical between light and dark renders.'
-  - 'Thoughtful readability detail: node labels are given a page-background patch
-    (`t.pageBg`) so tree connector lines pass behind the text instead of through it,
-    in both themes.'
-  - 'Clear depth encoding: node size and connector line width shrink with depth (22→17→13→9
-    px, line width 2.5→1.3), and the root label is bold and larger, producing an unambiguous
-    visual hierarchy from CEO to individual contributors.'
-  - 'Idiomatic, non-trivial use of ECharts'' `tree` series: `orient: ''LR''`, `edgeShape:
-    ''polyline''`, `edgeForkPosition`, a separate `leaves` label config, and `emphasis.focus:
-    ''descendant''` go well beyond a default tree configuration.'
-  - 'Realistic, neutral synthetic data: a 28-person, 4-level org chart (CEO → VP →
-    Director → IC) with diverse names and plausible titles, closely matching the specification''s
-    own ''30 employees across 4 levels'' example.'
-  - Both renders are fully readable — correct warm off-white/near-black backgrounds,
-    no dark-on-dark or light-on-light text, no clipped elements at any edge, and canvas
-    is exactly 3200×1800.
+  - 'Color and size jointly encode organizational depth (CEO→VP→Director→IC) using
+    the canonical Imprint order (#009E73, #C475FD, #4467A3, #BD8233), and a subtitle
+    spells out the encoding instead of relying on a traditional legend'
+  - Label backgroundColor matches the page background so connector lines pass behind
+    text instead of through it — a deliberate anti-overlap technique across 28 nodes
+  - Edge lineStyle color and width (2.5 - depth*0.4) are driven by each node's own
+    depth, producing a subtle color/weight gradient from trunk to leaves
+  - Realistic, neutral org-chart data with genuine branching variation (VPs have 2-3
+    directors, directors have 2-3 reports) rather than uniform, repetitive groups
+  - Idiomatic use of the echarts tree series (orient LR, edgeShape polyline, edgeForkPosition,
+    initialTreeDepth -1, emphasis.focus descendant) with no arrows, matching the spec's
+    layout guidance
   weaknesses:
-  - Title occupies only ~35% of canvas width at fontSize 22 on a 3200px-wide canvas
-    — noticeably narrower than the 50-70% guideline band; a slightly larger title
-    fontSize (e.g. 26-28) would balance better against the large canvas without risking
-    overflow.
-  - No legend or annotation states that node color/size encode organizational depth
-    — it reads clearly from position and the CEO label alone, but an explicit 'level'
-    cue (e.g. a small caption or level labels) would remove any ambiguity for a first-time
-    viewer.
-  - The recursive `styleByDepth` helper is a function, which technically departs from
-    the pure imports→data→plot→save script shape — justified here since the data is
-    a nested tree and per-depth styling needs traversal, but worth noting.
+  - styleByDepth() is a recursive helper rather than flat Imports→Data→Plot→Save structure;
+    justified by the nested tree data but still a minor departure from the KISS/no-functions
+    guideline
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent across the whole canvas.
-      Chrome: Title "network-hierarchical · javascript · echarts · anyplot.ai" is centered at top in bold dark ink, clearly legible. All 28 node labels (CEO, VPs, Directors, ICs) render in dark text on a matching page-background patch so tree connector lines pass behind the text, not through it — fully readable.
-      Data: Root node "Alex Chen — CEO" is a large bold green (#009E73) circle at far left. Three VP nodes are lavender/purple, seven Director nodes are blue, seventeen leaf (IC) nodes are ochre/amber — an exact match to the canonical Imprint palette order (green → lavender → blue → ochre) applied by depth. Polyline connectors fan out left-to-right, shrinking in width with depth.
-      Legibility verdict: PASS — no overlap, no clipping at any edge, all text readable.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "network-hierarchical · javascript · echarts · anyplot.ai" in bold dark text, centered near the top; subtitle "Node color and size encode organizational depth: CEO → VP → Director → IC" in a lighter gray directly below. Both are crisp and fully within the canvas.
+      Data: A left-to-right tree (org chart) rooted at "Alex Chen — CEO" (large teal-green circle, #009E73), branching to 3 VP nodes (magenta/purple, #C475FD), then 7 Director nodes (navy blue, #4467A3), then 17 individual-contributor leaf nodes (ochre/amber, #BD8233). Node size shrinks with depth (22→17→13→9 px). Connector lines are right-angled polylines colored to match the depth of the node they originate from, and every node label sits on a small background patch that matches the page background so crossing lines never obscure the text.
+      Legibility verdict: PASS — every title, subtitle, and node label is clearly readable against the light background; no overlapping text anywhere across the 28 nodes.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent across the whole canvas.
-      Chrome: Same title, now in light/white ink, centered and fully legible against the dark background. Node labels are light text on dark page-background patches, same layout as the light render.
-      Data: Data colors are identical to the light render — brand green root, lavender VPs, blue Directors, ochre ICs — confirming only chrome (background/text) flipped, not data colors.
-      Legibility verdict: PASS — no dark-on-dark text, no clipping, all labels and title clearly visible against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light/white and light-gray text respectively, fully legible against the dark surface. No dark-on-dark text anywhere.
+      Data: Identical tree structure and identical node/edge colors to the light render — CEO node still #009E73 green, VP nodes still magenta, Director nodes still navy blue, IC nodes still ochre. Only the chrome (background, title/subtitle color, label background patches) adapts to the dark theme; the label background patches correctly flip to the dark page color so they still mask the connector lines behind the text.
+      Legibility verdict: PASS — all text is clearly legible in the dark theme, the brand green root node reads well, and there is no dark-on-dark or light-on-light failure in either render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (14/18/22), all text readable in both themes;
-          small labels would shrink further at 400px thumbnail scale given 28 nodes.
+        comment: All font sizes explicitly set (title 27px, subtitle 14px, labels
+          14px); title fits without clipping; readable at both full size and thumbnail
+          scale in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or connector collisions anywhere in the tree.
+        comment: Label background patches keep every one of the 28 node labels legible
+          even where connector lines cross behind them; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node size and line width scale down appropriately by depth (22/17/13/9
-          px).
+        comment: Node marker size scales with depth (22/17/13/9px), giving clear visual
+          weight to higher levels without crowding the leaf level
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are CVD-safe; no red-green as sole signal.
+        comment: Four distinct, CVD-safe hues from the Imprint palette distinguish
+          depth levels; no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, nothing clipped, but title is narrower
-          (~35% width) than the 50-70% guideline band.
+        comment: Tree fills roughly 80% of canvas width and ~75% of height with balanced
+          margins on all sides; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for tree layout; title format matches spec exactly.
+        comment: No axes needed for a tree diagram; title plus explanatory subtitle
+          fully describe the encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Root = #009E73; depth levels follow canonical Imprint order; identical
-          data colors across themes; correct theme backgrounds.'
+        comment: 'Root node is #009E73; subsequent depths use canonical Imprint order
+          (#C475FD, #4467A3, #BD8233); backgrounds theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -117,22 +107,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom per-depth palette/size/line-width mapping plus label-background
-          trick to keep connectors from crossing text.
+        comment: Deliberate depth-based color+size encoding and label-background technique
+          clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimal chrome (no axes/legend needed), generous whitespace, clean
-          polyline edges.
+        comment: Edge width tapers with depth, generous whitespace, no clutter; falls
+          just short of every-detail-polished perfection
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bold, larger root creates a clear focal point; color/size fade guides
-          the eye from CEO to ICs.
+        comment: Color and size create an immediate visual hierarchy from CEO to ICs,
+          and the subtitle makes the encoding explicit rather than leaving the viewer
+          to infer it
     spec_compliance:
       score: 15
       max: 15
@@ -142,52 +133,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine ECharts tree series with LR hierarchical layout, root positioned
-          at left as spec's horizontal-layout note requires.
+        comment: Correct hierarchical tree layout with explicit levels, matching the
+          spec's core requirement
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Unique-labeled nodes, parent-child edges, 4 explicit levels, 28 nodes
-          within the 10-50 range.
+        comment: Unique node IDs/labels, parent-child edges, explicit levels, root
+          positioned at left for horizontal orientation, edges are lines without arrows
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Edges accurately encode the org-chart parent-child relationships;
-          all data visible.
+        comment: All 28 nodes and their parent-child edges are shown; no data hidden
+          or mismapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'network-hierarchical · javascript · echarts · anyplot.ai';
-          no legend needed.
+        comment: Title matches the mandated format exactly; subtitle substitutes for
+          a legend and clearly documents the color/size encoding
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes, edges, and level all present; level is only implied visually
-          (color/position) rather than explicitly labeled.
+        comment: Branching varies meaningfully across VPs (2-3 directors) and directors
+          (2-3 reports), avoiding a uniform look
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral org chart with diverse names and role titles.
+        comment: Neutral, comprehensible corporate org-chart scenario with named roles
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 28 nodes / 4 levels closely matches the spec's own 30-employee example.
+        comment: 28 employees across 4 management levels matches the spec's 10-50
+          node / 4-level guidance closely
     code_quality:
       score: 9
       max: 10
@@ -197,53 +189,53 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses one recursive helper (styleByDepth) to traverse the nested tree
-          — justified by the data shape, but departs from a flat imports/data/plot/save
-          script.
+        comment: Uses a recursive styleByDepth() helper rather than flat structure;
+          reasonably justified by the nested tree data, but a departure from the no-functions
+          guideline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded in-memory data.
+        comment: Fully deterministic, hard-coded in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts; nothing unused.
+        comment: No imports beyond the provided echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a 4-level tree, no fake functionality.
+        comment: Clean, appropriately complex for a recursive tree structure, no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract correctly: echarts.init with no
-          explicit size/devicePixelRatio, animation:false.'
+        comment: Follows the mount-node contract correctly; animation disabled; current
+          tree-series API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of the tree series'' high-level API: orient, edgeShape,
+          edgeForkPosition, initialTreeDepth, emphasis.focus'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level use of the tree series API (orient, grid percentages,
-          leaves label block).
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Uses tree-specific options beyond the basics: edgeForkPosition,
-          polyline edgeShape, emphasis.focus:''descendant'', per-node itemStyle/lineStyle
-          recursion.'
+        comment: edgeForkPosition and emphasis.focus:'descendant' are echarts-specific
+          tree-series features not trivially replicated elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -253,3 +245,4 @@ impl_tags:
   dataprep: []
   styling:
   - publication-ready
+  - edge-highlighting
