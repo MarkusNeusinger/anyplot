@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bar-error
 created: '2026-09-02T12:03:29Z'
-updated: '2026-09-02T12:06:55Z'
+updated: '2026-09-02T12:18:15Z'
 generated_by: claude-sonnet
 workflow_run: 33627423584
 issue: 2376
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
   - Correct, idiomatic implementation of error-bar whiskers via an ECharts custom
@@ -20,35 +20,43 @@ review:
     caps on both ends as required by the spec.
   - Theme-adaptive error-bar stroke color (t.ink) correctly flips from black to white
     between light and dark renders while the bar fill color (palette[0] green) stays
-    identical — exactly matches the Imprint theme contract.
+    pixel-identical — exactly matches the Imprint theme contract.
+  - The added markLine average-yield reference directly addresses the prior review's
+    DE-03 weakness, giving the chart a genuine focal point (viewers can see which
+    treatments beat the mean) instead of six flat, unranked bars.
   - The subtitle '±1 standard deviation (n = 30 plots per treatment)' satisfies the
     spec's requirement to explain what the error bars represent, without cluttering
     the chart with a legend for what is effectively a single data series.
   - 'Clean chrome: y-axis line/ticks removed, gridlines subtle and horizontal-only,
     generous y-axis headroom (~15%) so error-bar caps never crowd the top gridline.'
   weaknesses:
-  - 'Design Excellence is generic-plus: every bar carries the same flat green with
-    no additional visual-hierarchy technique (e.g. markLine/markArea baseline, or
-    emphasis on the best-performing treatment) despite meaningfully different underlying
-    values.'
-  - Library Mastery is limited to the necessary custom renderItem whisker series;
-    no additional idiomatic ECharts touches (e.g. markLine for a reference threshold)
-    that would showcase more of the library beyond what error bars strictly require.
+  - 'The new markLine average label (''Average: 23.83 kg'', position: insideEndTop)
+    lands directly on top of the rightmost (Compost) bar and its error-bar whisker
+    — the whisker''s vertical line runs immediately against the left edge of the text,
+    and the dashed average line crosses straight through the middle of the label instead
+    of sitting cleanly above or below it. Move the label to a clear zone, e.g. position:
+    ''start'' near the Control bar (which has the most headroom above its bar/whisker),
+    or place it outside the plot area via markLine label position ''end'' with an
+    offset, so it no longer collides with bar fill or whisker geometry.'
+  - 'Design Excellence is still mid-pack: every bar carries the same flat green with
+    the average line as the only hierarchy device — no additional distinctive ECharts
+    touch (e.g. emphasis styling on the best-performing treatment, or a markArea band
+    for a target range) beyond that one addition.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "bar-error · javascript · echarts · anyplot.ai" centered at top in dark ink, subtitle "Error bars represent ±1 standard deviation (n = 30 plots per treatment)" below it in a softer gray. Y-axis label "Yield (kg per plot)" and x-axis label "Treatment" both present with units. Six category tick labels (Control, Nitrogen, Phosphorus, Potassium, N+P+K, Compost) all legible. Horizontal gridlines are subtle light gray.
+      Chrome: Title "bar-error · javascript · echarts · anyplot.ai" centered at top in dark ink, subtitle "Error bars represent ±1 standard deviation (n = 30 plots per treatment)" below it in a softer gray. Y-axis label "Yield (kg per plot)" and x-axis label "Treatment" both present with units. Six category tick labels (Control, Nitrogen, Phosphorus, Potassium, N+P+K, Compost) all legible. Horizontal gridlines are subtle light gray. A new dashed average-yield reference line crosses the plot with the label "Average: 23.83 kg" — the label sits on top of the Compost bar and its error-bar whisker crosses directly through the text, a real overlap (see weaknesses).
       Data: Six green (#009E73) bars of equal width, each topped with a black error-bar whisker (horizontal caps at top and bottom, vertical connecting line). Bar heights and error magnitudes vary sensibly by treatment (Control lowest ~18.4, N+P+K highest ~29.6).
-      Legibility verdict: PASS
+      Legibility verdict: PASS (all chrome text readable; the average label text itself is legible despite overlapping the bar/whisker, so this is an overlap/design issue rather than a legibility failure)
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title/subtitle now in light/off-white ink, axis labels and tick labels rendered in light gray, clearly visible against the dark background. Gridlines subtle but visible.
+      Chrome: Same title/subtitle now in light/off-white ink, axis labels and tick labels rendered in light gray, clearly visible against the dark background. Gridlines subtle but visible. The same average-label overlap with the Compost bar/whisker reproduces identically in this render.
       Data: Bars remain the identical #009E73 green as the light render (confirmed pixel-matched hue) with error-bar whiskers now rendered in white/light stroke instead of black — correct theme adaptation of the chrome element while data color stayed fixed.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; same overlap issue as the light render, not a legibility failure.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -56,14 +64,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes with explicit font sizes; title/subtitle
-          hierarchy clear
+        comment: All chrome text readable in both themes with explicit font sizes;
+          title/subtitle hierarchy clear
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No collisions between bars, error whiskers, labels, or title
+        passed: false
+        comment: New markLine average label overlaps the Compost bar fill and its
+          error-bar whisker line runs directly through the label text
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -82,7 +91,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, sensible y-axis headroom, nothing clipped
+        comment: Canvas gate passed, good proportions, sensible y-axis headroom, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -97,7 +107,7 @@ review:
         comment: 'First series is #009E73; backgrounds match theme tokens in both
           renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -115,10 +125,12 @@ review:
         comment: Axis line/ticks removed on y-axis, gridlines subtle and horizontal-only
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or focal-point emphasis beyond raw bar heights
+        passed: true
+        comment: Average-yield markLine now gives a real focal point/comparison baseline
+          versus the prior flat bars, but its label placement collides with the Compost
+          bar and whisker, undercutting the polish
     spec_compliance:
       score: 15
       max: 15
@@ -207,28 +219,29 @@ review:
         passed: true
         comment: 'Mounts correctly on #container, animation disabled'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series + renderItem for whiskers combined with a native markLine
+          average reference is the documented, idiomatic ECharts pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom series + renderItem is the documented ECharts pattern for
-          error bars
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: api.coord-based custom renderItem is a moderately advanced technique;
-          no further distinctive touches
+        comment: api.coord-based custom renderItem plus markLine average line are
+          two distinctive touches; label placement keeps this from full marks
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - error-bars
+  - annotations
   patterns:
   - data-generation
   dataprep: []
