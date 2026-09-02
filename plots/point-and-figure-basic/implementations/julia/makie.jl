@@ -21,6 +21,7 @@ const IMPRINT_PALETTE = [
 ]
 const BULL_COLOR = IMPRINT_PALETTE[1]  # brand green, doubles as "gain" semantic anchor
 const BEAR_COLOR = IMPRINT_PALETTE[5]  # matte red, semantic anchor for "loss"
+const SIGNAL_COLOR = colorant"#DDCC77"  # anyplot amber, reserved for caution/callout marks
 
 # --- Data: synthetic daily closing prices with alternating trend regimes ----
 n_days = 260
@@ -111,6 +112,12 @@ keep_resistance = resistance_y .>= price_min - box_size
 resistance_x = resistance_x[keep_resistance]
 resistance_y = resistance_y[keep_resistance]
 
+# Breakout point: analytic intersection of the two 45-degree lines
+# (support(x) = resistance(x)), used to anchor the crossover annotation
+cross_x = (col_high[high_col] + high_col - col_low[low_col] + low_col) / 2
+cross_y = (col_low[low_col] + (cross_x - low_col)) * box_size
+has_crossover = cross_x >= max(low_col, high_col) && cross_x <= n_cols
+
 # --- Plot ---------------------------------------------------------------
 title_text = "NovaTech Inc. — box \$2.00, reversal 3 · point-and-figure-basic · julia · makie · anyplot.ai"
 title_ratio = length(title_text) > 67 ? 67 / length(title_text) : 1.0
@@ -150,7 +157,7 @@ ax = Axis(
     ygridvisible        = true,
     ygridcolor          = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xticks              = 1:xtick_step:n_cols,
-    yticks              = y_min:(box_size * 5):y_max,
+    yticks              = y_min:box_size:y_max,
 )
 
 scatter!(ax, x_up, y_up;
@@ -165,8 +172,33 @@ lines!(ax, support_x, support_y;
 lines!(ax, resistance_x, resistance_y;
     color = INK, linestyle = :dash, linewidth = 2.5, label = "Resistance")
 
-axislegend(ax;
-    position = :rt,
+# Annotate the swing points that anchor each trend line, so the viewer sees
+# *why* the lines start where they do rather than just that they exist.
+text!(ax, low_col, col_low[low_col] * box_size;
+    text = "Swing low", color = INK_SOFT, fontsize = 12,
+    align = (:left, :top), offset = (6, -6))
+text!(ax, high_col, col_high[high_col] * box_size;
+    text = "Swing high", color = INK_SOFT, fontsize = 12,
+    align = (:left, :bottom), offset = (6, 6))
+
+# Call out the support/resistance crossover as the chart's focal breakout
+# signal, rather than leaving the viewer to spot it unassisted.
+if has_crossover
+    scatter!(ax, [cross_x], [cross_y];
+        marker = :star5, markersize = 24, color = SIGNAL_COLOR,
+        strokecolor = INK, strokewidth = 1, label = "Breakout signal")
+    text!(ax, cross_x, cross_y;
+        text = "Breakout", color = INK, fontsize = 13, font = :bold,
+        align = (:center, :bottom), offset = (0, 16))
+end
+
+Legend(fig[1, 1], ax;
+    tellwidth = false, tellheight = false,
+    halign = :right, valign = :top,
+    margin = (12, 12, 12, 12),
+    padding = (10, 10, 8, 8),
+    patchsize = (18, 18),
+    rowgap = 4,
     backgroundcolor = ELEVATED_BG,
     labelcolor = INK,
     framevisible = false)
