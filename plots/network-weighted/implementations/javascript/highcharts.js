@@ -59,10 +59,9 @@ function nodeRadius(id) {
   const norm = (weightedDegree[id] - minDegree) / (maxDegree - minDegree);
   return 14 + Math.sqrt(norm) * (34 - 14);
 }
-function labelSize(id) {
-  const norm = (weightedDegree[id] - minDegree) / (maxDegree - minDegree);
-  return 12 + norm * 4;
-}
+// All country labels share one size — node radius alone carries the degree
+// hierarchy, so the labels stay uniform and easy to scan.
+const NODE_LABEL_SIZE = 13;
 
 // Edge weight -> line width / opacity, both scaled continuously (never a
 // fixed handful of tiers) so the thickness itself communicates magnitude.
@@ -134,6 +133,38 @@ for (let iter = 0; iter < 350; iter += 1) {
   temperature *= 0.97;
 }
 
+// Weighted-degree hubs sit close to the centroid while lightly-connected
+// nodes (Singapore, Italy) settle far outside the core under pure repulsion —
+// a continuous spread, not just one or two outliers. A min/max rescale
+// stretches the whole canvas to fit the single farthest node, cramming the
+// rest of the network into a small central patch and leaving wide empty
+// bands near the edges. Apply a radial power-law compression (exponent < 1)
+// around the centroid: distances shrink relative to each other the farther
+// out they are, so the far nodes move inward and the near ones spread out,
+// filling the canvas evenly while preserving each node's direction and
+// relative ordering from the centroid.
+const centroid0 = { x: 0, y: 0 };
+NODES.forEach((node) => {
+  centroid0.x += pos[node.id].x / NODES.length;
+  centroid0.y += pos[node.id].y / NODES.length;
+});
+const distsFromCentroid = NODES.map((node) => {
+  const dx = pos[node.id].x - centroid0.x;
+  const dy = pos[node.id].y - centroid0.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}).sort((a, b) => a - b);
+const medianDist = distsFromCentroid[Math.floor(distsFromCentroid.length / 2)];
+const RADIAL_COMPRESSION = 0.6;
+NODES.forEach((node) => {
+  const dx = pos[node.id].x - centroid0.x;
+  const dy = pos[node.id].y - centroid0.y;
+  const dist = Math.max(Math.sqrt(dx * dx + dy * dy), 0.01);
+  const newDist = medianDist * (dist / medianDist) ** RADIAL_COMPRESSION;
+  const scale = newDist / dist;
+  pos[node.id].x = centroid0.x + dx * scale;
+  pos[node.id].y = centroid0.y + dy * scale;
+});
+
 // The layout has no fixed boundary — recenter and rescale it into a known
 // frame before handing coordinates to the axes.
 let minX = Infinity;
@@ -197,7 +228,7 @@ const nodeSeries = REGIONS.map((region) => ({
       name: node.id,
       custom: { weightedDegree: weightedDegree[node.id] },
       marker: { radius },
-      dataLabels: { y: -(radius + 6), style: { fontSize: `${labelSize(node.id)}px` } },
+      dataLabels: { y: -(radius + 8), style: { fontSize: `${NODE_LABEL_SIZE}px` } },
     };
   }),
   dataLabels: {
