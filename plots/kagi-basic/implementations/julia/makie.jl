@@ -89,22 +89,37 @@ ax = Axis(
     bottomspinecolor    = INK_SOFT,
     xgridvisible        = false,
     ygridcolor          = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    yticks              = Makie.LinearTicks(7),
 )
 
-# Each leg of the staircase is drawn as a shoulder/waist (horizontal) followed
-# by the price move (vertical); color and thickness encode the leg's direction.
+# Each leg of the staircase is drawn with Makie's native stairs! step-plot
+# recipe (shoulder/waist geometry via step = :post); color and thickness
+# encode the leg's direction.
 for i in 1:(length(turn_x) - 1)
     is_up = turn_y[i + 1] > turn_y[i]
     seg_color = is_up ? YANG_COLOR : YIN_COLOR
     seg_width = is_up ? 5.0 : 2.0
-    lines!(
+    stairs!(
         ax,
-        [turn_x[i], turn_x[i + 1], turn_x[i + 1]],
-        [turn_y[i], turn_y[i], turn_y[i + 1]];
+        [turn_x[i], turn_x[i + 1]],
+        [turn_y[i], turn_y[i + 1]];
+        step = :post,
         color = seg_color,
         linewidth = seg_width,
     )
 end
+
+# Small markers at each reversal (shoulder/waist) point sharpen the
+# data-storytelling focal point beyond the raw staircase geometry.
+scatter!(
+    ax,
+    turn_x[2:(end - 1)],
+    turn_y[2:(end - 1)];
+    color = PAGE_BG,
+    strokecolor = INK_SOFT,
+    strokewidth = 1.5,
+    markersize = 7,
+)
 
 lines!(ax, [NaN, NaN], [NaN, NaN]; color = YANG_COLOR, linewidth = 5.0, label = "Yang (bullish)")
 lines!(ax, [NaN, NaN], [NaN, NaN]; color = YIN_COLOR, linewidth = 2.0, label = "Yin (bearish)")
