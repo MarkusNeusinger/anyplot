@@ -1,7 +1,7 @@
 // anyplot.ai
 // dashboard-metrics-tiles: Real-Time Dashboard Tiles
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: 91/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 

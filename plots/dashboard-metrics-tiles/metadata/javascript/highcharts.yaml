@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: dashboard-metrics-tiles
 created: '2026-09-02T00:04:02Z'
-updated: '2026-09-02T00:07:53Z'
+updated: '2026-09-02T00:22:38Z'
 generated_by: claude-sonnet
 workflow_run: 33573341106
 issue: 3791
@@ -12,42 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Exact mandated title format and a spec-faithful grid (3x2 for 6 tiles, matching
-    the specification's own 3x2-for-six-tiles guidance)
-  - 'All required tile elements present: metric label, prominent value, sparkline
-    trend, and a colored up/down change indicator, plus a bonus status dot'
-  - Reuses the canonical Highcharts sparkline idiom cleanly across all six chart instances
-    (disabled axes/legend/tooltip, transparent background, subtle area fill, no animation)
-  - Data colors (green/amber/red per status) are identical between light and dark
-    renders -- only chrome (page/card backgrounds, text) flips correctly
-  - Deterministic per-tile seeded LCG data generation produces realistic, varied metric
-    values and trend directions (mix of favorable/unfavorable changes across good/warning/critical
-    statuses)
+  - 'Exact theme compliance: page background samples to #FAF8F1 (light) / #1A1A17
+    (dark) and elevated card background to #FFFDF6 / #242420 pixel-for-pixel, matching
+    the style guide precisely.'
+  - 'Sophisticated, correct semantic color usage: ''good'' status tiles use brand
+    green #009E73, the ''warning'' tile uses the amber semantic anchor #DDCC77, and
+    the ''critical'' tile uses the matte-red semantic anchor #AE3030 — exactly the
+    intended, non-ordinal use of the palette''s semantic anchors.'
+  - 'Strong redundant encoding for accessibility: status is conveyed by color AND
+    a glyph (✓ / ! / ✕) inside the status dot, and change direction is conveyed by
+    color AND an up/down arrow glyph — not color alone.'
+  - 'Distinctive Highcharts touch: each sparkline adds a dashed plotLines baseline
+    at the period mean, giving trend-vs-baseline context beyond a raw sparkline, with
+    a code comment explaining the axis-visibility workaround needed to make plotLines
+    render.'
+  - Clean typography hierarchy (46px value / 15px label / 17px change / 22px header,
+    all explicit) and a fully chromeless sparkline (no axis, no gridlines, no legend,
+    no tooltip) that keeps each tile visually quiet and focused on the KPI.
+  - Deterministic, seeded per-tile data generation (small LCG, one seed per metric)
+    covering a realistic mix of good/warning/critical statuses and favorable/unfavorable
+    change directions.
   weaknesses:
-  - The status dot (top-right of each tile) encodes good/warning/critical using color
-    alone, with no accompanying shape or text cue -- a colorblind viewer could confuse
-    the green 'good' dot with the red 'critical' dot on a tile where the metric value
-    alone doesn't make the status obvious. Consider a distinct shape/icon per status
-    or a text label alongside the color.
-  - Doesn't showcase a distinctive Highcharts-only capability beyond the standard
-    sparkline recipe (e.g. a shared plotBand/plotLine for a threshold, or Highcharts.charts-based
-    synced crosshair) that would strengthen the Library Mastery distinctive-features
-    case.
+  - The white '!' glyph inside the amber (warning) status dot has very low contrast
+    (~1.6:1 white-on-#DDCC77), well under WCAG's 3:1 floor for graphical objects —
+    the exclamation mark is hard to make out even at full resolution, and disappears
+    entirely once the dot is scaled down for mobile widths. Consider a dark-ink glyph
+    on the amber dot instead of white (the green and red dots stay high-contrast with
+    white, so only the amber case needs the fix).
+  - At the 400px-wide mobile thumbnail, the tiny status-dot glyphs (✓/!/✕) are no
+    longer legible — only the dot color survives, so a colorblind viewer loses the
+    redundant status signal exactly at the viewport where it matters most. The KPI
+    value, change arrow/percent, and sparkline trend all remain readable at that size,
+    so this only affects the status-dot layer.
+  - Data-generation helper functions (lcg, history, mean) deviate from the KISS 'imports
+    → data → plot → save, no functions' structure — reasonable given six repeated
+    per-tile chart instances, but a couple of small helpers could be inlined without
+    hurting readability.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) page background with slightly elevated near-white card backgrounds for each of the 6 tiles, arranged in a 3x2 grid.
-      Chrome: Bold dark header title "dashboard-metrics-tiles · javascript · highcharts · anyplot.ai" top-left, fully readable. Each card shows a metric label (dark gray, e.g. "CPU Usage"), a large bold dark value (e.g. "45%"), a small colored change indicator with up/down triangle arrow (green or red), and a small colored status dot top-right (green/amber/red). All text is clearly legible against the light background.
-      Data: Each card contains a compact area sparkline (24 points) below the value, colored to match the tile's status (teal-green #009E73-ish for good, amber/gold for warning, red for critical), with a subtle ~16% opacity fill under the line. First categorical/status color used is the brand green.
-      Legibility verdict: PASS
+      Background: Warm off-white, sampled #FAF8F1 (250,248,241) — matches the spec exactly, not pure white.
+      Chrome: Bold dark header "dashboard-metrics-tiles · javascript · highcharts · anyplot.ai" top-left, fully readable. Six rounded tile cards (#FFFDF6 elevated surface) in a 3x2 grid, each with a gray metric label, a small colored status dot with a glyph (✓ good / ! warning / ✕ critical) top-right, a large bold value, a colored change indicator with an up/down arrow, and a compact area sparkline with a dashed gray baseline. All text (header, labels, values, change %) is clearly legible against the light background.
+      Data: First/"good" tiles (CPU Usage, Response Time, Active Users, Throughput) use brand green #009E73 for both sparkline and favorable change text. Memory Usage ("warning") uses the amber semantic anchor. Error Rate ("critical") uses the matte-red semantic anchor #AE3030. Change-indicator color follows favorability (green when the change is good for that metric, red when it's bad), independently verified by sampling — e.g. CPU Usage's "▼5.2%" samples to (0,158,115) green, Memory Usage's "▲8.1%" samples to (174,48,66) red.
+      Legibility verdict: PASS overall — the one flaw is the white "!" glyph on the amber warning dot, which has poor contrast (~1.6:1) and is hard to read even at full resolution; every other text/glyph element is clearly legible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) page background with slightly lighter dark-gray elevated card backgrounds, same 3x2 grid layout.
-      Chrome: Header title and all tile labels/values render in light/white text, clearly visible against the dark background. No dark-on-dark text observed -- labels, values, and change percentages are all legible. Status dots and change-indicator colors are unchanged in hue from the light render.
-      Data: Sparkline line colors (green/amber/red) are visually identical to the light render; only the card and page backgrounds and the ink text color flipped, confirming data-color/theme-chrome separation is correctly implemented.
-      Legibility verdict: PASS
+      Background: Warm near-black, sampled #1A1A17 (26,26,23) — matches the spec exactly, not pure black. Elevated card surface samples to #242420, matching the spec's dark elevated token.
+      Chrome: Header and tile labels/values render in light ink, clearly visible against the dark background — no dark-on-dark text anywhere. Sparkline baselines (dashed) switch to a light gray, still visible against the dark fills.
+      Data: All data colors are identical to the light render — brand green, amber, and matte-red sparklines/text sample to the same hex values in both themes; only the chrome (background, card surface, text ink) flips, exactly as required.
+      Legibility verdict: PASS overall — same amber-dot glyph contrast issue as light (white "!" on amber, ~1.6:1), everything else reads cleanly, including at the 400px mobile thumbnail check (status-dot glyphs shrink below legibility, but the KPI value/change/sparkline layer remains fully readable there).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,52 +73,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/label/value/change text clearly readable in both themes;
-          sensible font sizes throughout.
+        comment: All sizes explicit (46/22/17/15px), well-proportioned, readable in
+          both themes; the tiny status-dot glyph is the only element that loses legibility
+          at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, sparklines, or status dots across all
-          6 tiles.
+        comment: No overlapping text or elements anywhere in the grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparkline density (24 pts) and line weight (2.5px) with subtle fill
-          are well matched to the compact tile size.
+        comment: Sparkline lines (2.5px) and fills are clearly visible; no-marker
+          sparkline style is appropriate for compact trend tiles
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Status dot encodes good/warning/critical via hue alone with no shape/text
-          backup, a CVD risk.
+        comment: White '!' glyph on the amber warning dot measures ~1.6:1 contrast,
+          below WCAG's 3:1 floor for graphical objects; green/red dots are high-contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Clean 3x2 grid, consistent tile sizing/spacing, nothing clipped or
-          overflowing.
+        comment: Grid + header use the large majority of the 3200x1800 canvas with
+          balanced margins; nothing is cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Mandated title format present; metric labels and units embedded in
-          values are descriptive.
+        comment: Every value includes its unit (%, ms, MB/s) and each tile is clearly
+          labeled
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First status color is Imprint #009E73; data colors identical between
-          light/dark; both backgrounds theme-correct.'
+        comment: 'First/good series = #009E73 exactly; warning uses the amber anchor
+          #DDCC77, critical uses the matte-red anchor #AE3030 — correct semantic use;
+          both theme backgrounds sample to the exact spec hexes'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -111,22 +127,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Rounded elevated cards, clear typographic hierarchy (label/value/change),
-          professional dashboard look.
+        comment: Custom dashboard layout with thoughtful semantic color mapping and
+          clean typography, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Generous whitespace, subtle sparkline fills, no unnecessary chrome
-          (axes/legend/tooltip disabled on sparklines).
+        comment: Chromeless sparklines, generous card padding, subtle dashed baseline;
+          minor rough edge is the low-contrast amber glyph
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Large focal values plus color-coded status/change create a clear
-          at-a-glance operational narrative.
+        comment: Value + status dot + change arrow + baseline-relative sparkline combine
+          to communicate each metric's health at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +152,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Dashboard grid of metric tiles with embedded sparklines, matching
-          the spec exactly.
+        comment: Responsive 3x2 grid of metric tiles, matching the spec's dashboard-metrics-tiles
+          definition
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Value, label, sparkline, and change indicator with arrow all present,
-          plus a bonus status dot.
+        comment: Value, label, sparkline, and change indicator with arrow all present
+          on every tile, plus status color coding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Current value and historical trend correctly mapped per tile.
+        comment: History arrays map correctly to sparkline trends, current values
+          and change percentages are consistent with the history
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated 'spec-id · language · library · anyplot.ai'
-          format exactly; no legend needed.
+        comment: Header matches 'dashboard-metrics-tiles · javascript · highcharts
+          · anyplot.ai' exactly; no legend needed since each tile is self-labeled
     data_quality:
       score: 15
       max: 15
@@ -167,80 +184,82 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers value, label, trend, change%, arrow direction, and status
-          across 6 tiles.
+        comment: Covers all three statuses (good/warning/critical) and both favorable/unfavorable
+          change directions across the 6 tiles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral ops-monitoring metrics (CPU, memory, latency,
-          error rate, users, throughput).
+        comment: Real, neutral ops-monitoring scenario (CPU, memory, latency, error
+          rate, users, throughput)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and units are sensible for each metric's real-world domain.
+        comment: All values (45% CPU, 72% memory, 120ms latency, 2.3% errors, 8412
+          users, 340MB/s) are realistic for a server dashboard
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Only small deterministic-data helper functions; no unnecessary classes/abstractions.
+        comment: A few small helper functions (lcg, history, mean) are used, reasonable
+          for six repeated per-tile chart instances but not the strictest KISS shape
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG per tile, fully deterministic.
+        comment: Deterministic seeded LCG per metric, no unseeded randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; relies solely on provided globals.
+        comment: No imports beyond the Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a multi-tile dashboard; no fake/simulated
-          interactivity.
+        comment: No fake UI, no over-engineering; DOM/chart split is appropriate for
+          a dashboard-tiles layout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, credits disabled,
-          current Highcharts API.
+        comment: Correct mount-node contract, no explicit width/height, animation
+          disabled, credits disabled
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Matches Highcharts' documented sparkline recipe (disabled axes/legend/tooltip,
-          transparent bg, minimal margins).
+        comment: 'Textbook idiomatic Highcharts sparkline pattern: hidden axes, disabled
+          legend/tooltip/marker, one chart instance per mount'
       - id: LM-02
         name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Multi-instance status-linked sparklines are a nice touch but don't
-          reach for a deeper Highcharts-only capability.
+        score: 3
+        max: 3
+        passed: true
+        comment: Uses plotLines for a styled reference-line baseline, a genuine Highcharts-specific
+          touch beyond generic sparkline usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - sparkline
+  - reference-line
   patterns:
   - data-generation
   - iteration-over-groups
