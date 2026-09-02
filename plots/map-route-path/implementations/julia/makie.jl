@@ -68,6 +68,8 @@ elevation_field(lon, lat) = 2150.0 + 780.0 * exp(
 )
 elev_m    = elevation_field.(lon_smooth, lat_smooth) .+ 15.0 .* (rand(N_POINTS) .- 0.5)
 elev_norm = (elev_m .- minimum(elev_m)) ./ (maximum(elev_m) - minimum(elev_m))
+elev_gain = sum(max.(diff(elev_m), 0.0))   # total climb along the recorded track
+peak_elev = elevation_field(LON_C, LAT_C)  # elevation at the loop's centroid peak
 
 # Terrain basemap: the elevation field is a single radially-symmetric peak,
 # so its contour lines are exact circles around the centroid — drawn
@@ -77,6 +79,7 @@ lon_min, lon_max = minimum(lon_smooth) - pad, maximum(lon_smooth) + pad
 lat_min, lat_max = minimum(lat_smooth) - pad, maximum(lat_smooth) + pad
 ring_phi = range(0, 2π; length = 100)
 ring_radii = R_DEG .* [0.3, 0.55, 0.8, 1.05, 1.3]
+labeled_ring_idx = [2, 4]   # label a couple of rings with their elevation value
 
 # Direction arrows: a handful of rotated triangles along the smoothed track
 arrow_idx = 20:40:(N_POINTS-10)
@@ -89,7 +92,7 @@ arrow_rot = [
 
 # --- Plot ---------------------------------------------------------------------
 const title_str = "Alpine Loop Trail · map-route-path · julia · makie · anyplot.ai"
-const title_sz   = round(Int, 20 * min(1.0, 67 / length(title_str)))
+const title_sz   = round(Int, 25 * min(1.0, 67 / length(title_str)))
 
 fig = Figure(
     size            = (1600, 900),
@@ -124,11 +127,47 @@ ax = Axis(
     limits            = (lon_min, lon_max, lat_min, lat_max),
 )
 
-# Basemap: concentric elevation rings around the peak the trail circles
-for r in ring_radii
+# Basemap: concentric elevation rings around the peak the trail circles,
+# with a couple of rings labeled by contour value so they read as terrain
+# context rather than decoration.
+for (i, r) in enumerate(ring_radii)
     lines!(ax, LON_C .+ r .* cos.(ring_phi), LAT_C .+ r .* sin.(ring_phi);
         color = TERRAIN_LINE, linewidth = 0.8)
+    if i in labeled_ring_idx
+        ring_elev = elevation_field(LON_C, LAT_C + r)
+        text!(ax, LON_C, LAT_C + r;
+            text      = "$(round(Int, ring_elev)) m",
+            fontsize  = 9,
+            color     = INK_SOFT,
+            align     = (:center, :bottom),
+            offset    = (0, 2),
+        )
+    end
 end
+
+# Summit marker: the peak the contour rings and elevation gradient center on
+scatter!(ax, [LON_C], [LAT_C];
+    marker      = :star5,
+    markersize  = 12,
+    color       = INK_SOFT,
+    strokewidth = 0,
+)
+text!(ax, LON_C, LAT_C;
+    text      = "Peak · $(round(Int, peak_elev)) m",
+    fontsize  = 11,
+    color     = INK_SOFT,
+    align     = (:center, :top),
+    offset    = (0, -8),
+)
+
+# Trail stat callout: total elevation gain along the recorded track
+text!(ax, lon_min + 0.04 * (lon_max - lon_min), lat_max - 0.04 * (lat_max - lat_min);
+    text      = "Elevation gain: +$(round(Int, elev_gain)) m",
+    fontsize  = 12,
+    color     = INK_SOFT,
+    align     = (:left, :top),
+    space     = :data,
+)
 
 # Route path, colored by elevation (Imprint sequential: green -> blue)
 lines!(ax, lon_smooth, lat_smooth;
