@@ -9,7 +9,7 @@ const margin = { top: 110, right: 210, bottom: 90, left: 100 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-// --- Data: synthetic iris-like measurements (4 variables, 3 species) -------
+// --- Data: synthetic iris-like measurements (6 variables, 3 species) -------
 // Deterministic LCG (the browser has no seeded Math.random) drives a
 // Box-Muller transform so each species clusters around realistic means.
 let seed = 42;
@@ -24,10 +24,28 @@ function gaussian(mean, std) {
   return mean + z * std;
 }
 
+// 6 variables per observation: the 4 classic iris measurements plus 2 derived
+// area measurements (sepal_area, petal_area), giving the Andrews expansion
+// fuller use of its 4-8 recommended dimensionality.
 const species = [
-  { name: "setosa", n: 30, means: [5.0, 3.4, 1.5, 0.2], stds: [0.35, 0.38, 0.17, 0.11] },
-  { name: "versicolor", n: 30, means: [5.9, 2.8, 4.3, 1.3], stds: [0.52, 0.31, 0.47, 0.2] },
-  { name: "virginica", n: 30, means: [6.6, 3.0, 5.6, 2.0], stds: [0.64, 0.32, 0.55, 0.27] },
+  {
+    name: "setosa",
+    n: 30,
+    means: [5.0, 3.4, 1.5, 0.2, 17.0, 0.3],
+    stds: [0.35, 0.38, 0.17, 0.11, 1.8, 0.15],
+  },
+  {
+    name: "versicolor",
+    n: 30,
+    means: [5.9, 2.8, 4.3, 1.3, 16.5, 5.6],
+    stds: [0.52, 0.31, 0.47, 0.2, 2.2, 1.0],
+  },
+  {
+    name: "virginica",
+    n: 30,
+    means: [6.6, 3.0, 5.6, 2.0, 19.8, 11.2],
+    stds: [0.64, 0.32, 0.55, 0.27, 2.6, 1.8],
+  },
 ];
 
 const observations = [];
@@ -49,9 +67,16 @@ for (let j = 0; j < dims; j++) {
   observations.forEach((o) => (o.values[j] = (o.values[j] - mean) / std));
 }
 
-// --- Andrews curve: x1/sqrt(2) + x2 sin(t) + x3 cos(t) + x4 sin(2t) --------
+// --- Andrews curve: x1/sqrt(2) + x2 sin(t) + x3 cos(t) + x4 sin(2t) + ... --
+// General Fourier expansion so any number of standardized variables (here 6)
+// contributes alternating sin/cos terms at increasing frequency.
 function andrews(tt, v) {
-  return v[0] / Math.SQRT2 + v[1] * Math.sin(tt) + v[2] * Math.cos(tt) + v[3] * Math.sin(2 * tt);
+  let f = v[0] / Math.SQRT2;
+  for (let k = 1; k < v.length; k++) {
+    const freq = Math.ceil(k / 2);
+    f += k % 2 === 1 ? v[k] * Math.sin(freq * tt) : v[k] * Math.cos(freq * tt);
+  }
+  return f;
 }
 
 const N_SAMPLES = 120;
@@ -61,6 +86,18 @@ const curves = observations.map((o) => ({
   species: o.species,
   points: tSamples.map((tt) => ({ t: tt, value: andrews(tt, o.values) })),
 }));
+
+// Per-species mean curve (Andrews is linear in v, so this is the curve of the
+// mean vector) drawn bolder on top, giving the dense central overlap a clear
+// visual-hierarchy anchor beyond color alone.
+const meanCurves = species.map((sp) => {
+  const spValues = observations.filter((o) => o.species === sp.name).map((o) => o.values);
+  const meanValues = d3.range(dims).map((j) => d3.mean(spValues, (v) => v[j]));
+  return {
+    species: sp.name,
+    points: tSamples.map((tt) => ({ t: tt, value: andrews(tt, meanValues) })),
+  };
+});
 
 const yExtent = d3.extent(curves.flatMap((c) => c.points.map((p) => p.value)));
 const yPad = (yExtent[1] - yExtent[0]) * 0.08;
@@ -146,8 +183,19 @@ g.selectAll("path.curve")
   .attr("d", (d) => line(d.points))
   .attr("fill", "none")
   .attr("stroke", (d) => color(d.species))
-  .attr("stroke-width", 1.4)
-  .attr("stroke-opacity", 0.45);
+  .attr("stroke-width", 1.1)
+  .attr("stroke-opacity", 0.35);
+
+// Bolder mean curves on top, one per species, for visual hierarchy.
+g.selectAll("path.mean-curve")
+  .data(meanCurves)
+  .join("path")
+  .attr("class", "mean-curve")
+  .attr("d", (d) => line(d.points))
+  .attr("fill", "none")
+  .attr("stroke", (d) => color(d.species))
+  .attr("stroke-width", 3)
+  .attr("stroke-opacity", 0.9);
 
 // --- Legend ------------------------------------------------------------------
 const legend = svg
