@@ -1,0 +1,253 @@
+library: chartjs
+language: javascript
+specification_id: scatter-text
+created: '2026-09-02T06:00:49Z'
+updated: '2026-09-02T06:19:43Z'
+generated_by: claude-sonnet
+workflow_run: 33596638637
+issue: 3482
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Attempt-1 feedback was addressed precisely: title fontsize raised (22→32px),
+    grid/border fully hidden instead of the previous four-sided box, and cluster centers/spreads
+    widened to fill more of the canvas.'
+  - Halo-stroke technique (page-background-colored stroke behind each label) keeps
+    labels legible where they're dense, and adapts correctly per theme.
+  - Idiomatic Chart.js plugin architecture (afterDatasetsDraw) replaces point markers
+    with text; pointRadius:0 + pointHitRadius:14 keeps hover targets usable without
+    drawing visible markers.
+  - Correct Imprint palette usage — three clusters use canonical positions 1-3, identical
+    across themes; all chrome correctly threads theme tokens.
+  - Deterministic reproducibility via a fixed-seed LCG, appropriate given the browser
+    has no seeded Math.random().
+  weaknesses:
+  - Title still fills only ~41% of plot width at 32px — under the ~50-70% "comfortable"
+    target. Could size up further (e.g. ~36-40px) for stronger visual hierarchy without
+    risking overflow.
+  - The far bottom-right corner of the canvas remains visibly empty even after the
+    cluster re-centering — a touch more rightward/downward spread on the "Functional
+    & Data" cluster (or a small counter-clockwise center shift) would balance the
+    frame further.
+  - The upper-right "Scripting & Web" sub-cluster (Ruby/Elixir/Swift/Lua/Python/Dart)
+    is still the densest region on the canvas; legible at full size but worth another
+    small widening for mobile-scale legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-text · javascript · chartjs · anyplot.ai" in bold dark ink, top-centered, now at 32px (up from attempt-1's 22px). Legend below the title with three swatches (green/lavender/blue) labeled "Systems & Low-Level", "Scripting & Web", "Functional & Data". Axis titles "Semantic Dimension 1 (t-SNE)" (x) and "Semantic Dimension 2 (t-SNE)" (y) in dark ink. Tick labels, grid, and axis border are all hidden by design — fully borderless plot area (the four-sided box from attempt 1 is gone).
+      Data: 30 programming-language names rendered as colored text instead of point markers, grouped into three domain clusters (systems/low-level in green, scripting/web in purple, functional/data in blue). Each label has a thin off-white halo/stroke keeping it legible near other labels. First series color is #009E73 brand green as required.
+      Legibility verdict: PASS — all text (title, legend, axis titles, and all 30 data labels) is clearly readable against the light background; no light-on-light issues. The upper-right cluster (Ruby/Elixir/Swift/Lua/Python/Dart) is the densest region but remains legible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title now in off-white ink, legend swatches identical colors with off-white text labels. Axis titles in off-white. Same fully borderless layout as the light render.
+      Data: Same 30 labels in the same three colors (green/lavender/blue) and same positions as the light render — data colors are identical between themes, confirming only chrome flipped. The halo stroke now renders as a dark-background-colored outline, staying subtle rather than clashing.
+      Legibility verdict: PASS — no dark-on-dark failures; title, legend, axis titles, and all data labels are clearly visible against the near-black background. Brand green and the other two Imprint hues both read well on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All 30 labels + chrome readable in both themes; Ruby/Elixir/Swift/Lua/Python/Dart
+          cluster is less cramped after the spread-7 widening but still the densest
+          region.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-data collisions anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Text-as-marker + halo stroke gives strong contrast; density handling
+          for 30 labels is solid.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three well-separated hues, halo stroke aids contrast further, no
+          red-green sole reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Four-sided grid/border box from attempt 1 fully removed; nothing
+          clipped. Title now fills ~41% of width at 32px, better than attempt 1's
+          ~28-30% but still under the ~50-70% comfortable target.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with method context (t-SNE).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical positions 1-3 used; correct theme
+          backgrounds; data colors identical across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Halo-stroke plugin and semi-bold typography, now paired with a fully
+          borderless plot area.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Ticks, grid, and axis border all hidden; previous rectangular border-box
+          complaint resolved.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain-based color clustering gives a clear grouping story; canvas
+          balance improved but the far bottom-right corner remains visibly empty.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Points replaced by text labels via pointRadius:0 + custom draw plugin,
+          exactly matching the spec's core concept.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: x/y coordinates, label text, explicit font size, and color-encoded
+          categorical grouping all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly mapped, all 30 points shown, no truncation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; legend labels match dataset
+          domain names.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Text-as-marker and color-as-category both used; alpha transparency
+          for overlap not needed/used since no labels overlap.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Programming-language word-embedding scenario is realistic, neutral,
+          and plausible for a t-SNE-style demo.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Cluster re-centering meaningfully improved canvas balance, but the
+          far bottom-right corner is still visibly empty.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Simple top-to-bottom script, small helper functions only, no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG gives deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom plugin is well-structured and does exactly what's needed;
+          no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'No filesystem writes; canvas correctly appended to #container; animation:false
+          set.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDatasetsDraw plugin hook is the correct, idiomatic Chart.js
+          mechanism for custom point rendering.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom tooltip callback and pointHitRadius tuning show good use of
+          Chart.js's interactive surface beyond the static render.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

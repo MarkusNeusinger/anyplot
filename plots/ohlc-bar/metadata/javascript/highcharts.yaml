@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: ohlc-bar
+created: '2026-09-02T04:47:42Z'
+updated: '2026-09-02T05:01:59Z'
+generated_by: claude-sonnet
+workflow_run: 33591809401
+issue: 3293
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Creative, correct workaround for the missing OHLC/candlestick module: each bar
+    is built from null-separated line strokes (high-low range plus left-open/right-close
+    ticks) using only the core bundle, matching the spec''s ''thin vertical lines
+    with horizontal ticks'' requirement exactly.'
+  - Finance-semantic color mapping (brand green for up, matte red for down) matches
+    the style guide's documented profit/loss exception, reinforced with redundant
+    triangle-direction markers (up/down) at the close tick for CVD-safety beyond color
+    alone.
+  - 'Data storytelling: a dashed xAxis plotLine with a label highlights the single
+    sharpest daily move, giving the chart a clear focal point instead of a flat data
+    dump.'
+  - Explicit, well-proportioned font sizing throughout (title 22px, axis titles 16px,
+    ticks/legend 14px); both themes are fully readable with correctly flipped chrome
+    and identical data colors.
+  - Custom tooltip formatter surfaces full OHLC values per bar despite the underlying
+    series type not natively supporting OHLC tooltips.
+  - Deterministic LCG-seeded data produces a realistic WTI crude oil price path with
+    both bullish and bearish stretches.
+  weaknesses:
+  - 'Library Mastery is solid but a bit generic in one respect: since the native OHLC
+    series type isn''t in the core bundle, the chart relies on a ''line'' series workaround
+    rather than a more distinctive Highcharts-only feature; consider layering in something
+    harder to replicate elsewhere (e.g., plotBands for session shading, or a custom
+    SVGRenderer overlay).'
+  - 'Visual refinement is good but not maximal: only the x-axis draws a line/tick
+    color, the y-axis relies on gridlines and labels alone with no explicit axis line
+    — a fine minimalist choice, but combined with the plain gridlines it reads closer
+    to ''well-configured'' than ''every-detail-polished''.'
+  - Element sizing (lineWidth 3px, triangle radius 5px) is adequate but not maximized
+    for a sparse ~42-point series; per the data-density heuristic, sparse data benefits
+    from more prominent markers — a slightly larger tick width/triangle radius would
+    improve visibility further at mobile scale.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Crude Oil Futures · ohlc-bar · javascript · highcharts · anyplot.ai" with a lighter "Sharpest move: -1.7%" subtitle-style annotation label; dark X-axis title "Trading Date" and Y-axis title "Price per Barrel (USD)"; soft dark-gray tick labels on both axes; subtle horizontal gridlines at each price level; legend at bottom center reads "Up (Close ≥ Open)" (green) and "Down (Close < Open)" (red). All text is clearly readable against the light background.
+      Data: 42 OHLC bars spanning early Feb to late Mar. First (and only) categorical series is brand green #009E73 for bullish bars, matte red #AE3030 for bearish bars — each bar shows a vertical high-low line, a left tick at the open price, and a right tick at the close price with a small triangle (pointing up for bullish, down for bearish) marking the close. A dashed vertical plot-line marks the day with the sharpest single-day move, with a small dark label above it.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis titles render in light/white text, tick labels in light gray, gridlines are faint light-colored horizontal lines, legend text is light-colored — all chrome has correctly flipped from the light render with no dark-on-dark or light-on-light failures.
+      Data: Bar colors are visually identical to the light render — same brand green (#009E73) for up bars and matte red (#AE3030) for down bars, confirming data colors are constant across themes; only the chrome (background, text, grid) adapted to the dark theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
+          14px); readable in both themes, title fits without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or tick-mark collisions, even in the densest clusters of
+          adjacent trading days
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ticks/triangles visible and distinguishable but could be slightly
+          larger given only ~42 sparse data points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Triangle direction markers give a redundant non-color encoding on
+          top of the red/green semantic colors
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend sits directly below the plot, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (USD), X-axis is descriptive (Trading Date)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 brand green; down series uses the documented
+          finance semantic-exception matte red; theme-correct backgrounds and chrome
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color use, direction markers, and an annotation-driven
+          focal point clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimalist axis treatment, subtle gridlines, generous whitespace;
+          not every micro-detail is maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sharpest-move plotLine annotation gives the viewer an immediate focal
+          point beyond a raw data dump
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct OHLC bar construction: high-low range, left-open tick, right-close
+          tick'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Date-formatted time axis, gridlines, up/down color distinction all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = trading date, Y = price, all data visible within axis bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai' format; legend labels match the up/down semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both bullish and bearish bars present with clear variation in range/direction
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world WTI crude oil futures scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range (~$75-83/barrel) and OHLC internal consistency (high
+          >= max(open,close), low <= min(open,close)) are factually sound
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports-data-chart script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the provided ANYPLOT_TOKENS and Highcharts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex given the core-bundle constraint, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid core-API usage (datetime axis, plotLines, custom tooltip formatter,
+          crosshair) working around the missing OHLC module
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point marker overrides, plotLines with label, and custom tooltip
+          formatter are distinctly Highcharts features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - publication-ready

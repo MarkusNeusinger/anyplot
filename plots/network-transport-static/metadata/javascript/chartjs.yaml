@@ -1,0 +1,273 @@
+library: chartjs
+language: javascript
+specification_id: network-transport-static
+created: '2026-09-02T04:20:50Z'
+updated: '2026-09-02T04:58:40Z'
+generated_by: claude-sonnet
+workflow_run: 33589879844
+issue: 3463
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'All four weaknesses from the attempt-1 review are visibly addressed: edges are
+    now hit-testable (routeHitDataset with pointHitRadius) so hovering a route shows
+    its full departure/arrival/type detail, not just station service count.'
+  - Node radius is now clearly degree-scaled (18 + degree*4) so hub stations (Central
+    Station, Eastport, Southgate, Harborview) read as visually dominant over leaf
+    stations (Millbrook, Bayside, Riverside) - the previous 'too subtle' sizing issue
+    is fixed.
+  - Network scaled up from 8/15 to 11 stations and 24 routes, comfortably inside the
+    spec's 8-20/15-60 range and showing off the lane-offset and curve system on more
+    bidirectional pairs.
+  - Edge label rotation is now clamped to +/-45 degrees (maxLabelAngle), eliminating
+    the near-vertical head-tilt labels flagged previously (IC1, S2, S11).
+  - 'Genuinely idiomatic Chart.js solution to a hard constraint: no native network
+    chart type exists, so the network is built via the library''s own beforeDatasetsDraw/afterDatasetsDraw
+    plugin hooks on a scatter dataset rather than reaching for another library or
+    a community plugin.'
+  - Outward station-label placement samples 8 candidate directions and picks the one
+    least aligned with any incident edge, so labels stay clear of converging route
+    lines even at busy hubs.
+  - 'Correct, theme-adaptive Imprint palette: first series is #009E73, canonical order
+    thereafter, data colors identical between light/dark, chrome (backgrounds, ink,
+    label backers) flips correctly.'
+  weaknesses:
+  - 'Regression introduced by the node-size fix: at Central Station, Southgate, Eastport,
+    and Harborview (the four largest, highest-degree hubs), an edge label''s translucent
+    backing box now visibly overlaps and cuts into the enlarged node circle - a light/dark
+    rectangular notch bites into the black (light theme) or off-white (dark theme)
+    node fill. Root cause: the label midpoint in transportLabels is computed purely
+    from the curve''s pixel midpoint and per-lane perpendicular offset, with no adjustment
+    for nodeRadius(source)/nodeRadius(target) - now that hub radii are much larger
+    (18 + degree*4), midpoints for short or near-vertical edges land inside or right
+    at the enlarged node''s boundary. Fix: push the label position further along the
+    curve (or increase the minimum node-to-label clearance) proportional to the larger
+    of the two endpoint node radii, e.g. skip/relocate labels whose midpoint distance
+    to either station center is less than nodeRadius + half the label box diagonal.'
+  - Route id + time labels are quite small (13px) relative to the 3200x1800 canvas
+    given 24 overlapping curves converging on a handful of hubs - legible but dense;
+    a couple more px or slightly more spacing between stacked lane labels would improve
+    scanability at the busiest hubs (Central Station has 5+ distinct edge labels within
+    a small radius).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "network-transport-static · javascript · chartjs · anyplot.ai" in dark ink, centered, ~68% of plot width. Bold dark station labels (Central Station, North Junction, Eastport, Westfield, Southgate, Lakeview, Millbrook, Harborview, Riverside, Hilltop, Bayside) anchored outward from the network centroid on translucent cream backing boxes. Bottom legend with three line swatches: "Regional Express" (green), "InterCity" (purple), "Local / S-Bahn" (blue). All chrome text is clearly readable against the light background.
+      Data: 11 black-filled station node circles, sized by route degree (Central Station and Eastport visibly larger than leaf stations like Millbrook/Bayside/Riverside), connected by 24 curved, arrowed, color-coded directed edges - green #009E73 Regional Express, purple InterCity, blue-slate Local/S-Bahn. Every edge carries a rotated "{routeId}  {dep}→{arr}" label on a cream backing box, clamped to a readable tilt. Defect: at the four largest hub nodes (Central Station, Southgate, Eastport, Harborview) a nearby edge-label's cream backing box visibly overlaps and cuts a light rectangular notch into the black node circle (confirmed via pixel crop). First data series is confirmed #009E73 (brand green).
+      Legibility verdict: PASS (all text readable; the node/label-box overlap is a visual-overlap defect, not a legibility failure - no text is unreadable).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title and station labels flipped to light ink; label backing boxes flip to the dark page color; legend readable in light text against the dark background.
+      Data: Station nodes flip to off-white/cream fill; the three route colors (#009E73 green, purple, blue-slate) are pixel-identical to the light render, confirming only chrome flipped as required. No dark-on-dark or light-on-light text failures found - all text has strong contrast against the near-black background. The same node/label-box overlap defect reproduces here (a dark rectangular notch cuts into the off-white node fill at the same four hub stations), confirming it is a geometry bug, not a theme-token bug.
+      Legibility verdict: PASS (all text readable; same overlap defect as the light render, not a legibility failure).
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Readable in both themes at full size; route labels are dense but
+          legible at 13px given 24 edges
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Edge-label backing box overlaps/cuts into the enlarged node circle
+          at 4 hubs (Central Station, Southgate, Eastport, Harborview) in both renders
+          - regression from the node-size fix
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Hub nodes now visibly larger than leaf nodes (fixed from attempt
+          1); slightly undercut by the label/node overlap at the same hubs
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe three-hue route coding, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions and margins, nothing clipped at canvas edge; label/node
+          overlap costs a point here too
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandated title format present; no axes needed for spatial network
+          layout
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct theme backgrounds,
+          data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom curved-edge plugin, lane offsetting, centroid-anchored labels
+          with 8-direction collision search
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axis/grid clutter, generous whitespace, but the node/label-box
+          overlap at 4 hubs reads as unpolished up close
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded route types plus now-clearly-larger hub nodes create
+          a real visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network/timetable diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved offset edges, arrows, route-id+time labels, color-coding,
+          and now full edge hover-tooltips all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Fixed x/y coordinates mapped directly with aspect-preserving scale,
+          no force-directed layout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct mandated title format; legend labels match the three route
+          types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 11 stations, 24 routes, bidirectional pairs, 3 route types, full
+          timetable fields
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible neutral regional-rail network naming and morning-commute
+          schedule
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 11 stations / 24 routes comfortably inside the spec's 8-20 / 15-60
+          range, up from attempt 1's minimum
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; plugin objects are the idiomatic Chart.js pattern for
+          this extension point
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided browser globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is proportional to the task; no fake/simulated UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set, current Chart.js
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine use of Chart.js's own plugin extension points (beforeDatasetsDraw/afterDatasetsDraw)
+          rather than a workaround library
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Invisible hit-testable dataset for per-edge tooltips, quadratic-curve
+          routing, per-lane offset geometry
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  - hover-tooltips
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
