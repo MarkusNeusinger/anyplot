@@ -1,7 +1,7 @@
 // anyplot.ai
 // windbarb-basic: Wind Barb Plot for Meteorological Data
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-02
+// Quality: 89/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
