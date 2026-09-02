@@ -66,7 +66,7 @@ p <- ggplot(df, aes(x = importance, y = feature, fill = importance)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.x = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.x = element_line(color = INK_MUTED, linewidth = 0.2),
     panel.grid.major.y = element_blank(),
     panel.grid.minor   = element_blank(),
     axis.title.x      = element_text(color = INK, size = 10, margin = margin(t = 8)),
