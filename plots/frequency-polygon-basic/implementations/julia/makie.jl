@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -37,16 +36,17 @@ edges = range(lo, hi; length = n_bins + 1)
 bin_width = step(edges)
 midpoints = [(edges[i] + edges[i + 1]) / 2 for i in 1:n_bins]
 
-function frequency_polygon_points(values, edges, midpoints)
-    counts = zeros(Int, length(midpoints))
+# Bin each group onto the shared edges, closing the polygon to zero at both ends
+polygon_xs = Vector{Vector{Float64}}()
+polygon_ys = Vector{Vector{Int}}()
+for values in reaction_times
+    counts = zeros(Int, n_bins)
     for v in values
-        idx = clamp(searchsortedlast(edges, v), 1, length(midpoints))
+        idx = clamp(searchsortedlast(edges, v), 1, n_bins)
         counts[idx] += 1
     end
-    # Close the polygon shape by extending to zero at both ends
-    xs = vcat(midpoints[1] - step(edges), midpoints, midpoints[end] + step(edges))
-    ys = vcat(0, counts, 0)
-    xs, ys
+    push!(polygon_xs, vcat(midpoints[1] - bin_width, midpoints, midpoints[end] + bin_width))
+    push!(polygon_ys, vcat(0, counts, 0))
 end
 
 # --- Plot -----------------------------------------------------------------
@@ -80,11 +80,16 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-for (i, (label, values)) in enumerate(zip(conditions, reaction_times))
-    xs, ys = frequency_polygon_points(values, edges, midpoints)
+# Sleep-deprived carries the widest, longest-tailed distribution — the story
+# of this chart — so it gets a heavier line to draw the eye toward it.
+linestyles = [:solid, :dash, :solid]
+linewidths = [3, 3, 4]
+
+for (i, label) in enumerate(conditions)
+    xs, ys = polygon_xs[i], polygon_ys[i]
     color = IMPRINT_PALETTE[i]
     band!(ax, xs, zeros(length(ys)), ys; color = RGBAf(color.r, color.g, color.b, 0.15))
-    lines!(ax, xs, ys; color = color, linewidth = 3, label = label)
+    lines!(ax, xs, ys; color = color, linewidth = linewidths[i], linestyle = linestyles[i], label = label)
 end
 
 axislegend(ax; position = :rt, framevisible = false, labelcolor = INK_SOFT)
