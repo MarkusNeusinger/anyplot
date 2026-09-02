@@ -1,7 +1,7 @@
 // anyplot.ai
 // map-route-path: Route Path Map
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: 85/100 | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
