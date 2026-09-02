@@ -1,0 +1,270 @@
+library: highcharts
+language: javascript
+specification_id: calibration-curve
+created: '2026-09-02T14:21:27Z'
+updated: '2026-09-02T14:35:16Z'
+generated_by: claude-sonnet
+workflow_run: 33640933933
+issue: 2331
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct reliability-diagram construction: 10 equal-width bins, mean predicted
+    probability plotted against observed frequency for two classifiers with distinct
+    calibration behavior (well-calibrated logistic regression vs. overconfident/sharpened
+    random forest)'
+  - 'New in this attempt: a genuinely Highcharts-specific native SVG callout (chart.renderer.label
+    with the built-in ''callout'' symbol, anchored via axis.toPixels) marks the largest
+    predicted-vs-observed gap on the Random Forest curve — directly resolves the prior
+    review''s LM-02 and DE-03 weaknesses with a technique that is not portable to
+    Chart.js/D3/ECharts, and the code comment correctly documents why'
+  - 'Tooltip re-enabled with theme-adaptive styling and valueDecimals: 3 — restores
+    a low-cost HTML-detail-view interactivity win without touching the static PNG,
+    addressing the prior review''s tooltip weakness'
+  - 'Correct Imprint palette order (brand green #009E73 first, lavender #C475FD second)
+    and fully theme-correct chrome in both renders — no dark-on-dark or light-on-light
+    failures'
+  - Diagonal perfect-calibration reference line correctly uses the theme-adaptive
+    ink token (dashed, no markers, enableMouseTracking disabled) rather than a categorical
+    palette color
+  - Distinct marker shapes (circle vs. diamond) give redundant encoding beyond color;
+    Brier score shown in both subtitle and per-series legend labels
+  - All font sizes explicitly set (title 22px, axis titles 16px, tick/legend/subtitle
+    14px); clean layout with generous margins, canvas gate passes, no clipping in
+    either render
+  weaknesses:
+  - Only two calibration behaviors are shown (well-calibrated vs. overconfident);
+    the spec also mentions underconfident models. Not required, but a third series
+    (or swapping one curve for a clearly underconfident one) would demonstrate fuller
+    feature coverage.
+  - 'CQ-01 (KISS structure): four helper functions (lcg, randNormal, binCalibration,
+    brierScore) are used — reasonable given the statistical computation needed, but
+    slightly departs from the pure imports-to-data-to-plot flat-script ideal.'
+  - 'Design Excellence is strong but not maximal: visual refinement (grid, whitespace)
+    reads as good rather than exceptional; a subtle shaded confidence/reference band
+    would push DE-02 further.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "calibration-curve · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; subtitle with Brier scores in medium-gray, readable; x-axis title "Mean Predicted Probability" and y-axis title "Observed Frequency (Fraction Positive)" in medium-gray, both legible and similarly sized; tick labels on both axes small and legible; gridlines subtle light-gray, visible but not competing with data; legend at bottom center with three entries, clearly readable. A new native-SVG callout box (light elevated-surface fill, ink-soft border) near (0.75, 0.75) reads "Largest gap: 0.17" with a leader line pointing to the Random Forest point at (0.85, 0.68) — text inside the callout is dark ink on a light fill, fully legible, and does not overlap any data markers or axis text.
+      Data: First series (Logistic Regression) is brand green (#009E73) circles+line hugging the diagonal reference closely; second series (Random Forest) is lavender/purple (#C475FD) diamonds+line, deviating from the diagonal (above it at low probabilities, below it at high probabilities — a classic sharpened/overconfident calibration curve); diagonal "Perfect calibration" reference is a black dashed line with no markers.
+      Legibility verdict: PASS — all text, including the new callout, is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle rendered in white/light-gray, fully legible; axis titles and tick labels in light gray, legible and balanced between x and y axes; gridlines subtle gray, visible against the dark background without dominating; legend text light-gray and readable. The callout box correctly flips to a dark elevated-surface fill with a light border and light ink text — "Largest gap: 0.17" remains fully legible against the dark background, no dark-on-dark failure.
+      Data: Both series render in the identical brand green and lavender hexes as the light render — confirmed unchanged data colors. The "Perfect calibration" reference line correctly flips to white dashes (theme-adaptive ink token) so it stays visible against the dark background instead of remaining black.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements, including the new callout, are clearly distinguishable from the background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, tick/legend/subtitle/callout
+          13-14px); readable in both themes with no clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; the new callout box and leader
+          line avoid crossing any markers or axis text.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (~9-10 binned points per series); marker radius 6 with
+          3px lines is prominent and appropriate for the density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender is CVD-safe; redundant marker-shape encoding (circle
+          vs. diamond) reinforces the distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; plot fills a large, balanced majority
+          of the canvas; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles ('Mean Predicted Probability', 'Observed
+          Frequency (Fraction Positive)') fully explain the unitless probability axes.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series canonical position 2 (#C475FD);
+          reference line and callout correctly use theme-adaptive tokens; both renders
+          theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Imprint palette, subtitle metric display, dashed reference line,
+          redundant marker shapes, and a polished native callout — clearly above library
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, no chart clutter — good but not
+          maximally refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The callout explicitly calls out the largest miscalibration gap (0.17)
+          on the overconfident curve, resolving the prior review's 'no explicit annotation'
+          gap; visual hierarchy is clear.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reliability-diagram / calibration-curve construction.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line, 10-bin default, Brier score summary metric,
+          multi-model comparison with distinct colors and legend — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = mean predicted probability, Y = observed frequency, both axes
+          spanning the full 0-1 range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; legend labels are descriptive
+          and include the Brier score per series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows well-calibrated vs. overconfident behavior; spec also mentions
+          underconfident models, which isn't demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Diagnostic screening / medical classifier scenario — realistic and
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Brier scores (0.168, 0.181) and calibration deviation magnitudes
+          are plausible for real-world classifiers.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Four helper functions (lcg, randNormal, binCalibration, brierScore)
+          — reasonable for the statistical computation but not a flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (20260225), fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only window.ANYPLOT_TOKENS and Highcharts
+          globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or over-engineering; the callout
+          is real Highcharts rendering, not simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series,
+          no deprecated API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct idiomatic use of Highcharts.chart, dashStyle, enableMouseTracking,
+          marker styling from tokens.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The chart.renderer.label callout with the built-in 'callout' symbol,
+          driven by axis.toPixels coordinate conversion in a load event handler, is
+          a genuinely Highcharts-specific technique not trivially portable to Chart.js/ECharts/D3
+          — directly resolves the prior review's LM-02 weakness.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
