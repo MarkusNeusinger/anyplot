@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: dashboard-metrics-tiles
 created: '2026-09-01T23:59:27Z'
-updated: '2026-09-02T00:03:38Z'
+updated: '2026-09-02T00:15:26Z'
 generated_by: claude-sonnet
 workflow_run: 33572987177
 issue: 3791
@@ -12,55 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Correct semantic use of the Imprint palette anchors — green (#009E73) for good/favorable,
-    amber for warning, matte red (#AE3030) for critical — identical data colors across
-    light and dark renders.
-  - Theme-adaptive chrome works flawlessly in both renders, confirmed legible even
-    at the 400px thumbnail scale.
+  - 'Both accessibility weaknesses from attempt 1 are fixed: each tile now carries
+    a shape-coded status icon (circle/triangle/square) redundant with the accent-bar
+    color, so status survives without color (VQ-04 CVD-safety).'
+  - The critical-status tile (Disk I/O) now gets a deliberate visual-weight bump —
+    tinted card surface via d3.interpolateRgb and a thicker red border — so the eye
+    lands on the metric that needs attention first, directly addressing the prior
+    data-storytelling weakness.
+  - Correct semantic use of the Imprint palette anchors — brand green for good/favorable,
+    amber for warning, matte red for critical — identical data colors across light
+    and dark renders, theme-adaptive chrome flawless in both.
   - Thoughtful separation between `favorable` (change-direction color on the arrow
-    indicator) and `status` (absolute-level color on the accent bar and sparkline)
-    — a nuance the spec implies but doesn't spell out.
-  - 'All required KPI tile elements present and cleanly composed: metric label, big
-    value + unit, sparkline (area + line + endpoint dot), and change indicator with
-    arrow + percentage.'
-  - Grid geometry correctly implements the spec's '3x2 for 6 tiles' responsive layout
-    with consistent tile sizing, margins, and gaps.
-  - Deterministic, realistic, plausible data across 6 distinct ops metrics (CPU, memory,
-    response time, error rate, throughput, disk I/O).
+    indicator) and `status` (absolute-level color on accent bar/icon/sparkline) —
+    a nuance the spec implies but doesn't spell out.
+  - Grid geometry correctly implements the spec's 3x2 layout for 6 tiles with consistent
+    sizing, margins, and gaps; deterministic, realistic ops-metrics data.
   weaknesses:
-  - Status (good/warning/critical) is conveyed via color-only on the left accent bar
-    and sparkline — no per-tile text/icon repeats the status, only the top legend
-    maps colors to meaning. Add a small status word or shape cue per tile for full
-    CVD-safety (VQ-04).
-  - Design is a clean, correct KPI-tile pattern but fairly formulaic (uniform rounded-card
-    + accent-bar layout for every tile); pushing a stronger visual hierarchy — e.g.
-    emphasizing the one critical metric (Disk I/O) so the eye lands there first —
-    would raise data storytelling.
-  - 'D3 usage is solid but not distinctive: mostly scaleLinear/area/line/curveMonotoneX,
-    no library-specific technique beyond the baseline shape generators.'
-  - Sparkline endpoint marker (r=4.5) and change-indicator glyph are on the small
-    side at the 400px thumbnail scale — still legible, but a touch more radius/stroke-width
-    would improve small-scale robustness.
+  - Sparkline endpoint marker (r=5.5, only up from 4.5 last attempt) and the change-indicator
+    percentage text are still on the small side at the 400px mobile thumbnail scale
+    — still legible but close to the lower bound.
+  - 'D3 usage remains solid but not deeply distinctive: shape generators (area/line/symbol),
+    scaleLinear, and interpolateRgb cover the visual needs well but don''t reach into
+    more advanced D3 modules (e.g. d3-hierarchy, d3-force, d3-geo) that would showcase
+    library mastery further.'
+  - The KPI-tile composition, while well executed, is a fairly conventional dashboard
+    pattern — solid craftsmanship rather than a standout aesthetic risk.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent) canvas; tile cards use a very slightly lighter elevated warm surface with a thin subtle grid-colored border.
-      Chrome: Title "dashboard-metrics-tiles · javascript · d3 · anyplot.ai" is dark, bold, centered, fully readable. A centered status legend (Good/Warning/Critical dots) sits below the title. Metric labels (e.g. "CPU Usage") are dark gray, tick-free (no axes on sparklines, as expected for this compact genre). All text is clearly dark-on-light with no light-on-light issues.
-      Data: 6 tiles in a 3x2 grid, each with a colored left accent bar (green/amber/red matching status), a large bold value + smaller unit, a top-right change indicator (colored triangle + percentage, colored by favorability not by status), and a sparkline (area fill at low opacity + line + endpoint dot) colored by status. First/anchor semantic color is Imprint green #009E73 for "good".
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1-consistent) canvas.
+      Chrome: Title "dashboard-metrics-tiles · javascript · d3 · anyplot.ai" is dark, bold, centered, fully readable. A Good/Warning/Critical legend with shape-coded symbols (circle/triangle/square) sits below it. Each of the 6 tiles has a colored left accent bar, a small shape-coded status icon next to the metric label, a large bold value + unit, a top-right change indicator (colored triangle + percentage), and a sparkline (area fill + line + endpoint dot). The Disk I/O (critical) tile has a visibly tinted pinkish-red card surface and a thicker red border, clearly distinguishing it from the other five tiles.
+      Data: First-series green (#009E73) used for "good" status tiles/sparklines, amber for "warning", matte red for "critical" — matches the Imprint semantic anchors.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent) canvas; tile cards use a slightly lighter dark elevated surface with a subtle border, matching the light render's card-vs-page contrast relationship.
-      Chrome: Title and metric labels render in light/white text, fully legible against the dark background. Legend dots and labels remain legible. No dark-on-dark failures detected — all ticks, labels, and title invert correctly via theme tokens.
-      Data: Data colors (green, amber, matte red) are visually identical to the light render — only the chrome (background, card fill, text, borders) flips, confirming correct theme-token usage. Sparkline area fills and accent bars read clearly against the dark tile background.
-      Legibility verdict: PASS
-
-    Additional check: the 400px thumbnail (plot-light_400.png) was also inspected — title, tile labels, and big values remain crisp and legible at this reduced scale; only the small change-indicator percentage text and sparkline endpoint dot approach the lower bound of legibility, though still readable.
+      Background: Warm near-black (#1A1A17-consistent) canvas.
+      Chrome: Same 6-tile layout on a slightly lighter dark elevated card surface. Title and labels render in light text, fully legible against the dark background — no dark-on-dark failures. The Disk I/O tile again shows a distinct warm dark-red tint and thicker red border relative to the other cards.
+      Data: Colors (green, amber, matte red) are visually identical to the light render — only chrome (background, card fill, text, borders) flips, confirming theme-adaptive tokens are threaded correctly.
+      Legibility verdict: PASS — all text is light-on-dark and clearly readable; brand green and status colors remain visible and distinguishable on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,75 +62,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes and even
-          at the 400px thumbnail. Change-indicator text is small at reduced scale.
+        comment: All text readable in both themes; change-indicator/legend text is
+          small but still legible at native scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between label, change indicator, value, unit, and sparkline
-          in either theme.
+        comment: No collisions between text, icons, sparklines
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Sparkline area/line/endpoint sized reasonably for 14-point sparse
-          series; endpoint dot slightly small at reduced scale.
+        comment: Sparkline lines/areas clear; endpoint dot (r=5.5) still borderline
+          small at 400px thumbnail
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Status is color-only on the accent bar/sparkline with no per-tile
-          text redundancy; only the shared top legend maps colors to meaning.
+        passed: true
+        comment: 'Fixed from attempt 1: shape-coded status icon per tile (circle/triangle/square)
+          is redundant with accent-bar color — CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Grid proportions clean, nothing cut
-          off, no overflow.
+        comment: 3x2 grid proportions clean, title well within bounds, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for sparkline tiles (expected for genre);
-          values carry units, title mandated format followed exactly.
+        comment: Mandated title format correct; no traditional axes needed for tile
+          layout
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint anchors used semantically (green=good, amber=warning,
-          red=critical); identical data colors across both theme-correct renders.
+        comment: Imprint palette[0] for good/brand, amber anchor for warning, palette[4]
+          matte red for critical; identical across themes; correct theme backgrounds
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above-generic polish: elevated card surfaces, accent bars, legend,
-          deliberate palette semantics.'
+        comment: Elevated cards, accent bars, shape-coded icons, deliberate critical-tile
+          tint — polished but a fairly conventional KPI-tile pattern
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Rounded corners, subtle borders, generous internal padding; grid
-          spacing/typography hierarchy could be pushed further.
+        comment: Generous whitespace, rounded corners, subtle borders, no chartjunk
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Big value + color draws the eye per tile, but all 6 tiles carry equal
-          visual weight — no emphasis steering attention to the one critical metric.
+        passed: true
+        comment: 'Fixed from attempt 1: critical tile now visually emphasized via
+          tint + thicker border, guiding the eye to the metric needing attention'
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct metric-tile dashboard layout.
+        comment: Dashboard metric tiles with sparklines and change indicators, as
+          specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Value, label, sparkline, and change indicator with arrow+percentage
-          all present.
+        comment: Value, label, sparkline, change indicator with arrow+percentage,
+          status color coding — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: History correctly mapped to sparkline domain/range; value/unit/change
-          all mapped correctly per metric.
+        comment: current_value, history, change_percent, status all mapped correctly
+          per tile
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; status legend included and
-          accurate.
+        comment: Title matches mandated format; legend maps status colors/shapes correctly
     data_quality:
       score: 15
       max: 15
@@ -177,20 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec fields used: metric_name, current_value, history, change_percent,
-          status.'
+        comment: 6 distinct ops metrics covering value, history, change, status
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral ops-monitoring metrics.
+        comment: Plausible, neutral ops-monitoring values (CPU/Memory/Response Time/Error
+          Rate/Throughput/Disk I/O)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value ranges and units sensible for each metric type.
+        comment: Values and units (%, ms, req/s) are domain-appropriate
     code_quality:
       score: 10
       max: 10
@@ -200,33 +191,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat, top-to-bottom script; no classes, minimal helper functions.
+        comment: Flat top-level script, minimal helper functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded, deterministic data arrays.
+        comment: Deterministic hardcoded in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3, no unused imports.
+        comment: No extraneous imports; d3 is the pinned global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the tile grid; no fake interactivity.
+        comment: No fake UI/interactivity; clear, well-commented structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, sized from ANYPLOT_SIZE, no animation.
+        comment: 'Builds a single svg into #container, sized from ANYPLOT_SIZE, no
+          animation'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -234,19 +226,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper scaleLinear/area/line/curveMonotoneX and selection.join usage.
+        comment: Idiomatic selection/join, scales, shape generators, symbol generator
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Sparkline area+line+dot composition is competent but not especially
-          D3-distinctive beyond baseline shape generators.
+        passed: true
+        comment: d3.symbol with custom shape types and d3.interpolateRgb tile-tint
+          blending go beyond baseline; still short of advanced D3 modules
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
