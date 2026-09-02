@@ -4,6 +4,7 @@ Tests for SEO helper functions.
 Directly tests the pure helper functions in api/routers/seo.py.
 """
 
+import html
 import json
 import re
 from datetime import datetime
@@ -436,6 +437,24 @@ class TestBuildImplHtml:
         page = _build_impl_html(spec, impl, "code()", "https://api.anyplot.ai/og/card.png")
         source = _extract_jsonld(page)["@graph"][1]
         assert source["image"] == "https://api.anyplot.ai/og/card.png"
+
+    def test_meta_description_names_the_library(self) -> None:
+        """Every implementation page of a spec used to carry the spec description
+        verbatim, so up to 16 pages shared one snippet (Bing flagged it, 2026-09)."""
+        mpl = _mock_impl("matplotlib", "python")
+        makie = _mock_impl("makie", "julia")
+        spec = _mock_spec([mpl, makie])
+        mpl_page = _build_impl_html(spec, mpl, "code()", "https://api.anyplot.ai/og/card.png")
+        makie_page = _build_impl_html(spec, makie, "code()", "https://api.anyplot.ai/og/card.png")
+        mpl_match = re.search(r'<meta name="description" content="([^"]*)"', mpl_page)
+        makie_match = re.search(r'<meta name="description" content="([^"]*)"', makie_page)
+        assert mpl_match and makie_match
+        mpl_meta, makie_meta = mpl_match.group(1), makie_match.group(1)
+        assert mpl_meta.startswith("Basic Scatter Plot in Matplotlib (Python): ")
+        assert makie_meta.startswith("Basic Scatter Plot in Makie.jl (Julia): ")
+        assert mpl_meta != makie_meta
+        # the visible body copy stays the plain spec description
+        assert f"<p>{html.escape(spec.description)}</p>" in mpl_page
 
     def test_no_code_no_pre_block(self) -> None:
         page = self._page(code=None)

@@ -248,6 +248,14 @@ Display names (Matplotlib, Makie.jl, Apache ECharts, …) are derived from
 `core/constants.py` (`LANGUAGES_METADATA` / `LIBRARIES_METADATA`) — never
 hand-maintained in the router.
 
+The meta/OG description is trimmed to 155 characters (`_meta_description()`).
+On an implementation page it starts with the page's own identity,
+`{title} in {library} ({language}): {spec description}`, so the up to 15
+library pages of a spec and its hub no longer share one snippet — Bing
+Webmaster Tools flagged that duplication in 2026-09 — and a searcher who
+typed the library name sees it in the result. The hub keeps the plain spec
+description; body copy and JSON-LD carry the full text on both.
+
 ## What a crawler sees of the plot
 
 Two different images exist per implementation, and the bot page carries both,

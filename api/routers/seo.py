@@ -692,7 +692,15 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     title_esc = html.escape(spec.title)
     lib_name_esc = html.escape(lib_name)
     desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
-    meta_desc_esc = html.escape(_meta_description(spec.description or DEFAULT_DESCRIPTION))
+    # The meta/OG description names the library first. Reusing the spec
+    # description verbatim gave every implementation page of a spec (up to 15)
+    # and its hub the same snippet — Bing Webmaster Tools flagged the catalogue
+    # for "too many pages with identical meta descriptions" (2026-09-02), and a
+    # searcher who typed "matplotlib funnel chart" saw nothing about matplotlib
+    # in the result. The visible body and the JSON-LD keep the plain text.
+    meta_desc_esc = html.escape(
+        _meta_description(f"{spec.title} in {lib_name} ({lang_name}): {spec.description or DEFAULT_DESCRIPTION}")
+    )
     image_esc = html.escape(image, quote=True)
     hub_url = f"https://anyplot.ai/{spec.id}"
     page_url = f"{hub_url}/{language_id}/{impl.library_id}"
