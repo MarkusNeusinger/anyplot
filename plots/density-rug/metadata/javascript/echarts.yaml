@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: density-rug
 created: '2026-09-02T00:31:15Z'
-updated: '2026-09-02T00:35:53Z'
+updated: '2026-09-02T00:46:24Z'
 generated_by: claude-sonnet
 workflow_run: 33575136771
 issue: 3505
@@ -12,131 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
+  - Vertical rug jitter fully resolves the prior overplotting — even the densest cluster
+    (~300-350ms) now shows discernible per-point texture in both themes
+  - Title fontSize increase (22→28) improves visual hierarchy without introducing
+    overflow or clipping
+  - New subtle zero-baseline markLine cleanly separates the KDE curve from the rug
+    band — exactly the secondary refinement the prior review suggested
   - Correct, consistent use of the Imprint palette (#009E73) across the KDE line,
-    fill, and rug marks in both light and dark renders
-  - Theme-adaptive chrome (title, legend, axis labels, ticks, axis lines) correctly
-    threaded through ANYPLOT_TOKENS in both themes — no dark-on-dark or light-on-light
-    failures
+    fill, and rug marks in both light and dark renders, with theme-adaptive chrome
+    correctly threaded through ANYPLOT_TOKENS
   - 'Genuinely idiomatic ECharts solution: a custom series with renderItem + api.coord
-    implements the rug marks, a chart type ECharts has no built-in support for'
+    implements rug marks, a chart type ECharts has no built-in support for'
   - Realistic, neutral reaction-time dataset (fast vs. slow responders) that visibly
-    demonstrates the KDE's bimodal capability while the rug confirms real data clustering
+    demonstrates the KDE's bimodal capability while the rug confirms real clustering
     and gaps
   - Deterministic, reproducible data generation via a fixed-seed LCG
   weaknesses:
-  - The densest cluster (~300-350 ms) causes rug ticks to visually merge into a near-solid
-    block, losing per-point resolution — the spec explicitly warns about this overplotting
-    risk and suggests 'jittering rug marks vertically... to reduce overplotting',
-    which was not applied. Reduce rug opacity/linewidth further and/or add small vertical
-    jitter to the tick y-position.
-  - Title renders at only ~28-30% of the plot width, well under the ~50-70% guideline
-    range for a title this short — increase title fontSize (e.g. 22 -> 26-28) for
-    stronger visual hierarchy.
-  - KDE/data-generation logic is split across several standalone helper functions
-    (makeLcg, gaussianSample, gaussianKernel, densityAt) rather than a flatter Imports
-    -> Data -> Plot structure; some helper logic is unavoidable for a from-scratch
-    KDE in vanilla JS, but consider inlining where feasible.
-  - Design reads as competent and well-configured rather than genuinely distinctive
-    — e.g. no secondary accent (subtle baseline rule at y=0, refined legend styling)
-    to further separate the KDE region from the rug band beyond the plain color/opacity
-    contrast.
+  - Title still occupies only ~35% of the plot width — improved from attempt 1's ~28-30%,
+    but still under the 50-70% guideline; a further fontSize bump (e.g. to ~32) would
+    sharpen the hierarchy further
+  - KDE/data-gen logic still spans three standalone helper functions (makeLcg, gaussianSample,
+    densityAt); largely justified by the from-scratch browser KDE, but any further
+    inlining that doesn't hurt readability would nudge KISS structure closer to ideal
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "density-rug · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable but modest in size relative to plot width. Legend ("KDE density", "Individual trials (rug)") sits directly below the title, readable dark text with a teal line/dot swatch and a teal filled swatch. X-axis "Reaction time (ms)" and Y-axis "Density" labels are dark and legible; tick labels (124, 200, 300, ... 672 on x; 0.0000-0.0054 on y) are soft gray and legible. No grid lines are drawn (deliberately minimal).
-      Data: A single teal-green (#009E73) KDE curve with matching semi-transparent fill shows a clear bimodal distribution (peaks near ~330 ms and ~480 ms, valley near ~410 ms). Below the zero baseline, a dense band of thin teal-green vertical rug ticks (semi-transparent) marks each of the 180 individual observations, echoing the two-cluster shape of the KDE and showing visible gaps at the low (~150-230 ms) and high (~550-600 ms) tails. In the single densest region (~300-350 ms) many ticks visually merge into a near-solid block.
-      Legibility verdict: PASS — all title, legend, and axis text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "density-rug · javascript · echarts · anyplot.ai" centered at top in dark ink, now noticeably larger (fontSize 28) and clearly readable. Legend ("KDE density", "Individual trials (rug)") below the title in readable dark text with teal swatches. X-axis "Reaction time (ms)" and Y-axis "Density" labels dark and legible; tick labels soft gray and legible. No grid lines (deliberately minimal chrome).
+      Data: Single teal-green (#009E73) KDE curve with matching semi-transparent fill shows a clear bimodal distribution (peaks ~330ms and ~480ms, valley ~410ms). Below a new subtle zero-baseline separator line, a band of thin teal-green rug ticks marks each of the 180 observations with vertical jitter — even the densest region (~300-350ms) now shows discernible individual-tick texture instead of merging into a solid block.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend, now rendered in light/off-white ink, clearly readable against the dark background. Axis labels and tick labels are rendered in a lighter soft-gray tone, legible throughout. No grid lines, matching the light render's minimal-chrome choice.
-      Data: The KDE curve, fill, and rug ticks use the identical teal-green (#009E73) as the light render — confirmed unchanged data colors between themes, only the chrome (background, text color) flipped as required.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text remains clearly visible against the dark background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and legend, rendered in light/off-white ink, clearly readable. Axis and tick labels use a lighter soft-gray tone, legible throughout, matching the light render's minimal-chrome choice. The zero-baseline separator is faint but present.
+      Data: KDE curve, fill, and jittered rug ticks use the identical teal-green #009E73 as the light render — confirmed unchanged data colors between themes, only chrome flipped.
+      Legibility verdict: PASS (no dark-on-dark failures observed)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes, but title
-          is undersized relative to plot width (~28-30% vs. the ~50-70% guideline),
-          so proportions aren't perfectly balanced
+        comment: Fully readable both themes; title grown 22→28 but still on the smaller
+          side proportionally
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element overlap in either render
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: KDE curve is well-sized; rug ticks in the single densest cluster
-          (~300-350ms) visually merge into a near-solid block, losing per-point resolution
-          — spec-suggested jitter not applied
+        comment: Vertical jitter fully resolves the prior near-solid-block rug overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast hue, no red-green reliance, adequate alpha on
-          overlapping rug ticks
+        comment: Good contrast, CVD-safe single-hue encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large majority of the canvas, balanced margins,
-          legend near plot, nothing cut off
+        comment: Canvas exactly 3200x1800, nothing clipped, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Reaction time (ms)'' has units; ''Density'' is descriptive'
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds and
-          chrome are theme-correct in both renders'
+        comment: 'First series #009E73, identical data colors across themes, correct
+          backgrounds'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above a bare library default — the reserved rug band, matched color
-          hierarchy, and layered fill+line design show real thought, but stops short
-          of publication-ready polish
+        comment: Larger title improves hierarchy; still not fully publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid removed, generous whitespace, subtle axis lines — good refinement,
-          though the overplotted rug cluster and undersized title slightly undercut
-          the polish
+        comment: New zero-baseline markLine cleanly separates KDE region from rug
+          band
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy (dominant KDE fill, secondary rug detail) clearly
-          conveys the bimodal 'two responder types' insight and lets the rug confirm
-          real clustering/gaps
+        comment: Bimodal 'two responder types' insight reads clearly
     spec_compliance:
       score: 15
       max: 15
@@ -152,21 +136,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: KDE with semi-transparent fill, rug marks with transparency, both
-          present and working
+        comment: KDE fill, rug marks, jitter, transparency all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=reaction time, Y=density, full data range visible
+        comment: X/Y correct, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend labels ('KDE density', 'Individual
-          trials (rug)') correctly describe the two series
+        comment: Title matches mandated format, legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -176,61 +158,54 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal shape, visible clustering, and gaps at both tails demonstrate
-          the full feature set of a density+rug plot
+        comment: Bimodal shape, gaps, and clustering all visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction-time mixture of quick/slow responders is a real, neutral,
-          comprehensible scientific scenario
+        comment: Plausible, neutral reaction-time dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times (roughly 150-650ms) and mean/std values are realistic
-          for a cognitive response-time task
+        comment: Sensible reaction-time range (124-672ms)
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Uses several standalone helper functions (makeLcg, gaussianSample,
-          gaussianKernel, densityAt) rather than a flat Imports->Data->Plot script;
-          largely unavoidable for a from-scratch KDE in vanilla JS but still deviates
-          from the KISS ideal
+        passed: true
+        comment: gaussianKernel inlined into densityAt; three helper functions remain,
+          largely unavoidable for a from-scratch KDE
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG(42)
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts/tokens objects
+        comment: No imports beyond echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; complexity matches what a from-scratch
-          KDE+rug requires
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current setOption API and the mount-node contract correctly,
-          animation disabled
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
       score: 8
       max: 10
@@ -240,24 +215,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct line+areaStyle for KDE and a well-formed custom series for
-          the rug; uses grid/legend/axis options idiomatically
+        comment: High-level line series plus theme tokens used correctly
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: The renderItem + api.coord custom series is a feature genuinely specific
-          to ECharts, used to fill a gap in its built-in chart catalog
-  verdict: REJECTED
+        comment: renderItem + api.coord custom series implements a chart type ECharts
+          has no native support for
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-series
   - layer-composition
-  - custom-rendering
   patterns:
   - data-generation
   dataprep:
   - kde
   styling:
+  - minimal-chrome
   - alpha-blending
