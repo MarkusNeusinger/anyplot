@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-marker-clustered
 created: '2026-09-02T02:46:36Z'
-updated: '2026-09-02T02:51:10Z'
+updated: '2026-09-02T03:13:23Z'
 generated_by: claude-sonnet
 workflow_run: 33583911593
 issue: 3766
@@ -12,251 +12,245 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/muix/plot-dark.html
-quality_score: 80
+quality_score: 81
 review:
   strengths:
-  - 'Grid-based proximity clustering is genuinely computed (not faked): stores are
-    grouped into lat/lon cells, centroids and dominant categories are derived, and
-    bubble radius scales with member count (individual/small-cluster/large-cluster
-    tiers)'
-  - Custom SVG overlay (ClusterCountLabels) uses useXScale/useYScale to draw exact
-    count labels centered on each cluster bubble at the live axis scale, a sophisticated
-    compositional use of ChartContainer beyond the simplified ScatterChart wrapper
-  - Reproducible seeded LCG (seed 42) with no Math.random(), and a two-part legend
-    (store format by color, cluster size by bubble diameter) that clearly documents
-    the encoding
-  - 'Theme handling is correct and clean: Imprint palette positions 1-3 used in canonical
-    order for the three store categories, backgrounds and chrome are theme-correct
-    in both renders, and the cluster count text color (t.pageBg) intelligently stays
-    legible against the colored bubbles in both themes'
+  - Deterministic, well-commented clustering pipeline (grid-based spatial binning
+    + an explicit overlap-resolution pass that converts pixel-space bubble separation
+    back through the axis scale) that produces a genuinely non-overlapping, size-accurate
+    cluster map.
+  - Idiomatic use of MUI X's composable chart API and useXScale/useYScale hooks to
+    layer custom SVG (geographic backdrop, count labels) directly in the chart's coordinate
+    space.
+  - Correct Imprint palette usage including a well-judged semantic exception (water
+    -> blue) and a clear, well-organized custom legend explaining both color and size
+    encodings.
+  - Identical data colors and fully legible theme-adaptive chrome across both light
+    and dark renders.
   weaknesses:
-  - No basemap or geographic context of any kind (no coastline/land-ocean shading,
-    no state/country boundaries, no place labels) — the spec's Notes explicitly require
-    'a basemap with appropriate geographic context (boundaries, streets, or terrain)'.
-    Right now the chart reads as a generic bubble scatter with axes labeled 'Longitude
-    (deg)'/'Latitude (deg)'; without prior knowledge of Pacific Northwest coordinates
-    a reader cannot tell this is a map. Since MUI X has no tile/geo layer, add a lightweight
-    static approximation the way the matplotlib version does (theme-adaptive ocean/land
-    background fill plus a simple state-boundary line), reusing the same custom-SVG-overlay
-    technique already proven in ClusterCountLabels.
-  - Several cluster bubbles visibly overlap (the '13' and '9' clusters near -122.7/45.5-46,
-    and the '16'/'3' clusters near -123/46) so the smaller cluster's circle is partly
-    hidden behind the larger one — reduce LAT_CELL/LON_CELL slightly or nudge overlapping
-    centroids apart so every bubble's full circumference stays visible.
-  - Axis tick labels use bare negative degrees ('-125°', '-122°') instead of conventional
-    geographic notation (e.g. '125°W', '49°N') — the latter reads more naturally as
-    a map and reduces the need to mentally negate longitude values.
-  - Cluster-size legend swatch diameters (9/19/30 px) don't quite match the actual
-    chart's markerSize values (7/17/30) — align the two so the legend accurately previews
-    on-chart bubble sizes.
+  - Several x- and y-axis tick labels are duplicated (e.g., '49°N' appears twice,
+    '48°N' appears twice) because valueFormatter's Math.abs(v).toFixed(0) rounds two
+    distinct 0.5°-spaced gridline values to the same integer -- reduce the tick step
+    to whole degrees (or show one decimal) so every rendered label is unique.
+  - The Puget Sound backdrop polygon (PUGET_SOUND array in GeographicBackdrop) renders
+    as a self-intersecting, twisted ribbon shape rather than a recognizable water-body
+    outline -- the listed points don't trace a simple non-self-intersecting perimeter
+    when connected in order; reorder them to follow the actual coastline consistently
+    (e.g., clockwise around the inlet) so the filled polygon doesn't cross itself.
+  - The rotated 'Latitude (°)' axis title sits very close to / slightly overlaps the
+    '47°N' tick label near the vertical center of the y-axis in both renders -- increase
+    the left margin slightly or add axis label offset spacing to separate them.
+  - '''Smooth zoom transitions'' and ''click-to-zoom'' cluster expand/collapse from
+    the spec are not implemented (a fixed single clustering level is shown); acceptable
+    given MUI X community''s lack of an interactive re-clustering framework, but worth
+    a brief code comment acknowledging the trade-off.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) plot background, correct per style guide.
-      Chrome: Title "TrailBrew Coffee Co. · map-marker-clustered · javascript · muix · anyplot.ai" in dark ink, clearly readable and appropriately sized; axis labels "Longitude (°)" / "Latitude (°)" and tick labels ("-125°"..."49°") in soft dark gray, all legible; subtle light gridlines visible without dominating; two-row footer legend (store format by color, cluster size by bubble diameter) fully readable in dark ink/soft ink.
-      Data: Flagship=#009E73 (green, first series, correct), Standard=lavender/purple, Kiosk=blue — canonical Imprint order; bubble sizes scale from small individual dots to large 7+ store clusters; white/cream count numbers rendered inside colored bubbles, legible against every bubble color; a few adjacent cluster bubbles partially overlap (e.g. "13"/"9" near -122.7°, "16"/"3" near -123°) but counts remain readable.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Dark title, dark axis titles/tick labels, all clearly readable against the cream background. Legend below the chart (store format colors + cluster size bubbles) also dark/readable.
+      Data: Bubble scatter map of Pacific NW coffee-store locations. First category (Flagship) is #009E73 green, Standard is lavender, Kiosk is blue -- matches canonical Imprint order. Cluster count labels drawn in a cream/off-white fill centered on bubbles, legible against the saturated bubble colors.
+      Legibility verdict: PASS, with two non-legibility defects noted separately: (1) duplicate axis tick labels (e.g. "49°N" appears twice) from integer-rounding of 0.5°-spaced ticks, (2) the Puget Sound backdrop polygon self-intersects and renders as a twisted ribbon shape instead of a coastline outline.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) plot background, correct per style guide.
-      Chrome: Title flips to light cream text, clearly readable; axis labels and tick labels flip to light gray, all legible; no dark-on-dark failures anywhere — gridlines, axis lines, and legend text all remain visible against the dark surface.
-      Data: Colors identical to the light render (green/lavender/blue), confirming the categorical data palette does not shift between themes; cluster count numbers render in dark ink against the colored bubbles (same t.pageBg-based fill logic, correctly inverted for the dark theme) and stay legible; the same bubble overlaps present in the light render persist here but do not affect legibility.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis titles, and tick labels flip to light ink and are fully legible against the dark background. No dark-on-dark failures found anywhere (title, axis labels, ticks, legend all check out).
+      Data: Colors identical to the light render (green/lavender/blue unchanged) -- confirmed via side-by-side comparison. Cluster count labels use fill=t.pageBg, which in dark mode is near-black text sitting on the bright bubble fills; this remains legible because the bubble hues are much lighter than the near-black page background, so it reads correctly despite not being literally "white text".
+      Legibility verdict: PASS. Same duplicate-tick-label and self-intersecting-polygon issues persist identically, confirming both are code/geometry bugs rather than theme-specific rendering failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titleFontSize auto-scaled, tickLabelStyle/labelStyle
-          set); readable in both themes; cluster labels at 11-13px are slightly small
-          at mobile scale
+        comment: Sizes explicitly set and well-proportioned, but duplicate axis-tick
+          labels undermine axis-content clarity.
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: Text itself never overlaps, but a couple of adjacent cluster bubbles
-          visually overlap each other ('13'/'9' and '16'/'3')
+        comment: Rotated 'Latitude (°)' axis title sits very close to / slightly overlaps
+          the '47°N' tick label.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubble sizing scales well with cluster size; overlap slightly reduces
-          visibility of the smaller of two adjacent clusters
+        comment: Cluster bubbles well-sized per count tier with overlap-avoidance;
+          individual dots small but visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three canonical Imprint colors, no red-green-only encoding
+        comment: Solid contrast on both surfaces; no overlap so no alpha-contrast
+          issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, title fits comfortably
+        comment: Chart/title/legend bands use the canvas well; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with degree units
+        comment: Descriptive labels with degree units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first, canonical order, correct theme-adaptive chrome
-          in both renders
+        comment: 'First series #009E73, canonical order for categories 2-3, correct
+          semantic water-blue exception, theme-correct chrome.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Custom SVG overlay for precise count labels is a genuinely sophisticated
-          technique; undercut by the missing geographic basemap
+        passed: false
+        comment: Thoughtful encoding choices let down by the visibly broken Puget
+          Sound shape.
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean margins/grid, but the broken polygon reads as an unrefined
+          bug.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, clean chrome
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Clustering hierarchy reads clearly, but without any geographic anchor
-          the chart doesn't immediately register as a map
+        comment: Size + color + count-label encoding clearly shows density hierarchy
+          across hubs vs rural areas.
     spec_compliance:
-      score: 11
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Clustering mechanic (aggregation, count display, size scaling) is
-          solid, but the map's defining basemap/geographic-context element is entirely
-          absent
+        comment: Correct clustered-marker approach; basemap is a documented, library-constrained
+          vector approximation rather than a wrong chart type.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Cluster count display and category color-coding present; the explicitly
-          required basemap (boundaries/streets/terrain) is missing
+        passed: true
+        comment: Count display, category coloring, and basemap present; zoom-driven
+          expand/collapse not implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude, full data range shown
+        comment: Longitude/latitude correctly mapped to X/Y with full range coverage.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format with descriptive prefix; legend labels match
-          categories and cluster tiers
+        comment: Title format matches spec; both legend rows explain encodings clearly.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Covers clustering-specific features well but lacks the geographic-context
-          feature called out in the spec
+        comment: Single stores, small and large clusters, multiple categories, urban
+          and rural coverage all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral coffee-chain store-location dataset across real
-          Pacific Northwest hub cities plus rural spread
+        comment: Neutral, plausible coffee-chain scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Store counts per hub and rural spread are sensible for the domain
+        comment: Geographically and numerically realistic for the Pacific Northwest.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No classes, minimal top-level helper functions
+        comment: More structured than a flat script, but each helper is justified
+          by the visualization's needs.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG, fully deterministic
+        comment: Deterministic seeded LCG, no Math.random().
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity
+        comment: No fake UI/interactivity; clustering and overlap-resolution logic
+          is real and functional.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized to
-          ANYPLOT_SIZE'
+        comment: skipAnimation set, harness contract respected.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Composable ChartContainer API used to enable custom SVG overlay layers.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses the compositional ChartContainer + zAxis colorMap pattern rather
-          than the simplified ScatterChart wrapper
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Custom overlay via useXScale/useYScale is a distinctive technique,
-          but no attempt was made to fake geographic context with the same technique
-  verdict: REJECTED
+        comment: useXScale/useYScale-driven custom overlays and zAxis ordinal colorMap
+          are MUI X-specific patterns.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
-  - groupby-aggregation
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
+  - publication-ready
   - alpha-blending
