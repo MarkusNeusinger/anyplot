@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: alluvial-basic
 created: '2026-09-02T11:04:58Z'
-updated: '2026-09-02T11:10:44Z'
+updated: '2026-09-02T11:20:52Z'
 generated_by: claude-sonnet
 workflow_run: 33622022513
 issue: 1878
@@ -12,55 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 95
 review:
   strengths:
-  - 'Genuinely creative engineering: implements an alluvial-style flow diagram from
-    Chart.js''s stacked-bar primitive plus a custom bezier-ribbon plugin — no workaround
-    libraries, fully idiomatic use of the plugin API.'
-  - Clean, correct theme-adaptive chrome — both renders pass the light/dark legibility
-    checklist with no dark-on-dark or light-on-light issues.
-  - First series correctly uses brand green; "Needs Support" sensibly maps to the
-    semantic red anchor for a "bad" status category.
-  - Deterministic, minimal, clean code with a conserved-population dataset (240 students
-    every semester) that reads as a believable, neutral academic scenario.
+  - 'Cross-tier flows are now genuinely computed and rendered: ribbon bands visibly
+    cross between different tier vertical positions, correctly reflecting the transition
+    matrices instead of the attempt-1 net-change-only approximation.'
+  - Palette order fixed to canonical Imprint order (Proficient→palette[1] lavender,
+    Developing→palette[2] blue), while Needs Support keeps the semantic-red anchor
+    — a well-justified semantic exception for a 'bad/at-risk' category.
+  - Redundant 'Semester' x-axis title removed, tightening the layout since the tick
+    labels already say Semester 1-4.
+  - 'Fully verified conserved-population dataset: every row and column of every per-gap
+    transition matrix sums exactly to the adjacent semester''s tier totals (240 students
+    every semester) — a rigorous, believable academic-tracking scenario.'
+  - Clean theme-adaptive chrome in both renders with identical data colors between
+    light and dark; no dark-on-dark or light-on-light failures.
   weaknesses:
-  - 'Palette order: `Proficient` (palette[2], blue) and `Developing` (palette[1],
-    lavender) are swapped from canonical order with no semantic justification — reassign
-    to canonical order (`Proficient`→palette[1], `Developing`→palette[2]) or document
-    a semantic reason if intentional.'
-  - The flow ribbons only show each tier's own segment width changing over time; no
-    ribbon crosses into a different tier's vertical position, so the chart doesn't
-    visually depict students actually transitioning between categories (only aggregate
-    per-tier size change). Consider whether a true cross-tier flow (or sub-band splits)
-    is achievable within Chart.js's plugin system, or clarify in a comment that this
-    is an intentional net-change approximation.
-  - 'Minor: the "Semester" x-axis title is redundant given the "Semester 1"–"Semester
-    4" tick labels directly below it; consider removing for a slightly cleaner layout.'
+  - Overlapping semi-transparent ribbons create visually busy crossing regions in
+    places (e.g. the Semester 1→Semester 2 gap) where several bands overlap and blend
+    colors; a subtle stroke or drawing larger flows first could reduce clutter, though
+    this is a minor refinement rather than a defect.
+  - The bezier-ribbon math itself is still fairly generic canvas geometry rather than
+    a Chart.js-distinctive feature; not required for this spec, but a further distinctive
+    touch (e.g. highlighting a band on legend hover) could raise Library Mastery in
+    a future pass.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 target — not pure white.
-      Chrome: Dark-ink title "alluvial-basic · javascript · chartjs · anyplot.ai" centered at top; "Students in tier" y-axis title and "Semester" x-axis title in dark ink; tick labels (0-250, Semester 1-4) in soft dark ink; bottom horizontal legend (Honors/Proficient/Developing/Needs Support) in dark ink. All clearly visible.
-      Data: Four stacked-bar columns (Semester 1-4), tiers colored Honors=#009E73 (green, brand/first series), Proficient=blue, Developing=lavender/purple, Needs Support=matte red. Smooth bezier flow ribbons connect each tier's segment across adjacent columns at ~45% alpha, colored per tier.
+      Chrome: Dark-ink title "alluvial-basic · javascript · chartjs · anyplot.ai" centered at top; "Students in tier" y-axis title in dark ink; tick labels (0-250, Semester 1-4) in soft dark ink; bottom horizontal legend (Honors/Proficient/Developing/Needs Support) in dark ink. All clearly readable, no light-on-light issues.
+      Data: Four stacked-bar columns (Semester 1-4). Tier colors: Honors=#009E73 (brand green, first series), Proficient=lavender (palette[1]), Developing=blue (palette[2]), Needs Support=matte red (semantic "bad" anchor, palette[4]). Bezier flow ribbons now visibly cross between different tier vertical positions between adjacent columns at ~45% alpha, correctly depicting students moving between tiers (not just each tier's own segment resizing).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 target — not pure black.
-      Chrome: Title, axis titles, tick labels, and legend all render in light ink and are clearly visible against the dark surface. No dark-on-dark failures found.
-      Data: Same four tier colors as the light render (green/blue/lavender/red) — confirmed identical; only the chrome (background, text) flipped between themes, exactly as required.
+      Chrome: Title, y-axis title, tick labels, and legend all render in light ink and are clearly visible against the dark surface. No dark-on-dark failures found.
+      Data: Same four tier colors as the light render (green/lavender/blue/red) — confirmed identical; only the chrome (background, text) flipped between themes, exactly as required. Cross-tier ribbon crossings match the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
         comment: All font sizes explicitly set, readable in both themes, no overflow;
-          minor redundant x-axis title.
+          redundant x-axis title removed since last attempt.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -72,13 +72,13 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bars and flow ribbons clearly visible and well-sized for 4x4 grid.
+        comment: Bars and flow ribbons clearly visible and well-sized for a 4x4 grid.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, redundant encoding via legend/labels, no red-green-only
+        comment: Good contrast, redundant encoding via legend/position, no red-green-only
           signal.
       - id: VQ-05
         name: Layout & Canvas
@@ -92,17 +92,17 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: '"Students in tier" and "Semester" are descriptive.'
+        comment: '"Students in tier" is fully descriptive of the measured quantity.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73; "Needs Support" correctly uses semantic
-          red anchor. But Proficient/Developing swap canonical palette[1]/palette[2]
-          with no semantic reason.'
+        passed: true
+        comment: 'First series correctly #009E73; Proficient/Developing now in canonical
+          order; Needs Support correctly uses the semantic red anchor. Theme-correct
+          chrome in both renders.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -110,22 +110,27 @@ review:
         score: 6
         max: 8
         passed: false
-        comment: Creative custom flow-ribbon plugin, clearly above a configured default.
+        comment: Creative custom flow-ribbon plugin, clearly above a configured default;
+          unchanged aesthetically from last attempt (the fix was a data/technique
+          correctness improvement, not a visual polish one).
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Grid/border refinement present but redundant x-axis title left in.
+        passed: true
+        comment: Subtle y-only grid, redundant x-axis title removed, generous whitespace;
+          bottom border kept on x-axis while left border removed on y-axis is a defensible
+          but slightly unconventional choice.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Ribbon width changes create clear visual hierarchy toward improving
-          tiers without annotations.
+        passed: true
+        comment: Now that ribbons genuinely cross tiers, the viewer can see real student
+          mobility (upward and downward) alongside the growing-Honors/shrinking-Needs-Support
+          trend, a much clearer story than the attempt-1 net-change-only view.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,11 +142,11 @@ review:
           per-category color.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: time_point/category/value present and conserved, but no ribbon crosses
-          tiers, so cross-category 'flow' transitions aren't visually represented.
+        passed: true
+        comment: time_point/category/value/flow all present and now visually represented
+          via genuine cross-tier ribbons.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -155,16 +160,16 @@ review:
         passed: true
         comment: Title format exact match; legend labels match tier names.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows tier-size shift story, but no crossing flows to demonstrate
-          full alluvial behavior.
+        passed: true
+        comment: Shows growth, decline, and genuine cross-tier movement in both directions
+          — full alluvial behavior now demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -176,7 +181,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Conserved 240-student cohort with plausible per-tier values.
+        comment: Conserved 240-student cohort; every transition matrix row/column
+          verified to sum to the correct tier totals.
     code_quality:
       score: 10
       max: 10
@@ -221,15 +227,15 @@ review:
         max: 5
         passed: true
         comment: Uses the sanctioned beforeDatasetsDraw plugin hook with getDatasetMeta()
-          bar geometry.
+          bar geometry to derive true per-tier cursor positions.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Solid library-specific technique, though ribbon math itself is generic
-          canvas code.
-  verdict: REJECTED
+        comment: Solid library-specific technique (plugin-hook-driven flow reconstruction),
+          though the ribbon bezier math itself remains fairly generic canvas geometry.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
