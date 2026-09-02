@@ -93,6 +93,12 @@ const color = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain(sharpeExt
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+svg
+  .append("clipPath")
+  .attr("id", "plot-area-clip")
+  .append("rect")
+  .attr("width", iw)
+  .attr("height", ih);
 
 // --- Axes -------------------------------------------------------------
 const pctFormat = d3.format(".0%");
@@ -107,13 +113,21 @@ for (const ax of [xAxis, yAxis]) {
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
 
-// gridlines (y only, subtle)
+// gridlines (both axes, subtle — this chart mixes scatter points with line series)
 g.append("g")
   .attr("class", "grid")
   .call(d3.axisLeft(y).ticks(6).tickSize(-iw).tickFormat(""))
   .selectAll("line")
   .attr("stroke", t.grid);
 g.select(".grid .domain").remove();
+
+g.append("g")
+  .attr("class", "grid")
+  .attr("transform", `translate(0,${ih})`)
+  .call(d3.axisBottom(x).ticks(8).tickSize(-ih).tickFormat(""))
+  .selectAll("line")
+  .attr("stroke", t.grid);
+g.selectAll(".grid .domain").remove();
 
 g.append("text")
   .attr("x", iw / 2)
@@ -138,6 +152,7 @@ const cmlLine = d3
   .y((d) => y(d.ret));
 g.append("path")
   .datum([{ risk: 0, ret: RISK_FREE }, cmlEnd])
+  .attr("clip-path", "url(#plot-area-clip)")
   .attr("fill", "none")
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", 2)
