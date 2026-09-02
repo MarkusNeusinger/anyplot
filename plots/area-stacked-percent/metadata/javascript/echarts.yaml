@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: area-stacked-percent
 created: '2026-09-02T11:58:05Z'
-updated: '2026-09-02T12:02:11Z'
+updated: '2026-09-02T12:10:09Z'
 generated_by: claude-sonnet
 workflow_run: 33627003742
 issue: 2647
@@ -12,15 +12,20 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
   - Correct, idiomatic 100%-stacked-area implementation (manual normalization + stack
     + areaStyle) with data summing to exactly 100% at every time point.
+  - 'Directly addressed the attempt-1 review feedback: added a per-band vertical LinearGradient
+    areaStyle (echarts.graphic.LinearGradient) for subtle depth, and swapped the hollow-ring
+    legend icon for a solid roundRect swatch.'
   - Canonical Imprint palette order preserved and pixel-identical between light and
     dark renders; only chrome (background, text, grid) flips.
   - 'Thoughtful detail: lineStyle.color set to t.pageBg creates a clean thin separator
     between bands instead of a distracting border.'
+  - Font sizes are now consistent across x-axis and y-axis tick labels (14px both),
+    fixing the prior minor VQ-01 mismatch.
   - Minimal, uncluttered chrome — hidden axis ticks/lines/splitlines where they'd
     add no information, subtle y-axis gridlines only.
   - Realistic, neutral dataset (fictional cloud providers) sized well within spec
@@ -28,99 +33,103 @@ review:
     period).
   - Both renders pass the theme-readability and edge-clipping checks cleanly.
   weaknesses:
-  - Design excellence is competent but not distinctive — no custom gradient fills,
-    annotations, or emphasis to elevate the storytelling beyond the default stacked-area
-    read.
-  - 'No ECharts-specific distinctive feature exercised (e.g. emphasis.focus: ''series''
-    for interactive-hover isolation, or a gradient areaStyle.color) — a missed opportunity
-    for Library Mastery credit that wouldn''t compromise the static PNG.'
-  - Legend markers render as hollow rings (ECharts' default line-series icon) rather
-    than solid color swatches — purely cosmetic, but slightly less polished than a
-    filled roundRect/circle icon would look.
+  - Design storytelling is still generic — the gradient adds polish but no explicit
+    visual hierarchy or focal point highlights the actual insight (e.g. Cascade Cloud's
+    share overtaking the rest); a callout or emphasized final-period label would push
+    this further.
+  - The gradient fill is a tasteful touch but functions as decoration rather than
+    data encoding (per the style guide's 'no gradient fills for style' minimalism
+    note) — acceptable here since it was explicitly requested by the prior review
+    to gain Library Mastery credit, but should not be over-used elsewhere.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Cloud Spend Share · area-stacked-percent · javascript · echarts · anyplot.ai" centered at top in dark text; horizontal legend with 5 entries below it; x-axis quarter labels rotated ~30°; y-axis 0-100% in 20% increments with "%" suffix. All fully readable.
-      Data: Five stacked bands bottom-to-top: Cascade Cloud (#009E73 brand green), Meridian Cloud (lavender), Nimbus Systems (blue), Anchorpoint (ochre), Other providers (matte red) — matches canonical Imprint order. Thin off-white separator lines between bands (lineStyle.color = t.pageBg).
+      Chrome: Title "Cloud Spend Share · area-stacked-percent · javascript · echarts · anyplot.ai" centered at top in dark text; horizontal legend with 5 solid roundRect swatches below it; x-axis quarter labels (2022 Q1 … 2024 Q4) rotated ~30°; y-axis 0-100% in 20% increments with "%" suffix. All text fully readable, sizes consistent (title 20px, legend/axis labels 14px throughout).
+      Data: Five stacked bands bottom-to-top: Cascade Cloud (#009E73 brand green), Meridian Cloud (lavender #C475FD), Nimbus Systems (blue #4467A3), Anchorpoint (ochre #BD8233), Other providers (matte red #AE3030) — matches canonical Imprint order. Each band now uses a subtle vertical gradient (richer near its own top edge, softer toward its bottom edge) for a light 3D-depth effect, plus thin off-white separator lines (lineStyle.color = t.pageBg) between bands.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Same title, legend, and axis labels rendered in light grey/white text against the dark background. Fully readable, no dark-on-dark issues.
-      Data: Identical band colors and stacking order to the light render (green/lavender/blue/ochre/red) — only chrome (background, text, separator-line color) flipped, confirming data-color consistency across themes.
+      Data: Identical band colors, stacking order, and gradient treatment as the light render (green/lavender/blue/ochre/red) — only chrome (background, text, separator-line color) flipped, confirming data-color consistency across themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both themes; x-axis labels slightly smaller than y-axis
-          (13 vs 14pt)
+        comment: All font sizes explicit; x/y axis and legend now consistently 14px,
+          fixing the prior 13-vs-14 mismatch. Readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions in either render
+        comment: No collisions in either render; rotated x-axis labels have adequate
+          spacing for 12 quarters.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Opacity and separator lines keep all 5 bands distinguishable
+        comment: Gradient fill and pageBg separator lines keep all 5 bands clearly
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, CVD-safe, no red-green sole signal
+        comment: Canonical Imprint order, CVD-safe, no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped or overflowing
+        comment: Good proportions, nothing clipped or overflowing, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Percent unit on y-axis ticks, title matches mandated pattern
+        comment: Percent unit on y-axis ticks, title matches mandated pattern.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds match spec, colors identical across
-          themes'
+        comment: 'First series #009E73, backgrounds match spec, data colors identical
+          across themes.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Some intentional touches (separator lines, opacity) but overall standard
-          stacked-area treatment
+        passed: true
+        comment: Gradient-shaded bands plus separator lines and solid legend swatches
+          are clearly above library defaults, though still a fairly standard stacked-area
+          treatment overall.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimal chrome, subtle gridlines only
+        comment: Legend icon fixed from hollow ring to solid roundRect; subtle single-axis
+          gridline only; minimal chrome.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Trend is visible but no explicit emphasis beyond the stacking itself
+        comment: Trend (Cascade Cloud's growing share) is visible but not explicitly
+          emphasized — no callout or highlighted focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +139,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked area
+        comment: Correct 100% stacked area.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present, normalized to 100%
+        comment: All features present, normalized to 100% at every time point.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x/y mapping, all data shown
+        comment: Correct x/y mapping, all data shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches, legend labels match series
+        comment: Title format matches mandated pattern, legend labels match series.
     data_quality:
       score: 15
       max: 15
@@ -158,19 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 quarters x 5 categories, full normalization shown
+        comment: 12 quarters x 5 categories, full normalization shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral fictional cloud-provider scenario
+        comment: Plausible, neutral fictional cloud-provider scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible spend values and resulting percentages
+        comment: Sensible spend values and resulting percentages, coherent trend.
     code_quality:
       score: 10
       max: 10
@@ -180,33 +189,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes
+        comment: Data -> init -> option flow; two small pure helper functions (hexToRgba,
+          bandGradient) support the gradient technique without over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Deterministic hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond provided globals
+        comment: No imports beyond provided globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI
+        comment: Appropriately simple, no fake UI or interactivity simulation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false, correct mount-node contract
+        comment: animation:false, correct mount-node contract, no explicit size/devicePixelRatio.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,13 +224,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct idiomatic stacked-line-area pattern
+        comment: Correct idiomatic stacked-line-area pattern with stack/areaStyle/showSymbol.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No distinctive ECharts-only capability exercised
+        passed: true
+        comment: Now uses echarts.graphic.LinearGradient for areaStyle.color and emphasis.focus:'series'
+          hover isolation — addresses the prior review's exact LM-02 gap.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -233,4 +244,5 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
+  - gradient-fill
   - minimal-chrome
