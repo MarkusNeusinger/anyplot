@@ -179,6 +179,29 @@ title_fontsize <- max(8, round(12 * title_ratio))
 
 fill_values <- setNames(IMPRINT_PALETTE[seq_along(categories)], categories)
 
+# Text color per category chosen for contrast against that category's fill
+# (data-tied, so — like the fill colors themselves — it does not flip with
+# THEME).
+pal_rgb        <- col2rgb(fill_values)
+pal_luma       <- (0.299 * pal_rgb["red", ] + 0.587 * pal_rgb["green", ] + 0.114 * pal_rgb["blue", ]) / 255
+leaf_label_ink <- ifelse(pal_luma < 0.5, "#F5F3EC", "#1A1A17")
+
+# --- The largest leaf in each category, kept only for the 2 biggest ------
+# categories, so every labeled circle is actually large enough to hold its
+# text: a small category's own biggest leaf can still be too tiny to read.
+leaf_top <- leaves_final %>%
+  group_by(category) %>%
+  slice_max(order_by = r, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  slice_max(order_by = r, n = 2, with_ties = FALSE) %>%
+  mutate(
+    label_size = pmin(3.2, pmax(1.8, 1.8 + 1.8 * (r / max(r)))),
+    text_color = leaf_label_ink[category]
+  )
+
+focal_id   <- leaf_top$id[which.max(leaf_top$r)]
+focal_ring <- leaf_polys %>% filter(id == focal_id)
+
 # --- Plot ------------------------------------------------------------------
 p <- ggplot() +
   geom_polygon(data = root_poly, aes(x, y), fill = ELEVATED_BG, color = NA) +
@@ -190,12 +213,22 @@ p <- ggplot() +
     data = leaf_polys, aes(x, y, group = id, fill = category),
     color = PAGE_BG, linewidth = 0.3, alpha = 0.9
   ) +
+  geom_polygon(
+    data = focal_ring, aes(x, y, group = id),
+    fill = NA, color = INK, linewidth = 0.9
+  ) +
   geom_text(
     data = cat_labels,
     aes(label_x, label_y, label = label, size = label_size, hjust = label_hjust, vjust = label_vjust),
     color = INK, fontface = "bold"
   ) +
+  geom_text(
+    data = leaf_top,
+    aes(abs_x, abs_y, label = label, size = label_size, color = text_color),
+    fontface = "bold"
+  ) +
   scale_fill_manual(values = fill_values, guide = "none") +
+  scale_color_identity() +
   scale_size_identity(guide = "none") +
   coord_fixed(
     xlim = c(-root_r * 1.12, root_r * 1.12),
