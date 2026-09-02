@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: frontier-efficient
 created: '2026-09-02T00:55:06Z'
-updated: '2026-09-02T01:00:38Z'
+updated: '2026-09-02T01:15:49Z'
 generated_by: claude-sonnet
 workflow_run: 33576831963
 issue: 3342
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Correct closed-form MPT math (analytic minimum-variance frontier via Merton's
-    formula, unconstrained tangency portfolio) rather than an approximated or brute-forced
-    frontier
-  - 'Full feature coverage: efficient frontier curve, long-only random-portfolio cloud,
-    Sharpe-ratio color mapping, minimum-variance and tangency markers, and the optional
-    capital market line — every required and optional spec note is present'
-  - Theme-adaptive chrome correctly threaded through Axis, Colorbar, and axislegend
-    tokens; both renders pass legibility with identical data colors
-  - Correct continuous colormap choice (imprint_seq for single-polarity Sharpe ratio)
-    and correct categorical order for markers (brand green frontier, lavender min-variance
-    diamond, blue tangency star)
-  - 'Sensible density handling: 400-point scatter uses alpha=0.6 with no stroke to
-    avoid overplotting mud, while the two key portfolios get larger markers with strokes
-    for unambiguous distinction'
+  - Mathematically rigorous closed-form MPT derivation (efficient frontier via covariance-matrix
+    inversion, tangency portfolio, capital market line) instead of a shortcut approximation
+  - 'Full feature coverage from the spec: frontier curve, random-portfolio scatter
+    cloud, minimum-variance and max-Sharpe (tangency) markers, capital market line,
+    and Sharpe-ratio color encoding with a colorbar'
+  - 'Imprint palette compliance is perfect: efficient frontier uses brand green #009E73,
+    min-variance/tangency markers use canonical palette positions 2 and 3, continuous
+    Sharpe-ratio scatter uses the correct imprint_seq (green-to-blue) colormap'
+  - Theme-adaptive chrome correctly threaded through Axis, Colorbar, and legend in
+    both light and dark renders
+  - 'Idiomatic, clean Makie usage: Axis/scatter!/lines!/Colorbar/axislegend/colsize!
+    with explicit font sizes and tick formatting throughout'
+  - Realistic, neutral financial data (6-asset universe with plausible returns, volatilities,
+    and a single-factor correlation model that guarantees a valid positive-definite
+    covariance matrix)
   weaknesses:
-  - Y-axis percent tick labels look irregularly spaced (3%, 5%, 8%, 10%, 13%) because
-    pct_format rounds the raw float ticks to the nearest integer percent — the underlying
-    grid is evenly spaced but the labels read as arbitrary jumps. Format to one decimal
-    (e.g. "2.5%", "7.5%") or pick explicit round-number ticks instead.
-  - Beyond the spec-mandated colorbar/CML/marker features, styling largely applies
-    the theme-token boilerplate from the style guide with little additional aesthetic
-    differentiation — consider de-emphasizing the dense scatter cloud further or annotating
-    the two key portfolios with their return/risk values to sharpen the visual hierarchy.
-  - The tangency star marker sits inside a region of similarly-colored blue scatter
-    points; shape/size/stroke differentiate it but a small callout label would remove
-    any ambiguity.
+  - The 'Tangency' and 'Min variance' callout text sits very close to the frontier/CML
+    lines (e.g. the 'Tangency' label at (6.2%, 5.8%) nearly touches the capital market
+    line above it) - push the offset further or add a subtle background box so the
+    labels read as clearly separate from the line geometry
+  - Scatter markersize=11 with alpha=0.6 for 400 portfolios is acceptable but the
+    densest cluster (10-14% risk) still shows meaningful marker overlap - consider
+    markersize~8-9 or alpha~0.5 to further reduce overplotting in that region
+  - Design storytelling (DE-03) relies mainly on the colorbar and marker emphasis;
+    a subtle shaded region between the efficient frontier and the dominated-portfolio
+    cloud, or a lighter callout box background, would sharpen the visual hierarchy
+    further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "frontier-efficient · julia · makie · anyplot.ai" is bold dark ink, fully visible, not clipped at the top edge. Axis labels "Risk (Annualized Std. Dev.)" and "Expected Return (Annualized)" are dark and clearly legible. Tick labels and the Sharpe-ratio colorbar label/ticks are in the softer secondary-ink tone and readable. Legend box (bottom right) uses the elevated cream fill with a visible frame; all four entries are legible and do not overlap data or each other.
-      Data: Random-portfolio scatter is colored with the imprint_seq green→blue continuous colormap keyed to Sharpe ratio. The efficient frontier is a thick brand-green (#009E73) curve. The capital market line is a dashed gray/ink-soft line from near the origin through the tangency point. The minimum-variance portfolio is a lavender diamond; the max-Sharpe (tangency) portfolio is a blue star — both palette positions 2 and 3, consistent with the Imprint canonical order.
-      Legibility verdict: PASS
+      Background: warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: title "frontier-efficient · julia · makie · anyplot.ai" in bold dark ink, clearly visible at top-center; axis labels "Risk (Annualized Std. Dev.)" and "Expected Return (Annualized)" in dark ink; percent-formatted tick labels in softer gray; subtle light gridlines on both axes; legend box (bottom-right) with light elevated background, dark framed border, dark text.
+      Data: dense scatter cloud of 400 simulated portfolios colored by Sharpe ratio using a green-to-blue sequential gradient (Imprint imprint_seq); thick brand-green (#009E73) efficient frontier curve; dashed dark capital market line from the origin through the tangency point; lavender diamond marker for the minimum-variance portfolio; blue star marker for the max-Sharpe (tangency) portfolio; small gray text callouts giving the return/risk of both key points; vertical colorbar on the right labeled "Sharpe ratio".
+      Legibility verdict: PASS - all text (title, axis labels, ticks, legend, callouts, colorbar label) is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, axis labels, and colorbar label render in light ink (#F0EFE8) and are clearly visible against the dark background. Tick labels and legend text use the lighter secondary tone and remain legible; legend frame/fill uses the dark elevated surface with a visible border. No dark-on-dark text anywhere.
-      Data: Scatter, frontier curve, CML, and both key-portfolio markers use identical colors to the light render — only the chrome (background, text, grid, legend frame) flipped, as required.
-      Legibility verdict: PASS
+      Background: warm near-black, matches #1A1A17 - not pure black.
+      Chrome: same title now rendered in light/white ink, fully legible; axis labels in light ink; tick labels in lighter gray; gridlines subtle and visible against the dark surface; legend box uses the dark elevated background (#242420-equivalent) with light text and a soft border.
+      Data: identical data colors to the light render - same green-to-blue Sharpe-ratio gradient, same brand-green frontier line, same lavender diamond and blue star markers - confirming only chrome flipped between themes.
+      Legibility verdict: PASS - no dark-on-dark failures observed; title, axis labels, ticks, legend text, and callouts are all clearly readable against the near-black background, and the brand green frontier line remains highly visible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -63,70 +64,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes
+        comment: Explicit font sizes throughout (titlesize=20, labelsize=14, ticklabelsize=12);
+          well-proportioned, readable in both themes; title is well within width bounds
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No collisions between text, legend, and data
+        comment: No overlap between axis text/ticks/legend; callout labels for min-variance
+          and tangency portfolios sit close to the frontier/CML lines but remain fully
+          readable
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Density-appropriate alpha and marker sizing; key portfolios stand
-          out via shape/stroke
+        comment: markersize=11, alpha=0.6 for 400 portfolios is reasonable for the
+          density but the densest 10-14% risk cluster still shows notable overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential colormap plus redundant shape encoding on key markers
+        comment: Sequential green-to-blue colormap is CVD-safe; distinct marker shapes
+          (diamond/star) add redundant encoding beyond color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Colorbar and labels fit within canvas, no clipping, well-proportioned
+        comment: Plot area fills the canvas well with colorbar integrated via colsize!,
+          balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels with units, but y-axis percent ticks look irregularly
-          spaced due to integer rounding
+        passed: true
+        comment: Descriptive axis labels with units (Annualized Std. Dev., Annualized)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq for Sharpe ratio, canonical categorical order for markers,
-          correct theme backgrounds
+        comment: 'Frontier is brand green #009E73, min-variance/tangency use canonical
+          palette positions 2/3, Sharpe-ratio scatter uses correct imprint_seq colormap;
+          theme chrome correct in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Competent execution of spec-required features; limited differentiation
-          beyond style-guide boilerplate
+        comment: 'Thoughtful, above-default design: colorbar encoding, distinct marker
+          geometry for key portfolios, restrained typography'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous whitespace; nothing exceptional
+        comment: Subtle grid, top/right spines removed, generous whitespace, framed
+          legend with elevated background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point via frontier + tangency star, color adds a data
-          dimension, but hierarchy is fairly conventional
+        comment: Clear visual hierarchy via thick frontier line, distinct key-portfolio
+          markers, and Sharpe-ratio color encoding; could push further with shaded
+          dominated-region emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -136,25 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter + line combination matches spec
+        comment: Correct efficient-frontier scatter+line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Frontier, scatter cloud, min-var/tangency markers, CML all present
+        comment: Frontier curve, portfolio scatter, min-variance and tangency markers,
+          CML, Sharpe-ratio coloring all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=risk, Y=return, axes cover full data range
+        comment: X=risk, Y=return correctly mapped, full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title format; legend labels match plotted series
+        comment: Title matches mandated format exactly; legend labels match plotted
+          series
     data_quality:
       score: 15
       max: 15
@@ -164,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All plot-type aspects shown: frontier, cloud, key points, CML, color
-          mapping'
+        comment: Full frontier curve, dense suboptimal-portfolio cloud, both key points
+          marked
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible 6-asset universe with realistic return/risk figures and
-          neutral framing
+        comment: Neutral, plausible 6-asset allocation universe (equities, bonds,
+          real estate, commodities, cash)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Risk 0-15%, return 2-13% is sensible for a diversified multi-asset
-          universe
+        comment: Return/risk ranges and correlation structure are realistic for the
+          asset classes chosen
     code_quality:
       score: 10
       max: 10
@@ -189,7 +199,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions/classes
+        comment: Linear imports -> data -> math -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,41 +211,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: CairoMakie, Colors, Random, LinearAlgebra all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Closed-form MPT math, no fake functionality
+        comment: Appropriate complexity for closed-form MPT math, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with current Makie API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current Makie API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Axis, scatter!, lines!, Colorbar, axislegend, colsize!
+          layout control
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis/Colorbar/axislegend usage, colsize! layout tuning
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Colorbar, custom cgrad, tick formatter — solid but fairly standard
-          Makie idioms
+        comment: Makie's grid-based figure layout (fig[1,1]/fig[1,2] with colsize!)
+          for colorbar allocation is fairly distinctive to Makie's layout system
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
@@ -245,5 +257,4 @@ impl_tags:
   styling:
   - alpha-blending
   - custom-colormap
-  - edge-highlighting
   - publication-ready
