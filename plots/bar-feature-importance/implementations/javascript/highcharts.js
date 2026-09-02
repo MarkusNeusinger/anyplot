@@ -33,6 +33,11 @@ const categories = [...featuresDesc].reverse();
 const importance = [...importanceDesc].reverse();
 
 // --- Color (Imprint sequential gradient, mapped to importance) -------------
+// Highcharts' chart-level colorAxis + series.colorKey pattern needs
+// modules/coloraxis.js for non-heatmap/treemap series, which this harness
+// does not load (core bundle only — see prompts/library/highcharts.md
+// "Forbidden patterns"). A per-point color computed from the Imprint
+// sequential stops is the feasible equivalent within that constraint.
 function hexToRgb(hex) {
   const v = parseInt(hex.slice(1), 16);
   return [(v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
@@ -51,6 +56,17 @@ const data = categories.map((name, i) => {
   const ratio = (importance[i] - minImportance) / (maxImportance - minImportance);
   return { name, y: importance[i], color: lerpColor(t.seq[0], t.seq[1], ratio) };
 });
+// Call out the single dominant feature (last entry — highest importance,
+// since categories/importance are sorted ascending for the horizontal bar).
+data[data.length - 1].dataLabels = {
+  format: "{point.y:.3f} — top predictor",
+  style: {
+    color: t.amber,
+    fontSize: "13px",
+    fontWeight: "700",
+    textOutline: "none",
+  },
+};
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -71,6 +87,7 @@ Highcharts.chart("container", {
   },
   xAxis: {
     categories,
+    lineWidth: 0,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
