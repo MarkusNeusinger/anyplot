@@ -87,6 +87,27 @@ function favorableColor(m) {
   return favorable ? t.palette[0] : t.palette[4];
 }
 
+// Chart.js plugin: marks the sparkline's last point with a filled "now" dot,
+// ringed in the card color so it reads clearly against the line/fill.
+const endpointDotPlugin = {
+  id: "endpointDot",
+  afterDatasetsDraw(chart) {
+    const meta = chart.getDatasetMeta(0);
+    const point = meta.data[meta.data.length - 1];
+    if (!point) return;
+    const { ctx } = chart;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = chart.data.datasets[0].borderColor;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = t.elevatedBg;
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
 // --- Mount -------------------------------------------------------------------
 const root = document.getElementById("container");
 root.style.display = "flex";
@@ -118,7 +139,8 @@ metrics.forEach((m) => {
   tile.style.padding = "24px 28px";
   tile.style.display = "flex";
   tile.style.flexDirection = "column";
-  tile.style.justifyContent = "space-between";
+  tile.style.justifyContent = "center";
+  tile.style.gap = "14px";
   grid.appendChild(tile);
 
   const labelRow = document.createElement("div");
@@ -165,7 +187,6 @@ metrics.forEach((m) => {
 
   const sparkWrap = document.createElement("div");
   sparkWrap.style.height = "84px";
-  sparkWrap.style.marginTop = "6px";
   tile.appendChild(sparkWrap);
 
   const canvas = document.createElement("canvas");
@@ -179,7 +200,21 @@ metrics.forEach((m) => {
         {
           data: m.data,
           borderColor: STATUS_COLOR[m.status],
-          backgroundColor: `${STATUS_COLOR[m.status]}26`,
+          // Canvas gradient (fades to transparent) instead of a flat alpha
+          // fill — a genuine canvas/Chart.js scriptable-option feature.
+          backgroundColor: (ctx) => {
+            const { chartArea, ctx: c } = ctx.chart;
+            if (!chartArea) return `${STATUS_COLOR[m.status]}26`;
+            const gradient = c.createLinearGradient(
+              0,
+              chartArea.top,
+              0,
+              chartArea.bottom,
+            );
+            gradient.addColorStop(0, `${STATUS_COLOR[m.status]}55`);
+            gradient.addColorStop(1, `${STATUS_COLOR[m.status]}00`);
+            return gradient;
+          },
           borderWidth: 2.5,
           pointRadius: 0,
           fill: true,
@@ -191,8 +226,12 @@ metrics.forEach((m) => {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      // Room for the endpoint dot, which would otherwise clip against the
+      // canvas edge since the last data point sits at the plot boundary.
+      layout: { padding: { top: 5, right: 5, bottom: 5 } },
       plugins: { legend: { display: false }, tooltip: { enabled: false } },
       scales: { x: { display: false }, y: { display: false } },
     },
+    plugins: [endpointDotPlugin],
   });
 });
