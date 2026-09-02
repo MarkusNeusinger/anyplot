@@ -24,14 +24,19 @@ function gaussian(mean, std) {
   return mean + z * std;
 }
 
-// Neighborhood clusters: center coord, point count, spread, visit-weight range
-// Downtown/Mission spread is tightened to well under half their ~1.9km
-// separation so the KDE shows a visible valley between the two peaks instead
-// of merging into one region.
+// Neighborhood clusters: center coord, point count, spread, visit-weight range.
+// Downtown/Mission lonStd/latStd (~0.22km) are narrow relative to their ~1.9km
+// separation, and the KDE bandwidth below is tightened to match, so the two
+// peaks stay distinct instead of blurring into a shared plateau. Sunset keeps
+// a wider spread (it's a more residential/coastal area) but its weightMean/n
+// are close enough to Downtown/Mission's that its peak still clears the
+// low-density baseline once the density is color-mapped (see the `scaled`
+// power-law compression below) - verified against the rendered PNG, not just
+// asserted here.
 const neighborhoods = [
-  { name: "Downtown", lon: -122.4194, lat: 37.7749, n: 700, lonStd: 0.006, latStd: 0.005, weightMean: 62, weightStd: 20 },
-  { name: "Mission", lon: -122.4090, lat: 37.7599, n: 600, lonStd: 0.006, latStd: 0.005, weightMean: 50, weightStd: 18 },
-  { name: "Sunset", lon: -122.4862, lat: 37.7599, n: 500, lonStd: 0.007, latStd: 0.006, weightMean: 40, weightStd: 15 },
+  { name: "Downtown", lon: -122.4194, lat: 37.7749, n: 700, lonStd: 0.0025, latStd: 0.0021, weightMean: 62, weightStd: 20 },
+  { name: "Mission", lon: -122.4090, lat: 37.7599, n: 600, lonStd: 0.0025, latStd: 0.0021, weightMean: 50, weightStd: 18 },
+  { name: "Sunset", lon: -122.4862, lat: 37.7599, n: 540, lonStd: 0.0032, latStd: 0.0028, weightMean: 45, weightStd: 15 },
 ];
 
 const points = [];
@@ -49,15 +54,14 @@ neighborhoods.forEach((c) => {
 const lonMin = -122.52, lonMax = -122.375;
 const latMin = 37.735, latMax = 37.805;
 const nx = 42, ny = 38;
-const bandwidthLon = 0.0035, bandwidthLat = 0.003;
+const bandwidthLon = 0.0025, bandwidthLat = 0.0021;
 
 const cellLon = (i) => lonMin + ((lonMax - lonMin) * i) / (nx - 1);
 const cellLat = (j) => latMin + ((latMax - latMin) * j) / (ny - 1);
 const lonIndexF = (lon) => ((lon - lonMin) / (lonMax - lonMin)) * (nx - 1);
 const latIndexF = (lat) => ((lat - latMin) / (latMax - latMin)) * (ny - 1);
 
-const grid = [];
-let minDensity = Infinity;
+const rawGrid = [];
 let maxDensity = 0;
 for (let i = 0; i < nx; i++) {
   const lon = cellLon(i);
@@ -69,14 +73,25 @@ for (let i = 0; i < nx; i++) {
       const dLat = (lat - p.lat) / bandwidthLat;
       density += p.weight * Math.exp(-0.5 * (dLon * dLon + dLat * dLat));
     }
-    // sqrt compresses the KDE's long right tail so mid/low density cells stay
-    // visually distinguishable instead of washing out near the global peak
-    const scaled = Math.sqrt(density);
-    grid.push([i, j, scaled]);
+    // Power-law (exponent 0.35, stronger than sqrt) compression: pulls the
+    // Downtown peak down relatively more than the Sunset peak, so all three
+    // named hotspots land in visibly distinct bands of the color scale
+    // instead of Sunset washing out near the zero-density baseline.
+    const scaled = Math.pow(density, 0.35);
+    rawGrid.push([i, j, scaled]);
     if (scaled > maxDensity) maxDensity = scaled;
-    if (scaled < minDensity) minDensity = scaled;
   }
 }
+
+// Mask out the near-zero-density baseline (the vast majority of the grid)
+// instead of rendering it opaque, so the coastline basemap beneath actually
+// shows through per the spec's transparency requirement. Per-cell
+// itemStyle.opacity was tried first but produces visible seams between
+// adjacent translucent cells (a canvas anti-aliasing artifact); omitting
+// low-density cells entirely avoids that and reads as an honest density
+// floor besides.
+const minDensity = 0.1 * maxDensity;
+const grid = rawGrid.filter(([, , scaled]) => scaled >= minDensity);
 
 const lonIndex = (lon) => Math.round(((lon - lonMin) / (lonMax - lonMin)) * (nx - 1));
 const latIndex = (lat) => Math.round(((lat - latMin) / (latMax - latMin)) * (ny - 1));
@@ -169,27 +184,27 @@ chart.setOption({
   ],
   series: [
     {
-      name: "Visit density",
-      type: "heatmap",
-      coordinateSystem: "cartesian2d",
-      data: grid,
-      progressive: 0,
-      itemStyle: { borderWidth: 0 },
-    },
-    {
-      // Drawn above the heatmap (not literally "underneath") because the heatmap
-      // paints every cell opaquely, including low-density cells at the ramp's
-      // base color, so a layer beneath it would be fully hidden.
+      // Drawn first (below the heatmap in z-order) as the basemap layer -
+      // visible wherever the masked density grid above leaves a gap.
       name: "Coastline",
       type: "line",
       coordinateSystem: "cartesian2d",
       data: coastlinePoints,
       showSymbol: false,
       smooth: 0.3,
-      lineStyle: { color: t.inkSoft, width: 2, type: "dashed", opacity: 0.6 },
-      z: 5,
+      lineStyle: { color: t.inkSoft, width: 2, type: "dashed", opacity: 0.7 },
+      z: 1,
       silent: true,
       tooltip: { show: false },
+    },
+    {
+      name: "Visit density",
+      type: "heatmap",
+      coordinateSystem: "cartesian2d",
+      data: grid,
+      progressive: 0,
+      itemStyle: { borderWidth: 0 },
+      z: 2,
     },
     {
       name: "Neighborhood",
