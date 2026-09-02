@@ -1,0 +1,238 @@
+library: d3
+language: javascript
+specification_id: range-interval
+created: '2026-09-02T05:16:00Z'
+updated: '2026-09-02T05:31:38Z'
+generated_by: claude-sonnet
+workflow_run: 33593691364
+issue: 3577
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Smoothed d3.line() + d3.curveCatmullRom trend curve through monthly means is a
+    genuine D3-native technique that directly resolves the prior LM-02 weakness
+  - Explicit 'Coldest'/'Warmest' callouts on the seasonal extremes give the chart
+    a clear focal point and narrative arc, resolving the prior DE-03 weakness
+  - Range widths now vary meaningfully (4-11 degC) across the year instead of the
+    prior uniform 4-8 degC spread, better demonstrating the plot type's ability to
+    show varying spread
+  - All theme tokens (ink, inkSoft, grid, pageBg, palette) threaded correctly across
+    both renders; brand green identical between light and dark, chrome flips cleanly
+    with no dark-on-dark or light-on-light failures
+  - Endpoint markers, semi-transparent range bars, and midpoint mean ticks together
+    satisfy every optional feature suggested in the specification
+  weaknesses:
+  - Title still occupies only ~42% of canvas width (well under the 50-70% guidance)
+    because the length-based font-scaling formula shrinks the 73-char descriptive+mandated
+    title fairly aggressively — consider a gentler scale factor or a larger base size
+    so the title reads with more presence
+  - The 'Coldest' emphasis ring sits exactly on the x-axis line, with roughly half
+    the marker overlapping the tick-label band below Jan — not clipped or unreadable,
+    but a touch visually awkward; nudging the ring or the axis domain padding would
+    clean this up
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Monthly Temperature Range · range-interval · javascript · d3 · anyplot.ai" at top; "Month" x-axis label and rotated "Temperature (°C)" y-axis label in dark ink; Jan-Dec / 0°-26° tick labels in soft dark gray; subtle horizontal y-only gridlines. All chrome text is clearly readable against the light background.
+      Data: 12 monthly range bars in brand green (#009E73) with semi-transparent fill, solid stroke, rounded corners, circular min/max endpoint markers with page-background-colored strokes, a dark horizontal mean-reference tick inside each bar, and a dotted smoothed trend curve (d3.curveCatmullRom) connecting the monthly means. "Coldest" (Jan) and "Warmest" (Jul) are explicitly called out with a double-ring marker and dark-ink label text. Range widths vary noticeably (~4 degC in Jan/Dec vs ~10-11 degC in Mar/Apr), tracing a clear seasonal curve.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all render in light/off-white text; gridlines are faint light lines. No dark-on-dark text anywhere — the "Coldest"/"Warmest" labels and mean-tick line both use light-toned ink and remain clearly visible against the green fill.
+      Data: Bars, endpoint markers, mean-tick, and trend curve are identical in color/position to the light render — only chrome (background, text, grid) flips, confirming palette consistency.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; title occupies
+          a modest ~42% of canvas width, on the small side but not squeezed or overlapping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, markers, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and lines well-sized for the 12-point sparse density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochrome design, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing clipped, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (degC), x-axis descriptive (Month)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 identical across themes; theme-correct chrome'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Alpha-blended fill, rounded corners, ring markers, mean-tick overlay,
+          and a smoothed d3-shape trend curve compose a genuinely polished chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, L-shaped spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit Coldest/Warmest callouts plus the seasonal trend curve create
+          a clear focal point and narrative arc
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct range-interval bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Endpoint markers, semi-transparent fill, midpoint reference line
+          all present per spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, min/max range on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed for
+          single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full seasonal cycle with meaningfully varying range widths (4-11
+          degC)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible monthly-temperature scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and seasonal progression factually plausible for a temperate
+          climate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct #container mount, current D3 v7 join API, no animation'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scaleBand/scaleLinear, axisBottom/axisLeft, selection.data().join()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.line() with curveCatmullRom smoothing is a genuine D3-native technique
+          beyond what other libraries offer out of the box
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
