@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: violin-grouped-swarm
 created: '2026-09-02T09:52:09Z'
-updated: '2026-09-02T09:57:08Z'
+updated: '2026-09-02T10:07:48Z'
 generated_by: claude-sonnet
 workflow_run: 33615683979
 issue: 3529
@@ -12,56 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-gr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/echarts/plot-dark.html
-quality_score: 81
+quality_score: 93
 review:
   strengths:
+  - Fixed the attempt-1 stray vertical axis-line artifact by explicitly setting axisLine.onZero:false
+    on both xAxis and yAxis — the plot area is now clean in both renders
   - Custom KDE (Silverman bandwidth) drives the violin polygons via an ECharts custom
-    series with proper renderItem/api.coord usage — accurate density shapes rather
-    than approximations
-  - Deterministic swarm dodge (binning + alternating rank) produces readable, non-overlapping
-    point clouds that visibly reveal the raw distribution under each violin
-  - 'Correct Imprint palette compliance: Junior = #009E73 (position 1), Senior = lavender
-    (position 2), identical across light and dark themes'
-  - Violin transparency (opacity 0.5) sits inside the spec's 0.4-0.6 range, keeping
-    swarm points clearly visible through the violin fill
-  - Adequate spacing between grouped violins (GROUP_GAP) and category slots prevents
-    cross-category or cross-group overlap
-  - Y-axis max is derived explicitly from the full KDE tail extent rather than an
-    auto-scaled 'nice' range, avoiding clipped violin tips
-  - Realistic, semantically coherent synthetic data (junior vs. senior response times
-    per task type) with plausible, well-separated values
+    series with proper renderItem/api.coord usage, giving accurate mirrored-density
+    shapes
+  - Deterministic swarm dodge (binning + alternating rank) produces clearly separated,
+    white-bordered points that visibly reveal the raw distribution under each violin
+  - New markLine annotation (median-to-median delta on the widest Junior/Senior split,
+    'Debugging') adds a genuine data-storytelling focal point beyond 'read the chart
+    yourself'
+  - 'Exact Imprint palette and theme-background compliance verified by pixel sampling:
+    light bg (250,248,241)=#FAF8F1, dark bg (26,26,23)=#1A1A17, Junior=#009E73 identical
+    across both themes'
+  - Deterministic, reproducible data via fixed-seed LCG + Box-Muller; realistic response-time
+    domain with sensible junior/senior/task-type differences
   weaknesses:
-  - 'A stray vertical line renders through the plot area at x=0 (the ''Data Entry''
-    category center), running the full chart height and crossing directly through
-    the gap between the Junior and Senior violins/swarm points. Cause: both xAxis
-    and yAxis are type ''value'', so ECharts'' default axisLine.onZero:true snaps
-    the yAxis line to the x=0 crossing point instead of the grid boundary. Fix: add
-    axisLine: { onZero: false } to the yAxis config (and, for safety, to the xAxis
-    config too) so both axis lines stay at the grid edges instead of the zero-crossing.
-    Visible in both light and dark renders.'
-  - Visual storytelling is competent but generic — the clear Junior/Senior gap on
-    'Debugging' (the widest split) isn't emphasized in any way; a light annotation
-    or subtle callout would raise the data-storytelling focal point beyond 'read the
-    chart yourself'
-  - Distinctive-feature usage stays close to the minimum viable custom-series + scatter
-    combination; consider leveraging additional ECharts-specific polish (e.g. a markLine/markArea
-    for group medians, or per-violin outline styling keyed to hue) to demonstrate
-    deeper library mastery
+  - The markLine dashed connector for the Debugging-category delta crosses directly
+    through both violin bodies and grazes nearby swarm points — a slightly cleaner
+    routing (e.g. offset outside the violin outlines) would avoid any data overlap
+  - 'Distinctive-feature usage is improved but still moderate: beyond the custom series
+    + scatter + single markLine, there is room for further ECharts-specific polish
+    (e.g. markPoint medians per group, richer tooltip formatting) to fully showcase
+    library mastery'
+  - Data-storytelling emphasis is limited to one category (Debugging); the other two
+    category gaps are left entirely to the viewer to interpret unaided
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "violin-grouped-swarm · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend ("Junior" green swatch, "Senior" purple swatch) centered below the title. X-axis title "Task Type" and Y-axis title "Response Time (seconds)" both present with units. Tick labels (0-60 on Y, Data Entry/Debugging/Code Review on X) all readable in soft dark ink against the light background. Horizontal gridlines are subtle. NOTE: an unintended vertical line runs the full height of the plot at x=0 (through the "Data Entry" category, between its two violins) — this is a rendering artifact from ECharts' default axisLine.onZero behavior, not an intentional gridline (splitLine is disabled on the x-axis).
-      Data: Three category groups (Data Entry, Debugging, Code Review) each showing two mirrored violin shapes (Junior=green #009E73, Senior=lavender) with swarm points of matching color overlaid inside each violin. Violins are semi-transparent so points are visible through the fill. Debugging shows the largest values and largest Junior/Senior gap; Data Entry the smallest values and tightest spread.
-      Legibility verdict: PASS (all text readable; the stray vertical line is a layout defect, not a legibility failure).
+      Background: Warm off-white, sampled pixel (250,248,241) = exact #FAF8F1 match — not pure white, not dark.
+      Chrome: Title "violin-grouped-swarm · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend ("Junior" green swatch, "Senior" purple swatch) centered below the title, no overlap with title. X-axis title "Task Type" and Y-axis title "Response Time (seconds)" both present with units, balanced font sizes. Tick labels (0-60 on Y in steps of 10; Data Entry/Debugging/Code Review on X) all readable in soft dark ink. Horizontal gridlines are subtle and only on the Y-axis. No stray axis-line artifact this time (the attempt-1 onZero bug is fixed) — grid area is clean.
+      Data: Three category groups (Data Entry, Debugging, Code Review) each showing two mirrored violin shapes (Junior=green #009E73, Senior=lavender #C475FD) with swarm points of matching color, white-bordered, overlaid inside each violin. Violins are semi-transparent (opacity 0.5) so points are visible through the fill. A dashed median-to-median callout line with "Δ 13.5s" label highlights the Junior/Senior gap on Debugging, the category with the widest split. Debugging shows the largest values and largest Junior/Senior gap; Data Entry the smallest values and tightest spread.
+      Legibility verdict: PASS (all text readable, no overlap issues, no clipped elements).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, legend, and axis titles rendered in light ink, clearly legible against the dark background. Tick labels in soft light ink, readable, no dark-on-dark failures observed. Gridlines subtle but visible.
-      Data: Data colors are identical to the light render — Junior green #009E73, Senior lavender — confirming the palette does not shift between themes; only chrome (background/text/grid) flips as expected. The same stray vertical axis-line artifact at x=0 is present, slightly less prominent against the dark background but still visible running the full plot height through the "Data Entry" category gap.
-      Legibility verdict: PASS (all text readable in both themes; no dark-on-dark issues found).
+      Background: Warm near-black, sampled pixel (26,26,23) = exact #1A1A17 match — not pure black, not light.
+      Chrome: Same title, legend, and axis titles rendered in light ink, clearly legible against the dark background. Tick labels in soft light ink, readable, no dark-on-dark failures observed anywhere (title, axis names, tick labels, legend text, delta-line label all pass). Gridlines subtle but visible.
+      Data: Data colors are pixel-identical to the light render — Junior green #009E73, Senior lavender #C475FD — confirming the palette does not shift between themes; only chrome (background/text/grid/markLine color) flips as expected (white dashed line + white label text on dark vs. black on light).
+      Legibility verdict: PASS (all text readable in both themes; no dark-on-dark issues found; brand green reads well on both surfaces).
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -70,21 +63,22 @@ review:
         max: 8
         passed: true
         comment: Title, legend, axis titles, and tick labels all readable in both
-          themes with correct ink/inkSoft tokens
+          themes with correct ink/inkSoft tokens; exact hex-verified theme backgrounds
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Stray vertical axisLine (onZero artifact) crosses directly through
-          the Data Entry violin/swarm gap in both renders
+        passed: true
+        comment: Stray axisLine artifact from attempt 1 is fixed; minor deduction
+          because the new markLine connector crosses through violin bodies and grazes
+          a few swarm points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Swarm points sized appropriately (9px) for ~40 obs/combo, clearly
-          visible against semi-transparent violins
+          visible with white borders against semi-transparent violins
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -93,11 +87,11 @@ review:
         comment: Green/lavender pairing has good contrast; not a red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Misplaced axisLine (onZero default) is a real layout/rendering defect;
-          otherwise proportions, title width, and margins are fine
+        passed: true
+        comment: Clean grid, no artifacts, good margins, title/legend/axes proportional,
+          canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,33 +103,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Junior=#009E73 (position 1), Senior=lavender (position 2), correct
-          light/dark chrome backgrounds
+        comment: 'Junior=#009E73 (position 1), Senior=lavender (position 2); pixel-sampled
+          backgrounds match #FAF8F1/#1A1A17 exactly'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom KDE-based violin construction and dodge algorithm show real
-          effort, but overall polish is undercut by the axis-line artifact
+        passed: true
+        comment: Custom KDE-based violin construction, dodge algorithm, and median-delta
+          callout show real polish; clean overall composition
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Default baseline; the stray vertical line is an unrefined, unintentional
-          element in an otherwise clean chart
+        passed: true
+        comment: No axis-line artifact, subtle single-axis grid, generous whitespace,
+          semi-transparent violins with edge-highlighted swarm points
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Distributional differences are visible but not emphasized; no annotation
-          or highlight guides the viewer to the key contrast
+        passed: true
+        comment: markLine delta annotation on the widest split gives a clear focal
+          point, but only one of three category gaps is emphasized
     spec_compliance:
       score: 15
       max: 15
@@ -197,8 +191,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions (KDE, dodge, renderItem) are justified by the custom-series
-          technique, not overengineered
+        comment: Helper functions (KDE, dodge, renderItem, median) are justified by
+          the custom-series technique, not overengineered
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -225,29 +219,30 @@ review:
         comment: 'Correct mount-node contract: echarts.init(container) with no explicit
           size/devicePixelRatio, animation:false'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: Idiomatic custom-series (renderItem/api.coord) for a non-native chart
-          type; the onZero default oversight shows an incomplete grasp of value-value
-          axis gotchas
+          type, with correct onZero handling on value-value axes
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Combines custom series + scatter in one coordinate system but doesn't
-          reach further into ECharts-specific polish (markLine/markArea, etc.)
-  verdict: REJECTED
+        passed: true
+        comment: Custom series + scatter + markLine annotation combined in one coordinate
+          system; still room for further ECharts-specific polish (markPoint, richer
+          tooltip)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
