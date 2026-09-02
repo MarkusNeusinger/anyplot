@@ -1,7 +1,7 @@
 // anyplot.ai
 // maze-circular: Circular Maze Puzzle
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-02
+// Quality: 88/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 //
 // ECharts has no native maze primitive, so the maze is built by hand: a graph
