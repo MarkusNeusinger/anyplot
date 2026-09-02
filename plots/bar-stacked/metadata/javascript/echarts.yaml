@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bar-stacked
 created: '2026-09-02T13:30:48Z'
-updated: '2026-09-02T13:35:09Z'
+updated: '2026-09-02T13:45:34Z'
 generated_by: claude-sonnet
 workflow_run: 33635733732
 issue: 1947
@@ -12,51 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 94
 review:
   strengths:
-  - 'First categorical series is exactly #009E73 and the remaining three stacked components
-    follow the canonical Imprint order (lavender, blue, ochre) identically across
-    both renders.'
-  - Total-value labels above each stack (via an invisible zero-height 'Total' series
-    with a label formatter) is a clean, spec-aligned touch that directly answers the
-    spec's 'consider adding total value labels above each complete stack' suggestion.
-  - Component stacking order is consistent across all six bars, making cross-category
-    comparison easy.
-  - 'Minimal, theme-adaptive chrome: y-axis line hidden, only a subtle horizontal
-    grid, generous margins — both renders are fully legible with no dark-on-dark or
-    light-on-light failures.'
-  - Deterministic in-memory data with a plausible, neutral SaaS revenue growth scenario
-    across four product lines.
+  - 'Correct Imprint palette in canonical order, first series #009E73, and data colors
+    are pixel-identical between light and dark renders — only chrome flips.'
+  - 'Genuine storytelling: total-value labels above each stack, a dashed average-total
+    reference line (via markLine), and a callout highlighting Subscriptions'' +150%
+    growth give the viewer an immediate insight beyond raw composition.'
+  - All font sizes explicitly set, including a title formula that scales to the mandated
+    string length — both renders are fully legible with no overflow or theme-adaptation
+    failures.
+  - 'Idiomatic ECharts usage: stack config, markLine for the reference line, a conditional
+    per-bar label formatter, and rounded top corners on the topmost segment for polish.'
+  - Deterministic, realistic SaaS revenue dataset with plausible scale and clearly
+    differentiated trends across all four components (Subscriptions accelerating,
+    Hardware roughly flat).
   weaknesses:
-  - Title says 'Quarterly SaaS Revenue' but the x-axis shows six individual months
-    (Jan-Jun), not quarters — either aggregate the data into real quarters (e.g. Q1-Q2,
-    or extend to four full quarters) or rename the descriptive title to 'Monthly SaaS
-    Revenue by Product Line' so the label matches the data.
-  - Design Excellence is solid but not distinctive — beyond the total-value labels
-    and the hidden y-axis line, the chart reads as a well-configured default. Consider
-    a subtle refinement pass (e.g. slightly rounded bar corners via itemStyle.borderRadius,
-    or a touch of visual hierarchy on the current/final period) to push past 'well-configured
-    default'.
-  - 'Data storytelling is default: the composition shift (Software growing from the
-    2nd-largest to clearly the largest segment by June) is present in the data but
-    not visually emphasized — a light annotation or color/weight emphasis on that
-    trend would raise the insight above a plain data display.'
-  - Library Mastery is generic beyond the total-label trick — no ECharts-distinctive
-    feature (e.g. markLine for an average/target reference, a richer tooltip formatter,
-    or graphic elements) is used to showcase the library's strengths.
+  - 'The ''Avg total: $181K'' markLine label (position: insideEndTop) sits partially
+    over the June bar''s amber Hardware segment, causing minor text/data overlap —
+    move it further right of the last category or drop it to a lower z-position relative
+    to the tallest bar.'
+  - Design is strong but stops short of publication-level distinctiveness — the chart
+    is still a fairly conventional stacked bar with two thoughtful additions; a more
+    differentiated typographic hierarchy between title and legend would push it further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Quarterly SaaS Revenue by Product Line · bar-stacked · javascript · echarts · anyplot.ai" in dark ink, centered, fully visible with no clipping. Legend (Subscriptions/Software/Services/Hardware) centered below the title with colored square swatches, all readable. Y-axis label "Revenue ($K)" top-left in dark ink. Y tick labels (0-250) and X category labels (Jan-Jun) in soft gray ink, both clearly legible. Subtle horizontal gridlines only, no vertical gridlines. Bottom x-axis line thin and subtle; y-axis line hidden.
-      Data: Six bars, each stacked bottom-to-top as Subscriptions (green #009E73), Software (lavender), Services (blue), Hardware (ochre) — consistent order across all bars. A bold dark total-value label (150, 164, 170, 187, 198, 218) sits above each stack.
-      Legibility verdict: PASS — all text is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Monthly SaaS Revenue by Product Line · bar-stacked · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend (Subscriptions, Software, Services, Hardware) below the title with color swatches, readable. Y-axis titled "Revenue ($K)" with dark-grey tick labels (0-250). X-axis month labels (Jan-Jun) in dark grey. Subtle horizontal gridlines only, no vertical gridlines, axis spines minimal.
+      Data: Six stacked bars (Jan-Jun), four components each: Subscriptions (#009E73 green, bottom), Software (light purple/magenta), Services (blue), Hardware (ochre/amber, top). Total value labels (150, 164, 170, 187, 198, 218) sit above each bar. A dashed reference line marks the average total ($181K) with a label near the June bar. A white "+150%" callout is shown inside the Subscriptions segment of the June bar.
+      Legibility verdict: PASS. All title, legend, and axis text is clearly readable against the light background. Minor note: the "Avg total: $181K" label partially overlaps the amber Hardware segment of the June bar but text remains legible (grey text still discernible against the amber fill).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, legend, y-axis label, and tick labels all render in light/white ink, all clearly visible against the dark background — no dark-on-dark failures observed. Gridlines and axis line remain subtle but visible.
-      Data: Same four-color stack order and hues as the light render (green/lavender/blue/ochre) — confirmed identical data colors, only chrome (background, text) flipped. Total-value labels above each stack are rendered in light ink and remain fully legible.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark issues.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis structure as the light render, now rendered in light/white text against the dark background. Gridlines are subtle light-grey. No dark-on-dark issues found — every label (title, legend, axis ticks, axis title, total labels, avg-line label) is clearly legible.
+      Data: Identical stacked-bar composition and colors to the light render — Subscriptions green (#009E73), Software purple, Services blue, Hardware ochre are pixel-identical to the light version; only the chrome (background/text/grid) flipped to the dark theme. Same total labels, same dashed average line, same "+150%" callout in white bold text on the green segment.
+      Legibility verdict: PASS. No dark-on-dark or light-on-light failures observed. Data colors confirmed identical to the light render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,76 +55,76 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scaled by length formula, axis/tick/legend
-          sizes fixed); well-proportioned, readable in both themes.
+        comment: All font sizes explicitly set (title formula, legend, axis, tick,
+          labels); readable in both themes with no overflow or clipping
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlap between title, legend, axis text, or total-value labels.
+        comment: 'Minor overlap: ''Avg total'' markLine label sits partially over
+          the June bar''s amber segment; text stays legible'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar width and spacing well-suited to 6 categories / 4 components;
-          nothing overplotted or too small.
+        comment: Bar segments clearly sized and distinguishable, appropriate for 6
+          categories x 4 components
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four hues (green/lavender/blue/ochre) are clearly distinguishable,
-          no red-green-only encoding.
+        comment: Multi-hue distinct colors (green/purple/blue/ochre), no red-green-only
+          signal, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large, well-balanced share of the canvas; margins
-          even; nothing cut off.
+        comment: Balanced margins, plot fills majority of canvas, legend near chart,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Revenue ($K)' with units.
+        comment: Y-axis 'Revenue ($K)' with units; X-axis self-descriptive month labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73; remaining series follow canonical Imprint
-          order; theme-correct chrome in both renders.'
+          order; identical across themes; theme-correct backgrounds'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a plain default (total labels, hidden y-axis line) but not
-          publication-level polish.
+        passed: true
+        comment: 'Strong design: rounded top corners, average reference line, growth
+          callout — clearly above library defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle single-axis grid, spines reduced, generous whitespace — good
-          but not maximal refinement.
+        passed: true
+        comment: Spines removed, gridlines horizontal-only and subtle, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Growth/composition-shift trend exists in the data but isn't visually
-          emphasized beyond the total labels.
+        passed: true
+        comment: Average-total reference line plus '+150%' growth callout on the fastest-growing
+          component gives a clear, immediate insight
     spec_compliance:
       score: 15
       max: 15
@@ -143,51 +134,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart.
+        comment: Correct stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct component colors, clear legend, consistent stacking order,
-          adequate bar spacing, total labels.
+        comment: Distinct harmonious colors, clear legend, total labels above stacks,
+          consistent component order across bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = category (month), Y = revenue; all data visible.
+        comment: Months on X, stacked revenue on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with descriptive prefix; legend labels
-          match series names.
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match component names
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varying component proportions and an overall growth trend across
-          periods.
+        comment: 4 components with clearly differentiated trajectories (fast-growing
+          Subscriptions vs. roughly flat Hardware)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral, comprehensible SaaS revenue-by-product-line scenario.
+        comment: Neutral, comprehensible SaaS revenue-composition scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Values are plausible, but the descriptive title says 'Quarterly'
-          while the x-axis is monthly (Jan-Jun) — a factual/labeling inconsistency.
+        passed: true
+        comment: Values and proportions plausible for a small/mid SaaS company
     code_quality:
       score: 10
       max: 10
@@ -197,50 +187,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes.
+        comment: Flat data -> init -> option structure, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data.
+        comment: Hardcoded deterministic data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global echarts only.
+        comment: No imports, uses global echarts/tokens only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI.
+        comment: Clean, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract, animation disabled, current API.
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of stack, markLine, conditional label formatter, itemStyle.borderRadius
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct idiomatic use of stack series, grid, legend, axis config.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: The invisible-total-series label trick is a nice ECharts-specific
-          touch, but no other distinctive feature (markLine, rich tooltip, graphic
-          elements) is used.
-  verdict: REJECTED
+        comment: markLine average reference line and per-bar label formatter are genuinely
+          ECharts-idiomatic, not trivially replicated
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,6 +237,6 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
+  dataprep:
+  - cumulative-sum
+  styling: []
