@@ -77,15 +77,45 @@ hubs.forEach((hub) => {
       destLat: dest.lat,
       color: hub.color,
       volume: dest.flow,
+      originName: hub.name,
+      destName: dest.name,
     });
   });
   hub.totalFlow = hub.destinations.reduce((sum, d) => sum + d.flow, 0);
+});
+
+// Hub-to-hub trunk flows (both directions per pair) — independently sampled
+// volumes naturally show the directional imbalance the spec calls out
+// (e.g. Memphis ships far more to Columbus than it receives back).
+const hubPairs = [
+  [0, 1],
+  [1, 0],
+  [1, 2],
+  [2, 1],
+  [2, 0],
+  [0, 2],
+];
+hubPairs.forEach(([i, j]) => {
+  const origin = hubs[i];
+  const dest = hubs[j];
+  const volume = Math.round(60 + rand() * 340);
+  flows.push({
+    originLon: origin.lon,
+    originLat: origin.lat,
+    destLon: dest.lon,
+    destLat: dest.lat,
+    color: origin.color,
+    volume,
+    originName: origin.name,
+    destName: dest.name,
+  });
 });
 
 const flowValues = flows.map((f) => f.volume);
 const minFlow = Math.min(...flowValues);
 const maxFlow = Math.max(...flowValues);
 const widthFor = (v) => 1.5 + ((v - minFlow) / (maxFlow - minFlow)) * 7.5;
+const heaviestFlow = flows.reduce((max, f) => (f.volume > max.volume ? f : max), flows[0]);
 
 function withAlpha(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -93,6 +123,51 @@ function withAlpha(hex, alpha) {
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
+
+// --- Simplified contiguous-US border (static, hand-digitized low-res
+// coastline/border vertices) — a light geographic reference frame drawn with
+// the same canvas-plugin technique, since chartjs.md forbids a geo plugin.
+const usOutline = [
+  [-124.7, 48.4], [-124.1, 46.9], [-124.1, 44.0], [-124.4, 42.0], [-124.4, 40.8],
+  [-123.8, 39.0], [-122.4, 37.8], [-121.9, 36.6], [-120.5, 34.5], [-119.7, 34.4],
+  [-118.3, 33.7], [-117.6, 33.2], [-117.2, 32.7],
+  [-114.7, 32.5], [-111.0, 31.3], [-108.2, 31.3], [-106.5, 31.8],
+  [-104.9, 29.5], [-102.3, 29.9], [-99.5, 26.4], [-97.4, 25.9],
+  [-97.2, 27.0], [-97.4, 27.8], [-95.3, 28.9], [-93.8, 29.7],
+  [-91.0, 29.1], [-89.4, 29.2], [-88.0, 30.3], [-85.6, 30.4],
+  [-85.0, 29.7], [-83.5, 29.1], [-82.6, 27.8], [-81.8, 25.8],
+  [-80.4, 25.2], [-80.1, 25.8], [-80.5, 28.5], [-81.5, 30.7],
+  [-79.9, 32.8], [-78.6, 33.9], [-77.9, 34.2], [-76.5, 34.7],
+  [-75.5, 35.2], [-76.0, 37.0], [-75.9, 38.0], [-74.9, 38.9],
+  [-74.0, 39.4], [-74.0, 40.6], [-72.9, 41.3], [-71.4, 41.3],
+  [-70.0, 42.3], [-70.2, 43.7], [-68.2, 44.4], [-67.0, 44.8],
+  [-67.8, 47.3], [-70.3, 46.2], [-71.5, 45.0], [-73.3, 45.0],
+  [-76.2, 44.0], [-79.2, 43.3], [-82.4, 41.7], [-83.1, 42.3],
+  [-82.4, 43.6], [-84.5, 46.5], [-87.9, 48.0], [-89.6, 48.0],
+  [-92.3, 48.6], [-95.2, 49.0], [-104.0, 49.0], [-114.0, 49.0],
+  [-117.0, 49.0], [-122.8, 49.0], [-123.2, 48.5], [-124.7, 48.4],
+];
+
+const basemapPlugin = {
+  id: "basemap",
+  beforeDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const { x, y } = scales;
+    ctx.save();
+    ctx.beginPath();
+    usOutline.forEach(([lon, lat], i) => {
+      const px = x.getPixelForValue(lon);
+      const py = y.getPixelForValue(lat);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.lineWidth = 1.25;
+    ctx.strokeStyle = withAlpha(t.inkSoft, 0.3);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
 
 // --- Custom plugin: draw curved flow arcs beneath the city markers ---------
 // Uses only the chart's own scales + canvas context (core Chart.js plugin
@@ -121,7 +196,41 @@ const flowArcsPlugin = {
       ctx.lineCap = "round";
       ctx.strokeStyle = withAlpha(f.color, 0.5);
       ctx.stroke();
+      // Cache the arc's midpoint (t=0.5 on the quadratic Bezier) so the
+      // callout plugin can label the heaviest corridor without recomputing.
+      f.midX = 0.25 * x0 + 0.5 * cx + 0.25 * x1;
+      f.midY = 0.25 * y0 + 0.5 * cy + 0.25 * y1;
     });
+    ctx.restore();
+  },
+};
+
+// --- Custom plugin: callout label on the single heaviest corridor ----------
+const calloutPlugin = {
+  id: "flowCallout",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const label = `Heaviest: ${heaviestFlow.originName} → ${heaviestFlow.destName} (${heaviestFlow.volume}/wk)`;
+    ctx.save();
+    ctx.font = "bold 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const metrics = ctx.measureText(label);
+    const padX = 8;
+    const padY = 5;
+    const boxW = metrics.width + padX * 2;
+    const boxH = 13 + padY * 2;
+    const bx = heaviestFlow.midX - boxW / 2;
+    const by = heaviestFlow.midY - boxH / 2;
+    ctx.fillStyle = t.elevatedBg;
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(bx, by, boxW, boxH, 5);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = t.ink;
+    ctx.fillText(label, heaviestFlow.midX, heaviestFlow.midY);
     ctx.restore();
   },
 };
@@ -152,7 +261,7 @@ const datasets = hubs.map((hub) => ({
 new Chart(canvas, {
   type: "scatter",
   data: { datasets },
-  plugins: [flowArcsPlugin],
+  plugins: [basemapPlugin, flowArcsPlugin, calloutPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -187,14 +296,14 @@ new Chart(canvas, {
       x: {
         min: -126,
         max: -68,
-        title: { display: true, text: "Longitude", color: t.ink, font: { size: 16 } },
+        title: { display: true, text: "Longitude (°)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 }, stepSize: 10 },
         grid: { color: t.grid },
       },
       y: {
         min: 24,
         max: 49,
-        title: { display: true, text: "Latitude", color: t.ink, font: { size: 16 } },
+        title: { display: true, text: "Latitude (°)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 }, stepSize: 5 },
         grid: { color: t.grid },
       },
