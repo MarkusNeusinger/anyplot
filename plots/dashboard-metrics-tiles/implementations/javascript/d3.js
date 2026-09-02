@@ -10,6 +10,12 @@ const GOOD = t.palette[0]; // #009E73 — brand green, also "favorable / good" a
 const WARNING = t.amber; // #DDCC77
 const CRITICAL = t.palette[4]; // #AE3030 — matte red, semantic anchor for bad/error
 const STATUS_COLOR = { good: GOOD, warning: WARNING, critical: CRITICAL };
+// Shape-coded per status (circle/triangle/square) so meaning survives without color — CVD-safe.
+const STATUS_SYMBOL = {
+  good: d3.symbolCircle,
+  warning: d3.symbolTriangle,
+  critical: d3.symbolSquare,
+};
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // A snapshot of an operations dashboard: current value + recent history per
@@ -38,7 +44,9 @@ const metrics = [
     name: "Response Time",
     value: 120,
     unit: "ms",
-    history: [155, 150, 148, 142, 138, 135, 130, 128, 125, 122, 124, 121, 118, 120],
+    history: [
+      155, 150, 148, 142, 138, 135, 130, 128, 125, 122, 124, 121, 118, 120,
+    ],
     changePercent: -15.3,
     favorable: true,
     status: "good",
@@ -47,7 +55,9 @@ const metrics = [
     name: "Error Rate",
     value: 0.8,
     unit: "%",
-    history: [0.5, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9, 0.7, 0.8, 0.9, 0.7, 0.8, 0.8],
+    history: [
+      0.5, 0.6, 0.5, 0.7, 0.6, 0.8, 0.7, 0.9, 0.7, 0.8, 0.9, 0.7, 0.8, 0.8,
+    ],
     changePercent: 2.1,
     favorable: false,
     status: "warning",
@@ -56,7 +66,10 @@ const metrics = [
     name: "Throughput",
     value: 1240,
     unit: "req/s",
-    history: [980, 1010, 1040, 1020, 1080, 1100, 1090, 1150, 1130, 1180, 1200, 1190, 1220, 1240],
+    history: [
+      980, 1010, 1040, 1020, 1080, 1100, 1090, 1150, 1130, 1180, 1200, 1190,
+      1220, 1240,
+    ],
     changePercent: 12.4,
     favorable: true,
     status: "good",
@@ -72,7 +85,8 @@ const metrics = [
   },
 ];
 
-const formatValue = (m) => (m.unit === "req/s" ? d3.format(",")(m.value) : String(m.value));
+const formatValue = (m) =>
+  m.unit === "req/s" ? d3.format(",")(m.value) : String(m.value);
 
 // --- Grid geometry ------------------------------------------------------------
 const cols = 3;
@@ -93,7 +107,11 @@ const contentX = accentW + padLeft;
 const contentW = tileW - contentX - padRight;
 
 // --- SVG mount ----------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
 
 // --- Title ---------------------------------------------------------------------
 svg
@@ -108,9 +126,9 @@ svg
 
 // --- Status legend --------------------------------------------------------------
 const legend = [
-  { label: "Good", color: GOOD },
-  { label: "Warning", color: WARNING },
-  { label: "Critical", color: CRITICAL },
+  { label: "Good", color: GOOD, symbol: STATUS_SYMBOL.good },
+  { label: "Warning", color: WARNING, symbol: STATUS_SYMBOL.warning },
+  { label: "Critical", color: CRITICAL, symbol: STATUS_SYMBOL.critical },
 ];
 const legendItemW = 110;
 const legendW = legend.length * legendItemW;
@@ -123,10 +141,9 @@ const legendItems = legendG
   .join("g")
   .attr("transform", (d, i) => `translate(${i * legendItemW}, 0)`);
 legendItems
-  .append("circle")
-  .attr("cx", 6)
-  .attr("cy", 0)
-  .attr("r", 6)
+  .append("path")
+  .attr("transform", "translate(6,0)")
+  .attr("d", (d) => d3.symbol().type(d.symbol).size(110)())
   .attr("fill", (d) => d.color);
 legendItems
   .append("text")
@@ -150,44 +167,64 @@ const tiles = svg
     return `translate(${x},${y})`;
   });
 
+// The critical-status tile gets a tinted surface + stronger border so the eye
+// lands there first — a deliberate visual-weight difference, not a size change
+// (tile footprint stays identical, preserving the uniform grid).
 tiles
   .append("rect")
   .attr("width", tileW)
   .attr("height", tileH)
   .attr("rx", 14)
-  .attr("fill", t.elevatedBg)
-  .attr("stroke", t.grid)
-  .attr("stroke-width", 1);
+  .attr("fill", (d) =>
+    d.status === "critical"
+      ? d3.interpolateRgb(t.elevatedBg, CRITICAL)(0.06)
+      : t.elevatedBg,
+  )
+  .attr("stroke", (d) => (d.status === "critical" ? CRITICAL : t.grid))
+  .attr("stroke-width", (d) => (d.status === "critical" ? 2.5 : 1));
 
 tiles
   .append("rect")
   .attr("x", 0)
-  .attr("width", accentW)
+  .attr("width", (d) => (d.status === "critical" ? accentW + 4 : accentW))
   .attr("height", tileH)
   .attr("rx", 3)
+  .attr("fill", (d) => STATUS_COLOR[d.status]);
+
+// Status icon — shape-coded (circle/triangle/square), redundant with the
+// accent-bar color so status still reads for color-vision-deficient viewers (VQ-04).
+const labelY = padTop + 18;
+tiles
+  .append("path")
+  .attr("transform", (d) => `translate(${contentX + 7},${labelY - 6})`)
+  .attr("d", (d) => d3.symbol().type(STATUS_SYMBOL[d.status]).size(90)())
   .attr("fill", (d) => STATUS_COLOR[d.status]);
 
 // Metric label
 tiles
   .append("text")
-  .attr("x", contentX)
-  .attr("y", padTop + 18)
+  .attr("x", contentX + 20)
+  .attr("y", labelY)
   .attr("fill", t.inkSoft)
   .style("font-size", "19px")
   .text((d) => d.name);
 
 // Change indicator — arrow direction from sign, color from favorability
-const changeY = padTop + 18;
-const changeGroup = tiles.append("g").attr("transform", `translate(0,${changeY})`);
+const changeGroup = tiles
+  .append("g")
+  .attr("transform", `translate(0,${labelY})`);
 changeGroup
   .append("text")
   .attr("x", tileW - padRight)
   .attr("y", 0)
   .attr("text-anchor", "end")
   .attr("fill", (d) => (d.favorable ? GOOD : CRITICAL))
-  .style("font-size", "19px")
-  .style("font-weight", "600")
-  .text((d) => `${d.changePercent >= 0 ? "▲" : "▼"} ${Math.abs(d.changePercent).toFixed(1)}%`);
+  .style("font-size", "20px")
+  .style("font-weight", "700")
+  .text(
+    (d) =>
+      `${d.changePercent >= 0 ? "▲" : "▼"} ${Math.abs(d.changePercent).toFixed(1)}%`,
+  );
 
 // Value display (big number + unit)
 const valueBaseline = padTop + 18 + 74;
@@ -216,11 +253,17 @@ const sparkH = sparkBottom - sparkTop;
 
 tiles.each(function (d) {
   const tile = d3.select(this);
-  const x = d3.scaleLinear().domain([0, d.history.length - 1]).range([0, contentW]);
+  const x = d3
+    .scaleLinear()
+    .domain([0, d.history.length - 1])
+    .range([0, contentW]);
   const yMin = d3.min(d.history);
   const yMax = d3.max(d.history);
   const pad = (yMax - yMin) * 0.15 || 1;
-  const y = d3.scaleLinear().domain([yMin - pad, yMax + pad]).range([sparkH, 0]);
+  const y = d3
+    .scaleLinear()
+    .domain([yMin - pad, yMax + pad])
+    .range([sparkH, 0]);
   const color = STATUS_COLOR[d.status];
 
   const area = d3
@@ -235,7 +278,9 @@ tiles.each(function (d) {
     .y((v) => y(v))
     .curve(d3.curveMonotoneX);
 
-  const spark = tile.append("g").attr("transform", `translate(${contentX},${sparkTop})`);
+  const spark = tile
+    .append("g")
+    .attr("transform", `translate(${contentX},${sparkTop})`);
   spark
     .append("path")
     .datum(d.history)
@@ -253,8 +298,8 @@ tiles.each(function (d) {
     .append("circle")
     .attr("cx", x(d.history.length - 1))
     .attr("cy", y(d.history[d.history.length - 1]))
-    .attr("r", 4.5)
+    .attr("r", 5.5)
     .attr("fill", color)
     .attr("stroke", t.elevatedBg)
-    .attr("stroke-width", 1.5);
+    .attr("stroke-width", 2);
 });
