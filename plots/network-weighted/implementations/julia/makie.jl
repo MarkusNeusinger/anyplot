@@ -32,16 +32,18 @@ region = [1, 3, 2, 3, 2, 2, 3, 1, 3, 1, 1, 2]
 region_names = ["Americas", "Europe", "Asia"]
 n = length(countries)
 
-# (source, target, weight) — weight is annual trade volume in $B
+# (source, target, weight) — weight is annual trade volume in $B, scaled to
+# realistic bilateral-trade magnitudes while preserving the relative ranking
+# (China/Canada/Mexico as USA's top partners)
 edges = [
-    (1, 2, 130), (1, 10, 118), (1, 11, 105), (1, 3, 45), (1, 4, 55), (1, 5, 40),
-    (2, 3, 60), (2, 4, 75), (2, 9, 65), (2, 12, 35),
-    (3, 6, 50), (3, 12, 42), (3, 5, 38),
-    (6, 5, 32), (5, 12, 28), (4, 9, 30),
-    (7, 2, 25), (7, 1, 22),
-    (8, 1, 18), (8, 2, 20),
-    (11, 2, 15), (10, 2, 17),
-    (12, 6, 20), (9, 1, 24),
+    (1, 2, 575), (1, 10, 520), (1, 11, 460), (1, 3, 200), (1, 4, 240), (1, 5, 175),
+    (2, 3, 265), (2, 4, 330), (2, 9, 285), (2, 12, 155),
+    (3, 6, 220), (3, 12, 185), (3, 5, 165),
+    (6, 5, 140), (5, 12, 120), (4, 9, 130),
+    (7, 2, 110), (7, 1, 95),
+    (8, 1, 80), (8, 2, 90),
+    (11, 2, 65), (10, 2, 75),
+    (12, 6, 90), (9, 1, 105),
 ]
 weights = [w for (_, _, w) in edges]
 min_weight, max_weight = extrema(weights)
@@ -58,9 +60,9 @@ end
 #     in the CI runtime). Heavier edges pull their endpoints closer. --------
 pos_x = randn(n) .* 3.0
 pos_y = randn(n) .* 3.0
-k = sqrt(100.0 / n)
+k = sqrt(180.0 / n)
 
-for iter in 0:249
+for iter in 0:299
     t_step = max(1.0 * 0.97^iter, 0.005)
     dx = zeros(n)
     dy = zeros(n)
@@ -133,17 +135,56 @@ ax = Axis(
 
 limits!(ax, 0, 1, 0, 1)
 
-# Edges — linewidth encodes trade volume, the spec's primary signal
-edge_points = Vector{Point2f}(undef, 2 * length(edges))
-edge_widths = Vector{Float32}(undef, 2 * length(edges))
+# Edges — linewidth encodes trade volume, the spec's primary signal. Each
+# edge is a 2-segment polyline bowed through a perpendicular-offset midpoint
+# (sign alternating by index) so near-parallel edges converging on the same
+# hub node stay visually separable instead of overlapping — still a single
+# batched linesegments! call.
+edge_points = Vector{Point2f}(undef, 4 * length(edges))
+edge_widths = Vector{Float32}(undef, 4 * length(edges))
+edge_mid    = Vector{Point2f}(undef, length(edges))
+top_idx     = argmax(weights)
 for (idx, (a, b, w)) in enumerate(edges)
-    edge_points[2idx - 1] = Point2f(pos_x[a], pos_y[a])
-    edge_points[2idx]     = Point2f(pos_x[b], pos_y[b])
+    p1 = Point2f(pos_x[a], pos_y[a])
+    p2 = Point2f(pos_x[b], pos_y[b])
+    edx, edy = pos_x[b] - pos_x[a], pos_y[b] - pos_y[a]
+    ed = max(sqrt(edx^2 + edy^2), 1e-4)
+    perp_x, perp_y = -edy / ed, edx / ed
+    curve_sign = isodd(idx) ? 1.0 : -1.0
+    mx, my = (pos_x[a] + pos_x[b]) / 2, (pos_y[a] + pos_y[b]) / 2
+    mid = Point2f(mx + perp_x * 0.028 * curve_sign, my + perp_y * 0.028 * curve_sign)
+    edge_mid[idx] = mid
+
     width = 1.4 + (w - min_weight) / (max_weight - min_weight) * (9.0 - 1.4)
-    edge_widths[2idx - 1] = width
-    edge_widths[2idx]     = width
+    edge_points[4idx - 3] = p1
+    edge_points[4idx - 2] = mid
+    edge_points[4idx - 1] = mid
+    edge_points[4idx]     = p2
+    edge_widths[4idx - 3] = width
+    edge_widths[4idx - 2] = width
+    edge_widths[4idx - 1] = width
+    edge_widths[4idx]     = width
 end
 linesegments!(ax, edge_points; color = (INK_SOFT, 0.4), linewidth = edge_widths)
+
+# Highlight the single strongest trade corridor as a sharper storytelling focal point
+top_a, top_b, top_w = edges[top_idx]
+top_width = 1.4 + (top_w - min_weight) / (max_weight - min_weight) * (9.0 - 1.4)
+lines!(
+    ax,
+    [Point2f(pos_x[top_a], pos_y[top_a]), edge_mid[top_idx], Point2f(pos_x[top_b], pos_y[top_b])];
+    color     = (IMPRINT_PALETTE[1], 0.85),
+    linewidth = top_width + 1.5,
+)
+text!(
+    ax, [edge_mid[top_idx][1]], [edge_mid[top_idx][2]];
+    text     = ["Top corridor: \$$(top_w)B"],
+    fontsize = 12,
+    font     = :bold,
+    color    = IMPRINT_PALETTE[1],
+    align    = (:center, :bottom),
+    offset   = (0.0f0, 6.0f0),
+)
 
 # Nodes — size encodes weighted degree (total trade volume), color encodes region
 scatter!(
@@ -158,9 +199,9 @@ text!(
     ax, pos_x, pos_y;
     text     = countries,
     align    = (:center, :top),
-    fontsize = 12,
+    fontsize = 13,
     color    = INK,
-    offset   = [(0.0f0, -(node_sizes[i] / 2 + 8)) for i in 1:n],
+    offset   = [(0.0f0, -(node_sizes[i] / 2 + 9)) for i in 1:n],
 )
 
 # Legend — region color + trade-volume line-width scale
@@ -168,7 +209,7 @@ region_elems = [
     MarkerElement(color = IMPRINT_PALETTE[i], marker = :circle, markersize = 16, strokewidth = 0)
     for i in 1:3
 ]
-weight_samples = [20, 65, 125]
+weight_samples = [90, 300, 550]
 weight_elems = [
     LineElement(color = INK_SOFT, linewidth = 1.4 + (w - min_weight) / (max_weight - min_weight) * (9.0 - 1.4))
     for w in weight_samples
