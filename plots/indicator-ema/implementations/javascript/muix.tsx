@@ -80,7 +80,14 @@ export default function Chart() {
   const size = window.ANYPLOT_SIZE;
   const padding = { top: 28, right: 44, bottom: 24, left: 44 };
   const titleBlockHeight = 56;
-  const chartWidth = size.width - padding.left - padding.right;
+  // MUI X's built-in yAxis `label` positions itself using a fixed
+  // (tickFontSize + tickSize + 10) offset rather than the tick labels'
+  // measured width, so a 4-char dollar-formatted tick ("$158") collides
+  // with the rotated title. Render the y-axis title ourselves in a
+  // dedicated column instead, and only reserve chart-internal margin for
+  // the tick labels.
+  const yAxisLabelColWidth = 32;
+  const chartWidth = size.width - padding.left - padding.right - yAxisLabelColWidth;
   const chartHeight = size.height - padding.top - padding.bottom - titleBlockHeight;
 
   return (
@@ -97,85 +104,107 @@ export default function Chart() {
       <Typography sx={{ fontSize: 22, fontWeight: 600, color: "text.primary", mb: "20px", lineHeight: 1 }}>
         {TITLE}
       </Typography>
-      <LineChart
-        width={chartWidth}
-        height={chartHeight}
-        skipAnimation
-        series={[
-          {
-            id: "close",
-            label: "Close Price",
-            data: closePrices,
-            color: t.palette[0],
-            showMark: false,
-            valueFormatter: (v) => `$${v.toFixed(2)}`,
-          },
-          {
-            id: "ema12",
-            label: "EMA (12-day)",
-            data: emaShort,
-            color: t.palette[1],
-            showMark: false,
-            valueFormatter: (v) => `$${v.toFixed(2)}`,
-          },
-          {
-            id: "ema26",
-            label: "EMA (26-day)",
-            data: emaLong,
-            color: t.palette[2],
-            showMark: false,
-            valueFormatter: (v) => `$${v.toFixed(2)}`,
-          },
-        ]}
-        xAxis={[
-          {
-            data: dates,
-            scaleType: "time",
-            label: "Trading Date",
-            valueFormatter: dateFormatter,
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
-          },
-        ]}
-        yAxis={[
-          {
-            label: "Price (USD)",
-            valueFormatter: (v) => `$${v}`,
-            tickLabelStyle: { fontSize: 14 },
-            labelStyle: { fontSize: 16 },
-          },
-        ]}
-        grid={{ horizontal: true }}
-        slotProps={{
-          legend: {
-            direction: "row",
-            labelStyle: { fontSize: 14 },
-            itemMarkWidth: 18,
-            itemMarkHeight: 10,
-            markGap: 8,
-          },
-        }}
-        sx={{
-          "& .MuiLineElement-series-close": { strokeWidth: 3.5 },
-          "& .MuiLineElement-series-ema12": { strokeWidth: 2 },
-          "& .MuiLineElement-series-ema26": { strokeWidth: 2 },
-        }}
-      >
-        {crossovers.map((c) => (
-          <ChartsReferenceLine
-            key={c.index}
-            x={dates[c.index]}
-            label={c.bullish ? "Golden cross" : "Death cross"}
-            labelAlign="start"
-            lineStyle={{
-              stroke: c.bullish ? t.palette[0] : t.palette[4],
-              strokeDasharray: "6 4",
-              strokeWidth: 1.5,
+      <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+        <Box
+          sx={{
+            width: yAxisLabelColWidth,
+            height: chartHeight,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: 16,
+              color: "text.secondary",
+              whiteSpace: "nowrap",
+              writingMode: "vertical-rl",
+              transform: "rotate(180deg)",
             }}
-            labelStyle={{ fill: c.bullish ? t.palette[0] : t.palette[4], fontSize: 13 }}
-          />
-        ))}
-      </LineChart>
+          >
+            Price (USD)
+          </Typography>
+        </Box>
+        <LineChart
+          width={chartWidth}
+          height={chartHeight}
+          skipAnimation
+          margin={{ top: 20, right: 30, bottom: 40, left: 64 }}
+          series={[
+            {
+              id: "close",
+              label: "Close Price",
+              data: closePrices,
+              color: t.palette[0],
+              showMark: false,
+              valueFormatter: (v) => `$${v.toFixed(2)}`,
+            },
+            {
+              id: "ema12",
+              label: "EMA (12-day)",
+              data: emaShort,
+              color: t.palette[1],
+              showMark: false,
+              valueFormatter: (v) => `$${v.toFixed(2)}`,
+            },
+            {
+              id: "ema26",
+              label: "EMA (26-day)",
+              data: emaLong,
+              color: t.palette[2],
+              showMark: false,
+              valueFormatter: (v) => `$${v.toFixed(2)}`,
+            },
+          ]}
+          xAxis={[
+            {
+              data: dates,
+              scaleType: "time",
+              label: "Trading Date",
+              valueFormatter: dateFormatter,
+              tickLabelStyle: { fontSize: 14 },
+              labelStyle: { fontSize: 16 },
+            },
+          ]}
+          yAxis={[
+            {
+              valueFormatter: (v) => `$${v}`,
+              tickLabelStyle: { fontSize: 14 },
+            },
+          ]}
+          grid={{ horizontal: true }}
+          slotProps={{
+            legend: {
+              direction: "row",
+              labelStyle: { fontSize: 14 },
+              itemMarkWidth: 18,
+              itemMarkHeight: 10,
+              markGap: 8,
+            },
+          }}
+          sx={{
+            "& .MuiLineElement-series-close": { strokeWidth: 3.5 },
+            "& .MuiLineElement-series-ema12": { strokeWidth: 2 },
+            "& .MuiLineElement-series-ema26": { strokeWidth: 2 },
+          }}
+        >
+          {crossovers.map((c) => (
+            <ChartsReferenceLine
+              key={c.index}
+              x={dates[c.index]}
+              label={c.bullish ? "Golden cross" : "Death cross"}
+              labelAlign="start"
+              lineStyle={{
+                stroke: c.bullish ? t.palette[0] : t.palette[4],
+                strokeDasharray: "6 4",
+                strokeWidth: 1.5,
+              }}
+              labelStyle={{ fill: c.bullish ? t.palette[0] : t.palette[4], fontSize: 13 }}
+            />
+          ))}
+        </LineChart>
+      </Box>
     </Box>
   );
 }
