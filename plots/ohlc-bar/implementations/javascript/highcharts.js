@@ -1,8 +1,7 @@
 // anyplot.ai
 // ohlc-bar: OHLC Bar Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 84/100 | Created: 2026-09-02
+// Quality: 93/100 | Created: 2026-09-02
 
 // The core bundle (no highcharts-more / modules/stock) has no "ohlc" series —
 // that type ships in modules/ohlc.js / modules/stock.js, neither of which is
