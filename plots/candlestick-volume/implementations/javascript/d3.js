@@ -47,6 +47,7 @@ const priceHeight = Math.round(plotHeight * 0.72);
 const volumeHeight = plotHeight - priceHeight - paneGap;
 
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const defs = svg.append("defs");
 
 const x = d3.scaleBand().domain(d3.range(data.length)).range([0, plotWidth]).padding(0.35);
 const yPrice = d3
@@ -61,6 +62,28 @@ const yVolume = d3
 const UP = t.palette[0]; // brand green — profit/up
 const DOWN = t.palette[4]; // semantic red anchor — loss/down
 const colorFor = (d) => (d.close >= d.open ? UP : DOWN);
+const isUp = (d) => d.close >= d.open;
+
+// CVD-safe secondary cues (VQ-04): up candles render hollow, down candles solid;
+// down-volume bars carry a diagonal hatch — shape distinguishes up/down without hue.
+const hatch = defs
+  .append("pattern")
+  .attr("id", "down-volume-hatch")
+  .attr("width", 6)
+  .attr("height", 6)
+  .attr("patternUnits", "userSpaceOnUse")
+  .attr("patternTransform", "rotate(45)");
+hatch.append("rect").attr("width", 6).attr("height", 6).attr("fill", DOWN);
+hatch.append("line").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 6).attr("stroke", t.pageBg).attr("stroke-width", 2);
+
+const tooltipShadow = defs
+  .append("filter")
+  .attr("id", "tooltip-shadow")
+  .attr("x", "-30%")
+  .attr("y", "-30%")
+  .attr("width", "160%")
+  .attr("height", "160%");
+tooltipShadow.append("feDropShadow").attr("dx", 0).attr("dy", 2).attr("stdDeviation", 3).attr("flood-opacity", 0.28);
 
 // --- Vertical gridlines spanning both panes (aligned by construction) ------
 const tickStep = Math.max(1, Math.round(data.length / 8));
@@ -113,7 +136,9 @@ candles
   .attr("width", x.bandwidth())
   .attr("y", (d) => yPrice(Math.max(d.open, d.close)))
   .attr("height", (d) => Math.max(1.5, Math.abs(yPrice(d.open) - yPrice(d.close))))
-  .attr("fill", colorFor);
+  .attr("fill", (d) => (isUp(d) ? t.pageBg : DOWN))
+  .attr("stroke", colorFor)
+  .attr("stroke-width", (d) => (isUp(d) ? 2 : 0));
 
 gPrice
   .append("text")
@@ -125,15 +150,23 @@ gPrice
   .style("font-size", "15px")
   .text("Price (USD)");
 
-// Legend — up / down bias
+// Legend — up / down bias, shape mirrors the hollow/solid candle cue
 const legend = gPrice.append("g").attr("transform", `translate(${plotWidth - 220},-58)`);
 const legendItems = [
-  { label: "Up close", color: UP },
-  { label: "Down close", color: DOWN },
+  { label: "Up close", color: UP, up: true },
+  { label: "Down close", color: DOWN, up: false },
 ];
 legendItems.forEach((item, i) => {
   const row = legend.append("g").attr("transform", `translate(${i * 130},0)`);
-  row.append("rect").attr("width", 16).attr("height", 16).attr("y", -12).attr("fill", item.color);
+  row
+    .append("rect")
+    .attr("width", 16)
+    .attr("height", 16)
+    .attr("y", -12)
+    .attr("rx", 3)
+    .attr("fill", item.up ? t.pageBg : item.color)
+    .attr("stroke", item.color)
+    .attr("stroke-width", item.up ? 2 : 0);
   row
     .append("text")
     .attr("x", 24)
@@ -170,8 +203,36 @@ gVolume
   .attr("width", x.bandwidth())
   .attr("y", (d) => yVolume(d.volume))
   .attr("height", (d) => volumeHeight - yVolume(d.volume))
-  .attr("fill", colorFor)
+  .attr("fill", (d) => (isUp(d) ? UP : "url(#down-volume-hatch)"))
   .attr("opacity", 0.85);
+
+// --- Storytelling emphasis: call out the peak-volume trading day -----------
+let peakIdx = 0;
+data.forEach((d, i) => {
+  if (d.volume > data[peakIdx].volume) peakIdx = i;
+});
+const peakX = x(peakIdx) + x.bandwidth() / 2;
+const peakY = yVolume(data[peakIdx].volume);
+const peakAnchor = peakIdx < data.length / 2 ? "start" : "end";
+
+const annotation = gVolume.append("g").attr("class", "annotation");
+annotation
+  .append("line")
+  .attr("x1", peakX)
+  .attr("x2", peakX)
+  .attr("y1", peakY - 26)
+  .attr("y2", peakY - 6)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.2);
+annotation
+  .append("text")
+  .attr("x", peakX + (peakAnchor === "start" ? 8 : -8))
+  .attr("y", peakY - 18)
+  .attr("text-anchor", peakAnchor)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-style", "italic")
+  .text("Peak volume");
 
 gVolume
   .append("text")
@@ -203,7 +264,12 @@ const crosshairLine = crosshairLayer
   .attr("opacity", 0);
 
 const tooltip = crosshairLayer.append("g").attr("opacity", 0);
-const tooltipBg = tooltip.append("rect").attr("fill", t.elevatedBg).attr("stroke", t.grid).attr("rx", 6);
+const tooltipBg = tooltip
+  .append("rect")
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("rx", 8)
+  .attr("filter", "url(#tooltip-shadow)");
 const tooltipText = tooltip
   .append("text")
   .attr("fill", t.ink)
@@ -217,14 +283,16 @@ function updateTooltip(i) {
 
   tooltipText.selectAll("tspan").remove();
   const fmt = d3.format("$,.2f");
+  const arrow = isUp(d) ? "▲" : "▼"; // secondary up/down cue, redundant with hue
   const lines = [
     d3.timeFormat("%b %d, %Y")(d.date),
     `O ${fmt(d.open)}  H ${fmt(d.high)}`,
-    `L ${fmt(d.low)}  C ${fmt(d.close)}`,
+    `L ${fmt(d.low)}  C ${fmt(d.close)} ${arrow}`,
     `Vol ${d3.format(",")(d.volume)}`,
   ];
   lines.forEach((line, li) => {
-    tooltipText.append("tspan").attr("x", 14).attr("y", 20 + li * 19).text(line);
+    const tspan = tooltipText.append("tspan").attr("x", 14).attr("y", 20 + li * 19).text(line);
+    if (li === 2) tspan.attr("fill", colorFor(d));
   });
 
   const boxWidth = 220;
