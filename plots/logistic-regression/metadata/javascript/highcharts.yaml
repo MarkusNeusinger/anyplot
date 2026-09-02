@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: logistic-regression
 created: '2026-09-02T02:10:03Z'
-updated: '2026-09-02T02:16:48Z'
+updated: '2026-09-02T02:25:30Z'
 generated_by: claude-sonnet
 workflow_run: 33581741815
 issue: 3550
@@ -12,55 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
   - 'Correct Imprint palette usage: first series brand green (#009E73) for "Did not
-    convert", second-position lavender for "Converted"; data colors identical between
-    light/dark renders and both surface backgrounds are theme-correct (#FAF8F1 / #1A1A17)'
+    convert", second-position lavender (#C475FD) for "Converted"; data colors identical
+    between light/dark renders and both surface backgrounds are theme-correct (#FAF8F1
+    / #1A1A17)'
   - 'Clever Highcharts-native technique for the 95% CI band: two stacked area series
     (a transparent lower bound plus a visible width series) reproduce a lower/upper
     confidence band without any add-on module'
+  - 'Color-accessibility fix applied this attempt: the lavender "Converted (1)" markers
+    now carry a 1px ink-colored stroke (dark on light, light on dark), giving them
+    a crisp boundary that resolves the prior sub-3:1 contrast weakness on the cream
+    background'
   - Clear, legible decision-threshold line at p=0.5 with an inline label that never
-    collides with data or other chrome
+    collides with data or other chrome, now sized consistently (14px) with the rest
+    of the secondary text
   - Deterministic seeded LCG for data generation with a plausible, neutral real-world
     narrative (marketing engagement score vs. conversion probability)
-  - Clean theme-adaptive typography and axis labeling that reads well in both light
-    and dark renders
   weaknesses:
-  - The lavender "Converted (1)" markers (#C475FD) sit below WCAG 3:1 contrast on
-    the cream light background and carry primary class-label information — consider
-    the style guide's optional 1px ink-colored marker stroke to firm up legibility,
-    especially at mobile scale
   - Several small helper functions (lcg, sigmoid, clamp01, standardError) move away
-    from the CQ-01 KISS ideal of no functions; they're minimal and arguably necessary
-    for the logistic math, but still a deviation from the flattest possible script
-  - The decision-threshold label is set at 13px while the surrounding tick/legend
-    text is 14px — a small, inconsistent secondary-text size
+    from the CQ-01 KISS ideal of no functions; minimal and arguably necessary for
+    the logistic math, but still a deviation from the flattest possible script
+  - 'Design Excellence is solid but not exceptional: the CI band and threshold line
+    show real design thought (DE-01/DE-03), but the plot area still reads as slightly
+    boxed with grid on both axes (DE-02) — removing the vertical gridlines or lowering
+    their opacity further would sharpen the visual refinement'
+  - Library Mastery is good but generic beyond the stacked-area CI trick — no use
+    of more distinctive Highcharts-only features (e.g. custom tooltip formatter, responsive
+    rules) that would push LM-02 higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "logistic-regression · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible. X-axis title "Customer Engagement Score" and y-axis title "Probability" in medium-gray, readable. Tick labels (0-100 on x, 0/0.25/0.5/0.75/1 on y) legible dark-gray text. Subtle light gridlines on both axes (appropriate for a scatter plot). Legend at bottom lists all four series with matching swatches, legible gray text. Decision-threshold label "Decision threshold (p = 0.5)" in small gray text near the dashed amber line, no overlap with other elements.
-      Data: First series (green squares, "Did not convert (0)") and second series (lavender triangles, "Converted (1)") — correct Imprint palette order, first-series brand green confirmed. Fitted probability curve rendered as a smooth, prominent black S-curve (~2.5px). Gray semi-transparent confidence band, narrower near the midpoint (~x=52) and widening toward the extremes. Amber dashed horizontal line at p=0.5. Points are y-jittered around 0 and 1 as specified, with visible transparency to convey density.
-      Legibility verdict: PASS — all text readable against the light background; no dark-on-light or light-on-light failures observed.
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "logistic-regression - javascript - highcharts - anyplot.ai" in bold dark ink, clearly legible, comfortably sized (not overflowing). X-axis title "Customer Engagement Score" and y-axis title "Probability" in medium-gray, readable. Tick labels (0-100 on x, 0/0.25/0.5/0.75/1 on y) legible dark-gray text. Subtle light gridlines on both axes. Legend at bottom lists all four series with matching swatches, legible gray text. Decision-threshold label "Decision threshold (p = 0.5)" in small gray text near the dashed amber line, now sized consistently with surrounding text, no overlap with other elements.
+      Data: First series (green squares, "Did not convert (0)") and second series (lavender triangles with a thin dark ink outline, "Converted (1)") -- correct Imprint palette order, first-series brand green confirmed. The ink outline on the lavender markers gives them a crisp, well-defined edge against the cream background. Fitted probability curve rendered as a smooth, prominent black S-curve (~2.5px). Gray semi-transparent confidence band, narrower near the midpoint (~x=52) and widening toward the extremes. Amber dashed horizontal line at p=0.5. Points are y-jittered around 0 and 1 as specified, with visible transparency to convey density.
+      Legibility verdict: PASS -- all text readable against the light background; no dark-on-light or light-on-light failures observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
       Chrome: Title, axis titles, and tick labels rendered in light off-white/gray tones, all clearly legible against the dark surface. Gridlines are subtle light-gray at low opacity, visible but not competing with data. Legend text is light gray and legible. Decision-threshold label remains legible near the dashed amber line.
-      Data: Data colors are identical to the light render — green squares and lavender triangles unchanged (confirmed, only chrome flipped). The fitted curve flips from black to white (it uses the theme-adaptive ink/neutral token, which per the style guide is the correct semantic choice for a "reference line," not a categorical series). Confidence band remains a subtle gray fill. Amber threshold line unchanged and clearly visible on the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and chrome elements are clearly visible against the near-black background, and the brand green + lavender markers both read clearly.
+      Data: Data colors are identical to the light render -- green squares and lavender triangles unchanged (confirmed, only chrome flipped). The lavender markers now carry a light-ink stroke on this surface, mirroring the light-render fix and giving the markers a crisp boundary against the near-black background. The fitted curve flips from black to white (theme-adaptive ink/neutral token, correct semantic choice for a reference line). Confidence band remains a subtle gray fill. Amber threshold line unchanged and clearly visible on the dark surface.
+      Legibility verdict: PASS -- no dark-on-dark failures; all text and chrome elements are clearly visible against the near-black background, and the brand green + lavender markers both read clearly with their new outline stroke.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All titles/labels/ticks legible in both themes; threshold label slightly
-          smaller (13px) than surrounding 14px text
+        comment: All titles/labels/ticks explicitly sized and legible in both themes;
+          the decision-threshold label is now 14px, consistent with surrounding secondary
+          text (fixed from the 13px seen in attempt 1)
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -72,16 +78,16 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Marker size (radius 4.5) and line width (2.5px) well matched to 180-point
+        comment: Marker radius (4.5) and line width (2.5px) well matched to 180-point
           density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Lavender 'Converted' markers fall below WCAG 3:1 contrast on the
-          light bg and carry primary class info; no outline stroke added per the style
-          guide's optional pattern
+        passed: true
+        comment: 1px ink-colored stroke added to the lavender 'Converted' markers
+          in both themes, resolving the prior sub-3:1 contrast weakness on the cream
+          background
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -111,15 +117,15 @@ review:
         max: 8
         passed: true
         comment: Stacked-area CI band trick, labeled threshold line, class-colored
-          jittered points show real design thought beyond defaults
+          jittered points with accessibility stroke show real design thought beyond
+          defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: Subtle grid, generous whitespace, clean bottom legend; gridlines
-          on both axes are appropriate for scatter but keep the plot area feeling
-          slightly boxed
+          on both axes keep the plot area feeling slightly boxed
       - id: DE-03
         name: Data Storytelling
         score: 4
