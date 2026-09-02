@@ -77,6 +77,12 @@ _FILE_SUFFIXES = {
     ".yml",
 }
 
+# Files with no extension are real paths too, and the suffix rule above drops
+# them silently — `api/Dockerfile` and `app/Dockerfile` are named in the guides
+# and would have gone unchecked (Copilot review). Matched on the basename, so
+# `prism/r` and `app/app/src`, which are prose rather than locations, stay out.
+_EXTENSIONLESS_FILES = {"CODEOWNERS", "Dockerfile", "LICENSE", "Makefile", "Procfile"}
+
 # Paths the guides name deliberately although they are absent: templates that
 # only exist once a developer copies them, and directories the rules define
 # ahead of the first file that will live in them.
@@ -105,7 +111,9 @@ def _looks_like_path(token: str) -> bool:
     normalised = token.strip("/")
     if "/" not in normalised:
         return False
-    return token.endswith("/") or Path(token).suffix in _FILE_SUFFIXES
+    if token.endswith("/") or Path(token).suffix in _FILE_SUFFIXES:
+        return True
+    return Path(token).name in _EXTENSIONLESS_FILES
 
 
 def _candidate_paths(text: str) -> set[str]:

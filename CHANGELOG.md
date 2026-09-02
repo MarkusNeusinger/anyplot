@@ -31,8 +31,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **The agent instructions are pinned by a test, and the drift it found is fixed** — `CLAUDE.md`
   and `.github/copilot-instructions.md` both open with the claim that they stay in sync, and both
   are read as binding shorthand, but nothing checked either claim. `tests/unit/test_agent_instructions.py`
-  adds four cheap pins with no database, network or fixtures: every backticked repo path resolves
-  (55 across the four agent-facing files), every relative link and same-page anchor resolves, every
+  adds four cheap pins with no database, network, or fixtures: every backticked repo path resolves
+  (57 across the four agent-facing files), every relative link and same-page anchor resolves, every
   skill the routing table names exists as `.claude/skills/<name>/SKILL.md` (8 of them; the harness
   skill `/update-config` is excluded by name), and seven rules that must reach both audiences are
   present on both sides. The mirroring pin is keywords rather than a text diff, because the two
