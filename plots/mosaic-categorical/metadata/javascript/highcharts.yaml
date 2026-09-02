@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: mosaic-categorical
 created: '2026-09-02T06:16:19Z'
-updated: '2026-09-02T06:27:28Z'
+updated: '2026-09-02T06:45:47Z'
 generated_by: claude-sonnet
 workflow_run: 33597666721
 issue: 3650
@@ -12,54 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
   - 'Correct mosaic semantics: rectangle widths are proportional to each department''s
     marginal share of headcount, heights are proportional to conditional rating shares
     within each department, and cell area is therefore faithfully proportional to
     cell frequency.'
+  - Now routes chrome through Highcharts' real xAxis/yAxis (linear scale 0..grandTotal
+    with a custom tickPositions/formatter for department centers, and a real 0-100%
+    yAxis) instead of hand-picked pixel margins — directly fixes the attempt-1 LM-01
+    weakness and makes the layout robust to Highcharts' own reserved space for title/subtitle/legend.
+  - 'Explicit data storytelling: a subtitle callout ("Sales has the highest ''Below''
+    share, at 19%") is paired with an amber-highlighted stroke on that exact cell,
+    giving the chart a clear focal point — directly fixes the attempt-1 DE-03 weakness.'
   - 'Fully theme-correct chrome: warm off-white / near-black backgrounds, all text
-    readable in both renders, and the Imprint categorical palette (green/violet/blue
+    legible in both renders, and the Imprint categorical palette (green/violet/blue
     in canonical order) is pixel-identical between light and dark.'
-  - 'Polished custom SVG drawing via chart.renderer: rounded rectangle corners, automatic
-    luminance-based text contrast for in-cell counts, subtle percentage gridlines,
-    and clear axis captions explaining the width/height encoding.'
-  - Balanced canvas utilization (~67% plot area) with the legend positioned directly
-    adjacent to the mosaic rather than isolated in empty space.
+  - 'Polished custom SVG drawing via chart.renderer: rounded rectangle corners, luminance-based
+    auto-contrast for in-cell counts, and a real Highcharts legend (title + swatches)
+    driven by the series array.'
+  - Margin risk from attempt 1 (bottom caption / legend header close to the canvas
+    edge) is resolved — both now sit comfortably inside the canvas in both themes.
   - Realistic, neutral business dataset (performance ratings across four departments)
     with meaningful variation in both department size and rating distribution.
   weaknesses:
-  - 'Library Mastery: series is left empty ([]) and the entire chart is hand-drawn
-    via chart.renderer inside events.load, bypassing Highcharts'' series/axis system
-    entirely. This is a defensible workaround since Highcharts core has no mosaic
-    series, but it reads as very low-level — none of Highcharts'' higher-level idioms
-    (dataLabels, plotOptions, a real xAxis/yAxis with a custom tickPositioner) are
-    used. Routing more of the chrome through Highcharts'' own axis machinery would
-    raise LM-01/LM-02.'
-  - Data storytelling (DE-03) relies only on the passive width/height encoding — there
-    is no explicit callout or annotation highlighting the most notable pattern (e.g.
-    Sales' comparatively higher share of 'Below' ratings vs. Engineering). A subtle
-    emphasis (accent color, small annotation) would strengthen the visual hierarchy.
-  - 'Minor layout risk: the bottom caption (''Department · column width ∝ headcount'')
-    sits only ~14 CSS px above the canvas bottom edge, and the legend header ''Performance
-    rating'' comes close to the right canvas edge. Neither is clipped in the current
-    render, but the margin is thin — add a few more px of buffer for robustness against
-    future layout drift.'
-  - 'CQ-01: the textColorFor() helper function breaks strict KISS Imports→Data→Plot→Save
-    structure. It''s a small, justified utility for accessible label contrast, but
-    could be inlined or replaced with a precomputed per-series lookup.'
+  - 'Library Mastery is still capped: the mosaic rectangles themselves are drawn manually
+    via chart.renderer inside events.load (Highcharts core has no mosaic series),
+    and the series array only carries empty-data placeholders to drive the legend.
+    This is a defensible workaround per the library''s no-native-series allowance,
+    but it means the chart''s core visual content still bypasses Highcharts'' series
+    system.'
+  - 'CQ-01: the luminance() helper remains a small standalone function, a minor deviation
+    from a strictly linear Imports->Data->Plot->Save script structure (acceptable
+    given its narrow purpose, but still not fully KISS).'
+  - In-cell count labels are fixed at 14px regardless of cell size (only gated on
+    a minimum cell size to appear at all) — the smallest labeled cell (Support 'Below'
+    = 12) is worth double-checking for legibility at a ~400px thumbnail width.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "mosaic-categorical · javascript · highcharts · anyplot.ai" in bold dark text, clearly legible. Y-axis percentage ticks (0/25/50/75/100%) and rotated axis title "Rating share within department" in soft dark gray, legible. Department labels (Engineering, Sales, Marketing, Support) and the bottom caption "Department · column width ∝ headcount" in soft dark gray, fully visible above the canvas edge. Legend "Performance rating" with Exceeds/Meets/Below entries, dark text, readable, positioned comfortably inside the right margin.
-      Data: Four mosaic columns (one per department), each split into three stacked cells (Exceeds/Meets/Below). First series (Exceeds) renders in the brand green #009E73, Meets in violet, Below in blue — matching the canonical Imprint categorical order. In-cell counts (e.g. 42, 58, 10) use auto-contrasted text (white on green/blue, dark on violet) and are all legible.
+      Chrome: Title "mosaic-categorical · javascript · highcharts · anyplot.ai" in bold dark text, clearly legible. Subtitle "Sales has the highest 'Below' share, at 19%" in soft dark gray, legible. Y-axis percentage ticks (0/25/50/75/100%) and rotated axis title "Rating share within department" in soft dark gray, legible. X-axis department labels (Engineering, Sales, Marketing, Support) and the bottom caption "Department · column width ∝ headcount" in soft dark gray, fully visible with comfortable margin above the canvas edge. Legend "Performance rating" with Exceeds/Meets/Below entries in dark text, fully inside the right margin, not clipped.
+      Data: Four mosaic columns (one per department, width proportional to headcount), each split into three stacked cells (Exceeds/Meets/Below, height proportional to conditional share). First series (Exceeds) renders in the brand green #009E73, Meets in violet, Below in blue — matching the canonical Imprint categorical order. The Sales/Below cell has a distinct amber-gold stroke matching the subtitle's callout. In-cell counts (e.g. 42, 58, 10) use auto-contrasted text (white on green/blue, dark on violet) and are all legible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title renders in light/cream text, clearly legible against the dark background. Y-axis percentage ticks and the rotated axis title render in a light soft gray, legible. Department labels and the bottom caption are light gray and fully visible, not clipped. Legend text and header are light-colored and legible; no dark-on-dark text anywhere.
-      Data: Same four mosaic columns with identical cell proportions and identical data colors (green/violet/blue) as the light render — only the chrome (background, text, grid, cell borders) flipped to the dark theme. In-cell counts remain legible with the same auto-contrast logic.
+      Chrome: Title and subtitle render in light/cream text, clearly legible against the dark background. Y-axis percentage ticks and the rotated axis title render in light soft gray, legible. Department labels and the bottom caption are light gray, fully visible, not clipped. Legend text and header are light-colored and legible; no dark-on-dark text anywhere.
+      Data: Same four mosaic columns with identical cell proportions and identical data colors (green/violet/blue) as the light render — only the chrome (background, text, grid, cell borders) flipped to the dark theme. The same amber-gold stroke highlights the Sales/Below cell. In-cell counts remain legible with the same auto-contrast logic.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -71,9 +71,9 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14/16/22px), readable in both themes
-          and at proportion; small in-cell counts for the smallest cells could shrink
-          further at ~400px mobile width
+        comment: All font sizes explicit (14/16/22px), readable in both themes; smallest
+          in-cell counts (e.g. 12) could shrink further to guarantee legibility at
+          ~400px mobile width
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -99,15 +99,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses ~67% of canvas, legend adjacent not isolated; bottom
-          caption and legend header have thin but non-clipping margins
+        comment: Real xAxis/yAxis reserve space correctly; nothing clipped; bottom
+          caption and legend now have comfortable margins (fixed from attempt 1)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive y-axis title with percentage ticks acting as units; bottom
-          caption explains the width encoding
+        comment: Descriptive y-axis title with percentage units; bottom caption explains
+          the width encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -116,31 +116,32 @@ review:
         comment: 'First series #009E73, canonical Imprint order for series 2-3, identical
           across themes, theme-correct backgrounds'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Fully custom-built mosaic (no library default exists) with intentional
-          layout, rounded corners, and auto-contrast labeling — clearly above a configured
-          default
+        comment: Fully custom-built mosaic with intentional layout, rounded corners,
+          luminance-based auto-contrast labeling, and an amber standout highlight
+          — clearly above configured defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axes hidden in favor of minimal hand-drawn gridlines, generous whitespace,
-          rounded cell corners with background-matching gaps
+        comment: Axes hidden in favor of minimal gridlines, generous whitespace, rounded
+          cell corners with background-matching gaps
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Visual hierarchy via proportional width/height encoding guides the
-          reader; no explicit annotation calling out the key insight
+        comment: Subtitle explicitly names the key insight (Sales' highest 'Below'
+          share) paired with an amber-highlighted cell — clear focal point and visual
+          hierarchy; fixes attempt-1 weakness
     spec_compliance:
       score: 15
       max: 15
@@ -206,8 +207,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly linear Imports->Data->Layout->Chart, but includes one small
-          helper function (textColorFor)
+        comment: Mostly linear Imports->Data->Layout->Chart, but still includes one
+          small helper function (luminance)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -219,8 +220,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only ANYPLOT_TOKENS/SIZE globals and Highcharts
-          used
+        comment: No unused imports; only ANYPLOT_TOKENS and Highcharts globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -236,36 +236,38 @@ review:
         comment: No explicit width/height, animation disabled on chart and series,
           credits disabled
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: series is empty; the whole chart bypasses Highcharts' series/axis
-          system in favor of raw chart.renderer drawing in events.load
+        passed: true
+        comment: Now uses real linear xAxis/yAxis with custom tickPositions/formatter
+          and Highcharts' own legend system, a real improvement over attempt 1; the
+          core rectangles are still hand-drawn via chart.renderer since Highcharts
+          core has no mosaic series
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts' renderer API tied to the chart's coordinate system,
-          a genuine Highcharts-specific escape hatch, though the shapes drawn are
-          generic rects/text
-  verdict: REJECTED
+        comment: Uses the renderer API tied to the chart's real coordinate system
+          (plotLeft/plotTop/plotWidth/plotHeight) plus a genuine Highcharts legend/title/subtitle
+          — a legitimate escape hatch, though the drawn shapes remain generic rects/text
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - manual-ticks
   - annotations
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - publication-ready
   - minimal-chrome
