@@ -25,27 +25,51 @@ const PEAK_RADIUS_KM = 180;
 const PEAK_SPEED_KT = 58;
 const INFLOW_DEG = 22;
 
+// Rankine-vortex-like tangential speed profile: 0 at the core, ramping up to
+// PEAK_SPEED_KT at PEAK_RADIUS_KM, then decaying outward. Shared by the outer
+// station grid and the inner core transect below, so both draw from the same
+// physically consistent wind field. Never called with r=0 (a true center
+// point has an undefined direction), so no divide-by-zero guard is needed.
+function windAt(x, y) {
+  const dx = x - CENTER.x;
+  const dy = y - CENTER.y;
+  const r = Math.hypot(dx, dy);
+  const tangentE = -dy / r;
+  const tangentN = dx / r;
+  const inflowE = -dx / r;
+  const inflowN = -dy / r;
+  const a = (INFLOW_DEG * Math.PI) / 180;
+  const dirE = Math.cos(a) * tangentE + Math.sin(a) * inflowE;
+  const dirN = Math.cos(a) * tangentN + Math.sin(a) * inflowN;
+  const ratio = r / PEAK_RADIUS_KM;
+  const speed = PEAK_SPEED_KT * ratio * Math.exp(1 - ratio);
+  return { u: speed * dirE, v: speed * dirN };
+}
+
 const stations = [];
 for (let x = 0; x <= 800; x += 160) {
   for (let y = 0; y <= 600; y += 150) {
-    const dx = x - CENTER.x;
-    const dy = y - CENTER.y;
-    const r = Math.hypot(dx, dy);
-    if (r === 0) {
-      stations.push({ x, y, u: 0, v: 0 });
-      continue;
-    }
-    const tangentE = -dy / r;
-    const tangentN = dx / r;
-    const inflowE = -dx / r;
-    const inflowN = -dy / r;
-    const a = (INFLOW_DEG * Math.PI) / 180;
-    const dirE = Math.cos(a) * tangentE + Math.sin(a) * inflowE;
-    const dirN = Math.cos(a) * tangentN + Math.sin(a) * inflowN;
-    const ratio = r / PEAK_RADIUS_KM;
-    const speed = PEAK_SPEED_KT * ratio * Math.exp(1 - ratio);
-    stations.push({ x, y, u: speed * dirE, v: speed * dirN });
+    stations.push({ x, y, ...windAt(x, y) });
   }
+}
+
+// Inner core transect: the coarse outer grid never comes closer than ~80 km
+// to the vortex center, so every one of its stations lands in the high-wind
+// (27-58 kt) band. These four points sample small radii near the core, where
+// the same tangential profile ramps up from near-zero, so the real dataset
+// (not just the legend) demonstrates the calm circle and the simpler
+// half-barb / single-full-barb notations.
+const CORE_TRANSECT = [
+  { r: 2, angleDeg: 35 }, // ~1.7 kt -> calm circle
+  { r: 7, angleDeg: 140 }, // ~5.9 kt -> half barb
+  { r: 14, angleDeg: 235 }, // ~11.3 kt -> single full barb
+  { r: 24, angleDeg: 330 }, // ~18.4 kt -> two full barbs
+];
+for (const { r, angleDeg } of CORE_TRANSECT) {
+  const angle = (angleDeg * Math.PI) / 180;
+  const x = CENTER.x + r * Math.cos(angle);
+  const y = CENTER.y + r * Math.sin(angle);
+  stations.push({ x, y, ...windAt(x, y) });
 }
 
 // --- Wind barb geometry (standard meteorological notation) ------------------
