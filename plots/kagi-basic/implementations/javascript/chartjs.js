@@ -75,6 +75,8 @@ pivots.push({ idx: extremeIdx, price: extreme });
 
 // Yang/yin: a column thickens on breaking the prior same-type pivot (shoulder
 // for up columns, waist for down columns) and thins on the opposite break.
+// The first column has no prior pivot to compare against, so it starts thick
+// (yang) by convention — harmless here since the series' first move is up.
 let thick = true;
 const columns = [];
 for (let k = 0; k < pivots.length - 1; k++) {
@@ -132,12 +134,22 @@ new Chart(canvas, {
         text: "kagi-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22 },
+        padding: { bottom: 4 },
+      },
+      subtitle: {
+        display: true,
+        text: `${reversalPct * 100}% reversal threshold · ${nDays} daily closes`,
+        color: t.inkSoft,
+        font: { size: 14, style: "italic" },
+        padding: { bottom: 16 },
       },
       legend: {
         labels: {
           color: t.ink,
           font: { size: 16 },
           usePointStyle: true,
+          boxPadding: 6,
+          padding: 14,
           generateLabels: () => [
             { text: "Yang (uptrend)", fillStyle: YANG, strokeStyle: YANG, lineWidth: 7, pointStyle: "line" },
             { text: "Yin (downtrend)", fillStyle: YIN, strokeStyle: YIN, lineWidth: 2.5, pointStyle: "line" },
@@ -157,7 +169,7 @@ new Chart(canvas, {
       },
       y: {
         ticks: { color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { color: t.grid.replace("0.15", "0.1") },
         title: { display: true, text: "Price ($)", color: t.ink, font: { size: 18 } },
       },
     },
