@@ -5,7 +5,7 @@
 import * as React from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -22,22 +22,33 @@ const TIME_POINTS = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024"];
 // Only adjacent-tier upgrades/downgrades (plus churn, which can originate
 // from any paid tier) — skip-tier jumps like Enterprise <-> Free would both
 // be unrealistic customer behavior and force ribbons into wide, crossing
-// detours that muddy the diagram.
+// detours that muddy the diagram. A small win-back rate (Churned -> Free)
+// keeps churn from being a fully absorbing state, matching real SaaS
+// reactivation behavior.
 const TRANSITION = {
   Free: { Free: 0.7, Basic: 0.22, Pro: 0, Enterprise: 0, Churned: 0.08 },
   Basic: { Free: 0.1, Basic: 0.55, Pro: 0.28, Enterprise: 0, Churned: 0.07 },
   Pro: { Free: 0, Basic: 0.1, Pro: 0.65, Enterprise: 0.2, Churned: 0.05 },
   Enterprise: { Free: 0, Basic: 0, Pro: 0.08, Enterprise: 0.9, Churned: 0.02 },
-  Churned: { Free: 0, Basic: 0, Pro: 0, Enterprise: 0, Churned: 1 },
+  Churned: { Free: 0.03, Basic: 0, Pro: 0, Enterprise: 0, Churned: 0.97 },
 };
 
-const INITIAL_POPULATION = { Free: 500, Basic: 300, Pro: 150, Enterprise: 50, Churned: 0 };
+const INITIAL_POPULATION = {
+  Free: 500,
+  Basic: 300,
+  Pro: 150,
+  Enterprise: 50,
+  Churned: 0,
+};
 const TOTAL = CATEGORIES.reduce((sum, cat) => sum + INITIAL_POPULATION[cat], 0);
 
 const nextPopulation = (pop) => {
   const next = {};
   CATEGORIES.forEach((to) => {
-    next[to] = CATEGORIES.reduce((sum, from) => sum + pop[from] * TRANSITION[from][to], 0);
+    next[to] = CATEGORIES.reduce(
+      (sum, from) => sum + pop[from] * TRANSITION[from][to],
+      0,
+    );
   });
   return next;
 };
@@ -89,7 +100,16 @@ const buildFlows = () => {
         const dstTop = inCursor[to];
         const dstBottom = dstTop - value;
         inCursor[to] = dstBottom;
-        flows.push({ step, from, to, value, srcTop, srcBottom, dstTop, dstBottom });
+        flows.push({
+          step,
+          from,
+          to,
+          value,
+          srcTop,
+          srcBottom,
+          dstTop,
+          dstBottom,
+        });
       });
     });
   }
@@ -109,6 +129,19 @@ const CATEGORY_COLOR = {
 };
 
 const NODE_W = 18;
+
+// Compact codes for the mid-diagram node chips (Q2/Q3) — short enough to sit
+// centered on the narrow node column without swallowing the ribbons on
+// either side.
+const CATEGORY_ABBR = {
+  Free: "Free",
+  Basic: "Basic",
+  Pro: "Pro",
+  Enterprise: "Ent",
+  Churned: "Chu",
+};
+const MID_LABEL_MIN_HEIGHT = 16;
+const MID_LABEL_FONT = 10;
 
 // --- Custom SVG layers, positioned via the chart's own scales --------------
 function AlluvialFlows() {
@@ -155,13 +188,20 @@ function AlluvialNodes() {
           const { top, bottom } = NODE_EXTENTS[colIndex][cat];
           const yTop = yScale(top);
           const yBottom = yScale(bottom);
+          const midY = (yTop + yBottom) / 2;
+          const segmentH = yBottom - yTop;
+          const showMidLabel =
+            !isFirst && !isLast && segmentH >= MID_LABEL_MIN_HEIGHT;
+          const midLabel = CATEGORY_ABBR[cat];
+          const midPillW = midLabel.length * MID_LABEL_FONT * 0.62 + 10;
+          const midPillH = MID_LABEL_FONT + 8;
           return (
             <React.Fragment key={`${timePoint}-${cat}`}>
               <rect
                 x={cx - NODE_W / 2}
                 y={yTop}
                 width={NODE_W}
-                height={yBottom - yTop}
+                height={segmentH}
                 fill={CATEGORY_COLOR[cat]}
                 stroke={t.pageBg}
                 strokeWidth={1.5}
@@ -169,13 +209,35 @@ function AlluvialNodes() {
               {(isFirst || isLast) && (
                 <text
                   x={isFirst ? cx - NODE_W / 2 - 10 : cx + NODE_W / 2 + 10}
-                  y={(yTop + yBottom) / 2 + 4}
+                  y={midY + 4}
                   textAnchor={isFirst ? "end" : "start"}
                   fontSize={13}
                   fill={t.inkSoft}
                 >
                   {`${cat} · ${Math.round(value)}`}
                 </text>
+              )}
+              {showMidLabel && (
+                <>
+                  <rect
+                    x={cx - midPillW / 2}
+                    y={midY - midPillH / 2}
+                    width={midPillW}
+                    height={midPillH}
+                    rx={midPillH / 2}
+                    fill={t.pageBg}
+                    opacity={0.92}
+                  />
+                  <text
+                    x={cx}
+                    y={midY + MID_LABEL_FONT / 2 - 1}
+                    textAnchor="middle"
+                    fontSize={MID_LABEL_FONT}
+                    fill={t.inkSoft}
+                  >
+                    {midLabel}
+                  </text>
+                </>
               )}
             </React.Fragment>
           );
@@ -185,20 +247,52 @@ function AlluvialNodes() {
   );
 }
 
+function ValueAxisTitle() {
+  const { top, height } = useDrawingArea();
+  const cy = top + height / 2;
+  return (
+    <text
+      x={16}
+      y={cy}
+      textAnchor="middle"
+      fontSize={13}
+      fill={t.inkSoft}
+      transform={`rotate(-90, 16, ${cy})`}
+    >
+      Customers
+    </text>
+  );
+}
+
 // --- Title + legend chrome ---------------------------------------------------
 const TITLE = "alluvial-basic · javascript · muix · anyplot.ai";
 const TITLE_FONT_DEFAULT = 28;
-const titleFontSize = TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const SUBTITLE = "Simulated SaaS subscription-tier migration · 1,000 customers across 4 quarters";
+const titleFontSize =
+  TITLE.length > 67
+    ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length))
+    : TITLE_FONT_DEFAULT;
+const SUBTITLE =
+  "Simulated SaaS subscription-tier migration · 1,000 customers across 4 quarters";
 const TITLE_H = 44;
 const SUBTITLE_H = 26;
 const LEGEND_H = 34;
 
 function Legend() {
   return (
-    <div style={{ height: LEGEND_H, display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+    <div
+      style={{
+        height: LEGEND_H,
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        flexWrap: "wrap",
+      }}
+    >
       {STACK_ORDER.map((cat) => (
-        <div key={cat} style={{ display: "flex", alignItems: "center", gap: "7px" }}>
+        <div
+          key={cat}
+          style={{ display: "flex", alignItems: "center", gap: "7px" }}
+        >
           <span
             style={{
               width: "13px",
@@ -211,7 +305,9 @@ function Legend() {
           <span style={{ fontSize: "14px", color: t.inkSoft }}>{cat}</span>
         </div>
       ))}
-      <span style={{ fontSize: "14px", color: t.inkSoft, fontStyle: "italic" }}>Band width ∝ transition volume</span>
+      <span style={{ fontSize: "14px", color: t.inkSoft, fontStyle: "italic" }}>
+        Band width ∝ transition volume
+      </span>
     </div>
   );
 }
@@ -268,6 +364,7 @@ export default function Chart() {
         skipAnimation
       >
         <ChartsXAxis axisId="time" />
+        <ValueAxisTitle />
         <AlluvialFlows />
         <AlluvialNodes />
       </ChartContainer>
