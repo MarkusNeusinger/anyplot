@@ -14,6 +14,16 @@
 # verified on the first dispatched run. The origin is also exactly the layer
 # that broke in the incident above; Cloudflare-edge issues are out of this
 # monitor's reach by design.
+#
+# What the bot pages are is DERIVED from the repo, never written out here. The
+# routes come from the `@router.get("/seo-proxy/…")` decorators in
+# api/routers/seo.py and the spec title from plots/<spec>/specification.yaml.
+# Hand-written literals go stale: the home title changed to "anyplot.ai —
+# AI-generated plot catalog for 15 libraries" and this check sat red for ten
+# consecutive nights on a healthy site — an alarm nobody can trust, which is
+# worse than no alarm. Deriving turns the check into what it is meant to assert
+# ("what is served == what the repo says"), covers every bot page the moment it
+# lands in seo.py, and cannot drift on a copy change again.
 
 name: Bot Serving Check
 
@@ -22,21 +32,36 @@ on:
     - cron: "23 6 * * *" # daily 06:23 UTC
   workflow_dispatch:
 
+# issues: write is the alarm path. Without it the job could only go red in a
+# tab nobody subscribes to — which is how those ten red nights stayed unnoticed.
+# The failure step opens (or comments on) one fixed-title issue and the success
+# step closes it again.
 permissions:
   contents: read
+  issues: write
 
 jobs:
   bot-serving:
     runs-on: ubuntu-latest
-    # 27 check() calls x (--retry 2 -> up to 3 attempts x --max-time 30) can
-    # reach ~41 min worst-case, plus four non-retried probes (llms.txt charset,
-    # trailing slash, og-image, .well-known redirect — 30s each); 46 leaves
+    # 36 check() calls (10 derived bot routes + spec page + impl page +
+    # ClaudeBot + 15 crawler UAs + 404 + robots + sitemap + 3 llms + 2 human
+    # controls) x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
+    # ~54 min worst-case, plus four non-retried probes (llms.txt charset,
+    # trailing slash, og-image, .well-known redirect — 30s each); 62 leaves
     # room to report a clean failure rather than dying to the job timeout,
     # which reports nothing useful. Recompute this when adding checks: the
-    # ceiling is check() calls x 90s, plus margin.
-    timeout-minutes: 46
+    # ceiling is check() calls x 90s, plus margin. The route sweep grows with
+    # api/routers/seo.py, so a new bot page adds 90s to that ceiling.
+    timeout-minutes: 62
     steps:
-      - name: Crawler UAs must get 200 + per-route titles
+      # The routes and the expected title are read out of the repo, so it has
+      # to be here before the first request goes out.
+      - name: Check out the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Crawler UAs must get 200 + per-route pages
         run: |
           set -uo pipefail
           # Cloud Run origin of the anyplot-app service (see header comment
@@ -66,21 +91,67 @@ jobs:
             fi
           }
 
-          # Bot path: prerendered per-route HTML from the seo-proxy
-          # Prefix, not the full title: the copy changed to "anyplot.ai —
-          # AI-generated plot catalog for 15 libraries" and this check went red
-          # for ten consecutive days without anyone noticing. The prefix still
-          # separates the prerendered page from the SPA shell, whose title is
-          # "any.plot() — any library.", which is the property under test.
-          check "$GOOGLEBOT"  "$ORIGIN/"                                "<title>anyplot.ai"
-          check "$GOOGLEBOT"  "$ORIGIN/scatter-basic"                   "<title>Basic Scatter Plot | anyplot.ai</title>"
-          check "$TWITTERBOT" "$ORIGIN/scatter-basic/python/matplotlib" "<title>Basic Scatter Plot - Matplotlib | anyplot.ai</title>"
+          # Bot path: prerendered per-route HTML from the seo-proxy.
+          #
+          # The routes are the API's own bot pages — every
+          # `@router.get("/seo-proxy/<literal>")` in api/routers/seo.py is a page
+          # a crawler must be able to reach. Reading them from the source means
+          # a page added there is swept the moment it lands, and no list here can
+          # go stale. (The two parameterised decorators, /{spec_id} and
+          # /{spec_id}/{language}/{library}, are excluded by the `[^"{]` class
+          # and probed separately below.)
+          #
+          # The assertion is the canonical link, not a title: it is GENERATED
+          # from the route, so it can never drift on a copy change, and it
+          # proves both halves at once — the SPA shell carries no
+          # `<link rel="canonical">` at all, so a match means the bot hop ran,
+          # and the href names the route, so it means the right page came back.
+          routes=$(grep -oE '@router\.get\("/seo-proxy/[^"{]*"\)' api/routers/seo.py \
+            | sed -E 's|@router\.get\("/seo-proxy||; s|"\)$||' \
+            | sed 's|^$|/|' | sort -u)
+          swept=0
+          while IFS= read -r route; do
+            [ -n "$route" ] || continue
+            swept=$((swept + 1))
+            check "$GOOGLEBOT" "$ORIGIN$route" "<link rel=\"canonical\" href=\"https://anyplot.ai$route\" />"
+          done <<< "$routes"
+
+          # A checkout that silently produced nothing, or a refactor that moves
+          # those decorators out of reach of the grep, would otherwise pass the
+          # whole sweep by checking zero routes.
+          if [ "$swept" -lt 1 ]; then
+            echo "::error::no bot routes found in api/routers/seo.py — the sweep asserted nothing"
+            fail=1
+          else
+            echo "swept $swept derived bot route(s)"
+          fi
+
+          # The spec page's expected title comes from the spec file, not from a
+          # literal here. `<title>$SPEC_TITLE` as a prefix: the suffix is site
+          # copy ("| anyplot.ai") and the impl page inserts the library name,
+          # neither of which this monitor is the right place to pin.
+          SPEC="scatter-basic"
+          SPEC_TITLE=$(sed -nE 's/^title:[[:space:]]*(.+)$/\1/p' "plots/$SPEC/specification.yaml" | head -1)
+          if [ -z "$SPEC_TITLE" ]; then
+            echo "::error::plots/$SPEC/specification.yaml carries no title — nothing to assert against"
+            fail=1
+            SPEC_TITLE="__no_title_in_the_spec_file__"
+          else
+            echo "expecting the $SPEC pages to be titled: $SPEC_TITLE"
+          fi
+          check "$GOOGLEBOT" "$ORIGIN/$SPEC" "<title>$SPEC_TITLE"
+          # The implementation page is asserted on its canonical instead: a
+          # three-segment route is the one that would still look right with the
+          # hub page served in its place, and the title prefix cannot tell them
+          # apart.
+          check "$TWITTERBOT" "$ORIGIN/$SPEC/python/matplotlib" \
+            "<link rel=\"canonical\" href=\"https://anyplot.ai/$SPEC/python/matplotlib\" />"
 
           # AI assistants take the same prerendered path (nginx $is_bot). These
           # checks hit the ORIGIN, so they verify the nginx map independently of
           # whether Cloudflare's AI Crawl Control currently 403s these UAs at
           # the edge — an edge-level policy change needs no change here.
-          check "$CLAUDEBOT" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
+          check "$CLAUDEBOT" "$ORIGIN/$SPEC" "<title>$SPEC_TITLE"
 
           # User-directed fetchers: a human asked their assistant to open the
           # page. All of these were verified receiving the empty SPA shell on
@@ -104,7 +175,7 @@ jobs:
             "Grok/1.0" \
             "Mozilla/5.0 (compatible; xAI-Bot/1.0)"
           do
-            check "$ua" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
+            check "$ua" "$ORIGIN/$SPEC" "<title>$SPEC_TITLE"
           done
 
           # A crawler asking for a URL that is no page gets a real 404 from the
@@ -162,7 +233,7 @@ jobs:
           # It used to 307 to http://api.anyplot.ai/seo-proxy/... — internal
           # path, wrong host, plain http, and that host disallows all crawling.
           slash_target=$(curl -sS --max-time 30 -o /dev/null -A "$GOOGLEBOT" \
-            -w '%{redirect_url}' "$ORIGIN/scatter-basic/")
+            -w '%{redirect_url}' "$ORIGIN/$SPEC/")
           case "$slash_target" in
             "")
               # No redirect at all: %{redirect_url} is empty, which the previous
@@ -178,7 +249,71 @@ jobs:
 
           # Control: humans must still get the SPA shell — on the home page
           # and on a deep route.
-          check "$HUMAN" "$ORIGIN/"              '<div id="root">'
-          check "$HUMAN" "$ORIGIN/scatter-basic" '<div id="root">'
+          check "$HUMAN" "$ORIGIN/"       '<div id="root">'
+          check "$HUMAN" "$ORIGIN/$SPEC"  '<div id="root">'
 
           exit $fail
+
+      # The alarm. One issue with a fixed title carries the whole history of
+      # this monitor: a first failure opens it, every further failure comments
+      # on it (so a long outage is one thread, not one issue per night), and
+      # the first green run closes it again.
+      - name: Raise the alarm
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          ALARM_TITLE: Bot serving check is red
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          # env.ALARM_TITLE inside the jq filter, not string interpolation:
+          # the title travels as data and never as jq syntax.
+          num=$(gh issue list --state open --limit 100 --json number,title \
+            --jq '[.[] | select(.title == env.ALARM_TITLE)] | .[0].number // empty')
+          if [ -n "$num" ]; then
+            echo "alarm issue #$num is already open — appending this run"
+            gh issue comment "$num" --body "Still red: $RUN_URL"
+            exit 0
+          fi
+          # printf over one argument per line: a YAML block scalar cannot carry
+          # unindented lines, and a leading run of spaces inside the body would
+          # render as a markdown code block on the issue.
+          body=$(printf '%s\n' \
+            "The daily bot-serving monitor failed: $RUN_URL" \
+            "" \
+            "Crawlers may be getting the SPA shell or an error page while the site" \
+            "looks healthy to humans — the failure mode that went unnoticed for four" \
+            "weeks in 2026 (see the header of the workflow file)." \
+            "" \
+            "Two causes are worth separating before anything else:" \
+            "" \
+            '- **The serving path broke** — `app/nginx.conf` (the `$is_bot` map, the' \
+            '  `@seo_proxy` upstream) or the API `/seo-proxy` routes. A real incident.' \
+            '- **The deployed pages are behind the repo** — the swept routes come from' \
+            '  `api/routers/seo.py` and the expected title from the spec file, so a' \
+            '  merged change that has not been deployed yet reads as a mismatch. Check' \
+            '  for a pending deploy first.' \
+            "" \
+            "This issue closes itself on the next green run.")
+          echo "opening the alarm issue"
+          gh issue create --title "$ALARM_TITLE" --label bug --label infrastructure --body "$body"
+
+      - name: Stand the alarm down
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          ALARM_TITLE: Bot serving check is red
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          num=$(gh issue list --state open --limit 100 --json number,title \
+            --jq '[.[] | select(.title == env.ALARM_TITLE)] | .[0].number // empty')
+          if [ -n "$num" ]; then
+            echo "closing alarm issue #$num"
+            gh issue comment "$num" --body "Green again: $RUN_URL"
+            gh issue close "$num"
+          else
+            echo "no open alarm issue — nothing to close"
+          fi

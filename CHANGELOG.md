@@ -28,6 +28,23 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **The bot-serving monitor now raises an alarm instead of only turning a tab red, and
+  derives what it asserts from the repo** — `bot-serving-check.yml` gained `issues: write`:
+  a failing run opens the fixed-title issue **Bot serving check is red** (or comments on it,
+  so a long outage is one thread rather than one issue per night) and the next green run
+  comments and closes it. Until now the check could only go red in the Actions tab, which is
+  exactly how it sat red for ten consecutive nights unnoticed — caused by the other half of
+  this change: hard-coded expectations. The swept routes now come from the
+  `@router.get("/seo-proxy/…")` decorators in `api/routers/seo.py` (10 today, and a new bot
+  page is covered the moment it lands) and the expected spec title from
+  `plots/<spec>/specification.yaml`, so a copy change can no longer make the alarm lie. The
+  per-route assertion is the generated `<link rel="canonical">` — the SPA shell carries none
+  at all and the href names the route, so one match proves both that the bot hop ran and
+  that the right page came back. A watchdog fails the run if the sweep found no routes or
+  the spec file no title, so an empty sweep can never pass by asserting nothing. Timeout
+  recomputed to 62 min by the file's own formula (36 checks x 90 s + four non-retried
+  probes).
+
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
   key file (`app/public/<key>.txt`, served by an explicit nginx `location` so crawler UAs
