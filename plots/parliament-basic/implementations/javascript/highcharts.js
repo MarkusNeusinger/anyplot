@@ -8,14 +8,15 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ---------------------------------------
 const parties = [
-  { name: "Party A", seats: 58 },
-  { name: "Party B", seats: 46 },
-  { name: "Party C", seats: 38 },
-  { name: "Party D", seats: 30 },
-  { name: "Party E", seats: 18 },
-  { name: "Party F", seats: 10 },
+  { name: "Coastal Alliance", seats: 58 },
+  { name: "Progress Union", seats: 46 },
+  { name: "Heritage Party", seats: 38 },
+  { name: "Civic Forum", seats: 30 },
+  { name: "Green Horizon", seats: 18 },
+  { name: "Unity Bloc", seats: 10 },
 ];
 const totalSeats = parties.reduce((sum, party) => sum + party.seats, 0);
+const majoritySeats = Math.floor(totalSeats / 2) + 1;
 
 // --- Hemicycle seat layout ---------------------------------------------------
 // Concentric arcs (rows) grow outward from an inner radius; each row's seat
@@ -54,6 +55,12 @@ rowSeatCounts.forEach((count, row) => {
 });
 seatPoints.sort((a, b) => b.angle - a.angle); // left (180°) -> right (0°)
 
+// Majority-threshold angle: the boundary between the last seat outside a
+// majority coalition (built left-to-right) and the first seat that would
+// tip it over 50%+1, used to draw a subtle radial guide.
+const majorityAngle =
+  (seatPoints[majoritySeats - 2].angle + seatPoints[majoritySeats - 1].angle) / 2;
+
 let cursor = 0;
 const series = parties.map((party, i) => {
   const data = seatPoints.slice(cursor, cursor + party.seats).map((p) => ({ x: p.x, y: p.y }));
@@ -62,13 +69,45 @@ const series = parties.map((party, i) => {
 });
 
 // --- Chart -------------------------------------------------------------------
-const pad = 24;
+const pad = 40;
 Highcharts.chart("container", {
   chart: {
     type: "scatter",
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    events: {
+      render: function () {
+        if (this.majorityGuideDrawn) return;
+        this.majorityGuideDrawn = true;
+        const xAxis = this.xAxis[0];
+        const yAxis = this.yAxis[0];
+        const rInner = INNER_RADIUS - 30;
+        const rOuter = maxRadius + 10;
+        const rLabel = maxRadius + 26;
+        const x1 = xAxis.toPixels(rInner * Math.cos(majorityAngle));
+        const y1 = yAxis.toPixels(rInner * Math.sin(majorityAngle));
+        const x2 = xAxis.toPixels(rOuter * Math.cos(majorityAngle));
+        const y2 = yAxis.toPixels(rOuter * Math.sin(majorityAngle));
+        this.renderer
+          .path(["M", x1, y1, "L", x2, y2])
+          .attr({
+            "stroke-dasharray": "4,4",
+            stroke: t.inkSoft,
+            "stroke-width": 1.5,
+            opacity: 0.55,
+            zIndex: 5,
+          })
+          .add();
+        const lx = xAxis.toPixels(rLabel * Math.cos(majorityAngle));
+        const ly = yAxis.toPixels(rLabel * Math.sin(majorityAngle));
+        this.renderer
+          .text(`Majority (${majoritySeats})`, lx, ly)
+          .attr({ align: "center", zIndex: 5 })
+          .css({ color: t.inkSoft, fontSize: "12px" })
+          .add();
+      },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
