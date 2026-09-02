@@ -80,7 +80,11 @@ ax = Axis(
 )
 ax.xticks = (1:n_months, months)
 
-barplot!(ax, x_idx, values; stack = stack, color = colors, width = 0.62)
+barplot!(
+    ax, x_idx, values;
+    stack = stack, color = colors, width = 0.72,
+    strokewidth = 1.25, strokecolor = PAGE_BG,
+)
 
 text!(
     ax, 1:n_months, totals;
@@ -88,17 +92,24 @@ text!(
     align = (:center, :bottom),
     offset = (0, 6),
     color = INK,
-    fontsize = 13,
+    fontsize = 14,
+    font = :bold,
+    strokewidth = 0.75,
+    strokecolor = PAGE_BG,
 )
 
 ylims!(ax, 0, maximum(totals) * 1.18)
 
 elements = [PolyElement(color = c) for c in IMPRINT_PALETTE]
 Legend(
-    fig[1, 2], elements, ["Solar", "Wind", "Natural Gas", "Coal"];
+    fig[1, 2], elements, ["Solar", "Wind", "Natural Gas", "Coal"], "Energy Source";
     framevisible = false,
     labelcolor   = INK,
     labelsize    = 13,
+    titlecolor   = INK,
+    titlesize    = 14,
+    titlefont    = :bold,
+    titlehalign  = :left,
 )
 
 # --- Save -----------------------------------------------------------------------
