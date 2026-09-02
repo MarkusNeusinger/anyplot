@@ -69,6 +69,23 @@ const plotH = size.height - margin.top - margin.bottom;
 const NODE_R = 28;
 const HUB_R = 33;
 
+// Edge-label backing boxes are sized from measured text width rather than
+// SVGElement.getBBox() — calling getBBox() on a freshly-added Highcharts
+// text element mid-loop only reflects the actually laid-out box for a few
+// of the labels (a batched-relayout quirk), leaving the rest with a
+// stale/zero-size box. Canvas 2D text measurement is synchronous and
+// unaffected by that, so every label gets a consistent box.
+const LABEL_FONT_SIZE = 12;
+const LABEL_FONT_WEIGHT = 500;
+const LABEL_FONT = `${LABEL_FONT_WEIGHT} ${LABEL_FONT_SIZE}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+const measureCtx = document.createElement("canvas").getContext("2d");
+measureCtx.font = LABEL_FONT;
+function labelBoxFor(text, cx, cy) {
+  const width = measureCtx.measureText(text).width;
+  const height = LABEL_FONT_SIZE * 1.3;
+  return { x: cx - width / 2, y: cy - height * 0.72, width, height };
+}
+
 function pixelOf(station) {
   return { x: margin.left + station.nx * plotW, y: margin.top + station.ny * plotH };
 }
@@ -99,6 +116,13 @@ ROUTES.forEach((route) => {
 // whether the edge itself runs mostly horizontal or mostly vertical.
 const LABEL_PERP_STEP = 92;
 const LABEL_ALONG_STEP = 46;
+// On short station pairs (adjacent stations) the fixed offsets above leave
+// little room between the pair midpoint and the arrow-trim point near the
+// target node, so the label ends up sitting on top of the arrowhead. Boost
+// both offsets inversely with edge length so close-together stations still
+// get enough clearance; longer edges are unaffected (boost clamps to 1).
+const REFERENCE_EDGE_LEN = 260;
+const MAX_LABEL_BOOST = 2.6;
 pairGroups.forEach((group, key) => {
   const [a, b] = key.split("|");
   const pa = pixels[a];
@@ -108,16 +132,17 @@ pairGroups.forEach((group, key) => {
   const canonNy = (pb.x - pa.x) / len;
   const alongX = (pb.x - pa.x) / len;
   const alongY = (pb.y - pa.y) / len;
+  const labelBoost = Math.min(MAX_LABEL_BOOST, Math.max(1, REFERENCE_EDGE_LEN / len));
   const n = group.length;
   group.forEach((route, i) => {
     route.curveNx = canonNx;
     route.curveNy = canonNy;
     const idx = n === 1 ? 0 : i - (n - 1) / 2;
     route.curveOffset = idx * CURVE_STEP;
-    route.labelPerpX = canonNx * idx * LABEL_PERP_STEP;
-    route.labelPerpY = canonNy * idx * LABEL_PERP_STEP;
-    route.labelAlongX = alongX * idx * LABEL_ALONG_STEP;
-    route.labelAlongY = alongY * idx * LABEL_ALONG_STEP;
+    route.labelPerpX = canonNx * idx * LABEL_PERP_STEP * labelBoost;
+    route.labelPerpY = canonNy * idx * LABEL_PERP_STEP * labelBoost;
+    route.labelAlongX = alongX * idx * LABEL_ALONG_STEP * labelBoost;
+    route.labelAlongY = alongY * idx * LABEL_ALONG_STEP * labelBoost;
   });
 });
 
@@ -209,15 +234,16 @@ const chart = Highcharts.chart("container", {
           // LABEL_ALONG_STEP above) so parallel-edge labels don't stack.
           const labelX = mx + route.labelPerpX + route.labelAlongX;
           const labelY = my + route.labelPerpY + route.labelAlongY;
-          const label = renderer
-            .text(`${route.id} | ${route.dep}→${route.arr}`, labelX, labelY)
-            .attr({ align: "center", zIndex: 6 })
-            .css({ color: t.ink, fontSize: "12px", fontWeight: "500" })
-            .add();
-          const bbox = label.getBBox();
+          const labelText = `${route.id} | ${route.dep}→${route.arr}`;
+          const box = labelBoxFor(labelText, labelX, labelY);
           renderer
-            .rect(bbox.x - 5, bbox.y - 3, bbox.width + 10, bbox.height + 6, 4)
+            .rect(box.x - 5, box.y - 3, box.width + 10, box.height + 6, 4)
             .attr({ fill: t.elevatedBg, stroke: color, "stroke-width": 1, opacity: 0.92, zIndex: 5 })
+            .add();
+          renderer
+            .text(labelText, labelX, labelY)
+            .attr({ align: "center", zIndex: 6 })
+            .css({ color: t.ink, fontSize: `${LABEL_FONT_SIZE}px`, fontWeight: String(LABEL_FONT_WEIGHT) })
             .add();
         });
 
