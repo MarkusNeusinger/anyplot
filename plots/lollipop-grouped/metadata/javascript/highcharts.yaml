@@ -1,0 +1,246 @@
+library: highcharts
+language: javascript
+specification_id: lollipop-grouped
+created: '2026-09-02T02:42:33Z'
+updated: '2026-09-02T02:57:00Z'
+generated_by: claude-sonnet
+workflow_run: 33583802312
+issue: 3485
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - All series now use uniform circular markers (color-only differentiation), matching
+    the spec's explicit 'circular dots' requirement — the diamond/square shape deviation
+    from the prior attempt is fixed.
+  - New focal-point emphasis (larger radius + ink-colored ring) on the single highest
+    value (West · Solar, $61M) introduces genuine data storytelling that was missing
+    in the previous attempt.
+  - 'Idiomatic Highcharts workaround for the missing native lollipop series: each
+    stem is a 2-point line segment (baseline -> value) followed by a null gap, correctly
+    avoiding cross-category connecting lines.'
+  - 'Theme-adaptive chrome is clean: data colors are pixel-identical between light
+    and dark renders, chrome (background/text/grid) correctly flips, and the focal-point
+    ring color itself adapts (dark ink on light, white on dark).'
+  - 'Canonical Imprint palette order used correctly: brand green (#009E73) first for
+    Solar, lavender for Wind, blue for Storage.'
+  weaknesses:
+  - Only 4 categories x 3 series -- within the spec's allowed range (3-8 categories,
+    2-5 series) but on the low end; a richer dataset (e.g. 5-6 regions) would better
+    demonstrate the grouped-lollipop pattern at scale.
+  - Visual hierarchy is limited to a single enlarged/ringed marker with no accompanying
+    annotation or callout text -- the storytelling improvement is real but subtle,
+    easy to miss at a glance.
+  - 'The header block is missing the ''// License: Highcharts -- commercial license,
+    free for non-commercial use (highcharts.com/license)'' line required by the highcharts
+    library rules to keep the license notice visible in every generated snippet.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "lollipop-grouped · javascript · highcharts · anyplot.ai" in bold dark ink at top; "Region" (x-axis) and "Revenue ($M)" (y-axis) titles in softer dark-gray ink; tick labels dark and clearly legible; horizontal gridlines are subtle light gray, visible but not dominant; legend (Solar / Wind / Storage) sits below the plot in dark-gray text with matching color swatches.
+      Data: Four region groups (South, North, West, East) each with three side-by-side lollipops. Solar = brand green (#009E73), Wind = lavender/violet, Storage = blue -- canonical Imprint order. Stems are thin vertical lines from the zero baseline to a circular marker. The single highest value (West · Solar, $61M) has a visibly larger marker with a bold dark ink ring, creating a clear focal point.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title, axis titles, and tick labels render in light/white ink, clearly legible against the dark background; gridlines are subtle and visible without dominating; legend text is light-gray and readable with the same color swatches as the light render.
+      Data: Same three data colors as the light render (green, lavender, blue) -- confirmed pixel-identical, only chrome inverted. The focal-point marker (West · Solar) keeps its larger radius but its ring color adapts to white/light ink instead of black, so it remains a clear focal point without becoming invisible against the dark background.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all title, axis, tick, and legend text is clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (14-26px), all text readable in both themes,
+          no dark-on-dark/light-on-light issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (12 points) with prominent radius-7 markers, radius-10
+          for the focal point
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue combination is CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), no overflow or clipping, balanced
+          axis labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Region'' and ''Revenue ($M)'' -- descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first, canonical Imprint order, correct theme backgrounds
+          in both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean composition with a deliberate focal-point marker treatment
+          beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome, subtle gridlines, generous whitespace, clean bottom
+          legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Focal-point emphasis on the global max value gives a real but subtle
+          visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped lollipop via 2-point stems + circular markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems, circular markers (fixed from diamond/square), side-by-side
+          offset, legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Region, Y=Revenue, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match series
+          names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 4 categories x 3 series -- within spec range but on the low end
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly product-line revenue by region -- plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values $15-61M -- sensible revenue scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only ANYPLOT_TOKENS/Highcharts globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Line-series-with-null-gaps is the correct idiomatic workaround for
+          Highcharts' lack of a native lollipop type
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point marker overrides for the focal point, custom tooltip formatter
+          filtering baseline/null points
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
