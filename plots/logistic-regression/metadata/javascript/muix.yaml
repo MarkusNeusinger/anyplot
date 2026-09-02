@@ -1,0 +1,240 @@
+library: muix
+language: javascript
+specification_id: logistic-regression
+created: '2026-09-02T02:17:07Z'
+updated: '2026-09-02T02:34:43Z'
+generated_by: claude-sonnet
+workflow_run: 33581912135
+issue: 3550
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Custom SVG overlays (ConfidenceBand, InflectionAnnotation) built with useXScale/useYScale
+    hooks demonstrate real MUI X mastery beyond the declarative chart API.
+  - 'Every spec-required feature is present: jittered scatter, smooth sigmoid curve,
+    95% CI band, dashed p=0.5 threshold line, and a model-summary annotation (midpoint
+    + accuracy).'
+  - Hand-built legend with per-series accurate swatches (circles for scatter, a stroke
+    for the line) instead of MUI's default uniform bar swatches.
+  - 'Correct palette/theme handling: brand green for the positive class, identical
+    data colors across themes, chrome correctly re-tokenized in dark mode.'
+  - Deterministic, self-contained implementation - seeded LCG for data, and a from-scratch
+    gradient-descent logistic fit with Wald confidence intervals, no external stats
+    dependency needed in the browser.
+  weaknesses:
+  - The midpoint/accuracy annotation sits partly inside the confidence-band shading
+    in both themes, softening contrast slightly - consider anchoring it just above
+    the band (e.g. around y=0.85-0.9 at this x).
+  - Code carries more helper functions/components (fitLogisticRegression, predictWithCI,
+    hexToRgba, ConfidenceBand, InflectionAnnotation) than a minimal KISS script would
+    - most are justified by the manual logistic fit and MUI X's hook-based overlay
+    pattern, but hexToRgba could be inlined via a template literal.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "Customer Conversion · logistic-regression · javascript · muix · anyplot.ai" in dark ink top-left; hand-built legend top-right (maroon dot "Not converted", green dot "Converted", black stroke "Fitted probability"); axis labels "Customer Engagement Score" / "Probability" in dark ink; all clearly readable.
+      Data: Maroon jittered scatter near y=0 (class 0), teal-green jittered scatter near y=1 (class 1), black sigmoid curve (~3px), light-gray 95% CI band, dashed threshold line at p=0.5 with open-circle inflection marker and two-line annotation. First categorical series (Converted) uses #009E73 brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title/legend/axis labels now in light ink/off-white against the dark surface - all clearly legible, no dark-on-dark failures.
+      Data: Scatter colors (maroon, teal-green) and annotation text identical to light render; curve, CI band, and threshold line switch to light/white strokes appropriate for dark chrome.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; annotation loses a touch of contrast
+          over the CI band
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotation partially sits inside the confidence-band fill
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size and alpha well-tuned for N=180 density with jitter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Classes separated by color and y-position, not color alone; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no overflow, balanced proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels, mandated title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green for positive class, theme-adaptive backgrounds, identical
+          data colors across themes
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hand-built legend, custom SVG overlays, refined typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines, subtle horizontal grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point at inflection point with model-summary callout
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoid + jittered binary scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jitter, distinct colors, curve, CI band, threshold line, annotation,
+          alpha all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correct, axes cover full range with sensible padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve, CI band, threshold, scatter, annotation all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Marketing conversion vs. engagement score, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 score range, N=180 within recommended 50-500
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions/components, justified by hook-based overlays
+          and manual fit
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct harness contract, current MUI X composition API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ChartContainer composition with per-axis IDs, skipAnimation on both
+          plot components
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale hooks drive genuinely custom overlays; base composition
+          is more standard
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - confidence-band
+  patterns:
+  - data-generation
+  - regression
+  dataprep:
+  - regression
+  - normalization
+  styling:
+  - alpha-blending
+  - publication-ready
