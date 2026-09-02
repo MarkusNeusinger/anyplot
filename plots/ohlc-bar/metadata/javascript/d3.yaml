@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: ohlc-bar
 created: '2026-09-02T04:42:08Z'
-updated: '2026-09-02T04:46:07Z'
+updated: '2026-09-02T04:57:22Z'
 generated_by: claude-sonnet
 workflow_run: 33591489311
 issue: 3293
@@ -12,38 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Correct, unambiguous OHLC visual encoding (vertical high-low line, left-tick open,
-    right-tick close) — clearly distinct from a candlestick chart
-  - Smart use of the finance semantic-color exception (palette[0] green / palette[4]
-    matte red) with a legend that makes the mapping explicit
+  - Correct, unambiguous OHLC visual encoding (vertical high-low line, left tick =
+    open, right tick = close), clearly distinct from a candlestick chart
+  - 'Directly addresses attempt-1 feedback: adds an 8-day moving-average overlay (d3-shape
+    line generator with curveMonotoneX) and dynamic high/low extreme callouts (live
+    getBBox-based box sizing) for real data storytelling and distinctive D3 mastery'
+  - Smart use of the finance semantic-color exception (palette[0] brand green / palette[4]
+    matte red) with an explicit legend that documents the mapping
   - 'Realistic synthetic data generation: weekday-only trading days, LCG-seeded drift/wick
-    logic producing a believable trending series'
+    logic producing a believable trending series across 45 bars'
   - Both renders are fully theme-correct — identical data colors, properly flipped
     chrome, no legibility failures in either theme
   weaknesses:
-  - Design Excellence is only baseline-competent — consider adding a data-storytelling
-    element (e.g. a subtle moving-average overlay, or an annotated high/low callout)
-    to create a clearer focal point
-  - Library Mastery is generic — lean into a more distinctive D3 pattern where it
-    fits (e.g. d3.line()/d3.area() for an overlay, or d3-shape-based custom rendering)
-    to differentiate from a boilerplate scales+axes implementation
-  - Verify legend and tick-label sizes still read comfortably at the ~400px mobile
-    thumbnail width; consider nudging legend font size up slightly if it feels cramped
-    there
+  - Callout label text (13px) and legend text (15px) are on the smaller side of the
+    range; verify they stay comfortably legible at the ~400px mobile thumbnail scale
+  - Aesthetic polish is solid but still fairly conventional for an OHLC composition
+    — a future pass could push typography hierarchy or stroke treatments further for
+    extra refinement
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "ohlc-bar · javascript · d3 · anyplot.ai" centered top in dark text; Y-axis tick labels ($124-$140) and rotated X-axis date labels (Mar 01-Apr 26) in dark/soft text; "Price (USD)" y-axis title; top-right legend "Up (close > open)" / "Down (close < open)". All clearly readable against the light background.
-      Data: First-series green is #009E73 (up bars), down bars use matte red #AE3030 (finance semantic exception) — both correctly documented in the legend.
+      Chrome: Title "ohlc-bar · javascript · d3 · anyplot.ai" centered top in bold dark text; Y-axis tick labels ($124-$140) and rotated (-30°) X-axis date labels (Mar 01-Apr 26) in dark/soft text; "Price (USD)" y-axis title; top-right legend with "Up (close > open)" / "Down (close < open)" / "8-Day MA" entries; two annotated callouts ("High $137.15", "Low $125.51") with dashed leader lines and boxed labels on an elevated-bg card. All text is clearly readable against the light background, no overlaps or clipping observed.
+      Data: First-series green is #009E73 (up bars), down bars use matte red #AE3030 (finance semantic exception) — both correctly documented in the legend. A dashed 8-day moving-average line in ink color tracks the trend across the 45-day series.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same layout with all text flipped to light tones (title, tick labels, legend, y-axis title). No dark-on-dark issues detected — every text element has clear contrast against the near-black surface.
-      Data: Bar colors (green/red) are pixel-identical to the light render; only chrome flipped, confirming correct theme-adaptive implementation.
+      Chrome: Same layout with all text flipped to light tones (title, tick labels, legend, y-axis title, callout labels). No dark-on-dark issues detected — every text element (including the smaller callout and legend text) has clear contrast against the near-black surface.
+      Data: Bar colors (green/red) and the moving-average line are pixel-identical to the light render; only chrome flipped, confirming correct theme-adaptive implementation.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -55,67 +54,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes; minor mobile-scale
-          caution
+        comment: Explicit font sizes, readable in both themes; small callout/legend
+          text is a minor mobile-scale caution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated ticks, thinned cadence, legend avoid all collisions
+        comment: Rotated ticks, thinned tick cadence, legend, and callout boxes avoid
+          all collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tick length/stroke-width well-matched to ~45-bar density
+        comment: Tick length and stroke-width well-matched to ~45-bar density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant tick-position encoding plus CVD-tuned green/matte-red pair
+        comment: Redundant tick-position encoding plus CVD-tuned green/matte-red pair,
+          not color-alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, generous margins, nothing clipped
+        comment: Canvas gate passed, generous margins, nothing clipped, callouts fit
+          inside bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units; dates self-explanatory
+        comment: Y-axis has units; dates self-explanatory on X
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: palette[0] up / palette[4] down finance exception, correct backgrounds,
-          identical data colors across themes
+        comment: palette[0] up / palette[4] down finance exception, correct theme
+          backgrounds, identical data colors across themes
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean but fairly standard bar-chart composition
+        passed: true
+        comment: High/low callouts and MA overlay add intentional hierarchy beyond
+          a plain bar chart
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid and whitespace, no further refinement
+        passed: true
+        comment: Spines removed, subtle grid, elevated-bg callout cards; room for
+          further stroke/typography polish
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: No emphasis technique beyond raw color-coded bars
+        passed: true
+        comment: Extreme-value callouts plus 8-day MA trend line create clear focal
+          points and guide the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -137,13 +142,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X=date band scale, Y=price linear niced domain
+        comment: X = date band scale, Y = price linear niced domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title; accurate legend labels
+        comment: Exact mandated title; accurate legend labels including new MA entry
     data_quality:
       score: 15
       max: 15
@@ -159,13 +164,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Weekday-only trading days, realistic drift/wick, neutral
+        comment: Weekday-only trading days, realistic drift/wick, neutral subject
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $124-$140 range plausible for mid-cap equity
+        comment: $124-$140 range plausible for a mid-cap equity
     code_quality:
       score: 10
       max: 10
@@ -175,7 +180,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary abstractions
+        comment: Flat script; the single addExtremeCallout helper is reasonable DRY
+          reuse for two call sites
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -199,33 +205,36 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current d3 v7 API
+        comment: Correct mount-node contract, current d3 v7 API, animation-free
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scaleBand/scaleLinear, .join() data-binding, axis generators, plus
+          idiomatic d3-shape line/mean usage
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper scaleBand/scaleLinear, .join() data-binding, axis generators
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Sticks to basic scales/axes/manual lines, no d3-shape or transition
-          showcase
+        comment: d3-shape curveMonotoneX line generator and live getBBox-based callout
+          sizing are genuinely D3-specific techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
+  - rolling-window
   styling:
   - grid-styling
