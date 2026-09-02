@@ -1,3 +1,7 @@
+// anyplot.ai
+// voronoi-basic: Voronoi Diagram for Spatial Partitioning
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 // anyplot.ai
 // voronoi-basic: Voronoi Diagram for Spatial Partitioning
