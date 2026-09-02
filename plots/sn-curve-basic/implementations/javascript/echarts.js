@@ -18,7 +18,7 @@ function lcg(seed) {
 const rand = lcg(42);
 
 const ultimateStrength = 745; // MPa
-const yieldStrength = 470; // MPa
+const yieldStrength = 650; // MPa — ~0.87 of ultimate, typical for Q&T 4340 steel
 const enduranceLimit = 260; // MPa
 const fitA = 1450; // MPa — Basquin intercept
 const fitB = -0.11; // Basquin exponent
@@ -32,7 +32,10 @@ const testPoints = [];
 stressLevels.forEach((stress) => {
   const meanCycles = Math.pow(stress / fitA, 1 / fitB);
   for (let i = 0; i < specimensPerLevel; i++) {
-    const scatterFactor = 1 + (rand() - 0.5) * 0.5; // +/-25% cycle scatter
+    // Spread specimens deterministically around the mean so same-stress
+    // clusters stay visually distinct instead of overlapping into one blob.
+    const jitter = (i - (specimensPerLevel - 1) / 2) * 0.24;
+    const scatterFactor = 1 + jitter + (rand() - 0.5) * 0.08;
     testPoints.push([meanCycles * scatterFactor, stress]);
   }
 });
@@ -70,7 +73,7 @@ chart.setOption({
     text: "sn-curve-basic · javascript · echarts · anyplot.ai",
     left: "center",
     top: 36,
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 24, fontWeight: 600 },
   },
   legend: {
     data: ["Test specimens", "Basquin fit"],
@@ -130,6 +133,12 @@ chart.setOption({
       showSymbol: false,
       lineStyle: { color: t.palette[1], width: 3 },
       itemStyle: { color: t.palette[1] },
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.ink, opacity: 0.06 },
+        label: { show: true, position: "insideTopLeft", color: t.inkSoft, fontSize: 13, fontStyle: "italic" },
+        data: [[{ yAxis: 200, name: "Infinite life region" }, { yAxis: enduranceLimit }]],
+      },
       markLine: {
         silent: true,
         symbol: "none",
