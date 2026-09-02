@@ -1,7 +1,7 @@
 // anyplot.ai
 // violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: 92/100 | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
