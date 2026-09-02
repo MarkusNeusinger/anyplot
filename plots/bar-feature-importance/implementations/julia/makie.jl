@@ -40,6 +40,9 @@ importance = importance[order]
 std_dev = std_dev[order]
 positions = 1:n_features
 
+# Bolder outline on the top driver (highest importance, last row) as a callout
+stroke_widths = [i == n_features ? 2.5 : 0.0 for i in 1:n_features]
+
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
@@ -50,7 +53,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = "bar-feature-importance · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 24,
     titlecolor        = INK,
     xlabel            = "Relative Importance",
     xlabelsize        = 14,
@@ -77,7 +80,8 @@ barplot!(
     color       = importance,
     colormap    = ANYPLOT_SEQ,
     colorrange  = (minimum(importance), maximum(importance)),
-    strokewidth = 0,
+    strokewidth = stroke_widths,
+    strokecolor = INK,
 )
 
 errorbars!(
@@ -96,7 +100,20 @@ text!(
     fontsize = 12,
 )
 
-xlims!(ax, 0, maximum(importance .+ std_dev) * 1.2)
+xlims!(ax, 0, maximum(importance .+ std_dev) * 1.15)
+
+Colorbar(
+    fig[1, 2];
+    colormap       = ANYPLOT_SEQ,
+    colorrange     = (minimum(importance), maximum(importance)),
+    label          = "Relative Importance",
+    labelcolor     = INK,
+    ticklabelcolor = INK_SOFT,
+    tickcolor      = INK_SOFT,
+    tickformat     = xs -> [string(round(Int, x * 100), "%") for x in xs],
+    width          = 18,
+)
+colsize!(fig.layout, 2, Fixed(90))
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
