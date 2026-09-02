@@ -1,0 +1,254 @@
+library: chartjs
+language: javascript
+specification_id: violin-swarm
+created: '2026-09-02T09:49:56Z'
+updated: '2026-09-02T10:02:58Z'
+generated_by: claude-sonnet
+workflow_run: 33615387118
+issue: 3526
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Repair loop fully addressed both attempt-1 weaknesses: binCount 24→32 and jitter
+    spacing 0.045→0.06 eliminated point-on-point touching in the densest bins, and
+    a new median-tick dataset per category adds the secondary emphasis device the
+    prior review asked for.'
+  - 'Violin outlines are hand-built from a Silverman-bandwidth KDE rendered as two
+    Chart.js line datasets with fill: ''-1'' — a native, plugin-free technique fully
+    compliant with chartjs.md''s ''no workarounds'' rule.'
+  - Beeswarm jitter algorithm clips point offsets to the local violin half-width,
+    so swarm points spread outward but never escape the violin boundary, matching
+    the spec's explicit containment requirement.
+  - 'Correct Imprint canonical palette order across all 4 categories (green -> lavender
+    -> blue -> ochre), identical hues in both themes, with theme-correct #FAF8F1 /
+    #1A1A17 backgrounds.'
+  - Deterministic mulberry32-seeded PRNG produces reproducible data with no external
+    RNG dependency.
+  - Median tick uses theme-adaptive t.ink so it stays legible against both the light
+    and dark backgrounds, and tooltip filtering (scatter-only) keeps the new median
+    datasets out of the interactive tooltip.
+  weaknesses:
+  - The new median tick sits exactly at the median y-value, so in the densest categories
+    (Placebo, Low-Dose Caffeine) it visually intersects several swarm points rather
+    than reading as a clean separate mark — minor, but a slight vertical offset or
+    a small gap around intersecting points would sharpen it further.
+  - No color legend; category identity relies solely on the x-axis tick labels beneath
+    each violin. Acceptable given the categorical x-axis carries the same labels,
+    but a cropped/zoomed view of just the plot area would lose the color key.
+  - Library Mastery stays at core Chart.js primitives (line/scatter/fill) throughout
+    — idiomatic and rule-compliant, but there is no additional distinctive Chart.js-specific
+    flourish (e.g. custom tick formatting beyond the category callback) beyond what
+    was already present in attempt 1.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Bold dark title "violin-swarm · javascript · chartjs · anyplot.ai" clearly readable at top. "Experimental Condition" (x-axis) and "Reaction Time (ms)" (y-axis) titles and medium-gray tick labels all legible. Subtle horizontal-only gridlines. No spines/frame.
+      Data: Four violins in canonical Imprint order — green (Placebo), lavender (Low-Dose Caffeine), blue (High-Dose Caffeine), ochre (Sleep-Deprived) — each filled at ~40% alpha with jittered swarm points overlaid inside the violin boundary, plus a bold dark median tick per category. First series is #009E73 as required. Swarm points are now well-separated (no touching) after the repair widened bin count/spacing.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all flip to light ink and remain clearly readable — no dark-on-dark failures anywhere. Median ticks flip to white (t.ink), staying visible against the dark violins.
+      Data: Data colors (green/lavender/blue/ochre) are identical to the light render; only chrome (background, text, grid) flipped, as required. Swarm points remain clearly distinguishable from the dark background.
+      Legibility verdict: PASS.
+
+    No AR-09 edge clipping observed: title, axis titles, y-axis tick labels (digits intact), and x-axis category labels all sit fully within the canvas with comfortable margin in both renders.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all text readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Swarm-point touching from attempt 1 is fixed; median tick line now
+          intersects a few points in the densest bins.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers sized appropriately for ~45-point-per-category density; wider
+          jitter spacing keeps points distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; no red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas, no cutoffs, balanced proportions, canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (ms).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, identical across themes, correct chrome
+          backgrounds.
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Fully custom violin+swarm+median-tick hybrid built from Chart.js
+          primitives, no plugins.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/frame, subtle single-axis grid, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New median tick per category now gives a clear secondary emphasis
+          device on top of spread/position contrast.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Violin + swarm hybrid, correctly implemented.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Overlaid swarm centered in violin, alpha 0.3-0.5 fill, contrasting
+          point color, points spread without escaping boundary.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, all data represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 categories, 45 obs each, full distribution + raw points shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral reaction-time/caffeine experiment scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times 200-700ms are realistic for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes, flat function structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32 PRNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a hand-built violin+swarm; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts canvas into #container, animation: false, current Chart.js
+          4.x API.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses only core Chart.js constructs (line, scatter, dataset fill),
+          no plugins.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Creative mixed-dataset fill-between violin technique, filtered/custom
+          tooltip callbacks, median-tick overlay.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting

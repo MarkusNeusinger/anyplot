@@ -1,0 +1,254 @@
+library: echarts
+language: javascript
+specification_id: violin-grouped-swarm
+created: '2026-09-02T09:52:09Z'
+updated: '2026-09-02T10:07:48Z'
+generated_by: claude-sonnet
+workflow_run: 33615683979
+issue: 3529
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Fixed the attempt-1 stray vertical axis-line artifact by explicitly setting axisLine.onZero:false
+    on both xAxis and yAxis — the plot area is now clean in both renders
+  - Custom KDE (Silverman bandwidth) drives the violin polygons via an ECharts custom
+    series with proper renderItem/api.coord usage, giving accurate mirrored-density
+    shapes
+  - Deterministic swarm dodge (binning + alternating rank) produces clearly separated,
+    white-bordered points that visibly reveal the raw distribution under each violin
+  - New markLine annotation (median-to-median delta on the widest Junior/Senior split,
+    'Debugging') adds a genuine data-storytelling focal point beyond 'read the chart
+    yourself'
+  - 'Exact Imprint palette and theme-background compliance verified by pixel sampling:
+    light bg (250,248,241)=#FAF8F1, dark bg (26,26,23)=#1A1A17, Junior=#009E73 identical
+    across both themes'
+  - Deterministic, reproducible data via fixed-seed LCG + Box-Muller; realistic response-time
+    domain with sensible junior/senior/task-type differences
+  weaknesses:
+  - The markLine dashed connector for the Debugging-category delta crosses directly
+    through both violin bodies and grazes nearby swarm points — a slightly cleaner
+    routing (e.g. offset outside the violin outlines) would avoid any data overlap
+  - 'Distinctive-feature usage is improved but still moderate: beyond the custom series
+    + scatter + single markLine, there is room for further ECharts-specific polish
+    (e.g. markPoint medians per group, richer tooltip formatting) to fully showcase
+    library mastery'
+  - Data-storytelling emphasis is limited to one category (Debugging); the other two
+    category gaps are left entirely to the viewer to interpret unaided
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, sampled pixel (250,248,241) = exact #FAF8F1 match — not pure white, not dark.
+      Chrome: Title "violin-grouped-swarm · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend ("Junior" green swatch, "Senior" purple swatch) centered below the title, no overlap with title. X-axis title "Task Type" and Y-axis title "Response Time (seconds)" both present with units, balanced font sizes. Tick labels (0-60 on Y in steps of 10; Data Entry/Debugging/Code Review on X) all readable in soft dark ink. Horizontal gridlines are subtle and only on the Y-axis. No stray axis-line artifact this time (the attempt-1 onZero bug is fixed) — grid area is clean.
+      Data: Three category groups (Data Entry, Debugging, Code Review) each showing two mirrored violin shapes (Junior=green #009E73, Senior=lavender #C475FD) with swarm points of matching color, white-bordered, overlaid inside each violin. Violins are semi-transparent (opacity 0.5) so points are visible through the fill. A dashed median-to-median callout line with "Δ 13.5s" label highlights the Junior/Senior gap on Debugging, the category with the widest split. Debugging shows the largest values and largest Junior/Senior gap; Data Entry the smallest values and tightest spread.
+      Legibility verdict: PASS (all text readable, no overlap issues, no clipped elements).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, sampled pixel (26,26,23) = exact #1A1A17 match — not pure black, not light.
+      Chrome: Same title, legend, and axis titles rendered in light ink, clearly legible against the dark background. Tick labels in soft light ink, readable, no dark-on-dark failures observed anywhere (title, axis names, tick labels, legend text, delta-line label all pass). Gridlines subtle but visible.
+      Data: Data colors are pixel-identical to the light render — Junior green #009E73, Senior lavender #C475FD — confirming the palette does not shift between themes; only chrome (background/text/grid/markLine color) flips as expected (white dashed line + white label text on dark vs. black on light).
+      Legibility verdict: PASS (all text readable in both themes; no dark-on-dark issues found; brand green reads well on both surfaces).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, legend, axis titles, and tick labels all readable in both
+          themes with correct ink/inkSoft tokens; exact hex-verified theme backgrounds
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Stray axisLine artifact from attempt 1 is fixed; minor deduction
+          because the new markLine connector crosses through violin bodies and grazes
+          a few swarm points
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Swarm points sized appropriately (9px) for ~40 obs/combo, clearly
+          visible with white borders against semi-transparent violins
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing has good contrast; not a red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean grid, no artifacts, good margins, title/legend/axes proportional,
+          canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units (seconds)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Junior=#009E73 (position 1), Senior=lavender (position 2); pixel-sampled
+          backgrounds match #FAF8F1/#1A1A17 exactly'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom KDE-based violin construction, dodge algorithm, and median-delta
+          callout show real polish; clean overall composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis-line artifact, subtle single-axis grid, generous whitespace,
+          semi-transparent violins with edge-highlighted swarm points
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: markLine delta annotation on the widest split gives a clear focal
+          point, but only one of three category gaps is emphasized
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped violin + swarm overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha 0.5 violins, distinct group colors with legend, dodged swarm
+          points, adequate spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match group names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 3 categories x 2 groups, 40 obs/combo, full violin + swarm shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral response-time domain with sensible junior/senior/task
+          differences
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1-60s range sensible for the described task-response domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (KDE, dodge, renderItem, median) are justified by
+          the custom-series technique, not overengineered
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + Box-Muller, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract: echarts.init(container) with no explicit
+          size/devicePixelRatio, animation:false'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic custom-series (renderItem/api.coord) for a non-native chart
+          type, with correct onZero handling on value-value axes
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom series + scatter + markLine annotation combined in one coordinate
+          system; still room for further ECharts-specific polish (markPoint, richer
+          tooltip)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting

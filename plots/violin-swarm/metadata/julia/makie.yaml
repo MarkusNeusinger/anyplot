@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: violin-swarm
+created: '2026-09-02T09:45:24Z'
+updated: '2026-09-02T10:00:10Z'
+generated_by: claude-sonnet
+workflow_run: 33615155699
+issue: 3526
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Custom beeswarm algorithm ties point offsets to local KDE density (same bandwidth
+    logic as the violin), so swarm points stay inside the violin outline and cluster
+    where density is actually highest.
+  - New dashed group-median trend line gives the plot a clear focal point/story (the
+    inverted-U dose-response), directly addressing the prior round's DE-03 weakness.
+  - show_median is now used as a genuine native Makie violin feature rather than a
+    manual overlay, partially addressing the prior LM-02 weakness.
+  - Theme-adaptive chrome is fully correct in both renders; Imprint palette in canonical
+    order starting with brand green.
+  - Realistic, neutral caffeine-dose/reaction-time scenario with a plausible inverted-U
+    pattern.
+  weaknesses:
+  - Title renders at only ~24% of the plot width -- noticeably smaller than the ~50-70%
+    target for a title this length; increase titlesize for stronger hierarchy.
+  - Two swarm points still visibly merge into a single blob just below the median
+    in the 0 mg violin -- tighten the beeswarm step size or add basic pairwise collision
+    resolution in the densest bins.
+  - 'CQ-01: two helper functions still break KISS structure (unresolved from the prior
+    round; algorithmically necessary but still scored down).'
+  - 'LM-02: swarm placement remains a generic, library-agnostic offset algorithm --
+    no Makie-specific technique for the beeswarm layout itself.'
+  - Sample size is fixed at 50 across every group; varying it per category would better
+    exercise DQ-01 Feature Coverage.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "violin-swarm · julia · makie · anyplot.ai" in bold dark ink, centered, fully visible with no clipping. X-axis label "Caffeine Dose" and Y-axis label "Reaction Time (ms)" in dark ink, both legible. Tick labels (0 mg/100 mg/200 mg/300 mg on x; 200/400/600 on y) render in a softer dark gray, clearly readable. Subtle horizontal gridlines at y=200/400/600. Top and right spines removed; left/bottom spines in a soft neutral tone.
+      Data: Four violins in Imprint order -- #009E73 (0 mg), #C475FD (100 mg), #4467A3 (200 mg), #BD8233 (300 mg) -- each at ~0.4 alpha with a solid stroke outline in the same hue, plus a solid ink median line and a new dashed ink-soft trend line connecting the four group medians. Individual reaction-time trials are overlaid as small ink-filled, light-stroked dots that stack in a beeswarm pattern within each violin's boundary.
+      Legibility verdict: PASS -- all text is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title and axis labels render in light ink (near-white), fully visible with no clipping. Tick labels render in a lighter soft gray, clearly legible against the dark background -- no dark-on-dark failures observed. Gridlines are subtle and visible. Spines match the light-render treatment (top/right hidden, left/bottom in a muted light tone).
+      Data: The four violin fill/stroke colors are pixel-identical to the light render (#009E73, #C475FD, #4467A3, #BD8233) -- only the chrome flipped. Swarm points are white-filled with dark strokes (inverted from the light render) so they remain visible against every violin hue on the dark background.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background, no dark-on-dark issues.
+
+    Both renders pass the theme-readability checklist. Canvas dimensions confirmed at 3200x1800 (landscape target) for both PNGs -- no canvas gate warning was present.
+
+    Residual issue noted in both renders: two swarm points in the 0 mg violin merge into a single overlapping blob just below the median line; title text measures ~24% of plot width (left spine to right spine), below the ~50-70% proportional target.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes, but title reads at only ~24% of
+          plot width -- under the ~50-70% target; bump titlesize for stronger hierarchy
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Nearly all swarm points cleanly separated, but two points merge into
+          a blob in the 0 mg violin below the median
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Improved from prior attempt (N_BINS 30->40, markersize 7->6): densest
+          columns mostly show gaps now, though a couple of points still touch'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Ink/white swarm points with contrasting stroke read clearly against
+          every translucent violin hue in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, balanced margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Caffeine Dose and Reaction Time (ms) are descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Translucent fill + stroke outline, native median lines, and new dashed
+          trend line add real polish over a plain default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New dashed group-median trend line now explicitly sharpens the inverted-U
+          dose-response story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Violin + swarm overlay both present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha ~0.4 violins, swarm centered and bounded within violin shape,
+          contrasting point color
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format is an exact match; no legend needed since categories
+          are on the x-axis
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Distributions vary in spread/skew/location across groups, but sample
+          size is fixed at 50/group
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible caffeine-dose/reaction-time scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction-time values and inverted-U dose-response pattern are scientifically
+          plausible
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Two helper functions (kde_density, beeswarm_offsets) still break
+          KISS structure; algorithmically justified but scored down
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the algorithmic requirement, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Native violin!/scatter!/lines! usage, per-category loop, show_median
+          as a built-in violin feature
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: show_median adds a genuine native touch, but the swarm layout itself
+          remains a fully manual/generic offset algorithm
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
