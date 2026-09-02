@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: sn-curve-basic
 created: '2026-09-02T06:18:39Z'
-updated: '2026-09-02T06:28:48Z'
+updated: '2026-09-02T06:45:35Z'
 generated_by: claude-sonnet
 workflow_run: 33597600650
 issue: 3826
@@ -12,116 +12,133 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - Correct log-log Basquin power-law curve (straight line in log-log space, flattening
-    at the endurance limit) - physically accurate S-N behavior
-  - All three required reference lines present with descriptive labels and differentiated
-    dash patterns for visual separation
-  - Explicit font sizing throughout (title/axis/tick/legend/reference-line labels),
-    fully legible in both light and dark renders
-  - Correct Imprint palette usage, identical data colors across themes, theme-correct
-    chrome in both renders
-  - Realistic, domain-accurate fatigue data with correct physical ordering of material
-    properties
-  - Clean, deterministic, idiomatic MUI X ChartContainer composition combining scatter
-    and line series
+  - 'Comprehensive spec coverage: log-log axes, Basquin power-law fit line, all three
+    material-property reference lines (ultimate, yield, endurance limit), and clearly
+    labeled low-cycle/high-cycle/infinite-life regions — every note from the specification''s
+    requirements is represented.'
+  - Genuine data storytelling via custom SVG overlays (SafeZoneBand, FatigueRegionLabels)
+    built with useDrawingArea/useXScale/useYScale — goes well beyond default chart
+    output to guide the reader through the fatigue-life narrative.
+  - 'Correct Imprint palette usage: brand green for specimens, palette[1] lavender
+    for the fit line, amber for reference-line thresholds, identical data colors across
+    both themes with only chrome flipping.'
+  - 'Deterministic, realistic data: seeded LCG jitter around an analytically-anchored
+    Basquin curve, plausible steel fatigue values (400-760 MPa stress range, 10^3-10^7
+    cycles).'
+  - Idiomatic composed MUI X API usage (ChartContainer + modular plot/axis/legend
+    components) with skipAnimation set on all animated components per the harness
+    contract.
   weaknesses:
-  - In the flat infinite-life region, the Basquin fit line visually merges with the
-    Endurance Limit reference line - consider a slight visual differentiator (opacity,
-    color nudge, or dash pattern) so the two remain distinguishable even where they
-    coincide
-  - Design Excellence relies on token-palette defaults without deeper bespoke refinement
-    (e.g. no shaded safe zone below the endurance limit, no explicit region labeling
-    for low-cycle/high-cycle/infinite-life zones called out in the spec notes)
-  - Data storytelling could be strengthened with light annotation of the three fatigue
-    regions along the x-axis to make the insight immediately obvious without reading
-    the reference-line labels
+  - Y-axis title 'Stress Amplitude (MPa)' visually overlaps the '500' tick label in
+    BOTH light and dark renders — the rotated axis title is vertically centered on
+    the full axis span, and because the log-scale y-axis (min=340, max=820) places
+    '500' almost exactly at that vertical midpoint, the title's glyph strokes cross
+    directly over the '5' digit, making it hard to read cleanly. Increase the horizontal
+    offset between the rotated y-axis label and the tick labels (e.g. push the label
+    further left via a larger ChartContainer margin.left combined with an explicit
+    axis label offset, or shorten/reposition the label) so no title glyph ever intersects
+    a tick label regardless of where a tick happens to land on the log scale.
+  - The endurance-limit reference line (strokeWidth 5, dash '3 5') is considerably
+    thicker than the ultimate/yield reference lines and visually competes with the
+    purple fit line where the two coincide past 10^6 cycles — consider a slightly
+    thinner stroke or a small vertical offset so the amber dash pattern doesn't blend
+    into the fit line's flat tail.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "sn-curve-basic · javascript · muix · anyplot.ai" centered top in dark ink; axis labels "Cycles to Failure, N" and "Stress Amplitude (MPa)" dark and readable; tick labels (10^3-10^7 on x, 400-800 on y) dark and readable; three horizontal dashed reference lines (Ultimate Strength, Yield Strength, Endurance Limit) with inline dark labels; legend top-right with dark text.
-      Data: First series (Test Specimens) renders in Imprint green #009E73 with white marker-stroke halos; second series (Basquin Fit) renders in Imprint palette position 2 (#C475FD, purple).
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "sn-curve-basic · javascript · muix · anyplot.ai" is centered at top in dark ink, clearly legible. X-axis label "Cycles to Failure, N" and Y-axis label "Stress Amplitude (MPa)" are both dark ink, similarly sized. Tick labels (10^3-10^7 on x, 400-800 on y) are legible in a softer ink tone. Horizontal grid lines are subtle. Three fatigue-region labels (LOW-CYCLE FATIGUE / HIGH-CYCLE FATIGUE / INFINITE LIFE) sit below the x-axis with thin boundary tick marks, legible and unobstructed.
+      Data: First series (Test Specimens) renders as brand-green (#009E73) circles with a white stroke for definition, 24 points clustered at 8 stress levels. Second series (Basquin Fit) is a lavender/purple line. Three amber dashed/dotted reference lines mark Ultimate Strength (760 MPa), Yield Strength (620 MPa), and Endurance Limit (380 MPa), each with an inline text label. A pale green "safe zone" band shades the region below the endurance limit, with an italic annotation.
+      Legibility verdict: FAIL for one element — the rotated "Stress Amplitude (MPa)" axis title visually overlaps the "500" y-tick label (its glyph strokes cross directly over the "5" digit) because the log-scale axis places 500 near the exact vertical midpoint where the title text is centered. All other text (title, other tick labels, legend, reference-line labels, region labels) is clearly readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, axis labels, tick labels, reference-line labels, and legend text all render in light ink and are clearly visible against the dark background. No dark-on-dark failures observed.
-      Data: Test Specimens marker color and Basquin Fit line color are pixel-identical to the light render (#009E73 and #C475FD respectively) - only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels flip to light ink/off-white and remain clearly legible against the dark background. Grid lines are subtle and visible. Region labels below the x-axis are legible in muted light-gray.
+      Data: Data colors are identical to the light render — same brand-green scatter, lavender fit line, amber reference lines — confirming only chrome (not data color) adapts to theme. The pale safe-zone band becomes a very subtle dark-green tint appropriate for the dark surface.
+      Legibility verdict: FAIL for the same element as the light render — the "500" y-tick label overlaps the rotated axis title in the same way (theme-independent layout defect, not a color/contrast issue). No dark-on-dark text failures observed elsewhere; all other text is comfortably legible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; fully readable in both themes
+        passed: false
+        comment: Nearly all text is readable in both themes, but the '500' y-tick
+          label is visually degraded by the overlapping rotated axis title in both
+          renders.
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Rotated y-axis title 'Stress Amplitude (MPa)' overlaps the '500'
+          tick label — confirmed via pixel crop in both light and dark renders. Overlapping
+          scatter points among specimens at the same stress level are expected data
+          behavior, not a defect.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Fit line coincides with the Endurance Limit reference line in the
-          flat region, reducing separability
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Marker and line sizing well-chosen for sparse dataset
+        comment: Markers sized appropriately (11px) for ~24 sparse points with white
+          stroke for definition; fit line and reference lines clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe green/purple pairing
+        comment: Brand green vs. lavender vs. amber are CVD-safe and mutually distinct;
+          no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Chart fills canvas well, balanced margins, legend near data
+        comment: Canvas is exactly 3200x1800, good margins and no clipping, but the
+          axis-title/tick collision is partly a layout defect.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Units present (MPa); domain-standard N notation for cycles
+        comment: Descriptive axis labels with units (MPa, cycles N).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint palette, identical across themes, theme-correct chrome
+        comment: 'First series is #009E73, canonical palette order, correct theme-adaptive
+          backgrounds, data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured baseline with nice touches (marker halo, dash differentiation)
-          but colors are straight token-palette defaults
+        passed: true
+        comment: Custom SVG overlays (safe-zone band, fatigue-region labels) built
+          on chart hooks show real design intent beyond defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Horizontal-only grid and generous margins; room for more polish
+        passed: true
+        comment: Minimal L-shaped chrome, subtle horizontal-only grid, generous margins,
+          white-stroke markers for definition.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Reference lines provide context, but no explicit labeling of the
-          three fatigue regions
+        passed: true
+        comment: Region labels, safe-zone shading, and threshold reference lines guide
+          the reader through the fatigue-life narrative described in the spec notes.
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +148,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N curve on log-log axes
+        comment: 'Correct S-N (Wohler) curve: log-log scatter with fit line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log-log scales, 3 reference lines, 3
-          fatigue regions, jittered scatter, fit line'
+        comment: Both axes log-scale, all three reference lines present, Basquin fit
+          overlaid, multi-specimen scatter, three fatigue regions called out.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stress on Y, cycles on X, full range visible
+        comment: Stress on y-axis, cycles on x-axis, matches spec.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact required format; legend labels match data
+        comment: Title matches required format exactly; legend labels are clear and
+          descriptive.
     data_quality:
       score: 15
       max: 15
@@ -160,20 +178,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter jitter, fit curve, and all three fatigue regions
+        comment: 'Covers every aspect noted in the spec: dual log axes, fit line,
+          all three material properties, region breakdown, multi-specimen scatter.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible steel-alloy fatigue testing scenario
+        comment: Plausible steel fatigue values, neutral engineering context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Physically correct ordering: Ultimate > Yield > Endurance limit;
-          realistic cycle range'
+        comment: Stress and cycle ranges are sensible for the domain.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +201,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward structure, minimal necessary helper functions
+        comment: Two small helper components exist only to render custom SVG overlays
+          required by the spec's storytelling — not over-engineered.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Deterministic seeded LCG RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import used
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: No fake UI; appropriate complexity for the custom overlays.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, skipAnimation set, current API
+        comment: Follows the harness contract (default-exported component, no manual
+          mount); skipAnimation set on LinePlot and ScatterPlot.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -217,20 +237,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ChartContainer composition with shared log-scale axis
-          IDs
+        comment: Uses the composed ChartContainer + modular plot/axis/legend pattern,
+          the recommended MUI X community approach for custom overlays.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: ChartsReferenceLine and compositional ChartContainer pattern are
-          meaningfully MUI X-specific
-  verdict: REJECTED
+        passed: true
+        comment: ChartsReferenceLine, useDrawingArea/useXScale/useYScale for custom
+          overlays, and item-level ChartsTooltip are genuinely distinctive MUI X features,
+          well used.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - log-scale
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
