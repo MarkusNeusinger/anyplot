@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: area-stacked-percent
 created: '2026-09-02T11:57:13Z'
-updated: '2026-09-02T12:02:11Z'
+updated: '2026-09-02T12:22:32Z'
 generated_by: claude-sonnet
 workflow_run: 33626785011
 issue: 2647
@@ -12,55 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Correct d3.stack().offset(d3.stackOffsetExpand) implementation with curveMonotoneX
-    gives a genuine, smooth 100%-normalized stacked area chart
-  - 'Imprint palette applied correctly: Chrome is the brand green #009E73 as the first
+  - 'Fully addressed all four Attempt-1 weaknesses: realistic Safari/Edge desktop-share
+    values, explicit ''(%)'' y-axis unit and ''Year'' x-axis title, previously-invisible
+    y-axis gridlines now redrawn above the stack at low opacity so they''re actually
+    visible, and a new data-verified ''Safari overtakes Edge/IE'' crossover annotation
+    (the data does cross between 2018 and 2019, so the callout is factually grounded,
+    not decorative)'
+  - Correct d3.stack().offset(d3.stackOffsetExpand) + curveMonotoneX gives a genuine,
+    smooth 100%-normalized stacked area chart
+  - 'Imprint palette applied correctly: Chrome is brand green #009E73 as the first
     series, Safari/Edge/Firefox follow canonical palette order, and ''Other'' is deliberately
-    mapped to the theme-adaptive muted anchor rather than consuming a categorical
-    slot'
+    mapped to the theme-adaptive muted semantic anchor instead of consuming a categorical
+    slot — matching the style guide''s documented ''other/rest/disabled'' exception'
   - In-browser legend construction measures label widths via getBBox() and centers
-    the legend precisely — a distinctly D3-native technique not easily replicated
-    in other libraries
-  - Clean, idiomatic KISS-structured code with only the d3 global, deterministic in-memory
-    data, and real data-join rendering (selection.data().join()) satisfying AR-05
+    the legend precisely — a distinctly D3-native technique
   - 'Both renders are theme-correct: warm off-white/near-black backgrounds, ink/inkSoft
-    tokens correctly threaded through axes, title, and legend'
+    tokens correctly threaded through axes, title, legend, and annotation halo text;
+    data colors are identical between themes'
   weaknesses:
-  - 'DQ-03: The ''illustrative'' browser market-share values deviate substantially
-    from well-known real-world proportions for this exact, easily fact-checked domain
-    — desktop Safari is shown at ~20-21%, roughly double its real-world ~9-10% desktop
-    share, while Edge is understated versus its real ~11% share. Tune values closer
-    to known real-world proportions (e.g., Safari ~8-10%, Edge ~5-11%) while preserving
-    the directional story (Chrome rising, IE/Edge declining).'
-  - 'VQ-06: The y-axis label ''Share of Total'' has no explicit unit suffix (e.g.,
-    ''Share of Total (%)''), and there is no x-axis title (e.g., ''Year'') — add both,
-    even though tick labels already show ''%'' and years.'
-  - 'DE-02: The y-axis gridlines (y.ticks(4)) are drawn but rendered underneath the
-    fully opaque stacked areas (which always sum to 100%), so they have zero visual
-    effect in the final output — this is dead code; either drop it or draw it above
-    the areas at low opacity so it''s actually visible.'
-  - 'DE-03: Visual hierarchy (Chrome anchored largest at the bottom) tells part of
-    the story, but there''s no callout marking the notable crossover moments (e.g.,
-    Safari overtaking Edge around 2018-2019, or the steep 2015-2019 Edge/IE decline)
-    that would push this from ''readable'' to ''immediately insightful''.'
+  - 'DQ-03: The ''Other'' category grows to 20% of desktop share by 2024, which is
+    unrealistic for a browser-share breakdown that already names the major players
+    (Chrome, Safari, Edge/IE, Firefox) — real-world ''other'' (Opera, Samsung Internet,
+    legacy browsers, etc.) for desktop typically stays under ~5-8%. Tighten ''Other''
+    to a smaller, more plausible ceiling and let the freed share redistribute toward
+    Edge (which could plausibly hold closer to its real ~10-11% rather than dropping
+    to 5%) rather than an oversized catch-all bucket.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "area-stacked-percent · javascript · d3 · anyplot.ai" is dark, bold, centered at top and fully readable. Legend row (Chrome, Safari, Edge / IE, Firefox, Other) sits centered below the title with color swatches and dark secondary-text labels, all legible. X-axis shows years 2015-2024 in dark tick text; y-axis shows 0%-100% in 20% increments with a rotated "Share of Total" label. All chrome text is clearly readable against the light background.
-      Data: Five stacked bands filling the full plot height at every x position (sums to 100%): Chrome (brand green #009E73) anchored at the bottom and largest, Safari (lavender), Edge/IE (blue), Firefox (ochre), and Other (muted grey-brown) on top, separated by thin light-colored stroke lines. First series is confirmed #009E73.
+      Chrome: Title "area-stacked-percent · javascript · d3 · anyplot.ai" is dark, bold, centered at top and fully readable. Legend row (Chrome, Safari, Edge / IE, Firefox, Other) sits centered below the title with color swatches and dark secondary-text labels, all legible. X-axis shows years 2015-2024 with an explicit "Year" title; y-axis shows 0%-100% in 20% increments with a rotated "Share of Total (%)" label (unit suffix now present). Subtle horizontal gridlines are now visible cutting across the colored bands at the 20/40/60/80% marks. A "Safari overtakes Edge/IE" annotation with a small circle marker sits inside the Safari band around 2019, its text rendered with a light halo so it stays legible over the purple fill.
+      Data: Five stacked bands filling the full plot height at every x position (sums to 100%): Chrome (brand green #009E73) anchored at the bottom and largest, Safari (lavender), Edge/IE (blue), Firefox (ochre), and Other (muted grey-brown) on top, separated by thin light-colored stroke lines. First series confirmed #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, legend text, and axis tick labels all render in light/white tones and are clearly legible against the dark background — no dark-on-dark issues observed. The "Other" band appears as a light warm-grey (the dark-theme muted token), and thin stroke lines between bands are now dark, matching the dark page background.
+      Chrome: Title, legend text, and axis tick/axis-title labels (including "Share of Total (%)" and "Year") all render in light/white tones and are clearly legible against the dark background — no dark-on-dark issues observed. The "Other" band appears as a light warm-grey (the dark-theme muted token), and the thin stroke lines between bands are now dark, matching the dark page background. The crossover annotation text and its halo remain legible over the purple Safari band. Gridlines are visible as faint dark streaks across the bands.
       Data: The same five bands in the same order and identical data colors as the light render (Chrome #009E73 at bottom, then Safari, Edge/IE, Firefox, Other) — confirmed only the chrome (background, text, separator-stroke color) flipped between themes, not the data-series colors.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,14 +62,16 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22px title, 16px axis label, 14-15px
-          ticks/legend), readable at full size in both themes, no overflow or clipping
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14-15px
+          ticks/legend, 13px annotation), readable at full size in both themes, no
+          overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render
+        comment: No overlapping text or elements in either render, including the new
+          crossover annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -88,8 +84,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between bands, white/dark separator strokes aid distinction,
-          no red-green sole signal
+        comment: Good contrast between bands, separator strokes aid distinction, no
+          red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -99,11 +95,11 @@ review:
           margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis label 'Share of Total' lacks an explicit '(%)' unit suffix
-          and there is no x-axis title, though tick labels partially compensate
+        passed: true
+        comment: 'Fixed from Attempt 1: y-axis now reads ''Share of Total (%)'' with
+          explicit unit, x-axis now has a ''Year'' title'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -112,7 +108,7 @@ review:
         comment: 'First series is #009E73, canonical order for remaining named series,
           ''Other'' correctly uses the muted semantic anchor, both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -124,18 +120,20 @@ review:
           areas, measured/centered legend — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Tick marks removed, generous whitespace, but the y-axis gridlines
-          are invisible dead code hidden beneath the fully opaque stack
+        comment: 'Fixed from Attempt 1: y-axis gridlines are now drawn above the stack
+          at low opacity and are actually visible; tick marks removed, generous whitespace'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Chrome's dominance and Edge/IE's decline are visible through area
-          proportions, but no callouts mark the key crossover moments
+        comment: 'Fixed from Attempt 1: new data-verified ''Safari overtakes Edge/IE''
+          crossover callout pushes this from merely readable toward insightful, on
+          top of Chrome''s dominance and Edge/IE''s decline already visible through
+          proportions'
     spec_compliance:
       score: 15
       max: 15
@@ -166,7 +164,7 @@ review:
         passed: true
         comment: Title matches required format exactly; legend labels match series
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -175,7 +173,7 @@ review:
         max: 6
         passed: true
         comment: 10 years x 5 categories with meaningful compositional shifts (Safari
-          overtaking Edge/Firefox, IE/Edge decline)
+          overtaking Edge, IE/Edge decline)
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -184,12 +182,12 @@ review:
         comment: Neutral, comprehensible business/tech scenario (browser market share)
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Sums correctly to 100% each year and directional trends are right,
-          but Safari desktop share (~20%) is roughly double its real-world value while
-          Edge is understated
+        passed: true
+        comment: 'Fixed from Attempt 1: Safari (7-10%) and Edge (5-21% declining)
+          are now realistic; residual issue: ''Other'' balloons to an implausible
+          20% by 2024'
     code_quality:
       score: 10
       max: 10
@@ -217,7 +215,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity for a measured legend
+        comment: No fake functionality, appropriate complexity for measured legend
+          and annotation halo
       - id: CQ-05
         name: Output & API
         score: 1
@@ -241,14 +240,16 @@ review:
         passed: true
         comment: In-browser getBBox()-measured legend centering and stackOffsetExpand
           are genuinely D3-distinctive
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - normalization
   styling:
-  - publication-ready
+  - grid-styling
+  - edge-highlighting

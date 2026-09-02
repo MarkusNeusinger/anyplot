@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-stacked-percent: 100% Stacked Area Chart
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-02
+// Quality: 93/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 const inkMuted = t.theme === "light" ? "#6B6A63" : "#A8A79F";
