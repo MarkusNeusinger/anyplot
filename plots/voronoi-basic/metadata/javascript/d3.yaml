@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: voronoi-basic
 created: '2026-09-02T10:27:20Z'
-updated: '2026-09-02T10:31:37Z'
+updated: '2026-09-02T10:40:35Z'
 generated_by: claude-sonnet
 workflow_run: 33619060957
 issue: 3415
@@ -12,37 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
   - Greedy graph coloring over the Delaunay adjacency (delaunay.neighbors) guarantees
-    neighboring Voronoi cells never share a color — a genuine improvement over naive
-    index-cycled coloring, which usually produces same-color neighbors.
-  - 'Idiomatic, current D3 API usage: d3.Delaunay.from + delaunay.voronoi([0,0,iw,ih]).renderCell(i),
-    clipped exactly to the plot bounding box as the spec requires.'
+    neighboring Voronoi cells never share a color — verified across the full tessellation
+    in both renders.
+  - 'The attempt-1 weaknesses (stock axis chrome, no visual hierarchy) are directly
+    and effectively addressed: shorter/thinner tick marks and domain line, plus a
+    focal-cell treatment (higher opacity, heavier border, outer ring, directional
+    leader-line callout) that gives the chart a clear point of entry.'
   - Exact 2400x2400 square canvas, no edge clipping in either render, and identical
     data colors between light and dark themes (only chrome flips).
   - Deterministic LCG-seeded data generation with a realistic, neutral framing (retail
     store service areas across a metro grid).
   weaknesses:
-  - Design excellence is mostly stock d3 axis chrome (default tick marks + domain
-    line, standard bold title) with token colors mapped in but no further custom typography
-    or visual-refinement pass — e.g. consider thinner/removed tick lines or a lighter
-    domain stroke to let the cell colors read as the primary content.
-  - No visual hierarchy or focal callout across the tessellation — every cell and
-    seed point carries equal visual weight, so the chart doesn't guide the viewer
-    to a specific story beyond 'here is the tessellation'.
+  - Design excellence is still capped by fairly conventional axis treatment (standard
+    bottom+left frame, no further typographic differentiation) — a future pass could
+    consider removing the domain line entirely or using a lighter grid-only reference
+    instead of a boxed axis frame, given the cell colors already carry the primary
+    content.
+  - Only one cell in the tessellation receives the focal treatment; that's an appropriate,
+    restrained choice for this plot type, but there's room to reinforce the story
+    further if this spec is revisited.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "Store Service Areas · voronoi-basic · javascript · d3 · anyplot.ai" centered at top, fully visible with margin above (confirmed via a top-edge crop — no clipping). X-axis label "Distance East of City Center (km)" and rotated Y-axis label "Distance North of City Center (km)" both dark and clearly readable (confirmed via a left-edge crop — the rotated label sits with clear space before the tick labels, not clipped). Tick labels (0-40) dark and legible. Thin bounding-box rectangle outlines the clip region in a soft ink tone.
-      Data: 20 Voronoi cells fill the bounding box in a mix of Imprint palette hues (green, blue-gray, lavender/purple, teal, tan/amber, red-brown) at 0.55 fill-opacity with off-white cell borders; adjacent cells never share the same color (verified in a dense-cluster crop around x=15-30, y=0-12 — every touching pair differs). Seed points are prominent brand-green (#009E73) circles with an off-white stroke, sitting clearly inside their own cell and not overlapping each other or any text.
+      Chrome: Bold dark title "Store Service Areas · voronoi-basic · javascript · d3 · anyplot.ai" centered at top, fully visible with margin above, no clipping. X-axis label "Distance East of City Center (km)" and rotated Y-axis label "Distance North of City Center (km)" both dark and clearly readable. Tick labels (0-40) dark and legible.
+      Data: 20 Voronoi cells fill the bounding box in Imprint hues at 0.55 fill-opacity with off-white seams; adjacent cells never share a color. Brand-green (#009E73) seed points sit inside their own cells. The focal cell (largest service area, bottom-left) is rendered at 0.75 opacity with a heavier ink border, an outer ring around its seed, and a leader-line callout labeled "Largest service area".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and both axis labels render in light/white text, clearly legible against the dark background — no dark-on-dark issue found. Tick labels and the bounding-box outline are likewise light-toned and visible.
-      Data: Same five non-green cell hues and the same brand-green seed-point color as the light render — only the background/text/grid chrome flipped, data colors are identical. Cells remain clearly distinguishable from the dark background and from each other.
+      Chrome: Title and both axis labels render in light text, clearly legible against the dark background — no dark-on-dark issue found. Tick labels and the focal callout text are likewise light-toned and visible.
+      Data: Same cell hues and the same brand-green seed-point color as the light render — only background/text/border chrome flipped, data colors identical. Cells remain clearly distinguishable from the dark background and from each other.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,22 +57,20 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes; explicit
-          font sizes set (16-22px)
+        comment: All text readable in both themes; explicit font sizes set (16-22px)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/marker/data collisions, including in the densest point cluster
+        comment: No text/marker/data collisions, including near the focal callout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Seed points (r=9) and cell fills clearly visible against off-white/near-black
-          chrome; 20 points is not dense enough to need alpha tuning beyond the 0.55
-          already used
+        comment: Seed points and cell fills clearly visible against off-white/near-black
+          chrome
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -82,8 +83,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400 square canvas, symmetric margins keep cells a true
-          square, no overflow or clipping
+        comment: Exact 2400x2400 square canvas, symmetric margins, no overflow or
+          clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -96,32 +97,32 @@ review:
         max: 2
         passed: true
         comment: Seed points use palette[0]=#009E73; cell fills drawn from tokens.palette;
-          both renders theme-correct backgrounds
+          both renders theme-correct
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Deliberate graph-coloring choice shows intent, but overall chrome
-          (axis, title) is standard d3 defaults with token colors applied
+        passed: true
+        comment: Graph-coloring + focal cell emphasis show real design intent; axis
+          chrome still fairly restrained beyond token-color mapping
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Default tick marks and domain line retained; no spine removal or
-          grid subtlety pass
+        passed: true
+        comment: 'Improved from attempt 1: short tick marks, thin low-contrast domain
+          line, opacity contrast between focal/non-focal cells'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: All cells/points carry equal visual weight; no focal emphasis or
-          hierarchy
+        passed: true
+        comment: Focal-cell callout (opacity, border, outer ring, leader line, label)
+          gives the tessellation a clear entry point and hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -137,8 +138,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Clipped to bounding box, cells distinguishable via color, seed points
-          clearly marked
+        comment: Clipped to bounding box, cells distinguishable via non-adjacent coloring,
+          seed points clearly marked
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -162,8 +163,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full tessellation, clip box, colored cells, and marked seeds all
-          present
+        comment: Full tessellation, clip box, colored cells, marked seeds, and focal
+          callout all present
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -204,7 +205,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity for the coloring algorithm
+        comment: No fake interactivity, appropriate complexity for coloring + callout
+          logic
       - id: CQ-05
         name: Output & API
         score: 1
@@ -229,11 +231,12 @@ review:
         max: 5
         passed: true
         comment: delaunay.neighbors()-driven greedy coloring is a genuinely distinctive
-          use of the API beyond basic tessellation rendering
+          use of the API
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
