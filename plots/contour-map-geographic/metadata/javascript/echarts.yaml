@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: contour-map-geographic
 created: '2026-09-01T23:25:13Z'
-updated: '2026-09-01T23:50:26Z'
+updated: '2026-09-02T00:12:43Z'
 generated_by: claude-sonnet
 workflow_run: 33570208345
 issue: 3772
@@ -12,81 +12,72 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/echarts/plot-dark.html
-quality_score: 79
+quality_score: 93
 review:
   strengths:
-  - Ocean void from attempt 1 is fixed — the west side of the canvas now has a deliberate,
-    theme-adaptive water tint instead of dead space
-  - Per-loop labeling is fixed — every closed contour ring at an index elevation now
-    gets its own label(s) instead of one label per threshold value, so both the northern
-    and southern peak rings are labeled
-  - Correct imprint_seq sequential colormap for elevation, and all chrome (title,
-    axis, colorbar, contour label boxes, coastline) is theme-adaptive and reads correctly
-    in both renders
+  - 'Coastline seam bug from attempt 2 is fully fixed: the ocean-polygon fill and
+    grid-snapped land heatmap tiles now share the same boundary, with no page-background
+    bleed-through at any staircase step in either theme'
+  - 'Contour lines are now genuinely smooth: Chaikin smoothing is correctly applied
+    to the final rendered path (not discarded), so the 1200 m and 2400 m index rings
+    render as clean rounded curves instead of faceted polygons'
+  - The notch/spike marching-squares artifacts on the north- and south-peak 2400 m
+    rings from attempt 2 are gone — the duplicate closing-vertex bug was fixed before
+    smoothing, and all three peak rings (including the un-ringed third summit's 1200
+    m contour) are now artifact-free
+  - Correct imprint_seq sequential colormap for elevation, with a well-justified semantic
+    exception (Imprint blue for the ocean tint, per the style guide's 'water → blue'
+    example) and fully theme-adaptive chrome in both renders
   - Deterministic, realistic Cascade-like elevation dataset with three peaks of varying
-    height and a plausible coastal-to-inland gradient
+    height, a plausible coastal-to-inland gradient, and per-loop index-contour labeling
+    so every closed ring carries its own value
   weaknesses:
-  - 'Coastline seam bug: a jagged strip of page-background color bleeds through between
-    the ocean-polygon fill and the land heatmap tiles at nearly every staircase step
-    in both themes (worst around 45.8-46.3°N, where it forms one continuous visible
-    gap). This looks like a registration mismatch between the continuous fractional
-    coastline used for oceanPolygon and the grid-snapped land tiles in gridData (tiles
-    only start at the first whole grid index where elevationAt > 0, which can sit
-    up to half a cell east of the true coastline) — grow the ocean polygon (or the
-    land tile test) by half a cell so the two fills overlap instead of leaving a gap,
-    or draw the polygon/tiles from the same snapped coordinates.'
-  - 'Contour lines still faceted despite the added smoothing pass: the spec requires
-    ''smooth contour lines,'' and while resolution/Chaikin-smoothing were added since
-    attempt 1, the rendered rings (especially the 1200 m / 2400 m index contours around
-    all three peaks) still show clear straight, axis-aligned segments with sharp corners
-    rather than rounded curves — increase Chaikin iterations (e.g. 3-4) and/or verify
-    the smoothing is actually applied to the final rendered path (not just computed
-    and discarded), and re-inspect at zoom before resubmitting.'
-  - 'Two concrete rendering artifacts near peak contours: a small rectangular notch
-    protrudes from the top of the north peak''s 2400 m ring, and a short vertical
-    spike/tail protrudes below the south peak''s 2400 m ring — both look like marching-squares
-    saddle-point or chain-stitching bugs rather than intentional geometry; trace contourSegments/chainSegments
-    for these two specific loops to find the mis-stitched segment.'
+  - 'Cosmetic only: the land heatmap tiles still form a visible grid-stairstep edge
+    along the coast beneath the smooth coastline stroke (inherent to per-cell heatmap
+    fill); not a defect now that the fill-registration gap is fixed, but a future
+    refinement could clip the heatmap to the smooth coastline curve for an even cleaner
+    edge'
+  - The marching-squares/Chaikin/chaining pipeline requires several helper functions
+    (coastLon, elevationAt, contourSegments, chainSegments, chaikinSmooth, projectPoint)
+    — well justified by the algorithm, but less flat than a typical KISS echarts snippet
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Cascade Range Elevation · contour-map-geographic · javascript · echarts · anyplot.ai" is bold dark text, centered top, fully readable. Axis titles "Longitude"/"Latitude" and the degree-formatted tick labels (e.g. "124.6°W", "47.6°N") render in dark grey and are clearly legible. The vertical colorbar (visualMap) on the right is labeled "2920 m" (top) and "0 m (coast)" (bottom) in dark grey text — readable.
-      Data: A light blue-grey ocean tint now fills the west ~40% of the canvas (fixed from attempt 1's blank void), separated from a green-to-blue sequential (imprint_seq) land heatmap by a dark jagged coastline. Three peak clusters (deep-blue cores) are visible at different scales. Black contour lines overlay the surface every 400 m; the bold 1200 m and 2400 m index lines now carry multiple labels per closed loop (fixed from attempt 1's one-label-per-threshold), in small light rounded-rect background boxes. On close zoom, the coastline shows a jagged strip of page-background color bleeding through between the ocean fill and the land heatmap at nearly every staircase step — a seam/registration bug. The contour rings themselves remain visibly faceted/polygonal (octagon-shaped) rather than smooth curves despite the added Chaikin-smoothing code, and two specific artifacts are visible: a small rectangular notch atop the north peak's 2400 m ring, and a short vertical spike below the south peak's 2400 m ring.
+      Chrome: Title "Cascade Range Elevation · contour-map-geographic · javascript · echarts · anyplot.ai" is bold dark text, centered top, fully visible and not clipped (~65% of canvas width). Axis titles "Longitude"/"Latitude" and degree-formatted tick labels (e.g. "124.6°W", "47.4°N") render in dark grey and are clearly legible. The vertical colorbar (visualMap) on the right is labeled "2927 m" (top) and "0 m (coast)" (bottom) in dark grey text, fully visible with no edge clipping.
+      Data: A light blue-grey ocean tint (Imprint blue, semantic water exception) fills the west of the canvas, cleanly bordered by a smooth dark coastline stroke with no visible gap or page-background bleed-through against the green-to-blue sequential (imprint_seq) land heatmap — the attempt-2 seam bug is gone on close zoom-in. Three peak clusters (deep-blue cores) are visible at different scales; the two clusters that exceed 2400 m render as clean, smooth, well-rounded circular rings (no faceting, no notch/spike artifacts), and the third, lower summit's 1200 m ring is likewise smooth. Black contour lines overlay the surface every 400 m; the bold 1200 m/2400 m index lines carry per-loop labels in small light rounded-rect background boxes, with no overlap between labels, lines, or axis text.
       Legibility verdict: PASS — no light-on-light issues; all text and lines are clearly distinguishable from the cream background.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Same composition as the light render but flipped to light-colored chrome — title and axis text render in near-white, tick labels in light grey, contour lines flip to a light/white stroke, and the coastline uses a light grey line. Contour label boxes flip to a dark fill with light text and stay fully readable.
-      Data: The green-to-blue elevation gradient and the colorbar are visually identical to the light render — confirms only chrome (not data colors) changes between themes. The same coastline seam bug is present here too, showing as a near-black (page-background) jagged strip bleeding through at the coast — same defect as light, both themes. The faceted contour rings and the north-peak notch / south-peak spike artifacts are present here as well.
+      Data: The green-to-blue elevation gradient and the colorbar are visually identical to the light render, confirming only chrome (not data colors) changes between themes. The coastline is clean here too — no dark/page-background bleed-through at the land/ocean boundary. The same smooth, artifact-free contour rings around all three peaks are present.
       Legibility verdict: PASS — no dark-on-dark failures found; all title/axis/tick/contour-label text is clearly legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title scaled to length, axis 16px, ticks
-          14px, colorbar 13px); all readable in both themes
+        comment: All font sizes explicitly set and scaled; title, axis, tick, and
+          colorbar text fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Coastline seam lets page-background color bleed through between the
-          ocean-polygon fill and land heatmap tiles at nearly every staircase step,
-          both themes
+        passed: true
+        comment: Coastline seam bug fixed — no fill/text collisions found on close
+          zoom in either theme
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Contour lines remain visibly faceted/polygonal around all three peaks
-          despite added smoothing; a notch artifact on the north peak's 2400 m ring
-          and a spike artifact on the south peak's 2400 m ring
+        passed: true
+        comment: Contour rings around all three peaks are smooth and artifact-free
+          (notch/spike bugs fixed); appropriate line weights for bold vs. minor contours
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -95,49 +86,51 @@ review:
         comment: Green-blue sequential gradient is CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Ocean void from attempt 1 is fixed with a theme-adaptive tint, but
-          the seam artifact undermines the clean fill
+        comment: Correct square 2400x2400 canvas, good use of plot area, no cut-off
+          elements, title comfortably within width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Longitude/Latitude) with tick labels carrying
-          implicit units (° N/W)
+        comment: Descriptive Longitude/Latitude axis titles with degree-unit tick
+          labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_seq colormap for single-polarity elevation data;
-          theme-correct chrome and backgrounds in both renders
+        comment: Correct imprint_seq colormap for elevation; justified semantic-exception
+          blue for ocean; theme-correct backgrounds and chrome in both renders
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        comment: Distinctive marching-squares + custom-series technique, but the coastline
-          seam and contour artifacts read as unfinished polish
+        comment: Hand-rolled marching-squares + Chaikin-smoothed contour rendering,
+          semantic ocean tint, and clean typography read as genuinely polished, not
+          generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        comment: Ocean fill and per-loop labeling are refinements over attempt 1,
-          but the seam gap and faceted rings pull refinement back down
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        comment: Per-loop labeling gives every peak ring a value now; index contours
-          create a clear visual hierarchy toward the peaks
+        comment: No chartjunk or spines, subtle grid, generous whitespace; minor cosmetic
+          grid-stairstep visible on the heatmap-tile coastline edge beneath the smooth
+          coastline stroke
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Bold, labeled index contours create a clear visual hierarchy guiding
+          the eye toward each summit
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,42 +141,47 @@ review:
         comment: Correct contour-lines-on-geographic-map type
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Contour labeling, colorbar, coastline, and now ocean basemap all
-          present, but lines are still not smooth as the spec requires
+        comment: Smooth labeled contour lines, filled land elevation surface, coastline
+          basemap context, and colorbar legend all present — smoothness requirement
+          now met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped to y/x, all data visible
+        comment: Lat/lon correctly mapped to y/x, full grid visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar legend labeled correctly
+        comment: Title format correct with descriptive prefix; colorbar legend labeled
+          with min/max values
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Three peaks of varying height, each now individually labeled per
-          loop; north-peak notch and south-peak spike artifacts are slightly distracting
+        passed: true
+        comment: Three peaks of varying height, ocean/land boundary, index contours
+          all individually labeled per loop
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, plausible Cascade-like elevation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: Elevation range and geographic extent are factually plausible for
           the region type
     code_quality:
@@ -210,29 +208,30 @@ review:
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI or interactivity, reasonable complexity
+        comment: No fake UI or interactivity, complexity is proportionate to the algorithm
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         comment: 'Correctly initializes on #container with animation disabled'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        comment: Idiomatic heatmap + visualMap usage; contour/coastline/ocean overlays
-          rely on lower-level custom series since ECharts has no native contour type
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        comment: Hand-rolled marching-squares contour algorithm with Chaikin smoothing
-          and chain-based multi-labeling is a genuinely distinctive ECharts capability
-  verdict: REJECTED
+        comment: Idiomatic heatmap + visualMap usage; contour/coastline/ocean overlays
+          correctly use custom series since ECharts has no native contour type
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        comment: Hand-rolled, bug-fixed marching-squares contour algorithm with Chaikin
+          smoothing, segment chaining, and per-loop multi-labeling is a genuinely
+          distinctive ECharts capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
