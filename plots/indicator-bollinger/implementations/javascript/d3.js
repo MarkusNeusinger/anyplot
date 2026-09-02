@@ -64,6 +64,30 @@ const y = d3
   .nice()
   .range([ih, 0]);
 
+// --- Volatility squeeze annotation (spec-sanctioned callout) -------------------
+// The narrowed-shock window (day 55-69) feeds a trailing 20-day rolling stdev,
+// so the band itself doesn't visibly pinch until that window is fully inside
+// the trailing lookback — around day 67-77. Highlight where the band is
+// actually visibly narrow, not where the underlying shocks were dampened.
+const squeezeX0 = x(dates[67]);
+const squeezeX1 = x(dates[77]);
+g.append("rect")
+  .attr("x", squeezeX0)
+  .attr("y", 0)
+  .attr("width", squeezeX1 - squeezeX0)
+  .attr("height", ih)
+  .attr("fill", t.ink)
+  .attr("fill-opacity", 0.05);
+
+g.append("text")
+  .attr("x", (squeezeX0 + squeezeX1) / 2)
+  .attr("y", 18)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-style", "italic")
+  .text("Volatility squeeze");
+
 // --- Gridlines -----------------------------------------------------------------
 g.append("g")
   .attr("class", "grid")
@@ -83,35 +107,31 @@ const area = d3
 
 g.append("path").datum(bandData).attr("fill", t.palette[1]).attr("fill-opacity", 0.16).attr("d", area);
 
-const bandLine = (accessor) =>
-  d3
-    .line()
-    .x((d) => x(d.date))
-    .y((d) => y(accessor(d)))
-    .curve(bandCurve);
-
+const upperLine = d3.line().x((d) => x(d.date)).y((d) => y(d.upper)).curve(bandCurve);
 g.append("path")
   .datum(bandData)
   .attr("fill", "none")
   .attr("stroke", t.palette[1])
-  .attr("stroke-width", 1.75)
-  .attr("d", bandLine((d) => d.upper));
+  .attr("stroke-width", 2.25)
+  .attr("d", upperLine);
 
+const lowerLine = d3.line().x((d) => x(d.date)).y((d) => y(d.lower)).curve(bandCurve);
 g.append("path")
   .datum(bandData)
   .attr("fill", "none")
   .attr("stroke", t.palette[1])
-  .attr("stroke-width", 1.75)
-  .attr("d", bandLine((d) => d.lower));
+  .attr("stroke-width", 2.25)
+  .attr("d", lowerLine);
 
 // --- Middle band (20-day SMA), dashed, ink-neutral reference line --------------
+const smaLine = d3.line().x((d) => x(d.date)).y((d) => y(d.sma)).curve(bandCurve);
 g.append("path")
   .datum(bandData)
   .attr("fill", "none")
   .attr("stroke", t.ink)
   .attr("stroke-width", 2)
   .attr("stroke-dasharray", "7,5")
-  .attr("d", bandLine((d) => d.sma));
+  .attr("d", smaLine);
 
 // --- Close price line (brand green, most prominent series) ---------------------
 const closeLine = d3
@@ -198,4 +218,16 @@ svg
   .attr("fill", t.ink)
   .style("font-size", `${titleFontSize}px`)
   .style("font-weight", "600")
+  .style("letter-spacing", "0.3px")
   .text(title);
+
+// Brand-green accent rule under the title, echoing the primary close-price series
+svg
+  .append("line")
+  .attr("x1", width / 2 - 42)
+  .attr("x2", width / 2 + 42)
+  .attr("y1", 66)
+  .attr("y2", 66)
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 3)
+  .attr("stroke-linecap", "round");
