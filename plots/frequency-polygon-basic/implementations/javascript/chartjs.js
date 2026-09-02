@@ -3,10 +3,6 @@
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
 // Quality: 85/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
-// anyplot.ai
-// frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -76,7 +72,7 @@ const datasets = groups.map((g, i) => {
     borderWidth: 3,
     fill: true,
     tension: 0,
-    pointRadius: points.map((_, idx) => (idx === 0 || idx === points.length - 1 ? 0 : 2.5)),
+    pointRadius: points.map((_, idx) => (idx === 0 || idx === points.length - 1 ? 0 : 4)),
     pointBackgroundColor: t.palette[i],
     pointBorderColor: t.pageBg,
     pointBorderWidth: 1,
@@ -111,8 +107,10 @@ new Chart(canvas, {
     scales: {
       x: {
         type: "linear",
+        min: minVal - binWidth / 2,
+        max: maxVal + binWidth / 2,
         ticks: { color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { display: false },
         title: { display: true, text: "Reaction Time (ms)", color: t.ink, font: { size: 16 } },
       },
       y: {
