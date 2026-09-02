@@ -1,0 +1,255 @@
+library: highcharts
+language: javascript
+specification_id: cat-box-strip
+created: '2026-09-02T14:58:43Z'
+updated: '2026-09-02T15:12:17Z'
+generated_by: claude-sonnet
+workflow_run: 33644704672
+issue: 2695
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Strip markers now carry a background-colored edge stroke (lineColor: t.pageBg,
+    lineWidth: 1), fixing attempt 1''s flat/edgeless markers and giving clear point
+    definition against the box fill and neighboring points.'
+  - 'Jitter spread was widened from ±0.275 to ±0.32 of category width, visibly reducing
+    overplotting in the two densest groups (Car: 80 pts, Bus: 65 pts) versus attempt
+    1.'
+  - 'Full spec feature coverage retained: median/Q1/Q3 box, IQR-fenced whiskers, jittered
+    semi-transparent strip points, deliberately varying sample sizes across groups
+    (80/65/50/35 - ''sample size awareness''), and genuine outliers (bus delays at
+    91/95) rendered beyond the whisker.'
+  - Box, whiskers, and median are drawn from primitive SVG shapes (renderer.path/rect)
+    anchored to real axis pixel coordinates via toPixels(), correctly working around
+    the unavailable highcharts-more boxplot module.
+  - Imprint palette applied in canonical order (green/lavender/blue/ochre) and kept
+    identical between light and dark renders; all chrome (ink, inkSoft, grid) is theme-adaptive
+    via window.ANYPLOT_TOKENS.
+  - Each series keeps Highcharts' default per-index marker symbol (circle/diamond/square/triangle),
+    giving free redundant shape encoding across the four categories.
+  weaknesses:
+  - Residual clumping remains in the densest groups (Car, Bus) despite the widened
+    jitter - a further nudge to ±0.36-0.38 or trimming marker radius to ~3.5px in
+    those groups would separate points even more cleanly, though this is now a minor
+    polish item rather than a legibility problem.
+  - Box stroke width (2.5px) is visually heavier than the whisker/median lines (2-3px),
+    a small weight imbalance that doesn't hurt readability but could be tightened
+    for a more uniform line hierarchy.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "cat-box-strip · javascript · highcharts · anyplot.ai" is bold dark ink, clearly legible; x-axis title "Transportation Mode" and y-axis title "Commute Time (minutes)" are dark-gray (inkSoft) and legible; tick labels (0-100 on y, category names on x) are legible; horizontal gridlines are subtle/light and don't compete with data.
+      Data: Four groups - Car (green #009E73 box + jittered circles), Bus (lavender box + diamonds, includes two outlier points near 91/95 above the whisker), Bike (blue box + squares), Walk (ochre box + triangles). First categorical series is confirmed brand green. Box shows median line, Q1/Q3 edges, whiskers extend to the IQR fence; strip points are semi-transparent, jittered around each category's x position, and now carry a subtle background-colored edge stroke that separates them from the box fill and each other.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis titles, and tick labels all switch to light/off-white ink and remain clearly readable against the dark surface; no dark-on-dark text found. Gridlines remain subtle (light, low-opacity).
+      Data: Identical box/strip layout and colors to the light render (green/lavender/blue/ochre, same outlier points visible for Bus) - confirms only chrome flips between themes, data colors are constant. Marker edge strokes are visible in this theme too (background-colored, so darker here).
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 22px, axis titles 16px, ticks 14px); all
+          text readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers now carry a background-colored edge stroke and jitter was
+          widened, fixing attempt 1's edgeless/clumped markers; minor residual clumping
+          remains in the two densest groups (Car, Bus).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; no red-green-only signal used.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No clipping/overflow; good margins on both renders.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ('Commute Time (minutes)').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, canonical order, theme-correct backgrounds
+          in both renders.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom SVG box/whisker construction, box fill opacity, jittered strip
+          overlay with edge-stroked markers, and per-series shape variation go well
+          beyond generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean spines/grid and generous whitespace; the marker edge stroke
+          fix closes the gap flagged in attempt 1.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Box + strip combination clearly conveys both summary stats and raw
+          distribution per group, with outliers visually called out.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct box-plot-with-strip-overlay type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median/Q1/Q3/whiskers, jitter+transparency, sample-size variation,
+          outliers-with-context all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend correctly omitted since x-axis
+          categories already label each color.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows median, quartiles, whiskers, outliers, and raw points together.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Commute time by transportation mode - plausible, neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10-95 minute range with sensible per-mode means/spreads.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (lcg, randNormal, quantile, drawBoxes) -
+          justified by the statistics needed, but more structure than the simplest
+          possible script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG RNG, deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only uses provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for the library
+          workaround.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node usage, no explicit width/height, animation disabled
+          everywhere.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of chart.renderer primitives plus scatter series, exactly
+          matching the recommended workaround for the missing boxplot module.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Highcharts.color().setOpacity() utility, categorical axis with explicit
+          tickPositions, and per-series default marker symbols used to good effect.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - quantile-calculation
+  styling:
+  - alpha-blending
+  - publication-ready
+  - edge-highlighting
