@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: histogram-returns-distribution
 created: '2026-09-02T01:15:26Z'
-updated: '2026-09-02T01:21:21Z'
+updated: '2026-09-02T01:31:32Z'
 generated_by: claude-sonnet
 workflow_run: 33578219432
 issue: 3751
@@ -12,53 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correct semantic use of the amber (#DDCC77) anchor for tail-event bars, matching
-    its documented warning/caution role, and of the theme-adaptive neutral token (ANYPLOT_NEUTRAL
-    = INK) for the normal-fit reference line.
-  - 'All spec-required features present: normal distribution overlay fitted to the
-    data, stats box with mean/std/skewness/kurtosis, tail-region highlighting beyond
-    2 standard deviations, density normalization, and an appropriate bin count (30)
-    for 252 observations.'
-  - 'Clean, minimalist chrome: top/right spines removed, subtle 15%-alpha gridlines,
-    and the legend frame removed per the decoration-removal checklist.'
-  - Both renders are fully readable with identical data colors (brand green + amber)
-    across light/dark and theme-correct chrome (backgrounds, text, grid).
-  - Canvas is exactly 3200x1800, reproducible via Random.seed!(42), and the code is
-    clean, single-pass KISS structure with no unused imports.
+  - Title fontsize increased from 20 to 25 as requested — title now spans ~41% of
+    canvas width (up from ~33%), comfortably legible without overflowing or looking
+    squeezed.
+  - The stats callout box (poly! Rect2f) was reshaped from a 0.26-relative-height
+    box to 0.17, now hugging the four lines of Mean/Std Dev/Skewness/Excess Kurtosis
+    text tightly instead of leaving a large empty band below the text.
+  - Bin count reduced from 30 to 22 (still within the spec's 20-50 recommended range),
+    producing a slightly smoother silhouette while preserving the fat-tail/skew signal.
+  - Legend is now built declaratively via `Legend(fig[1, 2], ax; ...)`, auto-collecting
+    entries from the axis's own labeled plot objects instead of manual handle construction
+    — a genuinely idiomatic Makie pattern that directly addresses the prior review's
+    Library Mastery feedback.
+  - 'All spec-required features remain present and correct: normal-distribution overlay,
+    stats box, tail-region highlighting beyond 2σ with the amber semantic-warning
+    color, density normalization, and theme-correct chrome/data colors identical across
+    both renders.'
   weaknesses:
-  - Title spans only ~33% of the canvas width (measured ~1051px of 3200px) for the
-    mandated 58-char title, well under the 70-85% the style guide expects for this
-    title format — the plot reads a bit top-heavy with excess empty space above the
-    axes. Increase titlesize from 20 toward ~24-26 for a more on-brand, prominent
-    title while staying clear of overflow.
-  - The stats callout box (top-left, poly! Rect2f(0.02, 0.72, 0.34, 0.26)) is noticeably
-    taller than its 4 lines of text require — roughly half the box height below the
-    text is empty. Shrink the box height (e.g. to ~0.16-0.18 relative units) so it
-    hugs the stats text more tightly.
-  - 'Design Excellence is solid but not exceptional: the interior of the distribution
-    is quite jagged (alternating tall/short bins) purely as an artifact of manually
-    binning 252 points into 30 bins — consider trimming to ~20-24 bins for a slightly
-    smoother, more publication-ready silhouette without losing the fat-tail/skew signal.'
-  - 'Library Mastery is generic: barplot!/lines!/Legend/text!/poly! are used correctly
-    but idiomatically, with no feature that''s genuinely distinctive to Makie (the
-    relative-space text/poly placement has direct equivalents in matplotlib''s transAxes
-    or plotly''s paper coordinates). Consider leveraging a more Makie-specific capability
-    (e.g. GridLayout composition, a custom recipe, or Makie''s declarative Legend
-    construction from plot objects) to raise distinctiveness.'
+  - Title still spans only ~41% of canvas width — improved from ~33% but still below
+    the 50-70% house-style proportion for this title format; a further bump toward
+    titlesize 28-30 would bring it fully on-brand without risking overflow.
+  - The distribution interior still shows a sharp spike-then-valley pattern immediately
+    left of the mode (density jumps from ~0.09 to ~0.42 then back to ~0.09 across
+    three adjacent bins) — largely sampling noise from n=252 at 22 bins, but it visually
+    competes with the fat-tail/skew message that is the plot's core purpose. Consider
+    16-18 bins for a smoother central silhouette, or accept as a fair tradeoff at
+    the current bin count.
+  - No direct annotation calls out the fat-tail / negative-skew insight (e.g. a callout
+    arrow or shaded 2σ band boundary) beyond the color-coded tail bins and stats box
+    — Data Storytelling is solid but not maximal.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "histogram-returns-distribution · julia · makie · anyplot.ai" is dark ink, bold, centered above the axes and fully legible though noticeably compact (~33% of canvas width) relative to the mandated-title convention. X-axis label "Daily Return (%)" and y-axis label "Density" are dark ink and clearly readable; tick labels are soft dark gray and legible. Gridlines are thin and subtle. A callout box (cream elevated background, thin gray border) in the upper-left shows Mean/Std Dev/Skewness/Excess Kurtosis in bold dark text, fully readable, though the box has noticeable empty space below the text. The legend at the right (no frame, blends into the page background) lists "Daily returns (|z| ≤ 2σ)", "Tail events (|z| > 2σ)", and "Normal fit" in soft dark gray text — all legible.
-      Data: Histogram bars are brand green (#009E73) for the bulk of the distribution and amber/gold for bins beyond ±2σ, correctly matching the Imprint brand-green-first rule and the amber semantic-warning anchor. A black dashed normal-fit curve overlays the histogram, clearly visible against the bars and background.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-returns-distribution · julia · makie · anyplot.ai" is dark ink, bold, centered above the axes, fully legible and now visibly larger/more prominent than the prior attempt (titlesize 25 vs 20), spanning roughly 41% of the canvas width. X-axis label "Daily Return (%)" and y-axis label "Density" are dark ink and clearly readable; tick labels are soft dark gray and legible. Gridlines are thin, subtle, 15%-alpha. A callout box (cream elevated background, thin gray border) in the upper-left shows Mean: -0.16%, Std Dev: 1.27%, Skewness: -0.90, Excess Kurtosis: 2.24 in bold dark text, now sized tightly around the four text lines with minimal wasted space. The unframed legend at the right lists "Daily returns (|z| ≤ 2σ)", "Tail events (|z| > 2σ)", and "Normal fit" in soft dark gray text — all legible, no overlap with plot content.
+      Data: Histogram bars are brand green (#009E73) for the bulk of the distribution (|z| ≤ 2σ) and amber/gold (#DDCC77) for the tail bins beyond ±2σ, correctly matching the Imprint brand-green-first rule and the amber semantic-warning anchor. A black dashed normal-fit curve overlays the histogram, clearly visible against both the bars and background.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues; no clipped text at any canvas edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis labels, and tick labels have flipped to light off-white/gray tones and remain fully legible against the dark background. Gridlines are thin and subtle (light, low-alpha). The stats callout box has flipped to a dark elevated background (#242420-like) with light bold text, fully readable. Legend text is light gray and legible, still unframed and blending into the page background.
-      Data: Histogram bars are the identical brand green (#009E73) and amber (#DDCC77) as the light render — confirmed unchanged. The normal-fit curve has correctly flipped from black to white/light dashed (uses the theme-adaptive "neutral" token), remaining clearly visible against the dark bars and background.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels have flipped to light off-white/gray tones and remain fully legible against the dark background at the same larger title size. Gridlines are thin, subtle, low-alpha light lines. The stats callout box has flipped to a dark elevated background (~#242420) with light bold text, fully readable and tightly sized around the text. Legend text is light gray, legible, unframed.
+      Data: Histogram bars are the identical brand green (#009E73) and amber (#DDCC77) as the light render — confirmed unchanged. The normal-fit curve has correctly flipped from black to white/light dashed (theme-adaptive INK token), remaining clearly visible against the dark bars and background.
       Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
@@ -70,23 +66,23 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set, readable in both themes; title is comfortably
-          clear of overflow but noticeably smaller/narrower than the house-style proportion
-          expected for the mandated title format, leaving excess whitespace above
-          the axes.
+        comment: Title fontsize raised 20->25, now ~41% canvas width (up from ~33%),
+          fully legible in both themes; still shy of the 50-70% house-style proportion
+          so not full marks.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render.
+        comment: No overlapping text or elements in either render; stats box and legend
+          both clear of data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars sized appropriately for 252 points across 30 bins with gap=0;
-          normal-fit line at linewidth=3 is clearly visible.
+        comment: Bars sized appropriately for 252 points across 22 bins with gap=0;
+          normal-fit line at linewidth=3 clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -98,8 +94,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Axes occupy ~84% of canvas width, legend sits adjacent to the plot
-          (not isolated), no cut-off content.
+        comment: Canvas gate passed at 3200x1800; stats box now proportioned to its
+          content; no cut-off content at any edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -113,35 +109,34 @@ review:
         max: 2
         passed: true
         comment: 'First series is #009E73; tail bars correctly use the amber semantic
-          anchor; backgrounds and chrome are theme-correct in both renders; data colors
-          identical across themes.'
+          anchor; backgrounds/chrome theme-correct; data colors identical across themes.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a plain default via correct semantic-anchor color usage, but
-          the jagged bin heights and oversized empty stats box keep it short of publication-level
+        passed: true
+        comment: Improved via the tightened stats box and fewer bins, but a sharp
+          spike-then-valley artifact near the mode still slightly undercuts publication-level
           polish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Spines removed top/right, subtle grid, legend frame removed per the
-          decoration checklist; deduct for the oversized/empty stats callout box.
+        comment: Spines removed, subtle grid, frameless legend, and the previously-flagged
+          oversized stats box is now fixed to hug its text tightly.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Color-coded tail events plus the normal-fit overlay create real visual
-          hierarchy toward the spec's core risk-analysis purpose, though no explicit
-          annotation calls out the fat-tail/skew insight directly.
+          hierarchy toward the spec's risk-analysis purpose, but no explicit annotation
+          calls out the fat-tail/skew insight directly.
     spec_compliance:
       score: 15
       max: 15
@@ -158,7 +153,7 @@ review:
         max: 4
         passed: true
         comment: Normal overlay, stats box (mean/std/skew/kurtosis), tail highlighting,
-          density normalization, 30 bins — all present.
+          density normalization, appropriate bin count — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -182,7 +177,7 @@ review:
         max: 6
         passed: true
         comment: Shows fat left tail, negative skew, and explicit tail events, though
-          the noisy interior bins slightly obscure the core unimodal shape.
+          the spike-valley interior bins slightly obscure the core unimodal shape.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -223,7 +218,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Manual binning is justified by the need for per-bin tail coloring;
+        comment: Manual binning justified by the per-bin tail coloring requirement;
           no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
@@ -232,7 +227,7 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png via px_per_unit=2, current CairoMakie API.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -241,21 +236,21 @@ review:
         max: 5
         passed: true
         comment: Correct, idiomatic Axis/barplot!/lines!/Legend usage; manual binning
-          instead of hist!() is a reasonable deviation given the tail-coloring requirement.
+          instead of hist!() remains a reasonable deviation given the tail-coloring
+          requirement.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No feature genuinely unique to Makie is exploited; relative-space
-          text/poly placement has direct equivalents in other libraries (transAxes,
-          paper coordinates).
-  verdict: REJECTED
+        passed: true
+        comment: Legend now built declaratively via Legend(fig[1,2], ax; ...), auto-collecting
+          entries from the axis's labeled plot objects — directly addresses the prior
+          review's feedback and is a genuinely Makie-idiomatic pattern (figure-position-as-layoutable-legend).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   - layer-composition
   patterns:
   - data-generation
