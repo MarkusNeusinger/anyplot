@@ -119,19 +119,29 @@ const Y_MAX = Math.max(R_MAX, ...portfolios.map((p) => p.y)) * 1.04;
 
 const pct = (v) => `${(v * 100).toFixed(0)}%`;
 
-// Capital Market Line: r = rf + Sharpe_tan * risk, drawn via axis-scale hooks
+// Capital Market Line: r = rf + Sharpe_tan * risk, drawn via axis-scale hooks.
+// Clip the endpoint to the visible plot bounds (intersect the ray with y = Y_MAX) so the
+// line never overshoots the chart, and place the label ~60% along the visible segment
+// (well clear of both the top-right legend and the bottom-left risk-free reference line).
+const CML_X_END = SHARPE_TAN > 0 ? Math.min(X_MAX, (Y_MAX - RF) / SHARPE_TAN) : X_MAX;
+const CML_Y_END = RF + SHARPE_TAN * CML_X_END;
+const CML_LABEL_X = 0.6 * CML_X_END;
+const CML_LABEL_Y = RF + SHARPE_TAN * CML_LABEL_X;
+
 function CapitalMarketLine() {
   const xScale = useXScale("risk");
   const yScale = useYScale("return");
   if (!xScale || !yScale) return null;
   const x1 = xScale(0);
   const y1 = yScale(RF);
-  const x2 = xScale(X_MAX);
-  const y2 = yScale(RF + SHARPE_TAN * X_MAX);
+  const x2 = xScale(CML_X_END);
+  const y2 = yScale(CML_Y_END);
+  const xLabel = xScale(CML_LABEL_X);
+  const yLabel = yScale(CML_LABEL_Y);
   return (
     <g>
       <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={t.palette[1]} strokeWidth={2.5} strokeDasharray="10,6" />
-      <text x={x2 - 12} y={y2 - 12} textAnchor="end" fontSize={14} fontWeight={600} fill={t.palette[1]}>
+      <text x={xLabel} y={yLabel - 22} textAnchor="middle" fontSize={14} fontWeight={600} fill={t.palette[1]}>
         Capital Market Line
       </text>
     </g>
@@ -154,7 +164,7 @@ export default function Chart() {
       <ChartContainer
         width={width}
         height={chartH}
-        margin={{ top: 24, right: 64, bottom: 76, left: 112 }}
+        margin={{ top: 24, right: 64, bottom: 76, left: 132 }}
         sx={{ "& .MuiLineElement-root": { strokeWidth: 4 } }}
         series={[
           {
@@ -195,7 +205,7 @@ export default function Chart() {
             xAxisId: "risk",
             yAxisId: "return",
             zAxisId: "flat",
-            color: t.amber,
+            color: t.palette[0],
             markerSize: 20,
             label: "Max-Sharpe (Tangency) Portfolio",
           },
@@ -250,7 +260,12 @@ export default function Chart() {
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4,4", strokeWidth: 1, opacity: 0.5 }}
         />
         <ChartsXAxis axisId="risk" tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }} labelStyle={{ fontSize: 16, fill: t.ink }} />
-        <ChartsYAxis axisId="return" tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }} labelStyle={{ fontSize: 16, fill: t.ink }} />
+        <ChartsYAxis
+          axisId="return"
+          tickFontSize={30}
+          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
+          labelStyle={{ fontSize: 16, fill: t.ink }}
+        />
         <ChartsLegend
           position={{ vertical: "top", horizontal: "right" }}
           slotProps={{
