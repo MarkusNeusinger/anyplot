@@ -123,11 +123,16 @@ jobs:
           # either way: a runner behind Cloudflare's bot management may see a
           # 403 that Bing's own fetch does not, and IndexNow verifies itself.
           for i in $(seq 1 16); do
-            if curl -fsS --max-time 15 -o /dev/null "https://${HOST}/${INDEXNOW_KEY}.txt"; then
-              echo "::notice::key file reachable"; break
-            fi
+            status=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' \
+              "https://${HOST}/${INDEXNOW_KEY}.txt" || echo 000)
+            case "$status" in
+              200) echo "::notice::key file reachable"; break ;;
+              # Deployed, but this runner is blocked at the edge: no point in
+              # waiting — Bing's own fetch is not subject to that block.
+              403) echo "::notice::key file answers 403 to this runner (edge bot management); treating as deployed"; break ;;
+            esac
             if [ "$i" -eq 16 ]; then
-              echo "::warning::key file not confirmed reachable after 8 min; submitting anyway"
+              echo "::warning::key file not confirmed reachable after 8 min (last status ${status}); submitting anyway"
             else
               sleep 30
             fi

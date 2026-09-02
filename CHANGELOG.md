@@ -41,6 +41,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The IndexNow workflow no longer waits eight minutes behind an edge 403** — its
+  key-file readiness loop treated every non-200 as "not deployed yet"; a GitHub runner
+  that Cloudflare's bot management answers with 403 would have slept the full budget on
+  every run. A 403 now counts as deployed (Bing's own fetch is not subject to that
+  block), and the final warning names the last status seen.
 - **Implementation pages no longer share one meta description per spec** — the SEO
   proxy reused the spec description verbatim as the `<meta name="description">` and OG
   description of every implementation page, so up to 15 library pages and their hub
