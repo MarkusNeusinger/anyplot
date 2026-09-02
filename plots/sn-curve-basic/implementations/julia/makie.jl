@@ -19,7 +19,6 @@ const IMPRINT_PALETTE = [
     colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
-const ANYPLOT_AMBER = colorant"#DDCC77"
 
 # --- Data: fatigue test coupons across 8 stress levels, 4 specimens each ---
 stress_levels = [550.0, 500.0, 450.0, 400.0, 350.0, 300.0, 275.0, 260.0]
@@ -50,6 +49,17 @@ fit_stress = exp10.(intercept .+ slope .* log10.(fit_cycles))
 ultimate_strength = 600.0
 yield_strength = 450.0
 endurance_limit = 250.0
+
+# Fatigue-region boundaries: low-cycle/high-cycle split at the conventional
+# 10^3-cycle mark; high-cycle/infinite-life split at the cycle count where the
+# Basquin fit crosses the endurance limit.
+xlim_lo, xlim_hi = 50.0, 1.5e6
+low_cycle_boundary = 1.0e3
+infinite_life_boundary = clamp(
+    exp10((log10(endurance_limit) - intercept) / slope),
+    low_cycle_boundary * 1.5,
+    xlim_hi * 0.98,
+)
 
 # --- Plot --------------------------------------------------------------------
 fig = Figure(
@@ -90,14 +100,31 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
-xlims!(ax, 50.0, 1.5e6)
+xlims!(ax, xlim_lo, xlim_hi)
 ylims!(ax, 200.0, 700.0)
 
-hlines!(ax, [ultimate_strength]; color = IMPRINT_PALETTE[3], linestyle = :dash,
+# Fatigue-region demarcation: subtle dotted separators + bottom-edge labels,
+# called out per the spec's low-cycle / high-cycle / infinite-life regions.
+vlines!(ax, [low_cycle_boundary, infinite_life_boundary];
+        color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.4),
+        linestyle = :dot, linewidth = 1.5)
+
+region_label_y = 207.0
+mid_low  = exp10(0.5 * (log10(xlim_lo) + log10(low_cycle_boundary)))
+mid_high = exp10(0.5 * (log10(low_cycle_boundary) + log10(infinite_life_boundary)))
+mid_inf  = exp10(0.5 * (log10(infinite_life_boundary) + log10(xlim_hi)))
+text!(ax, mid_low, region_label_y; text = "Low-Cycle", fontsize = 11,
+      color = INK_SOFT, align = (:center, :bottom))
+text!(ax, mid_high, region_label_y; text = "High-Cycle", fontsize = 11,
+      color = INK_SOFT, align = (:center, :bottom))
+text!(ax, mid_inf, region_label_y; text = "Infinite Life", fontsize = 11,
+      color = INK_SOFT, align = (:center, :bottom))
+
+hlines!(ax, [ultimate_strength]; color = IMPRINT_PALETTE[2], linestyle = :dash,
         linewidth = 2.5, label = "Ultimate Strength")
-hlines!(ax, [yield_strength]; color = IMPRINT_PALETTE[4], linestyle = :dash,
+hlines!(ax, [yield_strength]; color = IMPRINT_PALETTE[3], linestyle = :dash,
         linewidth = 2.5, label = "Yield Strength")
-hlines!(ax, [endurance_limit]; color = ANYPLOT_AMBER, linestyle = :dash,
+hlines!(ax, [endurance_limit]; color = IMPRINT_PALETTE[4], linestyle = :dash,
         linewidth = 2.5, label = "Endurance Limit")
 
 lines!(ax, fit_cycles, fit_stress; color = INK_SOFT, linewidth = 3,
@@ -105,6 +132,15 @@ lines!(ax, fit_cycles, fit_stress; color = INK_SOFT, linewidth = 3,
 
 scatter!(ax, cycles, stress; color = IMPRINT_PALETTE[1], markersize = 16,
          strokewidth = 1.5, strokecolor = PAGE_BG, label = "Test specimens")
+
+# Annotate where the Basquin fit crosses the endurance limit — the point
+# beyond which infinite fatigue life is predicted.
+n_label = infinite_life_boundary >= 1e6 ?
+    string(round(infinite_life_boundary / 1e6; digits = 2), "M") :
+    string(round(Int, infinite_life_boundary / 1e3), "k")
+text!(ax, infinite_life_boundary * 0.97, endurance_limit * 1.1;
+      text = "fit crosses endurance limit\nN ≈ $(n_label)",
+      fontsize = 11, color = INK_SOFT, align = (:right, :bottom))
 
 axislegend(ax; position = :rt, labelcolor = INK_SOFT, framevisible = false,
            labelsize = 12)
