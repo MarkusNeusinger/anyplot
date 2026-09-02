@@ -135,11 +135,14 @@ function SmithGrid() {
       ))}
       {RESISTANCE_VALUES.map((r) => {
         const p = toPx((r - 1) / (1 + r), 0);
+        // r=1 sits exactly at the chart center, right next to the Z0 marker —
+        // give it extra clearance so the two labels don't cluster together.
+        const labelOffset = r === 1 ? 26 : 18;
         return (
           <ChartsText
             key={`rl-${r}`}
             x={p.x}
-            y={p.y + 18}
+            y={p.y + labelOffset}
             text={String(r)}
             style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "middle" }}
           />
@@ -164,7 +167,7 @@ function SmithGrid() {
       <circle cx={toPx(0, 0).x} cy={toPx(0, 0).y} r={5} fill="none" stroke={t.ink} strokeWidth={2} />
       <ChartsText
         x={toPx(0, 0).x}
-        y={toPx(0, 0).y - 20}
+        y={toPx(0, 0).y - 26}
         text="Z0"
         style={{ fontSize: 15, fill: t.ink, textAnchor: "middle", fontWeight: 500 }}
       />
@@ -196,14 +199,34 @@ function ImpedanceLocus() {
         .filter((p) => labeledFreqs.includes(p.fGHz))
         .map((p) => {
           const px = toPx(p.re, p.im);
+          // Nudge the label outward along the radial direction from the chart
+          // center (same technique as the reactance-arc labels above) rather
+          // than a fixed pixel offset — points near |Γ|=1 (e.g. 1 GHz at
+          // |Γ|≈0.975) would otherwise sit on top of the boundary circle and
+          // converging grid arcs.
+          const origin = toPx(0, 0);
+          const dx = px.x - origin.x;
+          const dy = px.y - origin.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          const ux = dx / dist;
+          const uy = dy / dist;
+          const LABEL_OFFSET_PX = 26;
+          const lx = px.x + ux * LABEL_OFFSET_PX;
+          const ly = px.y + uy * LABEL_OFFSET_PX;
           return (
             <g key={p.fGHz}>
               <circle cx={px.x} cy={px.y} r={9} fill={brand} stroke={t.pageBg} strokeWidth={2.5} />
               <ChartsText
-                x={px.x + 14}
-                y={px.y - 12}
+                x={lx}
+                y={ly}
                 text={`${p.fGHz} GHz`}
-                style={{ fontSize: 14, fill: t.ink, fontWeight: 500 }}
+                style={{
+                  fontSize: 14,
+                  fill: t.ink,
+                  fontWeight: 500,
+                  textAnchor: ux >= 0.15 ? "start" : ux <= -0.15 ? "end" : "middle",
+                  dominantBaseline: uy >= 0.15 ? "hanging" : uy <= -0.15 ? "auto" : "central",
+                }}
               />
             </g>
           );
