@@ -1,0 +1,245 @@
+library: d3
+language: javascript
+specification_id: indicator-sma
+created: '2026-09-02T01:54:08Z'
+updated: '2026-09-02T02:07:18Z'
+generated_by: claude-sonnet
+workflow_run: 33580818257
+issue: 3651
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - The Close line is now the clear visual anchor (stroke-width 3.5, full opacity)
+    versus the thinner, slightly-transparent SMA overlays (2.5, 0.9) - directly fixes
+    the prior review's prominence weakness
+  - New crossover annotation (dashed vertical rule + ringed marker + adaptively-placed
+    label) directly supports the spec's 'detecting golden cross / death cross signals'
+    application and adds genuine data storytelling
+  - Correct Imprint palette (brand green first, canonical order for the 3 SMAs) with
+    fully correct theme-adaptive chrome in both renders - no dark-on-dark or light-on-light
+    issues
+  - Deterministic, seeded data generation with a correctly implemented rolling SMA
+    (proper null-padding per period's warm-up window), including SMA 200's late appearance
+  - Clean, KISS-structured code - no imports beyond the global d3, no fake interactivity
+  weaknesses:
+  - Only the first crossover in the series is annotated (Death Cross); the more narratively
+    relevant Golden Cross later in the year (SMA 20 crossing back above SMA 50 ahead
+    of the H2 rally) is not surfaced - consider annotating both crossovers, or the
+    most recent one, for a more complete golden/death cross story per the spec's Applications
+    section
+  - Crossover-finding and curve techniques are competent but still fairly generic
+    for a D3-only review - a more distinctive D3-specific technique (e.g. d3.bisector
+    for the crossover lookup, a clip-path reveal, or interactive-ready scales) would
+    strengthen Library Mastery further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark title "indicator-sma · javascript · d3 · anyplot.ai" centered at top; centered horizontal legend below (Close, SMA 20, SMA 50, SMA 200); "Price (USD)" label top-left; currency-formatted y-axis ticks; monthly x-axis ticks rotated -30deg; subtle horizontal y-axis-only gridlines. A "Death Cross" annotation (dashed vertical rule, ringed marker, text label) sits near April 2024. All readable against the light background.
+      Data: Close is a thick, fully-opaque brand-green (#009E73) line reading as the visual anchor; SMA 20 lavender (#C475FD), SMA 50 blue (#4467A3), SMA 200 ochre (#BD8233) are thinner and slightly transparent overlays. SMA 200 correctly appears only from ~September onward (200-period warm-up).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Title and "Price (USD)" label in light ink; tick/legend text in softer light grey; gridlines faint but visible; Death Cross annotation legible in light ink.
+      Data: Same four colors as light render (green, lavender, blue, ochre) - confirmed identical; only chrome flipped. No dark-on-dark issues - all text clearly legible; brand green remains vivid.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes at full and
+          mobile scale; title fits without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between the crossover label, legend, and data lines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Close line (width 3.5, opacity 1) now reads as the visual anchor;
+          SMA overlays (width 2.5, opacity 0.9) clearly visible but secondary
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe for 4 series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins, nothing clipped, legend near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price (USD) descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green #009E73, canonical order for SMAs, correct
+          theme backgrounds in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Correct Imprint palette, intentional line-weight/opacity hierarchy,
+          and the new crossover annotation lift this above a generic default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Implicit L-shaped frame, subtle y-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Death Cross annotation is a real storytelling win, but only the first
+          crossover is surfaced - the later Golden Cross ahead of the H2 rally isn't
+          called out
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line SMA overlay chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Close + SMA 20/50/200, legend, y-axis grid all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=price, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; legend labels match spec's suggested
+          format exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 spec fields present; SMA 200's late appearance correctly reflects
+          its longer warm-up window
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral random-walk stock-price scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible price range and one-year trading span
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small, purposeful helper functions only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG random walk
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, only the global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper scales, axes, line generator with curveMonotoneX, idiomatic
+          .datum() binding
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Genuine D3-specific idioms used, but nothing that couldn't be replicated
+          in another library with more effort
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
