@@ -4,6 +4,7 @@ Tests for SEO helper functions.
 Directly tests the pure helper functions in api/routers/seo.py.
 """
 
+import html
 import json
 import re
 from datetime import datetime
@@ -445,13 +446,15 @@ class TestBuildImplHtml:
         spec = _mock_spec([mpl, makie])
         mpl_page = _build_impl_html(spec, mpl, "code()", "https://api.anyplot.ai/og/card.png")
         makie_page = _build_impl_html(spec, makie, "code()", "https://api.anyplot.ai/og/card.png")
-        mpl_meta = re.search(r'<meta name="description" content="([^"]*)"', mpl_page).group(1)
-        makie_meta = re.search(r'<meta name="description" content="([^"]*)"', makie_page).group(1)
+        mpl_match = re.search(r'<meta name="description" content="([^"]*)"', mpl_page)
+        makie_match = re.search(r'<meta name="description" content="([^"]*)"', makie_page)
+        assert mpl_match and makie_match
+        mpl_meta, makie_meta = mpl_match.group(1), makie_match.group(1)
         assert mpl_meta.startswith("Basic Scatter Plot in Matplotlib (Python): ")
         assert makie_meta.startswith("Basic Scatter Plot in Makie.jl (Julia): ")
         assert mpl_meta != makie_meta
-        # the body copy stays the plain spec description
-        assert spec.description in mpl_page
+        # the visible body copy stays the plain spec description
+        assert f"<p>{html.escape(spec.description)}</p>" in mpl_page
 
     def test_no_code_no_pre_block(self) -> None:
         page = self._page(code=None)
