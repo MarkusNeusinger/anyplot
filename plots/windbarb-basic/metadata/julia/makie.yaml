@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: windbarb-basic
 created: '2026-09-02T10:29:06Z'
-updated: '2026-09-02T10:48:00Z'
+updated: '2026-09-02T10:57:35Z'
 generated_by: claude-sonnet
 workflow_run: 33619040962
 issue: 3694
@@ -12,69 +12,66 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 90
 review:
   strengths:
-  - 'Full wind-barb vocabulary is genuinely present and verified pixel-by-pixel: half
-    barbs, full barbs, a filled triangular pennant (confirmed via crop around the
-    gale station), and an open calm-circle marker without a staff all render correctly.'
+  - 'Render pipeline issue from the previous review is resolved: plot-light.png/plot-dark.png
+    now match current HEAD — the dashed reference ring + crosshair at the vortex center
+    are visible in both renders, and axis labels correctly read ''Distance east/north
+    of vortex center (km)''.'
+  - 'Full wind-barb vocabulary confirmed via pixel-level crop: half barbs, full barbs,
+    a filled triangular pennant at the gale-force station, and an open calm-circle
+    marker without a staff all render correctly and match standard meteorological
+    notation.'
   - Data is a physically coherent Rankine-vortex wind field with a guaranteed calm
-    eye and a guaranteed gale-force station, so the barb field forms a genuine, readable
-    cyclonic swirl rather than random noise.
+    eye and a guaranteed gale-force station, producing a genuinely readable cyclonic
+    (counterclockwise) swirl rather than random noise; the new reference ring + crosshair
+    now explicitly call out the vortex center instead of requiring the viewer to infer
+    it from barb orientation alone.
   - 'Theme-adaptive chrome is correctly threaded through Axis kwargs (titlecolor,
-    xlabelcolor/ylabelcolor, ticklabelcolor, spinecolor); backgrounds correctly flip
-    between #FAF8F1 and #1A1A17 while the brand-green #009E73 barbs stay pixel-identical
+    xlabelcolor/ylabelcolor, tick label/tick colors, spine colors); backgrounds correctly
+    flip between #FAF8F1 and #1A1A17 while the brand-green #009E73 barbs stay pixel-identical
     between renders.'
-  - 'Current source (HEAD, commit ed6f490a5) shows real library-mastery work beyond
-    attempt 1: per-station RGBAf color arrays (speed-keyed alpha) passed directly
-    into the batched linesegments!/poly! calls, plus a dashed reference ring + crosshair
-    at the vortex center and a reframed ''vortex center'' axis-label wording — all
-    directly responsive to the prior review''s DE-03/DQ-03/LM-02 feedback.'
+  - 'Idiomatic, efficient Makie usage: all staffs/ticks batched into single linesegments!
+    calls and pennants into one poly! call, each paired with a matching per-primitive
+    RGBAf color array for speed-keyed alpha — a genuinely Makie-native technique.'
   - 'Clean KISS structure: explicit Random.seed!(42), only used imports (CairoMakie,
     Colors, Random), no fake interactive elements, canonical save("plot-$(THEME).png",
-    fig; px_per_unit=2) call, and the saved canvas measures exactly 3200×1800.'
+    fig; px_per_unit=2) call, and the saved canvas measures exactly 3200x1800.'
   weaknesses:
-  - 'CRITICAL — stale render pipeline mismatch: plot-light.png/plot-dark.png in this
-    review do not reflect the current implementation (HEAD commit ed6f490a5, the ''fix(makie):
-    address review feedback'' commit). The rendered axis labels still read ''Distance
-    east/north of low-pressure center (km)'' and no reference ring or crosshair is
-    visible anywhere near the vortex center — but the current .jl source already renamed
-    the labels to ''Distance east/north of vortex center (km)'' (lines 141-142) and
-    already adds a dashed reference ring + crosshair at (center_x, center_y) with
-    radius_max=1.6 (lines 162-171). Verified with pixel-level scans: zero pixels matching
-    the expected INK_SOFT-at-alpha-0.35 blend color exist anywhere within a 900x700px
-    box centered on the vortex, in either theme. These images appear to be carried
-    over from the pre-repair attempt rather than freshly rendered from current HEAD.
-    Action needed: regenerate plot-light.png/plot-dark.png from the current commit
-    before the next review — do NOT ask the implementation to re-add the ring/crosshair
-    or re-word the axis labels, since commit ed6f490a5 already did both; only the
-    render artifact is out of date.'
-  - Because the reviewed artifact is stale, VQ-05/DE-03/DQ-03 could not be visually
-    re-verified against the intended fixes (reference ring for the vortex-center callout,
-    and the reframed 'vortex center' domain-scale wording) — score is capped pending
-    a fresh render.
-  - 'As literally rendered: Design Excellence still reads as ''well-configured default''
-    — a single monochrome hue with no visible reference mark at the vortex center,
-    so the cyclonic pattern still requires the viewer to infer the center from barb
-    orientation alone rather than seeing it called out directly (this is exactly what
-    the current source''s ring/crosshair addition is meant to fix, once re-rendered).'
+  - At the gale-force station, the half-barb tick and the filled pennant triangle
+    geometrically overlap (the half-tick's origin point sits inside the pennant's
+    footprint given the current tick_spacing/full_len/half_len ratios), producing
+    a slightly cluttered 'notched arrowhead' look under close inspection rather than
+    the clean sequential staff-then-pennant-then-tick spacing of standard notation.
+    Minor at full-image scale but worth a small geometry tweak (e.g. increase tick_spacing
+    slightly or shorten half_len) for a future revision.
+  - Aesthetic Sophistication is still constrained by the single-hue (brand green only)
+    palette across all ~48 stations; the per-station speed-keyed alpha gradient is
+    a nice touch but is subtle enough that it barely reads as an intensity cue at
+    a glance — a slightly wider alpha range or a secondary visual cue (e.g. staff
+    length keyed to speed) would sharpen the storytelling further.
+  - No annotation labels the vortex center itself (e.g. a small 'vortex center' text
+    near the crosshair) — the ring and crosshair mark it visually, but a reader unfamiliar
+    with the convention must infer what the dashed circle and cross represent from
+    context alone.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "windbarb-basic · julia · makie · anyplot.ai" in bold dark ink, clearly legible. Axis labels read "Distance east of low-pressure center (km)" / "Distance north of low-pressure center (km)" in matching dark ink; tick labels (0, 5, 10 on x; 0.0, 2.5, 5.0 on y) in softer gray, all fully visible, nothing clipped. Only left/bottom spines present, no grid lines.
-      Data: All ~48 stations render in brand green #009E73 — staffs, feathers, one filled triangular pennant (confirmed via pixel crop near the gale station), and one open calm-circle marker with no staff. Barb orientation forms a clear cyclonic (counterclockwise) swirl. NO dashed reference ring or crosshair is visible anywhere near the apparent vortex center, despite the current source code (HEAD) containing code to draw one.
+      Chrome: Title "windbarb-basic · julia · makie · anyplot.ai" in bold dark ink, centered, clearly legible, occupying ~35-40% of plot width (well within bounds, no overflow). Axis labels read "Distance east of vortex center (km)" / "Distance north of vortex center (km)" in matching dark ink — confirming this render reflects current HEAD (previous review's stale render still said "low-pressure center"). Tick labels (0, 5, 10 on x; 0.0, 2.5, 5.0 on y) in softer gray, all fully visible, nothing clipped. Only left/bottom spines present, no grid lines.
+      Data: ~48 stations render in brand green #009E73 — staffs, feathers (half and full barbs), one filled triangular pennant at the gale-force station (confirmed via pixel crop), and one open calm-circle marker with no staff near the vortex center. A dashed reference ring plus a crosshair (+) mark is now clearly visible centered inside the barb field, directly calling out the vortex center — this is new versus the previous (stale) review and matches the current .jl source. Barb orientation forms a clear cyclonic (counterclockwise) swirl around the marked center. Speed-keyed alpha is present (stations vary subtly in opacity) but is a subtle effect at full-image scale.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
-      Note: axis-label wording ("low-pressure center") and the missing ring/crosshair do NOT match the current .jl source, which already renames the labels to "vortex center" and adds the ring/crosshair. This render appears stale (pre-dates commit ed6f490a5).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and axis-label text (still "low-pressure center") now in light ink, tick labels in lighter gray — all clearly legible against the dark surface, no dark-on-dark failures.
-      Data: Barb geometry, pennant, and calm-circle marker render in the identical brand green #009E73 as the light render — confirmed unchanged between themes; only chrome flipped. Same as the light render, no reference ring/crosshair is visible near the vortex center.
+      Chrome: Same title and the corrected "vortex center" axis-label wording, now in light ink; tick labels in lighter gray — all clearly legible against the dark surface, no dark-on-dark failures.
+      Data: Barb geometry, the filled pennant, the calm-circle marker, and the dashed reference ring + crosshair all render in the identical brand green #009E73 / INK_SOFT gray as the light render — confirmed pixel-identical data colors between themes, only chrome (background, text, ring/crosshair ink) flipped correctly.
       Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures.
-      Note: same staleness concern as the light render — this PNG does not reflect the ring/crosshair or label-wording changes present in the current source.
+
+    Cross-check: cropping a 600x500px region around the gale-force station (near the reference ring, both themes) confirms the filled pennant triangle and an overlapping half-barb tick — the full barb vocabulary (half, full, pennant, calm) is genuinely present, though the half-tick geometrically overlaps the pennant's interior at that one station (minor, noted in weaknesses).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -82,23 +79,26 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit titlesize=20/xlabelsize=14/ylabelsize=14/ticklabelsize=12;
-          readable in both themes. Title occupies ~35-40% of width — comfortably within
-          bounds, no overflow.
+        comment: Explicit titlesize=20/xlabelsize=14/ylabelsize=14/xticklabelsize=12/yticklabelsize=12;
+          readable in both themes; title occupies ~35-40% of width, comfortably within
+          bounds.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
         comment: Jittered grid keeps all ~48 barbs, ticks, and labels clear of one
-          another; no collisions in either render.
+          another; minor exception is a geometric overlap between the half-barb tick
+          and the pennant triangle at the single gale-force station (confirmed via
+          pixel crop), a small clutter artifact rather than a text/data collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: linewidth=2.2 and calm-circle markersize=18 are well-scaled for this
-          sparse (~48-point) dataset.
+          sparse (~48-point) dataset; per-station speed-keyed alpha adds a subtle
+          intensity cue without harming visibility.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -111,15 +111,17 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas measures exactly 3200x1800 (canvas gate passed). Plot area
-          fills the canvas with balanced margins, nothing cut off.
+        comment: Canvas measures exactly 3200x1800 (canvas gate passed, no gate-failure
+          file present). Plot area fills the canvas with balanced margins, nothing
+          cut off in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive with units (km); title matches the mandated
-          format.
+        comment: Both axis labels descriptive with units (km) and now correctly read
+          'vortex center' (confirmed fresh render matches current source); title matches
+          the mandated format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -128,34 +130,37 @@ review:
         comment: 'First (only) series is #009E73 in both renders; backgrounds correctly
           #FAF8F1/#1A1A17; chrome theme-correct in both.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'As rendered: clean single-hue barb field reads as a well-configured,
-          domain-appropriate default. Current source adds a per-station speed-keyed
-          alpha gradient which is not confirmable in this stale render.'
+        passed: true
+        comment: Dashed reference ring + crosshair at the vortex center and per-station
+          speed-keyed alpha (now visually confirmed in a fresh render) lift this above
+          a generic default, but the plot remains a single-hue field without further
+          palette or hierarchy work.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Top/right spines removed, no grid clutter, generous whitespace. No
-          further polish (reference marks) visible in the rendered artifact.
+        passed: true
+        comment: Top/right spines removed, no grid clutter, generous whitespace, and
+          the new subtle dashed ring/crosshair are a genuine refinement now visible
+          in the render.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
+        passed: true
         comment: Rankine-vortex data produces a genuine visible cyclonic swirl with
-          a guaranteed calm eye and gale extremity — real hierarchy, but as rendered
-          nothing marks the vortex center itself, so the pattern still requires inference.
-          Current source's ring/crosshair addition targets exactly this gap but isn't
-          visible in this stale render.
+          a guaranteed calm eye and gale extremity; the newly-visible reference ring
+          + crosshair now explicitly anchor the vortex center instead of leaving it
+          to inference, a real improvement over the prior (stale) render — though
+          no text label names the center, so a first-time reader must still infer
+          the ring's meaning from context.
     spec_compliance:
       score: 15
       max: 15
@@ -190,7 +195,7 @@ review:
         comment: Title matches the mandated 'windbarb-basic · julia · makie · anyplot.ai'
           format exactly; single-series plot correctly omits a redundant legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -209,13 +214,13 @@ review:
           observations around a vortex.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: As rendered, the ~10km x 6km domain with a 1.6km circulation radius
-          still carries the 'low-pressure center' label wording, which reads as unusually
-          small for a synoptic low. Current source already renamed this to 'vortex
-          center' framing, but that fix isn't visible in this stale render.
+        passed: true
+        comment: Fresh render confirms the axis labels and framing now correctly describe
+          a mesocyclone-scale vortex ('vortex center', ~10km x 6km domain, 1.6km circulation
+          radius) rather than the stale render's 'low-pressure center' wording, which
+          read as an inconsistent scale for a synoptic low.
     code_quality:
       score: 10
       max: 10
@@ -271,9 +276,8 @@ review:
         passed: true
         comment: Per-station speed-keyed alpha via RGBAf color arrays passed directly
           to linesegments!/poly! is a genuinely Makie-native technique (native per-vertex/per-primitive
-          color attributes) directly responsive to the prior review's 'not Makie-unique'
-          critique — a real improvement, though not yet at custom-@recipe level.
-  verdict: REJECTED
+          color attributes), a real improvement though not yet at custom-@recipe level.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
