@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: lollipop-grouped
 created: '2026-09-02T02:35:24Z'
-updated: '2026-09-02T02:39:26Z'
+updated: '2026-09-02T02:51:03Z'
 generated_by: claude-sonnet
 workflow_run: 33583176978
 issue: 3485
@@ -12,29 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Regions pre-sorted by total revenue descending — a genuine data-storytelling touch
+  - 'Fixed both weaknesses from the prior review: the title now carries a descriptive
+    prefix, and the coloring now goes through a categorical cgrad/colorrange mapping
+    — a real Makie-specific technique — with a hand-built legend to match'
+  - Regions pre-sorted by total revenue descending, revealing the ranking pattern
     called out in the spec notes
-  - Y-axis ticks hidden in favor of category labels only, x-only subtle gridlines
-    — clean horizontal-lollipop convention
+  - Marker strokes colored to the page background give clean separation where stems
+    and markers overlap
   - Data colors are pixel-identical between light and dark renders; only chrome tokens
     flip
-  - Canvas lands exactly on the 3200x1800 landscape target with resolution=(1600,900)
-    / px_per_unit=2
   weaknesses:
-  - Title occupies only ~25% of plot width at titlesize=20 — well under the ~50-70%
-    guideline for a short, unprefixed mandated title. Consider a descriptive title
-    prefix to both add context and improve visual proportion
-  - No distinctive Makie-specific technique used (e.g. colormap-mapped categorical
-    grouping, custom recipes) — relies on a straightforward per-series loop, which
-    is correct but doesn't showcase library-specific strengths
+  - Title still sits around ~40% of plot width — better than the prior ~25%, but still
+    short of the 50-70% target band. Consider a slightly larger titlesize or a longer
+    descriptive prefix to close the gap.
+  - 'Design Excellence remains close to well-configured default: no additional visual
+    hierarchy beyond the region sort (e.g., emphasizing the leading product line,
+    or a subtle background band per group) — a data-storytelling refinement that could
+    be added.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1.
-      Chrome: Title "lollipop-grouped · julia · makie · anyplot.ai" centered at top, dark ink; xlabel "Quarterly Revenue ($M)" below axis; x-tick labels at 0/50/100; region labels (North America, Asia Pacific, Europe, Latin America) on y-axis; legend bottom-right with Software/Hardware/Services. All readable against light background.
-      Data: First series (Software) uses #009E73 brand green; Hardware uses lavender #C475FD; Services uses blue #4467A3. Thin stems from x=0 to value, circular markers at tips with light-background-colored stroke.
+      Chrome: Title "Quarterly Revenue by Region and Product Line · lollipop-grouped · julia · makie · anyplot.ai" centered at top, dark ink; xlabel "Quarterly Revenue ($M)" below axis; x-tick labels at 0/50/100; region labels (North America, Asia Pacific, Europe, Latin America) on y-axis with tick marks hidden; legend bottom-right (Software/Hardware/Services), frameless. All readable against light background.
+      Data: First series (Software) uses #009E73 brand green; Hardware uses lavender #C475FD; Services uses blue #4467A3. Thin stems from x=0 to value, circular markers at tips with page-background-colored stroke for separation.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -44,7 +46,7 @@ review:
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,7 +54,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; slightly small title
+        comment: All sizes explicit, both themes readable; title improved from prior
+          attempt but still ~40% width, short of 50-70% target
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -64,20 +67,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (26px) for sparse 12-point dataset
+        comment: Markers (26px) and stems well-sized for sparse 12-point dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe, no red-green as sole signal
+        comment: Imprint palette, CVD-safe; page-background marker stroke aids separation
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas exact 3200x1800; title notably below the 50-70% width guideline
-          (~25%)
+        comment: Canvas exact 3200x1800, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -89,9 +91,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct backgrounds both themes'
+        comment: 'First series #009E73, canonical order, correct backgrounds both
+          themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -99,19 +102,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Custom palette and hidden y-ticks, but standard style-guide execution
+        comment: Thoughtful colormap-driven coloring and hand-built legend, but overall
+          a clean standard style-guide execution
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Spines removed, subtle x-only grid, generous whitespace
+        comment: Spines removed, y-ticks hidden, subtle x-only grid, frameless legend,
+          page-background marker strokes
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Sorted by descending total revenue reveals ranking
+        comment: Descending revenue sort reveals ranking, but no further emphasis
+          technique
     spec_compliance:
       score: 15
       max: 15
@@ -139,7 +145,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match series
+        comment: Title format correct with descriptive prefix; legend labels match
+          series
     data_quality:
       score: 15
       max: 15
@@ -149,7 +156,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All grouped-lollipop features shown
+        comment: All grouped-lollipop features shown across regions and product lines
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -189,7 +196,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, manual-legend rationale documented in comment
       - id: CQ-05
         name: Output & API
         score: 1
@@ -197,7 +204,7 @@ review:
         passed: true
         comment: Correct save call and canvas params
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -208,10 +215,12 @@ review:
         comment: Clean Axis/scatter!/lines! usage with theme tokens
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Standard per-series loop, no distinctive Makie-only feature
+        comment: Categorical cgrad/colorrange color-mapping plus hand-built MarkerElement
+          legend — a genuine Makie-specific pattern addressing the prior review's
+          callout
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -226,3 +235,4 @@ impl_tags:
   - publication-ready
   - minimal-chrome
   - grid-styling
+  - edge-highlighting
