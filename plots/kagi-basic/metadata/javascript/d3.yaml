@@ -1,0 +1,257 @@
+library: d3
+language: javascript
+specification_id: kagi-basic
+created: '2026-09-02T02:06:52Z'
+updated: '2026-09-02T02:24:07Z'
+generated_by: claude-sonnet
+workflow_run: 33581305303
+issue: 3341
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Kagi segments now use d3.line() with curveStepBefore instead of raw SVG <line>
+    elements — a genuine D3-shape idiom that directly resolves the attempt-1 LM-02
+    finding
+  - New end-of-line price callout (rounded box, border colored to match the last segment's
+    direction) gives the chart a clear focal point and directly answers the attempt-1
+    data-storytelling weakness
+  - numDays raised 260→320 and REVERSAL_PCT tuned 0.04→0.032, nearly doubling visible
+    reversals (13→22 columns) and much better demonstrating the trend-identification
+    narrative from the spec's Applications section
+  - Refined legend uses rounded color chips instead of raw stroke swatches, reading
+    as an intentional design choice rather than a default
+  - 'Faithful Kagi construction: reversal-threshold pivot detection correctly produces
+    alternating thick-green yang / thin-red yin segments with proper shoulders/waists'
+  - Correct Imprint palette usage with the documented finance semantic exception (profit/up
+    → green, loss/down → red)
+  - Theme-adaptive chrome is fully correct in both renders — title, axis labels, ticks,
+    legend, and the new callout box all read cleanly with no dark-on-dark or light-on-light
+    failures
+  - Deterministic seeded PRNG (mulberry32) driving a plausible regime-drift price
+    series
+  weaknesses:
+  - Yin (down) segments at stroke-width 2.5px are quite thin relative to the 3200px
+    canvas — likely to read as faint at the 400px mobile thumbnail size; consider
+    nudging THIN up slightly (e.g. to 3-3.5px) while keeping the thick/thin contrast
+    ratio intact
+  - curveStepBefore is a fairly common D3 curve; Library Mastery could go further
+    with a more distinctive D3-specific technique (e.g. a custom voronoi-based hover
+    target for the HTML view, or a d3-scale annotation layer) to push past a solid-but-not-exceptional
+    score
+  - Visual hierarchy still leans mainly on color + thickness + the new callout; no
+    annotation calls out the largest single reversal, which the spec's Applications
+    section highlights as a key analytical use case
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "kagi-basic · javascript · d3 · anyplot.ai" centered at top; dark-ink axis titles "Kagi Line Index (3.2% Reversal Threshold)" and "Closing Price ($)"; softer-gray tick labels on both axes; top-right legend with rounded green/red chips labeled "Yang (Up)" / "Yin (Down)". All chrome text is clearly readable against the light background.
+      Data: 22-column Kagi zigzag built from thick green (#009E73) up-segments and thin red (#AE3030) down-segments, ranging roughly $65-$117, with right-angle shoulders/waists at each reversal. A small end-of-line callout ("Last: $86.62") with a red border (matching the final down-direction) sits just right of the last data point, fully inside the canvas margin with no clipping.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, fully legible against the dark surface; legend chips and labels equally readable. No dark-on-dark text anywhere.
+      Data: Identical green/red Kagi geometry and colors to the light render — only chrome flipped, as required. The end-of-line callout box uses the dark elevated-surface fill with the same red border and light-ink text, remaining legible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; sensible size hierarchy (title
+          22px, axis titles 16px, ticks/legend/callout 14px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, callout, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Thick/thin encoding is clear at full res; thin (2.5px) down-segments
+          may read faint at 400px mobile thumbnail
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Thickness gives redundant encoding beyond green/red color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed, no clipping even with the wider right
+          margin for the new callout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels are descriptive with units and dynamically embed the
+          reversal threshold
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0]/palette[4] via documented finance semantic exception;
+          theme-correct backgrounds in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New end-of-line callout and rounded legend chips lift this well past
+          a generic default (was 4/8 in attempt 1)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped implicit axes, no competing grid, refined legend chips;
+          solid but not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Direct ''Last: $86.62'' callout creates a clear focal point, directly
+          answering the attempt-1 feedback'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kagi chart with reversal-threshold direction changes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thick yang/thin yin, shoulders/waists, index-based x-axis, green/red
+          colors all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, full pivot range shown with sensible padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match spec
+          terminology
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 22 Kagi columns now clearly demonstrate reversal/trend narrative,
+          up from 13 in attempt 1
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible regime-drift stock price series, neutral subject matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 320 daily closes -> 22 reversal columns and a $60-125 price range
+          are sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Two small helper functions (PRNG, pivot builder) are necessary for
+          the Kagi algorithm, not incidental complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed mulberry32 PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: d3 global only, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity, appropriate complexity for the Kagi algorithm
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract; no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scales, axes, join pattern, and now d3.line() with a step curve are
+          all idiomatic D3
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Switched from raw SVG <line> to d3.line()+curveStepBefore, directly
+          resolving the attempt-1 finding; curveStepBefore is still a fairly common
+          curve rather than a highly distinctive D3 feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
