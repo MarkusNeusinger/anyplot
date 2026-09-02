@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: lollipop-grouped
+created: '2026-09-02T02:35:55Z'
+updated: '2026-09-02T02:54:26Z'
+generated_by: claude-sonnet
+workflow_run: 33583480158
+issue: 3485
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Top-performer storytelling (highlighted band, accent bar, bold row label, star
+    callout) creates a genuine focal point instead of a flat comparison, directly
+    rewarding DE-03
+  - 'Correct Imprint palette with theme-adaptive chrome: first series is #009E73,
+    categorical data colors are pixel-identical between light and dark renders, only
+    chrome (background/text/grid) flips'
+  - Nested scaleBand (y0 for category, y1 for series) produces clean grouped-lollipop
+    offsets with no overlap across 5 categories x 3 series
+  - Direct value labels next to each dot remove the need to eyeball gridlines, improving
+    legibility at a glance
+  - Legend width/position is computed dynamically via getBBox() and centered, instead
+    of a hardcoded offset
+  - Sorted categories ascending by mean score so the strongest model naturally lands
+    at the top row, reinforcing the highlight
+  weaknesses:
+  - Vertical gridlines run through the highlighted top-performer band at the same
+    opacity as elsewhere, slightly diluting the isolation of the highlight wash —
+    consider suppressing or fading gridlines within the highlighted row band
+  - Design embellishment is limited to a single storytelling device (top-performer
+    highlight); DE-01 aesthetic sophistication would read stronger with one more layer
+    of intentional hierarchy (e.g. subtle value-label color coding or a secondary
+    annotation)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "lollipop-grouped · javascript · d3 · anyplot.ai" is centered, bold, dark ink, clearly readable. A 3-item legend (Accuracy/Precision/Recall) sits below the title with colored dot swatches. X-axis "Score (%)" label and 0%-100% tick labels are dark and legible. Y-axis shows 5 model names (SVM (RBF), Logistic Regression, Random Forest, Gradient Boosting, Neural Network) in dark text, with "Neural Network" bolded. Subtle vertical gridlines are visible but do not dominate.
+      Data: Each category row has three horizontal stems (thin, ~70% opacity) ending in circular dots — green (#009E73, Accuracy), violet (Precision), and slate-blue (Recall) — each with a white-stroked halo separating it from the stem, plus a bold numeric value label to the right of each dot. The top row ("Neural Network") has a soft green highlight wash, a green accent bar on the left edge, and a "★ Top performer — highest accuracy (96.2%)" callout above it. First series is confirmed #009E73.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend labels, axis titles, and tick labels all render in light/white text, clearly visible against the dark background. Gridlines are subtle dark-gray, visible but unobtrusive. The top-performer highlight wash uses a darker green tint appropriate for the dark surface, with the same green accent bar and callout text (in green, still legible).
+      Data: Data colors (green, violet, slate-blue for Accuracy/Precision/Recall) are identical in hue and saturation to the light render — only the chrome (background, text, grid, highlight tint) has flipped. No dark-on-dark failures observed; every tick label, axis label, legend label, and value label is clearly distinguishable from the near-black background.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text (title, legend, axes, value labels, callout) explicitly
+          sized and readable in both themes at full canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, stems, dots, legend, or highlight annotation
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (15 points) uses prominent r=8 dots with white-stroke
+          halos; stems thin and at 0.7 opacity so they read as connectors, not the
+          focal element
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/violet/blue series are hue-distinct (not red-green), adequate
+          contrast against both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift flag); balanced margins, no clipping,
+          no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled 'Score (%)' with units; y-axis categorical labels
+          self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; data colors identical across themes; backgrounds
+          match #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Highlight band, accent bar, bold label, and callout show intentional
+          hierarchy beyond generic defaults; single embellishment layer keeps it just
+          short of exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, minimal chrome; gridlines running
+          through the highlight band slightly dilute the effect
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point (top model) reinforced by three coordinated visual
+          cues (wash, accent, callout) guiding the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped lollipop chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems, circular markers, side-by-side offset within group, legend,
+          horizontal orientation for long labels, meaningful sort order — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=value(0-100%), Y=category with nested series offset; all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required 'lollipop-grouped · javascript · d3 · anyplot.ai'
+          format; legend labels match series names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 categories x 3 series, sorted, all rendered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classifier benchmark (Accuracy/Precision/Recall across 5 models)
+          is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 82-96% range is sensible for classifier metrics
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-level script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 is the injected global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, join() pattern, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of scaleBand/scaleLinear/scaleOrdinal, axisBottom/axisLeft,
+          join() pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Nested band scales for grouping, getBBox-driven dynamic legend centering,
+          conditional tick styling for the highlighted row
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - wide-to-long
+  styling:
+  - alpha-blending
+  - edge-highlighting
