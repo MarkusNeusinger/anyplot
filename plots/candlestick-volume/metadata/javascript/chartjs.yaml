@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: candlestick-volume
+created: '2026-09-02T14:19:28Z'
+updated: '2026-09-02T14:25:11Z'
+generated_by: claude-sonnet
+workflow_run: 33640331929
+issue: 3068
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Candlesticks built via the idiomatic Chart.js floating-bar technique (two overlaid
+    `bar` datasets with `[low, high]` and `[min(open,close), max(open,close)]` ranges)
+    since Chart.js has no native candlestick type without a community plugin — exactly
+    the correct native approach per the library's no-workarounds rule.
+  - Dual-pane layout matches the spec's 70-75%/25-30% split precisely (72%/28% via
+    flexbox), and both panes pin their y-axis width to 76px via `afterFit`, keeping
+    the shared category gridlines pixel-aligned across panes.
+  - Bullish/bearish coloring follows the documented finance semantic exception (palette[0]
+    green for close ≥ open, palette[4] matte red for close < open) applied consistently
+    to both candlesticks and volume bars.
+  - A custom `syncCrosshair` Chart.js plugin synchronizes a hover-driven crosshair
+    across both chart instances, satisfying the spec's cross-pane cursor requirement
+    as a genuine interactive feature (explicitly guarded to never appear in the static
+    screenshot).
+  - 'Data shows real variety: both bullish and bearish candles, doji-like narrow-range
+    days, and a plausible uptrend-consolidation-pullback arc with volume that visually
+    correlates with larger price moves.'
+  - Deterministic LCG-seeded data generation; theme-adaptive chrome (ink, inkSoft,
+    grid tokens) correctly threaded through both chart configs so light/dark renders
+    both pass legibility.
+  - Title correctly follows the mandated format with a descriptive company prefix,
+    and its font size is scaled down via the length-based formula to avoid overflow.
+  weaknesses:
+  - Volume y-axis title 'Volume' has no explicit unit (e.g., 'Volume (shares)') while
+    the price axis does ('Price (USD)') — minor inconsistency in axis-label completeness.
+  - Three helper constructs (lcg, pruneTicks, the syncCrosshair plugin object) go
+    slightly beyond a pure top-to-bottom KISS script — justified by the dual-pane
+    sync requirements, but still adds structure.
+  - The cross-pane crosshair sync, while a nice touch, is a fairly common charting-library
+    pattern (axisPointer sync in echarts, manual sync in D3) rather than something
+    uniquely irreplicable outside Chart.js — caps Library Mastery's distinctiveness
+    score.
+  - At the 400px mobile-preview scale, the smallest tick labels (13px CSS, volume
+    y-axis 'M' values and price y-axis '$' values) are legible but noticeably tight
+    — still readable, not a failure.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "TechNova Inc. (TCNV) · candlestick-volume · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. Top-right legend with two swatches, "Bullish (close ≥ open)" (green) and "Bearish (close < open)" (red), readable. Price pane y-axis shows "$170"–"$205" in $-prefixed dark-soft labels with "Price (USD)" axis title. Volume pane y-axis shows "0.0M"–"3.0M" with "Volume" axis title. X-axis shows sparse date labels (Jan 2, Jan 14, Jan 24, Feb 5, Feb 17, Feb 27, Mar 11, Mar 21) under "Trading Date" title, only on the bottom (volume) pane — the price pane's x-axis ticks are intentionally hidden but its gridlines remain aligned with the volume pane's. Subtle vertical/horizontal gridlines visible in both panes without competing with data.
+      Data: 60 daily OHLC candlesticks (green bullish, matte-red bearish bodies with thin wicks) tracing an uptrend from ~$180 (early Jan) to a peak of ~$201 (mid-March) followed by a pullback to ~$192 (late March); several narrow-bodied/doji-like days are visible mid-trend. Volume bars below use identical per-day up/down coloring and range roughly 1.1M–2.3M shares, with visually higher volume on some of the larger price-move days.
+      Legibility verdict: PASS — all title, legend, axis-title, and tick text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis titles now rendered in light/off-white ink, fully readable against the dark background. Tick labels use a lighter soft-ink tone, also readable. Gridlines are faint and theme-adaptive (light, low-alpha lines instead of dark ones).
+      Data: Candlestick and volume bar colors are pixel-identical to the light render — same bullish green (#009E73) and bearish red (#AE3030) hues, same shapes, same values — confirming only chrome flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every title, axis label, tick label, and legend entry is clearly visible against the near-black surface.
+
+    Both renders were also checked at the 400px mobile-preview scale (plot-light_400.png / plot-dark_400.png): all text remains legible, though the smallest tick labels are visually tight at that scale — not a failure, just the plot's densest text.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes and at mobile
+          scale, no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either pane
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Candle body/wick thickness and volume bar width well-matched to 60-day
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses the documented finance semantic exception (green/red), palette
+          pre-validated for CVD distance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 72/28 pane split matches spec range, balanced margins, canvas well
+          utilized
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price (USD) has units; Volume/Trading Date descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, bearish uses palette[4] matte red per semantic
+          exception, theme-correct chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful finance-semantic coloring, aligned dual-pane axes, custom
+          legend labels — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle theme-adaptive grid, generous whitespace, borderless legend
+          — good refinement, not flawless
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-linked price/volume panes and a clear uptrend-pullback arc
+          create visual hierarchy guiding the reader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct candlestick-with-volume dual-pane chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shared x-axis with aligned gridlines, matching up/down volume colors,
+          correct pane ratio, cross-pane crosshair (interactive)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dates on x, OHLC price and volume on respective y-axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format with descriptive prefix; legend labels match
+          bullish/bearish semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bullish, bearish, and doji-like candles; varied volume
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral fictional tech-stock scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price ~$174-$201 and 1.1M-2.3M daily volume are plausible for a mid-cap
+          stock
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few helper functions (lcg, pruneTicks, plugin object) beyond pure
+          linear script, justified by dual-pane sync
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals/imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; crosshair only draws on real events
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical Chart.js floating-bar technique for OHLC candlesticks
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom plugin-based cross-chart crosshair sync uses Chart.js's plugin
+          API, but the concept is replicable elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - publication-ready
+  - grid-styling
