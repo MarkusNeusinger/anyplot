@@ -1,0 +1,250 @@
+library: highcharts
+language: javascript
+specification_id: bar-error
+created: '2026-09-02T12:14:10Z'
+updated: '2026-09-02T12:28:49Z'
+generated_by: claude-sonnet
+workflow_run: 33627656007
+issue: 2376
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Peak-highlighting (a runtime-brightened variant of the brand green on the Drug
+    B bar) combined with the expanded subtitle callout creates a clear visual focal
+    point — directly addresses the DE-03 'no storytelling' weakness from attempt 1
+  - 'Subtle bar corner radius (borderRadius: 3) is a tasteful refinement beyond the
+    plain rectangular baseline'
+  - Clever, well-documented null-gap composite line series synthesizes error-bar whiskers
+    and caps within the core-bundle-only constraint (no highcharts-more), with cap
+    width derived from the column's own point/group padding geometry rather than a
+    hand-picked constant
+  - 'Full light/dark theme threading: bar and error-bar data colors are identical
+    across both renders, only chrome (grid, ticks, whisker color) adapts'
+  - Realistic, appropriately-scaled enzyme-activity dataset across 6 treatment groups
+    with sensible mean/SD magnitudes
+  - Subtitle clearly states what the error bars represent ("±1 standard deviation"),
+    satisfying the spec's annotation requirement without a redundant single-series
+    legend
+  weaknesses:
+  - 'The peak-highlight color is a runtime-brightened variant of #009E73 rather than
+    a literal Imprint hex — acceptable as an emphasis technique under AI discretion,
+    but a custom-derived tint rather than a palette member, so keep it as the only
+    such deviation'
+  - Only symmetric error bars are demonstrated; the spec's asymmetric (lower, upper)
+    error-bar branch remains unexercised (explicitly optional in the spec, so this
+    is a minor feature-breadth note, not a defect)
+  - Design excellence, while clearly improved, is still fairly restrained overall
+    — an additional layer (e.g. a direct data-label on the highlighted bar, or a slightly
+    more editorial color treatment) could push DE-01 further toward publication-ready
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bar-error · javascript · highcharts · anyplot.ai" centered at top, softer dark-gray subtitle "Error bars show ±1 standard deviation · Drug B shows the highest mean activity" beneath it. Y-axis titled "Enzyme Activity (U/mg)" with subtle horizontal gridlines every 5 units; x-axis shows six category labels (Control, Drug A–E). All title/subtitle/axis/tick text is clearly dark-on-light and fully readable.
+      Data: Six column bars in brand green (#009E73), except the Drug B bar (the highest mean, ~71.4) which is rendered in a brightened mint-green tint to draw the eye. Each bar carries a dark-gray whisker with horizontal top/bottom caps marking ±1 SD, clearly visible against the light background and proportioned to ~75% of the bar width.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Identical layout and text content, now rendered in light ink tones (white title, light-gray subtitle, light-gray axis/tick labels). No dark-on-dark failures — every text element is clearly legible against the near-black surface.
+      Data: Bar colors are unchanged from the light render — base bars remain #009E73, the Drug B highlight remains the same brightened mint tint — confirming data colors are identical across themes. Only the error-bar whisker/cap color adapts, shifting to a light gray appropriate for the dark surface (still clearly distinguishable from the near-black background and from the green bars).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via tokens; readable in both themes;
+          title comfortably narrow (~30% width), no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, or error bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and error-bar whiskers/caps clearly visible and appropriately
+          sized for 6 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast between bars, whiskers, and background in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (U/mg); categories are self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; peak-highlight
+          is a brightened tint of the same hue used for emphasis, not a competing
+          hue; chrome is theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded bar corners, brightened peak highlight, and a two-part subtitle
+          callout are clearly above a configured default, though short of full publication-ready
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Subtle single-axis gridlines, borderWidth: 0, generous whitespace;
+          refinement visible but not maximal'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Highlighted peak bar plus explicit subtitle callout ('Drug B shows
+          the highest mean activity') gives the viewer an immediate, clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Column chart with error bars, correct type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible caps, legend/annotation via subtitle, consistent bar/error
+          styling all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on X, enzyme activity on Y, all 6 groups visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; legend correctly omitted for the
+          single data series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Varying means and SD magnitudes across 6 groups; symmetric-only,
+          asymmetric variant unexercised (optional per spec)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible pharmacology/enzyme-assay scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Enzyme activity (U/mg) values and SDs are realistic and proportionate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear imports/data/chart structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the Highcharts global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container, animation disabled, credits disabled, current
+          API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly composes the error-bar visualization within the core-bundle
+          constraint using standard column + line series
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Null-gap composite line series with cap width derived from the column's
+          own pointPadding/groupPadding geometry is a Highcharts-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - error-bars
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - peak-highlighting
