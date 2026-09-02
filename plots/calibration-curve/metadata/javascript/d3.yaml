@@ -1,0 +1,264 @@
+library: d3
+language: javascript
+specification_id: calibration-curve
+created: '2026-09-02T14:18:06Z'
+updated: '2026-09-02T14:24:04Z'
+generated_by: claude-sonnet
+workflow_run: 33640385960
+issue: 2331
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Full spec compliance: diagonal perfect-calibration reference line, 10 equal-width
+    bins, both Brier score and ECE displayed, optional prediction-distribution histogram
+    included as a secondary panel.'
+  - 'Correct Imprint palette usage with theme-adaptive chrome verified identical across
+    both renders — first series is #009E73, backgrounds are #FAF8F1/#1A1A17, and the
+    diagonal reference line correctly uses the theme-adaptive ''neutral'' ink token
+    for its baseline/reference role.'
+  - 'Distinctive D3 technique: scaleSqrt bubble-sizing on the calibration markers
+    to encode per-bin sample count, layered onto a manually composited two-panel (calibration
+    curve + histogram) shared-x layout.'
+  - Realistic, well-motivated credit-risk scenario with internally consistent metric
+    values (Brier score 0.128, ECE 0.090) and a plausible skewed risk-score distribution.
+  - Deterministic seeded LCG data generation per the D3 reproducibility guidance;
+    clean single-pass script with explicit font sizes throughout.
+  weaknesses:
+  - Markers for the 10 aggregated bins (radius 7-18 css px) could be modestly larger
+    given how sparse the data is — increase the scaleSqrt range slightly (e.g. 9-22)
+    for more prominence.
+  - The predicted-vs-observed pattern is uniformly overconfident across the entire
+    probability range (true rate = predicted^1.5 everywhere) — varying the miscalibration
+    direction slightly in one region (e.g. brief near-diagonal or crossing segment)
+    would better showcase mixed calibration behavior per DQ-01.
+  - Design polish is strong but stops short of a publication-level flourish — e.g.
+    no visual callout or shaded band for the largest miscalibration gap, which would
+    sharpen the data storytelling further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "calibration-curve · javascript · d3 · anyplot.ai" is bold dark text, clearly legible. Axis labels ("Observed default rate", "Mean predicted probability", "Count") and tick labels are dark/soft-dark and fully readable. Grid lines are subtle horizontal lines, visible but not competing with data. Legend text ("Model calibration (marker size = bin sample count)", "Perfect calibration") is legible dark-gray text top-left.
+      Data: Top panel shows a green (#009E73) line with circular markers (sized by bin sample count) tracking below a dashed gray diagonal reference line — a clear overconfidence pattern. Bottom panel shows a muted-gray histogram of predicted-probability counts, decreasing from ~750 at the low end to ~190 at the high end. Brier score (0.128) and ECE (0.090) are printed in muted text in the empty lower-right area of the top panel.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels have flipped to light (off-white/soft-gray) text, all clearly legible against the dark background. Grid lines remain subtle. Legend text is light-gray and readable. No dark-on-dark text anywhere.
+      Data: The calibration line/markers are the identical #009E73 green as in the light render (confirmed same hue/saturation), and the histogram bars are a light muted gray (their neutral tone flipped appropriately for the dark surface) while remaining fully visible. Brier/ECE annotation text is legible light-gray in the same lower-right position.
+      Legibility verdict: PASS — all text and data elements read clearly against the dark background; data colors are identical to the light render, only chrome flipped as expected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px/14px axis labels,
+          14px/13px ticks, 14px legend, 15px footnote); readable in both themes, no
+          overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render; legend and
+          footnote have generous clearance.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: sqrt-scaled markers (r=7-18px) and 3px line are visible for the 10
+          aggregated bins, but could be modestly larger given how sparse the data
+          is.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Reference line differentiated from data line by both color and dash
+          pattern, not hue alone; strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel composition fills the canvas edge-to-edge without cutoff;
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels: ''Observed default rate'', ''Mean predicted
+          probability'', ''Count''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 identical in both themes; backgrounds correct;
+          reference line uses theme-adaptive neutral ink token; all chrome theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful marker-size-encodes-sample-count technique and clean muted
+          secondary palette, clearly above defaults, though short of full publication-level
+          flourish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Only left+bottom axis lines kept, subtle y-only gridlines, generous
+          whitespace between panels — solid but not maximally polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Overconfidence gap between curve and diagonal is immediately visible,
+          marker size adds a second read; no explicit callout/annotation of the biggest
+          gap.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reliability-diagram/calibration-curve type with markers,
+          connecting line, and diagonal reference.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference, 10 equal-width bins, Brier score AND ECE, and
+          the optional prediction-distribution histogram are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = mean predicted probability, y = observed frequency, correctly
+          mapped across the full 0-1 domain.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; legend labels accurately
+          describe the series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Realistic bin-size variation and growing/narrowing calibration gap,
+          but uniformly overconfident throughout rather than mixed under/over-confidence.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit-default risk scenario, real, neutral, comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Brier score and ECE values are realistic; bin counts sum correctly
+          and follow a plausible skewed risk distribution.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single top-to-bottom script; only function is the LCG helper recommended
+          by the D3 library guide.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG seeded with 42.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for a two-panel composite chart, no
+          fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds exactly one <svg> into #container per the mount-node contract;
+          current d3 v7 API, no animation.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scaleLinear/scaleSqrt/axisLeft/axisBottom, d3.line() generator,
+          selection.join() data binding, d3.format.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scaleSqrt marker-radius-to-sample-count encoding plus manually composited
+          two-panel shared-x layout goes beyond generic usage, though not a rare/exotic
+          D3 feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - manual-ticks
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
