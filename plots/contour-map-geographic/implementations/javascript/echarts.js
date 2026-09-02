@@ -8,12 +8,12 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Synthetic elevation model of a coastal mountain range (Cascade-like terrain):
-// a wavy coastline, an inland rise, and three peaks. Grid: 70 x 70 points over
-// a 4.2° x 4.2° lon/lat box (fine enough that marching-squares isolines read
-// as smooth curves rather than faceted polygons).
+// a wavy coastline, an inland rise, and three peaks. Grid: 100 x 100 points
+// over a 4.2° x 4.2° lon/lat box (fine enough that marching-squares isolines
+// read as smooth curves rather than faceted polygons).
 const LON_MIN = -124.6, LON_MAX = -120.4;
 const LAT_MIN = 43.6, LAT_MAX = 47.8;
-const NX = 70, NY = 70;
+const NX = 100, NY = 100;
 const TICK_INTERVAL = Math.max(1, Math.floor(NX / 7));
 
 const lonVals = Array.from({ length: NX }, (_, i) => LON_MIN + (i * (LON_MAX - LON_MIN)) / (NX - 1));
@@ -70,11 +70,18 @@ for (let j = 0; j < NY - 1; j++) {
   coastSegments.push([[x1, j], [x2, j + 1]]);
 }
 
-// Single ocean polygon following the coastline exactly (left edge, up the
-// coastline, top edge) — avoids the seam artifacts a per-cell tile fill
-// would leave between adjacent water rects.
+// Single ocean polygon that shares its right edge with the land heatmap
+// tiles' left edge on every row: heatmap tiles are grid-snapped (they exist
+// from the first whole index where elevationAt > 0, spanning index±0.5), so
+// the fill boundary must be grid-snapped too, not the continuous fractional
+// coastline — otherwise up to half a cell of page background bleeds through
+// between the two fills at every staircase step.
+function firstLandIndex(j) {
+  const ci = lonToIndex(coastLon(latVals[j]));
+  return Math.ceil(ci - 1e-9);
+}
 const oceanPolygon = [[-0.5, -0.5]];
-for (let j = 0; j < NY; j++) oceanPolygon.push([lonToIndex(coastLon(latVals[j])), j]);
+for (let j = 0; j < NY; j++) oceanPolygon.push([firstLandIndex(j) - 0.5, j]);
 oceanPolygon.push([-0.5, NY - 0.5]);
 
 // --- Marching squares: isoline segments for one elevation threshold ---------
@@ -172,7 +179,14 @@ function chainSegments(segs) {
 
 // Chaikin corner-cutting: replaces each edge with two points 1/4 and 3/4
 // along it, rounding the polygonal marching-squares output into a smooth
-// curve without changing the underlying topology.
+// curve without changing the underlying topology. `points` must be the
+// distinct ring vertices with NO repeated closing point — chainSegments
+// represents a closed loop as [...ring, ring[0]] (first === last, so the
+// shape renders closed), and feeding that duplicate straight into the
+// modulo-wrapped closed-loop math below creates one degenerate zero-length
+// edge exactly at the seam, which survives every iteration as an unsmoothed
+// sharp corner (the notch/spike artifacts on the peak rings). Callers must
+// strip the duplicate before calling and re-append it after.
 function chaikinSmooth(points, iterations, closed) {
   let pts = points;
   for (let it = 0; it < iterations; it++) {
@@ -203,9 +217,12 @@ for (let lvl = CONTOUR_INTERVAL; lvl <= maxVal; lvl += CONTOUR_INTERVAL) levels.
 // single elevation level often forms one long connected boundary that
 // snakes past several peaks (the inland-rise term keeps the ridge between
 // peaks above the threshold too) rather than one separate ring per peak —
-// so index (bold) chains get a label every ~220 points of path, spacing
-// labels out along the line instead of stamping just one per chain.
-const LABEL_SPACING = 220;
+// so index (bold) chains get a label every ~55 points of *raw* (pre-smooth)
+// path, spacing labels out along the line instead of stamping just one per
+// chain. Basing the count on the raw chain — not the Chaikin-smoothed one —
+// keeps label density independent of the smoothing-iteration count.
+const CHAIKIN_ITERATIONS = 4;
+const RAW_LABEL_SPACING = 55;
 const contourPaths = [];
 levels.forEach((threshold) => {
   const bold = threshold % INDEX_EVERY === 0;
@@ -216,11 +233,15 @@ levels.forEach((threshold) => {
       chain.length > 2 &&
       Math.abs(chain[0][0] - chain[chain.length - 1][0]) < 1e-4 &&
       Math.abs(chain[0][1] - chain[chain.length - 1][1]) < 1e-4;
-    const smoothed = chaikinSmooth(chain, 2, closed);
+    // Drop the duplicate closing vertex before smoothing (see chaikinSmooth
+    // comment above), then re-append it so the rendered path still closes.
+    const ringPoints = closed ? chain.slice(0, -1) : chain;
+    const smoothed = chaikinSmooth(ringPoints, CHAIKIN_ITERATIONS, closed);
+    if (closed) smoothed.push(smoothed[0]);
 
     const labels = [];
     if (bold) {
-      const count = Math.max(1, Math.round(smoothed.length / LABEL_SPACING));
+      const count = Math.max(1, Math.round(chain.length / RAW_LABEL_SPACING));
       for (let k = 0; k < count; k++) {
         const at = Math.min(smoothed.length - 1, Math.floor(((k + 0.5) * smoothed.length) / count));
         labels.push({ text: `${threshold} m`, at });
@@ -229,6 +250,23 @@ levels.forEach((threshold) => {
     contourPaths.push({ points: smoothed, labels, bold });
   });
 });
+
+// api.coord() on a *category* axis runs every value through ECharts'
+// OrdinalScale.parse, which does `Math.round()` on numeric input before
+// mapping to pixels — silently snapping every fractional marching-squares /
+// Chaikin coordinate to the nearest whole grid line. That's what was making
+// the "smoothed" contours render as raw staircases. Fix: read the pixel
+// position of only the two exact-integer axis ends (never rounded, since
+// they're already integers) once per renderItem call, then interpolate
+// fractional coordinates ourselves — bypassing the axis's rounding entirely.
+function projectPoint(api, pt) {
+  const origin = api.coord([0, 0]);
+  const xEnd = api.coord([NX - 1, 0]);
+  const yEnd = api.coord([0, NY - 1]);
+  const pxPerX = (xEnd[0] - origin[0]) / (NX - 1);
+  const pxPerY = (yEnd[1] - origin[1]) / (NY - 1);
+  return [origin[0] + pt[0] * pxPerX, origin[1] + pt[1] * pxPerY];
+}
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById('container'));
@@ -292,7 +330,7 @@ chart.setOption({
       type: 'custom',
       coordinateSystem: 'cartesian2d',
       renderItem(params, api) {
-        const coords = oceanPolygon.map((p) => api.coord(p));
+        const coords = oceanPolygon.map((p) => projectPoint(api, p));
         return {
           type: 'polygon',
           shape: { points: coords },
@@ -317,8 +355,8 @@ chart.setOption({
       coordinateSystem: 'cartesian2d',
       renderItem(params, api) {
         const seg = coastSegments[params.dataIndex];
-        const p1 = api.coord(seg[0]);
-        const p2 = api.coord(seg[1]);
+        const p1 = projectPoint(api, seg[0]);
+        const p2 = projectPoint(api, seg[1]);
         return {
           type: 'line',
           shape: { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] },
@@ -337,7 +375,7 @@ chart.setOption({
       coordinateSystem: 'cartesian2d',
       renderItem(params, api) {
         const path = contourPaths[params.dataIndex];
-        const coords = path.points.map((p) => api.coord(p));
+        const coords = path.points.map((p) => projectPoint(api, p));
         const lineEl = {
           type: 'polyline',
           shape: { points: coords },
