@@ -1,0 +1,253 @@
+library: highcharts
+language: javascript
+specification_id: map-marker-clustered
+created: '2026-09-02T02:45:00Z'
+updated: '2026-09-02T03:00:48Z'
+generated_by: claude-sonnet
+workflow_run: 33583749210
+issue: 3766
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses are visibly fixed: cluster marker border is now
+    1px (matches the thin dotted-gridline chrome), the separateClusterCircles() repulsion
+    pass keeps dense hubs like the Milan group (3/12/6/78/34/8/10/17) from touching,
+    and the legend now has a dedicated ''Cluster (larger, bordered, count inside)''
+    entry distinguishing clusters from individual store dots.'
+  - Genuine pixel-space clustering rebucketed on afterSetExtremes, so clusters actually
+    expand/collapse with zoom level rather than a static pre-baked layout, matching
+    the spec's core requirement.
+  - Dominant-category coloring with a tooltip breakdown for mixed clusters, renderer-based
+    spider-line hover reveal, and click-to-zoom-to-extent are all wired through real
+    Highcharts events/renderer calls -- no faked interactivity.
+  - 'Correct Imprint palette usage: first categorical series is #009E73, all four
+    categories stay visually distinct in both renders, and theme tokens are threaded
+    through every chrome element (title, axes, grid, legend, coastline).'
+  - 'Realistic, appropriately scaled synthetic data: ~655 stores across 10 real Italian
+    cities with per-city category skew, within the spec''s 100-5000 point range.'
+  weaknesses:
+  - The simplified Italy/Sicily coastline polygon doesn't fully enclose all jittered
+    store points -- the two Bari-area Grocery clusters near lon 16.7-17.1 sit visibly
+    outside (east of) the drawn mainland outline in both renders, making them look
+    like they float offshore. Either widen the coastline polygon around Puglia or
+    tighten the jitter radius so members stay inside the outline.
+  - Cluster count-label text uses `t.pageBg` for color, which gives good contrast
+    against saturated fills but reads as near-black text in both themes on the medium-luminance
+    blue (Clothing) clusters (e.g. '58', '61', '40') -- contrast there is noticeably
+    lower than on the green/purple/ochre clusters. A slightly darker/lighter tint
+    keyed to the fill's own luminance (rather than a flat pageBg) would even out legibility
+    across categories.
+  - 'Design Excellence is still the weakest category: aesthetic sophistication is
+    solid but not distinctive beyond dominant-category coloring and sqrt-scaled radii
+    -- consider a subtle drop-shadow or elevation cue on cluster circles to reinforce
+    they''re aggregates, not individual markers, beyond just size and border.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold dark-ink title "Store Locations Across Italy · map-marker-clustered · javascript · highcharts · anyplot.ai", grey subtitle with interaction hints, dark longitude/latitude axis titles and tick labels with °E/°N suffixes, subtle dotted gridlines, a thin grey Italy+Sicily coastline outline, and a bottom legend with five entries: Electronics (green), Grocery (purple), Clothing (blue), Home & Garden (ochre), and a dedicated "Cluster (larger, bordered, count inside)" swatch. All chrome text is clearly legible against the light background.
+      Data: First categorical series is #009E73 (Electronics). Clustered circles are sized by sqrt(member count), filled with the dominant category color, bordered with a thin 1px dark-ink ring, and carry a bold numeric count label ("78", "61", "52", etc.) in a pageBg-colored font. Small unbordered dots mark unclustered individual stores. Dense hubs (e.g. the Milan-area group) show visible spacing between adjacent circles -- no touching/overlap this attempt.
+      Legibility verdict: PASS (count labels on the medium-luminance blue "Clothing" clusters have noticeably lower contrast than on the other three category colors, but remain readable).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same title/subtitle/axis/legend content, now rendered in light-ink tones (title/axis titles light, tick/legend text softer light grey); gridlines and the coastline outline switch to semi-transparent light strokes so they stay visible without dominating. No dark-on-dark failures -- all chrome text reads clearly against the dark background.
+      Data: Cluster layout, radii, and all four category colors are pixel-identical to the light render -- only chrome flipped, confirming theme-adaptive tokens are threaded correctly. Count labels again use a pageBg-derived color (now near-black), which stays legible on green/purple/ochre fills but is the weakest-contrast case on the blue "Clothing" clusters, same as in light.
+      Legibility verdict: PASS (same blue-cluster contrast caveat as light render; no other legibility issues).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text readable in both themes; count labels on blue Clothing
+          clusters have lower (but acceptable) contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: separateClusterCircles() fix resolved the attempt-1 overlap in dense
+          hubs (Milan group); no touching circles observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cluster radii and individual dots scale appropriately with density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No red-green-only signal; four hue families used
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 canvas confirmed, no canvas-gate failure, no clipping,
+          sensible margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°E) / Latitude (°N) descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, data colors identical across themes, correct
+          theme backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Dominant-category coloring, sqrt-scaled cluster sizing, real basemap
+          outline; not yet highly distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 1px cluster border now matches the thin dotted-gridline chrome weight
+          (up from the attempt-1 2px)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: New dedicated legend entry for clusters clarifies the size/aggregation
+          hierarchy that was previously unexplained
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Clustered marker map with zoom-dependent reclustering
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Count display, dominant-category coloring, click-to-zoom, hover spider-lines,
+          basemap outline all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon/lat correctly mapped to x/y with degree-formatted ticks
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive} · {spec-id} · {language} · {library}
+          · anyplot.ai; legend labels match categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Clustering, expansion, hover, categories all demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Italian cities, plausible neutral retail categories
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~655 stores across 10 cities, within the 100-5000 spec range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions are necessary for zoom-driven reclustering, spacing,
+          and hover/click interactivity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity for real clustering logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled everywhere
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: afterSetExtremes, point events, chart.renderer.path used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Manual pixel-space clustering, renderer-based spider lines, click-to-zoom-to-extent
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending

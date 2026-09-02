@@ -1,0 +1,278 @@
+library: chartjs
+language: javascript
+specification_id: mosaic-categorical
+created: '2026-09-02T03:15:42Z'
+updated: '2026-09-02T06:30:04Z'
+generated_by: claude-sonnet
+workflow_run: 33585750815
+issue: 3650
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Mosaic geometry is mathematically correct: column widths equal the marginal share
+    of each department, segment heights equal the conditional share of each work mode
+    within a department, and the resulting tile area is proportional to joint frequency
+    (count_ij / grand total), matching the spec''s definition precisely.'
+  - 'First categorical series renders as Imprint #009E73 and the remaining series
+    follow the canonical Imprint order (#C475FD, #4467A3); data colors are pixel-identical
+    between the light and dark renders.'
+  - 'Theme-adaptive chrome is clean in both renders: correct #FAF8F1/#1A1A17 backgrounds,
+    no dark-on-dark or light-on-light text, no clipped elements at the canvas edges,
+    spines/x-axis fully hidden for a minimal look.'
+  - Deterministic, realistic HR dataset (department x work mode) with genuine variation
+    across departments (Engineering skews remote, Support skews onsite) that gives
+    the mosaic an implicit story just from the tile proportions.
+  - 'New since attempt 1: percentage value labels are now printed directly on tiles
+    large enough to hold them, using a WCAG-luminance contrast function (readableTextColor)
+    so the label always reads against that tile''s own fill in both themes — this
+    directly reinforces the mosaic''s story (Engineering 60% remote, Support 60% onsite)
+    instead of leaving the viewer to eyeball proportions.'
+  - 'New since attempt 1: a real interactive tooltip is now wired via canvas hit-testing
+    (mousemove -> pickTile -> custom-drawn tooltip box with drop shadow) showing department,
+    work mode, count, share-of-department, and share-of-total — a genuine distinctive
+    Chart.js feature in the HTML detail view rather than a disabled/static tooltip.'
+  weaknesses:
+  - Visual style remains fairly flat outside the new tile drop-shadows — solid fills,
+    generic sans-serif stack, no distinctive typography or intentional hierarchy beyond
+    palette + shadow (DE-01/DE-02 still capped).
+  - 'Tiles are still drawn manually via ctx.fillRect() inside a plugin afterDraw hook
+    (Chart instance built with datasets: [] purely for chartArea/scale/legend layout),
+    so the actual data marks bypass Chart.js''s own dataset/controller rendering pipeline
+    entirely — defensible since Chart.js has no native mosaic controller, but it caps
+    idiomatic-usage credit (LM-01).'
+  - The italic 12px explanatory caption under the x-axis ('Department (column width
+    ∝ headcount share)') remains slightly undersized relative to the rest of the type
+    scale (minor VQ-01 nit).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "mosaic-categorical · javascript · chartjs · anyplot.ai" in bold dark ink at top center, fully visible with no clipping, with an italic subtitle "Engineering skews remote, Support skews onsite — hover a tile for exact counts" beneath it. Y-axis shows percent ticks (0%-100%) in soft gray with a "Share within department" title. Below the plot, dark department labels (Engineering, Sales, Marketing, Support) sit under their respective columns, with a smaller italic gray caption "Department (column width ∝ headcount share)" beneath them — both fully within the canvas bounds with a comfortable bottom margin. A "Work mode" legend with three color swatches (Remote/Hybrid/Onsite) sits at the right, clear of the plot area.
+      Data: Four columns of varying widths (Engineering widest, reflecting the largest headcount share), each stacked into three colored segments (green Remote, purple Hybrid, blue Onsite) whose heights vary per department — Engineering is mostly green (remote-heavy, labeled 60%), Support is mostly blue (onsite-heavy, labeled 60%). Each tile large enough to hold text carries a bold percentage label (e.g. 60%, 30%, 10%, 20%, 50%, 47%, 33%, 20%, 13%, 27%) rendered in a luminance-appropriate contrast color against its own fill. First series is #009E73 green as required. Subtle drop shadows give the tiles slight depth against the flat background.
+      Legibility verdict: PASS — all title, subtitle, axis, tick, tile-label, and legend text is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and subtitle now in light/off-white and soft-gray text respectively, fully visible. Y-axis percent ticks and axis title are light gray, clearly legible. Department labels and the caption beneath the plot are light-colored and unclipped. Legend text and "Work mode" title are light-colored and legible against the dark background.
+      Data: Tile colors, proportions, and percentage labels are pixel-identical to the light render (green/purple/blue in the same positions and sizes, same 60%/30%/10%/... values) — only the background, gridlines, and chrome text flipped for the dark theme, as required. Tile-label contrast color is computed per-tile so it remains readable on the same green/purple/blue fills in this theme too.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text, including the new percentage tile labels, remains legible in the dark theme.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (12/13/14/16/22px), readable in both
+          themes, no clipping; new tile percentage labels use a luminance-based contrast
+          function so they stay readable on every fill color; the small 12px explanatory
+          caption under the x-axis remains the only slightly-undersized element
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the new tile
+          percentage labels which only render on tiles large enough (w>64, h>32) to
+          hold them without crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tiles are large, clearly separated by white gaps, well-sized for
+          a 4x3 contingency table
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue combination is CVD-safe, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills most of the canvas, legend and axis titles balanced,
+          no wasted space, nothing cut off; canvas dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y axis has percent-unit ticks + descriptive title, x axis has a descriptive
+          caption explaining the width encoding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining series in canonical Imprint order,
+          identical across themes, correct theme-adaptive chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: 'Improved since attempt 1: tile drop-shadows and value labels add
+          polish, but typography is still a generic sans-serif stack with no distinctive
+          treatment beyond palette + shadow'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/x-axis hidden, white tile gaps add separation, and the new
+          subtle drop-shadows on tiles plus the tooltip's own shadow/rounded-rect
+          give a more refined, layered look than the flat fills of attempt 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Tile-size variation creates visual hierarchy on its own, and the
+          new bold percentage labels on larger tiles now explicitly reinforce the
+          Engineering-remote / Support-onsite contrast called out in the subtitle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct mosaic construction: variable-width columns x variable-height
+          stacked segments with area proportional to joint frequency'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Marginal widths, conditional heights, area proportional to cell frequency,
+          gap spacing, and dual-variable labeling all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Department on x (width), work mode share on y (height), all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the required pattern; legend labels
+          match the three work modes
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Four departments each show a distinct work-mode mix; good variation
+          though the table is a modest 4x3 size
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee department vs. work-mode survey is a real, neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Headcounts and remote/onsite splits per department are realistic
+          and internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data -> plugin -> chart, no unnecessary functions/classes beyond
+          the small helpers the tooltip/label features need
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global Chart/tokens are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear variable names and comments explaining the geometry and hit-testing;
+          the hover tooltip is genuine (real mousemove hit-testing), not fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, no deprecated
+          API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Chart.js''s title/legend/scale/plugin layout system correctly,
+          but the actual data marks still bypass Chart.js''s dataset/controller rendering
+          entirely (datasets: [])'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Improved since attempt 1: now wires a real hit-tested hover tooltip
+          (mousemove -> pickTile -> custom-drawn tooltip with count/share breakdown)
+          through the core Chart.js plugin afterDraw + chartArea layout, showcasing
+          genuine Chart.js interactivity in the HTML detail view instead of a disabled
+          tooltip'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome

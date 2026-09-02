@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: scatter-text
+created: '2026-09-02T06:05:49Z'
+updated: '2026-09-02T06:27:05Z'
+generated_by: claude-sonnet
+workflow_run: 33596804234
+issue: 3482
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Idiomatic use of d3-force (forceX/forceY/forceCollide) to prevent label collisions
+    — a genuinely distinctive D3 technique (LM-02) that a naive port to another library
+    could not easily replicate.
+  - 'Correct Imprint palette in canonical order for the four paradigm categories (green
+    -> lavender -> blue -> ochre), brand green #009E73 first, identical data colors
+    and theme-correct chrome across both renders (VQ-07).'
+  - Prominence-driven typography (font-size 16/18/20px, weight, opacity) creates a
+    clear visual hierarchy so well-known languages read first without needing annotations
+    (DE-03).
+  - 'Clean, KISS-structured code: deterministic fixed-seed LCG, current d3 v7 API
+    (.join(), forceSimulation().stop() + manual ticks), no fake interactivity.'
+  weaknesses:
+  - A large empty band cuts across the middle of the canvas between the four paradigm
+    islands; it matches the 'embedding gaps' concept but leaves roughly a third of
+    the canvas visually inert — consider a slightly larger jitter radius or pulling
+    cluster centers a bit closer to tighten the composition.
+  - Title occupies only ~25% of canvas width at 22px, noticeably lighter than the
+    strong typographic hierarchy used for the data labels themselves — a touch more
+    size or weight would balance the composition.
+  - No visual callout (e.g. a faint island outline or subtle background tint) ties
+    each color-coded cluster back to its category name beyond the legend swatch —
+    a nice-to-have for data storytelling, not required by the spec.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "scatter-text · javascript · d3 · anyplot.ai" centered at top; a horizontally-centered category legend (Systems/Web/Data Science/Functional) with color swatches directly beneath it; small "Component 1" / "Component 2" axis captions in soft gray. All chrome text is clearly legible against the light background — no light-on-light issues.
+      Data: 40 programming-language names function as the markers themselves, colored by paradigm category and arranged in four loosely separated clusters (Systems bottom-left-ish, Web upper-right, Data Science lower-left, Functional lower-right). Well-known languages (Python, JavaScript, Rust, TypeScript, C++, Go) render larger, bolder, and fully opaque; niche languages (Zig, Ada, SPSS, Prolog) render smaller and semi-transparent. First category (Systems) uses brand green #009E73; the other three use the next Imprint palette hues in canonical order.
+      Legibility verdict: PASS — all title, legend, axis-caption, and data-label text is readable; no overlapping labels observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, legend labels, and axis captions all flip to light tones (white/light-gray) and remain fully readable — no dark-on-dark failures found.
+      Data: Same 40 language labels at the same coordinates with identical colors to the light render (Systems green, Web lavender, Data Science blue, Functional ochre) — only the chrome (background/text) flips; the data-color layer is unchanged between themes, as required.
+      Legibility verdict: PASS — all chrome and data text is clearly readable against the dark surface; brand green #009E73 remains vivid on both backgrounds.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (16/18/20px), fully readable in both themes;
+          title comfortably fits without overflow though small relative to canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: forceCollide keeps all 40 labels non-overlapping in both renders
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Prominence tiers (size/weight/opacity) make labels visible and hierarchical;
+          not a classic marker-density scenario so not a perfect match to the sizing
+          table
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four CVD-safe Imprint hues, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Bounding box spans most of the canvas and margins are balanced, but
+          a large dead zone sits between the four clusters
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Component 1''/''Component 2'' are the correct convention for a
+          latent embedding space where literal units don''t apply'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (green/lavender/blue/ochre), brand green
+          first, theme-correct chrome and backgrounds in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Force-directed layout plus a deliberate prominence hierarchy is clearly
+          above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines, no grid, generous whitespace; the mid-canvas dead zone
+          keeps this from a perfect score
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size/weight/opacity hierarchy guides the eye to well-known languages,
+          but there is no direct callout tying each cluster to its category beyond
+          the legend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Text labels stand in for markers exactly as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Font-size/opacity adjustment by prominence, collision-avoided dense
+          regions, legible labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly scaled from data extent, all points shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated pattern; legend labels
+          match the four categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 40 labels across 4 categories and 3 prominence tiers show the full
+          range of the plot type
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible domain (programming languages by paradigm)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Paradigm groupings (Rust/Go/C in Systems, Python/R/SQL in Data Science,
+          etc.) are factually sound
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports -> data -> scales -> draw structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no extraneous packages
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container per the mount-node contract, current d3
+          v7 API'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook d3 data-join + scale + force-simulation usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: d3-force collision avoidance for label declutter is a distinctive
+          D3 capability, hard to replicate in higher-level charting libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-simulation
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
