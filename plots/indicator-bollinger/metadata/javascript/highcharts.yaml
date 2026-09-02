@@ -1,0 +1,244 @@
+library: highcharts
+language: javascript
+specification_id: indicator-bollinger
+created: '2026-09-02T01:34:06Z'
+updated: '2026-09-02T01:47:06Z'
+generated_by: claude-sonnet
+workflow_run: 33579425485
+issue: 3237
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Bollinger Bands now use the canonical sequential palette slot t.palette[1] (#C475FD
+    lavender) instead of the previously flagged t.palette[2] blue, fixing the VQ-07
+    deviation from attempt 1.
+  - New 'Oversold touch' annotation (diamond marker + data label at the point of closest
+    band approach) gives the chart a clear analytical focal point, directly addressing
+    the DE-03 storytelling weakness from attempt 1.
+  - Clever fill-masking technique (tinted upper area + page-background-colored lower
+    area) correctly emulates a Bollinger Band envelope without the unavailable arearange
+    module.
+  - 'Theme-adaptive chrome is fully correct in both renders: SMA line flips from near-black
+    to white via t.ink, band fill/outline stays legible on both surfaces, backgrounds
+    flip to the correct warm off-white / near-black.'
+  - Realistic squeeze/expansion cycles in the synthetic price data (tight bands mid-year,
+    wide bands during the March-April decline) give strong coverage of the indicator's
+    core value proposition.
+  - Explicit, well-proportioned typography in both renders — no overlap, clipping,
+    or unreadable text; layout uses the canvas well with balanced margins.
+  - Title, subtitle, and legend exactly match the required format and accurately describe
+    the plotted series.
+  weaknesses:
+  - Design Excellence, while improved by the new annotation, still reads as a well-configured
+    conventional finance chart rather than a visually distinctive one — the underlying
+    styling (grid, spines, typography) is correct but not remarkable.
+  - The fill-masking band technique and touch-point annotation are solid, replicable
+    patterns rather than a feature unique to Highcharts' capabilities — Library Mastery
+    has room to grow toward Highcharts-distinctive features (e.g. plotBands, plotLines
+    with translated zones) in future iterations.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "indicator-bollinger · javascript · highcharts · anyplot.ai" and a medium-gray subtitle "20-day SMA · ±2σ bands" are both clearly legible. Y-axis title "Price (USD)" is present with dark-gray tick labels on both axes, subtle horizontal-only gridlines, and a bottom legend listing "Bollinger Bands (±2σ)", "SMA (20)", "Close". A black dashed SMA(20) line runs through the middle of a lavender-tinted band envelope (light purple fill, matching #C475FD outline). An amber diamond marker with the "Oversold touch" label sits near mid-March where the green Close line dips closest to the lower band.
+      Data: Bold green (#009E73) Close price line drawn prominently over the lavender band fill; SMA is black dashed; band outline/fill is lavender (t.palette[1]), matching the canonical Imprint slot 2.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle now rendered in white/light-gray, fully legible; tick labels and axis title are light gray; gridlines remain subtle but visible; legend text is light-colored. The SMA line correctly flips from black to white dashed via the theme ink token — no dark-on-dark failure. The "Oversold touch" annotation label is white and clearly legible against the dark band fill.
+      Data: The Close line is the identical #009E73 green as the light render; the band fill becomes a dark purple tint with the same lavender outline color as light — data colors are unchanged between themes, only chrome flipped.
+      Legibility verdict: PASS — all text reads clearly against the dark background, no dark-on-dark issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes, sizes explicit and consistent
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, annotation, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weights and marker size appropriate for 120-point density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/amber contrast is CVD-safe, not red-green reliant
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; proportions and margins balanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price (USD) axis title with units, dated x-axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: bands now use t.palette[1] (lavender), Close uses t.palette[0]
+          (brand green); backgrounds correct in both themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Improved with the touch-point annotation, but still reads as a conventional,
+          correctly-styled finance chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle horizontal-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New 'Oversold touch' annotation creates a clear analytical focal
+          point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bollinger Bands indicator chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Close, SMA middle band, upper/lower bands with semi-transparent fill
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis, price on y-axis, all series aligned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows squeeze/expansion cycles, breakout, band touches
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral stock-price random walk, plausible daily trading calendar
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices in sensible $140-195 range, 120 trading days
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, minimal helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG RNG, deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, well-commented workaround for missing arearange module
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set on chart and series; harness owns the save
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct use of core-bundle-only chart with tokens threaded throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Fill-masking workaround plus a computed touch-point annotation show
+          above-baseline effort, though the technique is replicable in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - publication-ready

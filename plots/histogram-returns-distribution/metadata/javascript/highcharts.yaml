@@ -1,0 +1,270 @@
+library: highcharts
+language: javascript
+specification_id: histogram-returns-distribution
+created: '2026-09-02T01:27:46Z'
+updated: '2026-09-02T01:41:39Z'
+generated_by: claude-sonnet
+workflow_run: 33578901231
+issue: 3751
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - The ±2σ plot-line labels were bumped to 14px, matching the rest of the type scale
+    — resolves the attempt-1 mobile-legibility deduction, all text is now explicitly
+    sized and readable in both themes
+  - 'Data storytelling is now explicit: the subtitle states "Skews negative (skew
+    -0.66) — fat left tail beyond ±2σ is the story here", directly pointing the viewer
+    at the insight instead of leaving them to find it'
+  - Visual refinement improved with a subtle drop shadow and rounded corners on the
+    stats box, giving it real elevation instead of a flat bordered rectangle
+  - The tail series now uses a vertical linearGradient (full amber to 55% opacity)
+    instead of a flat fill — a distinctive Highcharts-only touch that adds depth without
+    hurting readability
+  - 'Perfect Imprint palette compliance carried over: primary series is #009E73, tail
+    highlight uses the semantic amber anchor, backgrounds are theme-correct (#FAF8F1
+    light / #1A1A17 dark) with identical data colors across both renders'
+  - 'All spec features present: stats box (mean, std dev, skewness, kurtosis), distinct
+    ±2σ tail coloring with dashed sigma reference lines, 30 bins for 252 observations,
+    density normalization, fitted normal curve overlay'
+  - Deterministic seeded LCG data produces a realistic negative-skew, fat-left-tail
+    return distribution that clearly demonstrates the spec's risk-analysis use case
+  - Title format and legend labels are exactly correct; no text overlap or clipping
+    in either render
+  weaknesses:
+  - 'The header block is missing the mandated `// License:` line (prompts/library/highcharts.md
+    requires it on every generated snippet — Highcharts is free for non-commercial
+    use but requires a paid commercial license, and this line documents that). Add
+    e.g. `// License: Highcharts — commercial license, free for non-commercial use
+    (highcharts.com/license)` under the `// Library:` line.'
+  - Code still introduces three top-level helper functions (makeLcg, randNormal, normalPdf)
+    ahead of the data section, a mild KISS deviation — acceptable given they're small
+    pure math helpers reused by both the data generation and the fitted-curve section,
+    but worth tightening further if revisited.
+  - Design Excellence, while meaningfully improved (shadow/elevation on the stats
+    box, gradient tail fill), still has room to push further into a fully art-directed
+    look — e.g. a secondary typographic hierarchy or a subtler grid treatment.
+  - Library Mastery leans on a solid combination of Highcharts-specific techniques
+    (renderer.label stats box, plotLines with labels, gradient tail fill, spline overlay)
+    but none individually reaches the 'couldn't easily be replicated elsewhere' bar
+    — e.g. dataLabels on the tail bins would push this further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-returns-distribution · javascript · highcharts · anyplot.ai" in bold dark text, clearly readable. Subtitle "Skews negative (skew -0.66) — fat left tail beyond ±2σ is the story here" in medium-gray text, readable and explicitly calling out the data's central insight. Axis titles "Daily Return (%)" (x) and "Density" (y) in dark ink-soft text at 16px, tick labels dark and legible at 14px. A stats box in the top-left (elevated off-white fill, thin border, subtle drop shadow, rounded corners) lists Mean (0.02%), Std Dev (1.26%), Skewness (-0.66, amber-highlighted), Kurtosis (1.27) in dark text — fully readable. Two thin dashed vertical lines mark -2σ/+2σ with small rotated labels at 14px near the top; fully visible, not clipped. Legend at the bottom ("Within ±2σ", "Beyond ±2σ (tail)", "Normal Distribution") in dark text, readable.
+      Data: Primary histogram bars are Imprint green (#009E73); bins beyond ±2σ render with a vertical amber gradient (full opacity to ~55%); a black dashed spline traces the fitted normal curve. Distribution is visibly left-skewed with a fat left tail, matching the reported skewness of -0.66.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light/white text, clearly readable against the dark background. Axis titles and tick labels are light-colored and legible — no dark-on-dark issue anywhere. The stats box uses a dark elevated fill with a light border, shadow, and light text. The ±2σ dashed lines and their 14px labels are light-colored and visible. Legend text is light-colored and readable.
+      Data: Bar colors are identical to the light render — same Imprint green for the body series, same amber gradient for the tail bins, same dashed curve shape (rendered in white instead of black to stay theme-adaptive, as expected — only chrome flips, not data colors).
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check; no dark-on-dark or light-on-light failures were found, and no title/axis/legend/annotation text is clipped at the canvas edges.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; ±2σ plot-line labels bumped from 12px
+          to 14px, now matching the rest of the type scale — legible in both themes
+          and at mobile widths
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 bins for 252 observations render as clean, distinct columns; normal
+          curve and gradient tail highlight are both clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/amber contrast is CVD-safe, not reliant on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a good share of the canvas with balanced margins; legend
+          sits directly under the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Daily Return (%)" carries units; "Density" is descriptive for the
+          normalized y-axis'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, tail uses the semantic amber anchor, both
+          renders theme-correct with identical data colors'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Shadow/elevation on the stats box and a gradient tail fill push this
+          clearly above a well-configured default toward a more art-directed look
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: New drop shadow + rounded corners on the stats box is concrete, visible
+          polish beyond the token-only grid/border styling from attempt 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Subtitle now explicitly states the skew/fat-tail finding — the viewer
+          sees the insight immediately instead of having to infer it from the stats
+          box alone
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram + normal-curve-overlay type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stats box, tail highlighting, normal overlay, density normalization,
+          appropriate bin count all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = daily return (%), y = density, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows negative skew, excess kurtosis, and a fat left tail beyond
+          ±2σ — demonstrates the risk-analysis use case the spec calls out
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible daily equity/ETF return series, neutral subject matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Drift and volatility magnitudes are realistic for daily equity returns
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear script but keeps three small helper functions (LCG,
+          normal sampler, normal PDF) ahead of the data section
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the provided globals are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Missing the mandated `// License:` header line required by prompts/library/highcharts.md
+          for every generated Highcharts snippet
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no explicit width/height
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of column + spline series, plotLines, and chart.renderer
+          for the annotation box
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines several Highcharts-specific techniques (renderer.label stats
+          box, plotLines-with-labels, linearGradient tail fill) — closer to distinctive
+          mastery than generic usage, though no single feature is fully irreplaceable
+          elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
+  - gradient-fill
