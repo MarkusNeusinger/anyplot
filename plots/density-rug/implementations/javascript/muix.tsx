@@ -1,7 +1,7 @@
 // anyplot.ai
 // density-rug: Density Plot with Rug Marks
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-02
+// Quality: 91/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
