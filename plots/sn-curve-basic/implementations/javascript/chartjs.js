@@ -36,6 +36,7 @@ stressLevels.forEach((stress) => {
 const fitCycles = [1e3, 1e7];
 const fitLine = fitCycles.map((n) => ({ x: n, y: basquinA * Math.pow(n, basquinB) }));
 
+const ultimateStrength = 780; // MPa
 const yieldStrength = 620; // MPa
 const enduranceLimit = 230; // MPa
 const enduranceStart = 1e6; // cycles beyond which the endurance limit applies
@@ -64,15 +65,30 @@ new Chart(canvas, {
         label: "Basquin fit",
         data: fitLine,
         type: "line",
-        borderColor: t.palette[2],
-        backgroundColor: t.palette[2],
+        borderColor: t.palette[1],
+        backgroundColor: t.palette[1],
         borderWidth: 3,
         pointRadius: 0,
         tension: 0,
         order: 2,
       },
       {
-        label: "Yield strength",
+        label: "Ultimate strength (780 MPa)",
+        data: [
+          { x: 1e3, y: ultimateStrength },
+          { x: 1e7, y: ultimateStrength },
+        ],
+        type: "line",
+        borderColor: t.palette[2],
+        backgroundColor: t.palette[2],
+        borderWidth: 2,
+        borderDash: [12, 4, 2, 4],
+        pointRadius: 0,
+        tension: 0,
+        order: 3,
+      },
+      {
+        label: "Yield strength (620 MPa)",
         data: [
           { x: 1e3, y: yieldStrength },
           { x: 1e7, y: yieldStrength },
@@ -84,22 +100,22 @@ new Chart(canvas, {
         borderDash: [10, 6],
         pointRadius: 0,
         tension: 0,
-        order: 3,
+        order: 4,
       },
       {
-        label: "Endurance limit",
+        label: "Endurance limit (230 MPa)",
         data: [
           { x: enduranceStart, y: enduranceLimit },
           { x: 1e7, y: enduranceLimit },
         ],
         type: "line",
-        borderColor: t.amber,
-        backgroundColor: t.amber,
+        borderColor: t.palette[5],
+        backgroundColor: t.palette[5],
         borderWidth: 2,
         borderDash: [3, 5],
         pointRadius: 0,
         tension: 0,
-        order: 4,
+        order: 5,
       },
     ],
   },
@@ -140,13 +156,13 @@ new Chart(canvas, {
       y: {
         type: "logarithmic",
         min: 150,
-        max: 700,
+        max: 850,
         title: { display: true, text: "Stress Amplitude (MPa)", color: t.ink, font: { size: 16 } },
         ticks: {
           color: t.inkSoft,
           font: { size: 14 },
           callback: (value) => {
-            if ([150, 200, 300, 400, 500, 600, 700].includes(value)) return value;
+            if ([150, 200, 300, 400, 500, 600, 700, 800].includes(value)) return value;
             return null;
           },
         },
