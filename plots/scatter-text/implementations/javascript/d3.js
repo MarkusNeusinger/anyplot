@@ -49,8 +49,8 @@ for (const cat of CATEGORIES) {
   }
 }
 
-const FONT_SIZE = { 1: 14, 2: 17, 3: 20 };
-const OPACITY = { 1: 0.6, 2: 0.8, 3: 1 };
+const FONT_SIZE = { 1: 16, 2: 18, 3: 20 };
+const OPACITY = { 1: 0.7, 2: 0.85, 3: 1 };
 const halfWidth = (d) => (d.label.length * FONT_SIZE[d.prominence]) / 3.1 + 4;
 
 // --- Scales -------------------------------------------------------------
@@ -128,3 +128,25 @@ svg
   .style("font-size", "22px")
   .style("font-weight", "600")
   .text("scatter-text · javascript · d3 · anyplot.ai");
+
+// --- Minimal dimension labels (this is an embedding plot: axes are latent
+// components, not measured units, so ticks would be misleading — just orient
+// the viewer with the two axis names) ---------------------------------------
+svg
+  .append("text")
+  .attr("x", margin.left + iw / 2)
+  .attr("y", height - 14)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("letter-spacing", "0.04em")
+  .text("Component 1");
+
+svg
+  .append("text")
+  .attr("transform", `translate(${16},${margin.top + ih / 2}) rotate(-90)`)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("letter-spacing", "0.04em")
+  .text("Component 2");
