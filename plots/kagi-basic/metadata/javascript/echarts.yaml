@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: kagi-basic
 created: '2026-09-02T02:04:51Z'
-updated: '2026-09-02T02:10:21Z'
+updated: '2026-09-02T02:21:02Z'
 generated_by: claude-sonnet
 workflow_run: 33581453683
 issue: 3341
@@ -12,51 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
   - 'Faithful Kagi construction: the reversal-threshold swing filter correctly absorbs
     sub-threshold moves and only opens a new column once price crosses the 4% reversal
     band, producing realistic shoulder/waist direction changes.'
+  - 'Addresses the attempt-1 weakness directly: a new callout (circle marker + ''Largest
+    swing: 28%'' label) marks the biggest single-column reversal, giving the chart
+    a clear focal point and pushing Data Storytelling (DE-03) past the prior ''correct
+    but flat'' tier.'
   - 'Genuine ECharts library mastery: uses a `type: ''custom''` series with `renderItem`/`api.coord()`
     to draw variable-width vertical and horizontal segments — the library-recommended
-    pattern for a chart type ECharts has no native series for, paired with dummy line
-    series purely to drive the legend.'
+    pattern for a chart type ECharts has no native series for — paired with dummy
+    line series purely to drive the legend swatches.'
   - 'Perfect Imprint palette + theme compliance in both renders: first series is brand
-    green `#009E73`, downtrend correctly uses the semantic red anchor per the finance
-    loss/down convention, and chrome (background, text, grid) is theme-correct on
-    both `plot-light.png` and `plot-dark.png`.'
+    green #009E73, downtrend correctly uses the semantic red anchor (palette[4], #AE3030)
+    per the finance loss/down convention, and chrome (background, text, grid) is theme-correct
+    on both plot-light.png and plot-dark.png.'
   - 'Dual encoding (color + line thickness: 7px yang vs 2.5px yin) makes uptrend/downtrend
-    strength readable at a glance and is also CVD-safe since it doesn''t rely on hue
-    alone.'
+    strength readable at a glance and is CVD-safe since it doesn''t rely on hue alone.'
   - Clean, deterministic data generation via a fixed-seed LCG, no network calls, no
     fake interactivity.
   - Title format and axis labels are exactly correct (`kagi-basic · javascript · echarts
     · anyplot.ai`, `Price ($)` with unit); legend labels match the yang/yin semantics.
   weaknesses:
-  - 'Design Excellence sits at well-configured-default tier (DE-01 4/8, DE-02 4/6):
-    palette and typography are compliant but not yet distinctively polished. Consider
-    a small deliberate flourish — e.g. subtler/rounder line caps, a touch more contrast
-    between title and legend weight, or a callout marking the largest reversal — to
-    push past ''correct'' into ''publication-ready''.'
-  - 'CQ-01: the `makeRng` LCG factory plus the reversal-tracking loop add more structure
-    than a strict linear imports→data→plot→save script. This is largely justified
-    by the Kagi construction algorithm itself, but look for opportunities to flatten/simplify
-    without hurting readability.'
+  - 'Design Excellence still sits below top tier (DE-01 5/8): palette, typography,
+    and the new callout are polished, but the rest of the chart (axis styling, legend
+    layout, background) is close to the library-skeleton defaults rather than a distinctively
+    custom look.'
+  - 'CQ-01: the makeRng LCG factory plus the reversal-tracking loop and the callout-placement
+    math add more structure than a strict linear script. This is mostly justified
+    by the Kagi construction algorithm itself, but is worth a look for opportunities
+    to simplify.'
   - 'Minor: Y-axis price ticks and the ''Kagi Line Index'' x-axis both read fine at
     desktop size, but tick label size at the ~400px mobile thumbnail is on the smaller
     side — verify legibility there before further size reductions elsewhere.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "kagi-basic · javascript · echarts · anyplot.ai" is dark, centered, fully visible with no clipping. Legend ("Yang (Uptrend)" green swatch, "Yin (Downtrend)" red swatch) sits directly below the title. Y-axis title "Price ($)" and x-axis title "Kagi Line Index" are dark/soft-ink and clearly legible. Tick labels ($123-$200, -0.5-17.5) are legible. Horizontal gridlines are subtle; x-axis has no gridlines (appropriate for this chart type).
-      Data: First series (Yang/uptrend) renders in brand green #009E73 as thick (7px) vertical/horizontal segments; Yin/downtrend renders in the semantic matte-red anchor as thin (2.5px) segments. 18 Kagi columns with realistic shoulder/waist reversals are visible, values ranging ~$126 to ~$196.
-      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "kagi-basic · javascript · echarts · anyplot.ai" is dark ink, centered, fully visible with no clipping. Legend ("Yang (Uptrend)" green swatch, "Yin (Downtrend)" red swatch) sits directly below the title with clear spacing. Y-axis title "Price ($)" and x-axis title "Kagi Line Index" are dark/soft-ink and clearly legible. Tick labels ($123-$200 on Y, -0.5-17.5 on X) are legible. Horizontal gridlines are subtle; x-axis has no gridlines (appropriate for this chart type, avoids clutter against the vertical Kagi bars). A new callout — a thin green ring around the tallest column's top plus the text "Largest swing: 28%" in dark ink — sits in open space near the top-right, not overlapping any other element.
+      Data: First series (Yang/uptrend) renders in brand green #009E73 as thick (~7px) vertical/horizontal segments; Yin/downtrend renders in the semantic matte-red anchor (#AE3030) as thin (~2.5px) segments. 18 Kagi columns with realistic shoulder/waist reversals are visible, values ranging ~$126 to ~$196, with the largest single-column swing (the callout target) clearly the tallest green bar around index 14.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues, callout text is dark-on-light and crisp.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, legend, and both axis titles/tick labels render in light ink (off-white/soft-gray), fully legible against the dark background. No dark-on-dark text observed anywhere (title, ticks, axis names, legend all correctly flipped to light tokens). Gridlines are subtle and theme-adaptive.
-      Data: Same green (#009E73) and matte-red hues as the light render, confirming the data-color/chrome separation rule — colors identical between renders, only chrome flipped.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, and both axis titles/tick labels render in light ink (off-white/soft-gray), fully legible against the dark background. The callout ring and "Largest swing: 28%" text also flip to light ink and remain crisp against the dark surface — no dark-on-dark text observed anywhere.
+      Data: Same green (#009E73) and matte-red (#AE3030) hues as the light render, confirming the data-color/chrome-only-flips rule — the Kagi bar colors and thicknesses are pixel-identical to the light render, only the background/text/grid changed.
       Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
@@ -76,7 +78,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlapping text or data elements in either render, including
+          the new callout
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -95,7 +98,7 @@ review:
         max: 4
         passed: true
         comment: Balanced margins, plot fills healthy majority of canvas, nothing
-          cut off
+          cut off, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -107,19 +110,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, semantic red for downtrend, theme-correct
+        comment: 'First series #009E73, semantic red anchor for downtrend, theme-correct
           chrome in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured default: correct palette and thoughtful thickness
-          variation, but no exceptional custom flourish'
+        passed: true
+        comment: Improved from attempt 1 via the callout flourish, but overall chrome
+          remains close to the library-skeleton defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -128,11 +131,11 @@ review:
         comment: Subtle single-axis grid, minimal chrome, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color + thickness dual encoding creates clear visual hierarchy for
-          trend strength
+        comment: New largest-swing callout gives the chart a clear focal point in
+          addition to the existing color + thickness dual encoding
     spec_compliance:
       score: 15
       max: 15
@@ -193,8 +196,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: makeRng factory and reversal-tracking loop add structure beyond a
-          strict linear script, though justified by the algorithm
+        comment: makeRng factory, reversal-tracking loop, and callout-placement math
+          add structure beyond a strict linear script, though justified by the algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -218,7 +221,8 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount contract, animation:false, current API
+        comment: Correct mount contract, animation:false, no explicit size/devicePixelRatio,
+          current API
     library_mastery:
       score: 9
       max: 10
@@ -235,13 +239,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: renderItem/api.coord() custom rendering is genuinely ECharts-distinctive
-          and hard to replicate cleanly in other libraries
-  verdict: REJECTED
+        comment: renderItem/api.coord() custom rendering plus chart.convertToPixel-driven
+          callout placement are genuinely ECharts-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep:
