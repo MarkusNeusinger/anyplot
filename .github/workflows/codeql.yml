@@ -1,0 +1,71 @@
+name: "CodeQL"
+
+# Advanced CodeQL setup, replacing the repository's default setup so the
+# generated plot implementations can be left out of scanning.
+#
+# Under default setup every push to an `implementation/*` branch and every
+# impl-* pull request triggered a full five-language scan; during the 4-slot
+# backfill of 2026-09-02 up to 23 CodeQL runs sat in the runner queue at once,
+# ahead of the pipeline's own jobs. `plots/**` holds generated, AI-reviewed
+# plot scripts that run only inside the pipeline's sandboxed render step —
+# scanning them has never produced an actionable alert, and the impl-* PRs
+# touch nothing else.
+#
+# Default setup must be switched off in the repository settings (Code
+# security → Code scanning) once this workflow lands: GitHub rejects
+# advanced-setup uploads while default setup is enabled.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'plots/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'plots/**'
+  schedule:
+    # Weekly, like the default setup it replaces. :23 past the hour dodges
+    # GitHub's top-of-hour scheduler overload (see daily-regen.yml).
+    - cron: '23 4 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        # Same coverage as the default setup: `javascript-typescript` covers
+        # both JavaScript and TypeScript; `actions` scans the workflow files.
+        language: [actions, javascript-typescript, python]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.37.9
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          # Also keep the plot scripts out of the analysis itself, not only
+          # out of the triggers: a docs-only push would otherwise still scan
+          # the thousands of files under plots/.
+          config: |
+            paths-ignore:
+              - plots/**
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.37.9
+        with:
+          category: "/language:${{ matrix.language }}"

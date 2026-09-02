@@ -81,6 +81,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **CodeQL moves to an advanced-setup workflow that skips `plots/**`** — the default
+  setup scanned five languages on every push to an `implementation/*` branch and every
+  impl-* pull request; during the 4-slot backfill of 2026-09-02 up to 23 CodeQL runs
+  waited in the runner queue at once, ahead of the pipeline's own jobs. The new
+  `.github/workflows/codeql.yml` keeps the same languages and weekly schedule but ignores
+  `plots/**` both as a trigger and inside the analysis, so pipeline PRs no longer start
+  a scan. Default setup has to be switched off in the repository settings for the
+  workflow's uploads to be accepted. (#11200)
 - **The API image is built in two stages and drops two thirds of its weight** — the
   single-stage `api/Dockerfile` produced a 1.6 GB image (502 MB compressed in Artifact
   Registry) of which 277 MB compressed was ballast in two layers: `build-essential`,
