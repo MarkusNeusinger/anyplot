@@ -131,21 +131,98 @@ bars
   .attr("stroke", (d) => (d.close >= d.open ? upColor : downColor))
   .attr("stroke-width", 2.5);
 
-// --- Legend (semantic up/down colors need a key) --------------------------------
-const legend = svg.append("g").attr("transform", `translate(${width - margin.right - 190},${margin.top - 56})`);
+// --- Moving-average overlay (d3-shape line generator, smoothed) ------------------
+const maWindow = 8;
+const maData = data
+  .map((d, i) => (i < maWindow - 1 ? null : { date: d.date, value: d3.mean(data.slice(i - maWindow + 1, i + 1), (s) => s.close) }))
+  .filter((d) => d !== null);
+
+const maLine = d3
+  .line()
+  .curve(d3.curveMonotoneX)
+  .x((d) => x(d.date.toISOString()) + bw / 2)
+  .y((d) => y(d.value));
+
+g.append("path")
+  .datum(maData)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 2)
+  .attr("stroke-dasharray", "6,4")
+  .attr("stroke-opacity", 0.75)
+  .attr("d", maLine);
+
+// --- Extreme callouts (highlight the period high/low for a clear focal point) ----
+function addExtremeCallout(point, priceKey, label, direction) {
+  const cx = x(point.date.toISOString()) + bw / 2;
+  const cy = y(point[priceKey]);
+  const leaderLen = 30;
+  const textY = cy + (direction === "up" ? -leaderLen - 6 : leaderLen + 6);
+  const calloutG = g.append("g").attr("class", "extreme-callout");
+
+  calloutG
+    .append("line")
+    .attr("x1", cx)
+    .attr("y1", cy)
+    .attr("x2", cx)
+    .attr("y2", cy + (direction === "up" ? -leaderLen : leaderLen))
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1.2)
+    .attr("stroke-dasharray", "2,2");
+
+  calloutG
+    .append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 4)
+    .attr("fill", "none")
+    .attr("stroke", t.ink)
+    .attr("stroke-width", 1.5);
+
+  const labelText = calloutG
+    .append("text")
+    .attr("x", cx)
+    .attr("y", textY)
+    .attr("text-anchor", "middle")
+    .attr("fill", t.ink)
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .text(`${label} $${point[priceKey].toFixed(2)}`);
+
+  const bbox = labelText.node().getBBox();
+  calloutG
+    .insert("rect", "text")
+    .attr("x", bbox.x - 6)
+    .attr("y", bbox.y - 3)
+    .attr("width", bbox.width + 12)
+    .attr("height", bbox.height + 6)
+    .attr("rx", 4)
+    .attr("fill", t.elevatedBg)
+    .attr("stroke", t.grid);
+}
+
+const maxHighPoint = data.reduce((a, b) => (b.high > a.high ? b : a));
+const minLowPoint = data.reduce((a, b) => (b.low < a.low ? b : a));
+addExtremeCallout(maxHighPoint, "high", "High", "up");
+addExtremeCallout(minLowPoint, "low", "Low", "down");
+
+// --- Legend (semantic up/down colors + moving-average key) -----------------------
+const legend = svg.append("g").attr("transform", `translate(${width - margin.right - 190},${margin.top - 80})`);
 const legendItems = [
-  { label: "Up (close > open)", color: upColor },
-  { label: "Down (close < open)", color: downColor },
+  { label: "Up (close > open)", color: upColor, dash: null },
+  { label: "Down (close < open)", color: downColor, dash: null },
+  { label: `${maWindow}-Day MA`, color: t.ink, dash: "6,4" },
 ];
 legendItems.forEach((item, i) => {
   const row = legend.append("g").attr("transform", `translate(0,${i * 26})`);
-  row.append("line").attr("x1", 0).attr("x2", 22).attr("y1", 0).attr("y2", 0).attr("stroke", item.color).attr("stroke-width", 3.5);
+  const swatch = row.append("line").attr("x1", 0).attr("x2", 22).attr("y1", 0).attr("y2", 0).attr("stroke", item.color).attr("stroke-width", 3.5);
+  if (item.dash) swatch.attr("stroke-dasharray", item.dash).attr("stroke-opacity", 0.75);
   row
     .append("text")
     .attr("x", 30)
     .attr("y", 5)
     .attr("fill", t.inkSoft)
-    .style("font-size", "14px")
+    .style("font-size", "15px")
     .text(item.label);
 });
 
