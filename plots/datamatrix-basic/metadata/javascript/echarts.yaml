@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: datamatrix-basic
 created: '2026-09-02T00:09:26Z'
-updated: '2026-09-02T00:14:43Z'
+updated: '2026-09-02T00:25:32Z'
 generated_by: claude-sonnet
 workflow_run: 33573649259
 issue: 3811
@@ -12,57 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Faithful ISO/IEC 16022 structure: solid L-shaped finder pattern occupies the
-    full left column and bottom row, with the alternating clock/timing track correctly
-    placed on the top row and right column — verified pixel-exact in both renders.'
-  - 'Exact theme-token compliance: sampled pixel values confirm plot background is
-    precisely #FAF8F1 (light) and #1A1A17 (dark), with modules using the corresponding
-    ink token — no drift from the style guide''s chrome hex values.'
-  - Honest, well-reasoned code comment documents the deliberate tradeoff of using
-    ink/page-background instead of the Imprint categorical palette for the modules,
-    directly citing the spec's own 'high contrast black on white' requirement rather
-    than silently deviating.
-  - Deterministic, seeded pseudo-random payload generation (mulberry32 seeded from
-    the content string) keeps the interior pattern reproducible without a real barcode
-    encoder, which the library rules explicitly note is unavailable in the browser
-    sandbox.
-  - Clean use of ECharts' custom series with `renderItem` to draw exact square modules
-    on a category/category cartesian grid — a legitimate, idiomatic way to render
-    an exact pixel-grid pattern without relying on a heatmap's continuous color legend.
-  - Quiet zone, canvas margins, and title placement are well-balanced; the square
-    2400×2400 canvas format is the correct choice for this grid-based, symmetric plot
-    type.
+  - Structural (finder + timing) modules now render in Imprint brand green (palette[0])
+    while payload modules stay on the ink token, directly resolving the prior review's
+    VQ-07 finding without losing the spec's L-shaped finder / alternating timing pattern.
+  - Deterministic mulberry32 RNG seeded from the content string gives fully reproducible
+    payload noise across runs.
+  - 'Correct mount-node contract: echarts.init with no explicit width/height or devicePixelRatio,
+    animation: false, and window.__anyplotReady set from the ''finished'' event.'
+  - 'Both renders are theme-correct: #FAF8F1 / #1A1A17 backgrounds, brand green constant
+    across themes, ink token flips for payload contrast, no dark-on-dark or light-on-light
+    text.'
+  - 'Canvas gate passed cleanly at 2400x2400 with the //# anyplot-orientation: square
+    directive, matching the natural square aspect of a Data Matrix symbol.'
+  - Realistic, neutral example payload (industrial part/lot serial string) fits the
+    spec's stated use cases.
   weaknesses:
-  - 'VQ-07 Palette Compliance: the modules use the theme ink token rather than the
-    Imprint categorical palette''s brand green (#009E73) for the ''first series''.
-    The tradeoff is well-justified by the spec''s explicit high-contrast black-on-white
-    requirement and is not a defect to fix reflexively, but it is a deliberate departure
-    from the hard ''first series is always #009E73'' rule and is noted here for visibility
-    rather than silently awarded full marks.'
-  - 'Design Excellence is modest (11/20): the render is faithful and clean but doesn''t
-    add much beyond the literal ISO 16022 structure — e.g. no subtle visual hierarchy
-    cue (like a faint corner marker or module-size legend) to help a human reader
-    parse finder-pattern vs. payload region at a glance. This is a soft, optional
-    polish note, not a correctness issue given a barcode''s aesthetic goal is technical
-    fidelity.'
+  - 'Design excellence is capped by the format itself: a single accent color plus
+    a binary grid leaves limited room for typographic hierarchy or compositional flourish
+    beyond the structure/payload color split already applied — acceptable for this
+    plot type, not a defect.'
+  - Only one distinctive ECharts technique is exercised (custom series with renderItem);
+    reasonable given ECharts has no native barcode chart type, but leaves LM-02 short
+    of a second differentiator.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, sampled pixel (250, 248, 241) = #FAF8F1 exactly — matches the required light-theme plot background.
-      Chrome: Title "datamatrix-basic · javascript · echarts · anyplot.ai" is centered at the top in dark ink (#1A1A17), clearly readable, comfortably within the canvas with generous margin above the matrix. No axis labels/ticks/legend/grid are present, which is correct — a Data Matrix barcode has no axes.
-      Data: A square 24x24-module grid (20 encoded modules + 2-module quiet zone on each side) rendered as black (#1A1A17) squares on the cream background. The left column and bottom row form a solid, unbroken L-shaped finder pattern; the top row and right column show a clean alternating (checkerboard) clock/timing pattern; the interior is a pseudo-random black/white payload pattern. A clear quiet zone margin separates the matrix from the canvas edge on all sides.
-      Legibility verdict: PASS — title and matrix are both crisp and high-contrast, no overlap, no clipping at any edge (verified via a cropped pixel inspection of the canvas borders).
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
+      Chrome: Title "datamatrix-basic · javascript · echarts · anyplot.ai" is centered near the top in dark ink text, clearly legible, not overflowing the canvas. No axis lines, ticks, or grid are shown (correctly hidden for this plot type).
+      Data: A 24x24 module grid forms the Data Matrix symbol. The left column and bottom row render as a solid green (#009E73) L-shaped finder pattern. The top row and right column render an alternating green/off-white checkerboard timing pattern. The interior payload cells render as near-black (ink) squares against the off-white background, giving strong black-on-white contrast for the encoded region. A visible quiet zone (2 modules) of page background surrounds the whole symbol.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, sampled pixel (26, 26, 23) = #1A1A17 exactly — matches the required dark-theme plot background.
-      Chrome: Same title text, now in light ink (#F0EFE8), clearly readable against the dark background. Same layout and margins as the light render — no dark-on-dark or light-on-light issues found.
-      Data: Identical module layout to the light render (same finder pattern, same timing pattern, same pseudo-random interior — confirmed pixel-identical grid), but with polarity flipped: modules are now light (#F0EFE8) on the near-black background, preserving the barcode's required high-contrast readability in dark mode. This is a deliberate, spec-driven choice to use the ink token rather than the Imprint palette's brand green for the "data," documented in the implementation's code comments.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; title and matrix both read clearly; a cropped inspection of the bottom canvas edge confirms no clipped/ghost text.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
+      Chrome: Same title, now rendered in light ink text, clearly legible against the dark background, correctly positioned and not clipped.
+      Data: Same 24x24 grid and same green (#009E73) finder/timing pattern — identical brand-green pixels to the light render, confirming the data color is theme-independent as required. Interior payload cells render as near-white (ink token flipped for dark theme) squares against the near-black background, preserving strong contrast for the encoded region. Quiet zone matches the dark page background.
+      Legibility verdict: PASS (checked a zoomed crop of the bottom margin — no residual chrome or text, no dark-on-dark artifacts)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -70,54 +59,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title fontSize 22 CSS px (44 source px) with theme-flipped ink color;
-          fully readable in both renders.
+        comment: Title clearly readable in both themes, no light-on-light or dark-on-dark
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Title and matrix are well separated; no text/element collisions.
+        comment: No collisions between title and grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Modules render at ~45 source px each on the 2400px canvas — clearly
-          visible, no overplotting concern (fixed grid, not density-based).
+        comment: 24x24 module grid, all cells crisply visible at this resolution
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Pure luminance (ink vs. page-background) contrast — inherently CVD-safe,
-          no red-green dependency.
+        comment: Green/ink/background contrast is solid in both themes, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for a symmetric grid plot; balanced
-          quiet-zone margins; nothing cut off.
+        comment: 2400x2400 canvas gate passed, symbol well-centered with balanced
+          margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches the mandated format exactly; correctly omits axes/legend,
-          which don't apply to a barcode.
+        comment: No axes needed for this plot type; title matches required format
+          exactly
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Modules use the theme ink token instead of Imprint palette[0] (#009E73).
-          Well-justified by the spec''s explicit ''high contrast black on white''
-          requirement and documented in code comments, but is a literal departure
-          from the hard first-series-is-brand-green rule, so not awarded full marks.
-          Backgrounds themselves are exactly on-spec (#FAF8F1 / #1A1A17, pixel-verified).'
+        passed: true
+        comment: 'Structural modules use palette[0] #009E73, identical across themes;
+          backgrounds are #FAF8F1/#1A1A17'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -125,22 +109,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Faithful, deliberate ISO 16022 structure with a documented design
-          rationale; limited further polish given the technical nature of a barcode.
+        comment: Deliberate green/ink split gives a professional, intentional look;
+          format itself limits further sophistication
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines/grid/axis clutter, generous quiet-zone whitespace; minimal
-          chrome overall.
+        comment: No axes/grid clutter, generous quiet-zone whitespace, clean composition
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No additional visual hierarchy cue beyond the raw finder/timing/payload
-          structure itself; default score, not raised.
+        passed: true
+        comment: Green finder/timing vs. ink payload creates a clear structure-vs-data
+          hierarchy cue
     spec_compliance:
       score: 15
       max: 15
@@ -150,29 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Data Matrix 2D barcode with L-shaped finder + alternating
-          timing pattern.
+        comment: 'Correct Data Matrix layout: L-shaped finder + alternating timing
+          + payload interior'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone, high-contrast rendering, solid L-finder, alternating
-          clock track, and an ECC-200-standin payload region are all present.
+        comment: Quiet zone (2 modules), solid L-finder, alternating timing track,
+          high-contrast payload all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Module row/col indices map 1:1 to the cartesian grid cells; full
-          symbol is shown.
+        comment: Deterministic pseudo-random payload stands in for ECC 200 encoding,
+          clearly documented as non-scannable; acceptable given no in-browser encoder
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'datamatrix-basic · javascript · echarts · anyplot.ai';
-          no legend needed for a single monochrome pattern.
+        comment: Title matches required '{spec-id} · javascript · echarts · anyplot.ai'
+          format; no legend needed
     data_quality:
       score: 15
       max: 15
@@ -182,22 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Finder pattern, timing pattern, quiet zone, and payload region are
-          all represented.
+        comment: Finder pattern, timing pattern, quiet zone, and payload region all
+          represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Content string 'PART:TRQ-4471/LOT:2609A' is a plausible, neutral
-          industrial parts-marking example matching the spec's applications list.
+        comment: PART:TRQ-4471/LOT:2609A is a plausible, neutral industrial serialization
+          string
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20x20-module symbol (24x24 with quiet zone) is a sensible mid-size
-          demo scale, consistent with the spec's 10x10/12x12 examples.
+        comment: 20x20 symbol size is a realistic ECC 200 module count
     code_quality:
       score: 10
       max: 10
@@ -207,32 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no classes; only a tiny PRNG helper function.
+        comment: Single small RNG helper, no classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, seeded from the content string.
+        comment: Fixed seed derived deterministically from content string
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the provided globals are used.
+        comment: No imports; uses only the global echarts
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear, well-commented, no fake UI/interactivity.
+        comment: No fake UI/interactivity; clear comments explain the structure/payload
+          split rationale
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, chart.on('finished')
-          ready signal.
+        comment: Correct mount-node contract, animation disabled, __anyplotReady signaled
+          from 'finished'
     library_mastery:
       score: 8
       max: 10
@@ -242,15 +225,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom series with renderItem on a category/category cartesian grid
-          is a legitimate, idiomatic way to draw an exact pixel grid.
+        comment: Idiomatic use of custom series + cartesian2d coordinate system for
+          a chart type ECharts has no native support for
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: renderItem-based custom rendering is a genuinely ECharts-distinctive
-          capability, well applied here.
+        comment: renderItem custom rendering is ECharts' standout escape hatch, well
+          applied; only one such technique used
   verdict: APPROVED
 impl_tags:
   dependencies: []
