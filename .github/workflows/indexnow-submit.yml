@@ -123,8 +123,10 @@ jobs:
           # either way: a runner behind Cloudflare's bot management may see a
           # 403 that Bing's own fetch does not, and IndexNow verifies itself.
           for i in $(seq 1 16); do
+            # On a transport failure curl still prints 000 for %{http_code};
+            # the fallback is assigned afterwards so nothing is appended.
             status=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' \
-              "https://${HOST}/${INDEXNOW_KEY}.txt" || echo 000)
+              "https://${HOST}/${INDEXNOW_KEY}.txt") || status=000
             case "$status" in
               200) echo "::notice::key file reachable"; break ;;
               # Deployed, but this runner is blocked at the edge: no point in

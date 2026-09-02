@@ -45,7 +45,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   key-file readiness loop treated every non-200 as "not deployed yet"; a GitHub runner
   that Cloudflare's bot management answers with 403 would have slept the full budget on
   every run. A 403 now counts as deployed (Bing's own fetch is not subject to that
-  block), and the final warning names the last status seen.
+  block), and the final warning names the last status seen. The submission body goes
+  through a file (a full-sitemap batch is ~260 KB, above the 128 KB command-line
+  argument cap that made the first sitemap-scope run report HTTP 000), and a first-use
+  `403 SiteVerificationNotCompleted` from IndexNow is a warning, not a failed run.
+  (#11204)
 - **Implementation pages no longer share one meta description per spec** — the SEO
   proxy reused the spec description verbatim as the `<meta name="description">` and OG
   description of every implementation page, so up to 15 library pages and their hub
