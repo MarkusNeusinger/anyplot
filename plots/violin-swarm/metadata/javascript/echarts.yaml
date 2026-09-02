@@ -1,0 +1,239 @@
+library: echarts
+language: javascript
+specification_id: violin-swarm
+created: '2026-09-02T09:53:30Z'
+updated: '2026-09-02T10:13:11Z'
+generated_by: claude-sonnet
+workflow_run: 33615846982
+issue: 3526
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Genuine violin+swarm hybrid built with ECharts' custom series `renderItem` for
+    the violin polygon plus a native scatter series for the beeswarm — an idiomatic,
+    technically sophisticated ECharts pattern rather than a workaround.
+  - Density-adaptive swarm layout (binned offsets with a size/opacity ratio) keeps
+    points inside the violin boundary and legible even in the most crowded bins.
+  - The 'Bimodal response' callout on Low Dose gives the chart a clear storytelling
+    focal point and uses the amber semantic anchor correctly for an annotation role.
+  - Correct Imprint palette usage — brand green `#009E73` violin fill, lavender `#C475FD`
+    swarm points — with theme-correct chrome (background, text, grid) in both light
+    and dark renders.
+  - Deterministic LCG + Box-Muller data generation keeps the plot fully reproducible
+    without any external RNG dependency.
+  weaknesses:
+  - The between-group reaction-time effect (Placebo mean ~340ms vs. High Dose mean
+    ~205ms, a ~135ms swing) is implausibly large for a caffeine-dosage effect — real
+    caffeine studies on simple reaction time typically show ~10-30ms improvements,
+    not a ~40% reduction. Narrow the per-category mean gap (e.g. ~300/275/260/245ms)
+    to stay factually plausible (DQ-03).
+  - Swarm points inside the densest violin (Placebo, 55 points) visibly touch/overlap
+    despite the density-aware spacing — tighten MAX_POINT_SPACING or lower the minimum
+    size/opacity ratio for the most crowded bins so individual observations stay distinguishable.
+  - The KDE/quantile/beeswarm helper functions push the code past the 'no functions'
+    KISS baseline expected for the JS libraries — understandable given the custom-series
+    technique, but worth consolidating where possible.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "Reaction Time by Caffeine Dose · violin-swarm · javascript · echarts · anyplot.ai" in dark ink, centered, ~53% of plot width, fully visible with no clipping. Legend ("Density" green swatch, "Observations" purple swatch) below the title, dark-on-light and readable. X-axis category labels (Placebo, Low Dose, Medium Dose, High Dose) and axis title "Experimental Condition" in dark ink, fully visible. Y-axis tick labels (0-500) and axis title "Reaction Time (ms)" in dark ink, fully visible with no leftmost-digit clipping. Horizontal gridlines are subtle and visible without competing with the data.
+      Data: Four violins in brand green (#009E73, alpha ~0.4) with purple/lavender swarm points (#C475FD) overlaid, spread horizontally within each violin's density outline. Low Dose violin has an amber outline and an amber "Bimodal response" text callout above it, correctly flagging the deliberately bimodal distribution.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title, legend, and axis labels now rendered in light ink/off-white, fully visible against the dark background. Gridlines remain subtle. No layout differences from the light render other than the chrome flip.
+      Data: Violins remain the same brand green, swarm points remain the same lavender/purple, and the amber Low Dose outline/callout is unchanged — confirms data colors are identical between themes, only chrome flipped.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (title, legend, axis labels, and tick labels are all rendered in light color against the near-black surface). Brand green and lavender data colors remain visible and distinguishable on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title scaled by length formula, legend
+          15px, axis names 18px, tick labels 14-16px); readable at full size in both
+          themes; title occupies ~53% of width, well within proportion.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap; swarm points in the densest violin (Placebo) touch
+          each other slightly despite density-aware spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Density-adaptive marker size/opacity (ratio-scaled per bin) keeps
+          points visible; could be slightly larger/more separated in the most crowded
+          bins.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Purple points on green violin with white/pageBg borders give strong
+          contrast; no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, no cut-off content, legend adjacent to plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units 'Reaction Time (ms)'; x-axis 'Experimental Condition'
+          descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (violin), second #C475FD (points), amber semantic
+          anchor for callout; theme-correct chrome in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Thoughtful custom violin+swarm composition with an intentional bimodal
+          accent, clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Subtle single-axis grid, generous whitespace, minimal chrome; not
+          fully polished at the densest swarm cluster.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: The amber-outlined bimodal violin plus text callout gives the chart
+          a clear, immediate focal point and insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct violin + swarm hybrid.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Swarm centered within violin, violin alpha ~0.4 (within 0.3-0.5 spec
+          range), contrasting point color, points stay within violin boundary.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Category on x, value on y, axes show all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format correct with descriptive prefix; legend labels 'Density'/'Observations'
+          match series.
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Different spreads and an explicit bimodal distribution across the
+          four categories.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, plausible caffeine-dosage reaction-time scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 2
+        max: 4
+        comment: The ~135ms mean swing from Placebo to High Dose is a much larger
+          caffeine effect than real-world reaction-time studies show; proportions
+          are plausible-looking but not factually well-calibrated.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Helper functions for KDE/quantile/beeswarm go beyond a flat script,
+          though justified by the custom-series technique.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic LCG seed 42.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No imports beyond the global echarts.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: No fake UI/interactivity, appropriate complexity for the technique.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Correct mount-node contract, animation disabled, current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Custom series renderItem + cartesian2d coordinateSystem is the recommended
+          ECharts pattern for shapes without a native series type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Uses renderItem/api.coord, graphic overlay, and convertToPixel —
+          features distinctive to ECharts' custom-series API.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
