@@ -141,24 +141,39 @@ jobs:
           # under that today (4.6k) but the split keeps this future-proof.
           split -l 10000 -d urls.txt batch_
           for f in batch_*; do
-            body=$(jq -n --arg host "$HOST" --arg key "$INDEXNOW_KEY" \
+            # The body goes through a file: a full-sitemap batch is ~250 KB,
+            # and a single command-line argument is capped at 128 KB on Linux
+            # — the first sitemap-scope run (33665718870) failed to exec curl
+            # at all and reported HTTP 000 for 4,593 URLs.
+            jq -n --arg host "$HOST" --arg key "$INDEXNOW_KEY" \
               --arg loc "https://${HOST}/${INDEXNOW_KEY}.txt" \
               --rawfile list "$f" \
               '{host: $host, key: $key, keyLocation: $loc,
-                urlList: ($list | split("\n") | map(select(length > 0)))}')
+                urlList: ($list | split("\n") | map(select(length > 0)))}' > body.json
             # Bounded: a slow or flaky api.indexnow.org must not burn the job
             # timeout; three retries cover a transient error, and a transport
             # error after them yields code 000 for the branch below instead of
             # aborting under `set -e`.
             code=$(curl -sS -o response.txt -w '%{http_code}' \
-              --max-time 30 --retry 3 --retry-delay 5 --retry-all-errors \
+              --max-time 60 --retry 3 --retry-delay 5 --retry-all-errors \
               -X POST "https://api.indexnow.org/indexnow" \
               -H "Content-Type: application/json; charset=utf-8" \
-              --data "$body") || code="000"
+              --data @body.json) || code="000"
             n=$(grep -c . "$f")
             case "$code" in
               200|202) echo "::notice::IndexNow accepted ${n} URL(s) (HTTP ${code})" ;;
-              # 4xx is a protocol or key problem on our side; make it visible.
+              # First use of a key (rollout or rotation): IndexNow verifies the
+              # key file asynchronously and answers 403 SiteVerificationNotCompleted
+              # until it has — seen on the first sitemap-scope run, minutes
+              # after the file went live. Not our fault, so warn; the next
+              # push resubmits its own URLs, and scope=sitemap is a re-run away.
+              403)
+                if grep -q SiteVerificationNotCompleted response.txt 2>/dev/null; then
+                  echo "::warning::IndexNow has not finished verifying the key file yet (403 SiteVerificationNotCompleted); ${n} URL(s) not accepted — re-run with scope=sitemap later"
+                else
+                  echo "::error::IndexNow rejected ${n} URL(s) (HTTP 403): $(head -c 300 response.txt 2>/dev/null)"; exit 1
+                fi ;;
+              # Any other 4xx is a protocol or key problem on our side; make it visible.
               4*) echo "::error::IndexNow rejected ${n} URL(s) (HTTP ${code}): $(head -c 300 response.txt 2>/dev/null)"; exit 1 ;;
               # 5xx / no response: their side. Every later push resubmits its
               # own URLs and `scope=sitemap` covers a longer gap, so warn.
