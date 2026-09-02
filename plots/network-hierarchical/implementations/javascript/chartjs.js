@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: a small org chart, 4 management levels, 22 employees -----------
+// --- Data: a small org chart, 4 management levels, asymmetric branching ---
 const orgTree = {
   label: "CEO",
   children: [
@@ -14,11 +14,16 @@ const orgTree = {
       children: [
         {
           label: "Eng Mgr A",
-          children: [{ label: "Sr Engineer" }, { label: "Engineer" }],
+          children: [
+            { label: "Sr Engineer" },
+            { label: "Engineer" },
+            { label: "QA Engineer" },
+          ],
         },
+        { label: "Eng Mgr B", children: [{ label: "Engineer" }] },
         {
-          label: "Eng Mgr B",
-          children: [{ label: "Sr Engineer" }, { label: "Engineer" }],
+          label: "Eng Mgr C",
+          children: [{ label: "Sr Engineer" }, { label: "DevOps Eng" }],
         },
       ],
     },
@@ -29,10 +34,7 @@ const orgTree = {
           label: "Sales Mgr A",
           children: [{ label: "Acct Exec" }, { label: "Sales Rep" }],
         },
-        {
-          label: "Sales Mgr B",
-          children: [{ label: "Acct Exec" }, { label: "Sales Rep" }],
-        },
+        { label: "Sales Mgr B", children: [{ label: "Sales Rep" }] },
       ],
     },
     {
@@ -42,10 +44,7 @@ const orgTree = {
           label: "PM Core",
           children: [{ label: "Designer" }, { label: "Analyst" }],
         },
-        {
-          label: "PM Growth",
-          children: [{ label: "Designer" }, { label: "Analyst" }],
-        },
+        { label: "PM Growth", children: [{ label: "Designer" }] },
       ],
     },
   ],
@@ -143,7 +142,7 @@ const nodeLabelPlugin = {
       meta.data.forEach((point, idx) => {
         ctx.save();
         ctx.fillStyle = t.ink;
-        ctx.font = "600 13px sans-serif";
+        ctx.font = "600 15px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillText(dataset.data[idx].label, point.x, point.y + dataset.pointRadius + 6);
