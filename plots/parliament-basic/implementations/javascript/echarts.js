@@ -55,7 +55,7 @@ const seriesData = divisions.map((division, i) => {
   const block = seatPositions.slice(cursor, cursor + division.seats);
   cursor += division.seats;
   return {
-    name: `${division.name} (${division.seats})`,
+    name: division.name,
     type: "scatter",
     data: block.map((p) => [p.x, p.y]),
     itemStyle: { color: t.palette[i], borderColor: t.pageBg, borderWidth: 1 },
@@ -67,6 +67,36 @@ const dotDiameter = rowSpacing * 0.8;
 const pad = dotDiameter / 2;
 const xRange = 2 * (outerRadius + pad);
 const yRange = outerRadius + 2 * pad;
+
+// --- Majority threshold marker (spec's optional 50%+1 highlight) -----------
+// A dashed radial markLine through the seat that tips the chamber into a
+// majority, using ECharts' coord-pair markLine (not a plain scatter point).
+const majoritySeats = Math.floor(totalSeats / 2) + 1;
+const thresholdSeat = seatPositions[majoritySeats - 1];
+const thresholdAngleRad = (thresholdSeat.angle * Math.PI) / 180;
+const thresholdRadius = outerRadius + pad;
+const thresholdEnd = {
+  x: thresholdRadius * Math.cos(thresholdAngleRad),
+  y: thresholdRadius * Math.sin(thresholdAngleRad),
+};
+const majorityMarkerSeries = {
+  type: "scatter",
+  data: [],
+  silent: true,
+  tooltip: { show: false },
+  markLine: {
+    silent: true,
+    symbol: "none",
+    lineStyle: { color: t.inkSoft, type: "dashed", width: 2 },
+    label: {
+      show: true,
+      formatter: () => `Majority · ${majoritySeats}`,
+      color: t.inkSoft,
+      fontSize: 13,
+    },
+    data: [[{ coord: [0, 0] }, { coord: [thresholdEnd.x, thresholdEnd.y] }]],
+  },
+};
 
 const topReserved = 70;
 const bottomReserved = 110;
@@ -104,6 +134,22 @@ chart.setOption({
     itemHeight: 16,
     textStyle: { color: t.inkSoft, fontSize: 15 },
     itemGap: 20,
+    formatter: (name) => {
+      const division = divisions.find((d) => d.name === name);
+      return division ? `${name} (${division.seats})` : name;
+    },
+  },
+  tooltip: {
+    trigger: "item",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink },
+    formatter: (params) => {
+      const division = divisions.find((d) => d.name === params.seriesName);
+      if (!division) return "";
+      const pct = ((division.seats / totalSeats) * 100).toFixed(1);
+      return `<strong>${division.name}</strong><br/>${division.seats} seats (${pct}%)`;
+    },
   },
   grid: { left: gridLeft, top: gridTop, width: gridWidth, height: gridHeight },
   xAxis: {
@@ -118,8 +164,11 @@ chart.setOption({
     max: outerRadius + pad,
     show: false,
   },
-  series: seriesData.map((s) => ({
-    ...s,
-    symbolSize: dotDiameter * scale,
-  })),
+  series: [
+    ...seriesData.map((s) => ({
+      ...s,
+      symbolSize: dotDiameter * scale,
+    })),
+    majorityMarkerSeries,
+  ],
 });
