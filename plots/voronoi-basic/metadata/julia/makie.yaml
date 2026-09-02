@@ -1,0 +1,250 @@
+library: makie
+language: julia
+specification_id: voronoi-basic
+created: '2026-09-02T10:25:13Z'
+updated: '2026-09-02T10:40:18Z'
+generated_by: claude-sonnet
+workflow_run: 33618620129
+issue: 3415
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Genuine voronoiplot! usage with cells clipped to a bounding box (clip = bbox)
+    — no infinite/unbounded edge regions, exactly as the spec requires
+  - Continuous cell coloring maps daily foot traffic through imprint_seq, correctly
+    chosen since visit counts are single-polarity (not diverging), with a properly
+    labeled, theme-adaptive Colorbar close to the plot
+  - 'Theme-adaptive chrome is fully correct in both renders: ink/ink-soft tokens flip
+    for title, axis text, tick labels, spines, seed-point markers, and cell stroke
+    color, while the data colormap stays byte-identical between light and dark'
+  - Realistic, neutral retail-traffic scenario with a plausible value range (300-1700
+    visits/day across a 12x6.5 km city grid) and a focal highlight ring on the busiest
+    store for light data storytelling
+  - 'Clean KISS script structure: seeded RNG, single Axis, no functions/classes, correct
+    plot-light.png/plot-dark.png output'
+  weaknesses:
+  - Only titlesize is set explicitly; xlabelsize/ylabelsize/xticklabelsize/yticklabelsize
+    are left at the Figure-level fontsize=14 default rather than being explicitly
+    sized — set them explicitly (e.g. xlabelsize=ylabelsize=16, xticklabelsize=yticklabelsize=13)
+    to earn full VQ-01 credit
+  - 'The focal highlight ring around the busiest store (scatter! with strokecolor=INK,
+    strokewidth=2.5) is visually very close to the ordinary cell-boundary strokes
+    (strokewidth=1.5, same INK color) and easy to miss — give it a distinct treatment
+    (e.g. the amber semantic anchor #DDCC77, or a visibly larger stroke width) so
+    the intended storytelling focal point actually reads at a glance'
+  - No grid is used and spines are the default L-shape (top/right removed) — acceptable,
+    but there is room for a touch more visual refinement (e.g. a subtle DataAspect
+    margin note or a legend/annotation calling out the highlighted store) to push
+    Design Excellence further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "voronoi-basic · julia · makie · anyplot.ai" centered at top, clearly readable. "X Position (km)" and "Y Position (km)" axis labels in dark ink, tick labels ("0", "5", "10" on X; "0.0", "2.5", "5.0" on Y) in a softer grey — all legible. Colorbar on the right labeled "Daily Visits" with tick labels "500", "1000", "1500", fully visible, not clipped at the canvas edge. Top and right spines removed, left/bottom spines kept in a soft ink tone.
+      Data: 26 Voronoi cells tile the plot area, clipped to a bounding box so no infinite edge regions appear. Cells are colored on a green-to-blue continuous gradient (imprint_seq) driven by daily visit counts, with black cell-boundary strokes separating adjacent regions. Black-filled seed-point markers sit inside each cell. A subtle ring highlights the busiest store.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlaps or clipping observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and axis labels now rendered in light/off-white ink, tick labels in a lighter soft-grey tone, both clearly visible against the dark background. Colorbar label and tick labels are also light-colored and readable. Spines and grid treatment mirror the light render (top/right removed, left/bottom kept in a lighter ink tone).
+      Data: The Voronoi cell colors are identical to the light render (green-to-blue imprint_seq gradient) — only the chrome (background, text, spines, cell-stroke/seed-marker ink color) flipped to the light tone. Seed-point markers are now white-filled dots, clearly visible against both the dark background and the colored cells.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found; all title, axis, tick, and colorbar text reads cleanly against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Readable in both themes, but only titlesize is explicit; axis/tick
+          label sizes rely on the Figure-level fontsize=14 default rather than explicit
+          xlabelsize/ylabelsize/xticklabelsize/yticklabelsize
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Seed markers (markersize=17) and cell strokes are well-sized for
+          26 sparse points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Cell strokes give redundant encoding beyond the sequential colormap,
+          CVD-safe imprint_seq gradient
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills most of the canvas, colorbar sits close via colgap!(15),
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"X Position (km)" / "Y Position (km)" are descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used for single-polarity continuous data; both
+          renders theme-correct backgrounds/chrome
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Continuous color-mapped tessellation with integrated colorbar is
+          clearly above a generic default voronoi diagram
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, no competing grid, but still library-default
+          L-frame with modest extra polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color intensity plus a focal ring on the busiest store create hierarchy,
+          though the ring is subtle against the cell-stroke lines
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine Voronoi diagram via voronoiplot!
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cells clipped to bounding box, distinguishable via color and edge,
+          seed points marked
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, axis limits show all seed points
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar label matches the mapped variable
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Clipped cells, edge+color differentiation, marked seeds, and a highlighted
+          store all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral retail foot-traffic scenario, real-world plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 300-1700 daily visits over a 12x6.5 km city grid is a sensible retail
+          scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Random, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current Makie API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct high-level voronoiplot! + Colorbar linkage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: voronoiplot! with clip=bbox is a Makie-specific recipe not trivially
+          replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
