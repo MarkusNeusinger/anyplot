@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-sma: Simple Moving Average (SMA) Indicator Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -47,6 +47,26 @@ const smaShort = sma(close, 20);
 const smaMedium = sma(close, 50);
 const smaLong = sma(close, 200);
 
+// Golden-cross / death-cross emphasis: color each Close segment by whether
+// price sits above (bullish, brand green) or below (bearish, semantic-red
+// anchor) the medium SMA — a Chart.js `segment` feature that turns the
+// crossover signal into the chart's visual focal point.
+function crossState(i) {
+  const s = smaMedium[i];
+  if (s == null) return "above";
+  return close[i] >= s ? "above" : "below";
+}
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+const bullish = t.palette[0]; // #009E73 brand green
+const bearish = t.palette[4]; // #AE3030 matte-red semantic anchor
+const bullishFill = hexToRgba(bullish, 0.14);
+const bearishFill = hexToRgba(bearish, 0.1);
+
 const labels = dates.map((d) =>
   d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" }),
 );
@@ -69,11 +89,19 @@ new Chart(canvas, {
       {
         label: "Close",
         data: close,
-        borderColor: t.palette[0],
-        backgroundColor: t.palette[0],
+        borderColor: bullish,
+        backgroundColor: bullishFill,
         borderWidth: 2,
         pointRadius: 0,
         tension: 0,
+        // Fill the gap between Close and SMA 50 (dataset index 2) rather than
+        // down to the axis bottom — a narrow, legible band that visualizes
+        // the crossover spread instead of a heavy full-height area.
+        fill: 2,
+        segment: {
+          borderColor: (ctx) => (crossState(ctx.p0DataIndex) === "below" ? bearish : bullish),
+          backgroundColor: (ctx) => (crossState(ctx.p0DataIndex) === "below" ? bearishFill : bullishFill),
+        },
       },
       {
         label: "SMA 20",
@@ -83,6 +111,7 @@ new Chart(canvas, {
         borderWidth: 2.5,
         pointRadius: 0,
         tension: 0,
+        fill: false,
       },
       {
         label: "SMA 50",
@@ -92,6 +121,7 @@ new Chart(canvas, {
         borderWidth: 2.5,
         pointRadius: 0,
         tension: 0,
+        fill: false,
       },
       {
         label: "SMA 200",
@@ -101,6 +131,7 @@ new Chart(canvas, {
         borderWidth: 3,
         pointRadius: 0,
         tension: 0,
+        fill: false,
       },
     ],
   },
