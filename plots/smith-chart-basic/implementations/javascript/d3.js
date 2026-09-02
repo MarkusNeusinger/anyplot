@@ -1,7 +1,7 @@
 // anyplot.ai
 // smith-chart-basic: Smith Chart for RF/Impedance
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-02
+// Quality: 93/100 | Created: 2026-09-02
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
