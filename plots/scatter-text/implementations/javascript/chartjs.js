@@ -16,20 +16,26 @@ function jitter(cx, cy, spread) {
   return { x: cx + (rand() - 0.5) * spread, y: cy + (rand() - 0.5) * spread };
 }
 
+// Cluster centers/spreads chosen to spread coverage across all four quadrants
+// of the wide 16:9 canvas (avoids the empty bottom-right seen at attempt 1) and
+// to open up the previously crowded Scripting & Web cluster.
 const clusters = [
   {
     domain: "Systems & Low-Level",
-    center: [-6, 2],
+    center: [-7, 3],
+    spread: 6,
     words: ["C", "C++", "Rust", "Go", "Zig", "Ada", "Fortran", "Assembly", "D", "Nim"],
   },
   {
     domain: "Scripting & Web",
-    center: [5, 3],
+    center: [6, 1],
+    spread: 7,
     words: ["JavaScript", "TypeScript", "Python", "Ruby", "PHP", "Perl", "Lua", "Dart", "Elixir", "Swift"],
   },
   {
     domain: "Functional & Data",
-    center: [0, -6],
+    center: [1, -7],
+    spread: 6,
     words: ["Haskell", "Scala", "Clojure", "F#", "Erlang", "OCaml", "Julia", "Elm", "Racket", "R"],
   },
 ];
@@ -37,7 +43,7 @@ const clusters = [
 const datasets = clusters.map((cluster, i) => ({
   label: cluster.domain,
   data: cluster.words.map((word) => {
-    const p = jitter(cluster.center[0], cluster.center[1], 5.5);
+    const p = jitter(cluster.center[0], cluster.center[1], cluster.spread);
     return { x: p.x, y: p.y, label: word };
   }),
   backgroundColor: t.palette[i],
@@ -92,7 +98,7 @@ new Chart(canvas, {
         display: true,
         text: "scatter-text · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "600" },
+        font: { size: 32, weight: "600" },
       },
       legend: {
         position: "top",
@@ -105,15 +111,20 @@ new Chart(canvas, {
       },
     },
     scales: {
+      // Numeric t-SNE coordinates carry no literal meaning, so ticks stay hidden;
+      // going fully borderless (no grid, no axis line) avoids the four-sided box
+      // a bare grid would draw and keeps focus on the text-label clusters.
       x: {
         title: { display: true, text: "Semantic Dimension 1 (t-SNE)", color: t.ink, font: { size: 16 } },
         ticks: { display: false },
-        grid: { color: t.grid },
+        grid: { display: false },
+        border: { display: false },
       },
       y: {
         title: { display: true, text: "Semantic Dimension 2 (t-SNE)", color: t.ink, font: { size: 16 } },
         ticks: { display: false },
-        grid: { color: t.grid },
+        grid: { display: false },
+        border: { display: false },
       },
     },
   },
