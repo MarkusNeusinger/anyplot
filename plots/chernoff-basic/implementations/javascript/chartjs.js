@@ -6,12 +6,19 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// Six financial-health metrics per company, each mapped to a distinct facial
-// feature. A tiny LCG stands in for a seeded RNG (the browser has none).
+// Eight financial-health metrics per company, each mapped to a distinct
+// facial feature. A tiny LCG stands in for a seeded RNG (the browser has
+// none).
 let lcgState = 42;
 function lcg() {
   lcgState = (lcgState * 1103515245 + 12345) % 2147483648;
   return lcgState / 2147483648;
+}
+// Stretches a 0-1 LCG draw into a realistic domain range for metrics whose
+// natural units aren't a 0-100% figure (e.g. a liquidity ratio or a
+// debt-to-equity multiple).
+function scaleRange(v, min, max) {
+  return min + v * (max - min);
 }
 
 const sectors = [
@@ -46,9 +53,11 @@ const companies = companyNames.map((name, i) => {
     revenue_growth: lcg(),
     employee_growth: lcg(),
     profit_margin: lcg(),
-    liquidity_ratio: lcg(),
+    liquidity_ratio: scaleRange(lcg(), 0.8, 3.2), // current-ratio style multiple
     market_share: lcg(),
-    rd_intensity: lcg(),
+    rd_intensity: scaleRange(lcg(), 1, 22), // % of revenue, realistic ceiling
+    debt_to_equity: scaleRange(lcg(), 0.1, 2.5), // multiple
+    customer_retention: scaleRange(lcg(), 60, 98), // %
   };
 });
 
@@ -60,6 +69,8 @@ const metrics = [
   "liquidity_ratio",
   "market_share",
   "rd_intensity",
+  "debt_to_equity",
+  "customer_retention",
 ];
 const ranges = {};
 metrics.forEach((m) => {
@@ -70,6 +81,22 @@ function normalize(m, v) {
   const { min, max } = ranges[m];
   return max > min ? (v - min) / (max - min) : 0.5;
 }
+
+// Composite overall-profile score (simple average of growth/margin/share/
+// retention, offset by leverage) drives the single "strongest profile"
+// highlight drawn on the grid.
+companies.forEach((c) => {
+  c.compositeScore =
+    (normalize("revenue_growth", c.revenue_growth) +
+      normalize("profit_margin", c.profit_margin) +
+      normalize("market_share", c.market_share) +
+      normalize("customer_retention", c.customer_retention) +
+      (1 - normalize("debt_to_equity", c.debt_to_equity))) /
+    5;
+});
+const topPerformer = companies.reduce((best, c) =>
+  c.compositeScore > best.compositeScore ? c : best,
+);
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -83,8 +110,12 @@ const chernoffFacesPlugin = {
   id: "chernoffFaces",
   afterDatasetsDraw(chart) {
     const { ctx, scales } = chart;
-    const cellW = Math.abs(scales.x.getPixelForValue(1) - scales.x.getPixelForValue(0));
-    const cellH = Math.abs(scales.y.getPixelForValue(1) - scales.y.getPixelForValue(0));
+    const cellW = Math.abs(
+      scales.x.getPixelForValue(1) - scales.x.getPixelForValue(0),
+    );
+    const cellH = Math.abs(
+      scales.y.getPixelForValue(1) - scales.y.getPixelForValue(0),
+    );
 
     chart.data.datasets.forEach((dataset, di) => {
       if (!chart.isDatasetVisible(di)) return;
@@ -92,21 +123,53 @@ const chernoffFacesPlugin = {
       dataset.data.forEach((raw, i) => {
         const el = meta.data[i];
         if (!el) return;
-        drawFace(ctx, el.x, el.y, cellW, cellH, raw);
+        drawFace(
+          ctx,
+          el.x,
+          el.y,
+          cellW,
+          cellH,
+          raw,
+          raw.company === topPerformer.company,
+        );
       });
     });
   },
 };
 
-function drawFace(ctx, cx, cy, cellW, cellH, r) {
-  const headRx = cellW * 0.24 * (0.75 + 0.5 * normalize("revenue_growth", r.revenue_growth));
-  const headRy = cellH * 0.28 * (0.75 + 0.5 * normalize("employee_growth", r.employee_growth));
-  const eyeR = headRx * (0.08 + 0.14 * normalize("profit_margin", r.profit_margin));
-  const mouthCurve = headRy * 0.55 * (2 * normalize("liquidity_ratio", r.liquidity_ratio) - 1);
+function drawFace(ctx, cx, cy, cellW, cellH, r, isTopPerformer) {
+  const headRx =
+    cellW * 0.24 * (0.75 + 0.5 * normalize("revenue_growth", r.revenue_growth));
+  const headRy =
+    cellH *
+    0.28 *
+    (0.75 + 0.5 * normalize("employee_growth", r.employee_growth));
+  const eyeR =
+    headRx * (0.08 + 0.14 * normalize("profit_margin", r.profit_margin));
+  const mouthCurve =
+    headRy * 0.55 * (2 * normalize("liquidity_ratio", r.liquidity_ratio) - 1);
   const browSlant = 10 * (2 * normalize("market_share", r.market_share) - 1);
-  const noseLen = headRy * (0.15 + 0.35 * normalize("rd_intensity", r.rd_intensity));
+  const noseLen =
+    headRy * (0.15 + 0.35 * normalize("rd_intensity", r.rd_intensity));
+  const eyeSpacing =
+    headRx * (0.34 + 0.16 * normalize("debt_to_equity", r.debt_to_equity));
+  const mouthWidth =
+    headRx *
+    (0.42 + 0.28 * normalize("customer_retention", r.customer_retention));
 
   ctx.save();
+
+  // Highlight ring: marks the company with the strongest overall profile
+  // (composite of growth, margin, market share, retention, and leverage).
+  if (isTopPerformer) {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, headRx * 1.28, headRy * 1.28, 0, 0, Math.PI * 2);
+    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = t.ink;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
 
   // Head
   ctx.beginPath();
@@ -118,7 +181,7 @@ function drawFace(ctx, cx, cy, cellW, cellH, r) {
   ctx.stroke();
 
   // Eyebrows (slant encodes market share)
-  const eyeOffsetX = headRx * 0.42;
+  const eyeOffsetX = eyeSpacing;
   const eyeY = cy - headRy * 0.15;
   ctx.strokeStyle = t.ink;
   ctx.lineWidth = 2.5;
@@ -148,9 +211,9 @@ function drawFace(ctx, cx, cy, cellW, cellH, r) {
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Mouth (curvature encodes liquidity ratio)
+  // Mouth (curvature encodes liquidity ratio, width encodes customer retention)
   const mouthY = cy + headRy * 0.55;
-  const mouthW = headRx * 0.55;
+  const mouthW = mouthWidth;
   ctx.beginPath();
   ctx.moveTo(cx - mouthW, mouthY);
   ctx.quadraticCurveTo(cx, mouthY + mouthCurve, cx + mouthW, mouthY);
@@ -160,12 +223,20 @@ function drawFace(ctx, cx, cy, cellW, cellH, r) {
 
   ctx.restore();
 
-  // Label
+  // Label — the top-performer's name gets a bold "★" prefix to flag it as
+  // the standout face on the grid. Its baseline drops below the highlight
+  // ring (not just the head) so the dashed stroke never crosses the text.
   ctx.save();
-  ctx.fillStyle = t.inkSoft;
-  ctx.font = "13px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(r.company, cx, cy + headRy + 20);
+  if (isTopPerformer) {
+    ctx.fillStyle = t.ink;
+    ctx.font = "bold 13px sans-serif";
+    ctx.fillText(`★ ${r.company}`, cx, cy + headRy * 1.28 + 20);
+  } else {
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = "13px sans-serif";
+    ctx.fillText(r.company, cx, cy + headRy + 20);
+  }
   ctx.restore();
 }
 
@@ -213,9 +284,11 @@ new Chart(canvas, {
               `Revenue growth: ${(r.revenue_growth * 100).toFixed(0)}%`,
               `Employee growth: ${(r.employee_growth * 100).toFixed(0)}%`,
               `Profit margin: ${(r.profit_margin * 100).toFixed(0)}%`,
-              `Liquidity ratio: ${(r.liquidity_ratio * 100).toFixed(0)}%`,
+              `Liquidity ratio: ${r.liquidity_ratio.toFixed(2)}x`,
               `Market share: ${(r.market_share * 100).toFixed(0)}%`,
-              `R&D intensity: ${(r.rd_intensity * 100).toFixed(0)}%`,
+              `R&D intensity: ${r.rd_intensity.toFixed(1)}% of revenue`,
+              `Debt-to-equity: ${r.debt_to_equity.toFixed(2)}x`,
+              `Customer retention: ${r.customer_retention.toFixed(0)}%`,
             ];
           },
         },
