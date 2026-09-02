@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: bar-error
+created: '2026-09-02T12:03:11Z'
+updated: '2026-09-02T12:15:45Z'
+generated_by: claude-sonnet
+workflow_run: 33626538477
+issue: 2376
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Real visual hierarchy now present: bars are sorted descending by mean yield and
+    the top performer (NPK Mix) is highlighted with full alpha plus a bold value label,
+    directly fixing the prior review''s ''no storytelling / no focal point'' weakness.'
+  - Value labels via geom_text (sprintf("%.1f", mean_yield)) add precision above each
+    bar without crowding the error-bar caps.
+  - 'Correct theme-token wiring: PAGE_BG/INK/INK_SOFT flip cleanly between light (#FAF8F1)
+    and dark (#1A1A17), with identical brand-green (#009E73) bars in both renders.'
+  - Error bars use geom_errorbar with visible caps (width=0.2) that clearly mark the
+    +/-1 SD range on every bar, and the subtitle explicitly states what they represent.
+  - Dynamic title fontsize (round(12 * 67 / nchar(plot_title))) adapts to the mandated
+    title's length instead of a hardcoded size.
+  - 'Realistic, neutral data: crop yield (tons/hectare) across 6 fertilizer treatments
+    with plausible means and replicate-based SDs.'
+  weaknesses:
+  - 'Library mastery is still fairly basic: beyond geom_col/geom_errorbar/geom_text
+    plus scale_alpha_manual, no distinctive ggplot2 feature is demonstrated (e.g.
+    coord_flip, faceting, ggrepel-style label placement, or scales::label_number on
+    the axis).'
+  - The highlighted (full-opacity) bar's meaning relies entirely on the subtitle text
+    ('Ranked by mean yield, highest first') and the bold label — an explicit annotation
+    callout (e.g. a small 'Best yield' tag near NPK Mix) would remove any ambiguity
+    for a first-time viewer.
+  - Asymmetric error bars are not demonstrated (optional per spec, but would have
+    been a low-cost way to raise DQ-01 feature coverage further).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Crop Yield by Fertilizer Treatment · bar-error · r · ggplot2 · anyplot.ai" and grey subtitle "Ranked by mean yield (highest first) · error bars show ±1 SD across 8 replicate plots per treatment" are both clearly legible against the light background. Axis titles ("Fertilizer Treatment", "Crop Yield (tons/hectare)") are dark and crisp; tick labels are a softer dark grey, fully readable. Only horizontal major gridlines are shown, subtle against the background.
+      Data: Six green bars sorted descending by mean yield (NPK Mix, Nitrogen, Compost, Potassium, Phosphorus, Control). NPK Mix is rendered at full alpha (brand green #009E73) with a bold "7.0" label; the remaining five bars are the same hue at reduced alpha (0.6), each topped with a black error bar with visible horizontal caps and a plain-weight value label (6.2, 6.1, 4.9, 4.2, 3.4). No overlap between labels, caps, or bars.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle render in light tones (white / light grey) and are clearly legible against the dark background — no dark-on-dark issue. Axis titles are light-colored and crisp; tick labels are a softer light grey and fully readable. Gridlines flip to a light color, remaining subtle.
+      Data: Same six bars in identical positions, heights, and hue as the light render, confirming data colors are unchanged between themes (only alpha differentiates NPK Mix from the rest, and that differentiation still reads clearly on dark). Error bar caps and value labels flip to a light color for contrast against the dark background, remaining clearly visible with no overlap.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; dynamic title fontsize keeps the
+          long mandated title from overflowing; value labels are crisp and appropriately
+          sized.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, error bars, or the new value labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and error-bar caps are clearly visible and appropriately sized
+          for 6 categories; reduced-alpha bars remain distinguishable from background.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High contrast green bars against ink error bars; single hue with
+          alpha differentiation, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (3200x1800); good proportions, nothing
+          clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (tons/hectare).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; identical
+          data colors across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional hierarchy now present via alpha-highlighted top performer,
+          bold value label, and ranked ordering — a real design decision, not just
+          default styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid limited to horizontal major lines only, ticks removed, value
+          labels add polish; still uses a single accent technique (alpha) rather than
+          deeper custom styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: bars ranked highest-to-lowest, best performer
+          highlighted and bold-labeled, subtitle reinforces the ranking narrative.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bar chart with error bars.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars with visible caps; subtitle explains ±1 SD.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = treatment, Y = mean yield, error mapped to ymin/ymax correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; no legend
+          needed for single series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers bars + symmetric error bars; asymmetric variant not shown
+          but not required by spec.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral agricultural field-trial scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yield values (3.2-7.4 t/ha) and SDs are realistic for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, straightforward script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; tibble accessed via namespaced call.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; appropriate complexity for the highlight/label
+          logic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ggsave with ragg::agg_png.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_col + geom_errorbar + geom_text + scale_alpha_manual
+          layering, correct factor releveling for ranked order.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: scale_alpha_manual highlighting and conditional fontface are a step
+          up from basic geoms, but still no coord_flip, faceting, or custom scale
+          formatting.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

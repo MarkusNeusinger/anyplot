@@ -1,0 +1,258 @@
+library: chartjs
+language: javascript
+specification_id: area-stacked-percent
+created: '2026-09-02T11:54:20Z'
+updated: '2026-09-02T12:09:59Z'
+generated_by: claude-sonnet
+workflow_run: 33626560563
+issue: 2647
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'tension: 0 fix removes the prior Catmull-Rom overshoot risk — bands now interpolate
+    with straight segments, guaranteeing the 100%-stacked layers never dip below 0
+    or over 100 between the 10 sampled years'
+  - Android's share now peaks at ~72.5% (2020) before easing to ~71% by 2024, replacing
+    the previous flat 82% plateau and landing squarely in the commonly cited real-world
+    range (~70-72%)
+  - Composition now changes continuously through all 10 years — iOS keeps growing
+    every year (14% to 27.6%), Other keeps gently declining — resolving the prior
+    6-year flat-plateau weakness
+  - 'New explicit visual-hierarchy device: the dominant Android series gets a heavier
+    3px border vs 1.5px for the rest, an intentional focal-point technique documented
+    in a code comment'
+  - 'Correct idiomatic Chart.js percent-stacked pattern retained: type ''line'' +
+    y.stacked + fill:''origin''/''-1'' chaining with filler.propagate:false explicitly
+    set'
+  - Imprint palette in canonical order with brand green (#009E73) as the first, dominant
+    series; data colors are pixel-identical between light and dark renders
+  - Theme-adaptive chrome fully correct in both renders — warm off-white (#FAF8F1)
+    / warm near-black (#1A1A17) backgrounds, all text uses ink/inkSoft tokens, y-axis-only
+    subtle dashed grid
+  weaknesses:
+  - Design Excellence remains solid-default territory — alpha-blended fills with solid
+    border strokes are tasteful but stop short of a distinctive, highly polished composition
+  - No feature is truly unique to Chart.js beyond the standard line/fill/stack idiom;
+    the filler.propagate tweak and border-width emphasis are good practice but not
+    a showcase of a library-distinctive capability
+  - Windows Phone and BlackBerry both reach exactly 0% by 2020 in lockstep — real-world
+    discontinuation timing differed slightly between the two platforms, a minor realism
+    nit
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Smartphone OS Market Share · area-stacked-percent · javascript · chartjs · anyplot.ai" in dark ink, centered at top, fully visible with no clipping; italic subtitle "Annual global shipment share across five platforms, 2015-2024" beneath it in a softer ink tone. X-axis title "Year" and Y-axis title "Market Share (%)" in dark ink. Tick labels (2015-2024 on x; 0%-100% in 20% steps on y, suffixed with "%") in a softer gray-ink tone. Bottom-aligned horizontal legend with 5 color swatches (Android, iOS, Windows Phone, BlackBerry, Other), all dark text, all fully readable. Subtle dashed horizontal gridlines align with the y-axis ticks; no x-axis gridlines.
+      Data: Five stacked, semi-transparent (alpha ~0.75) filled bands with solid borders (Android's border noticeably heavier than the rest), summing to exactly 100% at every year with clean straight-segment transitions (no spline overshoot). Bottom-to-top order: Android (brand green #009E73, largest band, rising from ~62% in 2015 to a ~72.5% peak around 2019-2020 then easing to ~71% by 2024), iOS (lavender/purple, second-largest, continuously growing from ~14% to ~27.6%), Windows Phone (blue, shrinking from ~14% to 0% by ~2020), BlackBerry (ochre, shrinking from ~7% to 0% by ~2020), Other (matte red, thin sliver shrinking from ~3% to ~1.4%). First series is confirmed brand green.
+      Legibility verdict: PASS — all text clearly readable against the light background, no dark-on-light legibility issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, subtitle, axis titles, and tick labels, now rendered in light ink (near-white for primary text, light gray for tick labels and subtitle), fully legible against the dark background. Legend swatches and text likewise flipped to light-on-dark and fully readable. Gridlines remain subtle, now a faint light tone against the dark surface.
+      Data: The five stacked bands use identical Imprint hex values to the light render (brand green Android at bottom, lavender/purple iOS, blue Windows Phone, ochre BlackBerry, red Other at top) — data colors are pixel-identical between the two themes; only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every title, subtitle, axis label, and tick label is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, title/subtitle sized appropriately for the
+          long descriptive title, no overflow, fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: tension:0 fix removes the prior spline-overshoot risk; bands are
+          clearly visible and well-bordered with straight-segment interpolation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, alpha-blended fills with
+          solid border strokes for definition
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed at 3200x1800; plot area fills the canvas with
+          balanced margins, legend directly below the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ('Year', 'Market Share (%)')
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73, remaining series follow canonical
+          Imprint order, backgrounds/chrome theme-correct in both renders, data colors
+          identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Above a bare configured default (alpha-blended fills, solid border
+          strokes, scaled title/subtitle) but not yet publication-ready polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Y-axis-only subtle dashed grid, no x-grid, generous whitespace before
+          legend — solid refinement, not perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'New explicit emphasis technique: heavier border on the dominant
+          Android series creates an intentional focal point beyond mere data-size
+          dominance'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic Chart.js percent-stacked area via line+fill+stacked
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time x-axis, categorical stacking, normalization to 100% all present
+          and verified
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=years, Y=market share %, all categories visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; legend labels
+          match dataset categories exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Composition now changes continuously across all 10 years (iOS keeps
+          growing, Other keeps declining) — the prior flat-plateau weakness is resolved
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible technology-market scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Android now peaks ~72.5% then eases to ~71%, matching commonly cited
+          real-world figures (~70-72%)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> mount -> chart, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; Chart is the pre-loaded global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set, current Chart.js
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook Chart.js area-stack idiom with the filler.propagate:false
+          correction that many implementations miss
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses Chart.js's fill chaining ('-1'/'origin') and per-series border-width
+          emphasis, somewhat distinctive to its filler plugin, but otherwise a standard
+          pattern replicable elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
