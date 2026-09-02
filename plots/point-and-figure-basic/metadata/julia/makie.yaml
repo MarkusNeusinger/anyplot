@@ -1,0 +1,269 @@
+library: makie
+language: julia
+specification_id: point-and-figure-basic
+created: '2026-09-02T05:12:06Z'
+updated: '2026-09-02T05:33:43Z'
+generated_by: claude-sonnet
+workflow_run: 33592783885
+issue: 3755
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - 'Correct P&F column-construction algorithm: strictly enforces box size and reversal-boxes
+    rules, never mixes X/O within a column'
+  - Breakout star + bold 'Breakout' callout at the analytic support/resistance intersection
+    gives the chart an immediate, clear focal point (directly resolves the prior review's
+    storytelling feedback)
+  - Explicit Legend object with an elevated-background panel (ELEVATED_BG, padding,
+    rowgap) reads as a deliberately composed panel rather than a default axislegend
+  - text! annotations anchoring 'Swing high' / 'Swing low' to the points that seed
+    each trend line make the analytical basis of the lines legible instead of implicit
+  - Theme-adaptive chrome (spines, grid alpha via RGBAf, tick/label colors, legend
+    background) is correctly threaded through both renders with no dark-on-dark or
+    light-on-light failures
+  - Spec-mandated green/red bull/bear semantic coloring correctly maps to Imprint
+    palette positions 1 and 5 (the sanctioned finance loss/gain exception); amber
+    breakout star correctly uses the semantic caution/callout anchor rather than a
+    stray hex
+  - X-axis correctly represents columns (reversals), not time, matching the defining
+    P&F convention from the spec
+  weaknesses:
+  - Title fontsize-scaling formula shrinks the long descriptive title to only ~39%
+    of canvas width — well under the 50-70% comfortable range and the 70-85% expected
+    for the mandated format; not an overflow/clipping problem, so not a hard deduction,
+    but there's room to raise the fontsize floor slightly for extra-long titles
+  - Y-axis gridlines are spaced every $10 (5x box size) rather than at the box-size
+    interval; still fine and not required by the spec, just an optional polish item
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Dark, fully legible title "NovaTech Inc. — box $2.00, reversal 3 · point-and-figure-basic · julia · makie · anyplot.ai" centered at top (comfortably within canvas bounds, no clipping). Axis labels "Column (Price Reversal)" and "Price ($)" in dark ink. Tick labels in a softer secondary gray. Subtle horizontal Y gridlines (~15% alpha). Top/right spines removed. Legend top-right sits inside a subtly elevated off-white panel (no visible frame border) listing "Bullish (X)", "Bearish (O)", "Support", "Resistance", "Breakout signal".
+      Data: Green X markers (#009E73) for bullish columns, red-outlined open-circle O markers (Imprint position 5, #AE3030) for bearish columns — never mixed within a column. Two black dashed 45-degree trend lines (support rising, resistance falling) converge near column 10-11 at an amber 5-point star marked "Breakout" in bold dark text. Small secondary-gray "Swing high" / "Swing low" annotations anchor the trend-line origin points.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotations, breakout callout) is clearly readable against the light background; no light-on-light issues found in close crops of the title, legend, y-axis tick column, or breakout/swing-low annotation regions.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: All chrome flipped — title/axis labels in off-white, tick labels/legend/annotations in a softer light gray, trend lines rendered as white dashes, gridlines faint light gray on dark. Legend panel uses the dark elevated background (#242420-consistent) rather than the plain page background, giving it a distinct "card" look. Spines and layout otherwise match the light render.
+      Data: X/O marker colors, star fill, and star stroke are pixel-identical to the light render (green #009E73, matte red outline, amber star) — confirmed no shift in data colors between themes; only surrounding chrome changed.
+      Legibility verdict: PASS — no dark-on-dark failures observed anywhere, including the "Swing low"/"Swing high" secondary-gray annotations and the bold white "Breakout" callout text, both of which sit with clear contrast against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set, title fontsize dynamically scaled and readable
+          in both themes without clipping; legend text is slightly small relative
+          to marker/patch size at native resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between legend, trend lines, annotations, and the dense
+          column-8/9/10 marker clusters (verified via close crops)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markersize 16 (X) / 15 (O, stroke 2.5) well adapted to the dataset;
+          breakout star (size 24) is prominent without overwhelming
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red redundantly encoded via distinct marker shapes (X vs. open
+          circle), not relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills a large, balanced portion of the 3200x1800 canvas,
+          nothing clipped or cut off; canvas dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Column (Price Reversal)" and "Price ($)" are descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Bullish/X) is Imprint #009E73; Bearish/O uses Imprint
+          position 5 (#AE3030, finance semantic exception); amber breakout star uses
+          the semantic caution anchor correctly; backgrounds/chrome theme-correct
+          in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Elevated-background legend panel plus the amber breakout-signal callout
+          add a genuine thoughtful design layer beyond the spec-mandated bull/bear
+          colors and standard theme tokens
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend panel refined with padding/margin/patchsize/rowgap and an
+          elevated background; spines removed and grid kept subtle; not every micro-detail
+          is polished (e.g. gridline interval) but clearly above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The amber star + bold 'Breakout' label at the analytic support/resistance
+          crossover gives the chart a clear, immediate focal point — the viewer sees
+          the trading signal without having to interpret the lines themselves
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct P&F construction: box/reversal logic, single-direction columns,
+          x-axis = columns not time'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: X/O columns, box size + reversal parameters in title, 45-degree support/resistance
+          trend lines, price scale on Y-axis with gridlines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=column index, y=price; both axes show the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows {Descriptive} · point-and-figure-basic · julia · makie
+          · anyplot.ai; legend labels match the data series including the new Breakout
+          signal entry
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both bullish and bearish columns, varying column heights/widths,
+          multiple reversals, and both trend lines plus their swing anchors
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible fictional-stock scenario ("NovaTech Inc."), no
+          sensitive content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range (~$72-$118) and $2 box size are realistic for an equity
+          P&F chart
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Sequential imports -> data -> P&F construction -> plot -> save, no
+          functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the P&F algorithm and its annotations,
+          no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2), current CairoMakie
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Figure/Axis/scatter!/lines!/text!/explicit Legend composition
+          with full theme-token threading
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Explicit Legend object placed in the Figure's grid layout with custom
+          background/padding, plus text! annotations anchoring the trend lines, are
+          genuine Makie compositional touches beyond generic scatter/lines/legend
+          usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - binning
+  styling:
+  - publication-ready
+  - alpha-blending
+  - edge-highlighting
