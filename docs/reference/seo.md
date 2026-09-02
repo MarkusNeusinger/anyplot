@@ -521,7 +521,12 @@ sitemap. Three pieces, kept in sync when the key is rotated:
 | Manual full load | `gh workflow run indexnow-submit.yml -f scope=sitemap` | Submits every URL of the live sitemap; used once at rollout and after a long outage of the workflow. |
 
 The engines answer `200` or `202` for an accepted batch; `4xx` means a key or
-payload problem and fails the run so it is visible. Bing Webmaster Tools shows
+payload problem and fails the run so it is visible. One `4xx` is transient by
+nature: after a rollout or a key rotation IndexNow verifies the key file
+asynchronously and answers `403 SiteVerificationNotCompleted` for a while, so
+the workflow retries that case once a minute for up to ten minutes before it
+fails — a `changed` run must not report success without its URLs accepted,
+because later pushes submit only their own diffs. Bing Webmaster Tools shows
 the received submissions under *IndexNow*.
 
 ## Discoverability for assistants
