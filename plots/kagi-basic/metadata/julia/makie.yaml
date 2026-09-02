@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: kagi-basic
 created: '2026-09-02T01:56:49Z'
-updated: '2026-09-02T02:00:35Z'
+updated: '2026-09-02T02:08:21Z'
 generated_by: claude-sonnet
 workflow_run: 33580984775
 issue: 3341
@@ -12,45 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Correct Kagi staircase construction with a proper 4% reversal-threshold state
-    machine (direction tracking, shoulder/waist geometry)
-  - 'Yang/Yin direction encoded redundantly via BOTH color (#009E73 green / #AE3030
-    red) AND line thickness (5px / 2px) — satisfies the no-color-only-signal accessibility
-    requirement'
-  - 'Clean theme-adaptive chrome: spines removed on top/right, single subtle horizontal
-    gridline, correct backgrounds (#FAF8F1 light / #1A1A17 dark) with identical data
-    colors across themes'
-  - Legend built via Makie's NaN-line idiom and correctly labeled 'Yang (bullish)'
-    / 'Yin (bearish)' matching spec terminology
-  - Realistic, neutral synthetic data (240-day random walk, 1.2% daily volatility)
-    producing a plausible mid-cap-style price range
+  - Correct, genuinely stateful Kagi reversal algorithm (not a disguised line chart)
+    — direction only flips on a 4% threshold breach, exactly matching the spec's reversal
+    semantics
+  - Idiomatic use of Makie's stairs!(..., step = :post) recipe, well-suited to the
+    rectilinear shoulder/waist geometry
+  - Redundant color+thickness encoding for yang/yin improves accessibility beyond
+    relying on red/green alone
+  - Reversal-point markers add a clear storytelling focal point on top of the raw
+    staircase
+  - Theme-adaptive chrome correctly implemented and verified — both renders pass the
+    legibility checklist with identical data colors
   weaknesses:
-  - Kagi legs are drawn with a manual per-segment lines! loop rather than Makie's
-    native stairs! step-plot recipe — the result is correct but misses the more idiomatic/distinctive
-    Makie primitive for staircase shapes (LM-02)
-  - Design polish is competent but standard — no extra data-storytelling emphasis
-    such as markers at reversal points, beyond what the raw staircase geometry already
-    conveys (DE-01/DE-03)
-  - Y-axis shows only 3 gridlines (65/70/75) across a ~$60-76 range, on the sparse
-    side for a price chart though not a legibility failure
+  - Reversal markers (markersize = 7) are small at thumbnail scale (400px) — consider
+    bumping slightly for better visibility on the catalog grid
+  - 'Design Excellence is solid but could go further: e.g., a subtle secondary annotation
+    (max drawdown/rally magnitude) or refined legend placement would push Data Storytelling
+    further'
+  - Library Mastery is competent but conservative — no distinctive Makie-only flourish
+    (e.g., custom Legend layout, Colorbar) beyond the core stairs! recipe
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "kagi-basic · julia · makie · anyplot.ai" in bold dark ink at top center, clearly legible. X-axis label "Line Index" and y-axis label "Price (USD)" in dark ink, both readable. Tick labels (0/5/10 on x; 65/70/75 on y) in a softer grey-brown, legible against the light background. Top and right spines removed; left/bottom spines a soft grey. A single subtle horizontal gridline set per y-tick.
-      Data: A Kagi staircase of ~13 legs. Thick green (#009E73) segments mark yang/bullish legs, thin red (#AE3030) segments mark yin/bearish legs, both clearly distinguishable from the background and each other. Legend bottom-right reads "Yang (bullish)" (thick green swatch) and "Yin (bearish)" (thin red swatch), no frame, legible.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "kagi-basic · julia · makie · anyplot.ai" bold and centered in dark ink; "Line Index" / "Price (USD)" axis labels and tick labels (0/5/10, 65/70/75) all in dark/soft-ink tones, clearly readable; subtle horizontal-only gridlines; top/right spines removed; bottom-right legend ("Yang (bullish)" / "Yin (bearish)") unframed and readable.
+      Data: Thick brand-green (#009E73) stairs for yang/bullish legs, thin matte-red (#AE3030) stairs for yin/bearish legs, drawn via stairs!(step=:post); small hollow markers at each reversal point.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, now in light/off-white ink, clearly legible against the dark background. Axis labels and tick labels flip to light/soft-light tones, both readable — no dark-on-dark text observed anywhere (title, axis labels, and tick labels all pass contrast). Spines and gridline flip to a soft light tone at low opacity, still subtle.
-      Data: Identical green (#009E73) and red (#AE3030) staircase segments and thickness encoding as the light render — data colors unchanged between themes, only chrome flipped, as required.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis/tick labels now in light ink/off-white, fully legible against the dark background; gridlines remain subtle and visible; legend still readable, no frame.
+      Data: Yang/yin colors (#009E73 green, #AE3030 red) are pixel-identical to the light render — only chrome flipped, as required. No dark-on-dark failures anywhere.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,74 +56,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text clearly legible in both themes; explicit font sizes (title
-          20, axis labels 14, ticks 12).
+        comment: All text readable in both themes with explicit font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render.
+        comment: No collisions between text, legend, or data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Thick (5px) vs thin (2px) line weights clearly distinguish yang/yin
-          segments against both backgrounds.
+        comment: Thick/thin contrast clear; reversal markers slightly small
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red pair backed by a redundant thickness cue (5px vs 2px),
-          so direction is never color-only.
+        comment: Redundant thickness channel backs up red/green color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas at target landscape size, no cutoff/overflow, no dimension-gate
-          flag.
+        comment: Canvas exactly 3200x1800, no clipping, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Line Index'' and ''Price (USD)'' are descriptive, with units where
-          applicable.'
+        comment: Descriptive axis labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Yang = #009E73 (Imprint position 1), Yin = #AE3030 (Imprint position
-          5, semantic red); backgrounds match #FAF8F1/#1A1A17.'
+        comment: Imprint positions 1 and 5, correct theme backgrounds, identical data
+          colors across themes
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Competent but standard styling; no distinctive custom polish beyond
-          library defaults.
+        passed: true
+        comment: Semantic color choice, redundant thickness encoding, reversal markers
+          show design intent
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, grid limited to a subtle single-axis horizontal
-          line, adequate whitespace.
+        comment: Spines removed, only subtle horizontal gridlines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Direction is legible at a glance via color+thickness, but no extra
-          emphasis (e.g. reversal-point markers) beyond the raw staircase.
+        comment: Reversal-point markers sharpen focal point on trend changes
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +126,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kagi staircase construction with a 4% reversal threshold
-          and proper shoulder/waist geometry.
+        comment: Genuine stateful Kagi construction
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick/thin lines, green up / red down, horizontal shoulders/waists,
-          line-index x-axis — all present.
+        comment: Thick/thin, color, threshold-only direction change, shoulders/waists
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = turn/line index (time-independent, per spec), Y = price.
+        comment: X = line index, Y = price, full turn-point series shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels 'Yang (bullish)'/'Yin
-          (bearish)' match spec terminology.
+        comment: Title matches mandated format; legend labels match spec terminology
     data_quality:
       score: 14
       max: 15
@@ -166,21 +155,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Multiple up/down legs of varying length and magnitude across the
-          full price range.
+        comment: Multiple reversals, thick/thin legs, shoulder/waist geometry demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Generic mid-cap-style stock, realistic daily volatility (1.2% std),
-          neutral (no real company named).
+        comment: Plausible mid-cap stock price path, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ~$60-76 with plausible daily moves for an equity.
+        comment: 240 observations within spec range, 4% reversal matches spec example
     code_quality:
       score: 10
       max: 10
@@ -190,35 +177,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, single top-to-bottom script.
+        comment: Flat script, loop inherent to stateful algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before data generation.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used.
+        comment: Only CairoMakie, Colors, Random, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Kagi construction loop is appropriately complex for the algorithm;
-          no fake UI.
+        comment: No fake UI, appropriately complex
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via px_per_unit=2; correct static-library
-          API.
+        comment: Correct save call and current Makie API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,15 +211,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Axis/lines! usage, theme tokens threaded through all chrome,
-          NaN-line legend idiom.
+        comment: Native stairs!(step=:post) recipe, correct primitive for rectilinear
+          geometry
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: NaN-line legend trick is a known Makie idiom, but the manual per-segment
-          lines! loop misses the more idiomatic native stairs! step-plot recipe.
+        comment: Competent but conservative, no further Makie-distinctive flourish
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -242,7 +226,8 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
-  - minimal-chrome
-  - grid-styling
+  - publication-ready
+  - edge-highlighting
