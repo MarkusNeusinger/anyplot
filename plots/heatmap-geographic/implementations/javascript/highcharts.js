@@ -61,6 +61,13 @@ const HOTSPOTS = [
 ];
 const N_PINGS = 1600;
 
+// Fixed landmark reference points (away from every hotspot) so the basemap
+// reads as a real district layout, not just a density surface.
+const LANDMARKS = [
+  { name: "Clock Tower", x: -0.55, y: -0.32 },
+  { name: "Public Library", x: 0.12, y: 0.36 },
+];
+
 const pings = [];
 HOTSPOTS.forEach((hotspot) => {
   const target = Math.round(N_PINGS * hotspot.weight);
@@ -83,7 +90,7 @@ HOTSPOTS.forEach((hotspot) => {
 // how far each ping's influence spreads — tuned to this district's ~2.4 km
 // scale so adjacent hotspots blend smoothly without merging into one blob.
 const BANDWIDTH_KM = 0.085;
-const GRID_COLS = 100;
+const GRID_COLS = 150;
 const CELL_KM = X_RANGE_KM / GRID_COLS;
 const GRID_ROWS = Math.round(Y_RANGE_KM / CELL_KM);
 const CELL_PX = PX_PER_KM * CELL_KM;
@@ -115,12 +122,8 @@ for (let row = 0; row < GRID_ROWS; row++) {
 // gamma-boosted interpolation across the two-stop imprint_seq gradient, with
 // alpha scaling so near-zero cells stay transparent and the basemap shows
 // through underneath (per spec: "sequential colormap ... with transparency").
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-const seqLow = hexToRgb(t.seq[0]);
-const seqHigh = hexToRgb(t.seq[1]);
+const seqLow = [t.seq[0].slice(1, 3), t.seq[0].slice(3, 5), t.seq[0].slice(5, 7)].map((h) => parseInt(h, 16));
+const seqHigh = [t.seq[1].slice(1, 3), t.seq[1].slice(3, 5), t.seq[1].slice(5, 7)].map((h) => parseInt(h, 16));
 const MIN_ALPHA = 0.04;
 const MAX_ALPHA = 0.92;
 const RENDER_THRESHOLD = 0.03; // skip visually-negligible cells (basemap already shows through)
@@ -143,32 +146,66 @@ cells.forEach((cell) => {
 });
 
 // --- Schematic street grid — basemap context beneath the density surface ----
-// Each line is its own tiny series (not one multi-segment series) so Highcharts
-// never re-sorts the two endpoints by x, which would otherwise scramble the grid.
-function streetLine(data) {
-  return {
-    type: "line",
-    data,
-    color: STREET_COLOR,
-    lineWidth: 1,
-    dashStyle: "Dash",
-    marker: { enabled: false },
-    enableMouseTracking: false,
-    showInLegend: false,
-    zIndex: 0,
-  };
-}
-const STREET_X_FRACS = [0.1, 0.3, 0.5, 0.7, 0.9];
-const STREET_Y_FRACS = [0.3, 0.5, 0.7];
+// Irregular spacing plus major/minor line weights (avenues vs. side streets)
+// and one diagonal boulevard, so the basemap reads as an actual district
+// layout rather than a uniform grid. Each line is its own tiny series (not one
+// multi-segment series) so Highcharts never re-sorts the two endpoints by x,
+// which would otherwise scramble the grid.
+const STREET_LINE_BASE = {
+  type: "line",
+  color: STREET_COLOR,
+  marker: { enabled: false },
+  enableMouseTracking: false,
+  showInLegend: false,
+  zIndex: 0,
+};
+const AVENUE_STYLE = { lineWidth: 1.5, dashStyle: "ShortDash" }; // major streets
+const SIDE_STREET_STYLE = { lineWidth: 1, dashStyle: "Dash" }; // minor streets
+const AVENUE_X_FRACS = [0.14, 0.52, 0.88];
+const SIDE_STREET_X_FRACS = [0.32, 0.7];
+const AVENUE_Y_FRACS = [0.26, 0.74];
+const SIDE_STREET_Y_FRACS = [0.12, 0.45, 0.6, 0.9];
 const streetGridSeries = [
-  ...STREET_X_FRACS.map((f) => streetLine([
-    [X_MIN + f * X_RANGE_KM, Y_MAX],
-    [X_MIN + f * X_RANGE_KM, Y_MIN],
-  ])),
-  ...STREET_Y_FRACS.map((f) => streetLine([
-    [X_MIN, Y_MIN + f * Y_RANGE_KM],
-    [X_MAX, Y_MIN + f * Y_RANGE_KM],
-  ])),
+  ...AVENUE_X_FRACS.map((f) => ({
+    ...STREET_LINE_BASE,
+    ...AVENUE_STYLE,
+    data: [
+      [X_MIN + f * X_RANGE_KM, Y_MAX],
+      [X_MIN + f * X_RANGE_KM, Y_MIN],
+    ],
+  })),
+  ...SIDE_STREET_X_FRACS.map((f) => ({
+    ...STREET_LINE_BASE,
+    ...SIDE_STREET_STYLE,
+    data: [
+      [X_MIN + f * X_RANGE_KM, Y_MAX],
+      [X_MIN + f * X_RANGE_KM, Y_MIN],
+    ],
+  })),
+  ...AVENUE_Y_FRACS.map((f) => ({
+    ...STREET_LINE_BASE,
+    ...AVENUE_STYLE,
+    data: [
+      [X_MIN, Y_MIN + f * Y_RANGE_KM],
+      [X_MAX, Y_MIN + f * Y_RANGE_KM],
+    ],
+  })),
+  ...SIDE_STREET_Y_FRACS.map((f) => ({
+    ...STREET_LINE_BASE,
+    ...SIDE_STREET_STYLE,
+    data: [
+      [X_MIN, Y_MIN + f * Y_RANGE_KM],
+      [X_MAX, Y_MIN + f * Y_RANGE_KM],
+    ],
+  })),
+  {
+    ...STREET_LINE_BASE,
+    ...AVENUE_STYLE,
+    data: [
+      [X_MIN, Y_MIN + 0.1 * Y_RANGE_KM],
+      [X_MIN + 0.62 * X_RANGE_KM, Y_MAX],
+    ],
+  }, // diagonal boulevard cutting across the grid
 ];
 
 // --- Chart --------------------------------------------------------------------
@@ -216,6 +253,20 @@ function drawHotspotLabels(chart) {
       .text(h.name, px, py)
       .attr({ align: "center" })
       .css({ color: t.ink, fontSize: "13px", fontWeight: "700" })
+      .add();
+  });
+}
+
+// Two fixed landmark markers (small filled square + label) reinforce that the
+// basemap represents a real street layout, distinct from the density blobs.
+function drawLandmarks(chart) {
+  LANDMARKS.forEach((lm) => {
+    const px = chart.xAxis[0].toPixels(lm.x, false);
+    const py = chart.yAxis[0].toPixels(lm.y, false);
+    chart.renderer.rect(px - 5, py - 5, 10, 10).attr({ fill: t.inkSoft, opacity: 0.6, "stroke-width": 0, zIndex: 2 }).add();
+    chart.renderer
+      .text(lm.name, px + 10, py + 4)
+      .css({ color: t.inkSoft, fontSize: "12px", fontWeight: "600" })
       .add();
   });
 }
@@ -308,5 +359,6 @@ Highcharts.chart(
   function (chart) {
     drawColorLegend(chart);
     drawHotspotLabels(chart);
+    drawLandmarks(chart);
   },
 );
