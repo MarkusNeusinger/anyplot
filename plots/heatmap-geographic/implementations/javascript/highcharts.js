@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-geographic: Geographic Heatmap for Spatial Density
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-02
+// Quality: 92/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME;
