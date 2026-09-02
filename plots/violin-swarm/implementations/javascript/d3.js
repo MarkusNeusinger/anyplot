@@ -128,7 +128,11 @@ densities.forEach((d, i) => {
 });
 
 // --- Swarm points: force-settled beeswarm, clamped to the violin outline ---
-const radius = 4.5;
+// Radius kept small so points stay distinguishable even in the densest bands
+// (Tactile, Auditory); fill uses the ink tone (not the violin's own hue) so
+// individual observations read as a contrasting layer on top of the density
+// shape, per the spec's "consider a contrasting color" guidance.
+const radius = 3.6;
 data.forEach((d, i) => {
   const centerX = x(d.category) + x.bandwidth() / 2;
   const points = densities[i].points;
@@ -142,11 +146,10 @@ data.forEach((d, i) => {
       d3.forceY((n) => y(n.value)).strength(1)
     )
     .force("x", d3.forceX(centerX).strength(0.03))
-    .force("collide", d3.forceCollide(radius + 0.6))
+    .force("collide", d3.forceCollide(radius + 0.9))
     .stop();
   for (let k = 0; k < 260; k++) sim.tick();
 
-  const color = t.palette[i % t.palette.length];
   g.selectAll(null)
     .data(nodes)
     .join("circle")
@@ -156,7 +159,7 @@ data.forEach((d, i) => {
     })
     .attr("cy", (n) => n.y)
     .attr("r", radius)
-    .attr("fill", color)
+    .attr("fill", t.inkSoft)
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 1);
 });
