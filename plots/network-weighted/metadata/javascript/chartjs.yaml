@@ -1,0 +1,240 @@
+library: chartjs
+language: javascript
+specification_id: network-weighted
+created: '2026-09-02T04:25:14Z'
+updated: '2026-09-02T04:40:36Z'
+generated_by: claude-sonnet
+workflow_run: 33590004151
+issue: 3290
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Thoughtful dual weight-encoding (edge width AND opacity) makes trade-volume magnitude
+    very readable at a glance.
+  - 'Smart label placement: labels default to the widest open angular gap between
+    a node''s incident edges, with a background halo, so text never collides with
+    a crossing edge.'
+  - Deterministic force-directed (Fruchterman-Reingold style) layout - no RNG, fully
+    reproducible, with independent-axis fitting that uses the square canvas well.
+  - Realistic, well-researched trade-volume data with plausible relative magnitudes
+    across major economies.
+  - Correct, idiomatic use of Chart.js's plugin architecture for a chart type the
+    library doesn't natively support.
+  weaknesses:
+  - The force-directed layout still leaves a moderately dense crossing of edges through
+    the CHN/GBR/DEU cluster in the center - consider a slightly stronger repulsion
+    constant or more simulation iterations to spread that cluster further.
+  - Legend value labels ($12B/$396B/$780B) and node-id labels become quite small at
+    the 400px mobile thumbnail - a couple of px increase on the legend sample-value
+    font would help mobile legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Title "network-weighted · javascript · chartjs · anyplot.ai" and subtitle in dark bold/regular text at top, clearly readable. Legend box top-left ("Trade volume ($B)") with dark text and three sample line-weight rows ($12B/$396B/$780B). Node-id labels in dark text with a light halo stroke, fully legible.
+      Data: 14 country-code nodes rendered in brand green #009E73, sized by weighted degree. Edges in ink-gray, width and opacity scaled to trade-volume weight; USA-CAN and USA-MEX read as darkest/thickest corridors.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Title, subtitle, legend box (dark elevated fill), and node labels all flip to light-colored text/fills. No dark-on-dark issues found - halo strokes behind labels keep them legible even where edges cross beneath them.
+      Data: Nodes remain the identical #009E73 green as the light render, confirming data-color consistency across themes. Edges flip to light gray/white strokes, clearly visible against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; legend value
+          labels get small at 400px mobile thumbnail.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Angular-gap label placement plus halo stroke keeps labels clear of
+          edges and each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node radius and edge width well matched to sparse 14-node/24-edge
+          graph.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue nodes plus neutral ink edges, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Network fills a healthy majority of the square canvas with balanced
+          margins; legend near plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No cartesian axes needed; title/subtitle/legend describe the encoding
+          with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is exactly #009E73; backgrounds correct in both themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dual weight-encoding, custom legend, thoughtful label-placement algorithm.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Halo-stroked labels and alpha gradients are polished, but central
+          cluster still reads a bit busy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Node size plus opacity boost on the heaviest corridor creates a clear
+          visual hierarchy.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct weighted network graph with force-directed layout.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present; edge overlap in the dense center cluster only
+          partially minimized.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All nodes/edges visible within the fitted layout bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend accurately reflects the weight scale.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good spread of weights and mix of hub/leaf nodes; no group attribute
+          (optional).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral bilateral trade-volume scenario among major economies.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Trade figures are in the right ballpark of real-world bilateral trade
+          volumes.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear; force simulation and plugin object add necessary structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity proportional to implementing a from-scratch network layout;
+          no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter dataset plus plugin hooks is the recommended pattern for
+          graph types Chart.js lacks natively.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Deep use of Chart.js's plugin lifecycle hooks and pixel-mapping scales.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - force-directed-layout
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
