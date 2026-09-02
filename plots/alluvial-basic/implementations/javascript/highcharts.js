@@ -90,6 +90,9 @@ Highcharts.chart("container", {
   title: {
     text: "alluvial-basic · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    // Extra margin below the subtitle so the Q1-Q4 column headers (drawn at
+    // chart.plotTop - 24) clear the subtitle baseline instead of sitting on it.
+    margin: 50,
   },
   subtitle: {
     text: "SaaS trial funnel · 1,000-lead cohort tracked across four quarters",
@@ -197,12 +200,14 @@ function drawAlluvial(chart) {
   });
 
   // Legend — identifies category color for the two middle columns, where
-  // endpoint labels aren't drawn.
+  // endpoint labels aren't drawn. Ordered to match the visual top-to-bottom
+  // stacking (STACK_ORDER), not category-definition order, so a swatch maps
+  // directly onto its band without hunting.
   const itemWidth = 210;
-  const legendWidth = itemWidth * CATEGORIES.length;
+  const legendWidth = itemWidth * STACK_ORDER.length;
   const legendY = chart.plotTop + chart.plotHeight + 34;
   const legendStartX = chart.plotLeft + (chart.plotWidth - legendWidth) / 2;
-  CATEGORIES.forEach((cat, i) => {
+  STACK_ORDER.forEach((cat, i) => {
     const itemX = legendStartX + i * itemWidth;
     r.rect(itemX, legendY - 11, 14, 14, 2).attr({ fill: CATEGORY_COLOR[cat] }).add();
     r.text(cat, itemX + 22, legendY)
