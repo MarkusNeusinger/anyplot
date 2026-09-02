@@ -52,13 +52,19 @@ title_text <- "box-horizontal · r · ggplot2 · anyplot.ai"
 p <- ggplot(df, aes(x = salary_k, y = job_title)) +
   geom_boxplot(
     fill = BRAND, color = INK, alpha = 0.75,
-    outlier.color = BRAND, outlier.alpha = 0.6, outlier.size = 1.8,
+    outlier.color = BRAND, outlier.alpha = 0.85, outlier.size = 2.6,
     linewidth = 0.5, width = 0.6
+  ) +
+  stat_summary(
+    fun = mean, geom = "point",
+    shape = 23, size = 3.2, stroke = 1.1,
+    fill = PAGE_BG, color = INK
   ) +
   labs(
     title = title_text,
     x = "Annual Salary (thousands USD)",
-    y = NULL
+    y = NULL,
+    caption = "◆ marks the mean; box marks the median and interquartile range"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -73,6 +79,7 @@ p <- ggplot(df, aes(x = salary_k, y = job_title)) +
     axis.text.y       = element_text(color = INK_SOFT, size = 9),
     axis.ticks        = element_blank(),
     plot.title        = element_text(color = INK, size = 12, margin = margin(b = 12)),
+    plot.caption      = element_text(color = INK_SOFT, size = 7, margin = margin(t = 10)),
     plot.margin       = margin(t = 16, r = 24, b = 12, l = 12)
   )
 
