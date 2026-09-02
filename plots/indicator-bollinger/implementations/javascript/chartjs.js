@@ -68,6 +68,66 @@ function hexToRgba(hex, alpha) {
 const bandColor = t.palette[2]; // blue — volatility envelope
 const smaColor = t.palette[1]; // lavender — middle band
 
+// --- Storytelling: locate the tightest squeeze and the sharpest breakout ---
+let squeezeIdx = -1;
+let minWidth = Infinity;
+for (let i = WINDOW - 1; i < N_DAYS; i++) {
+  const w = upperBand[i] - lowerBand[i];
+  if (w < minWidth) {
+    minWidth = w;
+    squeezeIdx = i;
+  }
+}
+
+let breakoutIdx = -1;
+let maxDeviation = -Infinity;
+for (let i = WINDOW - 1; i < N_DAYS; i++) {
+  const dev = Math.max(close[i] - upperBand[i], lowerBand[i] - close[i]);
+  if (dev > maxDeviation) {
+    maxDeviation = dev;
+    breakoutIdx = i;
+  }
+}
+
+const calloutPlugin = {
+  id: "bollingerCallouts",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const xScale = chart.scales.x;
+    const yScale = chart.scales.y;
+
+    function draw(idx, label, valueArr, color, dy) {
+      const x = xScale.getPixelForValue(labels[idx], idx);
+      const y = yScale.getPixelForValue(valueArr[idx]);
+      const textY = y + dy + (dy > 0 ? 16 : -10);
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y + dy);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = "600 14px sans-serif";
+      ctx.fillStyle = t.ink;
+      ctx.textAlign = "center";
+      ctx.fillText(label, x, textY);
+      ctx.restore();
+    }
+
+    draw(squeezeIdx, "Squeeze", lowerBand, t.inkSoft, 36);
+    draw(breakoutIdx, "Breakout", close, t.palette[0], -34);
+  },
+};
+
 // --- Mount -------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -75,6 +135,7 @@ document.getElementById("container").appendChild(canvas);
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
   type: "line",
+  plugins: [calloutPlugin],
   data: {
     labels,
     datasets: [
@@ -92,7 +153,7 @@ new Chart(canvas, {
         label: "Bollinger Band (±2σ)",
         data: lowerBand,
         borderColor: bandColor,
-        backgroundColor: hexToRgba(bandColor, 0.15),
+        backgroundColor: hexToRgba(bandColor, 0.2),
         borderWidth: 1.5,
         pointRadius: 0,
         fill: "-1",
@@ -157,7 +218,7 @@ new Chart(canvas, {
           font: { size: 14 },
           callback: (v) => "$" + v.toLocaleString(),
         },
-        grid: { color: t.grid },
+        grid: { color: hexToRgba(t.ink, 0.1), lineWidth: 1 },
       },
     },
   },
