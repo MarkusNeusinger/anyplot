@@ -1,0 +1,261 @@
+library: makie
+language: julia
+specification_id: frequency-polygon-basic
+created: '2026-09-02T00:39:42Z'
+updated: '2026-09-02T00:52:59Z'
+generated_by: claude-sonnet
+workflow_run: 33575973409
+issue: 3418
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Shared bin edges computed once across all three groups (`edges`/`midpoints`) so
+    the polygons are directly comparable, and each polygon is explicitly closed to
+    zero at both ends per the spec notes
+  - Layered semi-transparent bands (`band!` at alpha 0.15) under each `lines!` stroke
+    create a readable ridgeline-style comparison without one group obscuring another
+  - 'Imprint palette used in exact canonical order (#009E73, #C475FD, #4467A3) and
+    is identical between the light and dark renders; only chrome (background, ink,
+    grid) flips correctly via the THEME env var'
+  - All font sizes are explicitly set (titlesize=20, xlabelsize/ylabelsize=14, tick
+    label sizes=12) and remain legible at full resolution and scaled down in both
+    themes
+  - Deliberate visual-hierarchy choice (Sleep-deprived gets linewidth=4 vs 3 for the
+    other two) documented directly in a code comment explaining the storytelling intent
+  - 'Clean KISS script structure: no functions/classes, straightforward imports ->
+    data -> plot -> save flow, with Random.seed!(42) for reproducibility'
+  weaknesses:
+  - The `linestyles = [:solid, :dash, :solid]` array assigns `:dash` to the Caffeine
+    line (index 2), but both the plotted line and its legend swatch render as a solid
+    stroke in both themes (verified at 4x zoom crop) — the dashed differentiation
+    the code intends never actually appears. Since color already distinguishes the
+    three groups this isn't a legibility failure, but the dead styling code should
+    either be fixed (confirm CairoMakie renders the `:dash` linestyle correctly for
+    `lines!`, e.g. by testing an explicit dash tuple) or removed if truly non-functional.
+  - The linewidth-based emphasis on Sleep-deprived (4 vs 3) is a nice storytelling
+    idea per the code comment, but the 33% difference is subtle enough that a viewer
+    is unlikely to register it as intentional emphasis without reading the legend/comment
+    — consider a slightly larger contrast or a complementary cue (e.g., z-order/opacity)
+    if the intent is to visually foreground that group.
+  - In the busy 250-320ms overlap region all three semi-transparent fills stack into
+    a muddy gray-blue tone that reduces at-a-glance separation of the three bands
+    (the line strokes themselves stay traceable, so this is a polish note rather than
+    a correctness issue).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "frequency-polygon-basic · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center. X-axis label "Reaction Time (ms)" and Y-axis label "Frequency" (rotated) both in dark ink, readable. Tick labels (200/300/400/500 on x, 0/20/40 on y) in a softer gray, legible. Subtle horizontal gridlines at y=20/40 only, low-contrast. Legend top-right with three swatches (Control, Caffeine, Sleep-deprived), no frame box, labels in soft gray — all readable.
+      Data: Three overlapping frequency polygons closed to zero at both ends, each with a semi-transparent fill beneath the line. First series (Control) is Imprint brand green #009E73, second (Caffeine) is lavender #C475FD, third (Sleep-deprived) is blue #4467A3 — matches canonical Imprint order. Caffeine's line is coded as dashed in the script but renders solid in the image (confirmed via zoomed crop of both the line and its legend swatch). Sleep-deprived's line is visibly thicker than the other two.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels as the light render but flipped to light ink/gray tones (confirmed via zoomed crops of the "0" y-tick and the "Reaction Time (ms)" x-axis label/ticks) — all clearly legible against the dark surface, no dark-on-dark failures observed. Gridlines remain subtle.
+      Data: Colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3) — only the chrome (background, text, grid) flipped. The Caffeine line and legend swatch are solid in this render too, same non-rendering-dash issue as light.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark text found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (titlesize=20, label sizes=14, tick sizes=12);
+          balanced, readable in both themes and at both extremes of the size range
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend sits clear of data; no text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Distinct linewidths (3/3/4) and alpha fills keep lines visible; center
+          overlap region gets visually busy but strokes stay traceable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; fills at low alpha don't wash out the
+          line strokes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No cut-off content, balanced margins, legend near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Reaction Time (ms)" has units; "Frequency" is a descriptive unitless
+          count label'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (#009E73/#C475FD/#4467A3), identical across
+          themes, theme-correct chrome and backgrounds
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Imprint palette with layered alpha fills reads as thoughtful,
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, single subtle y-gridline set, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Deliberate linewidth emphasis on Sleep-deprived creates hierarchy,
+          but the 33% thickness delta is subtle rather than immediately obvious
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct frequency-polygon construction (midpoint-connecting lines
+          closed to zero)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shared bin edges, closed-to-zero polygons, distinct colors, legend,
+          semi-transparent fill all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=reaction time bin midpoints, Y=frequency counts, full data range
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match group
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three groups show distinct central tendency, spread, and right-skew
+          tail behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Reaction-time psychology experiment scenario is real, neutral, and
+          comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times (means 250-340ms, sensible SDs) are realistic for
+          human RT experiments
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear imports -> data -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Otherwise clean, but the `linestyles`/`:dash` assignment is dead
+          code — it doesn't visibly affect the render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Competent high-level Makie API usage (Figure/Axis/lines!/band!/axislegend)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! layering for the fill-under-line ridgeline effect is a reasonably
+          Makie-idiomatic technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready
