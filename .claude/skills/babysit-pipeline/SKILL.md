@@ -160,11 +160,17 @@ Claude usage window, which is why the user pulled it back the same
 evening. Reducing means: stop launching and let in-flight PRs drain;
 never cancel runs that already spent Claude time.
 
-**For an unattended queue use the scheduler** —
+**For an unattended queue use the scheduler**,
 `.claude/skills/babysit-pipeline/run_queue.sh <queue-dir> [slots]`,
-started detached so it survives the session, both streams captured
-(`setsid nohup .../run_queue.sh agentic/runs/<run> 2 >
-agentic/runs/<run>/queue.out 2>&1 &` — the `2` is the slot count). It keeps `[slots]` drivers in flight over
+started detached so it survives the session, with both streams
+captured:
+
+```bash
+setsid nohup .claude/skills/babysit-pipeline/run_queue.sh agentic/runs/<run> 2 \
+  > agentic/runs/<run>/queue.out 2>&1 &      # the 2 is the slot count
+```
+
+It keeps `[slots]` drivers in flight over
 `<queue-dir>/full_queue.txt`, skips libraries already on main and
 pairs recorded as `CONFIRMED GAP` in `deferred.log`, harvests every
 driver's `RESULT=` line into `done.log` / `deferred.log`, and holds

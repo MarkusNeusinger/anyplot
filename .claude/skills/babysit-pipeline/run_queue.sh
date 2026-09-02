@@ -19,16 +19,25 @@
 #   setsid nohup run_queue.sh agentic/runs/<run> 2 > agentic/runs/<run>/queue.out 2>&1 &
 # Stop it with `pkill -f run_queue.sh`; drivers keep running (after their
 # dispatches they only watch).
-set -uo pipefail
+#
+# `RUN_QUEUE_LIB=1 source run_queue.sh <queue-dir>` loads the functions for
+# testing without starting the scheduler loop — strict mode stays off then so
+# the caller's shell keeps its own options.
+if [ "${RUN_QUEUE_LIB:-}" != 1 ]; then
+  set -uo pipefail
+fi
 
 usage() {
-  echo "usage: $(basename "$0") <queue-dir> [slots]" >&2
+  echo "usage: $(basename "${BASH_SOURCE[0]}") <queue-dir> [slots]" >&2
   exit 2
 }
 [ "$#" -ge 1 ] || usage
 Q="$(cd "$1" && pwd)" || usage
 [ -f "$Q/full_queue.txt" ] || { echo "error: $Q/full_queue.txt not found" >&2; exit 2; }
 SLOTS="${2:-2}"
+case "$SLOTS" in
+  ''|*[!0-9]*|0) echo "error: slots must be a positive integer, got '$SLOTS'" >&2; usage ;;
+esac
 
 # run_spec.sh lives next to this script; the repo is resolved the same way the
 # driver does it (ANYPLOT_REPO wins, then git from the script's location).
@@ -150,7 +159,13 @@ harvest() {
     echo "$key" >> "$HARVESTED"
     case "$line" in
       RESULT=COMPLETE*)
-        echo "$spec COMPLETE ($(echo "$line" | sed -E 's/^RESULT=COMPLETE spec=[^ ]+ libs=//'), queue-runner) $(date -u +%F_%H:%M)" >> "$Q/done.log"
+        # Two shapes: `... libs=<list> after ~N min` after a real run, or
+        # `... (all libs already present)` when nothing was missing.
+        case "$line" in
+          *" libs="*) detail=$(sed -E 's/^RESULT=COMPLETE spec=[^ ]+ libs=//' <<<"$line") ;;
+          *)          detail="all libs already present" ;;
+        esac
+        echo "$spec COMPLETE ($detail, queue-runner) $(date -u +%F_%H:%M)" >> "$Q/done.log"
         say "DONE  $spec" ;;
       *)
         echo "$spec $(echo "$line" | sed 's/^RESULT=//') (queue-runner; retry pending) $(date -u +%F_%H:%M)" >> "$Q/deferred.log"
