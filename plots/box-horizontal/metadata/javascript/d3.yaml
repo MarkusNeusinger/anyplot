@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: box-horizontal
 created: '2026-09-02T13:30:50Z'
-updated: '2026-09-02T13:36:21Z'
+updated: '2026-09-02T13:45:51Z'
 generated_by: claude-sonnet
 workflow_run: 33635669039
 issue: 2548
@@ -12,52 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horiz
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Categories sorted ascending by median (per the spec's own suggestion), so the
-    fastest services read at the top and latency risk increases down the chart — a
-    genuine readability win over an unsorted list
-  - 'Correct statistics: Q1/median/Q3 via d3.quantile, whiskers computed as 1.5×IQR
-    fences with points outside classified as outliers and drawn separately'
-  - Deterministic mulberry32 PRNG + Box-Muller normal sampler gives fully reproducible
-    per-service distributions without any external dependency
-  - Idiomatic D3 v7 join pattern throughout (selectAll(...).data(...).join("g")),
-    including a nested join for per-group outlier circles
-  - 'Realistic, varied dataset: six services with escalating mean/spread (Image CDN
-    ~42ms to Recommendation Engine ~218ms) and outliers concentrated on the higher-latency,
-    higher-variance services — matches how real API latency tails behave'
+  - 'Fixed the Attempt-1 box-fill theme drift: the box body now uses a fixed opaque
+    pre-mix (d3.interpolateRgb(t.palette[0], "#ffffff")(0.28)) instead of alpha blending,
+    verified pixel-identical (RGB 71,185,154) between light and dark renders'
+  - 'Fixed the Attempt-1 x-axis tick-mark inconsistency: xAxis.selectAll(".line").remove()
+    now matches the y-axis, giving a clean, decoration-free look on both axes'
+  - Categories sorted ascending by median, so the fastest services read at the top
+    and latency risk increases down the chart
+  - 'Correct statistics throughout: Q1/median/Q3 via d3.quantile, 1.5x IQR whisker
+    fences, points outside classified as outliers and drawn separately'
+  - Deterministic mulberry32 PRNG + Box-Muller sampler gives fully reproducible per-service
+    distributions with no external dependency
   weaknesses:
-  - 'VQ-07: The box body uses fill-opacity 0.72 on top of the theme page background,
-    so the composited box color is a noticeably lighter mint-green on the light render
-    (#FAF8F1 backdrop) versus a noticeably deeper forest-green on the dark render
-    (#1A1A17 backdrop) — even though the underlying fill token (t.palette[0]) and
-    stroke are identical in both. Raise fill-opacity closer to 1 (or pre-mix a fixed
-    opaque tint) so the box reads as the same green regardless of theme, keeping only
-    chrome theme-adaptive.'
-  - 'DE-02: The x-axis still draws default d3.axisBottom tick marks (small perpendicular
-    lines in t.inkSoft) even though the y-axis already has its tick lines removed
-    (yAxis.selectAll("line").remove()) — remove the x-axis tick lines too (keep only
-    the tick labels and the gridline layer) for a cleaner, more consistent, decoration-free
-    look.'
-  - 'LM-02: The implementation is solid but the box-from-primitives technique (manual
-    rect/line marks driven by computed quantiles) is generic and could be replicated
-    in any SVG-capable library with only minor syntax changes. Consider leaning further
-    into a genuinely D3-specific feature (e.g. d3.brush for a coordinated range-selection
-    affordance in the accompanying HTML, since interactivity is fair game there) to
-    raise distinctiveness beyond the current baseline.'
+  - 'VQ-07: Outlier circles still use fill-opacity 0.55 against the raw page background
+    (t.pageBg stroke ring), so the composited outlier color visibly shifts between
+    the light render (light mint, ~RGB 113,199,172) and the dark render (deep forest
+    green, ~RGB 11,98,73) even though the underlying t.palette[0] fill token is identical.
+    Apply the same fix already used for the box body -- pre-mix a fixed opaque tint
+    (e.g. d3.interpolateRgb(t.palette[0], t.pageBg)(0.55) computed per theme, or simply
+    raise fill-opacity toward 1 and keep the page-bg ring only as a thin separator
+    stroke) so outlier dots read as the same green in both themes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "box-horizontal · javascript · d3 · anyplot.ai" centered at top, clearly readable against the light background. Y-axis category labels (Image CDN, Auth Service, Notification Queue, Payment Gateway, Search API, Recommendation Engine, sorted ascending by median) render in a dark ink-soft tone, fully legible. X-axis tick labels ("0 ms" … "800 ms") and the "Response Time (ms)" axis label are dark and legible. Subtle light-gray vertical gridlines at each 100ms tick, visible but not competing with the data.
-      Data: Six horizontal boxes in brand green (#009E73 stroke, translucent fill), a solid dark median line inside each box, thin whisker lines with end caps, and green outlier dots (visible on Notification Queue, Payment Gateway, Search API, Recommendation Engine) with a light ring matching the page background for separation from the box/whisker lines behind them.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "box-horizontal · javascript · d3 · anyplot.ai" centered at top, clearly readable against the light background. Y-axis category labels (Image CDN, Auth Service, Notification Queue, Payment Gateway, Search API, Recommendation Engine, sorted ascending by median) render in a dark ink-soft tone, fully legible. X-axis tick labels ("0 ms" ... "800 ms") and the "Response Time (ms)" axis label are dark and legible. Subtle light-gray vertical gridlines at each 100ms tick, visible but not competing with the data. X-axis tick marks (small perpendicular lines) have been removed, matching the y-axis treatment.
+      Data: Six horizontal boxes in brand green (#009E73 stroke, opaque pre-mixed mint fill -- sampled RGB 71,185,154), a solid dark median line inside each box, thin whisker lines with end caps, and green outlier dots (visible on Notification Queue, Payment Gateway, Search API, Recommendation Engine) with a light ring matching the page background for separation.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
       Chrome: Title, y-axis category labels, x-axis tick labels, and the "Response Time (ms)" label all render in light/white tones, clearly legible against the dark background. Gridlines are subtle light lines at low opacity, visible but unobtrusive. No dark-on-dark text anywhere.
-      Data: Same six services in the same order, same green (#009E73) stroke and outlier dots — the outlier rings now match the dark page background instead of light. The median line renders as a light/white line (theme-adaptive ink) inside each box, still clearly distinguishable from the box body. One notable difference from the light render: the box body's composited fill looks like a visibly deeper, more saturated forest-green than the lighter mint-green fill seen on the light render — an artifact of the 0.72 fill-opacity compositing against a much darker backdrop, not a change in the underlying color token.
-      Legibility verdict: PASS — all text is fully readable against the dark background; only the box interior fill tone (not the stroke/median/outliers) shifts visibly between themes, which is a VQ-07 note rather than a legibility failure.
+      Data: Same six services in the same order. Box body color is now pixel-identical to the light render (sampled RGB 71,185,154 in both) -- the Attempt-1 fill-compositing bug is fixed for the box body via the fixed opaque pre-mix tint. However, outlier markers still shift: sampled outlier RGB is (11,98,73), a visibly deeper/darker forest-green versus (113,199,172) on the light render, because outlier fill-opacity 0.55 still composites directly against the theme page background instead of using a pre-mixed opaque tint like the box body now does.
+      Legibility verdict: PASS -- all text is fully readable against the dark background; only the outlier marker fill tone (not text, not the box body, not the stroke/median) shifts visibly between themes, which is a VQ-07 note rather than a legibility failure.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -108,12 +97,12 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: 'First series is #009E73 and theme chrome is correct in both renders,
-          but box fill-opacity (0.72) composites against different page backgrounds,
-          producing a visibly lighter mint-green box on light vs. a visibly deeper
-          forest-green box on dark — data color should read identically across themes'
+        comment: Box fill-theme-drift from Attempt 1 is fixed (pre-mixed opaque tint,
+          pixel-identical across themes), but outlier circles still alpha-composite
+          (fill-opacity 0.55) against the raw page background, so outlier dot color
+          visibly shifts between light (RGB 113,199,172) and dark (RGB 11,98,73) renders
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -121,16 +110,15 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Rounded box corners, translucent fill with solid stroke, and background-punched
+        comment: Rounded box corners, opaque pre-mixed fill tint, background-punched
           outlier rings show intentional craft beyond configured defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle single-axis grid, generous whitespace via 0.45 band padding,
-          y-axis tick marks already removed — but x-axis still draws default tick
-          marks
+        comment: X-axis default tick marks now removed (fixed from Attempt 1) to match
+          the y-axis; subtle single-axis grid; generous whitespace via 0.45 band padding
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -154,7 +142,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Median line, quartile box, 1.5×IQR whiskers, and outliers all present
+        comment: Median line, quartile box, 1.5x IQR whiskers, and outliers all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -184,7 +172,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: API response time distributions by service — realistic, neutral,
+        comment: API response time distributions by service -- realistic, neutral,
           comprehensible tech scenario
       - id: DQ-03
         name: Appropriate Scale
@@ -202,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot flow; the two small helper functions
+        comment: Linear imports -> data -> plot flow; the two small helper functions
           (mulberry32, normal) are the recommended seeded-RNG pattern for D3, not
           over-engineering
       - id: CQ-02
@@ -250,7 +238,7 @@ review:
         comment: Manual box-plot construction from d3-array quantiles and data joins
           demonstrates D3's low-level approach, but the technique itself is generic
           and could be replicated with minor changes in another SVG-capable library
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
