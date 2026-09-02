@@ -1,15 +1,7 @@
 // anyplot.ai
 // windbarb-basic: Wind Barb Plot for Meteorological Data
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-09-02
-//
-// The core Highcharts bundle has no "windbarb" series (that ships only in the
-// highcharts-more/windbarb add-on module, which is not loaded here — see
-// prompts/library/highcharts.md "No add-on modules"). Barbs are instead drawn
-// natively with the core SVGRenderer: a scatter series supplies the axes /
-// coordinate system, and a `chart.events.render` hook paints the staff +
-// barb + pennant glyphs at each point's pixel position on every redraw.
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 85/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
