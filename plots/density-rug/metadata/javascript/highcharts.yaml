@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: density-rug
 created: '2026-09-02T00:31:01Z'
-updated: '2026-09-02T00:35:06Z'
+updated: '2026-09-02T00:42:00Z'
 generated_by: claude-sonnet
 workflow_run: 33575309507
 issue: 3505
@@ -12,102 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
   - Correctly implements a Gaussian-kernel KDE from scratch (Silverman bandwidth rule)
     rather than faking a smooth curve, and the bimodal reaction-time distribution
-    (fast group ~320ms, slow tail ~485ms) is clearly resolved in the curve shape
-  - 'Rug marks are genuinely distinct from the density curve: thin (pointWidth 2),
-    semi-transparent (~45% opacity via alpha-suffixed hex) to handle overlap, and
-    separated from the fill by a plotLine at y=0 as the spec''s ''preserve transparency
-    about where actual observations fall'' calls for'
-  - Axis extents (gridMin/gridMax = data range ± 3*bandwidth) avoid clipping the curve
-    tails while keeping the rug band tight and readable
-  - 'Theme handling is clean: identical brand-green (#009E73) data color in both renders,
-    only chrome (background, ink, grid) flips, background colors correctly warm off-white
-    / near-black'
-  - Deterministic, dependency-free implementation (custom seeded LCG + Box-Muller)
-    with no fake interactivity or workaround libraries
+    is clearly resolved
+  - 'Rug marks are genuinely distinct from the density curve: thin, semi-transparent,
+    separated from the fill by a plotLine baseline, matching the spec''s requirement
+    to preserve transparency about individual observations'
+  - Y-axis tick labels are now evenly spaced and visually distinct (0.0000-0.0070
+    in clean steps) after adding an explicit niceStep tickInterval alongside the toFixed(4)
+    formatter, resolving the attempt-1 duplicate-label weakness
+  - 'Clean theme handling: identical brand-green data color in both light and dark
+    renders, only chrome flips'
+  - Deterministic, dependency-free implementation (seeded LCG) with no fake interactivity
   weaknesses:
-  - Y-axis tick labels use a formatter hard-coded to `toFixed(3)`, but Highcharts'
-    auto tick interval here is finer than 0.001 (roughly 0.0004-0.0005 density units
-    apart). Consecutive ticks round to the same displayed string, producing visibly
-    duplicated labels top-to-bottom (0.006, 0.006, 0.005, 0.005, 0.004, 0.004, 0.004,
-    0.003, 0.003, 0.002, 0.002, 0.001, 0.001) in both renders. Fix by increasing formatter
-    precision to toFixed(4)/toFixed(5), or by setting an explicit yAxis.tickInterval
-    so labeled ticks are spaced far enough apart to be visually distinct.
-  - Legend is disabled entirely; with two named series ('Estimated density', 'Observations')
-    a one-line caption or subtitle clarifying that the lower ticks are individual
-    observations would help viewers unfamiliar with rug plots, though the plot is
-    still interpretable without it.
+  - No legend or caption distinguishing the density curve from the rug ticks for viewers
+    unfamiliar with rug plots — minor, the plot is still interpretable from the visual
+    encoding alone
+  - Repurposing a zero-padded column series as rug ticks is a clever technique but
+    doesn't showcase a truly distinctive Highcharts-only feature (e.g. no custom renderer,
+    no series-specific API beyond area/column)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "density-rug · javascript · highcharts · anyplot.ai" in bold dark ink, centered, fully visible with no clipping. X-axis title "Reaction Time (ms)" and y-axis title "Density" (rotated) in medium-gray ink, both legible. X tick labels (150-675, step 25) are evenly spaced and dark-on-light. Y tick labels are readable but show a rounding artifact: several consecutive labels display the same rounded value (e.g. "0.006" appears twice in a row, "0.004" appears three times in a row) because the toFixed(3) formatter can't resolve the fine auto tick interval. Grid lines are subtle horizontal gray lines, clearly visible but not dominant.
-      Data: Density curve and fill are brand green (#009E73), clearly bimodal with a tall peak near 320ms and a smaller shoulder near 475ms. Rug marks below the y=0 baseline are thin, semi-transparent green ticks showing the individual reaction-time observations, visually separated from the density fill by a thin horizontal baseline.
-      Legibility verdict: PASS (the duplicate y-axis labels are a clarity nit, not an unreadability failure — every character is crisp and dark-on-light).
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: Title "density-rug · javascript · highcharts · anyplot.ai" is bold, dark, centered, fully visible. X-axis title "Reaction Time (ms)" and rotated y-axis title "Density" are legible in medium-gray ink. Y-axis tick labels (0.0000 through 0.0070) are now evenly spaced and visually distinct — no duplicate rounded values (the attempt-1 issue is fixed).
+      Data: KDE curve and its fill are brand green (#009E73), clearly bimodal (tall peak ~320ms, smaller shoulder ~475ms). Below a thin baseline at y=0, semi-transparent green rug ticks show the 150 individual reaction-time observations, denser under the main peak and sparser in the tail.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels, now rendered in light ink/inkSoft tones against the dark background — all clearly legible, no dark-on-dark text anywhere. Grid lines are subtle light-gray, visible without dominating.
-      Data: Density fill/line and rug ticks are the identical brand green (#009E73) as the light render — only the chrome (background/text/grid) flipped, confirming color-token discipline.
-      Legibility verdict: PASS (same duplicate-label rounding artifact as the light render, otherwise fully readable).
+      Background: warm near-black, matches #1A1A17.
+      Chrome: Same title, axis titles, and tick labels now render in light ink/inkSoft tones — fully legible, no dark-on-dark failures anywhere. Y-axis tick label spacing is identical to the light render.
+      Data: Density fill/line and rug ticks are pixel-identical brand green to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text crisp and correctly themed in both renders; y-axis tick
-          labels round-collide (toFixed(3) vs finer tick interval) producing visible
-          duplicate values, which costs a point
+        comment: All text readable in both themes; y-axis label duplication from attempt
+          1 is fixed
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axis text, ticks, or data
+        comment: No collisions between text, curve, or rug ticks
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150-point rug is dense but ticks are thin (2px) and semi-transparent,
-          staying legible without merging into a solid band; density line/fill clearly
-          visible
+        comment: Thin (2px), semi-transparent rug ticks stay legible even with 150
+          overlapping observations
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue design with no red/green dual-encoding; adequate contrast
-          on both surfaces
+        comment: Single-hue encoding, adequate contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); balanced margins, title ~45% width
-          well within bounds, no overflow or clipping
+        comment: Canvas gate passed, no clipping/overflow, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis titles are descriptive with units (Reaction Time (ms), Density),
-          but duplicated y-axis tick label strings undercut the axis's usefulness
+        passed: true
+        comment: Descriptive titles with units; explicit tickInterval now makes every
+          labeled tick visually distinct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds match
-          Imprint light/dark tokens'
+        comment: '#009E73 first series, identical across themes, correct light/dark
+          backgrounds'
     design_excellence:
       score: 13
       max: 20
@@ -116,23 +105,22 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Deliberate touches: calibrated rug alpha, tick height sized to 12%
-          of max density, baseline plotLine separating the two encodings'
+        passed: false
+        comment: Calibrated rug alpha, tick height sized to 12% of max density, baseline
+          plotLine separating the two encodings
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle gridlines, generous whitespace, no chartjunk; axis chrome
-          uses inkSoft consistently
+        comment: Subtle gridlines, generous whitespace, consistent inkSoft chrome
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bimodal shape is the clear focal point; rug band reinforces where
-          real observations cluster vs. thin out
+        comment: Bimodal shape is a clear focal point; rug band reinforces where observations
+          cluster vs. thin out
     spec_compliance:
       score: 15
       max: 15
@@ -148,22 +136,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Filled KDE curve, rug ticks, semi-transparent fill, transparent overlapping
-          rug marks all present
+        comment: Filled KDE curve, rug ticks, semi-transparent fill, transparency
+          for overlapping rug marks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction time (ms), Y = density; axis range covers full data
-          plus KDE tails
+        comment: x = reaction time (ms), y = density, range covers data + KDE tails
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; legend appropriately omitted
-          for a single visual concept
+        comment: Title matches mandated format exactly; legend appropriately omitted
     data_quality:
       score: 15
       max: 15
@@ -173,20 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 150 observations show both the smoothed shape and raw placement/clustering/gaps
+        comment: 150 observations show shape, modality, and raw placement/gaps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lexical-decision reaction times with a realistic fast-majority/slow-tail
-          bimodal structure; neutral domain
+        comment: Lexical-decision reaction times with realistic fast-majority/slow-tail
+          structure
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150-650ms range and density magnitudes are sensible for the domain
+        comment: Sensible ms range and density magnitudes
     code_quality:
       score: 10
       max: 10
@@ -196,34 +182,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small pure helper functions only for the KDE math, no
-          over-engineering
+        comment: No classes, small pure helpers only for KDE math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic
+        comment: Seeded LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only provided globals
+        comment: No imports, only provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom KDE and rug are real, not simulated; complexity matches the
-          task
+        comment: Real KDE/rug, not simulated
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Correct mount-node contract, animation disabled in both required
-          places, no explicit width/height
+          places
     library_mastery:
       score: 7
       max: 10
@@ -233,19 +217,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of area+column series combination, plotLines, formatter,
-          and theme tokens
+        comment: Correct area+column combination, plotLines, formatter, theme tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
+        passed: false
         comment: Repurposing a zero-padded column series as rug ticks alongside an
-          area series is a clever, non-generic Highcharts technique
+          area series is a clever, non-generic technique but not a Highcharts-exclusive
+          API feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - layer-composition
   patterns:
   - data-generation
