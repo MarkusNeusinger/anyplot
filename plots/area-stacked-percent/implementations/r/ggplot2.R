@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(ragg)
 
 set.seed(42)
@@ -38,6 +37,30 @@ df <- expand.grid(quarter = quarters, vendor = vendors) %>%
 
 df$vendor <- factor(df$vendor, levels = vendors)
 
+# --- Direct end-of-line labels (replaces side legend) ------------------------
+# Stacking order is reverse-factor (bottom-to-top: E, D, C, B, A), so cumulative
+# shares must be computed in that same order to land labels on the right band.
+last_quarter <- max(df$quarter)
+label_df <- df %>%
+  filter(quarter == last_quarter) %>%
+  mutate(pct = revenue / sum(revenue)) %>%
+  arrange(desc(vendor)) %>%
+  mutate(ymax = cumsum(pct), ymin = ymax - pct, ymid = (ymin + ymax) / 2) %>%
+  arrange(ymid)
+
+# Nudge overlapping labels apart (thin bands, e.g. Vendor D/E, sit within a
+# text-height of each other) so labels never collide, and keep the bottom
+# label clear of the 0% axis line.
+min_gap <- 0.06
+label_df$ylabel <- label_df$ymid
+label_df$ylabel[1] <- max(label_df$ylabel[1], 0.04)
+for (i in 2:nrow(label_df)) {
+  if (label_df$ylabel[i] - label_df$ylabel[i - 1] < min_gap) {
+    label_df$ylabel[i] <- label_df$ylabel[i - 1] + min_gap
+  }
+}
+label_df$label_x <- last_quarter + 60
+
 # --- Plot -----------------------------------------------------------------
 title_text <- "Cloud Market Share · area-stacked-percent · r · ggplot2 · anyplot.ai"
 title_fontsize <- round(12 * min(1.0, 67 / nchar(title_text)))
@@ -45,29 +68,41 @@ title_fontsize <- round(12 * min(1.0, 67 / nchar(title_text)))
 p <- ggplot(df, aes(x = quarter, y = revenue, fill = vendor)) +
   geom_area(position = "fill", color = PAGE_BG, linewidth = 0.3) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
+  geom_segment(
+    data = label_df,
+    aes(x = last_quarter, xend = label_x, y = ymid, yend = ylabel, color = vendor),
+    inherit.aes = FALSE, linewidth = 0.35
+  ) +
+  geom_text(
+    data = label_df,
+    aes(x = label_x, y = ylabel, label = vendor, color = vendor),
+    inherit.aes = FALSE, hjust = 0, size = 3, fontface = "bold"
+  ) +
+  scale_color_manual(values = IMPRINT_PALETTE, guide = "none") +
   scale_y_continuous(labels = scales::percent_format(), expand = c(0, 0)) +
-  scale_x_date(expand = c(0, 0), date_labels = "%Y", date_breaks = "1 year") +
+  scale_x_date(
+    expand = expansion(mult = c(0, 0.02), add = c(0, 250)),
+    date_labels = "%Y", date_breaks = "1 year"
+  ) +
+  coord_cartesian(clip = "off") +
   labs(
     title = title_text,
     x = "Quarter",
-    y = "Market Share",
-    fill = "Vendor"
+    y = "Market Share (%)"
   ) +
   theme_minimal(base_size = 8) +
   theme(
-    plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    panel.background   = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.2),
-    panel.grid.minor   = element_blank(),
-    panel.grid.major.x = element_blank(),
-    axis.title         = element_text(color = INK, size = 10),
-    axis.text          = element_text(color = INK_SOFT, size = 8),
-    axis.ticks         = element_blank(),
-    plot.title         = element_text(color = INK, size = title_fontsize),
-    legend.title       = element_text(color = INK, size = 10),
-    legend.text        = element_text(color = INK_SOFT, size = 8),
-    legend.background  = element_blank(),
-    legend.key         = element_blank()
+    legend.position     = "none",
+    plot.background     = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background    = element_rect(fill = PAGE_BG, color = NA),
+    panel.grid.major.y  = element_line(color = INK, linewidth = 0.2),
+    panel.grid.minor    = element_blank(),
+    panel.grid.major.x  = element_blank(),
+    axis.title          = element_text(color = INK, size = 10),
+    axis.text           = element_text(color = INK_SOFT, size = 8),
+    axis.ticks          = element_blank(),
+    plot.title          = element_text(color = INK, size = title_fontsize),
+    plot.margin         = margin(t = 5, r = 34, b = 5, l = 5)
   )
 
 # --- Save -------------------------------------------------------------------
