@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: parliament-basic
 created: '2026-09-02T04:55:50Z'
-updated: '2026-09-02T05:00:53Z'
+updated: '2026-09-02T05:13:45Z'
 generated_by: claude-sonnet
 workflow_run: 33592113871
 issue: 2499
@@ -12,53 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliamen
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - 'Excellent Imprint palette compliance: canonical order (#009E73, #C475FD, #4467A3,
-    #BD8233, #AE3030, #2ABCCD) held exactly across all 6 parties, identical data colors
-    between light and dark renders.'
-  - Correctly computed hemicycle geometry — concentric arc row capacities allocated
-    via the largest-remainder method, seats sorted by angle left-to-right, and the
-    seat count sums exactly to totalSeats (200).
-  - Highcharts' automatic per-series marker symbol rotation (circle/diamond/square/triangle/triangle-down)
-    gives redundant shape encoding on top of color, improving colorblind accessibility
-    for free.
-  - Legend correctly shows party name plus seat count per the spec's Notes requirement,
-    e.g. 'Party A (58)'.
-  - Theme-adaptive chrome is fully correct in both renders — no dark-on-dark or light-on-light
-    failures, transparent chart background lets the page surface show through.
-  - Deterministic, reproducible in-memory data; clean procedural (KISS) code with
-    no fake interactivity, animation disabled correctly.
+  - Renamed parties to descriptive, non-partisan fictional faction names (Coastal
+    Alliance, Progress Union, Heritage Party, Civic Forum, Green Horizon, Unity Bloc),
+    directly resolving the Attempt 1 DQ-02 weakness while staying neutral.
+  - Added a subtle dashed majority-threshold guide line with a "Majority (101)" label
+    via the Highcharts renderer API, directly resolving the Attempt 1 DE-03 weakness
+    and giving the chart a clear focal insight (no single party holds a majority).
+  - Exact Imprint canonical palette order held across all 6 parties, pixel-identical
+    data colors between light and dark renders, theme-correct chrome in both.
+  - 'Bespoke hemicycle geometry: concentric arc row capacities via largest-remainder
+    method, seats sorted by angle left-to-right, seat count sums exactly to totalSeats
+    (200).'
+  - Legend correctly shows party name plus seat count per the spec's Notes requirement;
+    redundant marker-shape encoding on top of color.
+  - Deterministic, reproducible in-memory data; clean KISS-style procedural code with
+    no fake interactivity.
   weaknesses:
-  - 'DQ-02: Party labels are purely abstract (''Party A'' … ''Party F''), matching
-    the lowest realism tier (''Category A''-style labels). Since the spec inherently
-    covers political-party data, keep it non-partisan/fictional but give the factions
-    descriptive names (e.g. ''Coastal Alliance'', ''Progress Union'', ''Heritage Party'')
-    instead of literal letters — raises DQ-02 without introducing any real-world political
-    reference.'
-  - 'DE-03: No visual emphasis on the majority threshold. The spec explicitly lists
-    ''highlight majority threshold line (e.g., 50%+1 seats)'' as an optional enhancement
-    — since no party holds a majority here (largest is 58/200), a subtle threshold
-    marker (e.g., a faint radial guide or annotation at seat 101) would sharpen the
-    story from ''good'' to ''excellent'' data storytelling.'
-  - 'LM-02: The implementation is solid idiomatic Highcharts scatter usage but doesn''t
-    lean on anything uniquely Highcharts beyond the default symbol rotation — consider
-    a more distinctive touch (e.g., legend click-to-toggle party visibility, or dataLabels
-    showing seat numbers on hover) to better showcase library-specific strengths in
-    the interactive HTML view.'
+  - 'DE-01: Aesthetic sophistication is still close to a well-configured default —
+    relies on Highcharts'' automatic per-series marker-symbol rotation rather than
+    a deliberately chosen icon set, and typography doesn''t vary weight across the
+    hierarchy beyond size.'
+  - 'LM-02: The renderer.path/text majority-guide overlay is a nice touch but a fairly
+    generic SVG-annotation technique; a more distinctly Highcharts-specific feature
+    (e.g. custom dataLabels formatter, legend click-to-toggle demo in the HTML view)
+    would push Library Mastery further.'
+  - 'DQ-02: Faction names are well-chosen and neutral, but still a synthetic/fictional
+    scenario rather than a real, named real-world dataset — capping this criterion
+    just short of full marks.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "parliament-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible at top-center. Legend below the hemicycle lists all 6 parties with name + seat count ("Party A (58)" … "Party F (10)") in dark-grey secondary text with colored/shaped swatches matching the data markers. No axis lines or ticks are shown (intentional — this chart type encodes data via seat position, not axes).
-      Data: Seats rendered as ~200 individual markers arranged in concentric semicircular arcs from left to right. First (largest) party uses brand green (#009E73) circles, then lavender diamonds, blue squares, ochre triangles, matte-red inverted triangles, and cyan circles for the smallest party — matching the Imprint canonical palette order exactly. Seat density is even, no overlap or overplotting.
-      Legibility verdict: PASS — all text (title, legend) is fully readable against the light background, no light-on-light issues.
+      Chrome: Bold dark-ink title "parliament-basic · javascript · highcharts · anyplot.ai" centered at top, fully legible. Legend below the hemicycle lists all 6 parties with descriptive names and seat counts ("Coastal Alliance (58)", "Progress Union (46)", "Heritage Party (38)", "Civic Forum (30)", "Green Horizon (18)", "Unity Bloc (10)") in soft-ink text. A small "Majority (101)" label with a subtle dashed radial guide line sits above the arcs, correctly positioned between the Progress Union and Heritage Party wedges.
+      Data: ~200 seat markers arranged in concentric semicircular arcs, colored in exact Imprint canonical order — green circles (Coastal Alliance), lavender diamonds (Progress Union), blue squares (Heritage Party), ochre triangles (Civic Forum), matte-red inverted triangles (Green Horizon), cyan circles (Unity Bloc). First series is #009E73 as required. No axes shown, correct for this chart type.
+      Legibility verdict: PASS — all title, legend, and annotation text clearly readable against the light background, no clipping at canvas edges.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white text, fully legible against the dark background. Legend text switches to a light secondary tone, fully readable; legend swatches keep the exact same colors as the light render.
-      Data: Identical seat layout and identical marker colors (green/lavender/blue/ochre/red/cyan) to the light render — confirms the categorical data colors are theme-invariant, only chrome (background + text) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title and legend text is clearly visible against the near-black surface.
+      Chrome: Title and legend text flip to light ink and remain fully legible; the majority-guide label flips to light-grey ink soft tone. No dark-on-dark failures.
+      Data: All seat marker colors are pixel-identical to the light render (green/lavender/blue/ochre/red/cyan), confirming only chrome (background + text) changed between themes. Brand green #009E73 remains vivid and clearly visible.
+      Legibility verdict: PASS — no dark-on-dark text, all elements distinguishable from the near-black background.
+
+    Both renders pass the theme-readability checklist. Data colors are identical across themes; only chrome flipped as required.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,51 +66,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (22px title, 14px legend), fully readable
-          in both themes; no axis labels to check proportion against.
+        comment: Explicit font sizes (title 22px, legend 14px, majority-guide label
+          12px); all readable in both themes at full size.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping seats, legend entries, or title text.
+        comment: No collisions between seats, legend, title, or the new majority-guide
+          label.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: marker.radius 17 with lineWidth 0 gives clean, well-spaced, clearly
-          visible seats for ~200 points.
+        comment: Marker radius 17 well-tuned for ~200 points; clearly visible without
+          overplotting.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Redundant shape encoding (circle/diamond/square/triangle/triangle-down)
-          on top of the CVD-safe Imprint palette.
+          on top of a CVD-safe palette.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Hemicycle plus legend fill the canvas well with balanced whitespace;
-          nothing cut off.
+        comment: Balanced whitespace, canvas dimension gate passed, nothing cut off,
+          legend adjacent to the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for axes (intentionally hidden for a parliament chart); title
-          format is descriptive per spec.
+        comment: Axes intentionally hidden (correct for this chart type); title format
+          correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Exact Imprint canonical order for all 6 series, identical across
-          themes; backgrounds theme-correct.
+        comment: Exact Imprint canonical order across all 6 parties, identical data
+          colors between light/dark, theme-correct chrome.
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -121,22 +119,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Bespoke concentric-arc geometry (largest-remainder capacity allocation)
-          goes well beyond a stock chart type.
+        comment: Bespoke concentric-arc geometry with largest-remainder allocation
+          is above a stock chart, but typography/marker choices still lean on Highcharts
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No gridlines/axes, generous whitespace, subtle legend styling.
+        comment: No gridlines/axes, generous whitespace, polished legend, subtle low-opacity
+          dashed guide line.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Size hierarchy (largest party dominates the leftmost/biggest wedge)
-          reads clearly, but no majority-threshold emphasis despite the spec suggesting
-          it.
+        passed: true
+        comment: New majority-threshold guide + '(101)' label gives the chart a clear
+          focal insight (no party holds a majority) — directly resolves Attempt 1
+          feedback.
     spec_compliance:
       score: 15
       max: 15
@@ -146,53 +146,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semicircular parliament/hemicycle seat chart.
+        comment: Correct hemicycle/parliament seat chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual seat dots, concentric arcs left-to-right, legend with
-          names + seat counts all present.
+        comment: Individual seat dots, concentric arcs, legend with counts, and the
+          spec's optional majority-threshold highlight are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 200 seats placed and accounted for exactly; positions correctly
-          derived from party seat counts.
+        comment: All 200 seats placed and accounted for exactly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match party
-          names + seat counts.
+        comment: Title format correct; legend labels match party names and seat counts.
     data_quality:
-      score: 10
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good spread of party sizes (58 down to 10), no single majority —
-          realistic hung-parliament scenario.
+        comment: Full spread of party sizes forming a realistic hung parliament, plus
+          explicit majority-threshold context.
       - id: DQ-02
         name: Realistic Context
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Abstract 'Party A'..'Party F' labels — lowest realism tier; use descriptive
-          fictional faction names instead.
+        passed: true
+        comment: Descriptive, plausible, non-partisan faction names (Coastal Alliance,
+          Progress Union, ...) resolve the Attempt 1 abstract-label weakness; still
+          a fictional scenario, not a named real-world dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 total seats sits comfortably within the spec's 50-700 guidance;
-          proportions are plausible.
+        comment: 200 total seats within the spec's 50-700 guidance; majority correctly
+          computed as floor(200/2)+1=101.
     code_quality:
       score: 10
       max: 10
@@ -202,32 +201,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat procedural script: data, geometry, chart.'
+        comment: Flat procedural script, no classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data, no RNG.
+        comment: Deterministic hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the Highcharts global and provided tokens.
+        comment: No imports; uses the harness globals only.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the geometry problem, no over-engineering,
-          no fake UI.
+        comment: Appropriate complexity for custom hemicycle geometry; renderer overlay
+          is real functionality, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, credits disabled.
+        comment: Follows the mount-node contract; animation disabled on chart and
+          series.
     library_mastery:
       score: 7
       max: 10
@@ -237,24 +237,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Clean high-level Highcharts.chart() scatter usage with plotOptions,
-          legend, and tooltip config.
+        comment: Clean high-level Highcharts.chart() scatter usage plus the documented
+          chart.events.render + renderer API pattern for custom overlays.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Leverages Highcharts' default per-series symbol rotation and custom
-          tooltip formatter, but nothing that couldn't be replicated with modest effort
-          in another library.
-  verdict: REJECTED
+        passed: true
+        comment: Custom renderer-drawn majority guide and tooltip pointFormatter are
+          Highcharts-specific touches, but a fairly generic SVG-annotation technique
+          overall.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
