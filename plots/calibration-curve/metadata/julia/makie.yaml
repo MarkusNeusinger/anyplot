@@ -1,0 +1,259 @@
+library: makie
+language: julia
+specification_id: calibration-curve
+created: '2026-09-02T14:11:48Z'
+updated: '2026-09-02T14:29:37Z'
+generated_by: claude-sonnet
+workflow_run: 33639838780
+issue: 2331
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - 'Directly resolved all three attempt-1 weaknesses: suppressed the stray x=0.5
+    gridline on the calibration panel, increased base/title/label fontsizes for stronger
+    mobile-scale legibility, and added a shaded band between the curve and diagonal
+    to visualize the calibration gap'
+  - Idiomatic Makie GridLayout composition (linkxaxes!/rowsize!/rowgap!) producing
+    a clean linked two-panel reliability diagram + prediction-distribution histogram
+  - 'Theme-adaptive chrome verified via pixel sampling: legend box renders #242420
+    in the dark theme (exact spec token) with light text, and #009E73 data series
+    is pixel-identical across both renders'
+  - No edge clipping in either render - title, axis labels, tick labels, and legend
+    all sit with comfortable margin at all four canvas edges (AR-09 clean)
+  - Clean, reproducible, dependency-light code with all spec-required elements present
+    (diagonal reference, 10 equal-width bins, Brier score + ECE, optional histogram
+    subplot)
+  weaknesses:
+  - The miscalibration band's low alpha (0.12) makes it barely perceptible in the
+    first couple of bins where predicted/observed values are close - a slightly higher
+    alpha or a per-bin emphasis on the largest gap would push Design Excellence further,
+    though this is a refinement, not a defect
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 - not pure white
+      Chrome: bold dark title "calibration-curve · julia · makie · anyplot.ai", dark axis labels
+        ("Fraction of positives", "Predicted probability", "Count"), muted-gray tick labels -
+        all clearly readable. Top/right spines removed, subtle horizontal-only gridlines.
+        No stray vertical gridline on the calibration panel (attempt-1 issue fixed).
+      Data: dashed gray diagonal "Perfect calibration" reference; brand-green (#009E73)
+        "Diagnostic model" curve + markers tracing an overconfident S-shape; new light-green
+        shaded band between curve and diagonal visualizing the miscalibration gap; Brier
+        score/ECE text annotation; gray prediction-distribution histogram below.
+        Legend box pixel-sampled: light elevated surface with dark text, fully readable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 - not pure black
+      Chrome: same title/labels/annotation now render in light ink, fully legible against
+        the near-black surface. Dashed reference flips to light gray, histogram bars lighten.
+        No dark-on-dark issues found anywhere.
+      Data: brand-green (#009E73) curve, markers, and band tint visually identical in hue
+        to the light render - only chrome flipped, confirming palette does not change with theme.
+      Legend box pixel-sampled at RGB (36,36,32) = #242420, exactly the dark elevated-surface
+        token, with light-colored text - confirms genuine theme adaptation, not a fixed white box.
+      Legibility verdict: PASS
+
+    Edge-clipping check (AR-09): corner/edge crops of the title, axis extremes (top/bottom/left/right),
+    and legend box on both renders show comfortable margin - no pixels of any text element are
+    missing at the canvas border.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Fontsizes bumped since attempt 1 (fig 16, title 22, labels 16), all
+          explicit; readable at full size and mobile scale in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or legend box
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers, band, line, histogram all clearly visible; attempt-1 stray
+          gridline artifact resolved
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. gray dashed reference gives good contrast; low-alpha band
+          doesn't obscure the curve
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, balanced 68/32 row split, no wasted space
+          or stray artifacts
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels throughout
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 pixel-verified identical across themes; backgrounds
+          pixel-verified #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New shaded miscalibration band adds a genuine custom visual device
+          beyond standard chrome recipe
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, linked axes; stray
+          gridline now suppressed
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Band directly visualizes the predicted-vs-observed gap, giving an
+          immediate read on model overconfidence
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reliability diagram / calibration curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference, 10 equal-width bins, Brier score + ECE, optional
+          histogram subplot all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = mean predicted probability, Y = observed fraction of positives,
+          correctly binned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels clear
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve, diagonal, summary metrics, prediction distribution, and miscalibration
+          band all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral diagnostic-screening classifier scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=4000 with realistic per-bin counts (280-590)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with current Figure(size=...) API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic GridLayout, axislegend, hidexdecorations!, band!, hist!
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: linkxaxes!/rowsize!/rowgap! linked layout plus band! for the miscalibration-gap
+          fill are distinctive Makie techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
