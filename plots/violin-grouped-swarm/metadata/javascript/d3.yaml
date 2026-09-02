@@ -1,0 +1,252 @@
+library: d3
+language: javascript
+specification_id: violin-grouped-swarm
+created: '2026-09-02T09:59:37Z'
+updated: '2026-09-02T10:14:34Z'
+generated_by: claude-sonnet
+workflow_run: 33615453886
+issue: 3529
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Increased swarm point radius (3.2px -> 3.8px) improves individual point distinguishability
+    in the dense Moderate/Complex clusters; the collision-avoidance algorithm mathematically
+    guarantees no two placed points overlap by less than 2*radius
+  - Legend is now a boxed panel with a title label ("EXPERTISE"), rounded corner swatches,
+    and a subtle border/background -- a clear polish step up from the plain swatches
+    in attempt 1
+  - Custom Epanechnikov KDE with per-violin, bandwidth-clipped sample grids still
+    avoids the common "thin needle tail" artifact from using a shared axis-wide grid
+  - Genuine beeswarm collision-avoidance layout (nearest-neighbor candidate search,
+    not naive jitter) correctly dodges points to their violin's position, matching
+    the spec's "Consider dodging swarm points" note
+  - Theme tokens correctly threaded through every chrome element (axis text/lines,
+    grid, title, legend box) in both light and dark renders, with identical underlying
+    data hues
+  weaknesses:
+  - Design Excellence is still limited by a fairly conventional violin+swarm rendering
+    -- the legend refinement helped, but the violins themselves (fill/stroke, no median/quartile
+    marker) remain close to a competent default
+  - Swarm points in the densest regions (Moderate/Complex, Novice group) remain visually
+    tight even though they don't literally overlap by construction; a touch more horizontal
+    spread or a slightly smaller sample size per combination would read more clearly
+    at a glance
+  - Legend width (260px) and per-swatch horizontal offset (78px step) are still hard-coded
+    for exactly two groups -- fine for this spec's 2-group data but a fixed assumption
+    if reused as a template
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "violin-grouped-swarm · javascript · d3 · anyplot.ai" centered top in dark ink; y-axis "Response Time (ms)" and x-axis "Task Complexity" labels dark and clearly readable; tick labels dark and legible; subtle horizontal gridlines only; legend sits in a boxed panel (top-right) titled "EXPERTISE" with rounded swatches for Novice/Expert.
+      Data: Three category groups (Simple, Moderate, Complex) on the x-axis, each split into paired violins -- teal-green "Novice" (matches Imprint #009E73, first series) and lavender-purple "Expert" (Imprint position 2, #C475FD) -- with beeswarm points overlaid inside each violin, colored to match their group.
+      Legibility verdict: PASS -- all text reads clearly as dark-on-light; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis labels, tick labels, and boxed legend, now rendered in light ink against the dark surface; legend box uses the darker "elevated" panel fill distinct from the page background; gridlines faint but visible.
+      Data: Identical green/purple hues to the light render -- only the chrome (background, text, grid, legend box) flipped, confirming palette compliance across themes.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all title/axis/tick/legend text is clearly legible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; readable in both themes; title fits
+          comfortably without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data/legend collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Swarm radius increased to 3.8px; collision-avoidance algorithm guarantees
+          no literal point overlap, fixing attempt-1's blob merging
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple pairing is CVD-safe, not red-green, adequate contrast
+          and alpha
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins; boxed legend sits
+          near the plot, not isolated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Response Time (ms)" has units; title matches mandated format exactly'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series Imprint position 2 (#C475FD);
+          backgrounds theme-correct in both renders; data hues identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom KDE + alpha-blended violins with a now-boxed, titled legend;
+          competent but still short of publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend box (rounded corners, subtle border, letter-spaced title)
+          adds attention to detail beyond attempt 1's plain swatches; y-axis domain
+          removed, subtle gridlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Complexity increases left-to-right; Novice consistently slower/more
+          variable than Expert is immediately readable
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped violin + swarm overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct group colors with legend, violin alpha 0.5 (within spec's
+          0.4-0.6), swarm sized down for grouped context, dodged to align with violin
+          position, adequate spacing between groups
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = category (band), Y = value (linear, nice-scaled); all data represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; legend labels (Novice/Expert)
+          match the group field
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 3 categories x 2 groups, 35 samples per combination, full violin+swarm
+          shown for every combination
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Response-time-by-task-complexity-and-expertise is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 80-1000 ms range is sensible for the stated domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Flat script overall; four small helper functions (LCG, normal sampler,
+          kernel, KDE estimator) are needed for the KDE math, justified but adds structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the d3 global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity proportionate to spec requirements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation added
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scaleBand/scaleLinear/axisLeft/axisBottom, d3.area + curveBasis
+          for violin shapes, token-driven theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-rolled Epanechnikov KDE and a genuine beeswarm collision-avoidance
+          layout are distinctive, above-default D3 techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - edge-highlighting
