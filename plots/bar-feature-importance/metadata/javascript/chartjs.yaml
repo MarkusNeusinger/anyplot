@@ -1,0 +1,260 @@
+library: chartjs
+language: javascript
+specification_id: bar-feature-importance
+created: '2026-09-02T12:34:14Z'
+updated: '2026-09-02T12:47:40Z'
+generated_by: claude-sonnet
+workflow_run: 33630217109
+issue: 2276
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Sort order is now correctly descending: "Living area (sqft)" (0.187, the highest
+    importance) renders at the TOP, fixing the prior REJECTED attempt''s core spec-compliance
+    defect (Chart.js horizontal bars place labels[0] at the top, and the code now
+    sorts descending before building labels/values).'
+  - 'Clear focal-point treatment on the top feature: a bold (700-weight) value label
+    plus a subtle 2px ink-colored border on the top bar sharpens the "what matters
+    most" story without adding chartjunk -- directly addresses the prior review''s
+    DE-01/DE-03 feedback to add emphasis on the single most important feature.'
+  - Sequential imprint_seq gradient (t.seq[0] green -> t.seq[1] blue) mapped to importance
+    value gives at-a-glance magnitude beyond bar length alone, matching the spec's
+    gradient requirement exactly; gradient colors are pixel-identical between the
+    light and dark renders.
+  - Y-axis now carries an explicit "Feature" title alongside the X-axis "Importance
+    (Gini)" title, rounding out axis completeness; all text (title, axis titles, ticks,
+    value labels) is explicitly sized and fully legible in both themes with no clipping
+    or overlap.
+  - Realistic, well-differentiated housing-model feature importances (14 features,
+    King County-style, within the spec's 10-30 recommendation) with the correct mandated
+    title format and a clean single-file structure using Chart.js's native plugin
+    API for value labels.
+  weaknesses:
+  - 'Feature importance values sum to ~0.840 rather than 1.0 -- scikit-learn / XGBoost
+    Gini-based feature_importances_ arrays are normalized to sum to 1.0 by construction,
+    so this reads as a factual/domain inaccuracy to a data-scientist audience. Fix:
+    rescale the `importance` values in the `features` array so they sum to 1.0 (e.g.
+    divide each by the current sum), keeping the same relative ordering and shape.'
+  - 'Design Excellence is strong but still short of publication-tier: outside the
+    new top-bar highlight, the rest of the composition (bar spacing, typography, chrome)
+    still reads close to a well-configured default. Consider one more distinctive
+    refinement (e.g. a small cumulative-importance annotation, or visually grouping/dimming
+    the long tail of low-importance features) to push the storytelling further.'
+  - LM-02 (distinctive features) is solid via the hand-rolled afterDatasetsDraw plugin
+    but could go further -- e.g. a custom tooltip callback formatting the importance
+    value for the interactive HTML view -- to more clearly separate this from a generically-portable
+    bar chart.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "bar-feature-importance · javascript · chartjs · anyplot.ai" centered at top in dark ink, clearly readable, spans well under 90% of width. X-axis title "Importance (Gini)" and tick labels (0, 0.05, 0.10, 0.15, 0.20) in soft dark gray, readable. Y-axis title "Feature" and 14 feature-name labels (e.g. "Waterfront view", "Living area (sqft)") in dark ink, all fully legible with no truncation or overlap. Subtle vertical gridlines on the x-axis only; y-axis has no gridlines.
+      Data: 14 horizontal bars sorted by importance value, HIGHEST at the top ("Living area (sqft)", 0.187) and LOWEST at the bottom ("Waterfront view", 0.012) -- correct per spec. Each bar is labeled with its precise numeric value in dark text just past the bar end; the top bar's label is bold (700 weight) vs. regular (500) for the rest, and the top bar carries a thin dark-ink border, creating a clear focal point. Bars use a sequential green-to-blue gradient keyed to importance: smallest bars are Imprint green (#009E73), shifting toward blue as importance increases.
+      Legibility verdict: PASS (all text clearly readable against the light background; no clipping at title, value labels, or axis titles).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/white text, clearly legible against the dark background. No dark-on-dark text anywhere -- title, axis titles, tick labels, and value-label annotations are all light-colored and readable. Gridlines are faint and unobtrusive.
+      Data: Identical bar order (highest at top), lengths, and gradient colors to the light render -- the green-to-blue sequential gradient and the top-bar bold label / border emphasis are pixel-identical between themes, confirming only chrome (background/text/grid) flipped, not data colors.
+      Legibility verdict: PASS (no dark-on-dark failures; all text and data elements clearly visible).
+
+    Cross-theme check: Data colors (the sequential green-to-blue gradient, the ink-colored top-bar border) are identical between light and dark renders; only background, text, and grid color flipped as expected.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 18px, ticks
+          14/15px, value labels 15px); readable in both themes with no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar thickness (barPercentage 0.75) well-suited to 14 categories;
+          gradient adds distinction
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient has good contrast; top bar has
+          redundant border+bold-label encoding, not color-alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, good canvas utilization, no canvas-gate
+          failure
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both 'Importance (Gini)' and 'Feature' axis titles now present and
+          descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq gradient for continuous importance data; theme-correct
+          backgrounds and chrome in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Value-encoded gradient plus top-bar emphasis is clearly above default,
+          but not yet publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, y-grid hidden, subtle x-grid, generous padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Correct top-down sort plus bold label + border on the top bar creates
+          a clear, immediate focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sort order fixed (highest importance now at top), gradient, and value
+          labels all present and correct
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = importance, Y = feature names, all 14 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for single series
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full spread of importances from low to high across 14 realistic features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Housing-model feature importance, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 2
+        max: 4
+        passed: false
+        comment: Importance values sum to ~0.840, not the 1.0 that Gini/feature_importances_
+          arrays are normalized to by construction -- a real-world proportion inaccuracy
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small helper functions justified by Chart.js gradient/plugin
+          idioms
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports/dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic indexAxis: ''y'' horizontal bar + native afterDatasetsDraw
+          plugin API, matches library skeleton exactly'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hand-rolled afterDatasetsDraw plugin for value labels is a distinctive
+          Chart.js-specific technique, but no additional distinctive feature was added
+          this attempt
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - edge-highlighting

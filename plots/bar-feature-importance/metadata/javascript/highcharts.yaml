@@ -1,0 +1,260 @@
+library: highcharts
+language: javascript
+specification_id: bar-feature-importance
+created: '2026-09-02T12:42:08Z'
+updated: '2026-09-02T13:04:45Z'
+generated_by: claude-sonnet
+workflow_run: 33630941298
+issue: 2276
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Bars sorted descending by importance (highest at top) exactly as the spec requires,
+    via the reversed-array trick for Highcharts' bottom-up 'bar' category order.
+  - 'Sequential Imprint gradient (imprint_seq, #009E73 -> #4467A3) mapped to each
+    bar''s importance value via per-point color, identical across light and dark renders.'
+  - 'Repair correctly removed the residual y-axis baseline (xAxis.lineWidth: 0), producing
+    a fully spine-free layout.'
+  - New 'top predictor' callout on the dominant feature (amber text, bold) sharpens
+    the data story beyond color/length alone.
+  - 'The code comment explains why Highcharts'' colorAxis + colorKey pattern isn''t
+    used: it needs modules/coloraxis.js, which the harness doesn''t load (core bundle
+    only). The per-point color gradient is the correct, documented workaround, not
+    a shortcut.'
+  - Realistic, neutral loan-default-risk feature set with importances summing to exactly
+    1.000, matching real sklearn/XGBoost feature_importances_ output.
+  - 'Both themes fully readable: correct off-white/near-black backgrounds, correct
+    ink/inkSoft/grid tokens, no dark-on-dark or light-on-light failures.'
+  - Clean, deterministic, dependency-free code with explicit font sizes throughout
+    and no fake interactivity.
+  weaknesses:
+  - 'Library Mastery is still modest: per-point color assignment is idiomatic given
+    the module constraint, but nothing else in the implementation showcases a Highcharts-distinctive
+    feature beyond basic bar/dataLabels config.'
+  - The optional std/error-bar feature from the spec notes is still omitted entirely;
+    not required, but even a subset would better demonstrate ensemble-importance variability.
+  - Using the amber semantic anchor (reserved for warning/caution per the style guide)
+    to highlight 'top predictor' is a mild semantic mismatch — the neutral or ink
+    token would fit the 'strongest signal' meaning better, though this is a minor
+    design judgment call, not a compliance violation.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bar-feature-importance · javascript · highcharts · anyplot.ai" in bold dark ink at top, subtitle "Gradient-boosted model · predicting loan default risk" in softer gray beneath it. Y-axis lists 12 feature names ("Credit score" down to "Verification status"), x-axis shows "Relative importance" from 0 to 0.25 with subtle vertical gridlines. All chrome text is dark and clearly legible against the light background.
+      Data: 12 horizontal bars sorted descending by importance from top (Credit score, 0.238) to bottom (Verification status, 0.023). Bar color forms a sequential Imprint gradient from brand green (#009E73) at low values to blue (~#4467A3) at the top bar. Bold data-label text shows the precise value at the end of each bar; the top bar's label additionally reads "0.238 — top predictor" in amber, positioned inside the bar (Highcharts auto-flipped it inward since the bar nearly spans the full axis range) with no clipping. No residual axis baseline is visible — the y-axis spine was removed in this attempt.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical title/subtitle/axis structure, now in light/white text — fully legible, no dark-on-dark failures on title, subtitle, ticks, or axis title.
+      Data: Same 12 bars, same sort order, and the gradient colors are pixel-identical to the light render (only chrome flipped). Data-label text switches to white/light and remains readable against both the dark background and the bar fills; the amber "top predictor" label on the top bar reads clearly against the blue bar in this theme too.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22px, subtitle 14px, ticks 14px, axis
+          title 16px, data labels 13px); readable in both themes with no overflow
+          or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between category labels, bars, or data-label text,
+          including the new top-predictor callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 bars with pointPadding/groupPadding give clean, well-sized bars
+          for the category count
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential gradient redundantly encoded with bar length, not hue-only;
+          CVD-safe green-to-blue ramp
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas with balanced margins, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Relative importance'' is descriptive; the metric is inherently
+          unitless (sums to 1)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) used for the continuous importance
+          mapping, identical across themes; correct theme backgrounds'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Data-driven color gradient plus weighted typography reads clearly
+          above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Repair removed the residual y-axis baseline (xAxis.lineWidth: 0);
+          subtle gridlines, no bar borders, generous spacing — fully spine-free now'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sort order + color gradient + new explicit 'top predictor' data-label
+          callout make the focal point unmistakable
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart via Highcharts 'bar' type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Descending sort, sequential gradient, and value annotations all present;
+          optional std/error bars correctly treated as optional
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, importance on x-axis, all 12 features visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          for single per-point-colored series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the full importance ranking and gradient; omits the optional
+          std/error-bar variability
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible loan-default-risk scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Importances sum to exactly 1.000, realistic exponential-decay distribution
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; two tiny helper functions for color math are trivial
+          and readable
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality; new code comment documents
+          the module-constraint tradeoff clearly
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses Highcharts.chart('container', ...) with no explicit width/height,
+          animation disabled
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point data.color assignment is the correct, documented Highcharts
+          pattern when colorAxis's module isn't loaded; core API usage is otherwise
+          clean
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Native colorAxis + colorKey continuous-coloring is genuinely unavailable
+          (requires modules/coloraxis.js, which this harness's core bundle forbids
+          per prompts/library/highcharts.md); the per-point dataLabels override on
+          the top bar is a small distinctive touch, but overall usage remains close
+          to generic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
