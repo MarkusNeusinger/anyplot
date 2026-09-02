@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: scatter-text
 created: '2026-09-02T06:08:08Z'
-updated: '2026-09-02T06:12:38Z'
+updated: '2026-09-02T06:27:49Z'
 generated_by: claude-sonnet
 workflow_run: 33596975851
 issue: 3482
@@ -12,49 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Clever text-as-marker rendering: symbolSize:0 with a label textBorderColor matched
-    to the page background keeps every city name legible over gridlines and neighboring
-    labels in both themes, without needing separate markers.'
-  - Accurate, realistic city climate dataset — temperature/rainfall pairs (e.g. Singapore
-    27.0°C/2340mm, Tokyo 15.4°C/1520mm, Riyadh 26.0°C/100mm) match real-world climate
-    figures closely.
-  - Clean, idiomatic ECharts option built via REGIONS.map() to generate one series
-    per continent — concise, KISS-compliant, no unnecessary abstraction.
-  - Correct Imprint palette application in canonical order with identical data colors
-    between light and dark renders; legend and series colors match.
-  - Sensible fixed axis bounds (0–32°C, 0–2500mm) comfortably contain every data point
-    with no clipping or overflow.
+  - The Nairobi/Perth and Berlin/London label collisions flagged in attempt 1 are
+    resolved via targeted pixel offsets in LABEL_OFFSETS, and both label pairs now
+    read as clearly separate lines in both renders.
+  - Lima and Cairo are lifted off the y=0 gridline with a -22px offset, clearing the
+    axis line in both themes.
+  - 'Clever text-as-marker rendering: symbolSize:0 with per-label textBorderColor
+    matched to the page background keeps every city name legible over gridlines and
+    neighboring labels in both light and dark themes.'
+  - Accurate, realistic city climate dataset (e.g. Singapore 27.0C/2340mm, Riyadh
+    26.0C/100mm, Moscow 5.8C/700mm) closely matches real-world figures.
+  - Clean, idiomatic ECharts option built via REGIONS.map()/cities.map() to generate
+    one series per continent - concise and KISS-compliant.
+  - Correct Imprint palette in canonical order with identical data colors between
+    light and dark renders; theme-adaptive chrome (title, axis, tick, grid) is correctly
+    mapped in both themes.
   weaknesses:
-  - 'Label overlap: ''Nairobi'' (19.0°C, 800mm) and ''Perth'' (18.6°C, 730mm) sit
-    close enough that their labels visually collide in both renders — nudge one label
-    vertically (e.g. label offset or position:''top''/''bottom'') or reduce font size
-    in this cluster.'
-  - 'Label overlap: ''Berlin'' and ''London'' labels nearly touch — same fix as above,
-    a small manual offset for crowded clusters would resolve it.'
-  - A few low-rainfall labels ('Lima', 'Cairo') sit directly on the y=0 gridline/axis,
-    visually merging with the axis line in both renders — offset them upward slightly
-    so they clear the axis.
-  - Design Excellence is solid but not yet at publication level — consider adding
-    one more layer of visual hierarchy (e.g. subtly emphasizing an outlier climate)
-    to push the storytelling beyond a plain labeled scatter.
+  - Design Excellence is solid but not yet at publication level (DE-01 5/8) - the
+    plot reads as a well-executed default rather than a distinctively art-directed
+    chart; consider a subtler background rule (e.g. a light diagonal reference band
+    per climate zone) to push aesthetic sophistication further.
+  - Data storytelling relies on continent color-coding alone (DE-03 4/6) - an explicit
+    visual callout (e.g. a shaded 'tropical' quadrant or a annotated outlier note
+    for Singapore/Mumbai's extreme rainfall) would sharpen the insight further, though
+    this is optional polish, not a defect.
+  - Library Mastery is good but generic-adjacent (LM-02 4/5) - the symbolSize:0 +
+    textBorderColor label-only technique is ECharts-idiomatic but not unique to ECharts;
+    a distinctive ECharts-only feature (e.g. visualMap, graphic elements, or markArea
+    zones) would push this further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "scatter-text · javascript · echarts · anyplot.ai" is dark ink, clearly readable. Legend (Africa/Asia/Europe/Americas/Oceania) with colored swatches sits centered below the title, readable. Axis titles "Average Temperature (°C)" and "Average Annual Rainfall (mm)" are dark and legible; tick labels are soft gray and legible. Gridlines are subtle warm-gray, visible but not dominant.
-      Data: 26 city names rendered as colored text (no markers, symbolSize:0), each colored by its continent's Imprint palette color, with a background-matched text outline for legibility over gridlines. First series (Africa) is #009E73 brand green, confirmed. Two label clusters overlap slightly: "Nairobi"/"Perth" and "Berlin"/"London". "Lima" and "Cairo" sit right on the y=0 gridline.
-      Legibility verdict: PASS (all text readable; overlap noted above is a design/spacing issue, not a legibility failure)
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "scatter-text - javascript - echarts - anyplot.ai" in dark ink is clearly readable at top; a centered continent legend (Africa, Asia, Europe, Americas, Oceania) sits below it; axis titles "Average Temperature (C)" and "Average Annual Rainfall (mm)" plus gray tick labels are legible against the light background; grid lines are subtle warm-gray.
+      Data: 26 city names render as colored text with no separate markers (symbolSize:0), each colored by its continent's Imprint palette color (Africa = brand green #009E73) with a background-matched text outline for legibility over gridlines and near other labels. Nairobi/Perth and Berlin/London - the two pairs flagged as overlapping in attempt 1 - now sit on clearly separate lines with visible vertical/horizontal gaps. Lima and Cairo are lifted above the y=0 gridline rather than sitting on it.
+      Legibility verdict: PASS - all text readable against the light background, no light-on-light issues, no remaining label collisions.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and legend text render in light ink, clearly readable against the dark background. Axis titles and tick labels are light-colored and legible; no dark-on-dark failures observed. Gridlines are subtle and visible.
-      Data: Same 26 city labels in identical Imprint colors to the light render (confirmed — first series still #009E73), with the same text-outline technique now using the dark background color, keeping every label crisp against the black surface. Same overlap issues persist (Nairobi/Perth, Berlin/London) since they are geometric, not theme-dependent.
-      Legibility verdict: PASS (no dark-on-dark text; same minor overlap issue as light render)
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, legend, and axis text all render in light ink and are clearly readable against the dark surface - no dark-on-dark failures; grid lines are subtle light-gray at low opacity.
+      Data: Data colors are identical to the light render (Africa confirmed #009E73, same hues for Asia/Europe/Americas/Oceania); only the chrome (background, text, grid) flips. The same text-outline technique now uses the dark background color, keeping labels crisp against the near-black surface. The same Nairobi/Perth, Berlin/London, and Lima/Cairo fixes hold identically in this render.
+      Legibility verdict: PASS - all text readable against the dark background, no dark-on-dark failures, brand green remains visible and identical to the light render.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,51 +65,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; minor deduction
-          because crowded clusters make a few labels harder to parse individually
+        comment: All font sizes explicit, readable in both themes; title fits comfortably
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Nairobi/Perth and Berlin/London labels visually overlap; main content
-          elsewhere still readable
+        passed: true
+        comment: Nairobi/Perth and Berlin/London offsets resolved the prior overlaps;
+          no collisions remain
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Text-as-marker approach (symbolSize:0) is perfectly suited to the
-          spec and the 26-point density
+        comment: Label-only markers sized and weighted appropriately for 26-point
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Background-matched text outlines give strong contrast; colors are
-          CVD-safe Imprint hues
+        comment: Text-border outline gives strong contrast against background and
+          gridlines
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization and balanced margins; minor deduction for
-          labels sitting on the y=0 gridline (Lima, Cairo)
+        comment: Lima/Cairo cleared off the y=0 gridline; balanced margins, no cut-off
+          content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles descriptive with units
+        comment: Descriptive axis labels with units (C, mm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, identical data colors
-          across themes, correct theme-adaptive chrome'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -114,22 +116,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Text-outline technique and continent color-coding show real design
-          thought, above a well-configured default
+        comment: Text-outline + continent color-coding shows real design thought,
+          not yet publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Subtle theme-matched grid and transparent background; overlap issue
-          and axis-line-hugging labels keep this below 'perfect'
+        comment: Subtle theme-matched grid, generous whitespace; label crowding no
+          longer holds this back
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Continent color grouping creates visible climate clusters (hot/wet
-          upper-right vs. cold/dry lower-left) — real visual hierarchy without annotations
+        comment: Continent color grouping creates visible climate clusters guiding
+          the reader
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +141,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine scatter-with-text-labels-instead-of-markers implementation
+        comment: Correct scatter-with-text-labels type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y/label present, color encodes an additional categorical dimension
-          (continent) as suggested
+        comment: All spec features present including overlap handling via offsets
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature on x, rainfall on y, all data visible within axis bounds
+        comment: X/Y correctly mapped to temperature/rainfall, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match continent series names
+        comment: Title format correct; legend labels match continent names
     data_quality:
       score: 15
       max: 15
@@ -168,20 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide spread of hot/wet, hot/dry, cold/wet, cold/dry climates across
-          5 continents
+        comment: Wide climate variety across 5 continents, dense and sparse regions
+          both shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral world-cities climate scenario
+        comment: Real, neutral scenario - world city climate data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values closely match real-world climate figures for the listed cities
+        comment: Values align with real-world climate figures for each city
     code_quality:
       score: 10
       max: 10
@@ -191,13 +192,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data -> init -> setOption structure
+        comment: Data, init, option - no classes/functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hard-coded deterministic data
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,13 +210,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Concise series generation via .map(), no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false set, current setOption API, harness-managed output
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
       score: 8
       max: 10
@@ -225,22 +226,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level option API usage, good structure
+        comment: Correct high-level setOption usage, doesn't push into advanced ECharts
+          features
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: textBorderColor/Width combined with symbolSize:0 label-only scatter
-          is a distinctive ECharts technique not trivially replicated elsewhere
-  verdict: REJECTED
+        comment: symbolSize:0 label-only scatter with textBorderColor/Width is distinctive
+          to ECharts
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - text-outline
+  - edge-highlighting
