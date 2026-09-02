@@ -1,8 +1,7 @@
 // anyplot.ai
 // lollipop-grouped: Grouped Lollipop Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 85/100 | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
