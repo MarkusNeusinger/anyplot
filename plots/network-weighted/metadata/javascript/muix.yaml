@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: network-weighted
 created: '2026-09-02T04:31:39Z'
-updated: '2026-09-02T04:36:40Z'
+updated: '2026-09-02T04:45:02Z'
 generated_by: claude-sonnet
 workflow_run: 33590653437
 issue: 3290
@@ -12,126 +12,130 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-w
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Correct, idiomatic use of MUI X's low-level composition API (ChartContainer +
-    useXScale/useYScale/useDrawingArea) to build a custom network-graph chart type
-    MUI X has no native support for, instead of faking it with a non-community package.
-  - Deterministic, seeded Fruchterman-Reingold force-directed layout with weight-influenced
-    attraction — edge weight shapes both stroke width AND the ideal node distance,
-    so the layout itself communicates connection strength, not just the line thickness.
-  - 'Full spec coverage: edge width scaled by weight, node radius scaled by weighted
-    degree, domain color-coding, an explicit edge-weight-scale legend, and heaviest
-    edges drawn last so the strongest collaborations stay legible on top.'
-  - Correct Imprint palette (canonical order for the abstract domain groups) and theme
-    tokens in both renders, plus a real (non-simulated) hover tooltip wired for the
-    interactive HTML export.
+  - Real force-directed (Fruchterman-Reingold) layout with weighted attraction — heavier
+    collaborations pull nodes closer together, so the layout itself, not just edge
+    thickness, communicates connection strength.
+  - 'Correct Imprint palette assignment: first series (Life Sciences) is #009E73,
+    remaining three domains follow canonical order 2-4; chrome (background, text)
+    is theme-correct in both renders.'
+  - Weighted-degree node sizing surfaces hub institutions (DSI, MAT, ENV) at a glance
+    — a genuine visual-hierarchy/storytelling win, not just a technical requirement.
+  - Heaviest edges are drawn last (sorted z-order) so the strongest collaborations
+    stay legible on top of overlapping lines.
+  - Deterministic reproducibility via a fixed-seed LCG for the initial layout scatter;
+    all data generated in-memory, no fetch/CDN.
+  - Idiomatic community MUI X composition — reuses `ChartContainer` plus `useXScale`/`useYScale`/`useDrawingArea`
+    hooks to build a custom network overlay, which is exactly the recommended community-surface
+    pattern for chart types MUI X has no native component for, and adds working hover
+    tooltips for the interactive HTML export.
+  - Title format matches the spec exactly; legend clearly explains both encodings
+    (domain color and weight-to-edge-width/node-size mapping) with sample values.
   weaknesses:
-  - Node ID labels and legend text (14px/13px/12px in the 1200px CSS mount) become
-    quite small once scaled to the ~400px mobile thumbnail, making the 14 individual
-    3-letter node codes hard to read at that size — consider bumping node-label and
-    legend fontSize by ~2px for better mobile legibility.
-  - A few edges cross near-tangentially through unrelated clusters (e.g. AST-CLI crosses
-    MAR-ENV, DSI-MAT crosses ENV-CHE) — inherent to a force-directed layout of a non-planar
-    graph, but slightly stronger repulsion or edge-length tuning around the CLI/ENV/MAT/AST
-    cluster would reduce the visual clutter.
-  - Title occupies only ~35-40% of the canvas width at fontSize=22, well under the
-    typical 50-70% range, leaving a lot of unused top margin — a modestly larger title
-    fontSize (~26-28px) would balance the composition better given this spec-id's
-    title is shorter than the 67-char reference length.
+  - Lightest edges (e.g. IMM-NEU, weight=6) render at strokeOpacity as low as 0.22
+    combined with strokeWidth=2, making the weakest connections fairly faint in both
+    themes — consider raising the opacity floor slightly (e.g. 0.3) so even the thinnest
+    edges stay comfortably legible at a glance.
+  - Title occupies roughly 45-48% of canvas width, on the low end of the guideline
+    range for a shorter custom title — a modest fontSize bump would give it slightly
+    more visual weight relative to the network below it.
+  - The overlay is split across several small components (GraphTitle, NetworkOverlay,
+    HoverTooltip, Legend) purely for organization — justified by the interactivity/physics
+    requirements, but a one-line comment naming the overall layout algorithm at the
+    top of the file would help future readers orient faster.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, measured RGB (250,248,241) = #FAF8F1, matches spec exactly.
-      Chrome: title "network-weighted · javascript · muix · anyplot.ai" in dark ink, centered top, clearly readable. 14 node-ID labels (e.g. "GEN", "DSI", "QPL") in dark bold text above each node, all legible. Bottom legend has a 4-item domain color key (Life Sciences/green, Physical Sciences/lavender, Computer Science/blue, Engineering/ochre) plus a caption "Edge width = co-authored papers · node size = weighted degree" and a 3-step edge-width scale (6/26/45), all in secondary ink, all legible against the light background.
-      Data: 14 circular nodes colored by domain using Imprint palette positions 1-4 (green #009E73 first, as required), sized by weighted degree (DSI and GEN are visibly the largest hubs). 24 edges connect the nodes, drawn in ink at low-to-medium opacity with width proportional to edge weight (AIR-DSI is visibly the thickest edge at weight 45, matching the data). Heaviest edges are drawn on top so they stay visible where lines cross.
-      Legibility verdict: PASS — no light-on-light text anywhere, all labels and legend text read clearly against the cream background.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "network-weighted · javascript · muix · anyplot.ai" centered top in dark ink, clearly legible. 14 node-ID labels (GEN, IMM, NEU, MAR, QPL, MAT, AST, CLI, ENV, AIR, DSI, ROB, CHE, BIO) placed above each node in bold dark text, all readable with no overlap. Bottom legend row explains 4 domain colors (Life Sciences, Physical Sciences, Computer Science, Engineering) plus a caption "Edge width = co-authored papers · node size = weighted degree" and a 3-point weight scale (6 / 26 / 45) with matching line thicknesses.
+      Data: Nodes colored by domain using the Imprint categorical palette — Life Sciences green #009E73 (first series, correct), Physical Sciences lavender, Computer Science blue, Engineering ochre, in canonical palette order. Edges are dark, semi-transparent lines whose width and opacity scale with co-authorship weight; node radius scales with weighted degree (DSI, MAT, ENV visibly largest = hubs). Layout is a force-directed graph where heavier edges pull node pairs closer.
+      Legibility verdict: PASS — all title, node-label, and legend text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, measured RGB (26,26,23) = #1A1A17, matches spec exactly.
-      Chrome: same title, node-ID labels, and legend content as the light render, all re-rendered in light ink/off-white tones. Title and node labels are clearly visible against the dark background; legend text (domain names, weight-scale caption and numbers) is in a lighter secondary tone and remains readable, no dark-on-dark failures observed.
-      Data: node fill colors are pixel-identical to the light render (same 4 Imprint hues), and edge widths/positions are unchanged — only the chrome (background, text, node stroke ring) flipped to the dark palette, exactly as required.
-      Legibility verdict: PASS — all title, node-label, and legend text is clearly readable on the near-black surface; no dark-on-dark or low-contrast text found.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, node labels, and legend layout as the light render, all rendered in light ink/off-white text, clearly legible against the dark background. No dark-on-dark text anywhere — title, node IDs, domain legend, and weight-scale labels are all bright and readable.
+      Data: Node and edge colors are visually identical to the light render (same Imprint palette hues, same green-first domain, same edge width/opacity encoding) — confirming only chrome flipped between themes, not data colors. Node outline stroke uses the page background color in both themes, giving crisp separation from crossing edges.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements read clearly on the dark surface, brand green remains vivid.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at full resolution, but node ID
-          labels and legend text (12-14px CSS) become quite small at the ~400px mobile
-          thumbnail size.
+        comment: All font sizes explicitly set (title 28px, node labels 16px, legend
+          14-16px), readable in both themes; title proportion slightly on the low
+          end but not a violation
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlaps; some edge-edge crossings
-          but no label collisions.
+        comment: No text-on-text or text-on-data collisions; edge crossings are expected
+          for a force-directed graph, not a defect
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node and edge sizes appropriate for a 14-node/24-edge network; heaviest
-          edges drawn on top for legibility.
+        comment: Edge width (2-13px) and node radius (15-40px) well adapted to a 14-node/24-edge
+          graph; lightest edges (opacity 0.22) are slightly faint
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4-way categorical domain coding via Imprint palette, CVD-safe, no
-          red-green-only signal.
+        comment: Domain colors distinguishable without relying on red-green; page-background
+          node stroke adds separation from crossing edges
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Nothing cut off, comfortable margins throughout; canvas measured
-          exactly 2400x2400.
+        comment: Network fills a large majority of the canvas with balanced margins;
+          legend sits directly below the plot, not isolated; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for a network graph; legend substitutes
-          clearly, title matches required format.
+        comment: N/A for a network graph (no coordinate axes) — full credit; title
+          and legend captions are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First domain uses #009E73, canonical Imprint order for the remaining
-          3 abstract domains, backgrounds measured exactly #FAF8F1/#1A1A17.'
+        comment: 'First domain (Life Sciences) is #009E73, remaining 3 domains follow
+          canonical Imprint order; backgrounds and chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        passed: true
-        comment: Custom force-directed layout with weight-driven attraction, thoughtful
-          multi-channel encoding (color + size + width).
+        comment: Custom force-directed layout with weighted attraction, intentional
+          size/opacity hierarchy — clearly above a configured default, though not
+          quite publication-tier polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: No chart junk, generous whitespace, rounded edge caps, opacity-graded
-          edges; some visual crowding from edge crossings keeps this below max.
+        comment: No competing chrome (no grid/spines/axis lines), generous whitespace,
+          restrained tooltip and legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Node size highlights hub labs, domain color reveals community structure,
-          heaviest-edges-on-top preserves the strongest-connection story.
+        comment: Node size = weighted degree and edge width/opacity = collaboration
+          strength let the viewer immediately spot hub institutions and strong ties;
+          heaviest edges drawn on top reinforces the hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -140,123 +144,106 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Weighted network graph with edge-thickness encoding, as specified.
+        comment: Correct weighted network graph with force-directed positioning
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Edge thickness by weight, weight-scale legend, optional weighted-degree
-          node sizing, force-directed layout with weight-influenced attraction all
-          present.
+        comment: Edge thickness by weight, weight legend, weighted-degree node sizing,
+          spring layout with weight-influenced attraction all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: All 14 nodes and 24 edges rendered; force-layout positions correctly
-          scaled to the drawing area.
+        comment: All 14 nodes and 24 edges rendered and visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai';
-          legend labels match the domain names used in the data.
+        comment: Title exactly matches 'network-weighted · javascript · muix · anyplot.ai';
+          legend labels match domain data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Covers weight-by-thickness, degree-by-size, and grouping-by-color
-          simultaneously.
+        comment: Wide weight range (6-45) with visibly distinct thin/thick edges,
+          hub vs. peripheral nodes, cross-domain and intra-domain edges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral research co-authorship network across 4 academic
-          domains.
+        comment: Real, neutral, comprehensible scenario — academic co-authorship network
+          across research domains
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 14 nodes (within the 10-50 spec range), 24 edges, weights 6-45 papers
-          — sensible values.
+        comment: Paper-count weights and weighted-degree sums are internally consistent
+          and plausible for the domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Components are the required React/MUI X interface, not gratuitous
-          abstraction; single clear layout function.
+        comment: Component decomposition (GraphTitle, NetworkOverlay, HoverTooltip,
+          Legend) is justified by the interactivity/physics needs, though it's more
+          structure than a minimal chart
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fixed-seed LCG drives both the initial scatter and is otherwise fully
-          deterministic physics.
+        comment: Fixed-seed LCG (state=42) for deterministic layout scatter
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only ChartContainer + the three hooks actually used, plus useState.
+        comment: Only used hooks/components imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI; complexity is proportional to implementing a genuine
-          force-directed layout from scratch.
+        comment: Complexity is warranted by the physics simulation MUI X doesn't provide
+          natively; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Default-exports Chart, sizes to window.ANYPLOT_SIZE, skipAnimation
-          set — harness contract respected.
+        comment: Correct default-exported Chart component, skipAnimation set, harness
+          owns file output
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses the documented low-level composition pattern (ChartContainer
-          + useXScale/useYScale/useDrawingArea) for a chart type outside MUI X's built-in
-          set.
+        comment: Uses ChartContainer + useXScale/useYScale/useDrawingArea, the recommended
+          community pattern for custom chart types MUI X has no built-in component
+          for
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Custom SVG overlay driven by MUI X's scale hooks, useDrawingArea-based
-          legend placement, real hover tooltips wired for the HTML export.
+        comment: The hooks-based custom-overlay composition is a signature MUI X capability,
+          not trivially replicated in another library with minor syntax changes
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - force-directed-layout
   - custom-legend
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
