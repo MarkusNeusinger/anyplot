@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 100, right: 80, bottom: 90, left: 110 };
+const margin = { top: 100, right: 150, bottom: 90, left: 110 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -21,17 +21,17 @@ function mulberry32(seed) {
 }
 const rand = mulberry32(20260108);
 
-const numDays = 260;
-const regimeDrift = [0.0012, -0.001, 0.002, -0.0016, 0.0008]; // rotating trend legs
+const numDays = 320;
+const regimeDrift = [0.0012, -0.001, 0.002, -0.0016, 0.0008, -0.0013, 0.0018]; // rotating trend legs
 const closes = [84];
 for (let i = 1; i < numDays; i++) {
-  const regime = regimeDrift[Math.floor(i / 44) % regimeDrift.length];
-  const shock = (rand() - 0.5) * 0.05;
+  const regime = regimeDrift[Math.floor(i / 38) % regimeDrift.length];
+  const shock = (rand() - 0.5) * 0.055;
   closes.push(Math.max(20, closes[i - 1] * (1 + regime + shock)));
 }
 
 // --- Kagi construction: reversal-threshold zigzag over the close series ----
-const REVERSAL_PCT = 0.04;
+const REVERSAL_PCT = 0.032;
 
 function buildKagiPivots(prices, reversalPct) {
   const pivots = [prices[0]];
@@ -74,30 +74,27 @@ function buildKagiPivots(prices, reversalPct) {
 }
 
 const pivots = buildKagiPivots(closes, REVERSAL_PCT);
+const numColumns = pivots.length - 1;
 
-const verticals = [];
-for (let i = 0; i < pivots.length - 1; i++) {
-  verticals.push({
-    x: i,
-    y0: pivots[i],
-    y1: pivots[i + 1],
+// Each pivot-to-pivot transition is one step-line segment: a vertical move
+// to the new pivot, then (except for the final segment) a horizontal
+// shoulder/waist carrying it to the next column.
+const kagiSegments = [];
+for (let i = 0; i < numColumns; i++) {
+  const hasShoulder = i < numColumns - 1;
+  kagiSegments.push({
+    points: [
+      { x: i, y: pivots[i] },
+      { x: hasShoulder ? i + 1 : i, y: pivots[i + 1] },
+    ],
     dir: pivots[i + 1] >= pivots[i] ? "up" : "down",
-  });
-}
-const horizontals = [];
-for (let i = 0; i < verticals.length - 1; i++) {
-  horizontals.push({
-    x0: i,
-    x1: i + 1,
-    y: verticals[i].y1,
-    dir: verticals[i + 1].dir,
   });
 }
 
 // --- Scales -------------------------------------------------------------
 const x = d3
   .scaleLinear()
-  .domain([0, verticals.length - 1])
+  .domain([0, numColumns - 1])
   .range([0, iw]);
 const yExtent = d3.extent(pivots);
 const y = d3
@@ -123,29 +120,24 @@ const THIN = 2.5;
 const upColor = t.palette[0]; // brand green
 const downColor = t.palette[4]; // matte red
 
-g.selectAll(".kagi-vertical")
-  .data(verticals)
-  .join("line")
-  .attr("class", "kagi-vertical")
-  .attr("x1", (d) => x(d.x))
-  .attr("x2", (d) => x(d.x))
-  .attr("y1", (d) => y(d.y0))
-  .attr("y2", (d) => y(d.y1))
-  .attr("stroke", (d) => (d.dir === "up" ? upColor : downColor))
-  .attr("stroke-width", (d) => (d.dir === "up" ? THICK : THIN))
-  .attr("stroke-linecap", "round");
+// Each vertical-then-shoulder segment is a d3-shape path (curveStepBefore),
+// not a raw SVG <line>, so the yang/yin step geometry comes from d3.line().
+const kagiLine = d3
+  .line()
+  .x((d) => x(d.x))
+  .y((d) => y(d.y))
+  .curve(d3.curveStepBefore);
 
-g.selectAll(".kagi-horizontal")
-  .data(horizontals)
-  .join("line")
-  .attr("class", "kagi-horizontal")
-  .attr("x1", (d) => x(d.x0))
-  .attr("x2", (d) => x(d.x1))
-  .attr("y1", (d) => y(d.y))
-  .attr("y2", (d) => y(d.y))
+g.selectAll(".kagi-segment")
+  .data(kagiSegments)
+  .join("path")
+  .attr("class", "kagi-segment")
+  .attr("fill", "none")
+  .attr("d", (d) => kagiLine(d.points))
   .attr("stroke", (d) => (d.dir === "up" ? upColor : downColor))
   .attr("stroke-width", (d) => (d.dir === "up" ? THICK : THIN))
-  .attr("stroke-linecap", "round");
+  .attr("stroke-linecap", "round")
+  .attr("stroke-linejoin", "round");
 
 // --- Axes --------------------------------------------------------------
 const xAxis = g
@@ -169,7 +161,7 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "16px")
-  .text("Kagi Line Index (4% Reversal Threshold)");
+  .text(`Kagi Line Index (${d3.format(".1%")(REVERSAL_PCT)} Reversal Threshold)`);
 
 g.append("text")
   .attr("transform", "rotate(-90)")
@@ -180,10 +172,10 @@ g.append("text")
   .style("font-size", "16px")
   .text("Closing Price ($)");
 
-// --- Legend --------------------------------------------------------------
+// --- Legend (rounded color chips, no frame per style guide) ----------------
 const legendItems = [
-  { label: "Yang (Up)", color: upColor, width: THICK },
-  { label: "Yin (Down)", color: downColor, width: THIN },
+  { label: "Yang (Up)", color: upColor },
+  { label: "Yin (Down)", color: downColor },
 ];
 const legend = svg
   .append("g")
@@ -191,22 +183,54 @@ const legend = svg
 legendItems.forEach((item, i) => {
   const row = legend.append("g").attr("transform", `translate(0, ${i * 28})`);
   row
-    .append("line")
-    .attr("x1", 0)
-    .attr("x2", 32)
-    .attr("y1", 0)
-    .attr("y2", 0)
-    .attr("stroke", item.color)
-    .attr("stroke-width", item.width)
-    .attr("stroke-linecap", "round");
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", -8)
+    .attr("width", 16)
+    .attr("height", 16)
+    .attr("rx", 4)
+    .attr("fill", item.color);
   row
     .append("text")
-    .attr("x", 42)
+    .attr("x", 26)
     .attr("y", 5)
     .attr("fill", t.inkSoft)
     .style("font-size", "14px")
     .text(item.label);
 });
+
+// --- End-of-line price callout --------------------------------------------
+const lastPivot = pivots[pivots.length - 1];
+const lastDir = kagiSegments[kagiSegments.length - 1].dir;
+const calloutColor = lastDir === "up" ? upColor : downColor;
+const callout = g
+  .append("g")
+  .attr("transform", `translate(${x(numColumns - 1)},${y(lastPivot)})`);
+callout
+  .append("circle")
+  .attr("r", 4.5)
+  .attr("fill", calloutColor)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2);
+callout
+  .append("rect")
+  .attr("x", 12)
+  .attr("y", -13)
+  .attr("width", 96)
+  .attr("height", 26)
+  .attr("rx", 6)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", calloutColor)
+  .attr("stroke-width", 1.5);
+callout
+  .append("text")
+  .attr("x", 60)
+  .attr("y", 4)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Last: $${lastPivot.toFixed(2)}`);
 
 // --- Title -------------------------------------------------------------
 svg
