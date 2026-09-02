@@ -20,8 +20,8 @@ function gaussianJitter(sigma) {
 }
 
 // --- Basemap: stylized coastal-district outline (illustrative, not a survey) -
-const centerLon = -73.97;
-const centerLat = 40.78;
+const centerLon = -74.01; // Downtown Manhattan / Financial District
+const centerLat = 40.71;
 const halfLonDeg = 0.095;
 const halfLatDeg = 0.1;
 const coastPoints = 56;
@@ -118,11 +118,14 @@ const landD = lineGen(coastline);
 
 svg.append("defs").append("clipPath").attr("id", "landClip").append("path").attr("d", landD);
 
+// map-layer: everything that pans/scales together under d3.zoom()
+const mapLayer = svg.append("g").attr("class", "map-layer");
+
 // land base
-svg.append("path").attr("d", landD).attr("fill", t.elevatedBg);
+mapLayer.append("path").attr("d", landD).attr("fill", t.elevatedBg);
 
 // density contours + point texture, clipped to the landmass
-const clipped = svg.append("g").attr("clip-path", "url(#landClip)");
+const clipped = mapLayer.append("g").attr("clip-path", "url(#landClip)");
 clipped
   .selectAll("path.contour")
   .data(density)
@@ -144,7 +147,43 @@ clipped
   .attr("opacity", 0.1);
 
 // coastline outline, crisp on top of the fills
-svg.append("path").attr("d", landD).attr("fill", "none").attr("stroke", t.inkSoft).attr("stroke-width", 1.5);
+mapLayer.append("path").attr("d", landD).attr("fill", "none").attr("stroke", t.inkSoft).attr("stroke-width", 1.5);
+
+// --- Annotation: highlight the single strongest density peak ---------------
+const peakContour = density.reduce((a, b) => (b.value > a.value ? b : a));
+const [peakX, peakY] = d3.polygonCentroid(peakContour.coordinates[0][0]);
+const peakLabelX = peakX - 40;
+const peakLabelY = peakY - 40;
+
+const annotation = svg.append("g").attr("class", "peak-annotation");
+annotation
+  .append("circle")
+  .attr("cx", peakX)
+  .attr("cy", peakY)
+  .attr("r", 30)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "4,3")
+  .attr("opacity", 0.75);
+annotation
+  .append("line")
+  .attr("x1", peakX - 21)
+  .attr("y1", peakY - 21)
+  .attr("x2", peakLabelX + 4)
+  .attr("y2", peakLabelY + 6)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1)
+  .attr("opacity", 0.6);
+annotation
+  .append("text")
+  .attr("x", peakLabelX)
+  .attr("y", peakLabelY)
+  .attr("text-anchor", "end")
+  .attr("fill", t.ink)
+  .style("font-size", "13px")
+  .style("font-weight", "600")
+  .text("Peak density");
 
 // --- Axes (lon/lat reference grid) -------------------------------------
 const lonFormat = (d) => `${Math.abs(d).toFixed(2)}°${d < 0 ? "W" : "E"}`;
@@ -172,7 +211,7 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
-  .text("Longitude");
+  .text("Longitude (°)");
 
 svg
   .append("text")
@@ -180,7 +219,34 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
-  .text("Latitude");
+  .text("Latitude (°)");
+
+// --- Zoom: pan/scale the map to explore density at different scales --------
+const zoom = d3
+  .zoom()
+  .scaleExtent([1, 6])
+  .translateExtent([
+    [offsetX, offsetY],
+    [offsetX + mapW, offsetY + mapH],
+  ])
+  .extent([
+    [offsetX, offsetY],
+    [offsetX + mapW, offsetY + mapH],
+  ])
+  .on("zoom", (event) => {
+    mapLayer.attr("transform", event.transform);
+    const zx = event.transform.rescaleX(xScale);
+    const zy = event.transform.rescaleY(yScale);
+    xAxis.call(d3.axisBottom(zx).ticks(5).tickFormat(lonFormat).tickSize(-mapH));
+    yAxis.call(d3.axisLeft(zy).ticks(5).tickFormat(latFormat).tickSize(-mapW));
+    for (const axis of [xAxis, yAxis]) {
+      axis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+      axis.selectAll("line").attr("stroke", t.grid);
+      axis.select(".domain").remove();
+    }
+  });
+
+svg.call(zoom);
 
 // --- Legend: density gradient -------------------------------------------
 const legendX = offsetX + mapW + 55;
