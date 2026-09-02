@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 
 import api.main as api_main
 from api.main import app
-from api.origin_gate import ORIGIN_SECRET_HEADER, is_exempt
+from api.origin_gate import ORIGIN_SECRET_HEADER, _matches, is_exempt
 from core.config import settings
 
 
@@ -113,14 +113,13 @@ class TestTheArmedGate:
 
 
 class TestTheExemptPaths:
-    """`/health` is how the deploy smoke reaches the candidate revision on its
-    `run.app` tag URL, which by definition never passes the edge, so gating it
-    would make every deploy fail closed. `/seo-proxy` is belt and braces: the
-    site's nginx DOES come through the edge, but the cost of being wrong there
-    is every crawler seeing a 403. `/debug/cache/invalidate` is the one
-    legitimate caller with no front door — `sync-postgres.yml` posts to the
-    direct URL because Cloudflare's bot challenge answers an unauthenticated
-    curl POST with a 403 HTML page; that endpoint carries its own token."""
+    """Two paths, no prefixes. `/health` is how the deploy smoke reaches the
+    candidate revision on its `run.app` tag URL, which by definition never
+    passes the edge, so gating it would make every deploy fail closed.
+    `/debug/cache/invalidate` is the one legitimate caller with no front door —
+    `sync-postgres.yml` posts to the direct URL because Cloudflare's bot
+    challenge answers an unauthenticated curl POST with a 403 HTML page; that
+    endpoint carries its own token."""
 
     def test_the_gate_is_really_armed_for_this_test(self, client: TestClient, armed):
         assert client.get(OPEN_PATH).status_code == 403
@@ -128,30 +127,34 @@ class TestTheExemptPaths:
     def test_health_is_never_gated(self, client: TestClient, armed):
         assert client.get("/health").status_code == 200
 
-    def test_the_prerendered_pages_are_never_gated(self, client: TestClient, armed):
-        assert client.get("/seo-proxy/legal").status_code != 403
-
     def test_the_cache_flush_is_never_gated(self, client: TestClient, armed):
         """503 is the answer with no CACHE_INVALIDATE_TOKEN configured — its
         own fail-closed gate, reached rather than pre-empted."""
         assert client.post("/debug/cache/invalidate").status_code == 503
 
+    def test_the_prerendered_pages_ARE_gated(self, client: TestClient, armed):
+        """Deliberately not exempt (Copilot review): the site's nginx fetches
+        them over `https://api.anyplot.ai`, so they carry the header, while an
+        exemption would leave the API's most expensive reads open on the direct
+        URL — a cache miss or an unknown id queries the repositories, and a
+        crawler user agent schedules an outbound Plausible event per request."""
+        assert client.get("/seo-proxy/legal").status_code == 403
+
     @pytest.mark.parametrize(
         ("path", "exempt"),
         [
             ("/health", True),
-            ("/seo-proxy", True),  # the redirect to /seo-proxy/
-            ("/seo-proxy/", True),
-            ("/seo-proxy/specs", True),
             ("/debug/cache/invalidate", True),
-            ("/seo-proxy-admin", False),
+            ("/seo-proxy", False),
+            ("/seo-proxy/", False),
+            ("/seo-proxy/specs", False),
             ("/healthz", False),
             ("/debug/cache", False),
             ("/debug/status", False),
             ("/specs", False),
         ],
     )
-    def test_the_exemption_list_is_exactly_these_prefixes(self, path, exempt):
+    def test_the_exemption_list_is_exactly_these_two_paths(self, path, exempt):
         assert is_exempt(path, "GET") is exempt
 
 
@@ -202,9 +205,16 @@ class TestARefusalCostsNothing:
             assert client.get(self.ASSET, headers=self.CRAWLER).status_code == 403
             assert assets.call_count == 0
 
-    def test_the_exempt_crawler_path_is_still_counted(self, client: TestClient, armed):
+    def test_a_refused_crawler_page_reports_nothing_either(self, client: TestClient, armed):
+        """The prerendered pages are the ones an unthrottled caller would pick:
+        every request with a crawler user agent schedules an outbound event."""
         with patch.object(api_main, "track_bot_fetch") as pages:
-            client.get("/seo-proxy/legal", headers=self.CRAWLER)
+            assert client.get("/seo-proxy/legal", headers=self.CRAWLER).status_code == 403
+            assert pages.call_count == 0
+
+    def test_with_the_header_the_crawler_page_counts(self, client: TestClient, armed):
+        with patch.object(api_main, "track_bot_fetch") as pages:
+            client.get("/seo-proxy/legal", headers=self.CRAWLER | EDGE)
             assert pages.call_count == 1
 
     def test_with_the_header_the_read_counts_again(self, client: TestClient, armed):
@@ -225,6 +235,44 @@ class TestHealthReportsTheVerdictForTheRequestItWasAskedWith:
         res = client.get("/health", headers=headers)
         assert res.status_code == 200
         assert res.json()["origin_gate"] == verdict
+
+
+class TestANonAsciiHeaderIsRefused:
+    """`secrets.compare_digest` raises TypeError when either `str` holds a
+    non-ASCII character, and a header value reaches the middleware
+    latin-1-decoded straight from the wire. Comparing as `str` would therefore
+    hand any unauthenticated caller a one-byte way to turn every refusal into
+    an unhandled 500 — the gate made expensive instead of cheap (Copilot
+    review). The compare encodes both sides first.
+    """
+
+    # Passed as raw bytes: an HTTP client refuses to encode a non-ASCII str
+    # header, so bytes are the only way one reaches the middleware at all.
+    RAW = b"s3cret-from-the-edg\xe9"
+
+    def test_a_non_ascii_header_is_a_403_not_a_500(self, client: TestClient, armed):
+        res = client.get(OPEN_PATH, headers={ORIGIN_SECRET_HEADER: self.RAW})
+        assert res.status_code == 403
+
+    def test_health_calls_it_a_mismatch_not_a_500(self, client: TestClient, armed):
+        res = client.get("/health", headers={ORIGIN_SECRET_HEADER: self.RAW})
+        assert res.status_code == 200
+        assert res.json()["origin_gate"] == "mismatch"
+
+    def test_the_str_comparison_this_replaced_would_have_raised(self):
+        """The proof that the two tests above measure something. Asserted on
+        the primitive rather than on a response, because the exact byte the
+        client puts on the wire is the transport's business — what matters is
+        that a non-ASCII `str` is fatal to `compare_digest` and harmless to
+        the encoded compare."""
+        import secrets as stdlib_secrets
+
+        seen = self.RAW.decode("latin-1")
+        with pytest.raises(TypeError):
+            stdlib_secrets.compare_digest(seen, SECRET)
+
+        assert _matches(seen, seen) is True
+        assert _matches(seen, SECRET) is False
 
 
 class TestATrailingNewlineCannotLockEveryoneOut:

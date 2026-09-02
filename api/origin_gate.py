@@ -27,16 +27,11 @@ it is promoted. Local development and the test suite therefore never see the
 gate, and the rollout can put the code in production long before the rule and
 the secret exist.
 
-Exempt by path, and only these three:
+Exempt by path, and only these two:
 
 * `/health` — the deploy's pre-traffic smoke probes the candidate revision on
   its `run.app` tag URL, which by definition never passes the edge. Gating it
   would make every deploy fail closed.
-* `/seo-proxy/…` — belt and braces. The site's nginx fetches the prerendered
-  pages over `https://api.anyplot.ai` (`app/nginx.conf` `@seo_proxy` and
-  `@seo_proxy_python`), so they DO pass the edge and DO carry the header; the
-  exemption exists because the cost of being wrong there is every crawler
-  seeing a 403, and the path is a read with no admin surface behind it.
 * `/debug/cache/invalidate` — the one legitimate caller that has no front door.
   `sync-postgres.yml` flushes the cache from a GitHub runner at the end of each
   sync, and it posts to the direct `*.run.app` URL *on purpose*: Cloudflare's
@@ -47,6 +42,17 @@ Exempt by path, and only these three:
   secret from CI instead would let this exemption go; that needs a repository
   secret and a workflow change, and is named as the follow-up in the PR that
   introduced this file.
+
+`/seo-proxy/…` is deliberately NOT exempt, though the sibling repo exempts it
+belt-and-braces. The site's nginx fetches the prerendered pages over
+`https://api.anyplot.ai` (`app/nginx.conf` `@seo_proxy` and `@seo_proxy_python`),
+so that path does pass the edge and does carry the header — while an exemption
+would leave the most expensive reads in the API open on the direct URL: a cache
+miss or an unknown id queries `SpecRepository`/`ImplRepository`, and a crawler
+user agent schedules an outbound Plausible event per request. That is precisely
+the cost this gate exists to refuse (Copilot review). The rollout measures the
+crawler path end to end before arming, and `bot-serving-check.yml` runs daily,
+so being wrong here is loud rather than silent.
 
 `OPTIONS` never reaches the gate in the shipped stack — `CORSMiddleware` sits
 outside it (`api/main.py`) and answers a preflight itself — but it is let
@@ -68,11 +74,24 @@ from core.config import settings
 
 ORIGIN_SECRET_HEADER = "x-origin-secret"
 
-# The `/seo-proxy` prefix keeps its slash so it cannot also swallow a future
-# `/seo-proxy-admin`; the bare form is listed separately for the redirect to
-# `/seo-proxy/`. See the module docstring for what each exemption buys.
-EXEMPT_PATHS = frozenset({"/health", "/seo-proxy", "/debug/cache/invalidate"})
-EXEMPT_PREFIXES = ("/seo-proxy/",)
+# Exact paths only, no prefixes: a prefix exemption is how a gate quietly grows
+# a hole. See the module docstring for what each of these two buys, and why
+# `/seo-proxy/…` is not among them.
+EXEMPT_PATHS = frozenset({"/health", "/debug/cache/invalidate"})
+
+
+def _matches(presented: str, expected: str) -> bool:
+    """Constant-time compare of the presented header against the secret.
+
+    Compared as BYTES, not as `str`: `secrets.compare_digest` raises TypeError
+    when either `str` holds a non-ASCII character, and a header value reaches
+    here latin-1-decoded straight from the wire. So a caller could put one byte
+    ≥ 0x80 in `X-Origin-Secret` and turn every refusal into an unhandled 500 —
+    an unauthenticated way to make the gate expensive instead of cheap (Copilot
+    review). Encoding first removes the restriction and the whole class of
+    problem, and covers a non-ASCII secret at the other end too.
+    """
+    return secrets.compare_digest(presented.encode("utf-8"), expected.encode("utf-8"))
 
 
 def gate_is_armed() -> bool:
@@ -88,7 +107,7 @@ def is_exempt(path: str, method: str) -> bool:
     """Paths and methods the gate never refuses."""
     if method == "OPTIONS":
         return True
-    return path in EXEMPT_PATHS or path.startswith(EXEMPT_PREFIXES)
+    return path in EXEMPT_PATHS
 
 
 def header_verdict(request: Request) -> str:
@@ -117,7 +136,7 @@ def header_verdict(request: Request) -> str:
         return "off-seen" if presented else "off"
     if not presented:
         return "missing"
-    return "ok" if secrets.compare_digest(presented, settings.origin_secret or "") else "mismatch"
+    return "ok" if _matches(presented, settings.origin_secret or "") else "mismatch"
 
 
 class OriginSecretMiddleware:
@@ -144,9 +163,9 @@ class OriginSecretMiddleware:
             await self.app(scope, receive, send)
             return
         presented = Request(scope).headers.get(ORIGIN_SECRET_HEADER)
-        # compare_digest needs two str: an absent header is not a mismatch to
-        # measure, it is simply the wrong door.
-        if presented and secrets.compare_digest(presented, settings.origin_secret or ""):
+        # An absent header is not a mismatch to measure, it is simply the wrong
+        # door — so it short-circuits before the compare.
+        if presented and _matches(presented, settings.origin_secret or ""):
             await self.app(scope, receive, send)
             return
         response = JSONResponse(

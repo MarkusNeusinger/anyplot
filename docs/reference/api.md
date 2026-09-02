@@ -250,7 +250,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 ```json
 {
   "message": "Welcome to anyplot API",
-  "version": "0.2.0",
+  "version": "3.2.0",
   "docs": "/docs",
   "health": "/health"
 }
@@ -268,10 +268,13 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 {
   "status": "healthy",
   "service": "anyplot-api",
-  "version": "0.2.0",
+  "version": "3.2.0",
   "origin_gate": "off"
 }
 ```
+
+`version` is the installed package's version (`api/version.py`), so it moves
+with each release rather than staying at the value written here.
 
 `origin_gate` reports what the gate makes of *this* request — never the secret
 itself. `/health` is exempt from the gate, so every route into the service can
@@ -474,17 +477,27 @@ service, which is what makes local development, the test suite and the rollback
 work: remove the variable from the service, promote the resulting revision, and
 the gate is gone.
 
-**Exempt paths**, and only these:
+**Exempt paths** — exact matches, no prefixes, and only these two:
 
 | Path | Why |
 |---|---|
 | `/health` | the deploy smoke probes the candidate revision on its `run.app` tag URL, which never passes the edge |
-| `/seo-proxy/…` | belt and braces — the prerendered pages do come through the edge, but the cost of being wrong is every crawler seeing a 403 |
 | `/debug/cache/invalidate` | `sync-postgres.yml` posts here from a GitHub runner over the direct URL, because Cloudflare's bot challenge answers an unauthenticated curl POST with a 403 HTML page. The endpoint has its own token (`CACHE_INVALIDATE_TOKEN`, constant-time compared, 503 when unconfigured) |
 
 `OPTIONS` is exempt too — a browser cannot attach a custom header to a CORS
 preflight, so a gate that refused one would break every cross-origin call
 instead of protecting anything.
+
+`/seo-proxy/…` is **not** exempt. The site's nginx fetches the prerendered pages
+over `https://api.anyplot.ai`, so that path carries the header — while an
+exemption would leave the API's most expensive reads open on the direct URL: a
+cache miss or an unknown id queries the repositories, and a crawler user agent
+schedules an outbound Plausible event per request. Validate the crawler path end
+to end while the gate is still off (below), not with an exemption:
+
+```bash
+curl -s -A 'Mozilla/5.0 (compatible; Googlebot/2.1)' https://anyplot.ai/scatter-basic | head -5
+```
 
 **Observing it.** `GET /health` reports `origin_gate` for the request it was
 asked with, never the value:

@@ -41,13 +41,20 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   rule and the secret exist. `/health` reports `origin_gate` (`off` · `off-seen` · `ok` ·
   `missing` · `mismatch`) for the request it was asked with — never the value — so every
   route into the service can be measured *before* the switch is thrown; `off-seen` is the
-  state every path that must keep working has to reach first. Exempt: `/health` (the deploy
-  smoke reaches the candidate on its `run.app` tag URL, which never passes the edge),
-  `/seo-proxy/…` (belt and braces — the cost of being wrong there is every crawler seeing a
-  403), `/debug/cache/invalidate` (`sync-postgres.yml` posts to the direct URL by design,
-  because Cloudflare's bot challenge answers an unauthenticated curl POST with a 403 HTML
-  page; that endpoint carries its own constant-time token) and `OPTIONS`, which a browser
-  cannot attach a custom header to. The Cloudflare Worker behind `anyplot.ai/api/*` now has
+  state every path that must keep working has to reach first. Exempt, as exact paths with no
+  prefixes: `/health` (the deploy smoke reaches the candidate on its `run.app` tag URL, which
+  never passes the edge) and `/debug/cache/invalidate` (`sync-postgres.yml` posts to the
+  direct URL by design, because Cloudflare's bot challenge answers an unauthenticated curl
+  POST with a 403 HTML page; that endpoint carries its own constant-time token), plus
+  `OPTIONS`, which a browser cannot attach a custom header to. `/seo-proxy/…` is deliberately
+  **not** exempt although the sibling repo exempts it: the site's nginx fetches those pages
+  over `api.anyplot.ai` and so carries the header, while an exemption would leave the API's
+  most expensive reads open on the direct URL — a cache miss or an unknown id queries the
+  repositories, and a crawler user agent schedules an outbound Plausible event per request.
+  The header is compared as bytes rather than as `str`, because `secrets.compare_digest`
+  raises `TypeError` on a non-ASCII `str` and a header arrives latin-1-decoded from the wire:
+  comparing strings would have handed any caller a one-byte way to turn every refusal into an
+  unhandled 500. The Cloudflare Worker behind `anyplot.ai/api/*` now has
   its source in `infra/cloudflare/`, because a Worker subrequest to a host in the same zone
   bypasses that zone's Transform Rules — so the Worker stamps the header itself, deleting
   any inbound one first so a caller cannot supply it. The pre-traffic smoke reads the secret
