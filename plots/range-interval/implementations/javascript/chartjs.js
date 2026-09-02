@@ -1,0 +1,70 @@
+// anyplot.ai
+// range-interval: Range Interval Chart
+// Library: chartjs 4.4.7 | JavaScript 22
+// Quality: pending | Created: 2026-09-02
+
+const t = window.ANYPLOT_TOKENS;
+
+// --- Data (in-memory, deterministic) — Berlin monthly temperature range ----
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const lowC = [0, 0, 2, 5, 9, 13, 15, 14, 11, 7, 3, 1];
+const highC = [3, 5, 9, 14, 19, 22, 24, 24, 19, 13, 7, 4];
+const ranges = months.map((_, i) => [lowC[i], highC[i]]);
+
+// brand green fill with reduced opacity so the range bars stay light
+function withAlpha(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// --- Title sizing (scale down once the title exceeds the ~67-char baseline) -
+const title = "Berlin Monthly Temperature Range · range-interval · javascript · chartjs · anyplot.ai";
+const titleFontSize = Math.max(14, Math.round(22 * Math.min(1, 67 / title.length)));
+
+// --- Mount -----------------------------------------------------------------
+const canvas = document.createElement("canvas");
+document.getElementById("container").appendChild(canvas);
+
+// --- Chart -----------------------------------------------------------------
+new Chart(canvas, {
+  type: "bar",
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: "Temperature range",
+        data: ranges,
+        backgroundColor: withAlpha(t.palette[0], 0.55),
+        borderColor: t.palette[0],
+        borderWidth: 2,
+        borderSkipped: false,
+        borderRadius: 6,
+        barPercentage: 0.6,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    plugins: {
+      title: { display: true, text: title, color: t.ink, font: { size: titleFontSize, weight: "500" } },
+      legend: { display: false },
+      tooltip: { enabled: false },
+    },
+    scales: {
+      x: {
+        ticks: { color: t.inkSoft, font: { size: 14 } },
+        grid: { display: false },
+        title: { display: true, text: "Month", color: t.ink, font: { size: 16 } },
+      },
+      y: {
+        ticks: { color: t.inkSoft, font: { size: 14 }, callback: (v) => `${v}°C` },
+        grid: { color: t.grid },
+        title: { display: true, text: "Average Temperature (°C)", color: t.ink, font: { size: 16 } },
+      },
+    },
+  },
+});
