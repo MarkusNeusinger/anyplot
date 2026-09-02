@@ -42,7 +42,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   hand, never write the pipeline's files by hand, and put the `approved` label on the issue rather
   than the PR — which is exactly the rule an agent that opens and edits PRs is most able to break;
   and `agentic/docs/project-guide.md` linked to `/CLAUDE.md`, which GitHub resolves as a site-root
-  URL and answers with a 404. Same pin as the sibling repo kurrentschrift. (#PRNUM)
+  URL and answers with a 404. Same pin as the sibling repo kurrentschrift. (#11210)
 
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
