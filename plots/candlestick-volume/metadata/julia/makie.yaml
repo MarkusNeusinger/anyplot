@@ -1,0 +1,265 @@
+library: makie
+language: julia
+specification_id: candlestick-volume
+created: '2026-09-02T14:13:42Z'
+updated: '2026-09-02T14:33:25Z'
+generated_by: claude-sonnet
+workflow_run: 33640059745
+issue: 3068
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Hollow-vs-filled candle body convention now added (up = hollow outline, down =
+    solid fill), giving CVD readers a secondary shape channel independent of the green/red
+    hue — directly resolves the VQ-04 gap from attempt 1.
+  - Extra top-of-axis headroom (0.18x price span) computed from the actual price range
+    keeps the top-left legend clear of the earliest candles regardless of where the
+    series peaks — resolves the legend/data proximity weakness from attempt 1.
+  - Volume y-axis label is now the fully self-contained "Volume (millions)" instead
+    of bare "Volume" — resolves the axis-labeling weakness from attempt 1.
+  - 'Idiomatic Makie dual-pane composition: linkxaxes! for a synchronized shared date
+    axis, rowsize!/rowgap! with Relative(0.72/0.28) for the spec''s mandated pane
+    split, linesegments! for wicks + barplot!(fillto=...) for bodies, and a manually
+    constructed PolyElement Legend.'
+  - Correct Imprint semantic-exception palette (up=#009E73 position 1, down=#AE3030
+    position 5) with identical data colors and correctly flipped theme-adaptive chrome
+    (#FAF8F1/#1A1A17 backgrounds) in both renders.
+  - Correctly and silently omits the spec's interactive crosshair request per the
+    CairoMakie static-only policy instead of faking a tooltip/cursor, avoiding AR-08.
+  weaknesses:
+  - The tallest early up-candle's wick tip still comes close to the bottom of the
+    "Down" legend label (small but non-zero margin) — a touch more headroom or shifting
+    the legend right by one candle width would make the clearance more robust across
+    re-renders.
+  - 'Design Excellence still reads as solid-but-standard: the dual-pane layout communicates
+    the price/volume correlation but has no additional emphasis (e.g., highlighting
+    the largest single-day volume spike or a notable price move) to sharpen the storytelling.'
+  - The legend's elevated background (#FFFDF6 at 0.85 alpha in light mode) is nearly
+    indistinguishable from the page background (#FAF8F1), so the legend currently
+    relies on that small headroom gap rather than a visibly contrasting surface to
+    stay legible over data.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "candlestick-volume · julia · makie · anyplot.ai" centered at top; "Price (USD)" y-axis label on the upper pane; "Volume (millions)" y-axis label and "Date" x-axis label (rotated ~30°, Mar 01–Apr 26) on the lower pane. Subtle horizontal grid lines aligned across both panes. Top-left "Up"/"Down" legend with hollow-green and solid-red swatches. All title, axis, and tick text renders in dark ink and is clearly readable against the light background.
+      Data: 60 daily OHLC candlesticks — up candles are hollow (page-background fill, #009E73 outline), down candles are solid #AE3030 fill — plus matching-colored volume bars below, sharing the same date axis via linkxaxes!.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same layout; title and axis labels now render in light ink (#F0EFE8), tick labels in a softer warm gray (#B8B7B0) — all clearly legible, no dark-on-dark failures. Grid lines remain faint but visible. Legend flips to a dark elevated surface with light text, still readable and clear of the earliest candles.
+      Data: Candlestick and volume-bar colors are pixel-identical to the light render (#009E73 hollow-up / #AE3030 solid-down) — confirming only chrome flips between themes, not data encoding.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, and tick labels are explicitly sized and clearly
+          readable in both themes; dense 60-candle x-axis ticks stay legible via 7-day
+          spacing and rotation.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions; the new headroom calculation
+          keeps the legend clear of the earliest candles.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Candle bodies/wicks and volume bars are appropriately sized for 60
+          periods; hollow-vs-filled bodies stay distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hollow-vs-filled body convention gives CVD readers a shape cue independent
+          of the green/red hue — resolves attempt 1's gap.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800; price/volume panes match the spec's
+          70-75%/25-30% split via rowsize!(Relative(0.72/0.28)).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Price (USD)", "Volume (millions)", "Date" are descriptive with
+          units; title matches the mandated format exactly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Up=#009E73 (Imprint position 1), down=#AE3030 (Imprint position 5,
+          finance semantic exception); backgrounds correct and theme-correct in both
+          renders.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom volume tick formatter, elevated legend surface, theme-adaptive
+          chrome, and the new hollow/filled body convention show deliberate polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle low-alpha grid, generous rowgap between panes
+          — unchanged from attempt 1, no new refinements this round.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Dual-pane correlation reads clearly but there is no additional emphasis
+          (e.g. highlighting a notable volume spike or price move).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-pane candlestick + volume chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shared linked x-axis, matching up/down color scheme in both panes,
+          ~72/28 pane split, subtle aligned grid — all spec notes satisfied except
+          the interactive crosshair, correctly and silently omitted per the static-library
+          policy.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, price (OHLC) and volume on y in their respective panes,
+          full 60-day range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches "candlestick-volume · julia · makie · anyplot.ai" exactly;
+          legend labels "Up"/"Down" match the encoding.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows open/high/low/close via body+wick, up/down coloring, and volume;
+          no additional feature (e.g. moving average overlay) beyond the base spec.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral tech-stock OHLCV series with volume correlated
+          to daily move magnitude.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices ($163-$187) and volumes (2.4M-6M) are sensible for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Dates — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for a dual-pane
+          chart.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2).
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: linkxaxes!, rowsize!/rowgap! with Relative, ytickformat closure,
+          theme-adaptive chrome tokens.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: linesegments! wicks + barplot!(fillto=...) hollow/filled bodies is
+          an efficient, distinctive Makie-native OHLC composition.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - manual-ticks
+  - subplots
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
+  - publication-ready
