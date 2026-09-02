@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -86,10 +87,16 @@ jitter = (rand(length(value)) .- 0.5) .* 0.28
 scatter!(
     ax, group_index .+ jitter, value;
     color = IMPRINT_PALETTE[1:length(groups)][group_index],
-    markersize = 7,
+    markersize = 9,
     strokewidth = 0,
     alpha = 0.45,
 )
+
+# Median-trend line: a subtle focal cue for the dose-response trend across groups
+group_medians = [median(value[group_index .== i]) for i in 1:length(groups)]
+trend_color = RGBAf(INK.r, INK.g, INK.b, 0.55)
+lines!(ax, 1:length(groups), group_medians; color = trend_color, linewidth = 2, linestyle = :dash)
+scatter!(ax, 1:length(groups), group_medians; color = trend_color, markersize = 11, marker = :diamond, strokewidth = 0)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
