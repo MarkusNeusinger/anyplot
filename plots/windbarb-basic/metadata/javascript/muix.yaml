@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: windbarb-basic
 created: '2026-09-02T10:45:39Z'
-updated: '2026-09-02T10:53:03Z'
+updated: '2026-09-02T11:02:55Z'
 generated_by: claude-sonnet
 workflow_run: 33620130918
 issue: 3694
@@ -12,63 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Fully correct meteorological wind-barb notation implemented from scratch (staff
-    length constant, pennants for 50 kt, full barbs for 10 kt, half barbs for 5 kt,
-    open circle for calm winds < 2.5 kt), with barbs stacked on the left of the staff
-    per Northern Hemisphere convention.
-  - 'Idiomatic advanced MUI X usage: builds a custom SVG glyph layer synced to the
-    chart''s own coordinate system via useXScale/useYScale inside ChartContainer,
-    rather than faking positions — exactly the ''raw children + hooks'' escape hatch
-    the community package is meant to support.'
-  - Data models a physically plausible Rankine-vortex-like cyclone wind field (tangential
-    + cross-isobar inflow component) rather than random noise, giving the plot a clear
-    rotational visual story around the low-pressure center.
-  - 'Clean theme handling: single brand-green (#009E73) data color identical across
-    light/dark renders, only chrome (background, ink, inkSoft) flips via window.ANYPLOT_TOKENS;
-    both renders pass the theme-readability checklist with no dark-on-dark or light-on-light
-    issues.'
-  - Well-designed self-contained legend (calm / 5 kt / 25 kt / 50 kt glyph key) placed
-    outside the data area with generous top margin, avoiding any overlap with axes
-    or data.
-  - Canvas is exactly 3200×1800 (confirmed via direct pixel measurement), no clipped
-    title/axis/legend elements at any edge in either render, skipAnimation and disableAxisListener
-    correctly set per the MUI X harness contract.
+  - Hand-built wind-barb glyph geometry (staff, half/full barbs, filled pennant, calm-wind
+    circle) fully matches standard meteorological notation, including the calm-wind
+    open circle and stacked pennant/barb/half-barb combinations.
+  - Data is a physically consistent Rankine-vortex-like wind field around a synthetic
+    low-pressure system, with an inner core transect specifically engineered to demonstrate
+    calm, half-barb, single-full-barb, and double-full-barb cases that the coarse
+    outer grid alone would never reach.
+  - 'Advanced, idiomatic MUI X composition: ChartContainer + ChartsXAxis/ChartsYAxis
+    combined with the useXScale/useYScale hooks to draw fully custom SVG marks in
+    the chart''s own coordinate system — a distinctive, hooks-based MUI X pattern
+    rather than a generic drawing.'
+  - 'Theme-adaptive chrome is flawless in both renders: warm off-white/near-black
+    backgrounds, fully readable dark ink on light and light ink on dark, identical
+    brand-green (#009E73) data color in both themes, no clipping at any canvas edge.'
+  - 'Clean, minimal layout: no grid, L-shaped spines, symmetric axis padding (100
+    km / 90 km) around the station grid, and a compact custom legend integrated directly
+    above the plot area rather than floating in isolation.'
   weaknesses:
-  - The spec explicitly calls out 'Calm winds (< 2.5 knots) shown as an open circle
-    without a staff' as a required notation rule, but none of the 30 generated stations
-    ever fall below 2.5 kt (computed range is 27.2-57.9 kt) — the calm-circle code
-    path only ever fires in the legend swatch, never in the actual plotted data. Widen
-    the vortex profile (e.g. lower PEAK_SPEED_KT, or add a couple of stations near
-    the vortex core/edge where speed naturally decays toward zero) so at least one
-    real station demonstrates the calm case.
-  - Real station speeds are bunched entirely in the high end of the scale (27-58 kt,
-    with 14 of 30 stations already showing pennants) — the simpler low-magnitude notations
-    (plain half-barb at ~5 kt, single full barb at ~10 kt) are only shown in the legend,
-    not exercised by actual data. Consider flattening the profile or adding a few
-    low-speed outlier stations so the full range of barb complexity is visible in
-    the real dataset, not just the legend key.
-  - 'Dead code: the `r === 0` special case in the station-generation loop (pushes
-    a calm station at the exact vortex center) never triggers because the x/y grid
-    steps (160/150) never land exactly on CENTER (400, 300) — either remove the branch
-    or adjust the grid so it''s reachable and doubles as the calm-wind demonstration.'
+  - Barb glyphs use a single fixed size (staffLen 42 / barbLen 14) across all 28 stations;
+    per the sparse-data heuristic (<50 points) they could be pushed slightly larger/more
+    prominent for extra visual punch, though current sizing is already clearly legible.
+  - The legend text (fontSize 13) sits a touch small relative to the 22px title and
+    16px axis labels — bumping to ~14-15px would tighten the typographic hierarchy.
+  - The synthetic cyclone field is realistic but the plot offers no explicit visual
+    cue (e.g. a subtle center marker or annotation) to help the reader spot the low-pressure
+    center that the barb rotation implies — a light-touch hint would strengthen the
+    data storytelling beyond 'display the field'.
+  - 'CQ-01: the implementation is necessarily broken into several helper functions
+    (windAt, rotate, barbGlyph, WindBarbLayer, legendKey) to build the custom glyph
+    geometry — reasonable for this chart type, but slightly more structure than the
+    KISS ''imports -> data -> plot'' ideal for the simplest implementations.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches the required light-theme surface.
-      Chrome: Title "windbarb-basic · javascript · muix · anyplot.ai" centered at top in bold dark ink, fully visible, not clipped. X-axis title "Distance east of grid origin (km)" and Y-axis title "Distance north of grid origin (km)" (rotated) both dark ink, clearly legible. Tick labels (-100..900 on X, -50..650 on Y) all dark, evenly spaced, readable. A 4-item legend row ("Calm (< 2.5 kt)", "5 kt", "25 kt", "50 kt") sits under the title with matching barb glyphs and dark gray labels.
-      Data: All 30 station glyphs and all 4 legend glyphs render in a single brand green (#009E73) — staffs, barb lines, and pennant triangles. Barb counts visibly vary station to station (from 2 full barbs + half barb up to multiple full barbs/pennants), consistent with a rotating wind field converging toward a low-pressure center around (400, 300).
+      Background: Warm off-white (~#FAF8F1), matches the required light-theme plot surface — not pure white.
+      Chrome: Title "windbarb-basic · javascript · muix · anyplot.ai" is bold, dark, and fully visible at top. X-axis label "Distance east of grid origin (km)" and Y-axis label "Distance north of grid origin (km)" (rotated) are dark, legible, and not clipped at either the left or bottom canvas edge. Tick labels on both axes are dark and comfortably sized relative to the axis labels. A custom legend row ("Calm (< 2.5 kt)", "5 kt", "25 kt", "50 kt") with matching barb glyphs sits between the title and plot area, fully readable.
+      Data: All 28 wind-barb glyphs (24 outer-grid stations + 4 inner-core transect points) render in brand green (#009E73) — staffs, half-barbs, full-barbs, and a filled pennant triangle for the highest-speed station, plus an open calm-wind circle near the vortex center. No overlap between glyphs, including in the dense core-transect cluster.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches the required dark-theme surface.
-      Chrome: Same title, axis titles, and tick labels now rendered in light ink against the dark background — all clearly legible, no dark-on-dark text anywhere. Legend labels are light gray, readable against the dark surface.
-      Data: Barb glyphs and legend glyphs remain the identical brand green (#009E73) as the light render — confirmed pixel-for-pixel same hue; only the chrome (background/text) flipped between renders, as required.
+      Background: Warm near-black (~#1A1A17), matches the required dark-theme plot surface — not pure black.
+      Chrome: Title, both axis labels, and all tick labels flip to light ink and remain fully readable against the dark background — no dark-on-dark text anywhere. Legend text is likewise light and legible.
+      Data: Barb glyphs are rendered in the identical brand green (#009E73) as the light render — confirmed pixel-for-pixel same hue and same station positions/orientations. Only the chrome (background, text) flips between themes, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -76,77 +68,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text explicitly sized and clearly readable
-          in both themes; still legible at 400px thumbnail.
+        comment: All font sizes explicit (title 22px, axis labels 16px, ticks 13px,
+          legend 13px); fully readable in both themes; legend text slightly small
+          relative to the rest of the hierarchy.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in the reserved top margin (baseY=148) with no collision
-          with title, axes, or data area.
+        comment: No text/text or text/data collisions anywhere, including the dense
+          core-transect cluster near the vortex center.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 30 barbs at a 160x150 km grid spacing, well separated, no overplotting;
-          markers/staffs appropriately sized for the density.
+        comment: 28 stations (sparse, <50) render with clearly visible staffs/barbs/pennant;
+          could be marginally larger per the sparse-data heuristic.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green glyphs on high-contrast light/dark backgrounds;
-          no red-green or hue-only signal.
+        comment: Single-hue brand green on a high-contrast neutral background in both
+          themes; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas measured exactly 3200x1800; no clipping at any edge; generous,
-          deliberate margins.
+        comment: Symmetric axis padding (100km/90km) around the station grid, legend
+          integrated near the plot (not isolated), nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles descriptive with units (km).
+        comment: Both axis labels descriptive with units (km).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series uses t.palette[0] = #009E73, identical across
-          themes; backgrounds match Imprint tokens in both renders.'
+        comment: 'First (only) series is #009E73, identical across themes; backgrounds
+          and text are theme-correct in both renders.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Fully custom meteorological glyph system and legend, not a default
-          chart type; deliberate typographic hierarchy.
+        comment: Hand-crafted meteorological glyph geometry (pennant/barb/half-barb/calm
+          circle) goes well beyond a library default, but the plot stays single-color/austere
+          without extra hierarchy cues.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No gridlines/spines clutter, minimal axis chrome, generous whitespace
-          around the vortex pattern.
+        comment: No grid, L-shaped spines only, generous and symmetric whitespace,
+          clean integrated legend.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Rotational vortex pattern is visible in barb directions, but reading
-          it as a cyclone requires some meteorological familiarity; no explicit visual
-          cue (e.g. faint center marker) to anchor the story.
+        comment: Vortex-shaped synthetic field and core transect create implicit visual
+          hierarchy (calm center, ramping speeds), but there is no explicit annotation
+          pointing the reader at the low-pressure center.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -154,55 +148,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine wind-barb notation (staff + barbs/pennants + calm circle),
-          matches spec exactly.
+        comment: Correct wind-barb notation, custom-built since MUI X has no native
+          barb chart.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Calm-circle notation is implemented but only ever exercised in the
-          legend, not by any of the 30 real stations (min speed 27.2 kt).
+        comment: Half barb, full barb, pennant, calm circle, staff points FROM wind
+          direction, barbs on staff's left side, grid spacing avoids overlap — all
+          present per spec Notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y mapped via useXScale/useYScale to real chart coordinates; axes
-          cover the full station extent with margin.
+        comment: x/y mapped through the chart's own scales via useXScale/useYScale;
+          axes show the full station grid.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly '{spec-id} · {language} · {library} · anyplot.ai';
-          custom legend clearly labeled.
+        comment: Title exactly matches the mandated format; legend labels correctly
+          describe the speed thresholds shown.
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Pennants and multi-barb stations are well represented (14/30 >= 50kt),
-          but the low end of the notation (half-barb, single full barb) never appears
-          in real data, only in the legend.
+        comment: Calm circle, half-barb, single/double full-barb, and pennant all
+          present thanks to the deliberate core transect.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Idealized cyclone/low-pressure wind field is a standard, neutral,
-          real-world meteorological pattern.
+        comment: Physically-motivated synthetic surface-wind observation grid around
+          a low-pressure system — neutral, real-world meteorological scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Speeds (27-58 kt) are plausible for a strong storm system but are
-          uniformly high across all stations, with no light-wind examples.
+        comment: Peak speed 58kt and calm/low-speed core are consistent with real
+          cyclone wind-field magnitudes and a proper Rankine-vortex profile.
     code_quality:
       score: 9
       max: 10
@@ -212,61 +206,59 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several small helper functions (rotate, barbGlyph, WindBarbLayer,
-          legendKey) are justified by the custom-glyph requirement, but include one
-          unreachable branch (r === 0 case).
+        comment: Several helper functions (windAt, rotate, barbGlyph, WindBarbLayer,
+          legendKey) are needed for the custom glyph geometry — reasonable for the
+          chart type but more structure than the simplest KISS ideal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic in-memory data generation, no RNG.
+        comment: Fully deterministic formulas, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, ChartsXAxis, ChartsYAxis, useXScale, useYScale
-          imported and used.
+        comment: Only ChartContainer/ChartsXAxis/ChartsYAxis/hooks imported, all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or UI; complexity is proportional to implementing
-          real wind-barb geometry.
+        comment: Appropriate complexity for the notation math; no fake UI or simulated
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: sizes to window.ANYPLOT_SIZE, skipAnimation
-          + disableAxisListener set, no manual mount/export code.'
+        comment: skipAnimation set, harness-owned output, current MUI X API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses ChartContainer's low-level composition plus documented scale
-          hooks rather than fighting a high-level chart type that doesn't support
-          barbs.
+        comment: ChartContainer + axis components + useXScale/useYScale is the documented
+          MUI X advanced-composition pattern for custom marks.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale-driven custom SVG layer is a genuinely distinctive
-          MUI X community-surface technique, not a generic default chart.
+        comment: The hooks-based scale API to drive fully custom SVG glyphs is a distinctive
+          MUI X composability feature, not a generic drawing approach.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - manual-ticks
+  - patches
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
