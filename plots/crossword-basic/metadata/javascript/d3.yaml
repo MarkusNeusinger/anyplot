@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: crossword-basic
 created: '2026-09-01T23:58:46Z'
-updated: '2026-09-02T00:03:57Z'
+updated: '2026-09-02T00:16:24Z'
 generated_by: claude-sonnet
 workflow_run: 33572860780
 issue: 3805
@@ -12,52 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/d3/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
+  - 'Fixed the theme-inversion defect from attempt 1: blocked/entry cell fills are
+    now fixed hex literals (#1A1A17 / #FAF8F1) instead of theme-adaptive tokens, so
+    the puzzle''s black/white identity is now identical in both light and dark renders
+    — only the stroke and frame follow the theme, exactly matching the spec''s monochrome-data
+    intent.'
   - Exact 180-degree rotational symmetry achieved via point-reflection construction
     (bottom half derived from the top half) rather than manually mirrored coordinates
-    — symmetry is correct by construction.
+    — verified programmatically to be a perfectly valid, fully-checked crossword grid
+    with no isolated single-letter cells.
   - 'Correct standard newspaper-crossword numbering algorithm: checks both across-start
-    and down-start conditions and increments in reading order.'
-  - Idiomatic D3 data-join pattern (selectAll().data().join()) used for both the grid
-    cells and the clue numbers.
-  - Explicit font sizing (26px title, 15px clue numbers) and exactly correct mandated
-    title text.
-  - Deterministic, hand-authored data with no randomness — fully reproducible.
-  - Square 2400x2400 canvas format is the right choice for a symmetric grid plot.
+    and down-start conditions and increments in reading order — verified correct.'
+  - Clue numbers now use a fixed dark NUMBER_FILL so they stay legible against the
+    fixed off-white entry-cell background in both themes, resolving the prior dark-theme
+    contrast concern.
+  - Idiomatic D3 data-join pattern (d3.cross + selectAll().data().join()) used for
+    both grid cells and clue numbers.
+  - Deterministic, hand-authored data with no randomness — fully reproducible; explicit
+    font sizing and exactly correct mandated title text.
+  - Square 2400x2400 canvas format is the right choice for a symmetric grid plot;
+    holds up cleanly even at the 400px mobile thumbnail size.
   weaknesses:
-  - 'Blocked cells fill with t.ink and entry cells fill with t.elevatedBg -- both
-    theme-adaptive chrome tokens -- so the crossword''s black/white cell identity
-    inverts between themes: in the dark render, ''blocking'' cells render as light/bright
-    squares and ''entry'' cells become dark, blending into the page background. This
-    breaks the spec''s fixed ''white cells for entry, black cells for blocking'' rule
-    in the dark render and treats the puzzle pattern (which is data, like the Imprint
-    palette data colors) as if it were theme chrome. Fix: give blocked and entry cells
-    fixed, theme-independent fills (a constant near-black and a constant off-white/cream)
-    so the pattern reads identically in both themes, and let only the stroke/frame
-    color follow the theme token.'
-  - In the dark render, entry cells (fill = elevatedBg, close in luminance to the
-    page background) have low value-contrast against the page -- cell boundaries are
-    legible mainly via the thin stroke lines, which could look washed out at mobile/thumbnail
-    scale.
   - 'LM-02: no D3-distinctive feature is used beyond the basic data-join grid build
-    (no d3-scale, d3-hierarchy, etc.) -- mastery beyond basic API usage is limited.'
+    (no d3-scale, d3-hierarchy, d3-force, etc.) — mastery beyond basic API usage remains
+    limited. This is a soft ceiling for a grid plot type and not required to fix.'
+  - 'DE-03: visual hierarchy is inherent to the grid/numbering structure but there
+    is no additional emphasis (e.g. distinguishing across-only vs down-only start
+    cells, or subtle shading) to add storytelling beyond the base puzzle structure.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Bold dark title "crossword-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Grid clue numbers (small dark-gray digits) sit in the top-left corner of word-start cells, clearly readable. Outer frame is a solid dark stroke.
-      Data: A 13x13 crossword grid with symmetric black blocking cells (dark/near-black fill) and white entry cells (off-white fill), separated by thin gray grid lines. The block pattern shows clean 180-degree rotational symmetry as specified.
+      Chrome: Bold dark title "crossword-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Grid clue numbers (small dark-gray digits, ~15px) sit in the top-left corner of word-start cells, clearly readable against the off-white cell fill. Outer frame is a solid dark stroke; thin gray grid lines separate every cell.
+      Data: A 13x13 crossword grid with symmetric black blocking cells (fixed near-black fill) and white entry cells (fixed off-white fill), verified programmatically to have exact 180-degree rotational symmetry and no isolated/unchecked single-letter cells.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title renders in light text, clearly readable against the dark background. Clue numbers render as light-gray digits inside entry cells, readable. Outer frame is a light stroke, visible.
-      Data: The block/entry cell identity INVERTS relative to the light render -- cells that were black (blocked) in the light render now render as light/bright squares, and cells that were white (entry) in the light render now render as dark cells that blend closely with the page background (distinguishable mainly via the thin stroke lines and the light-colored numbers they contain). The grid shape and symmetry are still visible and each render is internally consistent/readable, but the black-cells-for-blocking / white-cells-for-entry semantics from the spec are not preserved across themes -- this is a real defect, not just a stylistic difference. No text is dark-on-dark or light-on-light; every glyph is legible.
-      Legibility verdict: PASS (text legible), but the cell-fill inversion is a spec-compliance defect flagged in weaknesses.
+      Chrome: Title renders in light text, clearly readable against the dark background. Outer frame is a light stroke, visible against the dark page.
+      Data: Blocked cells and entry cells now use the SAME fixed hex fills as the light render (#1A1A17 blocked / #FAF8F1 entry) — the puzzle's black/white identity no longer inverts between themes, resolving the attempt-1 defect. Clue numbers remain dark-gray on the fixed off-white entry-cell fill (not theme-flipped), so they stay legible on both surfaces. Verified at the 400px mobile thumbnail size — the grid, blocks, and numbers all remain crisp and distinguishable against the dark page background.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; cell-fill identity now matches the light render as required).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,7 +65,7 @@ review:
         max: 8
         passed: true
         comment: Explicit font sizes (26px title, 15px numbers); readable in both
-          themes
+          themes; verified crisp even at 400px thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -75,11 +74,11 @@ review:
         comment: No collisions between numbers, cells, or title
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Cells clearly bounded by strokes; dark-theme entry cells have low
-          fill-vs-background contrast
+        comment: Fixed entry/block fills now give strong, theme-independent contrast;
+          dark-theme contrast issue from attempt 1 is resolved
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -102,12 +101,12 @@ review:
           formatted
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Backgrounds are theme-correct, but blocked/entry cell fills use theme-adaptive
-          ink/elevatedBg tokens, inverting the puzzle's black/white data pattern between
-          themes
+        passed: true
+        comment: Fixed hex literals for the data pattern (block/entry) render identically
+          in both themes; only chrome (stroke, frame, title) follows the theme tokens
+          as required
     design_excellence:
       score: 12
       max: 20
@@ -133,7 +132,7 @@ review:
         comment: Structure and numbering give inherent hierarchy; no additional emphasis
           beyond that
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,11 +143,11 @@ review:
         comment: Correct crossword grid type
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Symmetric blocking, numbering, and uniform grid lines all present;
-          black/white cell identity not preserved across themes
+        comment: Symmetric blocking, numbering, uniform grid lines, and now theme-stable
+          black/white cell identity all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -171,7 +170,7 @@ review:
         max: 6
         passed: true
         comment: Shows blocked cells, entry cells, across-start and down-start numbering,
-          symmetric pattern
+          symmetric pattern; verified fully-checked grid with no isolated cells
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -235,7 +234,7 @@ review:
         passed: false
         comment: Generic SVG grid build; no D3-distinctive feature (scales, hierarchy,
           etc.) used
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
