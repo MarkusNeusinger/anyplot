@@ -1,0 +1,265 @@
+library: chartjs
+language: javascript
+specification_id: andrews-curves
+created: '2026-09-02T11:15:20Z'
+updated: '2026-09-02T11:30:51Z'
+generated_by: claude-sonnet
+workflow_run: 33623192875
+issue: 2859
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Bold, fully-opaque per-region mean curves now overlay the 60 translucent individual
+    curves, giving the chart an explicit focal point instead of an undifferentiated
+    wall of lines
+  - Subtitle explicitly narrates the insight ("Rioja's lower tannin visibly separates
+    its curve from Bordeaux and Chianti"), turning the chart into a guided story rather
+    than a raw data dump
+  - Fifth chemistry variable (tannin) added, bringing dimension count to 5 (within
+    the spec's 4-8 recommended range) and enriching the Fourier expansion so cluster
+    separation reads more clearly
+  - Individual-curve alpha lowered to 0.32 and borderWidth to 1.1 (from 0.45 / 1.5
+    in attempt 1), reducing mid-band clutter while the bold mean curves stay fully
+    legible
+  - Chart.js `order` property correctly layers translucent individual curves beneath
+    the bold mean curves, and the legend `filter` callback is re-targeted to pick
+    up the solid mean-curve swatch instead of a faint individual one
+  - Z-score standardization of all five wine-chemistry variables before curve construction,
+    exactly matching the spec's normalization note
+  - Deterministic fixed-seed LCG + Box-Muller PRNG gives fully reproducible synthetic
+    data
+  - Imprint palette applied in canonical order (Bordeaux=#009E73, Rioja=#C475FD, Chianti=#4467A3),
+    identical between light and dark renders; theme chrome (background, text, grid)
+    correctly flips in both
+  - Realistic, neutral wine-chemistry scenario across three real wine regions with
+    plausible value ranges for acidity, sugar, alcohol, pH, and tannin
+  - Custom π/π-2 tick-label callback on the x-axis makes the radian domain immediately
+    legible in both themes
+  weaknesses:
+  - 'Design Excellence is strong but not yet publication-tier: typography still relies
+    on the default font stack (no custom font family or weight variation beyond bold/italic),
+    so DE-01 caps below the top band'
+  - Visual refinement is good but not maximal — grid and whitespace are subtle library-token
+    defaults rather than a bespoke refinement pass; a touch more legend/title spacing
+    or a hairline divider under the subtitle would push DE-02 higher
+  - CQ-01 (KISS Structure) still uses several helper functions (uniform, normal, andrewsCurve,
+    withAlpha) rather than flat imports->data->plot->save script structure — acceptable
+    given the math involved, but not the purest KISS form
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Bold dark title "andrews-curves · javascript · chartjs · anyplot.ai" at top, italic gray subtitle beneath it ("Bold lines trace each region's average wine — Rioja's lower tannin visibly separates its curve from Bordeaux and Chianti"), a three-entry legend (Bordeaux, Rioja, Chianti) with ring-style point markers directly below the subtitle. X-axis "t (radians)" with π-based tick labels (-π, -π/2, 0, π/2, π); y-axis "Andrews curve f(t)" with numeric ticks (-6..6). Subtle light gridlines. All chrome text is clearly dark and fully readable against the light background — no light-on-light issues.
+      Data: 60 translucent individual wine curves in brand green (#009E73), lavender (#C475FD), and blue (#4467A3) at low alpha (~0.32), overlaid by 3 bold, fully-opaque region-mean curves in the same three hues (borderWidth 3.5). The bold Rioja curve visibly separates from the overlapping Bordeaux/Chianti bold curves in the mid-band, matching the subtitle's claim. First categorical series (Bordeaux) is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title, subtitle, legend, and axis labels, now rendered in light ink (title/axis in near-white, subtitle/ticks in soft light gray) — clearly legible against the dark surface. Gridlines remain faint but visible. No dark-on-dark failures observed; every text element (title, subtitle, legend, tick labels, axis titles) is light-colored against the dark background.
+      Data: The three curve hues (green, lavender, blue) and their alpha/boldness treatment are pixel-identical to the light render — only the background, text, and grid color flipped, confirming theme-independent data colors. Brand green #009E73 remains clearly visible on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable in both themes; title/subtitle
+          well-proportioned, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, subtitle, legend, axes all cleanly spaced with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Individual curves lowered to alpha 0.32 / width 1.1 to reduce mid-band
+          clutter; bold 3.5px mean curves stay clearly visible on top via `order`
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint hues, distinguishable without relying
+          on hue alone (bold vs. faint layering)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a large, well-proportioned share of
+          the canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"t (radians)" has units; "Andrews curve f(t)" is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order thereafter, identical data
+          colors across themes, theme-correct chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bold mean-curve overlay + narrative subtitle is a genuine, thoughtful
+          design decision clearly above defaults; typography still uses the default
+          font stack
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle theme-adaptive grid, generous whitespace, subtitle padding;
+          refinement is good but not maximal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bold focal curves plus an explicit narrating subtitle guide the viewer
+          straight to the cluster-separation insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Andrews-curves construction via Chart.js line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalization, transparency for density, category coloring, t in
+          [-π, π] all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=t, y=f(t) correctly mapped, full domain visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match region categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 chemistry dimensions (within spec's 4-8 range), shows both individual
+          spread and per-region averages
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral wine-chemistry scenario across three real regions
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Acidity, sugar, alcohol %, pH, and tannin values are all realistic
+          for wine chemistry
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions (PRNG, andrewsCurve, withAlpha) rather
+          than a flat script, but justified by the math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only browser globals and Chart.js
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Linear x-scale, `order`-based z-layering, tick callback formatting,
+          legend filter callback — all idiomatic Chart.js high-level API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combining per-dataset `order` z-layering with a legend-dedup filter
+          to compress 63 datasets into a clean 3-entry legend is a genuinely Chart.js-specific
+          pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - groupby-aggregation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

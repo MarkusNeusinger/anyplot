@@ -1,0 +1,235 @@
+library: makie
+language: julia
+specification_id: andrews-curves
+created: '2026-09-02T11:13:42Z'
+updated: '2026-09-02T11:28:56Z'
+generated_by: claude-sonnet
+workflow_run: 33622980955
+issue: 2859
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
+review:
+  strengths:
+  - Correct, textbook Andrews-curve Fourier transform with proper per-feature z-score
+    normalization before the expansion
+  - Real, neutral mtcars dataset with genuine multi-feature (5-dimension) coverage
+    and visible cluster separation by cylinder class
+  - Theme-adaptive chrome implemented correctly and completely — both renders pass
+    the light/dark readability check with zero dark-on-dark or light-on-light failures,
+    and data colors are pixel-identical across themes
+  - 'Correct canonical Imprint palette order with first series #009E73'
+  weaknesses:
+  - 'Outlier highlight doesn''t render: the code draws an ink halo (lines!(...; color=(INK,
+    0.5), linewidth=6.0)), a full-opacity outlier line, a stroked scatter marker,
+    and a text!(...; text="Outlier: $(outlier_model)", ...) annotation intended as
+    the plot''s focal point — but pixel analysis of both plot-light.png and plot-dark.png
+    finds zero ink-colored pixels anywhere in the plot data area (outside title/axis-label/legend
+    bands). Verify the text! call lands within the final axis limits (draw before
+    axislegend''s layout pass, or set limits! explicitly), confirm the (INK, 0.5)
+    alpha-tuple color syntax renders in this CairoMakie version, and check the scatter
+    strokewidth=1.5 ring survives downsampling.'
+  - With all three groups' curves at alpha=0.4 crossing near the center, the middle
+    of the plot is visually dense — consider a lower alpha or thinner linewidth for
+    non-highlighted curves so the (once-fixed) outlier stands out more
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "andrews-curves · julia · makie · anyplot.ai" bold and dark, fully legible. Axis labels "t (radians)" and "f(t)" dark and legible. Tick labels (-π, -π/2, 0, π/2, π on x; -4..4 on y) legible in softer ink tone. Legend box top-right ("Cylinders") with 3 entries, readable.
+      Data: ~32 overlapping Andrews-curve traces at alpha≈0.4 in three Imprint colors — green (#009E73, 4-cylinder), lavender (#C475FD, 6-cylinder), blue (#4467A3, 8-cylinder). Pixel analysis found no visible ink-colored halo, scatter marker stroke, or "Outlier: <model>" text label anywhere in the plot area — the code's outlier-highlight block does not render.
+      Legibility verdict: PASS (all chrome text readable; no light-on-light issues)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels flip to light ink tones (F0EFE8 / B8B7B0) and remain fully legible. Legend box and text flip correctly too.
+      Data: Same three curve colors as light render — confirmed pixel-identical (only chrome flips). Same pixel-level check confirms the outlier halo/marker/text annotation is not visible here either.
+      Legibility verdict: PASS (no dark-on-dark failures found)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha=0.4 reasonable for ~32 curves, dense center crossing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three well-separated hues, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: t (radians) has units, f(t) is standard notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful palette but attempted focal-point technique fails to render
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid, generous whitespace; dense center not
+          mitigated
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Outlier halo/scatter/text annotation intended as focal point does
+          not render in either theme
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Andrews-curve Fourier transform
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Category coloring and alpha present; outlier annotation feature not
+          visually delivered
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: t on x, f(t) on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match groups
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 5 real features, 32 cars, 3 groups, cluster separation visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral mtcars automotive dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct per-feature z-score normalization before transform
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> transform -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Outlier annotation block produces no visible effect in saved PNG
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct save call, current CairoMakie API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level Axis/lines!/scatter!/text!/axislegend usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage, nothing Makie-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - dataset-loading
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

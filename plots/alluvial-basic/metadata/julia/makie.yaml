@@ -1,0 +1,241 @@
+library: makie
+language: julia
+specification_id: alluvial-basic
+created: '2026-09-02T11:04:26Z'
+updated: '2026-09-02T11:10:19Z'
+generated_by: claude-sonnet
+workflow_run: 33621812286
+issue: 1878
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Exact flow conservation: every source-node''s outgoing flows and every destination-node''s
+    incoming flows sum precisely to the adjacent column''s category totals'
+  - Clean, idiomatic theme-token handling (PAGE_BG/INK/INK_SOFT/INK_MUTED) with correct
+    Imprint palette use and a well-justified semantic exception for Undecided mapped
+    to the muted anchor
+  - Smooth, professional-looking cosine-eased flow bands built from first principles
+    with poly!, well beyond basic Makie usage
+  - Both renders pass the theme-readability and edge-clipping checks cleanly — no
+    chrome or clipping defects in either theme
+  weaknesses:
+  - Legend label/title font sizes rely on Makie defaults rather than being explicitly
+    set — set labelsize/titlesize on the Legend(...) call for full VQ-01 marks
+  - No explicit annotation or visual callout highlighting the key insight (steep Undecided
+    attrition) — a small callout or bolder emphasis on that band would strengthen
+    data storytelling
+  - Category labels/values only appear at the first and last columns; middle columns
+    rely solely on the legend for color identification — acceptable for alluvial diagrams
+    but an optional per-node value label would push feature coverage further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "alluvial-basic · julia · makie · anyplot.ai" in bold dark ink, semester labels (Semester 1-4), category+count labels at first/last columns, horizontal "Track" legend below — all clearly readable in dark ink against the light background.
+      Data: STEM=#009E73 (brand green, first series), Business=#C475FD (lavender), Humanities=#4467A3 (blue), Undecided=muted gray semantic anchor. Flow bands are alpha-blended (0.55) versions of the source category color.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, semester labels, category+count labels, and legend, all rendered in light ink and clearly readable against the dark background. No dark-on-dark failures found, including in the dense crossing-band region.
+      Data: Colors identical to light render (green/lavender/blue/muted-gray, muted gray uses the lighter dark-theme adaptive token) — only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Key sizes explicitly set and well-proportioned in both themes; Legend
+          font sizes rely on defaults
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; crossing bands are inherent to the alluvial
+          form
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Nodes and 0.55-alpha bands stay distinguishable even at dense crossings
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hues remain distinguishable under alpha compositing, no red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced canvas usage, no clipping at edges (verified via crops)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive semester labels; correct title; value axis intentionally
+          unlabeled (idiomatic for alluvial)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, well-justified muted semantic
+          exception for Undecided, theme-correct chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color mapping, smooth eased bands, clearly above default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, 3 of 4 spines removed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Shrinking Undecided band tells a clear story via color/proportion
+          but lacks explicit annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial diagram with strict per-column ordering
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: time_point, category, value, flow, proportional bands, transparency,
+          and labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time points, Y=stacked category values, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; legend labels match categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Retention, cross-track migration, and steep attrition all shown;
+          could add a dip-then-recover trajectory
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world academic track scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Verified exact flow conservation across all time steps
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/layout/plot/save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a plot type with no native Makie recipe
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good Figure/Axis/Legend/poly!/text! usage; hand-rolled bands are
+          the correct approach absent a native recipe
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Cosine-eased polygon flow bands with alpha compositing are a distinctive
+          low-level technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
