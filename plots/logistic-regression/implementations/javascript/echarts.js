@@ -103,6 +103,9 @@ for (let i = 0; i < CURVE_POINTS; i++) {
   curveBandHeight.push([x, pHi - pLo]);
 }
 
+// x-value where the fitted curve crosses p = 0.5 (the decision threshold).
+const xThreshold = -realBeta0 / realBeta1;
+
 // --- Title (mandated format, fontsize scaled to the descriptive prefix) ----
 const titleText = "Marketing Conversion · logistic-regression · javascript · echarts · anyplot.ai";
 const titleRatio = titleText.length > 67 ? 67 / titleText.length : 1.0;
@@ -178,7 +181,7 @@ chart.setOption({
       stack: "confidence",
       symbol: "none",
       lineStyle: { opacity: 0 },
-      areaStyle: { color: t.palette[2], opacity: 0.18 },
+      areaStyle: { color: t.palette[2], opacity: 0.24 },
       silent: true,
       tooltip: { show: false },
       z: 1,
@@ -188,7 +191,7 @@ chart.setOption({
       type: "scatter",
       data: notConvertedPoints,
       symbolSize: 10,
-      itemStyle: { color: t.palette[0], opacity: 0.6 },
+      itemStyle: { color: t.palette[0], opacity: 0.6, borderColor: t.pageBg, borderWidth: 1 },
       z: 3,
     },
     {
@@ -196,7 +199,7 @@ chart.setOption({
       type: "scatter",
       data: convertedPoints,
       symbolSize: 10,
-      itemStyle: { color: t.palette[1], opacity: 0.6 },
+      itemStyle: { color: t.palette[1], opacity: 0.6, borderColor: t.pageBg, borderWidth: 1 },
       z: 3,
     },
     {
@@ -212,6 +215,20 @@ chart.setOption({
         lineStyle: { type: "dashed", color: t.inkSoft, width: 2 },
         label: { formatter: "p = 0.5", color: t.inkSoft, fontSize: 14, position: "insideEndTop" },
         data: [{ yAxis: 0.5 }],
+      },
+      markPoint: {
+        silent: true,
+        symbol: "circle",
+        symbolSize: 14,
+        itemStyle: { color: t.palette[2], borderColor: t.pageBg, borderWidth: 2 },
+        label: {
+          formatter: `x ≈ ${xThreshold.toFixed(1)}`,
+          color: t.ink,
+          fontSize: 13,
+          position: "top",
+          distance: 10,
+        },
+        data: [{ coord: [xThreshold, 0.5] }],
       },
     },
   ],
