@@ -1,0 +1,276 @@
+library: chartjs
+language: javascript
+specification_id: violin-grouped-swarm
+created: '2026-09-02T09:47:06Z'
+updated: '2026-09-02T10:03:39Z'
+generated_by: claude-sonnet
+workflow_run: 33615222574
+issue: 3529
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Genuinely novel Chart.js technique: a full KDE-based violin curve rendered via
+    a custom beforeDatasetsDraw plugin (scales.x/y.getPixelForValue), layered behind
+    a dodge-computed beeswarm scatter overlay -- a chart type Chart.js has no native
+    support for, executed idiomatically through the plugin API.'
+  - The new insight subtitle ('Senior engineers finish every task type faster and
+    more consistently than juniors') directly addresses the review-1 storytelling
+    feedback and gives the plot an explicit, immediately visible focal point.
+  - 'Palette and theme chrome are fully compliant: Junior=#009E73 (canonical first
+    slot), Senior=#C475FD (canonical second slot), identical hues across light/dark
+    renders, with all text/grid/legend correctly flipped per theme.'
+  - 'Realistic, well-scaled data: task completion times by developer role and task
+    type, with per-cell mean/std producing varied spreads, visible outliers, and a
+    plausible senior-faster-than-junior pattern that holds across all three task types.'
+  - Title format, legend labels, and axis titles (with units) match spec requirements;
+    no clipping or overlap in either render.
+  weaknesses:
+  - Title still fills only ~45-50% of canvas width, well under the ~70-85% expected
+    for this longer descriptive-prefix + mandated title -- the sqrt(67/length) compensation
+    curve over-shrinks the font. Try a gentler compensation (e.g. sqrt with a higher
+    floor around 22-24px, or scale by a milder exponent) so the title reads as prominent.
+  - Violin fill alpha is 0.32 (hexToRgba(cell.color, 0.32)), below the spec's explicitly
+    requested 0.4-0.6 range ('Apply transparency to violins (alpha 0.4-0.6)'). This
+    is a regression from attempt 1 (~0.42, in range) -- restore fill alpha into 0.40-0.50
+    while keeping the swarm points visible on top.
+  - 'Design Excellence (aesthetic sophistication) is still default-tier: two flat
+    Imprint colors with a uniform look across all six violins. A subtle additional
+    refinement (e.g. a thin median/quartile marker inside each violin, or a slightly
+    richer stroke-vs-fill contrast) would push this from ''good'' to ''excellent''.'
+  - Helper functions (makeLcg, gaussian, computeSwarmOffsets, hexToRgba) plus a plugin
+    object add structure beyond the simple imports -> data -> plot -> save ideal (CQ-01).
+    Largely unavoidable given the custom KDE+swarm rendering Chart.js requires, but
+    inline small one-off helpers like hexToRgba where feasible.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "Task Completion Time by Role - violin-grouped-swarm - javascript - chartjs - anyplot.ai" in dark ink, italic gray subtitle "Senior engineers finish every task type faster and more consistently than juniors" beneath it, legend top-right ("Junior" mint green, "Senior" lavender), axis titles "Task Type" (x) and "Completion Time (minutes)" (y), subtle horizontal gridlines only. All chrome text is dark and clearly legible.
+      Data: Six violin shapes across 3 category pairs (Debugging, Feature Dev, Code Review). First series (Junior) is #009E73 brand green; second series (Senior) is #C475FD lavender, matching canonical Imprint palette order. Each violin is a semi-transparent KDE-shaped fill with a solid stroke outline, overlaid with ~35 small swarm dots per cell colored to match and bordered in the page background color for separation. Markers and violin outlines are clearly distinguishable from the light background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same layout as light render; title, subtitle, legend, axis titles, and tick labels all render in light/off-white ink. No dark-on-dark text found anywhere (titles, ticks, legend all clearly legible against the near-black surface). Gridlines remain subtle but visible.
+      Data: Violin and swarm colors are identical hex values to the light render (#009E73 / #C475FD) -- only chrome (background, text, grid, legend swatch) flips between themes, as required. The semi-transparent violin fills read as slightly more saturated purely due to alpha compositing over a darker background, which is expected alpha-blending behavior and not a palette-compliance issue.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes with explicit font sizes, but the
+          mandated+descriptive title still fills only ~45-50% of canvas width vs.
+          the ~70-85% expected for this length -- sqrt compensation curve over-shrinks
+          the font.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, subtitle, legend, axis labels, ticks, or
+          data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Swarm point radius (3.6px) and binned dodge offsets keep ~35 points/cell
+          visible without significant overplotting.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender is CVD-safe; page-matched marker borders add contrast
+          without relying on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the large majority of the canvas with balanced margins;
+          legend sits near the plot; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Task Type'' and ''Completion Time (minutes)'' are descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD (canonical order); backgrounds
+          and chrome are theme-correct in both renders; data colors identical across
+          themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Two flat Imprint colors applied uniformly across all six violins
+          -- reads as a well-configured default rather than publication-ready polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X gridlines disabled, subtle y-only grid, page-matched marker borders
+          -- some refinement above library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New italic subtitle explicitly calls out the cross-category insight
+          ('seniors finish every task type faster and more consistently') -- viewer
+          immediately sees the story.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Grouped violin plot with swarm overlay, dodged by secondary group
+          variable.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Distinct group colors with clear legend, dodged swarm points matching
+          violin hue, adequate spacing between grouped violins -- but violin fill
+          alpha is 0.32, outside the spec's requested 0.4-0.6 range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = Task Type (categorical), Y = Completion Time in minutes (numeric);
+          all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} - {spec-id} - {language} - {library}
+          - anyplot.ai' format; legend labels 'Junior'/'Senior' match the data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Distributions vary meaningfully in center and spread across all 6
+          category-group cells, with visible outliers.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Developer task-completion time by role and task type is a real, neutral,
+          comprehensible business/tech scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Completion times (5-110 minutes) and the seniority gap are plausible
+          for software engineering tasks.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Multiple helper functions (makeLcg, gaussian, computeSwarmOffsets,
+          hexToRgba) plus a plugin object deviate from the flat imports -> data ->
+          plot -> save ideal; largely justified by the custom KDE+swarm rendering
+          Chart.js requires.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG (seed=42) drives all randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses window.ANYPLOT_TOKENS and the global Chart; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a chart type with no native Chart.js support;
+          no fake UI or interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a single canvas into #container, uses new Chart(...), and
+          sets animation: false as required by the harness.'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the plugin API (beforeDatasetsDraw) and scale pixel-mapping
+          the idiomatic Chart.js way to add a custom layer beneath datasets.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom KDE violin curve + binned dodge-computed beeswarm via the
+          plugin API is a genuinely distinctive technique for a chart type Chart.js
+          does not support natively.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
