@@ -120,7 +120,7 @@ function computeClusters(chart) {
       points.push({
         x: lon,
         y: lat,
-        marker: { radius, symbol: "circle", fillColor: CATEGORY_COLORS[dominant], lineColor: t.ink, lineWidth: 2 },
+        marker: { radius, symbol: "circle", fillColor: CATEGORY_COLORS[dominant], lineColor: t.ink, lineWidth: 1 },
         dataLabels: {
           enabled: true,
           format: String(members.length),
@@ -130,7 +130,56 @@ function computeClusters(chart) {
       });
     }
   });
+
+  // Nudge apart cluster circles that would otherwise touch/overlap at their
+  // edges once rendered — clustering only guarantees a shared pixel cell, not
+  // a rendered gap between neighboring cells' circles.
+  separateClusterCircles(
+    points.filter((p) => p.custom.isCluster),
+    xAxis,
+    yAxis
+  );
   return points;
+}
+
+function separateClusterCircles(clusterPoints, xAxis, yAxis) {
+  const MIN_GAP_PX = 3;
+  const nodes = clusterPoints.map((point) => ({
+    point,
+    px: xAxis.toPixels(point.x, true),
+    py: yAxis.toPixels(point.y, true),
+    r: point.marker.radius,
+  }));
+
+  for (let iter = 0; iter < 4; iter++) {
+    let moved = false;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i];
+        const b = nodes[j];
+        const dx = b.px - a.px;
+        const dy = b.py - a.py;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        const minDist = a.r + b.r + MIN_GAP_PX;
+        if (dist < minDist) {
+          const push = (minDist - dist) / 2;
+          const ux = dx / dist;
+          const uy = dy / dist;
+          a.px -= ux * push;
+          a.py -= uy * push;
+          b.px += ux * push;
+          b.py += uy * push;
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+
+  nodes.forEach((node) => {
+    node.point.x = xAxis.toValue(node.px, true);
+    node.point.y = yAxis.toValue(node.py, true);
+  });
 }
 
 function recluster() {
@@ -301,5 +350,14 @@ Highcharts.chart("container", {
       showInLegend: true,
       zIndex: 1,
     })),
+    {
+      type: "scatter",
+      name: "Cluster (larger, bordered, count inside)",
+      data: [],
+      enableMouseTracking: false,
+      marker: { symbol: "circle", radius: 9, fillColor: t.pageBg, lineColor: t.ink, lineWidth: 1 },
+      showInLegend: true,
+      zIndex: 1,
+    },
   ],
 });
