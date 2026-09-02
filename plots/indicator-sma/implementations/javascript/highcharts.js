@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-sma: Simple Moving Average (SMA) Indicator Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
@@ -56,6 +56,23 @@ const sma20Series = dates.map((d, i) => [d, sma20[i]]);
 const sma50Series = dates.map((d, i) => [d, sma50[i]]);
 const sma200Series = dates.map((d, i) => [d, sma200[i]]);
 
+// Golden-cross / death-cross detection (SMA 50 vs SMA 200) — the spec's
+// headline application. Only real crossovers found in the generated series
+// are annotated, so the callout always matches what the lines actually do.
+const crossovers = [];
+for (let i = 1; i < PERIODS; i++) {
+  const prev50 = sma50[i - 1];
+  const prev200 = sma200[i - 1];
+  const cur50 = sma50[i];
+  const cur200 = sma200[i];
+  if (prev50 == null || prev200 == null || cur50 == null || cur200 == null) continue;
+  if (prev50 <= prev200 && cur50 > cur200) {
+    crossovers.push({ date: dates[i], type: "golden", label: "Golden Cross" });
+  } else if (prev50 >= prev200 && cur50 < cur200) {
+    crossovers.push({ date: dates[i], type: "death", label: "Death Cross" });
+  }
+}
+
 // --- Chart -----------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -75,6 +92,23 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    crosshair: { color: t.grid, dashStyle: "Dash" },
+    // Distinctive Highcharts feature: declarative plotLines spotlight the
+    // real golden-cross / death-cross moments found in the data above.
+    plotLines: crossovers.map((c) => ({
+      value: c.date,
+      color: c.type === "golden" ? t.palette[0] : t.amber,
+      dashStyle: "Dash",
+      width: 2,
+      zIndex: 5,
+      label: {
+        text: c.label,
+        rotation: 0,
+        y: 16,
+        x: 6,
+        style: { color: t.ink, fontSize: "12px", fontWeight: "600" },
+      },
+    })),
   },
   yAxis: {
     title: {
@@ -87,15 +121,33 @@ Highcharts.chart("container", {
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
+    margin: 14,
   },
-  tooltip: { xDateFormat: "%b %e, %Y" },
+  tooltip: {
+    shared: true,
+    // Distinctive Highcharts feature: custom formatter reports each SMA's
+    // delta versus the Close price, not just the raw line values.
+    formatter: function () {
+      const closePoint = this.points.find((p) => p.series.name === "Close");
+      const lines = [`<b>${Highcharts.dateFormat("%b %e, %Y", this.x)}</b>`];
+      this.points.forEach((p) => {
+        let delta = "";
+        if (closePoint && p.series.name !== "Close") {
+          const deltaPct = ((closePoint.y - p.y) / p.y) * 100;
+          delta = ` <span style="color:${t.inkSoft}">(${deltaPct >= 0 ? "+" : ""}${deltaPct.toFixed(1)}% vs Close)</span>`;
+        }
+        lines.push(`<span style="color:${p.color}">●</span> ${p.series.name}: <b>$${p.y.toFixed(2)}</b>${delta}`);
+      });
+      return lines.join("<br/>");
+    },
+  },
   plotOptions: {
     series: { animation: false, marker: { enabled: false } },
   },
   series: [
-    { name: "Close", data: closeSeries, lineWidth: 2, color: t.palette[0], zIndex: 4 },
-    { name: "SMA 20", data: sma20Series, lineWidth: 1.5, color: t.palette[1], zIndex: 3 },
-    { name: "SMA 50", data: sma50Series, lineWidth: 1.5, color: t.palette[2], zIndex: 2 },
-    { name: "SMA 200", data: sma200Series, lineWidth: 1.5, color: t.palette[3], zIndex: 1 },
+    { name: "Close", data: closeSeries, lineWidth: 2.5, color: t.palette[0], zIndex: 4 },
+    { name: "SMA 20", data: sma20Series, lineWidth: 1.5, dashStyle: "Solid", color: t.palette[1], zIndex: 3 },
+    { name: "SMA 50", data: sma50Series, lineWidth: 1.5, dashStyle: "ShortDash", color: t.palette[2], zIndex: 2 },
+    { name: "SMA 200", data: sma200Series, lineWidth: 1.75, dashStyle: "LongDash", color: t.palette[3], zIndex: 1 },
   ],
 });
