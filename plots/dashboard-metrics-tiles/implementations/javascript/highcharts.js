@@ -26,6 +26,11 @@ function history(seed, n, base, trend, noiseFrac) {
 }
 
 const STATUS_COLOR = { good: t.palette[0], warning: t.amber, critical: t.palette[4] };
+const STATUS_GLYPH = { good: "✓", warning: "!", critical: "✕" };
+
+function mean(values) {
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
 
 const tiles = [
   {
@@ -109,7 +114,9 @@ tiles.forEach((tile, index) => {
   labelEl.textContent = tile.label;
   labelEl.style.cssText = `font-size:15px; font-weight:500; color:${t.inkSoft}; letter-spacing:0.02em;`;
   const dotEl = document.createElement("span");
-  dotEl.style.cssText = `width:12px; height:12px; border-radius:50%; background:${statusColor}; display:inline-block;`;
+  dotEl.textContent = STATUS_GLYPH[tile.status];
+  dotEl.title = tile.status;
+  dotEl.style.cssText = `width:16px; height:16px; border-radius:50%; background:${statusColor}; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; line-height:1; color:#FFFFFF;`;
   headerRow.appendChild(labelEl);
   headerRow.appendChild(dotEl);
 
@@ -138,6 +145,7 @@ tiles.forEach((tile, index) => {
 //     nodes above are attached so Highcharts can measure each mount's size) ----
 tiles.forEach((tile, index) => {
   const statusColor = STATUS_COLOR[tile.status];
+  const baseline = mean(tile.history);
   Highcharts.chart(`spark-${index}`, {
     chart: {
       type: "area",
@@ -148,7 +156,27 @@ tiles.forEach((tile, index) => {
     credits: { enabled: false },
     title: { text: null },
     xAxis: { visible: false },
-    yAxis: { visible: false },
+    // Distinctive Highcharts touch: a dashed baseline plotLine (period mean)
+    // showing trend-vs-baseline context, not just the raw sparkline. `visible`
+    // must stay true (default) — Highcharts only wires up plotLines during
+    // Axis#render(), which the chart skips entirely for axes marked
+    // visible:false — so the chrome is stripped by hand instead.
+    yAxis: {
+      lineWidth: 0,
+      gridLineWidth: 0,
+      tickLength: 0,
+      labels: { enabled: false },
+      title: { text: null },
+      plotLines: [
+        {
+          value: baseline,
+          color: t.inkSoft,
+          width: 1,
+          dashStyle: "Dash",
+          zIndex: 3,
+        },
+      ],
+    },
     legend: { enabled: false },
     tooltip: { enabled: false },
     plotOptions: {
