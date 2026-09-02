@@ -34,21 +34,31 @@ replicate_yields <- bind_rows(lapply(seq_along(treatments), function(i) {
 yield_summary <- replicate_yields %>%
   group_by(treatment) %>%
   summarise(mean_yield = mean(yield), sd_yield = sd(yield)) %>%
-  mutate(treatment = factor(treatment, levels = treatments))
+  arrange(desc(mean_yield)) %>%
+  mutate(
+    treatment = factor(treatment, levels = treatment),
+    is_top = mean_yield == max(mean_yield)
+  )
 
 # --- Plot -------------------------------------------------------------------
 plot_title <- "Crop Yield by Fertilizer Treatment · bar-error · r · ggplot2 · anyplot.ai"
 title_fontsize <- round(12 * 67 / nchar(plot_title))
 
 p <- ggplot(yield_summary, aes(x = treatment, y = mean_yield)) +
-  geom_col(fill = BRAND, width = 0.6) +
+  geom_col(aes(alpha = is_top), fill = BRAND, width = 0.6) +
   geom_errorbar(
     aes(ymin = mean_yield - sd_yield, ymax = mean_yield + sd_yield),
     width = 0.2, color = INK, linewidth = 0.6
   ) +
+  geom_text(
+    aes(y = mean_yield + sd_yield, label = sprintf("%.1f", mean_yield), fontface = ifelse(is_top, "bold", "plain")),
+    vjust = -0.9, size = 3, color = INK
+  ) +
+  scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = 0.6), guide = "none") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
   labs(
     title = plot_title,
-    subtitle = "Error bars show ±1 SD across 8 replicate plots per treatment",
+    subtitle = "Ranked by mean yield (highest first) · error bars show ±1 SD across 8 replicate plots per treatment",
     x = "Fertilizer Treatment",
     y = "Crop Yield (tons/hectare)"
   ) +
