@@ -82,37 +82,106 @@ columns.forEach((col, colIndex) => {
   }
 });
 
+// --- Support / resistance 45-degree trend lines -----------------------------
+// Classic P&F construction: a support (resistance) line starts at the box low
+// (high) of the first rising (falling) column reached, then advances exactly
+// one box per column — the "45-degree" slope the spec calls for — until a
+// later column's box range breaks through it. The next rising/falling column
+// then starts a fresh line, so trends are shown as a series of segments.
+function buildTrendSegments(colDir, boundaryOf, slopeSign) {
+  const segments = [];
+  let seg = null;
+  const startSegment = (colX, col) => ({
+    startCol: colX,
+    startVal: boundaryOf(col),
+    points: [{ x: colX, y: boundaryOf(col) * boxSize }],
+  });
+
+  columns.forEach((col, i) => {
+    const colX = i + 1;
+    if (!seg) {
+      if (col.dir === colDir) seg = startSegment(colX, col);
+      return;
+    }
+
+    const projected = seg.startVal + slopeSign * (colX - seg.startCol);
+    const broken = slopeSign > 0 ? boundaryOf(col) < projected : boundaryOf(col) > projected;
+    if (broken) {
+      if (seg.points.length > 1) segments.push(seg.points);
+      seg = col.dir === colDir ? startSegment(colX, col) : null;
+    } else {
+      seg.points.push({ x: colX, y: projected * boxSize });
+    }
+  });
+  if (seg && seg.points.length > 1) segments.push(seg.points);
+  return segments;
+}
+
+// Merge segments into a single dataset, breaking the line between segments
+// with a NaN point (spanGaps: false keeps the gap from being connected).
+const withGaps = (segments) =>
+  segments.flatMap((seg, i) => (i === 0 ? seg : [{ x: seg[0].x, y: NaN }, ...seg]));
+
+const supportPoints = withGaps(buildTrendSegments(1, (col) => col.bottom, 1));
+const resistancePoints = withGaps(buildTrendSegments(-1, (col) => col.top, -1));
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Chart ---------------------------------------------------------------------
+const datasets = [
+  {
+    label: "X — rising",
+    data: risingBoxes,
+    pointStyle: "crossRot",
+    pointRadius: 11,
+    pointBorderWidth: 3,
+    pointBorderColor: t.palette[0],
+    pointBackgroundColor: t.palette[0],
+    showLine: false,
+  },
+  {
+    label: "O — falling",
+    data: fallingBoxes,
+    pointStyle: "circle",
+    pointRadius: 11,
+    pointBorderWidth: 3,
+    pointBorderColor: t.palette[4],
+    pointBackgroundColor: "transparent",
+    showLine: false,
+  },
+];
+if (supportPoints.length) {
+  datasets.push({
+    label: "Support (45°)",
+    data: supportPoints,
+    showLine: true,
+    spanGaps: false,
+    fill: false,
+    borderColor: t.inkSoft,
+    borderWidth: 2,
+    borderDash: [10, 5],
+    pointRadius: 0,
+  });
+}
+if (resistancePoints.length) {
+  datasets.push({
+    label: "Resistance (45°)",
+    data: resistancePoints,
+    showLine: true,
+    spanGaps: false,
+    fill: false,
+    borderColor: t.inkSoft,
+    borderWidth: 2,
+    borderDash: [3, 5],
+    pointRadius: 0,
+  });
+}
+
 new Chart(canvas, {
   type: "scatter",
-  data: {
-    datasets: [
-      {
-        label: "X — rising",
-        data: risingBoxes,
-        pointStyle: "crossRot",
-        pointRadius: 11,
-        pointBorderWidth: 3,
-        pointBorderColor: t.palette[0],
-        pointBackgroundColor: t.palette[0],
-        showLine: false,
-      },
-      {
-        label: "O — falling",
-        data: fallingBoxes,
-        pointStyle: "circle",
-        pointRadius: 11,
-        pointBorderWidth: 3,
-        pointBorderColor: t.palette[4],
-        pointBackgroundColor: "transparent",
-        showLine: false,
-      },
-    ],
-  },
+  data: { datasets },
   options: {
     responsive: true,
     maintainAspectRatio: false,
