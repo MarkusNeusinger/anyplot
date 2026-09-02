@@ -160,7 +160,7 @@ jobs:
         id: claude
         continue-on-error: true
         timeout-minutes: 45
-        uses: anthropics/claude-code-action@dcb57747bfceeaa1fa72638cae52295d1d853d4a  # v1
+        uses: anthropics/claude-code-action@a874e9ecd7bb36efdad65429c6b35815f5a08f10  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ inputs.model || 'sonnet' }} --settings ${{ github.workspace }}/.claude/settings.json"
@@ -180,7 +180,7 @@ jobs:
         if: steps.claude.outcome == 'failure'
         id: claude_retry
         timeout-minutes: 45
-        uses: anthropics/claude-code-action@dcb57747bfceeaa1fa72638cae52295d1d853d4a  # v1
+        uses: anthropics/claude-code-action@a874e9ecd7bb36efdad65429c6b35815f5a08f10  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ inputs.model || 'sonnet' }} --settings ${{ github.workspace }}/.claude/settings.json"
