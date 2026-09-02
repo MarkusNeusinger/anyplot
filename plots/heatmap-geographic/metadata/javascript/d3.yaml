@@ -1,0 +1,259 @@
+library: d3
+language: javascript
+specification_id: heatmap-geographic
+created: '2026-09-02T01:04:54Z'
+updated: '2026-09-02T01:23:09Z'
+generated_by: claude-sonnet
+workflow_run: 33577286507
+issue: 3638
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Fixed the geographic mismatch flagged in the prior review: coordinates (40.71N,
+    -74.01W) now genuinely correspond to Downtown Manhattan / Financial District,
+    matching the ''Downtown Ride-Share Pickup Density'' title.'
+  - Zoom-to-explore is now implemented via d3.zoom() with the axes rescaling live
+    during pan/zoom, addressing the previously-missing SC-02 spec suggestion.
+  - New peak-density annotation (dashed circle + leader line + label) creates a clear
+    single focal point, addressing the prior 'no dominant focal point' Design Excellence
+    weakness.
+  - Axis titles now read 'Longitude (°)'/'Latitude (°)', carrying the unit suffix
+    in the label text itself as requested in the prior review.
+  - d3.contourDensity() KDE clipped to a custom illustrative coastline via SVG clipPath
+    remains a standout, distinctive D3 technique.
+  - Imprint imprint_seq colormap (brand green -> blue) applied consistently; data
+    colors identical between light and dark renders, both fully legible.
+  weaknesses:
+  - The peak-annotation group (dashed circle, leader line, 'Peak density' text) is
+    appended directly to the root <svg>, not inside the mapLayer <g> that receives
+    the zoom transform. Panning/zooming the map will visually detach the annotation
+    from the actual peak location — reposition it inside the zoom handler (recompute
+    its coordinates from the current zoom transform, like the axes already do) so
+    it tracks the data point.
+  - Design excellence is strong but still short of top-tier editorial polish — e.g.
+    the ambient background points could be visually differentiated more from the hotspot
+    fill so the density story reads even faster.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matching the Imprint light-theme surface — not pure white.
+      Chrome: Title "Downtown Ride-Share Pickup Density · heatmap-geographic · javascript · d3 · anyplot.ai" in bold dark ink, fully readable, spans roughly 80% of the canvas width (expected for the mandated long title, no clipping). "Longitude (°)"/"Latitude (°)" axis titles and degree-formatted tick labels (e.g. "74.05°W", "40.80°N") render in soft dark gray, fully legible. Gridlines are subtle and confined to the map's data extent. The "Pickup density" legend title, High/Low labels, and vertical gradient bar sit to the right of the map with comfortable margin from the canvas edge. The dashed "Peak density" annotation circle and leader line are dark and clearly readable against the blue high-density core.
+      Data: An irregular, organically-shaped illustrative coastline filled with a green-to-blue KDE density surface (Imprint imprint_seq colormap) showing a strong central/north cluster (deep blue core, marked "Peak density") and secondary clusters to the south — with faint individual pickup-point texture visible beneath the contour fills. Land outside the density surface renders in a light elevated-surface tone; the coastline outline is a crisp dark stroke.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matching the Imprint dark-theme surface — not pure black.
+      Chrome: Same title, axis titles, and tick labels now render in light off-white/gray ink, fully legible against the dark background — no dark-on-dark failures observed. Gridlines remain subtle. Legend text and High/Low labels are light-colored and readable; the gradient bar itself is unchanged. The peak annotation circle/line/label render in light ink, clearly visible against the dark core.
+      Data: The same landmass silhouette, now filled on a darker elevated-surface tone outside the density surface, with the identical green-to-blue KDE gradient and hotspot layout as the light render — confirming the data colors are theme-independent. The coastline outline switches to a lighter stroke color appropriate for the dark surface.
+      Legibility verdict: PASS — all text is light-on-dark and clearly readable, no dark-on-dark failures; brand green/blue data colors remain vivid and legible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14px ticks/axis titles, 16px legend
+          title, 24px length-scaled title); fully legible in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap among title, axis labels, tick labels, legend, and the
+          new peak annotation.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: KDE contour bands clearly graduated; point texture (r=1.3, alpha=0.1)
+          appropriately subtle for ~1900-point density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue-family green-to-blue sequential gradient is CVD-safe;
+          no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map, axes, title, legend, and peak annotation all sit comfortably
+          within the canvas; no overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis titles now read 'Longitude (°)'/'Latitude (°)' — unit suffix
+          present in the label text itself, fixing the prior gap.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous data correctly uses imprint_seq (green->blue); identical
+          data colors across themes; both backgrounds correct.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom coastline, land-clipped contours, and the new peak annotation
+          raise polish above a well-configured default, though short of top-tier editorial
+          refinement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain lines removed, gridlines subtle, generous whitespace — solid
+          but not maximally polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New peak-density annotation (dashed circle + leader line + label)
+          gives the plot a clear focal point, addressing the prior weakness.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct KDE-based geographic heatmap via contourDensity.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE, sequential colormap with transparency, colorbar legend, illustrative
+          coastline basemap, AND zoom-to-explore (d3.zoom with rescaled axes) — all
+          spec-suggested features now present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude/latitude correctly mapped to x/y with true-distance aspect
+          correction; all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec exactly; legend labels ('Pickup density',
+          High/Low) match the continuous data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple hotspots of varying intensity plus ambient background, point
+          texture, and coastline basemap show the full feature set.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ride-share pickup density is realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinates (40.71N, -74.01W) now correctly correspond to Downtown
+          Manhattan / Financial District, matching the title — fixes the prior geographic
+          mismatch.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG PRNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the visualization, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; harness handles output files.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of d3 scales, axes with tickSize gridlines, geoPath, clipPath,
+          polygonCentroid, and zoom.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.contourDensity() KDE clipped to a custom landmass, plus zoom-to-explore,
+          are distinctive D3 capabilities; docked 1 point because the peak-annotation
+          group sits outside the pannable map-layer and will visually detach from
+          the data point once the user zooms/pans.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill
