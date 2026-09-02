@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: cat-box-strip
 created: '2026-09-02T14:56:05Z'
-updated: '2026-09-02T15:00:17Z'
+updated: '2026-09-02T15:08:47Z'
 generated_by: claude-sonnet
 workflow_run: 33644429982
 issue: 2695
@@ -12,50 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/echarts/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Correct box-plot construction with Tukey 1.5×IQR whisker fencing (boxStats), and
-    a deterministic seeded LCG + Box-Muller gaussian for reproducible synthetic data
-  - Strip points are cleanly overlaid on the boxes with jitter (±0.28 category-width)
-    and alpha=0.4, giving both summary statistics and raw distribution visibility
-    as required by the spec
-  - 'Full theme-adaptive chrome: axis lines, tick labels, grid, and title all pull
-    from window.ANYPLOT_TOKENS; identical Imprint green (#009E73) data color between
-    light and dark renders'
-  - Canvas gate passes exactly (3200×1800 landscape), animation disabled, no import/require
-    violations, idiomatic mount-node contract usage
+  - Jitter width was widened (±0.28 → ±0.36) and marker size reduced (9 → 7) as requested
+    in Attempt 1 feedback — individual strip points are now distinguishable in the
+    dense 50-59/60+ groups instead of merging into solid blobs
+  - Added a markLine trend annotation ("Median +55 min (20-29 → 60+)") directly addressing
+    the prior DE-03/LM-02 feedback — gives the chart a clear focal point and a distinctive
+    echarts-specific touch beyond the baseline boxplot+scatter combo
+  - Correct box-plot construction with Tukey 1.5×IQR whisker fencing and a deterministic
+    seeded LCG + Box-Muller gaussian for reproducible synthetic data
+  - 'Full theme-adaptive chrome: axis lines, tick labels, grid, title, and the new
+    markLine label all pull from window.ANYPLOT_TOKENS; identical Imprint green (#009E73)
+    data color between light and dark renders'
+  - Canvas gate passes exactly (3200×1800 landscape), animation disabled, idiomatic
+    mount-node contract usage
   - Realistic, neutral dataset (marathon finish times by runner age group) with a
-    clear, plausible upward trend across categories that gives the chart a storytelling
-    angle
+    clear, plausible upward trend across categories
   weaknesses:
-  - Strip points heavily overlap into near-solid green blobs inside the boxes for
-    the denser groups (50-59, 60+, ~34-45 points each) — increase jitter width slightly
-    (e.g. 0.35-0.4 span) and/or drop symbolSize from 9 to ~6-7 to keep individual
-    points distinguishable per the spec's 'points use jitter and transparency to reduce
-    overlap' requirement
-  - Design is monochromatic single-color across all five box/strip groups with no
-    additional visual hierarchy or annotation calling out the age-related trend —
-    consider a subtle callout or emphasis on the clearest group-to-group increase
-    to strengthen data storytelling (DE-03)
-  - Distinctive echarts-specific features are minimal beyond the basic boxplot+scatter
-    composition mandated by the spec itself — combining a library-specific touch (e.g.
-    markLine for an overall mean/median reference) would raise library mastery
+  - The new markLine label ("Median +55 min...") is positioned at the midpoint of
+    the trend line, which lands directly on top of the 40-49 group's box outline and
+    its densest cluster of strip points — the dashed line and text visually collide
+    with data marks instead of sitting in clear space
+  - 50-59 and 60+ groups still show noticeably denser point overlap than the younger
+    groups (larger sample sizes, 45 and 34 points) — individual points are now distinguishable
+    but still touch/overlap frequently
+  - Design remains monochromatic (single green hue across all elements) with limited
+    additional visual polish beyond the new trend line
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "cat-box-strip · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend ("Distribution", "Runners") below title in soft ink, readable. X-axis "Runner Age Group" (20-29, 30-39, 40-49, 50-59, 60+) and Y-axis "Finish Time (minutes)" (150-390) both fully legible with dark tick labels against the light background. Horizontal gridlines are thin and subtle, visible but not dominant.
-      Data: Box plots outlined in Imprint green (#009E73) with transparent fill, showing median line, Q1/Q3 box, and whisker caps for each of the five age groups. Individual runner points (green, opacity 0.4) are jittered around each category's x-position, overlaid on the boxes. First/only data series correctly uses #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "cat-box-strip · javascript · echarts · anyplot.ai" centered in dark ink, fully legible. Legend ("Distribution", "Runners") sits directly below the title. Axis titles ("Runner Age Group", "Finish Time (minutes)") and all tick labels render in dark/soft-ink and are clearly readable. Horizontal gridlines are thin and subtle.
+      Data: Five box plots (transparent fill, #009E73 outline) show median/Q1/Q3/whiskers per age group, with jittered green strip points (opacity 0.4, symbolSize 7) overlaid — individual points are distinguishable, though the 50-59 and 60+ groups still show frequent overlap given larger sample sizes. A new dashed markLine trend annotation runs from the 20-29 median to the 60+ median, labeled "Median +55 min (20-29 → 60+)" — the label sits directly on top of the 40-49 box and its dense point cluster, creating visual overlap with data marks (text remains legible, but the placement is cluttered).
+      Legibility verdict: PASS (all text readable; overlap is a data/annotation collision, not a legibility failure)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, legend, and both axis titles/tick labels render in light ink tones, clearly legible against the dark background. No dark-on-dark text observed anywhere (title, axis names, tick labels, legend all pass). Gridlines are faint but visible.
-      Data: Box outlines and jittered strip points use the identical Imprint green (#009E73) as the light render — only the chrome (background, text, grid) flipped, confirming theme-adaptive tokens were threaded correctly through the whole option object.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Title, legend, and both axis titles/tick labels render in light ink and are clearly legible — no dark-on-dark failures. Gridlines faint but present.
+      Data: Box outlines and jittered strip points use the identical #009E73 green as the light render — only chrome (background, text, grid, markLine color) flipped between themes, as required. The same markLine label overlap with the 40-49 box/points is present here too.
+      Legibility verdict: PASS (all text readable; same overlap issue as light render, not a legibility failure)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -63,69 +62,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes explicitly set via tokens
+        comment: All text readable in both themes; markLine label crosses over box/points
+          but stays legible
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text collisions with other text or data
-      - id: VQ-03
-        name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Dense groups (50-59, 60+) show heavy point overlap into near-solid
-          blobs — jitter/marker size could be tuned further
+        comment: markLine trend label + dashed line overlaps the 40-49 box outline
+          and its densest strip points
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Wider jitter + smaller markers improved point distinguishability;
+          50-59/60+ still moderately dense
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High contrast, monochromatic green, no red-green reliance
+        comment: Single-hue green, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), no overflow, good proportions
+        comment: Canvas gate passes 3200x1800, proportions clean, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (minutes)
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes, correct theme
-          backgrounds'
+        comment: 'First series #009E73, both renders theme-correct backgrounds'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Clean but monochromatic single-color treatment across all groups;
-          no strong distinguishing polish
+        comment: Monochromatic but the trend annotation adds a touch of polish over
+          Attempt 1
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed, subtle single-direction grid, generous whitespace
+        passed: true
+        comment: Minimal spines, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Age-related upward trend is visible but not emphasized with any annotation
-          or focal treatment
+        passed: true
+        comment: New markLine highlights the age-related median trend, a clear focal
+          point; placement overlap slightly undercuts execution
     spec_compliance:
       score: 15
       max: 15
@@ -135,26 +135,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Box plot with strip overlay, correctly combined
+        comment: Box plot with strip overlay, exactly as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median/Q1/Q3/whiskers plus jittered, transparent strip points all
-          present
+        comment: Median/Q1/Q3/whiskers plus jittered, transparent strip points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, numeric value on y, all data shown
+        comment: category on x, value on y, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels are clear
+        comment: Title matches mandated format; legend labels match series names
     data_quality:
       score: 15
       max: 15
@@ -164,20 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows median, quartiles, whiskers, individual points, and sample-size
-          differences across groups
+        comment: Shows distribution shape, outliers, and sample-size differences across
+          groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marathon finish times by age group — plausible and neutral
+        comment: Marathon finish times by age group, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150-390 minute range is sensible for marathon finish times
+        comment: Values in a realistic minutes range
     code_quality:
       score: 10
       max: 10
@@ -187,33 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small, necessary helper functions only (LCG/gaussian, boxStats)
+        comment: Helper functions are necessary (RNG, box stats), no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts
+        comment: Only the global echarts is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract respected, animation:false set
+        comment: 'Correct mount-node contract, animation: false'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -221,23 +220,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct boxplot + scatter series composition, proper z-ordering and
-          silent overlay
+        comment: boxplot + scatter + markLine composition is idiomatic echarts
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: No echarts-specific features beyond the spec-mandated boxplot+scatter
-          combo
+        comment: markLine trend annotation is a genuine echarts-specific touch, though
+          placement needs refinement
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
+  - jitter
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - quantile-calculation
   styling:
   - alpha-blending
