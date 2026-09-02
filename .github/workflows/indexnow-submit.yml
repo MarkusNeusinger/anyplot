@@ -24,6 +24,9 @@ on:
     branches: [main]
     paths:
       - 'plots/**'
+      # A change to this workflow exercises itself with the full list; a
+      # fix that never runs until the next plot merge is a fix nobody saw.
+      - '.github/workflows/indexnow-submit.yml'
   workflow_dispatch:
     inputs:
       scope:
@@ -48,7 +51,10 @@ env:
 jobs:
   submit:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Worst case: ~12 min waiting for the key file (16 probes, 15 s timeout,
+    # 30 s apart) + the 10 min verification deadline + one last request with
+    # its retries (up to ~4 min), with room to spare.
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -80,6 +86,11 @@ jobs:
           }
           commits=$(jq 'length' <<<"$PUSH_COMMITS")
           if [ "$SCOPE" = "sitemap" ]; then
+            full_list | sort -u > urls.txt
+          elif [ "$commits" -eq 1 ] && git diff --name-only HEAD~1 HEAD -- .github/workflows/indexnow-submit.yml | grep -q .; then
+            # The workflow itself changed (the push.paths entry above): run
+            # the real thing end to end rather than an empty diff.
+            echo "::notice::workflow file changed; submitting the full list"
             full_list | sort -u > urls.txt
           elif [ "$commits" -gt 1 ]; then
             # A multi-commit push (rare on main) is not what fetch-depth 2 can
@@ -120,14 +131,22 @@ jobs:
           # The engines validate a submission by fetching the key file. It is
           # served by the app deploy, which a rollout or a key rotation may
           # still have in flight — wait for it (up to ~8 min), but submit
-          # either way: a runner behind Cloudflare's bot management may see a
-          # 403 that Bing's own fetch does not, and IndexNow verifies itself.
+          # either way: this probe is a courtesy, IndexNow's own key fetch
+          # below is the authoritative check.
           for i in $(seq 1 16); do
-            if curl -fsS --max-time 15 -o /dev/null "https://${HOST}/${INDEXNOW_KEY}.txt"; then
-              echo "::notice::key file reachable"; break
-            fi
+            # On a transport failure curl still prints 000 for %{http_code};
+            # the fallback is assigned afterwards so nothing is appended.
+            status=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' \
+              "https://${HOST}/${INDEXNOW_KEY}.txt") || status=000
+            case "$status" in
+              200) echo "::notice::key file reachable"; break ;;
+              # Cloudflare's bot management answers 403 before the origin is
+              # asked, so this says nothing about the deploy either way, and
+              # waiting cannot change it. Bing's fetch is not subject to it.
+              403) echo "::notice::key file answers 403 to this runner (edge bot management), which cannot confirm the deploy; skipping the wait, IndexNow verifies the key itself"; break ;;
+            esac
             if [ "$i" -eq 16 ]; then
-              echo "::warning::key file not confirmed reachable after 8 min; submitting anyway"
+              echo "::warning::key file not confirmed reachable after 8 min (last status ${status}); submitting anyway"
             else
               sleep 30
             fi
@@ -136,24 +155,48 @@ jobs:
           # under that today (4.6k) but the split keeps this future-proof.
           split -l 10000 -d urls.txt batch_
           for f in batch_*; do
-            body=$(jq -n --arg host "$HOST" --arg key "$INDEXNOW_KEY" \
+            # The body goes through a file: a full-sitemap batch is ~250 KB,
+            # and a single command-line argument is capped at 128 KB on Linux
+            # — the first sitemap-scope run (33665718870) failed to exec curl
+            # at all and reported HTTP 000 for 4,593 URLs.
+            jq -n --arg host "$HOST" --arg key "$INDEXNOW_KEY" \
               --arg loc "https://${HOST}/${INDEXNOW_KEY}.txt" \
               --rawfile list "$f" \
               '{host: $host, key: $key, keyLocation: $loc,
-                urlList: ($list | split("\n") | map(select(length > 0)))}')
-            # Bounded: a slow or flaky api.indexnow.org must not burn the job
-            # timeout; three retries cover a transient error, and a transport
-            # error after them yields code 000 for the branch below instead of
-            # aborting under `set -e`.
-            code=$(curl -sS -o response.txt -w '%{http_code}' \
-              --max-time 30 --retry 3 --retry-delay 5 --retry-all-errors \
-              -X POST "https://api.indexnow.org/indexnow" \
-              -H "Content-Type: application/json; charset=utf-8" \
-              --data "$body") || code="000"
+                urlList: ($list | split("\n") | map(select(length > 0)))}' > body.json
             n=$(grep -c . "$f")
+            # First use of a key (rollout or rotation): IndexNow verifies the
+            # key file asynchronously and answers 403 SiteVerificationNotCompleted
+            # until it has — seen minutes after the file went live. Retry that
+            # case once a minute until a ten-minute deadline has passed (an
+            # elapsed deadline, so slow responses cannot stretch it); if it
+            # persists, the run FAILS, so a `changed` run keeps its URL set and
+            # can be re-run — a green warning would have dropped those URLs for
+            # good, because later pushes submit only their own diffs.
+            deadline=$(( $(date +%s) + 600 ))
+            while :; do
+              # Bounded: a slow or flaky api.indexnow.org must not burn the job
+              # timeout; three retries cover a transient error, and a transport
+              # error after them yields code 000 for the branch below instead of
+              # aborting under `set -e`.
+              code=$(curl -sS -o response.txt -w '%{http_code}' \
+                --max-time 60 --retry 3 --retry-delay 5 --retry-all-errors \
+                -X POST "https://api.indexnow.org/indexnow" \
+                -H "Content-Type: application/json; charset=utf-8" \
+                --data @body.json) || code="000"
+              if [ "$code" = 403 ] && grep -q SiteVerificationNotCompleted response.txt 2>/dev/null \
+                 && [ "$(date +%s)" -lt "$deadline" ]; then
+                echo "::notice::IndexNow has not finished verifying the key file yet; retrying in 60 s"
+                sleep 60
+                continue
+              fi
+              break
+            done
             case "$code" in
               200|202) echo "::notice::IndexNow accepted ${n} URL(s) (HTTP ${code})" ;;
-              # 4xx is a protocol or key problem on our side; make it visible.
+              # 4xx is a protocol or key problem on our side (or the key still
+              # unverified after ten minutes); make it visible and keep the run
+              # re-runnable.
               4*) echo "::error::IndexNow rejected ${n} URL(s) (HTTP ${code}): $(head -c 300 response.txt 2>/dev/null)"; exit 1 ;;
               # 5xx / no response: their side. Every later push resubmits its
               # own URLs and `scope=sitemap` covers a longer gap, so warn.

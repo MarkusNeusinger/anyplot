@@ -517,11 +517,17 @@ sitemap. Three pieces, kept in sync when the key is rotated:
 | Piece | Where | Purpose |
 |-------|-------|---------|
 | Key file | `app/public/<key>.txt` (served by nginx to every client, bots included — an explicit `location =` like `robots.txt`) | Proves the submitter controls `anyplot.ai`; the engines fetch it on every submission. The key is public by design. |
-| Submission workflow | `.github/workflows/indexnow-submit.yml` | On every push to `main` that touches `plots/`, maps the diff to page URLs (`/{spec}` and `/{spec}/{language}/{library}`) and POSTs them to `https://api.indexnow.org/indexnow`, 10,000 per request. A deleted implementation is submitted too — the protocol means "this URL changed". |
+| Submission workflow | `.github/workflows/indexnow-submit.yml` | On every push to `main` that touches `plots/`, maps the diff to page URLs (`/{spec}` and `/{spec}/{language}/{library}`; a changed specification covers the hub and all of its implementation pages) and POSTs them to `https://api.indexnow.org/indexnow`, 10,000 per request. A deleted implementation is submitted too — the protocol means "this URL changed". A push that changes the workflow file itself, or one carrying more than one commit, submits the full list instead of a diff. |
 | Manual full load | `gh workflow run indexnow-submit.yml -f scope=sitemap` | Submits every URL of the live sitemap; used once at rollout and after a long outage of the workflow. |
 
 The engines answer `200` or `202` for an accepted batch; `4xx` means a key or
-payload problem and fails the run so it is visible. Bing Webmaster Tools shows
+payload problem and fails the run so it is visible. One `4xx` is transient by
+nature: after a rollout or a key rotation IndexNow verifies the key file
+asynchronously and answers `403 SiteVerificationNotCompleted` for a while, so
+the workflow retries that case once a minute until a ten-minute deadline has
+passed (elapsed time, so slow responses cannot stretch it) and then fails — a
+`changed` run must not report success without its URLs accepted, because later
+pushes submit only their own diffs. Bing Webmaster Tools shows
 the received submissions under *IndexNow*.
 
 ## Discoverability for assistants
