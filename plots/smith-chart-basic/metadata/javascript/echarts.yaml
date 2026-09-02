@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: smith-chart-basic
 created: '2026-09-02T06:09:11Z'
-updated: '2026-09-02T06:14:35Z'
+updated: '2026-09-02T06:33:46Z'
 generated_by: claude-sonnet
 workflow_run: 33597107890
 issue: 3792
@@ -12,75 +12,83 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-cha
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
+  - Grid value labels are now present for both constant-resistance circles (0.2, 0.5,
+    1, 2, 5) and constant-reactance arcs (j0.2...j5, -j0.2...-j5), placed via ECharts'
+    `graphic` component using `chart.convertToPixel` for pixel-exact positioning against
+    the data-space grid geometry — this directly fixes the prior attempt's VQ-06/LM-02
+    weaknesses and is a genuinely ECharts-specific technique.
   - 'Mathematically correct Smith-chart geometry: resistance circles (cx=r/(1+r),
     cr=1/(1+r)) and reactance arcs (cy=1/x, cr=1/|x|) use the standard gamma-plane
-    formulas, and the boundary circle correctly represents |gamma|=1'
+    formulas, and the boundary circle correctly represents |gamma|=1.'
   - Impedance locus is a physically plausible antenna-feed sweep (skin-effect-like
-    resistance rise plus a series L-C reactance crossing from capacitive to inductive)
-    verified against the underlying formulas
-  - Frequency labels (1.0/2.3/3.7/5.0 GHz) are offset radially outward from each point
-    using vector math, avoiding overlap with the curve or the Z0 marker in both themes
-  - Z0 (matched-condition) reference point at the chart center is clearly marked,
-    giving the viewer an immediate visual reference for how close the locus is to
-    a perfect match
+    resistance rise plus a series L-C reactance crossing from capacitive to inductive),
+    with frequency labels (1.0/2.3/3.7/5.0 GHz) offset radially outward from each
+    point using vector math.
+  - Z0 (matched-condition) reference point at the chart center gives the viewer an
+    immediate visual anchor for how close the locus is to a perfect match.
   - Theme-adaptive chrome (ink/inkSoft/grid tokens) is threaded through every text
-    and line element, and the data curve color (#009E73) is pixel-identical between
-    light and dark renders
+    and line element, including the newly added grid labels, and the data curve color
+    (#009E73) is pixel-identical between light and dark renders.
+  - Frequency-label and Z0-label font sizes were bumped (15->17px, 13->15px) since
+    the prior review, improving legibility once the 2400x2400 PNG is scaled down for
+    mobile.
   - 'Clean, minimal-chrome layout: axes hidden, no cartesian frame, generous whitespace,
-    boundary circle emphasized with a slightly heavier stroke than the interior grid'
+    boundary circle emphasized with a slightly heavier stroke than the interior grid.'
   - Deterministic, in-memory data generation with clear domain-driven parameters (z0=50,
     4 nH series inductance, 1 pF series capacitance) — fully reproducible, no RNG
-    needed
+    needed.
   weaknesses:
-  - Constant-resistance circles and constant-reactance arcs have no numeric labels
-    (e.g. 0.2, 0.5, 1, 2, 5) — conventional Smith charts label these so a reader can
-    identify a specific circle/arc; right now the grid is decorative rather than readable
-  - Frequency labels (fontSize 15) and the Z0 label (fontSize 13) are on the small
-    side once the 2400x2400 PNG is scaled down to a ~400px mobile width — consider
-    bumping both by a few px for mobile legibility
-  - No axis/units label equivalent for the Smith-chart grid itself (VQ-06) — the subtitle
-    mentions 'Z0 = 50 Ω' but the resistance/reactance circles carry no value annotation
-  - resistanceCircle()/reactanceArc() are named functions, which deviates from the
-    KISS 'no functions' guidance — justified here by the repeated parametric-circle
-    math, but worth noting
-  - No distinctively ECharts-specific feature is used (e.g. graphic component, custom
-    series, visualMap) — the grid-as-many-line-series approach could be replicated
-    in most other charting libraries with similar effort
+  - The '1.0 GHz' frequency label collides with the |Gamma|=1 boundary circle in both
+    light and dark renders — the boundary stroke visibly cuts through the 'G' of 'GHz'
+    because the radial 46px offset isn't enough clearance for a locus point that sits
+    close to the chart boundary. Increase the offset (or clamp the label radius so
+    it never exceeds ~1.12) specifically for points near |gamma|=1.
+  - The '0.5' resistance-circle grid label sits almost flush against a locus marker/line
+    segment near the top of the chart (very tight vertical gap) — not a hard overlap
+    but crowded; nudge the label's textVerticalAlign/offset up a few more px where
+    a grid label's point falls near the data curve.
+  - resistanceCircle()/reactanceArc() remain named helper functions, which deviates
+    from the KISS 'no functions' guidance — still justified by the repeated parametric-circle
+    math used for 12 grid curves, but worth a mention.
+  - Optional VSWR circles (constant reflection-coefficient magnitude) from the spec's
+    notes are still not included — explicitly optional, not a deduction, but would
+    add extra data-density polish.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "smith-chart-basic · javascript · echarts · anyplot.ai" (bold, dark ink) and subtitle "Antenna feed impedance, 1-5 GHz · normalized to Z0 = 50 Ω" (softer grey) are both centered above the chart and fully readable. The Smith-chart grid (constant-resistance circles, constant-reactance arcs, the horizontal zero-reactance line, and the outer |gamma|=1 boundary circle) renders in a subtle light grey, clearly visible but not competing with the data. "Z0" label and its grey dot sit at the chart center. Frequency labels ("1.0 GHz", "2.3 GHz", "3.7 GHz", "5.0 GHz") are placed just outside the curve at labeled points, in dark ink, all legible.
+      Chrome: Title "smith-chart-basic · javascript · echarts · anyplot.ai" (bold, dark ink) and subtitle "Antenna feed impedance, 1-5 GHz · normalized to Z0 = 50 Ω" (softer grey) are centered above the chart and fully readable. The Smith-chart grid (constant-resistance circles labeled 0.2/0.5/1/2/5, constant-reactance arcs labeled j0.2-j5 and -j0.2--j5, the horizontal zero-reactance line, and the outer |gamma|=1 boundary circle) renders in subtle light grey with dark-grey grid-value labels, clearly visible but not competing with the data. "Z0" label and its grey dot sit at the chart center. Frequency labels ("1.0 GHz", "2.3 GHz", "3.7 GHz", "5.0 GHz") are placed just outside the curve at labeled points, in dark ink; all are legible except "1.0 GHz", whose "G" is visibly bisected by the boundary-circle stroke passing through it (readable but a genuine minor overlap).
       Data: The impedance locus is a single connected green (#009E73) line with matching green circular markers (11px, 13 points total), starting near the bottom-right (1.0 GHz, near the outer boundary, indicating a poor match) and curving counter-clockwise up through the left side of the chart to the top-right (5.0 GHz), ending closer to — but still outside — the matched center.
-      Legibility verdict: PASS — all title, subtitle, frequency-label, and Z0-label text is clearly readable against the light background; no light-on-light issues.
+      Legibility verdict: PASS (with one minor flaw) — all title, subtitle, and grid-label text is clearly readable against the light background with no light-on-light issues; the "1.0 GHz" label is readable but crossed by the boundary line.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle now rendered in light ink (white/near-white) and soft grey respectively, both fully legible against the dark background. The Smith-chart grid lines and boundary circle flip to light grey, remaining subtle but visible. "Z0" label and dot are light grey, readable at the center. Frequency labels flip to light ink text, all legible with no dark-on-dark failures.
+      Chrome: Same title/subtitle now rendered in light ink (white/near-white) and soft grey respectively, both fully legible against the dark background. The Smith-chart grid lines, boundary circle, and grid-value labels flip to light grey, remaining subtle but visible. "Z0" label and dot are light grey, readable at the center. Frequency labels flip to light ink text, all legible with no dark-on-dark failures — except the same "1.0 GHz" / boundary-circle collision observed in the light render, reproduced identically here.
       Data: The impedance locus curve and markers are the identical #009E73 green as the light render — same shape, same positions, confirming data-color consistency across themes. Brand green reads clearly against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all chrome elements correctly flipped for the dark theme while data color stayed constant.
+      Legibility verdict: PASS (with one minor flaw) — no dark-on-dark or light-on-light failures; chrome elements correctly flipped for the dark theme while data color stayed constant; the same boundary/label collision as the light render persists.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes at full
-          size; frequency/Z0 labels (13-15px) are borderline small once scaled to
-          ~400px mobile width
+        comment: Font sizes explicitly set and bumped since the prior review (freq
+          labels 15->17px, Z0 13->15px); readable in both themes; minor deduction
+          because the '1.0 GHz' label is partly crossed by the boundary circle
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Frequency labels are radially offset from their points, no collisions
-          with curve, grid, or each other
+        comment: The '1.0 GHz' frequency label collides with the |gamma|=1 boundary
+          circle stroke in both renders (G is bisected); the '0.5' grid label is also
+          very tight against a locus marker
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -100,15 +108,16 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Chart disc fills roughly 80% of the square canvas height with balanced
-          margins; nothing is cut off
+        comment: Chart disc fills roughly 80% of the square canvas with balanced margins;
+          canvas gate passed; nothing clipped at the canvas edge
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Subtitle carries units (Z0 = 50 Ω) but the resistance/reactance grid
-          itself has no value labels, so the chart's implicit 'axes' are unlabeled
+        passed: true
+        comment: Resistance and reactance grid values are now labeled directly on
+          the chart, and the subtitle carries the Z0=50 Ω unit context — fixes the
+          prior review's gap
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -117,17 +126,16 @@ review:
         comment: 'First (only) series is exactly #009E73, identical between light/dark;
           backgrounds match #FAF8F1/#1A1A17; all chrome is theme-correct'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful, above-default execution (offset labels, weighted boundary
-          circle, Z0 reference) but grid values aren't labeled, which a top-tier Smith
-          chart would include
+        comment: Fully labeled grid via pixel-exact `graphic` placement, offset frequency
+          labels, weighted boundary circle, Z0 reference — clearly above-default execution
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -140,8 +148,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: The labeled frequency progression plus the Z0 reference point create
-          a clear visual story of how the match quality evolves across the sweep
+        comment: Labeled frequency progression plus Z0 reference and now-labeled grid
+          create a clear visual story of match quality evolving across the sweep
     spec_compliance:
       score: 15
       max: 15
@@ -158,8 +166,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Grid, normalization, connected locus, frequency labels, |gamma|=1
-          boundary, and matched-center marker are all present
+        comment: Grid (now labeled), normalization, connected locus, frequency labels,
+          |gamma|=1 boundary, and matched-center marker are all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -174,17 +182,17 @@ review:
         comment: Title matches the mandated format exactly; single-series chart correctly
           omits a redundant legend in favor of inline labels
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Shows resistance circles, reactance arcs (both signs), boundary,
-          locus, and matched point; missing only the optional VSWR circles and grid
-          value labels
+          locus, matched point, and now numeric grid-value labels; only the optional
+          VSWR circles are omitted
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -237,7 +245,7 @@ review:
         comment: Correct mount-node contract, animation disabled, current setOption
           API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -246,16 +254,16 @@ review:
         max: 5
         passed: true
         comment: Correct, idiomatic use of line/scatter series, itemStyle/lineStyle,
-          and label offsets; the grid-as-many-series approach is a reasonable but
-          not highly distinctive pattern
+          label offsets, and the graphic component
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: No ECharts-specific feature (graphic component, custom series, visualMap)
-          is used — the approach could be replicated in most other charting libraries
-  verdict: REJECTED
+        passed: true
+        comment: Now uses the ECharts `graphic` component with `convertToPixel` for
+          pixel-exact grid-label placement — a genuinely ECharts-specific technique,
+          fixing the prior review's gap; still not using visualMap/custom series
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
