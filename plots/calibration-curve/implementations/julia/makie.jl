@@ -60,20 +60,20 @@ ece = sum(bin_count[valid] ./ n .* abs.(fp .- mp))
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
-    fontsize        = 14,
+    fontsize        = 16,
     backgroundcolor = PAGE_BG,
 )
 
 ax_cal = Axis(
     fig[1, 1];
     title             = "calibration-curve · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 22,
     titlecolor        = INK,
     ylabel            = "Fraction of positives",
     ylabelcolor       = INK,
-    ylabelsize        = 14,
-    xticklabelsize    = 12,
-    yticklabelsize    = 12,
+    ylabelsize        = 16,
+    xticklabelsize    = 13,
+    yticklabelsize    = 13,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
     xtickcolor        = INK_SOFT,
@@ -83,13 +83,14 @@ ax_cal = Axis(
     rightspinevisible = false,
     leftspinecolor    = INK_SOFT,
     bottomspinecolor  = INK_SOFT,
-    xgridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    xgridvisible      = false,
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xminorgridvisible = false,
     yminorgridvisible = false,
     limits            = (0, 1, 0, 1),
 )
 
+band!(ax_cal, mp, min.(fp, mp), max.(fp, mp); color = (BRAND, 0.12))
 lines!(ax_cal, [0.0, 1.0], [0.0, 1.0];
     color = INK_SOFT, linestyle = :dash, linewidth = 2.5, label = "Perfect calibration")
 lines!(ax_cal, mp, fp; color = BRAND, linewidth = 3)
@@ -99,7 +100,7 @@ axislegend(ax_cal, position = :rb, framevisible = true, backgroundcolor = ELEVAT
 
 text!(ax_cal, 0.03, 0.94;
     text = "Brier score: $(round(brier_score, digits = 3))\nECE: $(round(ece, digits = 3))",
-    color = INK_SOFT, fontsize = 13, align = (:left, :top))
+    color = INK_SOFT, fontsize = 15, align = (:left, :top))
 
 hidexdecorations!(ax_cal; label = true, ticklabels = true, ticks = false, grid = false)
 
@@ -109,10 +110,10 @@ ax_hist = Axis(
     ylabel            = "Count",
     xlabelcolor       = INK,
     ylabelcolor       = INK,
-    xlabelsize        = 14,
-    ylabelsize        = 14,
-    xticklabelsize    = 12,
-    yticklabelsize    = 12,
+    xlabelsize        = 16,
+    ylabelsize        = 16,
+    xticklabelsize    = 13,
+    yticklabelsize    = 13,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
     xtickcolor        = INK_SOFT,
