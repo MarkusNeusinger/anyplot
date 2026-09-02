@@ -1,0 +1,263 @@
+library: chartjs
+language: javascript
+specification_id: lollipop-grouped
+created: '2026-09-02T02:33:43Z'
+updated: '2026-09-02T02:47:19Z'
+generated_by: claude-sonnet
+workflow_run: 33583325952
+issue: 3485
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct lollipop simulation via a bar-plus-plugin technique that follows the library-recommended
+    workaround (afterDatasetsDraw circular markers on top of thin category-grouped
+    bars), giving genuine side-by-side grouped offset positioning for free from the
+    category scale.
+  - Imprint palette is fully correct and in canonical order (Hardware=#009E73 brand
+    green, Software=lavender, Services=blue), identical across both themes; backgrounds
+    are correctly warm off-white (light) and warm near-black (dark).
+  - All theme-adaptive chrome (title, axis titles, tick labels, legend text, and the
+    callout annotation) correctly threads t.ink / t.inkSoft / t.grid tokens — both
+    renders are fully legible with no dark-on-dark or light-on-light failures.
+  - 'Clean, minimal composition: single y-axis-only subtle grid, one axis border removed,
+    generous whitespace, legend placed close to the plot rather than isolated.'
+  - 'Top-performer emphasis (larger marker + ''Top: $42.5M'' callout) creates a clear,
+    honest focal point without simulating any fake interactivity.'
+  - Data is realistic (quarterly revenue by product line across sales regions) and
+    sorted by a meaningful metric (descending total revenue per region), matching
+    the spec's explicit guidance.
+  weaknesses:
+  - Legend swatches render as squares (boxWidth/boxHeight) while the actual data marks
+    are circular dots — set legend.labels.pointStyle/usePointStyle to circles so the
+    legend visually matches the lollipop markers.
+  - The three lollipops within a group sit very close together (categoryPercentage/barPercentage
+    produce only a slight horizontal offset) — a touch more spread would make the
+    'side by side' grouping read more clearly at a glance, especially in the Latin
+    America group where values are closest together.
+  - The mandated title occupies only ~30% of the canvas width at the current fontsize
+    — not a violation, but there is headroom to grow it slightly for more visual presence
+    at the top of a 3200px-wide canvas without approaching the overflow threshold.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "lollipop-grouped · javascript · chartjs · anyplot.ai" in dark ink, centered top. X-axis title "Region", Y-axis title "Quarterly Revenue ($M)" in dark ink. Tick labels in a softer dark gray. Legend (Hardware/Software/Services) top-right with square color swatches. A single subtle horizontal (y-axis-only) gridline set. "Top: $42.5M" callout in dark bold text above the tallest North America Hardware marker. All chrome text is clearly readable against the light background.
+      Data: Four region groups (North America, Europe, Asia Pacific, Latin America) sorted descending by combined revenue, each with three thin vertical stems topped by circular dots — green (#009E73, Hardware), lavender (Software), blue (Services). The top value (North America Hardware, $42.5M) has a visibly larger dot than the rest.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink/soft-light gray, fully legible against the dark surface. Legend text is light-colored and readable. Gridline is a faint light rule. "Top: $42.5M" callout renders in light text above the tallest marker — no dark-on-dark failure.
+      Data: Identical marker colors and positions to the light render — green (#009E73), lavender, and blue dots are unchanged, confirming only chrome flipped between themes, not data colors.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24px, axis titles 16px, ticks
+          14px, legend 17px); readable and well-proportioned in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker collisions in any group, including the closer-valued
+          Latin America group.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Sparse data (12 points): markers are prominent (13-17px radius),
+          well-adapted to low density; top value further emphasized.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; hue-only distinction is fine at n=3 series per the
+          palette guidance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the vast majority of the canvas with balanced margins;
+          legend sits close to the plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Region'' and ''Quarterly Revenue ($M)'' — descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for series 2-3, theme-correct
+          backgrounds/chrome in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom lollipop rendering plus a tasteful top-value callout — clearly
+          above a default chart.js bar chart.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, one border removed, generous whitespace;
+          legend swatches don't match the circular marker style, holding this back
+          from a top score.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Larger marker + callout on the top performer gives a clear, honest
+          focal point guiding the reader.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Grouped lollipop chart correctly realized (thin stems + circular
+          markers, grouped by category).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems, circular distinct-colored markers, side-by-side grouping
+          with offset, legend present, categories sorted by a meaningful metric.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=region category, Y=quarterly revenue; all 12 data points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'lollipop-grouped · javascript · chartjs ·
+          anyplot.ai'; legend labels match dataset names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good spread of values across 4 regions x 3 product lines, clear variation
+          and ranking, though no special edge-case data (e.g., a near-tie or an outlier
+          group).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Neutral, plausible business scenario: quarterly revenue by product
+          line across sales regions.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue figures and regional ordering (NA > Europe > APAC > LatAm)
+          are plausible and internally consistent.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> mount -> plugin -> chart structure; the plugin object
+          is required by the Chart.js plugin API, not incidental complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data array.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for working around Chart.js's lack of a native
+          lollipop controller; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, current Chart.js
+          4.x API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses exactly the library-recommended bar+afterDatasetsDraw pattern
+          (per prompts/library/chartjs.md) to get grouped-offset lollipops for free
+          from the category scale.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin with interpolated element positions
+          (getProps) is Chart.js-specific, though the overall lollipop concept isn't
+          unique to this library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
