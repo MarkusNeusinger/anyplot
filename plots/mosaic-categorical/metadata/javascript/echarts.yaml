@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: mosaic-categorical
 created: '2026-09-02T06:56:39Z'
-updated: '2026-09-02T07:03:19Z'
+updated: '2026-09-02T07:11:06Z'
 generated_by: claude-sonnet
 workflow_run: 33600611181
 issue: 3650
@@ -12,113 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Correctly implements a genuine mosaic plot from scratch using ECharts' custom
-    series + renderItem API (ECharts has no native mosaic type) — column widths encode
-    channel share of total orders and stack heights encode conditional category share
-    within each channel, matching the spec's area-proportional definition exactly.
-  - 'Imprint palette applied correctly and in canonical order: Electronics = #009E73
-    (brand green, first series), followed by Clothing/Home Goods/Books in the standard
-    palette sequence; data colors are pixel-identical between the light and dark renders.'
-  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white background
-    in light, warm near-black in dark, all text uses ink/inkSoft tokens with no dark-on-dark
-    or light-on-light failures, no clipped elements at either canvas edge.'
-  - Clean, deterministic, single-pass code (no functions/classes beyond the required
-    renderItem/formatter callbacks) with a legend-registration trick (empty-data helper
-    series) that is a well-known idiomatic ECharts pattern for giving custom series
-    a working legend.
-  - Realistic, neutral business dataset (retail orders by channel × product category)
-    with clear, non-uniform variation across cells so the resulting mosaic visibly
-    demonstrates association between the two categorical variables — the core purpose
-    of the plot type.
+  - Repair correctly resolved the attempt-1 mobile-legibility failure — title, subtitle,
+    axis, legend, tick, and custom channel/n= label font sizes are all raised, and
+    the plot-light_400.png / plot-dark_400.png thumbnails confirm every text element
+    stays readable at mobile preview width.
+  - Added an explicit 'Purchase channel' x-axis label (via graphic text) alongside
+    the existing channel tick names, resolving the attempt-1 SC-02 note about the
+    first categorical variable lacking a formal label.
+  - Genuine area-proportional mosaic built from scratch with ECharts' custom series
+    + renderItem + coordinateSystem API — column widths encode channel share of orders,
+    stack heights encode conditional category share, exactly matching the spec's definition.
+  - Imprint palette applied correctly and in canonical order (green/lavender/blue/ochre),
+    pixel-identical data colors between light and dark renders, fully correct theme-adaptive
+    chrome in both.
+  - Clean, deterministic, single-pass code using an idiomatic legend-registration
+    pattern (empty-data helper series) with no fake interactivity.
   weaknesses:
-  - 'Mobile-viewport legibility fails broadly: downscaling plot-light.png to ~400px
-    width (matching the site''s mobile preview) renders the title, subtitle, legend
-    text, axis label, tick labels, and the ''n='' channel-total annotations all as
-    illegible blur — cap-height for the title text is only ~27px at native 1800px
-    canvas height, which is ~3px once scaled to a 225px-tall mobile preview. Increase
-    fontSize across the board (title ~28-32, subtitle ~16, legend/axis/tick text ~16-18,
-    custom-rendered channel labels ~16-18) so text holds up at mobile scale, not just
-    at native 3200x1800 resolution.'
-  - 'Title occupies only ~31% of canvas width (measured: 997px of 3200px) at fontSize
-    22 — below the ~50-70% expected for a shorter custom-length title (55 chars, shorter
-    than the ~67-char full mandated benchmark). Raising the title fontSize per the
-    legibility fix above will naturally also improve this proportion.'
-  - X-axis lacks a formal axis-title identifying the first categorical variable (channel/purchase-method)
-    — it's only implied by the tick-style channel names and the subtitle text; consider
-    an explicit label for full clarity per the spec's 'labels should identify both
-    categorical variables clearly'.
-  - No residual/deviation-from-independence color coding, which the spec notes as
-    an optional enhancement ('Color coding can indicate residuals or deviations from
-    independence') — the implementation uses flat per-category colors instead; not
-    required, but would add analytical depth.
+  - Title still occupies only ~42% of canvas width at fontSize 30 — below the 50-70%
+    comfortable-fill guideline, though it is not squeezed or clipped and reads clearly
+    at every preview size, so this is a minor cosmetic note rather than a legibility
+    problem.
+  - No residual/deviation-from-independence color coding (spec lists this as an optional
+    enhancement, not required).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Title "mosaic-categorical · javascript · echarts · anyplot.ai" centered at top in dark ink text, subtitle below in softer gray explaining the width/color encoding. Y-axis shows 0-100% with percent-formatted tick labels and a rotated axis title "Share of product category within channel." X-axis shows three channel names (Online, Mobile App, In-Store) each with an "n=" total below. A vertical legend sits at the right listing the four product categories with color swatches. All chrome elements are readable at native 3200x1800 resolution.
-      Data: Three mosaic columns of unequal width (Online widest, Mobile App and In-Store narrower and equal), each subdivided into four stacked colored rectangles (Electronics = green #009E73, Clothing = light purple, Home Goods = blue, Books = ochre/amber) separated by thin light gaps. Column widths clearly differ (channel volume) and the internal color proportions differ substantially per column, visibly showing the channel-category association.
-      Legibility verdict: PASS at native resolution, but FAIL at mobile scale — downscaling the PNG to ~400px width (simulating the site's mobile preview) renders the title, subtitle, axis label, tick labels, legend text, and "n=" annotations as illegible blur; font sizes are not large enough to survive that scale-down.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Dark-ink title "mosaic-categorical · javascript · echarts · anyplot.ai" centered at top (fontSize 30), softer-gray subtitle below explaining the width/color encoding (fontSize 17). Y-axis shows 0-100% ticks with a rotated "Share of product category within channel" axis name; x-axis shows the three channel names ("Online", "Mobile App", "In-Store") each with an "n=" total beneath, plus a bottom-centered "Purchase channel" label. A vertical legend at the right lists the four product categories with color swatches. All chrome text is clearly readable against the light background at native resolution AND at the downscaled 800px/400px preview thumbnails.
+      Data: Three mosaic columns of unequal width (Online widest at n=750, Mobile App and In-Store equal at n=600), each subdivided into four stacked rectangles colored Electronics = brand green #009E73, Clothing = lavender, Home Goods = blue, Books = ochre — matching the canonical Imprint palette order, separated by thin light gaps.
+      Legibility verdict: PASS — confirmed readable at native size and at the pre-generated 800px/400px thumbnails; the attempt-1 mobile-legibility failure is resolved.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Same layout as the light render with all text (title, subtitle, axis label, tick labels, legend, channel/"n=" labels) rendered in light/soft-white ink, clearly visible against the dark background — no dark-on-dark failures observed. Gaps between mosaic cells appear as thin near-black lines consistent with the dark page background showing through.
-      Data: Data colors are identical to the light render (green/purple/blue/ochre, matched positions per column) — only the chrome (background, text, gap color) flips as expected.
-      Legibility verdict: PASS at native resolution, matching the light render's chrome correctness; FAILS the same mobile-scale legibility check as the light render for the same reason (font sizes too small relative to canvas to survive downscaling to ~400px).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light; title/subtitle/axis/legend/tick text all render in light/soft-white ink and remain clearly legible. No dark-on-dark failures observed in either the native render or the 400px dark thumbnail.
+      Data: Colors (green/lavender/blue/ochre) are pixel-identical to the light render; only chrome, gap-line color, and background flip between themes.
+      Legibility verdict: PASS — no dark-on-dark issues, mobile thumbnail confirmed legible.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 7
         max: 8
-        passed: false
-        comment: Readable at native 3200x1800, but title/subtitle/axis/legend/annotation
-          text all become illegible when the PNG is downscaled to ~400px mobile width;
-          title also only spans ~31% of canvas width at fontSize 22.
+        passed: true
+        comment: Repair raised all font sizes; title/subtitle/axis/legend/tick/annotation
+          text confirmed readable at native 3200x1800 and at the pre-generated 800px/400px
+          mobile thumbnails in both themes. Title still fills only ~42% of canvas
+          width, slightly under the 50-70% ideal.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No text/data/legend collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Mosaic rectangles are well-sized and clearly visible; gaps distinguish
-          adjacent cells cleanly.
+        comment: All cell rectangles clearly visible with distinct colors and separating
+          gaps.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue/ochre categorical colors are distinguishable without
-          relying on red-green as sole signal.
+        comment: Imprint palette provides adequate contrast and CVD-safe hue separation;
+          no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Mosaic + legend fill a large, balanced share of the canvas; nothing
-          clipped or isolated.
+        comment: No canvas-gate failure; no clipping or overflow; balanced axis labels;
+          title readable and not squeezed despite being narrower than the 50-70% guideline.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label is descriptive and tick labels carry percent units.
+        comment: Descriptive y-axis name with % units; x-axis now labeled 'Purchase
+          channel' plus per-column n= totals.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint #009E73, remaining series follow canonical
-          palette order, identical across themes, theme-correct chrome in both renders.'
+        comment: 'First series #009E73, canonical Imprint order, identical data colors
+          across themes, correct #FAF8F1/#1A1A17 backgrounds.'
     design_excellence:
       score: 16
       max: 20
@@ -127,22 +112,23 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Genuine custom-built mosaic with intentional color harmony and clean
-          typography — clearly above library defaults, though not yet at flawless
-          publication polish.
+        passed: true
+        comment: Genuine custom-built mosaic (ECharts has no native mosaic type) with
+          intentional color harmony, clearly above generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: Axis lines/spines hidden, grid essentially invisible, generous whitespace,
-          thoughtful gap-line and 'n=' detail — close to perfect but legend styling
-          is default.
+        passed: true
+        comment: Axis lines/spines hidden, grid effectively invisible, generous whitespace,
+          thoughtful cell-gap lines and n= detail.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
-        comment: Varying column widths and internal color proportions make the channel-category
-          association immediately visible without needing annotation.
+        passed: true
+        comment: Column widths plus internal color proportions make the channel-category
+          association immediately visible.
     spec_compliance:
       score: 15
       max: 15
@@ -151,25 +137,28 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Genuine area-proportional mosaic plot matching the spec definition.
+        passed: true
+        comment: Genuine area-proportional mosaic construction matching the spec definition.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Gap spacing between cells present; both categorical variables identified
-          via tick labels/legend plus the subtitle's explicit encoding explanation.
+        passed: true
+        comment: Gap spacing present; both categorical variables now clearly labeled
+          (x-axis via 'Purchase channel' + tick names, y-axis via axis name + legend).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Width = channel marginal share, height = conditional category share
-          within channel — correct per spec.
+        passed: true
+        comment: Width = channel marginal share, height = conditional category share,
+          correctly computed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exactly matches the mandated pattern; legend labels
-          match the four product categories.
+        passed: true
+        comment: Title format exact; legend labels match categories.
     data_quality:
       score: 14
       max: 15
@@ -178,19 +167,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Strong, non-uniform variation across all channel/category cells demonstrates
-          real association; no residual/independence-deviation encoding (optional
-          per spec).
+        passed: true
+        comment: Strong, non-uniform variation across cells demonstrates real association;
+          no residual/independence-deviation coloring (spec lists this as optional).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, real-world retail-channel scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Order counts and totals are plausible for a mid-size retailer.
+        passed: true
+        comment: Plausible order counts and totals.
     code_quality:
       score: 10
       max: 10
@@ -199,30 +190,33 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Flat imports/data/init/option structure; only necessary callbacks
-          (renderItem, formatter).
+        passed: true
+        comment: No unnecessary functions/classes; flat script structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully hard-coded, deterministic data.
+        passed: true
+        comment: Deterministic, hard-coded in-memory data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No imports beyond the global echarts.
+        passed: true
+        comment: No import/require; only the provided echarts global used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for a custom-series mosaic; no fake UI or simulated
-          interactivity.
+        passed: true
+        comment: Appropriate complexity for a from-scratch mosaic; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Follows the mount-node contract correctly; animation disabled; current
-          API.
+        passed: true
+        comment: 'Mounts on #container, animation:false, current custom-series API,
+          no filesystem writes.'
     library_mastery:
       score: 9
       max: 10
@@ -231,24 +225,27 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: Expert use of ECharts' custom series + renderItem + coordinateSystem
-          + api.coord, plus the empty-data-series legend trick.
+        passed: true
+        comment: Expert use of custom series + renderItem + coordinateSystem + api.coord,
+          plus the empty-data-series legend-registration trick.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Custom series/renderItem is a feature genuinely distinctive to ECharts
-          among the JS charting libraries in this catalog.
-  verdict: REJECTED
+        passed: true
+        comment: Custom series/renderItem is genuinely distinctive to ECharts among
+          this catalog's JS libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-series
   - annotations
   - custom-legend
   patterns:
-  - matrix-construction
+  - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - minimal-chrome
+  - publication-ready
