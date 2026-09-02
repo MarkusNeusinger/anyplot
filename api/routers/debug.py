@@ -76,6 +76,14 @@ def require_admin(
        local dev, and break-glass access via the Cloud Run direct URL (which
        bypasses Cloudflare).
 
+    **Break-glass changed shape with the origin gate.** While `ORIGIN_SECRET`
+    is set on the service, a call over the direct `run.app` URL needs BOTH
+    headers — `X-Admin-Token` and `X-Origin-Secret` — because
+    `api/origin_gate.py` answers first and asks which door you came in at, not
+    who you are. Both values are readable from Secret Manager by whoever is
+    holding the glass. The admin token alone gets a 403, not a 401, and the
+    difference is the only hint. (`docs/reference/api.md` § Origin gate.)
+
     Without `settings.admin_token` configured the token path is disabled (503),
     so a misconfigured prod deploy without Cloudflare Access still fails closed.
     """

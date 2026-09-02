@@ -485,21 +485,25 @@ rollout somewhere:
 SERVICE=anyplot-api
 LOC="--project=anyplot --region=europe-west4"
 
-# 1. Refuse to act while a candidate revision is in flight. `services update`
-#    clones the service's LATEST template, not the serving one, and the deploy
-#    pipeline deliberately leaves each build's smoked-but-unpromoted candidate
-#    as latest — so arming during a deploy would promote that build's image
-#    along with the gate, and naming the new revision precisely does not change
-#    which image it inherits.
+# 1. Build the new revision from the image that is SERVING, not from whatever
+#    is latest. `services update` clones the service's latest template, and the
+#    deploy pipeline deliberately leaves each build's candidate there — smoked
+#    and unpromoted on a good build, and still there on a bad one, because a
+#    failed smoke skips the promote and nothing cleans it up. Pinning the image
+#    means the arm/disarm revision serves what is serving now, whatever state
+#    the pipeline is in; naming the revision alone would not have.
 read -r SERVING LATEST <<<"$(gcloud run services describe "$SERVICE" $LOC --format=json \
   | python3 -c "import json,sys; d=json.load(sys.stdin); \
       t=[x for x in d['status']['traffic'] if x.get('percent')==100]; \
       print(t[0]['revisionName'], d['status']['latestReadyRevisionName'])")"
-test "$SERVING" = "$LATEST" || {
-  echo "latest revision $LATEST is not the serving one ($SERVING): a candidate is in flight."
-  echo "Wait for the pipeline to promote or roll it back, then start again."
-  exit 1
-}
+IMAGE=$(gcloud run revisions describe "$SERVING" $LOC --format="value(spec.containers[0].image)")
+
+# A mismatch is a WARNING, never a stop: it is normal right after a deploy, and
+# it is permanent after a failed smoke — a hard refusal here would make the
+# emergency rollback unavailable exactly when it is needed. With the image
+# pinned, the remaining risk is only that the latest template carries a config
+# change nobody promoted; check the revision afterwards if this fires.
+test "$SERVING" = "$LATEST" || echo "note: latest ($LATEST) is not serving ($SERVING) — image pinned to the serving one"
 
 # 2. Pin the secret to a NUMBER, never `:latest`. Cloud Run resolves a
 #    secret-backed variable when each instance starts, so with `:latest` a new
@@ -511,16 +515,22 @@ VERSION=$(gcloud secrets versions list ORIGIN_SECRET --project=anyplot \
 
 # 3. Update, then promote BY NAME. The service pins traffic to a named
 #    revision, so the update alone serves nothing; and `--to-latest` here would
-#    reintroduce exactly the problem step 1 guards against.
+#    hand traffic to whatever the pipeline last built.
 SUFFIX="arm-$(date -u +%Y%m%d%H%M)"
-gcloud run services update "$SERVICE" $LOC \
+gcloud run services update "$SERVICE" $LOC --image="$IMAGE" \
   --update-secrets="ORIGIN_SECRET=ORIGIN_SECRET:$VERSION" --revision-suffix="$SUFFIX"
 gcloud run services update-traffic "$SERVICE" $LOC --to-revisions="$SERVICE-$SUFFIX=100"
+
+# 4. Confirm what is now serving — the gate's verdict AND the image, because
+#    step 1's warning is only worth having if somebody looks.
+curl -s "https://api.anyplot.ai/health"
+gcloud run services describe "$SERVICE" $LOC --format="value(status.traffic)"
 ```
 
 **Rolling back** is the same block with `--remove-secrets=ORIGIN_SECRET` in
 place of `--update-secrets` (step 2 then has nothing to resolve) and a
-`disarm-` suffix.
+`disarm-` suffix. It must stay executable in the worst state the service can be
+in, which is why step 1 warns rather than refuses.
 
 **Rotating the secret** means changing two sides that must agree, and the gate
 accepts exactly one value — so there is no overlap window. Roll back first,
