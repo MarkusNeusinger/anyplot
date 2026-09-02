@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: frontier-efficient
 created: '2026-09-02T01:02:06Z'
-updated: '2026-09-02T01:07:39Z'
+updated: '2026-09-02T01:16:54Z'
 generated_by: claude-sonnet
 workflow_run: 33577164760
 issue: 3342
@@ -12,52 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'All spec-required features are present in one coherent chart: random portfolio
-    scatter cloud, efficient-frontier curve, capital market line, and labeled minimum-variance
-    and maximum-Sharpe (tangency) portfolios.'
-  - 'Correct Imprint palette usage: brand green (#009E73) is the hero efficient-frontier
-    line, and imprint_seq (d3.interpolateRgbBasis over t.seq) is correctly used for
-    the continuous Sharpe-ratio color encoding on the scatter cloud.'
-  - 'Theme-adaptive chrome is clean in both renders: axis text, ticks, domain lines,
-    and title all read correctly against both the light and dark backgrounds while
-    data colors stay identical.'
+  - 'Full spec coverage in one coherent chart: random portfolio scatter cloud, efficient-frontier
+    curve, capital market line, and clearly labeled minimum-variance and maximum-Sharpe
+    (tangency) portfolios'
+  - 'Correct Imprint palette usage across both themes: brand green (#009E73) hero
+    frontier line, imprint_seq sequential gradient correctly applied to the continuous
+    Sharpe-ratio color encoding'
+  - Capital market line is now clipped to the plot's rectangular area via clip-path,
+    fixing the attempt-1 bleed into the title/legend margin
+  - Both x- and y-axis gridlines are now present (fixed from attempt 1), which helps
+    readers gauge risk values across the scattered portfolio cloud
   - Deterministic Monte Carlo simulation via a seeded LCG plus a mathematically valid
-    one-factor covariance model (guarantees a positive-semidefinite correlation matrix)
-    gives realistic, reproducible portfolio data.
-  - 'Annotation labels for ''Min variance'' and ''Max Sharpe (tangency)'' use a stroke
-    halo (paint-order: stroke) so they stay legible over the dense scatter cloud.'
+    one-factor covariance model over a realistic 5-asset universe (bonds, REIT, intl
+    equity, US equity, commodities)
+  - Halo-stroked annotation labels keep 'Min variance' / 'Max Sharpe' legible over
+    the dense scatter cloud in both themes
   weaknesses:
-  - The capital market line is drawn unclipped past the y-axis domain and bleeds into
-    the top margin/title chrome area before disappearing off the top of the canvas
-    — clip the CML path to the plot's rectangular area (or shorten cmlEnd) so it terminates
-    cleanly inside the axes instead of overshooting into the margin.
-  - Grid is y-axis only; since this chart mixes scatter points with line series, a
-    subtle x-axis grid (per the style guide's 'both axes for scatter plots' guidance)
-    would help readers gauge risk values for the scattered portfolios.
-  - The 'Max Sharpe (tangency)' label sits close to a dense cluster of scatter points;
-    the stroke halo keeps it readable but a small offset or leader line would reduce
-    visual crowding.
-  - Library mastery is solid but conventional — relies on the standard scale/axis/line/symbol
-    generators from the skeleton; no distinctive D3-only techniques (e.g. voronoi,
-    force, quadtree) that would showcase deeper D3 capability.
+  - The 'Max Sharpe (tangency)' label still sits close to / slightly overlapping a
+    scatter point in the dense cluster near the tangency point in both renders — nudge
+    the label further up/right or add a short leader line to fully clear the cloud
+  - The efficient-frontier line has a visibly stepped/staircase shape (sharp shelves
+    around 8-9% risk) rather than a smooth curve, because curveMonotoneX interpolates
+    across sparse, irregularly-spaced Pareto-optimal points drawn from only 350 simulated
+    portfolios — increasing N_PORTFOLIOS (e.g. to 800-1000) would yield more frontier
+    points and a visually smoother curve
+  - Library mastery remains conventional (standard scale/axis/line/symbol generators)
+    — no distinctive D3-only technique (voronoi, force, quadtree) to showcase deeper
+    D3 capability; optional polish, not a functional issue
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface exactly — not pure white.
-      Chrome: Title "frontier-efficient · javascript · d3 · anyplot.ai" is bold, dark ink, centered at top and clearly legible. X-axis label "Portfolio Risk (annualized standard deviation)" and Y-axis label "Expected Return (annualized)" are dark ink, readable. Tick labels (0%–22% on X, 2%–10% on Y) are soft dark gray, clearly legible. Subtle horizontal (y-axis) gridlines are visible but do not compete with data.
-      Data: A dense scatter cloud of ~350 portfolios colored on a green→blue continuous gradient (Sharpe ratio, imprint_seq). The efficient-frontier curve is a thick brand-green (#009E73) line tracing the Pareto upper boundary of the cloud. A dashed gray capital-market-line runs from the risk-free intercept through the tangency point and extends beyond the plotted data toward the top-right, exiting the visible plot area. A lavender circle marks "Min variance" and a blue star marks "Max Sharpe (tangency)," both labeled with dark text on a white halo. A top-right legend distinguishes "Efficient frontier" (green) and "Capital market line" (dashed gray), and a vertical gradient bar on the right labeled "Sharpe ratio" shows the 0.18–0.53 color scale.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "frontier-efficient · javascript · d3 · anyplot.ai" is bold dark ink, centered at top and clearly legible. Axis labels ("Portfolio Risk (annualized standard deviation)" / "Expected Return (annualized)") and tick labels (percent-formatted) render in dark/soft-dark ink and are fully readable. Subtle gridlines now appear on BOTH axes (fixed from attempt 1, which was y-only).
+      Data: Dense scatter cloud of ~350 simulated portfolios colored on a green-to-blue continuous gradient keyed to Sharpe ratio (imprint_seq). A thick brand-green (#009E73) efficient-frontier line traces the Pareto upper-left boundary with a visible stepped/staircase shape. A gray dashed capital market line runs from the risk-free intercept through the tangency point and is now clipped cleanly within the plot area (no bleed into the title margin, fixed from attempt 1). A lavender circle marks "Min variance"; a navy star marks "Max Sharpe (tangency)" — both labels use halo-stroked text, though the Max Sharpe label sits close to a dense point cluster. Top-right legend (frontier / CML swatches) plus a vertical Sharpe-ratio gradient bar with numeric endpoints complete the chart.
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface exactly — not pure black.
-      Chrome: Title, axis labels, and tick labels have all flipped to light off-white/soft-gray tones and remain fully legible against the dark background. Gridlines are subtle and appropriately dimmed. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend text, and annotation labels are all clearly visible).
-      Data: The brand green frontier line, lavender min-variance marker, blue max-Sharpe star, and the green→blue Sharpe-ratio scatter gradient are pixel-identical to the light render — confirming only chrome (not data colors) changed between themes. The dashed capital-market-line and legend also render correctly in light gray against the dark surface.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, tick labels, and legend text all flip to light off-white/soft-gray tones and remain fully legible. Gridlines on both axes remain subtle but visible against the dark background. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend, and the Sharpe-ratio colorbar labels are all clearly visible).
+      Data: Brand-green frontier line, lavender/navy key-point markers, gray dashed CML, and the green-to-blue Sharpe-ratio gradient scatter are pixel-identical in hue to the light render — confirming only chrome (background, text, grid) flips between themes, per the Imprint palette rule.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,50 +64,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick text readable in both themes at full and mobile-implied
-          scale.
+        comment: All text readable in both themes, font sizes explicit (13-22px)
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Halo-stroked annotation labels stay readable, but 'Max Sharpe' label
-          sits close to a dense point cluster.
+        comment: '''Max Sharpe (tangency)'' label sits close to a dense scatter cluster;
+          halo keeps it readable but slight crowding remains'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size and line thickness well matched to the ~350-point density.
+        comment: r=6 markers with alpha 0.55 appropriate for ~350-point density; frontier
+          line at 4.5px stroke reads as the hero series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe palette, no red-green-only encoding.
+        comment: imprint_seq green-blue gradient is CVD-safe; no red-green as sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800; capital market line overshoots the axis
-          domain unclipped into the top margin.
+        comment: Canvas gate passed; CML now clipped to the plot rectangle via clip-path,
+          fixing the attempt-1 bleed into the title margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Descriptive axis labels with units (annualized standard deviation
-          / annualized return).
+          / annualized return)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green, imprint_seq for continuous Sharpe encoding,
-          correct theme backgrounds.
+        comment: Brand green hero frontier, imprint_seq for continuous Sharpe encoding,
+          correct theme backgrounds, data colors identical across themes
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -116,22 +116,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom gradient colorbar, distinct star/circle markers, and halo-stroked
-          labels show above-default polish.
+        comment: Custom gradient colorbar, distinct star/circle key-point markers,
+          halo-stroked labels, coherent hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: L-shaped axis frame and subtle grid are good, but the unclipped CML
-          line and y-only grid reduce refinement.
+        passed: true
+        comment: L-shaped axis frame, subtle dual-axis grid, clipped CML — refined
+          from attempt 1's unclipped line
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Frontier and key portfolios are clear focal points; Sharpe color
-          gradient adds a meaningful second dimension.
+        comment: Frontier + key portfolios are a clear focal point and the Sharpe
+          gradient adds a second dimension, but the stepped/staircase frontier shape
+          slightly undercuts the 'smooth curve' narrative
     spec_compliance:
       score: 15
       max: 15
@@ -141,26 +142,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct efficient-frontier scatter+line chart.
+        comment: Scatter + frontier line matches the efficient-frontier spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Frontier, scatter cloud, min-variance, max-Sharpe, and the optional
-          CML are all present.
+        comment: Frontier curve, scatter cloud, min-variance, max-Sharpe, and optional
+          CML all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=risk, Y=return, full data range shown on both axes.
+        comment: X=risk, Y=return, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels are accurate.
+        comment: Title matches mandated format; legend labels match rendered series
     data_quality:
       score: 15
       max: 15
@@ -170,21 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers scatter cloud, frontier, CML, and both key points.
+        comment: 'Shows all aspects of the plot type: frontier, cloud, key points,
+          CML, Sharpe coloring'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Plausible 5-asset universe (bonds/REIT/intl equity/US equity/commodities)
-          with sensible return/vol assumptions.
+          with sensible return/vol/correlation assumptions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Annualized return (2-10%) and risk (0-20%) ranges are realistic for
-          a diversified portfolio universe.
+        comment: Realistic annualized return (2-10%) and risk (0-22%) ranges for a
+          diversified portfolio universe
     code_quality:
       score: 10
       max: 10
@@ -194,32 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with small, purposeful helper functions only.
+        comment: Flat procedural script; small helper functions (lcg, correlation,
+          covariance, randomWeights) are appropriate for the math, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42) for deterministic data.
+        comment: Seeded LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Uses only the global d3 bundle, no extra imports.
+        comment: No imports beyond the d3 global, per the D3 mount-node contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; complexity (one-factor covariance model) matches
-          the domain need.
+        comment: Appropriate complexity for a Monte Carlo portfolio simulation; no
+          fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, sizes svg from ANYPLOT_SIZE, no animation.
+        comment: Uses current D3 v7 API (join, scaleSequential, interpolateRgbBasis,
+          symbol); no animation added
     library_mastery:
       score: 6
       max: 10
@@ -229,14 +233,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of d3 scales, axes, line and symbol generators.
+        comment: Idiomatic use of scales, axes, line/symbol generators, join pattern,
+          clip-path, linearGradient defs
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Gradient legend and symbolStar are nice touches but stay within conventional
-          d3 patterns; no voronoi/force/quadtree-level showcase.
+        comment: Conventional D3 usage; no voronoi/force/quadtree-level showcase of
+          deeper D3-only capability
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -250,4 +255,4 @@ impl_tags:
   - correlation-matrix
   styling:
   - alpha-blending
-  - gradient-fill
+  - custom-colormap
