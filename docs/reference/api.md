@@ -477,6 +477,25 @@ service, which is what makes local development, the test suite and the rollback
 work: remove the variable from the service, promote the resulting revision, and
 the gate is gone.
 
+**Arming and rolling back** are the same two commands with a different first
+flag. The service pins traffic to a named revision, so a `services update`
+alone creates a revision that serves nothing — the promote is what takes
+effect, and it must name the revision the update just made:
+
+```bash
+# Arm.  (Roll back with --remove-secrets=ORIGIN_SECRET instead.)
+SUFFIX="arm-$(date -u +%Y%m%d%H%M)"
+gcloud run services update anyplot-api --project=anyplot --region=europe-west4 \
+  --update-secrets=ORIGIN_SECRET=ORIGIN_SECRET:latest --revision-suffix="$SUFFIX"
+gcloud run services update-traffic anyplot-api --project=anyplot --region=europe-west4 \
+  --to-revisions="anyplot-api-$SUFFIX=100"
+```
+
+**Never `--to-latest` here**, for the reason `api/cloudbuild.yaml` avoids it:
+the deploy pipeline leaves each build's smoked-but-unpromoted candidate as the
+latest revision, so `--to-latest` can promote a concurrent build's untested
+image while you think you are only turning the gate on or off.
+
 **Exempt paths** — exact matches, no prefixes, and only these two:
 
 | Path | Why |

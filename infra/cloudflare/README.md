@@ -55,9 +55,11 @@ harmless while the gate is not yet armed. It is **not a rollback**: as long as
 the Cloud Run service is armed, every apex API request without the header gets
 a 403, so removing the binding takes that route down rather than freeing it.
 Rolling back always happens on the API side — remove `ORIGIN_SECRET` from the
-service **and promote the resulting revision**. The ordering holds in both
-directions: the Worker starts stamping before the gate is armed, and stops only
-after it is disarmed.
+service **and promote the resulting revision by name** (the two commands are in
+[`docs/reference/api.md`](../../docs/reference/api.md#origin-gate); never
+`--to-latest`, which can promote a concurrent build's revision instead). The
+ordering holds in both directions: the Worker starts stamping before the gate is
+armed, and stops only after it is disarmed.
 
 ## Settings (dashboard)
 
