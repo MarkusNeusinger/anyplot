@@ -1,0 +1,236 @@
+library: d3
+language: javascript
+specification_id: coefficient-confidence
+created: '2026-09-01T23:17:40Z'
+updated: '2026-09-01T23:33:42Z'
+generated_by: claude-sonnet
+workflow_run: 33569931742
+issue: 3576
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - The "practically negligible" zero-band is a genuinely useful addition beyond the
+    spec's minimum ask (just a zero line) — it visually separates "crosses zero but
+    barely" from confidently non-zero effects.
+  - Point-marker radius scaled by |coefficient| gives the largest effects more visual
+    weight without cluttering the chart.
+  - 'The callout on the top driver ("Largest driver: square_footage (+0.42)") adds
+    a clear narrative focal point per SC/DE storytelling goals.'
+  - Data is correctly pre-sorted by |coefficient| descending, matching the spec's
+    "typically ordered by magnitude" note.
+  - Both themes render cleanly with correctly swapped chrome and identical data colors
+    — no legibility issues in either render.
+  weaknesses:
+  - 'Design Excellence could go further: consider a subtle y-axis-only guideline per
+    row or slightly heavier caps on the largest-CI bars to reinforce hierarchy beyond
+    color/size alone.'
+  - Library Mastery is solid but generic — the manual error-bar construction and radius
+    scale don't showcase anything distinctly d3-only. Not a blocker, just headroom
+    for attempt 3 if further iteration happens.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - PASS
+      Chrome: Title "coefficient-confidence · javascript · d3 · anyplot.ai" centered and bold, x-axis label "Standardized Coefficient (β) with 95% Confidence Interval" below axis, tick labels on both axes, legend top-right (Significant / Not significant) - all clearly readable in dark ink
+      Data: 12 variables ordered by |coefficient| descending, significant coefficients in Imprint green #009E73, non-significant in muted gray, dashed zero-reference line, shaded "negligible" band around zero, green callout label on the top driver
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - PASS
+      Chrome: Same title, axis label, tick labels, and legend, rendered in light ink - all clearly readable, no dark-on-dark issues found
+      Data: Colors identical to light render (green #009E73 for significant markers/bars); muted anchor color correctly swaps to a lighter theme-adaptive gray for chrome-context elements while data semantics stay identical
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, markers, error bars, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers sized by effect magnitude, clear CI caps, appropriate density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/gray distinguished by hue and legend text, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, generous margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label states effect measure with units; title follows mandated
+          format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; both renders theme-correct; data colors
+          identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Negligible zero-band, magnitude-scaled markers, and largest-driver
+          callout show real design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain lines only, tick marks suppressed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Magnitude ordering plus significance coloring plus callout gives
+          clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Horizontal coefficient plot with CI error bars
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero line, magnitude ordering, significance color distinction, horizontal
+          layout, effect-measure axis label all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Coefficients on x, variables on y, all 12 shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels precise
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Point estimate, CI bounds, and significance flag all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible standardized coefficients from a housing-price regression,
+          neutral subject
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 variables, realistic magnitudes and CI widths
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no faked interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 API, no animation
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of scaleLinear/scaleBand/d3.extent/d3.format and .join()
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Manual error-bar construction and magnitude-scaled radius are competent
+          but fairly standard d3 composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome

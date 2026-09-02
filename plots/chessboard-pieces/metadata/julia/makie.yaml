@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: chessboard-pieces
+created: '2026-09-01T23:19:34Z'
+updated: '2026-09-01T23:42:09Z'
+generated_by: claude-sonnet
+workflow_run: 33569442772
+issue: 3350
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - The King/Queen glyph fallback issue from Attempt 1 is fixed — explicitly setting
+    font="DejaVu Sans" on the text! calls now renders proper crown silhouettes for
+    K/Q (distinct from the fan-of-dots blob seen before) alongside the already-clean
+    Rook/Bishop/Knight/Pawn glyphs.
+  - 'Checkerboard square colors are derived from approved tokens (blend of page background
+    + brand green #009E73 via weighted_color_mean) instead of an invented hue — ties
+    the board to Imprint identity while still reading as a felt/wood board, and adapts
+    correctly between themes.'
+  - Piece fill/stroke scheme keeps white-vs-black piece identity constant across themes
+    while guaranteeing contrast against either square shade via an opposite-polarity
+    stroke — a clever accessibility solution.
+  - 'Correct chess conventions: h1 is the light square, a1 is dark, white pieces start
+    at the bottom (ranks 1-2) — matches the spec''s orientation requirement exactly.'
+  - Realistic, well-known, factually accurate game position (Scholar's Mate final
+    position) exercising all six piece types for both colors, with correct piece counts
+    including the captured f7 pawn.
+  - 'Clean, idiomatic KISS script: heatmap! for the checkerboard, text! with stroke
+    for glyphs, DataAspect() for square cells, deterministic fixed position data,
+    no functions/classes.'
+  - Theme-adaptive chrome flips correctly between light and dark (title, tick labels,
+    border); canvas gate passed at 2400x2400.
+  weaknesses:
+  - No visual hierarchy highlights the checkmate itself — the board is purely descriptive
+    with no emphasis (e.g. a subtle ring/accent) on the mating queen or attacked king
+    square. Not a spec violation (annotations are only expected when explicitly requested),
+    but it caps Data Storytelling (DE-03) at the default score.
+  - The board-square colors are a custom-computed blend (weighted_color_mean of PAGE_BG
+    + BRAND) rather than a literal Imprint palette hex or semantic anchor — defensible
+    here since board shading isn't a categorical data series, but worth flagging as
+    a pattern to watch if it recurs elsewhere without a documented rationale.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "chessboard-pieces · julia · makie · anyplot.ai" in dark ink, centered top, fully visible, not clipped. File letters (a-h) below the board and rank numbers (1-8) to the left render in soft dark gray — all clearly legible against the light background.
+      Data: 8x8 checkerboard alternates cream squares and a muted sage/teal-green square (blended from page background + brand green #009E73); h1 (bottom-right) is light, a1 (bottom-left) is dark — correct standard chess orientation. White pieces render as pale/cream glyphs with a dark outline stroke; black pieces render as solid near-black glyphs with a cream outline stroke — all fully legible against either square shade. Rook, Bishop, Knight, Pawn, King, and Queen glyphs are now all crisp and recognizable (the King shows a crown-with-cross silhouette, the Queen shows a multi-point pearled crown) — the font-fallback blob issue from Attempt 1 is resolved.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title renders in light/cream ink, fully visible, not clipped. File/rank labels render in a lighter gray — clearly visible, no dark-on-dark failures.
+      Data: Checkerboard alternates a mid-gray square and a deep forest-green square (same blend formula, anchored to the dark background) — clearly distinct from the page background. Piece fill/stroke colors are identical in hex value to the light render (white pieces stay pale/cream-filled with dark stroke, black pieces stay near-black-filled with cream stroke) — only the board/chrome tones shifted per theme, as expected. All six piece types remain legible and distinguishable, including King and Queen.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; King/Queen glyph fallback from Attempt 1
+          fixed via font="DejaVu Sans" — all six piece types now readable in both
+          themes, title fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, tick labels, or pieces
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Large (fontsize=76) glyphs appropriate for 32 sparse pieces on a
+          2400x2400 canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Piece identity encoded via fill/stroke luminance contrast, not hue
+          — inherently colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Board fills nearly the full square canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: File/rank labels (a-h, 1-8) are the correct domain-appropriate coordinate
+          labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Board colors derived from approved tokens (PAGE_BG + brand #009E73
+          blend); theme-correct chrome in both renders; no banned colormaps'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful brand-tied board coloring and stroke-outlined pieces,
+          no longer undercut by the K/Q glyph issue
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, no grid, generous whitespace, subtle manual border
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Purely descriptive, no emphasis on the checkmate itself (default
+          — not required by spec)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chess board with pieces
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All six piece types now legible, correct orientation, pieces centered
+          and sized to not touch edges
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Square-to-piece mapping correct, full board visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for a single board
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All six piece types shown for both colors
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, well-known game position (Scholar's Mate)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Legal, factually accurate position including the captured f7 pawn
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic fixed position dict
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie + Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png save with px_per_unit=2
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: heatmap! for the board, text! for glyphs, DataAspect(), standard
+          Figure/Axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses text! strokecolor/strokewidth glyph outlining for theme-independent
+          piece contrast
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - manual-ticks
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - minimal-chrome

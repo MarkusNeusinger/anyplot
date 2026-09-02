@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: coefficient-confidence
+created: '2026-09-01T23:18:45Z'
+updated: '2026-09-01T23:44:49Z'
+generated_by: claude-sonnet
+workflow_run: 33569525373
+issue: 3576
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Correct forest/coefficient plot structure: rangebars! for horizontal CIs, scatter!
+    for point estimates, dashed zero-reference line'
+  - Coefficients ordered by |magnitude| descending, exactly per spec guidance
+  - 'Clear semantic color-coding (Imprint brand green #009E73 = significant, muted
+    gray = not significant) with a matching custom MarkerElement legend'
+  - Inline value labels anchored outward from each CI (away from the zero line) so
+    they never collide with the dashed reference line or the bars
+  - 'Theme-adaptive chrome correct in both renders: FAF8F1/1A1A17 backgrounds, all
+    chrome text legible, data colors identical across themes'
+  - Idiomatic Makie usage — rangebars! is the right primitive for precomputed interval
+    bounds, plus a hand-built MarkerElement legend and vlines! for the reference line
+  weaknesses:
+  - Y-axis tick label for the top row renders as 'Square Footage' instead of the full
+    'Square Footage (per 100 sq ft)' defined in the `variables` array — confirmed
+    by pixel-cropping both plot-light.png and plot-dark.png; there is ample unused
+    margin left of the label, so the suffix is not being clipped at the canvas edge
+    (not AR-09), it is simply not drawn. This leaves the real-world scale of the largest,
+    most prominent coefficient (45.2) ambiguous to a reader. Investigate CairoMakie's
+    y-tick-label protrusion sizing for this specific (longest) label string — try
+    a shorter unit phrasing (e.g. 'Square Footage (/100 sq ft)') or explicitly size
+    the left protrusion/yticklabelspace so the full string renders in both themes.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold centered title "coefficient-confidence · julia · makie · anyplot.ai" fully visible near the top with clear margin. X-axis title "Coefficient Estimate (Δ Sale Price, $ thousands)" and tick labels (-20, 0, 20, 40, 60) are dark and legible. Y-axis category labels (variable names) are dark gray and legible against the light background, EXCEPT the top-row label which reads only "Square Footage" instead of the full "Square Footage (per 100 sq ft)" — confirmed by pixel crop, the unit suffix is silently dropped even though there is unused margin to its left (not edge clipping). A dashed vertical reference line marks zero. Legend ("Significant (95% CI excludes zero)" / "Not significant") sits bottom-right near the plot, on a slightly elevated off-white panel, not floating in empty space.
+      Data: Horizontal range bars show each coefficient's 95% CI, with a point marker at the estimate. Significant coefficients (CI excludes zero) are brand green (#009E73); non-significant ones are muted gray. Compact "+NN.N"/"-NN.N" value labels sit just outside each CI, colored to match significance.
+      Legibility verdict: PASS (all chrome text is legible; the one issue above is a content-completeness bug on a single tick label, not a contrast/legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis title, and tick labels all render in light ink tones (near-white/light-gray) and are clearly readable against the dark background — no dark-on-dark failures observed. The same "Square Footage" truncation (missing "(per 100 sq ft)") reproduces identically here, confirmed by pixel crop.
+      Data: Data colors are identical to the light render — brand green for significant, muted gray for non-significant, dashed zero line, value labels in matching colors. No hue shift between themes.
+      Legibility verdict: PASS (all chrome text legible in dark mode; same single-label completeness bug as light mode, not a legibility/contrast issue).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: false
+        comment: All rendered text is crisp and explicitly sized, but the top-row
+          y-tick label 'Square Footage (per 100 sq ft)' is silently truncated to 'Square
+          Footage' in both themes — a content-completeness defect on the plot's most
+          prominent label.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between value labels, CI bars, legend, or axis text; labels
+          are deliberately anchored on the outward side of each CI.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize=22 and whiskerwidth=14 are well-scaled for 9 sparse rows.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. muted gray, not red-green; good contrast against both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend anchored near the plot, plot uses a large
+          share of the 3200x1800 canvas, nothing clipped at the border.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Coefficient Estimate (Δ Sale Price, $ thousands)'' is descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Significant series uses Imprint #009E73; non-significant uses theme-neutral
+          muted gray; both backgrounds theme-correct; identical data colors across
+          themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping plus inline value-label annotations,
+          clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right/left spines removed, subtle x-only gridlines at 0.15 alpha,
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Magnitude ordering, significance color-coding, and inline value labels
+          create an immediate visual hierarchy pointing at the largest effects.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct coefficient/forest plot with horizontal CI range bars.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero reference line, magnitude ordering, significance color-coding,
+          horizontal layout, effect-measure axis label — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: false
+        comment: X/Y assignment is correct, but the truncated 'Square Footage' tick
+          label loses its unit qualifier.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; legend labels correctly
+          describe the significance semantics.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows significant and non-significant coefficients, positive and
+          negative signs, and varying CI widths.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible housing-price regression scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Values are internally consistent and plausible, but the dropped unit
+          suffix on the largest coefficient makes its real-world scale ambiguous to
+          a reader.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Printf — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current rangebars!
+          API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: rangebars!, axislegend with custom MarkerElement, vlines! — high-level
+          idiomatic Makie.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: rangebars! is a Makie-distinctive primitive well-suited to precomputed
+          CI bounds; hand-built legend elements.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
+  - grid-styling
