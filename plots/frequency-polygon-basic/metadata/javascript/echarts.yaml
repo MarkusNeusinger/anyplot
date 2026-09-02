@@ -1,0 +1,261 @@
+library: echarts
+language: javascript
+specification_id: frequency-polygon-basic
+created: '2026-09-02T00:47:33Z'
+updated: '2026-09-02T01:01:41Z'
+generated_by: claude-sonnet
+workflow_run: 33576487263
+issue: 3418
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Peak markPoint pins with ms labels (420 ms Caffeine, 447 ms Placebo, 502 ms Sleep-deprived)
+    directly address the prior review's DE-03/LM-02 gaps, giving each group a clear,
+    labeled focal point that guides comparison
+  - Custom tooltip formatter aggregates all three series per bin midpoint with rounded
+    ms and per-group counts — a genuine ECharts-specific feature beyond a bare line+area
+    series
+  - 'emphasis: { focus: ''series'', lineStyle: { width: 4 } } leverages ECharts''
+    series-focus interaction to dim other groups on hover'
+  - 'X-axis axisLine is now hidden (axisLine: { show: false }), matching the already-hidden
+    splitLine and delivering the cleaner minimal chrome the prior review requested'
+  - 'First series correctly uses brand green #009E73 with the remaining two following
+    Imprint''s canonical order; distinct line styles (solid/dashed/dotted) keep the
+    chart CVD-safe independent of color'
+  - Bin edges are shared across all three groups and each polygon is correctly extended
+    to zero at both ends, matching the spec's explicit requirements
+  - Deterministic reproducibility via a fixed-seed LCG feeding a Box-Muller normal
+    sampler
+  - Theme-adaptive chrome threads correctly through ANYPLOT_TOKENS in both renders;
+    canvas dimension gate passed with no clipping
+  weaknesses:
+  - 'xAxis (type: value) autoscales from 0 even though the zero-extended data only
+    spans roughly 230-750ms, leaving ~25-30% of the plot width as empty margin on
+    the left of the visible polygons — set xAxis.min to a value just below the extended
+    minimum point (e.g. midpoints[0] - 2*binWidth) to reclaim that space'
+  - Peak markPoint pins (symbolSize 34) sit exactly on top of the peak bin's data
+    marker, visually replacing rather than augmenting it — offset the pin slightly
+    above the line (e.g. via a small y-value bump or symbolOffset) so the underlying
+    circle marker at the peak bin stays visible, preserving marker consistency across
+    all bins
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "frequency-polygon-basic · javascript · echarts · anyplot.ai" is centered, dark ink text, fully readable. Legend ("Placebo" solid green, "Caffeine" dashed lavender, "Sleep-deprived" dotted blue) sits below the title with matching line-style swatches, clearly readable. X-axis "Reaction Time (ms)" and Y-axis "Frequency (count)" titles and tick labels are dark/soft-ink on the light background, all legible. Horizontal grid lines are faint and unobtrusive; vertical grid and x-axis line are both hidden for a cleaner frame.
+      Data: Three overlapping frequency polygons with semi-transparent fills — green (Placebo, solid line, peak 447ms), lavender/magenta (Caffeine, dashed line, peak 420ms, leftmost/fastest), blue (Sleep-deprived, dotted line, peak 502ms, rightmost/slowest). First series is confirmed brand green #009E73. Each peak now carries a colored pin marker with a bold "<value> ms" label above it, giving each distribution a clear labeled focal point. Circular markers sit at each bin midpoint; lines extend to zero at both ends closing each polygon shape. Overlap regions blend into muted composite colors, which is expected and readable. The x-axis auto-ranges from 0, leaving a visible empty margin before the first non-zero data point around ~230ms.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, and both axis titles/tick labels switch to light ink text against the dark background, all clearly legible; no dark-on-dark text observed anywhere. Grid lines remain subtle but visible against the dark surface. Peak labels render in light text, staying legible against the dark background.
+      Data: Same three colors, line styles, and peak-pin annotations as the light render — green, lavender/magenta, blue — confirming data-color identity across themes; only the chrome (background, text, grid) flips. Markers, fills, and peak pins remain clearly distinguishable from the near-black background. Same left-margin whitespace observed as in the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes with explicit font sizes; title
+          auto-scales to length
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render, including the new peak
+          pin labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (7px) and 3px lines sized appropriately for ~18-point binned
+          polygons
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Solid/dashed/dotted line styles differentiate groups independent
+          of color, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no clipping, but xAxis auto-ranges from 0 leaving
+          ~25-30% empty margin on the left before the first data point
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Reaction Time (ms)'' and ''Frequency (count)'' are descriptive
+          with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Peak markPoint pins and a per-bin tooltip formatter add real polish
+          beyond the spec-mandated fills/line-styles
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X-axis axisLine now hidden to match the hidden splitLine, resolving
+          the prior review's full-weight axis line note
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Labeled peak pins for each group create deliberate focal points that
+          guide the viewer straight to the key comparison (peak reaction time per
+          condition)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct frequency polygon: binned counts connected by line segments'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct styles, legend, markers, zero-extension, aligned bins, semi-transparent
+          fill all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction time midpoints, Y = frequency count, full data range
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match group names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full distribution shapes for 3 groups shown, enabling shape/spread/mode
+          comparison
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Reaction-time experiment (Placebo/Caffeine/Sleep-deprived) is plausible
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~230-750ms range and n=300/group with 18 bins are sensible for the
+          domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (lcg, normalSamples, toPolygon) are necessary in
+          JS (no numpy/histogram builtin) but add structure beyond linear imports->data->plot
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for binning/peak logic, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init with no explicit size/devicePixelRatio, animation:false
+          set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard idiomatic option/series API usage including markPoint
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markPoint peak annotations, custom tooltip formatter, and emphasis/focus
+          now used, resolving the prior 'generic line+area series' note
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - area-fill
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - publication-ready
