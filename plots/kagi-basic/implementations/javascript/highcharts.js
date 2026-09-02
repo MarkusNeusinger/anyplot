@@ -88,6 +88,22 @@ for (let i = 1; i < vertices.length; i++) {
 const YANG = t.palette[0]; // "#009E73" brand green — uptrend breakout
 const YIN = t.palette[4]; // "#AE3030" matte red — downtrend breakdown
 
+// --- Standout-move callout: find the single largest vertex-to-vertex swing
+// and shade its column with a plotBand tinted in its own yang/yin color, so
+// the reader's eye lands on the move that matters most, not just the trend ---
+let standout = segments[0];
+let standoutDelta = 0;
+for (const seg of segments) {
+  const delta = Math.abs(seg.data[1][1] - seg.data[0][1]);
+  if (delta > standoutDelta) {
+    standoutDelta = delta;
+    standout = seg;
+  }
+}
+const standoutUp = standout.data[1][1] > standout.data[0][1];
+const standoutLabel =
+  "Standout " + (standoutUp ? "breakout: +$" : "breakdown: -$") + standoutDelta.toFixed(2);
+
 // --- Chart ---------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -112,6 +128,22 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: standout.data[0][0],
+        to: standout.data[1][0],
+        color: Highcharts.color(standoutUp ? YANG : YIN)
+          .setOpacity(0.14)
+          .get(),
+        label: {
+          text: standoutLabel,
+          style: { color: t.ink, fontSize: "12px", fontWeight: "600" },
+          align: "center",
+          verticalAlign: "top",
+          y: 14,
+        },
+      },
+    ],
   },
   yAxis: {
     title: {
