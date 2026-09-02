@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: chernoff-basic
+created: '2026-09-02T14:59:25Z'
+updated: '2026-09-02T15:16:22Z'
+generated_by: claude-sonnet
+workflow_run: 33645052048
+issue: 3003
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - All 8 spec-suggested facial-feature mappings are now used (face width/height,
+    eye size, eyebrow slant, mouth curvature, nose length, eye spacing, mouth width)
+    — full multivariate coverage per company.
+  - liquidity_ratio and rd_intensity now use realistic domain-appropriate scales (0.8-3.2x
+    current-ratio multiple, 1-22% of revenue) instead of raw 0-100% figures, with
+    matching tooltip units.
+  - 'Explicit data-storytelling touch added: a dashed highlight ring and star-prefixed
+    label mark the company with the strongest composite overall profile, giving the
+    grid a clear focal point.'
+  - Creative, technically sound use of Chart.js's plugin system (afterDatasetsDraw)
+    combined with an invisible scatter dataset to position and hand-draw genuine Chernoff
+    faces.
+  - 'Correct Imprint palette usage: sector colors map to canonical positions 1-3,
+    identical across light/dark renders, with theme-adaptive chrome correctly threaded
+    through every canvas drawing call.'
+  - Deterministic seeded LCG keeps the data reproducible since the browser has no
+    RNG seed.
+  weaknesses:
+  - The highlighted top-performer (Bluepeak Retail) has a frowning mouth (its liquidity_ratio
+    is comparatively low) which can read as visually incongruous next to the star/highlight
+    — inherent to independent per-feature encoding rather than a bug, but worth a
+    one-line legend/caption note in a future pass to preempt viewer confusion.
+  - Several helper functions (lcg, scaleRange, normalize, drawFace) are required for
+    the custom-drawing plugin, a larger deviation from the flat 'Imports -> Data ->
+    Plot' structure than most chartjs specs — justified here but still the largest
+    remaining code-quality gap.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "chernoff-basic · javascript · chartjs · anyplot.ai" at top; 12 company-name labels below each face in medium-gray ink; bottom legend with Technology/Retail/Energy swatches. All text clearly legible against the light background.
+      Data: 12 Chernoff faces in a 4x3 grid, outlined in the three Imprint sector colors (green #009E73 Technology, lavender/purple Retail, blue Energy). Eyes/eyebrows/mouth/nose drawn in dark ink. Face shape, eye size, eyebrow slant, mouth curvature/width, eye spacing, and nose length all visibly vary per company, encoding all 8 spec metrics. The composite-score top performer (Bluepeak Retail, top-right) has a dashed highlight ring and a star-prefixed bold label.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, company labels, and legend text all render in light/cream ink, clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Same 4x3 face grid with pixel-identical outline colors (green/lavender/blue) to the light render, confirming only chrome flipped. Eyes are now filled cream/light instead of dark, eyebrows/mouth/nose in light ink — correctly adapted. The highlight ring/star label on Bluepeak Retail is preserved and legible (white dashed ring, white star+bold text).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; readable in both themes; title's
+          narrower width proportion is expected chartjs CSS-px convention, not a defect
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, faces, highlight ring, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 faces at grid density render with clear, distinguishable strokes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; sector encoded by color + position, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; balanced grid, no overflow/clipping in either
+          render
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a face grid; title + per-face labels
+          are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, identical data colors across
+          themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuinely custom hand-drawn face illustration, clearly above defaults,
+          but rendering stays simple line-art (no fill/shading nuance)
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, hidden axes, generous whitespace, clean legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed highlight ring + star label on the top-composite-score company
+          gives the grid a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Faithful Chernoff-faces implementation via a custom plugin, the correct
+          approach given no native chart type exists
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 8 spec-suggested feature mappings now used (face width/height,
+          eye size, eyebrow slant, mouth curvature/width, nose length, eye spacing)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each metric normalized 0-1 and mapped consistently to its facial
+          feature
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match sector names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of variation visible across all 8 facial features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible business scenario across three sectors
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: liquidity_ratio (0.8-3.2x) and rd_intensity (1-22% of revenue) now
+          use realistic domain scales with matching tooltip units
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (lcg, scaleRange, normalize, drawFace) are necessary
+          for the custom-drawing plugin but deviate from the flat-structure ideal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; genuine plugin-drawn faces
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set; harness-owned mount/canvas contract respected
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of the plugin lifecycle (afterDatasetsDraw) with a scatter
+          dataset for pixel-position anchoring
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Genuinely leverages Chart.js's plugin/extension API beyond core chart
+          types
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - edge-highlighting
