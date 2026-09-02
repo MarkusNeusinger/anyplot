@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-text
 created: '2026-09-02T06:12:59Z'
-updated: '2026-09-02T06:19:36Z'
+updated: '2026-09-02T06:35:33Z'
 generated_by: claude-sonnet
 workflow_run: 33597344127
 issue: 3482
@@ -12,49 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Text-as-marker is exactly the spec''s core ask: a custom scatter slot (slots={{
-    scatter: TextScatter }}) replaces the default marker with an SVG <text> element
-    per point, positioned via xScale/yScale.'
-  - Text halo (paintOrder="stroke" with stroke={t.pageBg}, strokeWidth=4) keeps every
-    label legible against gridlines and neighboring labels in both themes.
-  - 'First categorical series is brand green #009E73 and the remaining three clusters
-    follow the canonical Imprint order (lavender, blue, ochre) — identical hues in
-    light and dark, only chrome flips.'
-  - Deterministic LCG (fixed seed 20260902) plus a staggered per-cluster offset grid
-    produces reproducible, collision-free label placement across 32 points.
-  - 'Correct harness contract: default-exported component, skipAnimation set, sizes
-    from window.ANYPLOT_SIZE, no manual mount/HTML.'
-  - Mandated title format followed exactly, with font size scaled proportionally to
-    the descriptive-title length so it never overflows.
-  - Canvas dimension gate passed (3200x1800 landscape); no clipped text at any edge
-    in either render.
+  - Custom TextScatter renderer via the ScatterChart `slots.scatter` API cleanly replaces
+    default point markers with text labels, directly fulfilling the spec's core requirement
+    using an idiomatic, distinctive MUI X extensibility pattern.
+  - Centrality-based font-size encoding (words nearer a cluster's centroid render
+    larger) gives each of the four clusters a visual anchor and creates genuine data
+    storytelling without adding clutter.
+  - Text halo (paintOrder=stroke, stroke=t.pageBg) keeps every label legible over
+    the gridlines in both themes, a thoughtful legibility technique beyond the library
+    defaults.
+  - Correct theme-adaptive chrome, Imprint palette in canonical order (brand green
+    first for Animals, lavender/blue/ochre for the other clusters), and a clean spines-off,
+    subtle-grid presentation.
+  - Deterministic seeded LCG for the jitter keeps the layout fully reproducible.
   weaknesses:
-  - 'Design excellence is functional but not pushed further: default MUI X axis lines/frame
-    are still visible and the grid/whitespace treatment doesn''t go beyond stock chrome
-    — a bit more refinement (e.g. trimming axis lines, tightening grid alpha) would
-    lift DE-01/DE-02.'
-  - Axis labels ('Embedding dimension 1' / 'Embedding dimension 2') are generic placeholders
-    typical of PCA/t-SNE/UMAP output but don't tie to any specific named dimension
-    or add interpretive value — acceptable for the spec but a missed opportunity for
-    a stronger data story.
-  - Spec notes suggest alpha transparency or rotation for dense/overlapping regions;
-    the current fixed LAYOUT offsets avoid overlap only because the cluster count
-    and word count are fixed at 8x4 — the code has no overlap-avoidance safeguard
-    if reused with denser data.
+  - Low-centrality labels render as small as ~14px against high-centrality labels
+    at ~20px; at the 400px mobile thumbnail scale the smallest labels risk being harder
+    to read — consider raising the minimum font-size floor slightly.
+  - The spec suggests alpha transparency for overlapping labels; not demonstrated
+    here (not currently needed since the staggered layout avoids overlap, but would
+    help a denser variant).
+  - The legend groups points by semantic category (Animals, Food & drink, Technology,
+    Sports) rather than treating this as a single scattered-labels series — a nice
+    readability enhancement, but a minor departure from the spec's implied single-series
+    framing.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white.
-      Chrome: Title "Word Embedding Projection · scatter-text · javascript · muix · anyplot.ai" in bold dark ink, top-left, fully visible and not clipped. Axis labels "Embedding dimension 1" / "Embedding dimension 2" in dark ink, both axes tick labels (0-100 by 20s) clearly readable. Legend top-right with 4 colored swatches (Animals, Food & drink, Technology, Sports) all fully visible, not clipped at the right edge. Subtle light gray gridlines, visible but not dominant.
-      Data: 32 text labels (words) act as the data marks, colored by cluster: green (#009E73, Animals — brand-first-series rule respected), lavender/purple (Food & drink), blue (Technology), ochre/amber (Sports) — matches canonical Imprint palette order. Each label has a thin light-colored stroke halo that keeps it crisp against the gridlines. No overlapping text, no clipped/cropped labels at canvas edges.
+      Background: Warm off-white (~#FAF8F1), correct for the light theme.
+      Chrome: Title "Word Embedding Projection · scatter-text · javascript · muix · anyplot.ai" is dark, bold, and fully readable in the top-left. X-axis label "Embedding dimension 1" and Y-axis label "Embedding dimension 2" are dark and legible. Tick labels (0/20/40/60/80/100 on both axes) are dark and readable. Subtle gridlines at each tick. Legend (top-right, 4 color swatches: Animals/Food & drink/Technology/Sports) is fully readable.
+      Data: 32 word labels arranged in 4 quadrant clusters, each cluster in one Imprint color — Animals in brand green #009E73, Food & drink in lavender/purple, Technology in blue, Sports in ochre/brown. Font size varies per word based on proximity to its cluster centroid (larger = more central), giving each cluster a visual anchor. All labels have a subtle background-colored halo so they stay legible over the gridlines. No overlaps between any labels.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Title in bold white/light ink, fully visible, not clipped. Axis labels and tick labels rendered in light ink, clearly readable against the dark background — no dark-on-dark failures observed. Legend swatches and text fully visible top-right. Gridlines subtle light-gray-on-dark, visible but unobtrusive.
-      Data: Same 32 text labels in the identical four colors as the light render (green/lavender/blue/ochre) — confirmed pixel-for-pixel consistent hues, only the page chrome (background, gridlines, title/axis ink) flipped to the dark palette. Stroke halo now uses the dark pageBg color, keeping labels crisp against dark gridlines too. No overlap, no clipping.
+      Background: Warm near-black (~#1A1A17), correct for the dark theme.
+      Chrome: Title is white/light and fully readable. Axis labels and tick labels are light-colored and clearly legible against the dark background — no dark-on-dark issues found. Gridlines are subtly visible.
+      Data: Same 32 word labels in the same 4 quadrant clusters, using the identical Imprint colors as the light render (brand green, lavender, blue, ochre) — confirmed unchanged; only the chrome (background, title, axis/tick text) flipped for the dark theme. Halo strokes correctly use the dark page background color so labels remain crisp against gridlines.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,78 +61,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes on title (scaled) and data labels (16px, weight
-          600) with stroke halo; readable in both themes. Axis/tick labels rely on
-          MUI defaults, not explicitly tuned.
+        comment: All text readable in both themes with explicit font sizes; smallest
+          low-centrality labels (~14px) are marginal at thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Staggered LAYOUT offsets plus small jitter keep all 32 labels collision-free
-          in both renders.
+        comment: Staggered per-cluster layout with jitter avoids any label collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bold 600-weight text with contrasting stroke halo is highly visible
-          against gridlines in both themes; sparse data (32 points) appropriately
-          sized.
+        comment: Sparse data (32 labels), font sizes and halo stroke keep every label
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct Imprint hues (green/lavender/blue/ochre), no red-green-only
-          encoding, stroke halo boosts contrast on both surfaces.
+        comment: 4 CVD-safe Imprint hues, text itself also conveys identity so color
+          is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Title fits without overflow, balanced
-          axis labels, no text overflow/clipping observed.
+        comment: Canvas gate passed (3200x1800); good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels for an embedding-projection context; mandated
-          title format followed.
+        comment: Descriptive axis labels and mandated title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for remaining series,
-          both backgrounds theme-correct, colors identical across themes.'
+        comment: Canonical Imprint order (#009E73 first), identical data colors across
+          themes, correct theme backgrounds
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Text-as-marker with stroke halo is a genuinely fitting, polished
-          solution to the spec's premise; above generic-default but overall chart
-          chrome stays close to MUI X stock look.
+        comment: Custom slot-based text-marker rendering and centrality-driven sizing
+          show intentional polish beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Default MUI X axis lines/frame remain; grid is subtle but not customized
-          beyond defaults.
+        passed: true
+        comment: Axis lines/ticks removed, grid opacity reduced, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Four color-coded quadrant clusters read clearly as groups, but there's
-          no single focal point or guided narrative beyond category grouping.
+        passed: true
+        comment: Size-by-centrality encoding creates a clear per-cluster focal point
     spec_compliance:
       score: 15
       max: 15
@@ -147,54 +134,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter plot where text labels are the visual element, replacing
-          point markers via a custom slot.
+        comment: Text labels fully replace point markers, exactly as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y/label data present, legible explicit font size, positioned at
-          coordinates as required.
+        comment: x/y coordinates, label text, legible sizing, count within 20-100
+          range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y correctly mapped via xScale/yScale; explicit 0-100 axis bounds
-          show all data.
+        comment: x/y axes correctly mapped, full 0-100 domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches mandated format with descriptive prefix; legend labels
-          match cluster names.
+          match cluster categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Covers the core text-as-marker premise plus categorical color-coding
-          and legend, matching all applications listed in the spec.
+        comment: Covers labeling and size-based emphasis; alpha-transparency handling
+          for overlap not demonstrated (not currently needed)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Word-embedding projection with four neutral semantic clusters (animals,
-          food, tech, sports) — plausible and non-controversial.
+        comment: Plausible, neutral word-embedding-style clusters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 32 points within the spec's recommended 20-100 range, sensible 0-100
-          embedding-like coordinate scale.
+        comment: 0-100 normalized embedding-dimension scale is sensible for the domain
     code_quality:
       score: 9
       max: 10
@@ -204,60 +187,61 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (makeLcg, makeCluster, TextScatter) — more
-          structure than a minimal plot, but each is justified by the custom-marker
-          requirement.
+        comment: Helper functions (makeLcg, makeCluster, TextScatter) are justified
+          by the library's slot-based API and multi-cluster data generation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (20260902) makes jitter deterministic.
+        comment: Seeded LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart imported from @mui/x-charts.
+        comment: Only ScatterChart imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom slot renderer, no fake UI/interactivity.
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the harness contract correctly; skipAnimation set; no manual
-          save calls.
+        comment: Sizes to window.ANYPLOT_SIZE, skipAnimation set, harness mount contract
+          respected
     library_mastery:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses the documented slots/slotProps extension point (the recommended
-          MUI X pattern for custom rendering) rather than fighting the API.
+        comment: Correct use of series/xAxis/yAxis/grid/legend slotProps and the ThemeProvider
+          contract
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Custom scatter slot swapping markers for scaled SVG text is a genuinely
-          distinctive use of MUI X's extensibility beyond basic chart usage.
+        comment: slots.scatter override to substitute the marker renderer is a genuinely
+          distinctive, advanced MUI X technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - custom-marker-rendering
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - edge-highlighting
+  - minimal-chrome
+  - grid-styling
