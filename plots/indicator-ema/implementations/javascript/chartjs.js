@@ -62,7 +62,7 @@ for (let i = 1; i < periods; i++) {
     crossPointColor[i] = t.palette[0];
   } else if (prevDiff >= 0 && currDiff < 0) {
     crossPointRadius[i] = 7;
-    crossPointColor[i] = "#AE3030";
+    crossPointColor[i] = t.palette[4];
   }
 }
 
@@ -89,8 +89,8 @@ new Chart(canvas, {
       {
         label: `EMA ${longPeriod}`,
         data: emaLong,
-        borderColor: t.palette[2],
-        backgroundColor: t.palette[2],
+        borderColor: t.palette[1],
+        backgroundColor: t.palette[1],
         borderWidth: 2.2,
         pointRadius: 0,
         tension: 0.1,
