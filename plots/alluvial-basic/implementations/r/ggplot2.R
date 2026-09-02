@@ -147,12 +147,22 @@ node_labels <- node_totals %>%
     hjust = if_else(stage == min(stage), 1, 0)
   )
 
+# --- Mini legend (covers the middle stage, where nodes have no free space
+# alongside them for direct labels since ribbons flank both sides) ----------
+max_y <- max(node_totals$ymax)
+legend_y <- max_y * 1.09
+legend_data <- tibble::tibble(
+  category = factor(CATEGORY_ORDER, levels = CATEGORY_ORDER),
+  x        = 2 + seq(-0.42, 0.42, length.out = length(CATEGORY_ORDER)),
+  y        = legend_y
+)
+
 # --- Plot ------------------------------------------------------------------
 p <- ggplot() +
   geom_ribbon(
     data = bands,
     aes(x = x, ymin = ymin, ymax = ymax, group = row_id, fill = cat_from),
-    alpha = 0.55
+    color = INK, linewidth = 0.15, alpha = 0.45
   ) +
   geom_rect(
     data = node_totals,
@@ -163,14 +173,25 @@ p <- ggplot() +
   geom_text(
     data = node_labels,
     aes(x = x, y = y, label = category, hjust = hjust),
-    size = 3.2, color = INK
+    size = 4, color = INK
+  ) +
+  geom_point(
+    data = legend_data,
+    aes(x = x, y = y),
+    color = CATEGORY_COLORS[as.character(legend_data$category)],
+    shape = 15, size = 3.5
+  ) +
+  geom_text(
+    data = legend_data,
+    aes(x = x + 0.06, y = y, label = category),
+    size = 2.9, color = INK_SOFT, hjust = 0, vjust = 0.4
   ) +
   scale_fill_manual(values = CATEGORY_COLORS, guide = "none") +
   scale_x_continuous(
     breaks = seq_along(STAGE_LABELS), labels = STAGE_LABELS,
     expand = expansion(mult = c(0.18, 0.18))
   ) +
-  scale_y_continuous(expand = expansion(mult = c(0.02, 0.02))) +
+  scale_y_continuous(expand = expansion(mult = c(0.02, 0.1))) +
   labs(
     title = "alluvial-basic · r · ggplot2 · anyplot.ai",
     x = NULL, y = NULL
