@@ -1,0 +1,275 @@
+library: chartjs
+language: javascript
+specification_id: smith-chart-basic
+created: '2026-09-02T06:11:18Z'
+updated: '2026-09-02T06:17:58Z'
+generated_by: claude-sonnet
+workflow_run: 33596756409
+issue: 3792
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Fully custom, geometrically-correct Smith chart grid (constant-resistance circles,
+    constant-reactance arcs, VSWR reference circle) hand-drawn via Chart.js plugin
+    hooks — a genuine engineering feat since Chart.js has no native Smith-chart or
+    polar-impedance support.
+  - Equal-aspect-ratio correction plugin measures px-per-unit on both axes after layout
+    and expands the tighter one so the resistance/reactance circles render as true
+    circles instead of ellipses — a correctness detail many hand-rolled Smith charts
+    get wrong.
+  - 'Realistic, physics-grounded RF data: a series-inductance + parasitic-capacitance
+    antenna feed model drives the impedance sweep, with the self-resonant frequency
+    computed analytically and the best-match point highlighted.'
+  - Theme-adaptive chrome is executed cleanly — data color (#009E73) and layout are
+    identical between light and dark renders, while text, grid, and the matched-condition
+    crosshair correctly flip token colors.
+  - 'Strong data storytelling: the matched-condition crosshair, the emphasized best-match
+    marker with callout label, and evenly spaced frequency labels along the locus
+    guide the viewer straight to the insight.'
+  weaknesses:
+  - No descriptive axis title clarifies that the grid numbers (0.2, 0.5, 2, 5 / +j1,
+    +j0.5, ...) are normalized resistance and reactance values — a viewer unfamiliar
+    with Smith-chart convention has no textual anchor for what the numbers mean.
+  - The smallest canvas-drawn labels (13px CSS reactance-arc labels) are on the small
+    side; at ~400px mobile scale-down they may become hard to read — consider bumping
+    the smallest labels to 14-15px.
+  - The '4.0 GHz' frequency label sits very close to the dashed VSWR reference circle,
+    causing minor visual crowding at that point on the curve.
+  - The implementation defines a helper function plus two multi-method plugin objects;
+    justified by Chart.js's plugin architecture (the only way to draw custom geometry),
+    but it moves further from a minimal 'no functions' structure than a simpler chart
+    type would need.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "smith-chart-basic · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. The Smith chart's constant-resistance circles and constant-reactance arcs are drawn in subtle light-gray grid lines, with numeric labels (0.2, 0.5, 2, 5 on the real axis; +j1, +j0.5, +j0.2, +j2, +j5 and their negative counterparts around the boundary) in dark ink. A dashed amber VSWR=2 reference circle is clearly distinct from the gray grid. A small crosshair marks the "Z0 matched" center point.
+      Data: Impedance locus is a solid green (#009E73) curve with circular markers of varying size — small dots for regular sweep points, larger dots at labeled 1.0-6.0 GHz frequency points, and the largest (dark-filled) marker at the best-match point (3.17 GHz), called out with a bold text label.
+      Legibility verdict: PASS — all title, grid-value, and frequency-label text is clearly readable against the light background; no light-on-light issues observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, grid geometry, and VSWR dashed circle, now rendered in light ink / light gray so they read clearly against the dark surface. The best-match marker fill flips from black to white (a theme-adaptive highlight, not a data color) while its position and the green locus color are unchanged.
+      Data: The impedance locus and all markers are the identical #009E73 green as the light render — confirming palette compliance between themes.
+      Legibility verdict: PASS — all text (title, grid labels, frequency labels, "Z0 matched" and "best match" callouts) is rendered in light color against the dark background; no dark-on-dark failures observed. Brand green remains clearly visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 14/13px canvas-drawn labels);
+          readable in both themes at full size. Smallest reactance-arc labels (13px)
+          could be marginal once scaled to mobile width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text overlap; the 'Z0 matched' and 'best match' callouts
+          sit cleanly separated from each other and from the frequency labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 31-point sweep uses appropriately prominent markers, with size escalation
+          for labeled points and the best-match point — well adapted to the sparse
+          data density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong green-on-cream / green-on-near-black contrast; amber VSWR
+          circle is distinct from both the grid gray and the data green; no red-green-only
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Smith chart circle fills a large, balanced portion of the square
+          canvas with even margins; nothing is cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: No cartesian axes are shown (appropriate for a normalized Gamma-plane
+          chart), but there is also no textual label explaining that the grid numbers
+          are normalized resistance/reactance values — relies entirely on reader familiarity
+          with Smith-chart convention.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; backgrounds are theme-correct
+          (#FAF8F1 / #1A1A17); amber semantic anchor used appropriately for the VSWR
+          reference threshold; all chrome flips correctly with theme.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful, restrained palette (brand green + amber accent) and intentional
+          hierarchy via marker emphasis — clearly above a configured default, short
+          of full publication-grade polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, no stray chrome; detail polish
+          visible in angle-aware label anchoring and the dashed VSWR circle.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Matched-condition crosshair plus a clearly emphasized, labeled best-match
+          point give the viewer an immediate answer to 'where is this antenna best
+          matched,' though it requires some Smith-chart familiarity to fully parse.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Smith chart with resistance circles, reactance arcs, and
+          reflection-coefficient plane.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid, normalization to Z0, impedance locus, frequency labels, optional
+          VSWR circle, |Gamma|=1 boundary, and matched-condition center are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Gamma real/imag parts correctly mapped to x/y; full sweep visible
+          within chart bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          for the single labeled series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both inductive and capacitive reactance regions, a resistance
+          peak near resonance, VSWR reference, and a highlighted best-match — full
+          feature coverage for the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible antenna-feed RF engineering scenario grounded
+          in real component values.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Z0=50Ω, 1-6GHz sweep, and nH/pF component values are realistic; self-resonant
+          frequency is computed with the correct closed-form formula and matches the
+          plotted curve.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A math helper plus two multi-method Chart.js plugin objects are defined
+          — necessary for custom canvas drawing, but more structure than the simplest
+          possible script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, analytically generated data — no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity is proportional
+          to drawing a genuinely custom chart type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract exactly; animation disabled; current
+          Chart.js API used throughout.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Chart.js's documented plugin-hook extension mechanism plus per-point
+          context callbacks — the correct, idiomatic way to build a chart type the
+          library doesn't ship natively.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Chart.js-specific plugin lifecycle hooks (afterLayout,
+          beforeDatasetsDraw, afterDatasetsDraw) and function-valued per-point style
+          callbacks — features distinctive to Chart.js's API design.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - grid-styling
