@@ -97,6 +97,26 @@ function Seats() {
   );
 }
 
+// Subtle background wedge behind the seats spanning from the majority line to
+// the leftmost edge — visually distinguishes the contiguous run of parties
+// (Green Alliance -> ... ) whose combined seats cross the 101-seat threshold.
+function MajorityHighlight() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const highlightR = OUTER_R + 16;
+  const steps = 48;
+  const arcPoints = Array.from({ length: steps + 1 }, (_, i) => {
+    const theta = MAJORITY_THETA + ((Math.PI - MAJORITY_THETA) * i) / steps;
+    return `${xScale(highlightR * Math.cos(theta))},${yScale(highlightR * Math.sin(theta))}`;
+  });
+  const pathD = `M ${xScale(0)} ${yScale(0)} L ${arcPoints.join(" L ")} Z`;
+  return (
+    <g data-drawing-container>
+      <path d={pathD} fill={t.ink} fillOpacity={0.06} stroke="none" />
+    </g>
+  );
+}
+
 function MajorityLine() {
   const xScale = useXScale();
   const yScale = useYScale();
@@ -137,11 +157,11 @@ function MajorityLine() {
 
 // --- Title + legend chrome ---------------------------------------------------
 const TITLE = "parliament-basic · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 24;
+const TITLE_FONT_DEFAULT = 30;
 const titleFontSize =
   TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_H = 46;
-const LEGEND_H = 40;
+const TITLE_H = 42;
+const LEGEND_H = 36;
 
 function Legend() {
   return (
@@ -194,6 +214,7 @@ export default function Chart() {
         yAxis={[{ id: "y", scaleType: "linear", min: domain.yMin, max: domain.yMax }]}
         skipAnimation
       >
+        <MajorityHighlight />
         <Seats />
         <MajorityLine />
       </ChartContainer>
