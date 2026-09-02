@@ -204,9 +204,26 @@ function drawContinents(chart) {
 
 // --- Great-arc approximation: quadratic Bezier bowed toward the north, ------
 // --- sampled into a polyline so it renders as a native, hoverable series ---
-const CURVATURE = 0.16;
+const CURVATURE_MIN = 0.1;
+const CURVATURE_MAX = 0.26;
 
-function arcPoints(lon1, lat1, lon2, lat2, steps) {
+function hashStr(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  }
+  return h;
+}
+
+// Deterministic per-pair jitter keeps the curvature within a fixed band so
+// every arc still bows toward the same rotational sense, but arcs sharing a
+// hub endpoint fan apart instead of stacking on top of one another.
+function curvatureFor(origin, dest) {
+  const frac = (hashStr(`${origin}->${dest}`) % 1000) / 1000;
+  return CURVATURE_MIN + frac * (CURVATURE_MAX - CURVATURE_MIN);
+}
+
+function arcPoints(lon1, lat1, lon2, lat2, steps, curvature) {
   const mx = (lon1 + lon2) / 2;
   const my = (lat1 + lat2) / 2;
   const dx = lon2 - lon1;
@@ -216,8 +233,8 @@ function arcPoints(lon1, lat1, lon2, lat2, steps) {
   // consistently, which is what makes a flow map read as a coherent set.
   const nx = -dy / dist;
   const ny = dx / dist;
-  const cx = mx + nx * dist * CURVATURE;
-  const cy = my + ny * dist * CURVATURE;
+  const cx = mx + nx * dist * curvature;
+  const cy = my + ny * dist * curvature;
   const points = [];
   for (let i = 0; i <= steps; i++) {
     const tt = i / steps;
@@ -245,10 +262,11 @@ const flowSeries = FLOWS.map((flow) => {
   const dest = PORTS[flow.dest];
   const norm = (flow.teu - teuMin) / (teuMax - teuMin);
   const rgb = lerpColor(t.seq[0], t.seq[1], norm);
+  const curvature = curvatureFor(flow.origin, flow.dest);
   return {
     type: "line",
     name: `${flow.origin} → ${flow.dest}`,
-    data: arcPoints(origin.lon, origin.lat, dest.lon, dest.lat, 28),
+    data: arcPoints(origin.lon, origin.lat, dest.lon, dest.lat, 28, curvature),
     color: `rgba(${rgb}, 0.6)`,
     lineWidth: MIN_WIDTH + (MAX_WIDTH - MIN_WIDTH) * norm,
     marker: { enabled: false },
@@ -272,11 +290,18 @@ const totalMax = Math.max(...Object.values(portTotals));
 const MIN_R = 8;
 const MAX_R = 26;
 
+// Direct-label the busiest hubs so the major corridors read without hovering.
+const HUB_NAMES = Object.entries(portTotals)
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 4)
+  .map(([name]) => name);
+
 const portSeries = {
   type: "scatter",
   name: "Port",
   data: Object.entries(PORTS).map(([name, coord]) => {
     const norm = (portTotals[name] - totalMin) / (totalMax - totalMin);
+    const radius = MIN_R + (MAX_R - MIN_R) * Math.sqrt(norm);
     return {
       x: coord.lon,
       y: coord.lat,
@@ -284,11 +309,25 @@ const portSeries = {
       total: portTotals[name],
       marker: {
         symbol: "circle",
-        radius: MIN_R + (MAX_R - MIN_R) * Math.sqrt(norm),
+        radius,
         fillColor: t.palette[0],
         lineColor: t.pageBg,
         lineWidth: 2,
       },
+      dataLabels: HUB_NAMES.includes(name)
+        ? {
+            enabled: true,
+            format: name,
+            allowOverlap: true,
+            y: -(radius + 10),
+            style: {
+              color: t.ink,
+              fontSize: "13px",
+              fontWeight: "600",
+              textOutline: `2px ${t.pageBg}`,
+            },
+          }
+        : undefined,
     };
   }),
   color: t.palette[0],
@@ -317,7 +356,7 @@ function drawLegend(chart) {
   chart.renderer
     .text("Shipment volume (thousand TEU)", boxX + 16, boxY + 24)
     .attr({ zIndex: 7 })
-    .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
+    .css({ color: t.ink, fontSize: "15px", fontWeight: "600" })
     .add();
 
   const sampleTeu = [teuMin, Math.round((teuMin + teuMax) / 2), teuMax];
@@ -341,7 +380,7 @@ function drawLegend(chart) {
     chart.renderer
       .text(`~${teu} kTEU`, boxX + 92, cursorY + 5)
       .attr({ zIndex: 7 })
-      .css({ color: t.inkSoft, fontSize: "13px" })
+      .css({ color: t.inkSoft, fontSize: "14px" })
       .add();
     cursorY += 28;
   });
@@ -349,7 +388,7 @@ function drawLegend(chart) {
   chart.renderer
     .text("Bubble size = port's total volume", boxX + 16, boxY + boxH - 14)
     .attr({ zIndex: 7 })
-    .css({ color: t.inkSoft, fontSize: "12px" })
+    .css({ color: t.inkSoft, fontSize: "13px" })
     .add();
 }
 
@@ -381,8 +420,11 @@ Highcharts.chart("container", {
     min: -180,
     max: 180,
     tickInterval: 30,
-    title: { text: "Longitude (°)", style: { color: t.inkSoft, fontSize: "16px" } },
-    lineColor: t.inkSoft,
+    title: {
+      text: "Longitude (°)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
+    lineWidth: 0,
     tickColor: t.inkSoft,
     gridLineWidth: 1,
     gridLineColor: t.grid,
@@ -392,8 +434,11 @@ Highcharts.chart("container", {
     min: -55,
     max: 75,
     tickInterval: 30,
-    title: { text: "Latitude (°)", style: { color: t.inkSoft, fontSize: "16px" } },
-    lineColor: t.inkSoft,
+    title: {
+      text: "Latitude (°)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
+    lineWidth: 0,
     tickColor: t.inkSoft,
     gridLineWidth: 1,
     gridLineColor: t.grid,
