@@ -1,7 +1,7 @@
 // anyplot.ai
 // choropleth-basic: Choropleth Map with Regional Coloring
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 79/100 | Created: 2026-09-02
 
 // Chart.js has no built-in geographic/shape geometry (that lives only in the
 // chartjs-chart-geo plugin, which is not installed in this runtime — see
