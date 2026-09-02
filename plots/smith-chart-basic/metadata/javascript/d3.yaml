@@ -1,0 +1,270 @@
+library: d3
+language: javascript
+specification_id: smith-chart-basic
+created: '2026-09-02T06:06:17Z'
+updated: '2026-09-02T06:23:52Z'
+generated_by: claude-sonnet
+workflow_run: 33596922496
+issue: 3792
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Attempt 2 directly addresses all three prior weaknesses: grid circles now use
+    the idiomatic selection.data().join() pattern instead of forEach+append, the impedance
+    locus carries a clear directional arrowhead (marker-end), and the optional constant-|Γ|
+    VSWR circle from the spec notes is now drawn (dashed, low-opacity, labeled).'
+  - 'Mathematically rigorous Smith-chart geometry built from first principles: constant-resistance
+    circles and constant-reactance arcs (both signs) are correctly derived via the
+    bilinear Z-to-Γ transform and clipped to the unit circle with a clip-path.'
+  - Correct complex-number impedance-to-reflection-coefficient transformation with
+    proper Z0 normalization; the VSWR-circle radius and the swept locus are physically
+    consistent (constant |Γ| as electrical length rotates phase).
+  - Clean, realistic, neutral RF engineering scenario (mismatched antenna feed impedance
+    sweep, 1-6 GHz, Z0 = 50 Ω) with plausible values.
+  - Theme-adaptive chrome correctly threaded through tokens - identical green data
+    color across light/dark, correct warm backgrounds, all text legible in both themes.
+  - 'Visual hierarchy is intentional: the r=1/x=1 ''major'' reference curves render
+    bolder and more opaque than the rest of the grid, and the VSWR context circle
+    is dashed/faint versus the solid, bold data locus.'
+  weaknesses:
+  - The '+j1' reactance-arc label sits close to the subtitle line (roughly 10 CSS
+    px of clearance at the top of the boundary circle) - not clipped or overlapping
+    in practice, but tighter than the rest of the layout; a touch more top margin
+    or a smaller offset multiplier would give it more breathing room.
+  - Only a single impedance locus/scenario is shown; an additional reference (e.g.
+    a second Z0 or a well-matched comparison locus) would demonstrate more of the
+    Smith chart's feature range, though the single-locus 'basic' scope is acceptable
+    for this spec.
+  - The custom bilinear-transform geometry (grid circles, clip-path, marker defs)
+    is distinctive within d3's raw-SVG model but is conceptually replicable in any
+    SVG-capable plotting layer with enough manual effort - it doesn't lean on a d3-only
+    primitive (e.g. d3-hierarchy, d3-force) that has no equivalent elsewhere.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1, not pure white and not dark.
+      Chrome: bold dark title "smith-chart-basic · javascript · d3 · anyplot.ai" and gray subtitle "Antenna feed impedance sweep · 1-6 GHz · Z0 = 50 Ω" both fully legible against the light surface. Subtle gray constant-resistance circles (0.2, 0.5, 1, 2, 5) and constant-reactance arcs (±0.2, ±0.5, ±1, ±2, ±5) are correctly clipped to the unit circle, with the r=1/x=1 curves rendered bolder for hierarchy. A bold dark boundary circle marks |Γ|=1, and a small dark dot at the exact chart center marks the matched condition (Z=Z0, Γ=0).
+      Data: green (#009E73) impedance locus arc with a matching arrowhead showing the low-to-high frequency sweep direction, a dashed low-opacity green constant-|Γ| circle for VSWR context, and four bold dark frequency labels (1.0, 2.7, 4.3, 6.0 GHz) at circular markers along the curve.
+      Legibility verdict: PASS - all text and grid elements are readable; the "+j1" reactance label sits close to the subtitle but does not overlap or clip.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17, not pure black and not light.
+      Chrome: title and subtitle flip to white/light-gray, grid circles/arcs and the boundary circle flip to light-gray strokes; all fully legible with no dark-on-dark text anywhere.
+      Data: the green locus, arrowhead, dashed VSWR circle, and frequency labels are pixel-identical in color and position to the light render - only the chrome (background, grid, text) flipped, confirming theme-adaptive tokens are threaded correctly.
+      Legibility verdict: PASS - no unreadable text in either theme.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes; the '+j1'
+          reactance label sits within ~10px of the subtitle - tight but not overlapping
+          or clipped.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Locus stroke-width and marker radius are prominent for a sparse 4-label
+          trajectory; the new arrowhead adds directional clarity that attempt 1 lacked.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong green-on-cream / green-on-near-black contrast; single-hue
+          data series, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 square canvas; chart circle fills a large, well-centered
+          portion with balanced margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Resistance/reactance grid values and the descriptive title+subtitle
+          (with Z0 units) serve as the chart's axes.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is Imprint #009E73, identical across themes;
+          backgrounds are the correct #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom bilinear-transform geometry, bolded major reference curves,
+          arrowhead and VSWR context circle show clear design intent above a configured
+          default, though short of a fully publication-polished FiveThirtyEight-level
+          treatment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle opacity-graded grid, no spines (n/a for this chart form),
+          dashed low-opacity context circle vs. bold solid data locus; the tight label-to-subtitle
+          spacing keeps this from a perfect score.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Directional arrow + ordered frequency labels + dashed VSWR loop for
+          context + bold r=1/x=1 hierarchy together tell the sweep story clearly.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Smith chart with resistance circles, reactance arcs, and
+          unit-circle boundary.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required and optional spec features present: grid, normalized
+          locus, frequency labels, VSWR circle, boundary, matched-condition center
+          marker.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real/imaginary reflection-coefficient components correctly mapped
+          to plot x/y via toPixel().
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'smith-chart-basic · javascript · d3 · anyplot.ai';
+          direct frequency labels substitute appropriately for a legend on a single-series
+          chart.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the full Smith-chart mechanic (grid, locus, VSWR loop, matched
+          point) but only a single load scenario - a second comparison locus would
+          show more range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral RF engineering scenario (antenna feed matching) with
+          sensible reference impedance.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Z0=50Ω, mismatched load 75+j25Ω, and 1-6GHz sweep are all physically
+          realistic; the reflection-coefficient math is correctly derived.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script with small pure helper functions for complex arithmetic
+          and pixel mapping, no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data generation, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-commented with physics rationale; no fake UI or simulated
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a single svg into #container per the harness contract; no
+          animation.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now consistently uses selection.data().join() for grid circles/labels/markers
+          (fixed from attempt 1's forEach+append), plus d3.line() with curveCatmullRom
+          and marker defs.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages d3's raw SVG control (clip-path, custom marker defs, bilinear-transform
+          geometry) that a high-level chart library couldn't easily express, though
+          the technique is conceptually portable to any SVG layer with effort.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - publication-ready
+  - alpha-blending

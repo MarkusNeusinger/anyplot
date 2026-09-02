@@ -1,0 +1,272 @@
+library: echarts
+language: javascript
+specification_id: sn-curve-basic
+created: '2026-09-02T06:11:23Z'
+updated: '2026-09-02T06:35:08Z'
+generated_by: claude-sonnet
+workflow_run: 33597234539
+issue: 3826
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'All three prior review weaknesses are fixed: the yield/ultimate ratio is now
+    650/745 ≈ 0.87 (realistic for Q&T 4340 steel), a shaded ''Infinite life region''
+    markArea now reinforces the endurance-limit storytelling the spec notes call for,
+    and deterministic per-specimen x-jitter keeps same-stress-level clusters visually
+    distinct instead of overlapping into one blob'
+  - Correct log-log S-N curve with clearly labeled Ultimate/Yield/Endurance reference
+    lines using distinct dash styles (solid/dashed/dotted) for quick visual differentiation
+  - Custom decade-tick formatter renders proper 10^n superscript labels instead of
+    raw scientific notation — a nice idiomatic touch for log axes
+  - Deterministic LCG-seeded data generation with a realistic Basquin power-law fit
+    and per-stress-level specimen scatter (44 points across 11 stress levels)
+  - Theme-adaptive chrome is fully correct in both renders; Imprint palette used in
+    canonical order (green scatter, lavender fit line), identical data colors across
+    themes
+  - Clean, KISS code structure with a single setOption call, correct mount-node contract,
+    animation disabled
+  weaknesses:
+  - The y-axis (log, min:200, max:900) only ever labels its two endpoints — there
+    are no intermediate tick labels or horizontal split lines, so the plot reads as
+    a boxed frame with no internal y-grid. The three labeled threshold lines (745/650/260
+    MPa) partly compensate, but a reader can't estimate an arbitrary data point's
+    stress value with any precision. Add explicit yAxis.axisLabel formatter/interval
+    (or minorSplitLine) so values like 300/400/500/700 MPa are labeled and gridded.
+  - 'Because the y min/max coincide exactly with the axis frame, the chart reads as
+    a closed box rather than the L-shaped frame the style guide favors — consider
+    a small headroom margin above Ultimate Strength (e.g. max: 950-1000) so the top
+    boundary doesn''t double as a data-adjacent gridline, and/or drop the right-side
+    axisLine so it doesn''t look enclosed.'
+  - Spec notes call out three distinct fatigue regions (low-cycle plastic, high-cycle
+    elastic, infinite life) but only the infinite-life region is visually delineated
+    — labeling the low-cycle/high-cycle transition would round out the data storytelling.
+  - Title occupies only ~35% of the plot width at the current fontsize — not a violation,
+    but a slightly larger fontsize would better match the visual weight of the rest
+    of the chrome and other catalog entries.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "sn-curve-basic · javascript · echarts · anyplot.ai" centered top in bold dark ink, clearly readable. Legend ("Test specimens", "Basquin fit") below title, readable dark text with matching green-dot and lavender-line swatches. X-axis "Cycles to Failure (N)" with 10³..10⁷ decade ticks (superscript formatted); Y-axis "Stress Amplitude (MPa)" log-scaled 200-900, but only the 200/900 endpoints carry numeric labels — no intermediate tick values. Three horizontal reference lines (solid = Ultimate Strength 745 MPa, dashed = Yield Strength 650 MPa, dotted = Endurance Limit 260 MPa) with dark-ink labels, all fully visible with no clipping at either canvas edge. A light gray "Infinite life region" markArea shades the zone below the endurance limit, with an italic label at its top-left. Subtle vertical gridlines at each x-decade; no visible internal horizontal gridlines.
+      Data: Green (#009E73) scatter markers for 44 test specimens spread (via deterministic jitter) across 11 stress levels — clusters are now individually distinguishable rather than overlapping into blobs. Lavender (#C475FD) Basquin fit line runs cleanly through the cloud from high-stress/low-cycle down to the endurance limit.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no clipping, no light-on-light.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/legend/axis layout, now rendered in light ink/off-white text — clearly readable against the dark background. Reference-line labels are light-colored and legible; no dark-on-dark text anywhere. The markArea shading and gridlines are subtle light-on-dark, still readable.
+      Data: Scatter and fit-line colors are pixel-identical to the light render (#009E73 green, #C475FD lavender) — only the chrome (background, text, grid, markArea tint) flipped, as required. Brand green remains clearly visible against the dark surface.
+      Legibility verdict: PASS — all text is light-on-dark and clearly readable, no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24, legend 16, axis name 16,
+          ticks 14); readable in both themes, no overflow/clipping — but the y-axis's
+          two-value-only labeling reduces precise value reading
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render; infinite-life-region
+          label and endurance-limit label sit on opposite sides with no clash
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter markers (symbolSize 13, opacity 0.85) and fit line (width
+          3) are clearly visible; the new deterministic x-jitter resolved the prior
+          same-stress-level overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender with redundant dash-style encoding on the reference
+          lines; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot area fills a large share of the canvas with balanced left/right
+          margins, but the y min/max coinciding with the axis frame gives a boxed,
+          slightly enclosed look and leaves the region above Ultimate Strength (745-900)
+          as unused headroom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis names with units: ''Cycles to Failure (N)'', ''Stress
+          Amplitude (MPa)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Imprint), second series palette[1] #C475FD,
+          correct canonical order; theme-correct chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom superscript decade-tick formatter, per-line dash-style differentiation,
+          and the new shaded infinite-life band show clear design intent, above a
+          plain configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle theme-adaptive grid and generous margins, but the boxed frame
+          effect from the coincident y min/max and lack of internal y-gridlines hold
+          this back from maximal refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Labeled Ultimate/Yield/Endurance threshold lines plus the new shaded
+          infinite-life region create a clear visual hierarchy and narrative around
+          where the fit curve sits relative to material properties
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct log-log S-N curve (scatter + fit line)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both axes log-scaled, three horizontal reference lines present, Basquin
+          fit overlaid, multi-specimen scatter present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = cycles, Y = stress, correctly assigned per spec
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels ('Test specimens',
+          'Basquin fit') match series names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 44 points across 11 stress levels with realistic per-specimen scatter,
+          full log-decade range, fit curve to endurance limit, plus a shaded infinite-life
+          region; low-cycle/high-cycle regions aren't separately labeled
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Neutral, plausible engineering scenario: quenched-and-tempered 4340
+          steel fatigue testing'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yield/ultimate ratio now 0.87 (fixed from 0.63), endurance/ultimate
+          ratio 0.35 — all realistic for this steel grade
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/init/option flow; the two small helpers (lcg,
+          formatDecadeTick) are necessary callbacks, not over-structuring
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG(42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current setOption API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Single setOption call, log axes, markLine/markArea, high-level scatter/line
+          series — idiomatic ECharts, though doesn't stretch into the library's more
+          advanced patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: markArea + markLine with per-line dash-style differentiation and
+          a custom label formatter are ECharts-specific touches, though replicable
+          with effort in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

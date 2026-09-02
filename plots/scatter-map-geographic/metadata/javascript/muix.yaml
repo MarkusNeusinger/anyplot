@@ -1,0 +1,267 @@
+library: muix
+language: javascript
+specification_id: scatter-map-geographic
+created: '2026-09-02T06:08:50Z'
+updated: '2026-09-02T06:29:16Z'
+generated_by: claude-sonnet
+workflow_run: 33596923884
+issue: 3617
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Handcrafted plate-carree basemap (continent silhouettes + 60°/30° graticule) gives
+    real geographic context without pulling in a forbidden geo/D3 dependency, and
+    the projection math is shared exactly between the SVG basemap and the chart's
+    linear axes so points line up perfectly
+  - Depth is mapped through the zAxis continuous colorMap using the Imprint sequential
+    stops (t.seq[0]/t.seq[1]) with a proper ContinuousColorLegend, and the data colors
+    are pixel-identical between the light and dark renders — only chrome flips
+  - Magnitude is binned into four series so marker size scales with earthquake magnitude
+    (5-17px), giving the map genuine multi-dimensional encoding (position + size +
+    color) as the spec calls for
+  - Dashed Prime Meridian / Equator ChartsReferenceLines with inline labels add useful
+    geographic orientation without cluttering the plot
+  - Clean, deterministic LCG-based data generation clustered along real subduction/collision
+    zones (Ring of Fire, Alpide belt, Andes) — factually grounded and neutral in topic
+  - Explicit font sizing throughout (title 24px, subtitle 13px, axis ticks 14px, axis
+    labels 16px, legend 14px) and skipAnimation set correctly per the muix harness
+    contract
+  weaknesses:
+  - The magnitude-tier legend at the bottom renders all four swatches at the same
+    fixed size (itemMarkWidth/itemMarkHeight are uniform in slotProps.legend) and
+    the same green color, so the legend itself conveys zero visual size difference
+    even though the subtitle says 'marker size = magnitude tier' — only the text labels
+    distinguish the tiers. Consider a custom legend (e.g. four manually-sized circle
+    swatches via a small SVG/Box row) so the legend visually matches the size encoding
+    used on the map.
+  - In the densest clusters (Japan-Kuril arc, Indonesia-Philippines arc) many overlapping
+    circles merge into a single blob at this alpha (0.82), making it hard to distinguish
+    individual epicenter counts within a cluster — a touch more transparency (alpha
+    ~0.65-0.7) or a thin stroke contrast would help separate them.
+  - The spec's optional `label` field (point identifier for tooltips) isn't surfaced
+    anywhere in the valueFormatter — only lon/lat/depth are shown; a short place-name
+    or zone label would round out the tooltip content for the interactive HTML view.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "scatter-map-geographic · javascript · muix · anyplot.ai" in bold dark ink top-left, subtitle in muted gray beneath it explaining the size/color encoding. Longitude/Latitude axes with degree-formatted tick labels (e.g. "60°N", "120°W"), light gray graticule gridlines, dashed Prime Meridian and Equator reference lines with inline labels, continent silhouettes drawn as flat light-gray shapes with soft outlines. Continuous depth legend top-right ("6 km shallow" → "591 km deep"). Magnitude-tier legend row at the bottom. All text is dark ink on the cream background and clearly legible.
+      Data: Circular markers cluster along real subduction/collision zones (Japan, Aleutians, Cascadia-Mexico, Andes, Indonesia, Tonga, Anatolia, Himalaya). Marker size varies 5-17px by magnitude tier; color runs from the Imprint sequential green (#009E73-family, shallow) through teal to blue (deep), matching the depth colorbar. Fill opacity ~0.82 with a page-colored stroke keeps overlapping points distinguishable, except in the two densest clusters where several circles fully merge.
+      Legibility verdict: PASS — all chrome text reads clearly against the light background; no dark-on-light or light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis/legend layout, now rendered in light ink (white/near-white) on the dark surface. Continents render as a slightly lighter charcoal gray with visible outlines against the near-black page. Graticule and reference lines remain visible but subtle.
+      Data: Marker colors are pixel-identical to the light render (same green-to-blue depth gradient, same per-tier sizes) — only the chrome (background, text, continent fill, grid) flipped for the dark theme, as required.
+      Legibility verdict: PASS — title, axis ticks, axis labels, and both legends are all light-colored and clearly readable on the dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24, subtitle 13, ticks 14, axis
+          labels 16, legend 14); readable at full size and well-proportioned in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions; reference-line labels
+          and legends sit clear of the data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers sized by magnitude tier and alpha-blended for overlap; two
+          dense clusters (Japan-Kuril, Indonesia) merge into blobs where individual
+          points are hard to separate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential encoding, good contrast against both surfaces,
+          not red-green reliant
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, balanced share of the canvas; legends sit close
+          to the map, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude axes with degree-formatted tick labels convey
+          units clearly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Depth uses imprint_seq (t.seq[0]/t.seq[1]); primary marker color
+          anchored to t.palette[0]; backgrounds correctly #FAF8F1/#1A1A17; data colors
+          identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hand-built basemap + graticule + continuous legend shows real
+          design effort beyond library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines disabled, subtle grid, dashed reference lines, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic clustering along fault lines plus depth color creates
+          clear visual hierarchy, though no explicit annotation calls out the pattern
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct geographic scatter map with basemap
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Color legend, size encoding, basemap, alpha-blending all present;
+          size legend swatches don't visually vary in size to match the encoding
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on x, latitude on y, full -180..180/-90..90 domain shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels correctly describe
+          magnitude tiers and depth range
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide magnitude (5.0-7.8) and depth (5-600km) ranges across 8 real
+          fault zones; optional label field unused
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral earthquake-science scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude and depth ranges factually plausible for the named subduction/collision
+          zones
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data -> series -> Chart component, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG generator
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ScatterChart, ChartsReferenceLine, ContinuousColorLegend, Box,
+          Typography, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, no over-engineering; hardcoded continent paths are justified
+          given the no-geo-dependency constraint
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exported component, skipAnimation set, current community
+          @mui/x-charts API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of xAxis/yAxis/zAxis, ChartsReferenceLine, slotProps.legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: zAxis continuous colorMap + ContinuousColorLegend are MUI X-distinctive
+          and not trivially replicated elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - custom-colormap
