@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: kagi-basic
 created: '2026-09-02T02:09:50Z'
-updated: '2026-09-02T02:18:38Z'
+updated: '2026-09-02T02:30:14Z'
 generated_by: claude-sonnet
 workflow_run: 33581625365
 issue: 3341
@@ -12,55 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Technically correct Kagi construction: vertices are collapsed only on genuine
-    4% reversal breaches, and the thick/thin (yang/yin) state flips only when a column
-    breaks the prior same-direction extreme, not on every alternation — this is the
-    authentic Kagi mechanic, not a simplified stand-in.'
+  - 'Technically correct Kagi construction: vertices collapse only on genuine 4% reversal
+    breaches, and the thick/thin (yang/yin) state flips only when a column breaks
+    the prior same-direction extreme, not on every alternation — the authentic Kagi
+    mechanic.'
   - 'Correct semantic-exception palette use: yang (breakout/gain) is brand green #009E73
-    and yin (breakdown/loss) is matte red #AE3030 (palette[4]) — matches the Imprint
-    style guide''s own explicit finance example (profit/up→green, loss/down→red),
-    with the legend labels literally saying ''breaks prior high/low'' so the mapping
-    is unambiguous.'
-  - Thickness (6px vs 2px) is a redundant non-color encoding on top of hue, so the
-    chart doesn't rely on red-green discrimination alone (VQ-04).
+    and yin (breakdown/loss) is matte red #AE3030 (palette[4]), matching the Imprint
+    style guide''s own finance up/down example, with unambiguous legend labels.'
+  - Line thickness (6px vs 2px) is a redundant non-color encoding on top of hue, so
+    the chart doesn't rely on red-green discrimination alone (VQ-04).
   - 'Both renders are fully theme-correct: identical data colors, warm off-white /
     near-black backgrounds, all chrome (title, subtitle, axis, grid, legend, tooltip)
-    sourced from window.ANYPLOT_TOKENS.'
+    sourced from window.ANYPLOT_TOKENS, no clipping or overlap.'
   - Deterministic, seeded LCG random walk for synthetic Brent crude closes; realistic
-    USD/bbl range with no external fetch/network dependency.
+    USD/bbl range ($38-$86) with no external fetch/network dependency.
   - 'Clean idiomatic Highcharts core-bundle usage: transparent chart background, animation
-    disabled on chart and series, credits disabled, no add-on modules, and a sensible
-    legend-proxy pattern (two zero-data series) to label the many per-segment line
-    series without cluttering the legend.'
+    disabled on chart and series, credits disabled, no add-on modules, and a legend-proxy
+    pattern (two zero-data series) to label the many per-segment line series.'
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level (DE-01/DE-02/DE-03
-    = 4/6): the semantic green/red is spec-mandated rather than an added creative
-    flourish, and there''s no visual callout on the standout move (e.g. the final
-    vertical breakout to ~$86) that would push it toward genuine data storytelling.'
+  - 'BUG — the standout-move callout (xAxis.plotBands with a tinted color band + ''Standout
+    breakout/breakdown'' label, defined around line 131-146) does not render at all
+    in either PNG: pixel-sampling both plot-light.png and plot-dark.png across the
+    full canvas width shows zero color deviation from the plain background anywhere
+    between the x=15 and x=16 gridlines, and no label text appears near the top of
+    the plot area. The standout/standoutUp/standoutLabel computation runs but has
+    no visible effect — this was the exact fix attempted for last attempt''s DE-03
+    weakness (''no visual callout on the standout move''), and it still doesn''t land,
+    so Data Storytelling is unchanged from the prior attempt despite the added code.
+    Investigate why Highcharts.color(...).setOpacity(0.14).get() combined with the
+    xAxis.plotBands array isn''t producing a visible band+label in the browser harness
+    (try a plain rgba() string for color instead of the Color-module helper, and verify
+    the label options render standalone); if it can''t be made to work, remove the
+    dead code rather than shipping a non-functional feature.'
+  - 'Design Excellence remains at ''well-configured default'' level: the semantic
+    green/red is spec-mandated rather than an added creative flourish, and (per the
+    bug above) there is still no functioning visual emphasis on the standout move.'
   - 'Library Mastery (LM-02) is only moderately distinctive: the per-segment series
     + tooltip formatter + dummy-legend-series pattern is a solid Highcharts-idiomatic
-    workaround, but it''s conceptually replicable in other charting libraries with
-    similar syntax — no use of a feature that''s uniquely Highcharts (e.g. plotLines/plotBands
-    to mark the reversal threshold visually).'
+    workaround, but the one genuinely distinctive addition attempted this round (plotBands
+    annotation) doesn''t actually render, so it can''t be credited.'
   - The x-axis 'Kagi Line Index' gives no sense of how many raw daily observations
-    (260) were collapsed into the 16 shown lines, or what time span they cover — a
-    small footnote or tooltip enhancement referencing the underlying date range would
-    orient the reader better, though this is optional polish, not a spec violation
-    (the spec explicitly endorses an index x-axis over a time axis for Kagi charts).
+    (260) were collapsed into the 16 shown lines, or what time span they cover — optional
+    polish, not a spec violation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "kagi-basic · javascript · highcharts · anyplot.ai" at top center, gray subtitle "Brent crude oil, synthetic daily close · 4% reversal threshold" beneath it. Y-axis title "Brent Crude Oil Price (USD/bbl)" and x-axis title "Kagi Line Index" in medium-gray, tick labels in the same soft gray on both axes. Subtle horizontal gridlines only (no vertical grid). Legend centered below the x-axis title with two swatches: a thick green line "Yang (breaks prior high)" and a thin red line "Yin (breaks prior low)". All text is clearly legible against the light background — no light-on-light issues found.
-      Data: A stepped Kagi line running left to right across 16 line segments (index 0-16), price ranging roughly $38-$86. Segments alternate between a thick green line (#009E73-like) and a thin red line (matte red), with horizontal "shoulder/waist" ledges at each turning point exactly as a Kagi chart should render. Thickness state persists across some direction reversals and only flips when a column breaks its prior same-direction extreme, matching authentic Kagi semantics.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "kagi-basic · javascript · highcharts · anyplot.ai" at top center, gray subtitle "Brent crude oil, synthetic daily close · 4% reversal threshold" beneath it. Y-axis title "Brent Crude Oil Price (USD/bbl)" and x-axis title "Kagi Line Index" in medium-gray, tick labels in the same soft gray on both axes. Subtle horizontal gridlines only (no vertical grid). Legend centered below the x-axis title with two swatches: a thick green line "Yang (breaks prior high)" and a thin red line "Yin (breaks prior low)". All text is clearly legible against the light background - no light-on-light issues found. Pixel-sampled the full canvas width at several y positions looking for the code's intended standout-move shaded plotBand + "Standout breakout/breakdown" label between the x=15 and x=16 gridlines (near the final steep green rise to ~$86): found no color deviation from the plain background and no label text anywhere - the plotBand/label do not render in this PNG.
+      Data: A stepped Kagi line running left to right across 16 line segments (index 0-16), price ranging roughly $38-$86. Segments alternate between a thick green line (#009E73) and a thin red line (matte red #AE3030), with horizontal shoulder/waist ledges at each turning point exactly as a Kagi chart should render. Thickness state persists across some direction reversals and only flips when a column breaks its prior same-direction extreme, matching authentic Kagi semantics.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
       Chrome: Same title/subtitle now rendered in white/light-gray, axis titles and tick labels in light gray, legend swatches and labels in light gray with the same green/red data lines. Gridlines are faint light-gray horizontal lines, subtle but visible against the dark background.
-      Data: Identical green (#009E73) and red (#AE3030) segment colors and identical stepped Kagi geometry to the light render — only the chrome (background, text, grid, legend) flipped, confirming palette consistency across themes. No dark-on-dark text found; all title/axis/tick/legend text is clearly legible.
+      Data: Identical green (#009E73) and red (#AE3030) segment colors and identical stepped Kagi geometry to the light render - only the chrome (background, text, grid, legend) flipped, confirming palette consistency across themes. No dark-on-dark text found; all title/axis/tick/legend text is clearly legible. Same pixel check as the light render around x=15-16 confirms the standout plotBand + label are equally absent here.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -73,8 +80,7 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend/subtitle
-          14px per the highcharts.md guide); well-proportioned, no overflow or clipping,
-          readable in both themes.
+          14px); well-proportioned, no overflow or clipping, readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -101,24 +107,24 @@ review:
         max: 4
         passed: true
         comment: Plot area fills the large majority of the canvas with balanced margins;
-          legend sits close to the plot, not isolated.
+          legend sits close to the plot, not isolated; no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Y-axis has descriptive label with units (USD/bbl); x-axis label is
-          descriptive (an index has no natural unit).
+          descriptive (an index has no natural unit, per spec).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'Yang = palette[0] #009E73 (brand green), Yin = palette[4] #AE3030
-          (matte red) — a valid Imprint semantic exception for finance up/down; identical
+          (matte red) - a valid Imprint semantic exception for finance up/down; identical
           across themes; theme-correct backgrounds and chrome in both renders.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -127,7 +133,7 @@ review:
         max: 8
         passed: false
         comment: 'Well-configured: theme tokens threaded throughout, semantic color
-          use, contextual subtitle — but the semantic coloring is spec-mandated, not
+          use, contextual subtitle - but the semantic coloring is spec-mandated, not
           an added creative choice, so it reads as a well-configured default rather
           than publication-level polish.'
       - id: DE-02
@@ -136,16 +142,17 @@ review:
         max: 6
         passed: false
         comment: Y-axis-only subtle gridlines, generous whitespace, clean legend placement
-          — solid refinement without being exceptional.
+          - solid refinement without being exceptional.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
         comment: Color + linewidth variation creates real visual hierarchy (the chart's
-          whole purpose), but there's no explicit emphasis (annotation/callout) on
-          the standout breakout, so it stops short of guiding the viewer to a specific
-          insight.
+          whole purpose), but the added standout-move plotBand callout does not render
+          in either PNG (verified by pixel sampling) - so there is still no functioning
+          emphasis pointing the viewer at the largest move, same shortfall as the
+          prior attempt.
     spec_compliance:
       score: 15
       max: 15
@@ -163,7 +170,7 @@ review:
         max: 4
         passed: true
         comment: 4% reversal threshold, yang/yin thickness+color coding, index-based
-          x-axis (spec explicitly endorses this over time) — all present.
+          x-axis (spec explicitly endorses this over time) - all present.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -189,7 +196,7 @@ review:
         max: 6
         passed: true
         comment: Both yang and yin segments present, including runs where thickness
-          persists across a directional reversal until a prior extreme is broken —
+          persists across a directional reversal until a prior extreme is broken -
           shows the full Kagi mechanic, not just a simple alternation.
       - id: DQ-02
         name: Realistic Context
@@ -206,7 +213,7 @@ review:
         comment: $38-86/bbl is within Brent's realistic historical range; momentum-driven
           random walk keeps daily moves plausible.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -215,8 +222,7 @@ review:
         max: 3
         passed: true
         comment: Imports/globals -> data generation -> Kagi construction -> chart,
-          no classes; the tiny lcg() closure is a necessary, single-purpose RNG helper,
-          not over-structuring.
+          no classes; the tiny lcg() closure is a necessary, single-purpose RNG helper.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -231,11 +237,14 @@ review:
         comment: No unused imports; only the provided globals are used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Complexity is proportional to the Kagi algorithm's genuine requirements;
-          no fake UI/interactivity.
+        passed: false
+        comment: The standout/standoutUp/standoutLabel block and the xAxis.plotBands
+          entry it feeds are dead code in practice - they compute a value and build
+          a label string that never renders on screen (verified by pixel sampling
+          both PNGs), which is wasted complexity/a latent bug rather than elegant
+          code.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -244,7 +253,7 @@ review:
         comment: Highcharts.chart('container', ...) with animation disabled on chart
           and series, matching the mount-node contract.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -257,18 +266,20 @@ review:
           express per-segment dynamic thresholds on an irregular index axis.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
+        passed: false
         comment: Custom tooltip formatter and the multi-series segment/legend-proxy
-          trick are genuine Highcharts-specific techniques, but the overall approach
-          is conceptually portable to other libraries with similar effort.
-  verdict: REJECTED
+          trick are genuine Highcharts-specific techniques, but the one attempt at
+          a more distinctive feature this round - an xAxis.plotBands annotation -
+          does not render, so it can't be credited toward mastery.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   dataprep: []
