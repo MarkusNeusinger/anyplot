@@ -39,7 +39,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   AST, so a decorator in single quotes, wrapped over two lines, carrying kwargs or passing
   its path as `path=` is not silently skipped the way a regex skips it, and a path that is
   no string literal at all fails the run rather than disappearing (10 routes today, and a
-  new bot page is covered the moment it lands) — and the expected spec title from
+  new bot page is covered the moment it lands) — and the expected spec title, YAML-decoded
+  and then HTML-escaped the way the renderer escapes it, from
   `plots/<spec>/specification.yaml`, so a copy change can no longer make the alarm lie. The
   per-route assertion is the generated `<link rel="canonical">` — the SPA shell carries none
   at all and the href names the route, so one match proves both that the bot hop ran and

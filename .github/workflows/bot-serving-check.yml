@@ -203,14 +203,18 @@ jobs:
           # literal here. `<title>$SPEC_TITLE` as a prefix: the suffix is site
           # copy ("| anyplot.ai") and the impl page inserts the library name,
           # neither of which this monitor is the right place to pin.
-          # Decoded with a YAML parser, not read off the source line: a quoted
-          # title is valid YAML and already occurs in this repo (see
-          # plots/heatmap-chromagram/specification.yaml), and a needle carrying
-          # the quote characters would be a false alarm of exactly the kind this
-          # rewrite exists to remove.
+          # Two decodings, both mirroring what the page actually does with the
+          # value. yaml.safe_load, not the source line: a quoted title is valid
+          # YAML and already occurs in this repo (plots/heatmap-chromagram).
+          # html.escape, because api/routers/seo.py escapes the title before it
+          # reaches `<title>` — `Mohr's Circle` is served as `Mohr&#x27;s
+          # Circle`, and a raw needle would be a false alarm against a perfectly
+          # healthy page. Both are the same failure this rewrite exists to
+          # remove: an expectation that does not match what is served.
           SPEC="scatter-basic"
           python3 -c "import yaml" 2>/dev/null || pip install --quiet --disable-pip-version-check pyyaml
           SPEC_TITLE=$(python3 - "$SPEC" <<'PY'
+          import html
           import sys
 
           import yaml
@@ -218,7 +222,7 @@ jobs:
           with open("plots/%s/specification.yaml" % sys.argv[1], encoding="utf-8") as fh:
               doc = yaml.safe_load(fh) or {}
           title = doc.get("title")
-          print(title if isinstance(title, str) else "")
+          print(html.escape(title) if isinstance(title, str) else "")
           PY
           )
           if [ -z "$SPEC_TITLE" ]; then
