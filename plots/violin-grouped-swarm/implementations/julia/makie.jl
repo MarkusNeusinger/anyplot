@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 
 Random.seed!(42)
 
@@ -116,6 +115,7 @@ ax = Axis(
     xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xticks             = (1:length(task_types), task_types),
+    limits             = (0.5, length(task_types) + 0.5, nothing, nothing),
 )
 
 violin!(
@@ -128,6 +128,18 @@ violin!(
 scatter!(
     ax, swarm_x, response_time;
     color = point_color, markersize = 6, strokewidth = 0.5, strokecolor = PAGE_BG,
+)
+
+# --- Focal annotation: call out the group with the widest spread -----------
+focal_task  = findfirst(==("Render"), task_types)
+focal_level = findfirst(==("Junior"), expertise_levels)
+focal_mask  = (task_idx .== focal_task) .& (expertise_idx .== focal_level)
+focal_x     = slot_center(focal_task, focal_level)
+focal_y     = maximum(response_time[focal_mask])
+text!(
+    ax, focal_x, focal_y;
+    text = "Widest spread", align = (:left, :bottom), offset = (10, 2),
+    color = INK_SOFT, fontsize = 11, font = :italic,
 )
 
 legend_elements = [MarkerElement(color = IMPRINT_PALETTE[i], marker = :circle, markersize = 14) for i in eachindex(expertise_levels)]
