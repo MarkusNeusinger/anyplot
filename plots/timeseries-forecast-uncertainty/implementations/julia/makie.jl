@@ -7,7 +7,6 @@ using CairoMakie
 using Colors
 using Random
 using Dates
-using Statistics
 
 Random.seed!(42)
 
@@ -105,8 +104,25 @@ vlines!(ax, [Float64(n_hist - 1)]; color = INK_SOFT, linestyle = :dot, linewidth
 band!(ax, x, lower_95, upper_95; color = (IMPRINT_PALETTE[3], 0.20), label = "95% interval")
 band!(ax, x, lower_80, upper_80; color = (IMPRINT_PALETTE[3], 0.38), label = "80% interval")
 
+# Thin edge strokes distinguish the 80%/95% band boundaries from each other
+lines!(ax, x, lower_95; color = (IMPRINT_PALETTE[3], 0.45), linewidth = 1, linestyle = :dash)
+lines!(ax, x, upper_95; color = (IMPRINT_PALETTE[3], 0.45), linewidth = 1, linestyle = :dash)
+lines!(ax, x, lower_80; color = (IMPRINT_PALETTE[3], 0.75), linewidth = 1)
+lines!(ax, x, upper_80; color = (IMPRINT_PALETTE[3], 0.75), linewidth = 1)
+
 lines!(ax, x, actual; color = IMPRINT_PALETTE[1], linewidth = 3, label = "Historical")
 lines!(ax, x, forecast; color = IMPRINT_PALETTE[3], linewidth = 3, linestyle = :dash, label = "Forecast")
+
+# Callout labeling the historical/forecast transition point
+y_max = maximum(filter(!isnan, vcat(actual, forecast, upper_95)))
+text!(
+    ax, Float64(n_hist - 1), y_max;
+    text     = "Forecast start",
+    color    = INK_SOFT,
+    fontsize = 11,
+    align    = (:left, :top),
+    offset   = (6, -2),
+)
 
 axislegend(ax; position = :lt, framevisible = false, labelcolor = INK_SOFT, labelsize = 12)
 
