@@ -1,7 +1,7 @@
 // anyplot.ai
-// scatter-map-geographic: Global Earthquake Epicenters by Magnitude and Depth
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// scatter-map-geographic: Scatter Map with Geographic Points
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-02
 
 //# anyplot-orientation: landscape
 
