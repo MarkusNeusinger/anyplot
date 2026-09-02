@@ -1,8 +1,7 @@
 // anyplot.ai
 // indicator-ema: Exponential Moving Average (EMA) Indicator Chart
-// Library: muix 7.29.1 | JavaScript 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 49/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
