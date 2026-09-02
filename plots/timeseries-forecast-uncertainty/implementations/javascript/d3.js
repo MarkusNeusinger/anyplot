@@ -62,7 +62,7 @@ const data = dates.map((date, i) => {
 
 // --- Colors ------------------------------------------------------------------
 const historicalColor = t.palette[0]; // brand green — observed data
-const forecastColor = t.palette[2]; // blue — prediction + uncertainty family
+const forecastColor = t.palette[1]; // canonical position 2 — prediction + uncertainty family
 
 // --- SVG mount -----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
