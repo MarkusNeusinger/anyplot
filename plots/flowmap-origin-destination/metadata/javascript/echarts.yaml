@@ -1,0 +1,253 @@
+library: echarts
+language: javascript
+specification_id: flowmap-origin-destination
+created: '2026-09-02T00:47:43Z'
+updated: '2026-09-02T01:05:12Z'
+generated_by: claude-sonnet
+workflow_run: 33576010676
+issue: 3765
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct continuous Imprint sequential colormap (green -> blue) for flow-volume
+    magnitude via visualMap, plus brand green (#009E73) for all port nodes — full
+    VQ-07 palette compliance in both themes.
+  - 'Thoughtful overlap resolution: Rotterdam/Hamburg markers are nudged apart with
+    symbolOffset (true coordinates untouched) and each port''s label position (top/bottom/left/right)
+    is hand-picked so labels for close neighbors (Shanghai/Busan, Rotterdam/Hamburg)
+    diverge instead of colliding.'
+  - Arc line width and opacity scale with flow share (1.5-7.5px, alpha 0.4-0.7) exactly
+    per spec, with alternating curveness so parallel routes into the same hub stay
+    visually separable.
+  - Fully theme-adaptive chrome end-to-end (axis lines, tick labels, grid, land-mass
+    fill/stroke, title/subtitle) with no clipping and no dark-on-dark/light-on-light
+    failures in either render.
+  - Deterministic, realistic dataset — 14 real container ports, 24 plausible trade
+    routes with sensible TEU volumes — and a well-engineered workaround (cartesian2d
+    + custom renderItem land polygons) for the lack of echarts-gl/GeoJSON in the offline
+    harness.
+  weaknesses:
+  - Hand-simplified continent polygons omit recognizable features geography-literate
+    viewers expect (India's peninsula, the Arabian Peninsula's shape, Japan/UK/Indonesia
+    as islands) — acceptable given the offline-harness constraint but a step down
+    from a real coastline dataset.
+  - All four axis sides keep a full value-axis frame (axisLine on all sides) rather
+    than the style guide's default L-shaped/spine-reduced look — a reasonable choice
+    for a geographic reference grid, but less refined than the house style.
+  - The faintest arcs (lowest flow share, ~0.4 opacity, ~1.5px width) are hard to
+    pick out where they cross the dense Shanghai/Singapore/Jebel Ali cluster — could
+    use a touch more contrast or z-ordering there.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the required light-theme page surface.
+      Chrome: Title "Global Trade Flows · flowmap-origin-destination · javascript · echarts · anyplot.ai" and subtitle are dark ink, clearly legible; longitude/latitude axis tick labels (dark gray) and gridlines (very subtle light gray) are all readable against the light background; the "Low volume / High volume" visualMap legend text at the bottom is legible.
+      Data: 14 green (#009E73) port-throughput circles sized by volume, connected by curved arcs colored on a green-to-blue continuous scale (imprint_seq) and widened for higher-volume routes; continents render as pale gray-green filled polygons behind the arcs for geographic context.
+      Legibility verdict: PASS — no light-on-light text found; all labels, ticks, and legend read cleanly against the cream background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — matches the required dark-theme page surface.
+      Chrome: Title and subtitle render in light ink (#F0EFE8-ish), axis tick labels and gridlines switch to light-gray tones, and the continent polygons switch to a darker gray fill with a lighter stroke — all remain clearly distinguishable from the near-black background.
+      Data: Port circles and arc colors are visually identical to the light render (same green nodes, same green-to-blue continuous arc scale) — only the chrome (background, text, grid, land fill) flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick, port label, and legend string stays legible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title fontsize correctly scales with title length; all text readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Per-port label positions and marker offsets (Rotterdam/Hamburg) avoid
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line widths/opacity scale with flow share, but the faintest arcs
+          are hard to see in the dense Asia cluster
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-blue scale is CVD-safe, no red-green sole encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: No clipping, good proportions; four-sided axis frame is a bit heavier
+          than the house style default
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude labeled with degree-formatted ticks
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, continuous data uses imprint_seq, backgrounds
+          theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom continent geometry, throughput-scaled markers, intentional
+          hub hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and generous whitespace, but full axis frame kept on
+          all sides
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color/width hierarchy highlights major corridors; marker size highlights
+          hub ports
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct origin-destination flow map with curved arcs over a basemap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved arcs, flow-proportional width, 0.4-0.7 alpha, color-encoded
+          magnitude, basemap, hover tooltips
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude/latitude axes correctly map origin/dest coordinates
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; visualMap legend clearly labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: origin/dest lat/lon, flow magnitude, and names all used
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real container ports and plausible, neutral shipping-volume dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: TEU volumes are sensible for individual trade-route legs
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A couple of small helper functions, mostly required by the custom
+          renderItem/sizing API
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real functionality, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, correct init contract, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Smart cartesian2d + lines + custom renderItem workaround given no
+          geo/GL extensions
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: visualMap continuous, lines series curveness/arrows, custom series
+          render item
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - bezier-curves
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - edge-highlighting
