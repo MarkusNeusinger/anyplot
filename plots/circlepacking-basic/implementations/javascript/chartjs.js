@@ -226,23 +226,41 @@ function fitText(ctx, text, maxWidth) {
   return truncated + "…";
 }
 
+// Transform from world units (node.absX/absY/radius) to canvas pixels: fit
+// the root circle to the smaller chartArea dimension, centered. Shared by
+// the manual draw pass and the synthetic hover points so both stay aligned.
+function computeTransform(chart) {
+  const { chartArea } = chart;
+  const cx = (chartArea.left + chartArea.right) / 2;
+  const cy = (chartArea.top + chartArea.bottom) / 2;
+  const available = Math.min(chartArea.width, chartArea.height) / 2 - 8;
+  const scale = available / root.radius;
+  return { cx, cy, scale };
+}
+
+// Leaf nodes only — the smaller circles whose labels are most likely
+// truncated in the static render, so a hover path is worth the most there.
+function collectLeaves(node, depth, out) {
+  if (depth === 2) out.push(node);
+  else if (node.children) node.children.forEach((c) => collectLeaves(c, depth + 1, out));
+  return out;
+}
+
 // --- Mount --------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Chart --------------------------------------------------------------
-// The bubble type hosts the canvas, title, and layout; the dataset stays
-// empty because the packed circles are drawn directly against the resolved
-// `chartArea` in a plugin — that avoids remapping our already-final pixel
-// radii through Chart.js's data-driven x/y scales.
+// The bubble type hosts the canvas, title, and layout; the packed circles
+// are drawn directly against the resolved `chartArea` in a plugin rather
+// than through the dataset — that avoids remapping our already-final pixel
+// radii through Chart.js's data-driven x/y scales. The dataset is used only
+// below to place invisible hover targets on top of the leaf circles.
 const circlePackingPlugin = {
   id: "circlePacking",
   afterDraw(chart) {
-    const { ctx, chartArea } = chart;
-    const cx = (chartArea.left + chartArea.right) / 2;
-    const cy = (chartArea.top + chartArea.bottom) / 2;
-    const available = Math.min(chartArea.width, chartArea.height) / 2 - 8;
-    const scale = available / root.radius;
+    const { ctx } = chart;
+    const { cx, cy, scale } = computeTransform(chart);
 
     ctx.save();
     ctx.textAlign = "center";
@@ -297,10 +315,18 @@ const circlePackingPlugin = {
         ctx.fillStyle = t.ink;
         ctx.fillText(fitText(ctx, node.label, r * 1.3), x, y - r + 15);
       } else if (depth === 2 && r > 24) {
-        const fontSize = Math.min(15, Math.max(11, Math.round(r * 0.42)));
+        // Shrink the font toward a legible floor before truncating, so
+        // longer holding names survive whole more often than a fixed
+        // radius-only font size would allow.
+        const maxWidth = r * 1.8;
+        let fontSize = Math.min(15, Math.max(11, Math.round(r * 0.42)));
         ctx.font = `500 ${fontSize}px -apple-system, sans-serif`;
+        while (fontSize > 9 && ctx.measureText(node.label).width > maxWidth) {
+          fontSize -= 1;
+          ctx.font = `500 ${fontSize}px -apple-system, sans-serif`;
+        }
         ctx.fillStyle = contrastText(node.color);
-        ctx.fillText(fitText(ctx, node.label, r * 1.7), x, y);
+        ctx.fillText(fitText(ctx, node.label, maxWidth), x, y);
       }
 
       if (node.children) node.children.forEach((c) => labelNode(c, depth + 1));
@@ -311,21 +337,39 @@ const circlePackingPlugin = {
   },
 };
 
-new Chart(canvas, {
+// Leaf circles are hand-drawn pixels with no data points of their own, so
+// hovering them natively needs an invisible bubble dataset placed exactly on
+// top. `data`/`min`/`max` stay empty/[-1,1] for the first render; once the
+// chart has laid out once we know the real chartArea and back-map every
+// leaf's already-drawn pixel center through the live scale (getValueForPixel)
+// so the two coordinate systems line up exactly, then redraw.
+const chart = new Chart(canvas, {
   type: "bubble",
-  data: { datasets: [{ data: [] }] },
+  data: { datasets: [{ data: [], backgroundColor: "transparent", hoverBackgroundColor: "transparent", borderWidth: 0, hoverBorderWidth: 0 }] },
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
     layout: { padding: 24 },
+    interaction: { mode: "nearest", intersect: true },
     scales: {
       x: { display: false, min: -1, max: 1 },
       y: { display: false, min: -1, max: 1 },
     },
     plugins: {
       legend: { display: false },
-      tooltip: { enabled: false },
+      tooltip: {
+        enabled: true,
+        backgroundColor: t.elevatedBg,
+        titleColor: t.ink,
+        bodyColor: t.ink,
+        borderColor: t.grid,
+        borderWidth: 1,
+        callbacks: {
+          title: (items) => items[0]?.raw?.label ?? "",
+          label: (item) => `$${item.raw.value}M`,
+        },
+      },
       title: {
         display: true,
         text: "Investment Portfolio Composition · circlepacking-basic · javascript · chartjs · anyplot.ai",
@@ -337,3 +381,14 @@ new Chart(canvas, {
   },
   plugins: [circlePackingPlugin],
 });
+
+const { cx, cy, scale } = computeTransform(chart);
+const leafHoverPoints = collectLeaves(root, 0, []).map((leaf) => ({
+  x: chart.scales.x.getValueForPixel(cx + leaf.absX * scale),
+  y: chart.scales.y.getValueForPixel(cy + leaf.absY * scale),
+  r: leaf.radius * scale,
+  label: leaf.label,
+  value: leaf.value,
+}));
+chart.data.datasets[0].data = leafHoverPoints;
+chart.update("none");
