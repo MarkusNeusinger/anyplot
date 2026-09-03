@@ -10,6 +10,8 @@ from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from api.security_headers import stamp as stamp_security_headers
+
 
 logger = logging.getLogger(__name__)
 
@@ -140,10 +142,17 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     Never reflects the raw exception text back to clients — `str(exc)` can leak
     DSN fragments, table names, file-path traceback fragments, and other internal
     state. The full traceback goes to the server log instead.
+
+    Stamps the security headers itself. `ServerErrorMiddleware` wraps every user
+    middleware, so this response is built OUTSIDE the http middleware stack and
+    is the one exit `api/main.py`'s header middleware cannot reach (Copilot
+    review). Same helper on both paths, so the two cannot drift.
     """
     logger.exception("Unhandled exception on %s", request.url.path)
-    return JSONResponse(
-        status_code=500, content={"status": 500, "message": "Internal server error", "path": _public_path(request)}
+    return stamp_security_headers(
+        JSONResponse(
+            status_code=500, content={"status": 500, "message": "Internal server error", "path": _public_path(request)}
+        )
     )
 
 
