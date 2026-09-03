@@ -46,6 +46,7 @@ from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
 from api.routers.specs import _refresh_specs_list, _refresh_specs_map  # noqa: E402
 from api.routers.stats import _refresh_stats  # noqa: E402
+from api.security_headers import stamp as stamp_security_headers  # noqa: E402
 from api.version import APP_VERSION  # noqa: E402
 from core.config import settings  # noqa: E402
 from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA  # noqa: E402
@@ -166,7 +167,7 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # `@app.middleware` both wrap what is already there — so reading this file from
 # here down gives the order a request actually travels, in reverse:
 #
-#   cache headers → CORS → origin gate → bot counter → gzip → router
+#   security headers → cache headers → CORS → origin gate → bot counter → gzip → router
 #
 # (`HeadAsGetMiddleware` and `MCPTrailingSlashMiddleware` wrap the whole app
 # further out still; both only rewrite the scope.)
@@ -284,6 +285,24 @@ async def add_cache_headers(request: Request, call_next):
         response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
     return response
+
+
+# Added LAST, so it is the OUTERMOST http middleware and every response that
+# leaves through the stack passes back through it — CORS preflights, the origin
+# gate's 403, an HTTPException's 4xx.
+#
+# It cannot be the only place, though. `ServerErrorMiddleware` wraps every user
+# middleware, so a route that RAISES makes `await call_next(request)` raise too
+# and the registered `Exception` handler's 500 is built outside this stack. That
+# path stamps the same headers itself, through the same helper
+# (`api/security_headers.py`, `api/exceptions.py::generic_exception_handler`).
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Stamp the baseline security headers the API host was missing.
+
+    Which headers, and why not `X-Frame-Options`: `api/security_headers.py`.
+    """
+    return stamp_security_headers(await call_next(request))
 
 
 # Mount MCP server for AI assistant integration
