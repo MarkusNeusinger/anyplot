@@ -240,8 +240,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   and `core` in the runtime stage put `.pyc` in the image, which takes ~1.8 s off every cold
   start (`import api.main` measured at 3.56–4.43 s with nothing cached against 1.79–2.26 s
   with bytecode present) at the price of a bigger venv layer (686.6 MB unpacked / 210.3 MB
-  compressed against 493.1 / 142.3). `uv` itself is pinned — it was the last unpinned input
-  of an otherwise `--frozen` build — and `UV_PYTHON` names the interpreter so uv can never
+  compressed against 493.1 / 142.3). `uv` itself is pinned — the resolver that reads
+  `uv.lock` was the unpinned link in the dependency chain, though the image as a whole
+  stays unreproducible on purpose: `python:3.13-slim` is a mutable tag and the apt packages
+  are deliberately unversioned — and `UV_PYTHON` names the interpreter so uv can never
   quietly download a managed CPython that the runtime stage does not have at the same path.
   With the pin, hadolint's DL3013 exception disappears; the remaining two (DL3008, DL3025)
   move out of the workflow's file-wide `ignore:` and onto the exact instructions they excuse,

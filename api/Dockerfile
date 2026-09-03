@@ -28,11 +28,13 @@ WORKDIR /app
 # ~110 MB that only ever sat there. If a future dependency arrives sdist-only,
 # the build fails loudly at this step — the right place to notice.
 #
-# uv is PINNED. It was the only unpinned input of this image: uv.lock fixes
-# every dependency, the base image fixes the interpreter, and the resolver
-# itself floated on whatever PyPI served that morning. A resolver change is
-# exactly the kind of difference that makes "it built yesterday" true and
-# useless. Pinning it also retires the DL3013 hadolint exception.
+# uv is PINNED — the unpinned link in the DEPENDENCY chain, nothing wider than
+# that. uv.lock fixes every package, but the resolver that reads it floated on
+# whatever PyPI served that morning, and a resolver change is exactly the kind
+# of difference that makes "it built yesterday" true and useless. The image as
+# a whole is still not reproducible: `python:3.13-slim` is a mutable tag, and
+# the apt packages in the runtime stage are deliberately unpinned for the reason
+# given at their DL3008 line. Pinning uv also retires the DL3013 exception.
 RUN pip install --no-cache-dir uv==0.10.9
 
 # Write .pyc next to every installed module. Without this the venv ships source
