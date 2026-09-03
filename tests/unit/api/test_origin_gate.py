@@ -114,13 +114,9 @@ class TestTheArmedGate:
 
 
 class TestTheExemptPaths:
-    """Two paths, no prefixes. `/health` is how the deploy smoke reaches the
+    """One path, no prefixes. `/health` is how the deploy smoke reaches the
     candidate revision on its `run.app` tag URL, which by definition never
-    passes the edge, so gating it would make every deploy fail closed.
-    `/debug/cache/invalidate` is the one legitimate caller with no front door —
-    `sync-postgres.yml` posts to the direct URL because Cloudflare's bot
-    challenge answers an unauthenticated curl POST with a 403 HTML page; that
-    endpoint carries its own token."""
+    passes the edge, so gating it would make every deploy fail closed."""
 
     def test_the_gate_is_really_armed_for_this_test(self, client: TestClient, armed):
         assert client.get(OPEN_PATH).status_code == 403
@@ -128,10 +124,18 @@ class TestTheExemptPaths:
     def test_health_is_never_gated(self, client: TestClient, armed):
         assert client.get("/health").status_code == 200
 
-    def test_the_cache_flush_is_never_gated(self, client: TestClient, armed):
-        """503 is the answer with no CACHE_INVALIDATE_TOKEN configured — its
-        own fail-closed gate, reached rather than pre-empted."""
-        assert client.post("/debug/cache/invalidate").status_code == 503
+    def test_the_cache_flush_is_gated_like_everything_else(self, client: TestClient, armed):
+        """It was the second exemption until `sync-postgres.yml` learned to send
+        the header itself. An exempt path is one anybody may POST to from
+        anywhere with only `CACHE_INVALIDATE_TOKEN` behind it; a caller that
+        carries the origin secret needs no hole in the gate."""
+        assert client.post("/debug/cache/invalidate").status_code == 403
+
+    def test_the_cache_flush_still_answers_the_caller_that_carries_the_header(self, client: TestClient, armed):
+        """403 above is the gate; 503 here is the endpoint's OWN fail-closed
+        lock with no CACHE_INVALIDATE_TOKEN configured — reached, not pre-empted.
+        The pair is what proves the flush is gated twice rather than moved."""
+        assert client.post("/debug/cache/invalidate", headers=EDGE).status_code == 503
 
     def test_the_prerendered_pages_ARE_gated(self, client: TestClient, armed):
         """Deliberately not exempt (Copilot review): the site's nginx fetches
@@ -145,7 +149,7 @@ class TestTheExemptPaths:
         ("path", "exempt"),
         [
             ("/health", True),
-            ("/debug/cache/invalidate", True),
+            ("/debug/cache/invalidate", False),
             ("/seo-proxy", False),
             ("/seo-proxy/", False),
             ("/seo-proxy/specs", False),
@@ -155,7 +159,7 @@ class TestTheExemptPaths:
             ("/specs", False),
         ],
     )
-    def test_the_exemption_list_is_exactly_these_two_paths(self, path, exempt):
+    def test_the_exemption_list_is_exactly_this_one_path(self, path, exempt):
         assert is_exempt(path, "GET") is exempt
 
 
@@ -287,11 +291,12 @@ class TestANonAsciiHeaderIsRefused:
 
 
 class TestTheOtherHeaderSecretsUseTheSameComparator:
-    """The gate exempts `/debug/cache/invalidate` on the grounds that it has its
-    own lock — so that lock has to be as cheap to fail as the gate is. It used
-    the raw `str` comparison, and it is the one endpoint reachable on the direct
-    `run.app` URL, so a non-ASCII `X-Cache-Token` turned a 401 into a logged 500
-    (Copilot review). `X-Admin-Token` had the same comparison."""
+    """`/debug/cache/invalidate` has its own lock behind the gate — so that lock
+    has to be as cheap to fail as the gate is. It used the raw `str` comparison,
+    and it was for a while the one endpoint reachable on the direct `run.app`
+    URL, so a non-ASCII `X-Cache-Token` turned a 401 into a logged 500 (Copilot
+    review). `X-Admin-Token` had the same comparison. These run with the gate
+    unarmed, which is the state of local development and of the suite at large."""
 
     RAW = b"tok\xe9n"
 

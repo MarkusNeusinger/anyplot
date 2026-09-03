@@ -76,10 +76,12 @@ git diff --name-only origin/main...
 A `/verify-*` gate only counts if the **diff's own flow** was driven —
 rendering a proxy or asserting a 200 is not verification.
 
-**Changelog gate:** every non-exempt PR adds its entries to
-`CHANGELOG.md` under `[Unreleased]` before the PR opens (rule + 
-exemptions in CLAUDE.md; the `/pull_request` command enforces the
-same gate and appends the PR number after creation).
+**Changelog gate:** every non-exempt PR adds `changelog.d/<slug>.md`
+before the PR opens and touches `CHANGELOG.md` not at all — that shared
+spot is where sibling PRs conflict (rule + exemptions in CLAUDE.md,
+format in `changelog.d/README.md`; the `/pull_request` command enforces
+the same gate and appends the PR number after creation). Locally:
+`uv run python -m tools.changelog check --base origin/main`.
 
 Then the local CI equivalents — the same commands the pipeline runs.
 **Hard gate: do not open the PR while any of these is red.**
