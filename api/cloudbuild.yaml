@@ -40,14 +40,6 @@ steps:
     id: "push-image"
     waitFor: ["build-image"]
 
-  # Push latest tag
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      - "push"
-      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
-    id: "push-latest"
-    waitFor: ["build-image"]
-
   # Deploy to Cloud Run
   - name: "gcr.io/cloud-builders/gcloud"
     args:
@@ -146,9 +138,31 @@ steps:
         ORIGIN_SECRET=$$(gcloud secrets versions access latest --secret=ORIGIN_SECRET 2>/dev/null || true)
         HDR=()
         if [ -n "$$ORIGIN_SECRET" ]; then HDR=(-H "X-Origin-Secret: $$ORIGIN_SECRET"); fi
+        # `expect <path> <needle> <what-it-means>` sends the origin header;
+        # `expect_bare` is the same probe without it. Both fetch to a file rather
+        # than piping into `grep -q`: `grep -q` exits at the first match and
+        # SIGPIPEs curl, so the pipe form only ever passed because `-ceu` carries
+        # no `pipefail` — a later hardening pass that adds it would red every
+        # deploy. Writing the body out also lets each failure name the probe and
+        # what was expected, which is the whole value of a log someone reads
+        # while a deploy is blocked. Same helper as app/cloudbuild.yaml.
+        _check() {
+          grep -qF "$$2" body.out || { echo "$$3 ($$1 is missing: $$2)"; exit 1; }
+          echo "OK: $$1"
+        }
+        expect() {
+          curl -fsS $$RETRY "$${HDR[@]}" -o body.out "$$URL$$1" \
+            || { echo "candidate did not serve $$1"; exit 1; }
+          _check "$$1" "$$2" "$$3"
+        }
+        expect_bare() {
+          curl -fsS $$RETRY -o body.out "$$URL$$1" \
+            || { echo "candidate did not serve $$1 without the origin header"; exit 1; }
+          _check "$$1" "$$2" "$$3"
+        }
         # /health stays bare: it is exempt from the gate, and that is what makes
         # it the probe that always reaches a cold candidate.
-        curl -fsS $$RETRY "$$URL/health" | grep -q '"healthy"'
+        expect_bare "/health" '"healthy"' "the candidate's /health did not report healthy"
         # …and that the secret this BUILD can read is the one the SERVICE was
         # given. /health reports the verdict for the request it was asked with
         # (never the value), so a rotation applied to only one of the two shows
@@ -169,9 +183,11 @@ steps:
         # unreachable (optional_db), so they prove the app serves but not the
         # database. /plots/filter takes require_db — it is the probe that fails
         # when the Cloud SQL connection is broken.
-        curl -fsS $$RETRY "$${HDR[@]}" "$$URL/libraries" | grep -q '"libraries"'
-        curl -fsS $$RETRY "$${HDR[@]}" "$$URL/languages" | grep -q '"languages"'
-        curl -fsS $$RETRY "$${HDR[@]}" "$$URL/plots/filter" >/dev/null
+        expect "/libraries" '"libraries"' "the candidate did not serve the library list"
+        expect "/languages" '"languages"' "the candidate did not serve the language list"
+        curl -fsS $$RETRY "$${HDR[@]}" -o /dev/null "$$URL/plots/filter" \
+          || { echo "/plots/filter failed — the candidate cannot reach Cloud SQL"; exit 1; }
+        echo "OK: /plots/filter"
         # Fail-closed admin gate. 401 is the answer with ADMIN_TOKEN present and
         # no header sent; a 503 here would mean the secret never arrived, which
         # is exactly the misconfiguration worth failing the build over. With the
@@ -179,6 +195,28 @@ steps:
         # says "admin gate" about something that never reached it.
         code=$$(curl -s $$RETRY "$${HDR[@]}" -o /dev/null -w '%{http_code}' "$$URL/debug/status")
         test "$$code" = "401" || { echo "admin gate expected 401, got $$code"; exit 1; }
+        # Re-assert the tag AFTER the probes. `candidate` is a shared tag, so a
+        # concurrent build could move it between the check above and the last
+        # probe, and this build would then have smoked someone else's revision
+        # while promoting its own. A competing build only ever tags its OWN
+        # revision and never ours back, so our revision at both ends means the
+        # tag was never reassigned while the probes ran.
+        #
+        # What that is and is not: `status.traffic` is CONTROL-PLANE state, so
+        # this detects an observed reassignment, it does not prove a given probe
+        # reached this revision. Tag-URL propagation can lag a reassignment, so a
+        # probe can still land on the previous candidate — the same residual
+        # app/cloudbuild.yaml documents at its own smoke step, and closing it
+        # would need a build-unique tag or a build id the service serves in its
+        # own response. The worst case stays mild: it needs the PREVIOUS
+        # candidate to have passed every probe too, so the failure is "promoted a
+        # revision we only believed we smoked", not "shipped a known-broken one".
+        # (app/cloudbuild.yaml, #11207, gained this second read while the API —
+        # the service with the DB connection and the admin gate — still checked
+        # once.)
+        REV_AFTER=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
+          | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['revisionName'])")
+        test "$$REV_AFTER" = "$$REV" || { echo "candidate tag moved to $$REV_AFTER mid-smoke (started on $$REV) — not promoting"; exit 1; }
         echo "smoke OK"
     id: "smoke"
     waitFor: ["deploy"]
@@ -197,6 +235,22 @@ steps:
       - "--to-revisions=${_SERVICE_NAME}-b$BUILD_ID=100"
     id: "promote"
     waitFor: ["smoke"]
+
+  # `:latest` moves only after THIS build promoted, so it can no longer name an
+  # image that was never rolled out. It used to wait on `build-image`, which put
+  # the tag on the registry before the candidate had been deployed, let alone
+  # smoked: a build whose smoke failed still left `:latest` pointing at the image
+  # that failed it. Same fix and same wording as app/cloudbuild.yaml (#11207).
+  # It is not a guarantee across concurrent builds — two overlapping deploys race
+  # for the tag and the later push wins whichever revision serves. That is why the
+  # deploy step pulls `:$BUILD_ID` and never `:latest`; the tag is a convenience
+  # for humans, not an input to the rollout.
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
+    id: "push-latest"
+    waitFor: ["promote"]
 
   # Report deployed URL
   - name: "gcr.io/cloud-builders/gcloud"
