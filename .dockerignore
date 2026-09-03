@@ -1,0 +1,41 @@
+# What a `docker build -f api/Dockerfile .` is allowed to see.
+#
+# This file has to live at the REPO ROOT. Docker reads `.dockerignore` from the
+# build CONTEXT, and the context of both the deploy step (api/cloudbuild.yaml)
+# and the pre-merge job (.github/workflows/ci-image.yml) is `.` — so the
+# `api/.dockerignore` that used to hold these rules was never read by anything.
+# The proof was inside the file itself: it excluded `*.md`, and yet
+# `COPY pyproject.toml uv.lock README.md ./` in the builder stage has succeeded
+# on every build since it was written.
+#
+# Narrowing the context to `api/` instead is not an option: the image needs
+# `core/`, `pyproject.toml` and `uv.lock`, which live above it.
+#
+# Allowlist, not denylist. A denylist that misses a new directory only makes the
+# context quietly fatter — that is how ~230 MB (a 120 MB `.git` plus a 69 MB
+# `plots/`) came to be uploaded on every build; an allowlist that misses one
+# fails at the COPY line, which is the loud failure. `app/` keeps its own
+# `app/.dockerignore`: the frontend build's context is `app`, so nothing here
+# applies to it.
+*
+
+!api
+!core
+!pyproject.toml
+!uv.lock
+!README.md
+
+# …and the noise that lives inside the trees above. `__pycache__` matters twice
+# over now that the image compiles its own bytecode: a stale host `.pyc` copied
+# into a layer would shadow the source it no longer matches.
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+
+# `.env*` is already covered by the `*` above. It is spelled out anyway so that
+# no future `!` line can let DATABASE_URL or ADMIN_TOKEN into a layer — the same
+# rule the sibling repo kurrentschrift keeps in its own `.dockerignore`.
+**/.env
+**/.env.*

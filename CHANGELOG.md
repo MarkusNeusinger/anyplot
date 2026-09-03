@@ -222,6 +222,33 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **The API image build gets a `.dockerignore` that is actually read, loses 69 MB of dead
+  weight and ships its own bytecode** — `api/.dockerignore` never did anything: Docker reads
+  the ignore file from the build CONTEXT, and both the Cloud Build step and the pre-merge
+  image job build with `.` at the repo root. The file said so itself — it excluded `*.md`
+  while the builder's `COPY … README.md` succeeded on every build — and the result was a
+  context of roughly 230 MB per build, a 120 MB `.git` and a 69 MB `plots/` foremost. The
+  replacement lives at the root and is an **allowlist** (`api`, `core`, `pyproject.toml`,
+  `uv.lock`, `README.md`): a denylist that misses a new directory only makes the context
+  quietly fatter, while an allowlist that misses one fails at the COPY line. The context
+  cannot instead be narrowed to `api/`, which is why this shape: the image needs `core/` and
+  the lock files, and they live above it. `COPY plots/ ./plots/` is gone from the runtime
+  stage — it was 16.6 MB of every pulled image (69.2 MB unpacked, 9,166 files; layer 10 of
+  the `latest` manifest) for a directory nothing reads, because the implementations this API
+  serves come from Postgres; `ci-image.yml` already said as much where it explains why
+  `plots/**` is not a build trigger. `UV_COMPILE_BYTECODE=1` plus a `compileall` over `api`
+  and `core` in the runtime stage put `.pyc` in the image, which takes ~1.8 s off every cold
+  start (`import api.main` measured at 3.56–4.43 s with nothing cached against 1.79–2.26 s
+  with bytecode present) at the price of a bigger venv layer (686.6 MB unpacked / 210.3 MB
+  compressed against 493.1 / 142.3). `uv` itself is pinned — the resolver that reads
+  `uv.lock` was the unpinned link in the dependency chain, though the image as a whole
+  stays unreproducible on purpose: `python:3.13-slim` is a mutable tag and the apt packages
+  are deliberately unversioned — and `UV_PYTHON` names the interpreter so uv can never
+  quietly download a managed CPython that the runtime stage does not have at the same path.
+  With the pin, hadolint's DL3013 exception disappears; the remaining two (DL3008, DL3025)
+  move out of the workflow's file-wide `ignore:` and onto the exact instructions they excuse,
+  so a new occurrence elsewhere in the file is caught instead of swallowed. (#11211)
+
 - **The frontend deploys through a candidate revision instead of straight onto live
   traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
   `api/cloudbuild.yaml`: deploy with `--no-traffic --tag=candidate
