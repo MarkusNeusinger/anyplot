@@ -79,16 +79,35 @@ jobs:
         # is unprotected by CF and accepts the bearer token directly.
         API_URL: ${{ vars.API_DIRECT_URL || 'https://anyplot-api-r3tvmejsmq-ez.a.run.app' }}
         CACHE_INVALIDATE_TOKEN: ${{ secrets.CACHE_INVALIDATE_TOKEN }}
+        # The header the Cloudflare Transform Rule stamps on everything it
+        # proxies for api.anyplot.ai. This call skips the edge on purpose (see
+        # above), so it has to stamp its own — which is what let
+        # api/origin_gate.py drop the /debug/cache/invalidate exemption. An
+        # exempt path is one anybody may POST to from anywhere; a caller that
+        # carries the header needs no hole in the gate. The value is never
+        # echoed: it reaches curl through the environment, and the step runs
+        # without `set -x`.
+        ORIGIN_SECRET: ${{ secrets.ORIGIN_SECRET }}
       run: |
         if [ -z "${CACHE_INVALIDATE_TOKEN}" ]; then
           echo "CACHE_INVALIDATE_TOKEN not set — skipping cache invalidation (cache will fall back to TTL expiry)"
           exit 0
         fi
+        # Absent secret => no header => the gate answers 403, which the branch
+        # below names. Sending an empty header instead would look like a
+        # mismatch and read as a rotation problem rather than a missing secret.
+        HDR=()
+        if [ -n "${ORIGIN_SECRET}" ]; then HDR=(-H "X-Origin-Secret: ${ORIGIN_SECRET}"); fi
         status=$(curl -sS -o /tmp/invalidate.json -w '%{http_code}' \
           -X POST "${API_URL}/debug/cache/invalidate" \
+          "${HDR[@]}" \
           -H "X-Cache-Token: ${CACHE_INVALIDATE_TOKEN}")
         echo "HTTP ${status}"
         cat /tmp/invalidate.json || true
+        if [ "${status}" = "403" ]; then
+          echo "::error::Cache invalidation was refused by the origin gate (HTTP 403). Set the ORIGIN_SECRET repository secret to the same value as the ORIGIN_SECRET on the anyplot-api Cloud Run service."
+          exit 1
+        fi
         if [ "${status}" = "503" ] || [ "${status}" = "401" ]; then
           echo "::error::Cache invalidation returned HTTP ${status} — token misconfigured server-side (503) or mismatched (401)"
           exit 1
