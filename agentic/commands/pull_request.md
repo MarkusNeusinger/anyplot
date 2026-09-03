@@ -55,6 +55,10 @@ EOF
 
 7. If step 4 added changelog entries without a PR reference, append the new PR number to those
    bullets (e.g. `(#1234)`) and push the follow-up commit.
+8. **The Copilot review runs ONCE**, when the PR opens (or leaves draft) — review-on-push is off in
+   the "Automated Copilot Code Review" ruleset (owner, 2026-09-03), so step 7's follow-up commit and
+   every later push trigger nothing. Do not re-request a review per push; the rule and its one
+   exception (a substantive rework) are in `CLAUDE.md` § "PR Follow-Through", step 3.
 
 ## Report
 
