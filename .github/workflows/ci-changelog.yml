@@ -1,0 +1,72 @@
+# Every PR carries a changelog fragment (changelog.d/<slug>.md) instead of a
+# bullet in the shared CHANGELOG.md.
+#
+# That shared spot is where sibling PRs conflicted each other — three times in
+# one night on 2026-09-02/03, each a hand-resolved rebase for text neither
+# branch disagreed about. The .gitattributes line endings do nothing for it, a
+# union merge driver would heal only the local rebase (GitHub's own mergeability
+# check ignores merge drivers), and a branch that MOVES changelog lines comes out
+# of a union rebase with the block duplicated. Fragments remove the spot instead
+# of healing it. The sibling repo kurrentschrift runs the same gate over the same
+# tool; keep the two in the same shape.
+#
+# Only runs on pull_request: a push to main has no base to diff against, and the
+# gate is a statement about a PR, not about a commit.
+
+name: "CI: Changelog"
+run-name: "Changelog: ${{ github.ref_name }}"
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'specification/**'
+      - 'implementation/**'
+
+concurrency:
+  group: ci-changelog-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fragment:
+    name: Changelog (fragment)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    # The two exempt authors, which are exactly the classes CLAUDE.md already
+    # excuses and a release summarizes in aggregate:
+    #
+    # * github-actions[bot] — the automated plot pipeline (spec-create,
+    #   impl-generate/review/repair/merge, spec auto-polish, daily-regen). Its
+    #   PRs touch only `plots/`, so the tool's own path exemption would pass
+    #   them anyway; skipping by author as well keeps the gate off the hundreds
+    #   of them per window entirely.
+    # * dependabot[bot] — a bot can neither write a fragment nor reach for the
+    #   label, so the gate would sit red on every Monday batch. A bump that DOES
+    #   deserve a line reaches the changelog through the human PR carrying it.
+    #
+    # `skip-changelog` is the human escape hatch, for a PR that truly changes
+    # nothing worth a line.
+    if: >-
+      !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+      && github.event.pull_request.user.login != 'dependabot[bot]'
+      && github.event.pull_request.user.login != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The gate diffs against the base branch, which a shallow checkout lacks.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+
+      # `--no-project`: the tool is standard library only, so the gate answers
+      # in seconds without syncing pandas, scipy and scikit-learn.
+      - name: Fragment present and well-formed
+        run: uv run --no-project python -m tools.changelog check --base "origin/${{ github.base_ref }}"

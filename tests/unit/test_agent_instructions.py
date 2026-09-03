@@ -266,7 +266,14 @@ MIRRORED_RULES = {
         "prose follows the google developer documentation style guide",
         "docs/reference/style-guide.md",
     ],
-    "every PR updates the changelog": ["every pr updates", "[unreleased]", "keep-a-changelog"],
+    # The keywords carry the PROHIBITION as well as the duty: a fragment is
+    # added AND `CHANGELOG.md` is left alone. A pin on "changelog.d" alone would
+    # stay green if a guide were rewritten to allow both.
+    "every PR adds a changelog fragment, never a CHANGELOG.md bullet": [
+        "changelog.d/<slug>.md",
+        "never a bullet in `changelog.md`",
+        'changelog (fragment)"',
+    ],
     "a release is condensed, never copied": ["condensed, never copied", "agentic/commands/release.md"],
     "never echo secret values": ["never echo secret"],
     "structural fix over symptomatic fix": ["structural fix over symptomatic fix"],
