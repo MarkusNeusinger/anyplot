@@ -346,7 +346,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   so the exception it needs has to be the shared secret, which means templating the app's
   nginx, attaching the secret to `anyplot-app`, and a Cloudflare Transform Rule for the
   `anyplot.ai` host that does not exist yet. Four coordinated changes, two in the dashboard,
-  one able to lock out every visitor if it lands out of order. (#PRNUM)
+  one able to lock out every visitor if it lands out of order. (#11214)
 
 - **`click` 8.3.1 → 8.3.3 closes PYSEC-2026-2132** — the only advisory `pip-audit`
   reports against the resolved runtime dependency set (`uv export --no-dev`), which now
