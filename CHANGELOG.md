@@ -236,7 +236,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   pass adding it would have turned every deploy red. They go through the same `expect` helper
   `app/cloudbuild.yaml` uses, which fetches to a file and names the probe and the missing
   needle when it fails; `/health` keeps a bare variant because reaching it without the origin
-  header is exactly what its gate exemption has to prove. (#PRNUM)
+  header is exactly what its gate exemption has to prove. (#11212)
 
 - **The frontend deploys through a candidate revision instead of straight onto live
   traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
