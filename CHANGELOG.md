@@ -324,6 +324,30 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Security
 
+- **The origin gate loses its last real exemption: the cache flush now carries the edge's
+  header instead of being waved through** — `/debug/cache/invalidate` was exempt because
+  `sync-postgres.yml` has no front door to come through: it posts from a GitHub runner to
+  the direct `*.run.app` URL on purpose, since Cloudflare's bot challenge answers an
+  unauthenticated curl POST against `api.anyplot.ai` with a 403 HTML page. The workflow now
+  sends `X-Origin-Secret` itself, out of an `ORIGIN_SECRET` repository secret, so the
+  exemption is gone and `EXEMPT_PATHS` holds exactly one entry — `/health`, which the deploy
+  smoke needs on the candidate's tag URL. The trade is worth naming: an exempt path is one
+  anybody may POST to from anywhere with only `CACHE_INVALIDATE_TOKEN` behind it, whereas a
+  caller that carries the header needs no hole at all. The two locks now sit in series, and
+  the test suite pins both ends — 403 without the header, 503 (the endpoint's own
+  fail-closed answer) with it. A missing repository secret fails that step with a message
+  naming it, rather than leaving the cache to go quietly stale. The second door the gate
+  still does not close — a crawler user agent reaching the prerendered pages through the
+  APP service's raw `run.app` URL — is now measured rather than suspected (a Googlebot UA
+  gets HTTP 200 and the correct canonical), and `api/origin_gate.py` records the two facts
+  that decide how it can be closed: Cloud Run answers a foreign `Host` header with its own
+  404, so a host rule in `app/nginx.conf` would be a real boundary rather than theatre —
+  and `bot-serving-check.yml` probes exactly that origin and cannot spoof the host either,
+  so the exception it needs has to be the shared secret, which means templating the app's
+  nginx, attaching the secret to `anyplot-app`, and a Cloudflare Transform Rule for the
+  `anyplot.ai` host that does not exist yet. Four coordinated changes, two in the dashboard,
+  one able to lock out every visitor if it lands out of order. (#PRNUM)
+
 - **`click` 8.3.1 → 8.3.3 closes PYSEC-2026-2132** — the only advisory `pip-audit`
   reports against the resolved runtime dependency set (`uv export --no-dev`), which now
   comes back clean. A transitive dependency, so the fix is a lock-file bump with no

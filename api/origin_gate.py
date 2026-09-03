@@ -27,21 +27,22 @@ it is promoted. Local development and the test suite therefore never see the
 gate, and the rollout can put the code in production long before the rule and
 the secret exist.
 
-Exempt by path, and only these two:
+Exempt by path, and only this one:
 
 * `/health` — the deploy's pre-traffic smoke probes the candidate revision on
   its `run.app` tag URL, which by definition never passes the edge. Gating it
   would make every deploy fail closed.
-* `/debug/cache/invalidate` — the one legitimate caller that has no front door.
-  `sync-postgres.yml` flushes the cache from a GitHub runner at the end of each
-  sync, and it posts to the direct `*.run.app` URL *on purpose*: Cloudflare's
-  bot challenge answers an unauthenticated curl POST against `api.anyplot.ai`
-  with a 403 HTML page. The endpoint carries its own shared secret
-  (`CACHE_INVALIDATE_TOKEN`, constant-time compared) and returns 503 when none
-  is configured, so it is gated — just by a different lock. Sending the origin
-  secret from CI instead would let this exemption go; that needs a repository
-  secret and a workflow change, and is named as the follow-up in the PR that
-  introduced this file.
+
+`/debug/cache/invalidate` used to be the second, and is not any more.
+`sync-postgres.yml` flushes the cache from a GitHub runner at the end of each
+sync and posts to the direct `*.run.app` URL *on purpose* — Cloudflare's bot
+challenge answers an unauthenticated curl POST against `api.anyplot.ai` with a
+403 HTML page — so it had no front door to come through. It has one now: the
+workflow sends the header itself, out of the `ORIGIN_SECRET` repository secret.
+That is strictly better than the exemption it replaces. An exempt path is one
+anybody may POST to from anywhere, with only the endpoint's own
+`CACHE_INVALIDATE_TOKEN` behind it; a workflow that carries the header needs no
+hole in the gate at all.
 
 `/seo-proxy/…` is deliberately NOT exempt, though the sibling repo exempts it
 belt-and-braces. The site's nginx fetches the prerendered pages over
@@ -61,18 +62,42 @@ preflight, so a gate that refused one would break every cross-origin call on the
 site rather than protecting anything. The exemption is what makes that
 independent of where the middleware ends up in the stack.
 
-**What this gate does not close.** It protects the API service's own door. The
-APP service (`anyplot-app`) also stands with `ingress=all`, and its nginx
-relays a crawler user agent through `@seo_proxy` to `https://api.anyplot.ai` —
-where the edge stamps the header legitimately. So a caller who sends a crawler
-user agent to the app's raw `*.run.app` URL still reaches the prerendered
-render, and its DB queries and Plausible event, without having passed the edge
-himself (Copilot review). That is a second door on a second service, not a hole
-in this one: the request this process sees genuinely came through the edge.
-Closing it means gating the app service or refusing to proxy for `run.app`
-hosts in `app/nginx.conf` — and `bot-serving-check.yml` deliberately probes that
-exact flow on the app origin, so it is a change with its own blast radius and
-its own PR.
+**What this gate does not close, measured 2026-09-03.** It protects the API
+service's own door. The APP service (`anyplot-app`) also stands with
+`ingress=all`, and its nginx relays a crawler user agent through `@seo_proxy` to
+`https://api.anyplot.ai` — where the edge stamps the header legitimately. So a
+caller who sends a crawler user agent to the app's raw `*.run.app` URL still
+reaches the prerendered render, and its DB queries and Plausible event, without
+having passed the edge himself (Copilot review). Confirmed live: a Googlebot UA
+against `…run.app/scatter-basic` answers 200 with the correct
+`<link rel="canonical" href="https://anyplot.ai/scatter-basic">`. That is a
+second door on a second service, not a hole in this one — the request this
+process sees genuinely came through the edge.
+
+Two things about closing it are now known, and neither was before:
+
+* **A `Host` rule would be a real boundary, not theatre.** The obvious worry is
+  that anyone could send `Host: anyplot.ai` to the `run.app` URL and walk
+  straight through a host check. They cannot: Google's frontend routes by Host
+  and answers a foreign one with its own 404 before the container is reached
+  (measured — `curl -H "Host: anyplot.ai" https://anyplot-app-….run.app/…`
+  returns Google's 404 page). On that origin `$host` is therefore always the
+  `run.app` name, so `app/nginx.conf` could refuse `@seo_proxy` for it.
+* **That alone would break `bot-serving-check.yml`**, which probes exactly this
+  origin with crawler UAs and cannot spoof the Host either, because Cloudflare
+  403s GitHub-runner IPs even for a UA-spoofed Googlebot. An exception keyed on
+  a header or a UA the workflow sends is worthless — this repository is public,
+  so the value is public with it. The exception has to be the shared secret,
+  which means the app's nginx must LEARN the secret: template the config
+  (`nginx-unprivileged` ships the `envsubst` entrypoint), attach `ORIGIN_SECRET`
+  to `anyplot-app` in `app/cloudbuild.yaml`, add a Cloudflare Transform Rule for
+  the `anyplot.ai` host (today's rule covers `api.anyplot.ai` only — without it
+  the enforcing config locks out every human visitor), and hand the workflow the
+  same secret.
+
+Four coordinated changes, two of them in the dashboard and one of them able to
+take the whole site down if it lands out of order. That is the reason this is
+still described here rather than done.
 """
 
 from __future__ import annotations
@@ -87,9 +112,9 @@ from core.config import settings
 ORIGIN_SECRET_HEADER = "x-origin-secret"
 
 # Exact paths only, no prefixes: a prefix exemption is how a gate quietly grows
-# a hole. See the module docstring for what each of these two buys, and why
-# `/seo-proxy/…` is not among them.
-EXEMPT_PATHS = frozenset({"/health", "/debug/cache/invalidate"})
+# a hole. See the module docstring for what this one buys, why
+# `/debug/cache/invalidate` no longer needs it, and why `/seo-proxy/…` never did.
+EXEMPT_PATHS = frozenset({"/health"})
 
 
 def gate_is_armed() -> bool:
