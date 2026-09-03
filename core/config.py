@@ -175,11 +175,13 @@ class Settings(BaseSettings):
 
     UNSET MEANS OFF, and that is the rollback: remove the variable from the
     Cloud Run service, promote the resulting revision, and the gate is gone.
-    Local dev and the test suite never set it. Exactly two paths stay exempt
-    when it is set — `/health` and `/debug/cache/invalidate`; the prerendered
-    `/seo-proxy/…` pages are NOT among them, since the site's nginx fetches
+    Local dev and the test suite never set it. Exactly ONE path stays exempt
+    when it is set — `/health`, which the deploy smoke reaches on the
+    candidate's `run.app` tag URL. `/debug/cache/invalidate` was the second
+    until `sync-postgres.yml` learned to send the header itself, and the
+    prerendered `/seo-proxy/…` pages never were, since the site's nginx fetches
     them through the edge and so carries the header. See `api/origin_gate.py`
-    for why each of the two has to be, and why the third is not."""
+    for why the one has to be, and why the other two are not."""
 
     @field_validator(
         "database_url",

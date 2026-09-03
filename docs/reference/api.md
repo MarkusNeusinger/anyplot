@@ -581,12 +581,20 @@ curl -s "https://api.anyplot.ai/health"   # expect "off" or "off-seen"
 Removing the Worker's binding is **not** a rollback — while the service is armed
 that takes the apex route down rather than freeing it. Roll back here first.
 
-**Rotating the secret** means changing two sides that must agree, and the gate
+**Rotating the secret** means changing every side that must agree, and the gate
 accepts exactly one value — so there is no overlap window. Roll back first,
-rotate the Secret Manager version, the Transform Rule and the Worker binding,
-then arm again on the new version number. The gate is off in between, which is
-the documented safe state; `/health` shows `off-seen` throughout, and `ok` when
-the new value is live on both sides.
+rotate the Secret Manager version, the Transform Rule, the Worker binding **and
+the `ORIGIN_SECRET` repository secret** in GitHub Actions settings, then arm
+again on the new version number. The gate is off in between, which is the
+documented safe state; `/health` shows `off-seen` throughout, and `ok` when the
+new value is live on both sides.
+
+The repository secret is the copy that is easiest to forget, because nothing
+about it lives in the Google Cloud console: `sync-postgres.yml` sends it as
+`X-Origin-Secret` on the cache flush, which goes to the direct `run.app` URL and
+therefore never passes the edge. Skip it in a rotation and the sync's last step
+starts failing with `Cache invalidation was refused by the origin gate (HTTP
+403)` — loudly, by design, but a day after the rotation rather than during it.
 
 **Exempt paths** — exact matches, no prefixes, and only this one:
 

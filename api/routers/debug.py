@@ -498,9 +498,11 @@ async def invalidate_cache(x_cache_token: str | None = Header(default=None)) -> 
     if not expected:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Cache invalidation not configured")
     # Constant-time compare to avoid byte-by-byte token recovery via timing —
-    # byte-wise, because this endpoint is exempt from the origin gate and is
-    # therefore reachable on the direct `run.app` URL, where a non-ASCII header
-    # would otherwise turn a cheap 401 into a logged 500 (api/secret_compare.py).
+    # byte-wise, because a non-ASCII header would otherwise turn a cheap 401
+    # into a logged 500 (api/secret_compare.py). This endpoint was exempt from
+    # the origin gate while `sync-postgres.yml` had no way to send the edge's
+    # header on the direct `run.app` URL; it now sends it, the exemption is gone,
+    # and this token is the second lock behind the gate rather than the only one.
     if not secret_matches(x_cache_token, expected):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid cache token")
 
