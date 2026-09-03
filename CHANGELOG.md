@@ -290,8 +290,9 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
   `api/cloudbuild.yaml`: deploy with `--no-traffic --tag=candidate
   --revision-suffix=b$BUILD_ID`, smoke the candidate on its tag URL, then `update-traffic`
-  to exactly that revision (the chains are not identical — this one pushes `:latest` only
-  after the promotion, where the API still pushes it alongside the deploy). The service
+  to exactly that revision (the chains were not identical at the time — this one pushed
+  `:latest` only after the promotion, where the API still pushed it alongside the deploy;
+  the API caught up in #11212). The service
   carries the whole crawler path in `app/nginx.conf` — the `$is_bot` map, the `location =`
   bypasses, the `@seo_proxy` upstream — and that is the file whose breakage served every
   bot an HTTP 502 for four weeks in 2026 while humans, Plausible and CI all saw a healthy
