@@ -161,7 +161,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   cost bot detection on a site whose origin gate leans on the edge; the way out is a
   nonce (Cloudflare stamps its injected script with the nonce it parses from this
   header), which needs an nginx `sub_filter` no test here can prove. All of it is
-  written down at the directive it explains. (#PRNUM)
+  written down at the directive it explains. (#11213)
 
 - **The IndexNow workflow no longer waits eight minutes behind an edge 403** — its
   key-file readiness loop treated every non-200 as "not deployed yet"; a GitHub runner
