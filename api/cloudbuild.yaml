@@ -199,10 +199,21 @@ steps:
         # concurrent build could move it between the check above and the last
         # probe, and this build would then have smoked someone else's revision
         # while promoting its own. A competing build only ever tags its OWN
-        # revision and never ours back, so seeing our revision at both ends means
-        # every probe in between hit it. (app/cloudbuild.yaml, #11207, gained this
-        # while the API — the service with the DB connection and the admin gate —
-        # still only checked once.)
+        # revision and never ours back, so our revision at both ends means the
+        # tag was never reassigned while the probes ran.
+        #
+        # What that is and is not: `status.traffic` is CONTROL-PLANE state, so
+        # this detects an observed reassignment, it does not prove a given probe
+        # reached this revision. Tag-URL propagation can lag a reassignment, so a
+        # probe can still land on the previous candidate — the same residual
+        # app/cloudbuild.yaml documents at its own smoke step, and closing it
+        # would need a build-unique tag or a build id the service serves in its
+        # own response. The worst case stays mild: it needs the PREVIOUS
+        # candidate to have passed every probe too, so the failure is "promoted a
+        # revision we only believed we smoked", not "shipped a known-broken one".
+        # (app/cloudbuild.yaml, #11207, gained this second read while the API —
+        # the service with the DB connection and the admin gate — still checked
+        # once.)
         REV_AFTER=$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
           | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['revisionName'])")
         test "$$REV_AFTER" = "$$REV" || { echo "candidate tag moved to $$REV_AFTER mid-smoke (started on $$REV) — not promoting"; exit 1; }
