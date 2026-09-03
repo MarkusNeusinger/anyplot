@@ -227,35 +227,23 @@ jobs:
         if: failure() && steps.check.outputs.should_build == 'true'
         run: docker logs api || true
 
-      # Threshold `warning` with three exceptions, rather than a non-blocking
-      # run: that way a warning of any other code blocks, which is the point of
-      # having the linter at all. All three are deliberate choices in
-      # api/Dockerfile, named at their line below.
-      #
-      # Note what `ignore` is and is not: hadolint applies it to the whole file,
-      # so a NEW DL3013, DL3008 or DL3025 somewhere else in api/Dockerfile is
-      # also suppressed. Line-scoping needs `# hadolint ignore=<code>` comments
-      # in the Dockerfile itself, next to the three instructions they excuse —
-      # the better home for them, and the right follow-up, but a Dockerfile edit
-      # is not this change's to make. app/Dockerfile needs no exceptions at all,
-      # so nothing there is suppressed — verified against hadolint 2.15.1, the
-      # version this action pins.
+      # Threshold `warning` and NO file-wide exceptions: a warning of any code
+      # blocks, which is the point of having the linter at all. The two rules
+      # api/Dockerfile declines (DL3008 apt pinning, DL3025 shell-form
+      # HEALTHCHECK) now carry `# hadolint ignore=<code>` comments at the exact
+      # instruction they excuse, so a NEW occurrence elsewhere in the file is
+      # still caught — which a file-wide `ignore:` silently swallowed. The third
+      # former exception, DL3013, is simply gone: `pip install uv==<version>` is
+      # pinned. DL3066 (non-numeric USER) still fires at info level, below the
+      # threshold, so it stays visible without blocking. app/Dockerfile needs no
+      # exceptions at all — verified against hadolint 2.15.1, the version this
+      # action pins.
       - name: Hadolint (api/Dockerfile)
         if: steps.check.outputs.should_build == 'true'
         uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
         with:
           dockerfile: api/Dockerfile
           failure-threshold: warning
-          # DL3013 `pip install uv` unpinned — uv is the installer; the versions
-          #        that matter are pinned in uv.lock, which the next line honours.
-          # DL3008 unpinned apt `curl`/`libraqm0` — pinning a Debian point release
-          #        breaks the build on every security update of the base image.
-          # DL3025 shell-form HEALTHCHECK CMD — the `|| exit 1` fallback needs a
-          #        shell; JSON form cannot express it.
-          # DL3066 (non-numeric USER) also fires but only at info level, so it
-          #        stays visible in the log without blocking; `useradd -u 1000`
-          #        already gives the user a fixed uid.
-          ignore: DL3013,DL3008,DL3025
 
       - name: Hadolint (app/Dockerfile)
         if: steps.check.outputs.should_build == 'true'
