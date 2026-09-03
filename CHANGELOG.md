@@ -245,7 +245,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   quietly download a managed CPython that the runtime stage does not have at the same path.
   With the pin, hadolint's DL3013 exception disappears; the remaining two (DL3008, DL3025)
   move out of the workflow's file-wide `ignore:` and onto the exact instructions they excuse,
-  so a new occurrence elsewhere in the file is caught instead of swallowed. (#PRNUM)
+  so a new occurrence elsewhere in the file is caught instead of swallowed. (#11211)
 
 - **The frontend deploys through a candidate revision instead of straight onto live
   traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
