@@ -20,4 +20,4 @@
   deliberately does NOT touch is the release's two aggregate lines — the italic *Catalog* line and
   the single **Dependencies:** bullet — because those summarize a window rather than a PR and are
   written at cut time. Ported from the sibling repo kurrentschrift, where the same tool has run
-  since 2026-08-30. (#PRNUM)
+  since 2026-08-30. (#11215)
