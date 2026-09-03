@@ -19,7 +19,8 @@ which has cost someone a day somewhere:
    one URL.
 
 3. **The API host's own headers.** api.anyplot.ai is a separate origin with no
-   nginx in front of it, so nothing there inherits anything from the website.
+   nginx in front of it, so nothing there inherits anything from the website —
+   and it has two exits, only one of which is a middleware.
 
 The nginx parse is deliberately crude — a brace counter over one file we write
 ourselves, not a config parser. It only has to be right about this file.
@@ -34,7 +35,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from api.main import app
+from api.main import app, fastapi_app
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -57,6 +58,12 @@ _COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
 # `</scriptfoo>` from counting as a close.
 _SCRIPT = re.compile(r"<script(?P<attrs>[^>]*)>(?P<body>.*?)</script(?=[\s/>])[^>]*>", re.DOTALL | re.IGNORECASE)
 _TYPE = re.compile(r"""type\s*=\s*["']?([^"'\s>]+)""", re.IGNORECASE)
+# An EXTERNAL script, which CSP judges by its URL and never by a hash. HTML
+# attribute names are case-insensitive and whitespace around `=` is legal, so
+# `<script SRC = "…">` is external too — a plain `"src=" in attrs` called it
+# inline and would have demanded a hash for a script with no body (Copilot
+# review). `\b` keeps it from matching a `data-src=` or an `xlink:src=`.
+_SRC = re.compile(r"\bsrc\s*=", re.IGNORECASE)
 # A <script> whose type is none of these is a DATA BLOCK (the three JSON-LD
 # blocks in index.html): the browser never executes it, and CSP never asks for
 # a hash.
@@ -69,7 +76,7 @@ def inline_script_hashes(html: str) -> list[str]:
     out = []
     for match in _SCRIPT.finditer(html):
         attrs = match.group("attrs")
-        if "src=" in attrs:
+        if _SRC.search(attrs):
             continue
         declared = _TYPE.search(attrs)
         if (declared.group(1).lower() if declared else "") not in _EXECUTABLE_TYPES:
@@ -166,17 +173,31 @@ def test_object_src_and_base_uri_stay_closed():
     assert directives["base-uri"] == ["'self'"]
 
 
-def test_reporting_directives_are_not_both_present():
-    """`report-to` beside `report-uri` silences Chromium entirely.
+def reporting_endpoint_groups() -> set[str]:
+    """The group names `Reporting-Endpoints` defines, if the header is set at all."""
+    conf = HEADERS_CONF.read_text(encoding="utf-8")
+    match = re.search(r'add_header\s+Reporting-Endpoints\s+"([^"]+)"', conf)
+    if not match:
+        return set()
+    return {part.split("=", 1)[0].strip() for part in match.group(1).split(",") if "=" in part}
 
-    Measured in the sibling repo kurrentschrift: with both directives in one
-    policy, Chromium sends NO report at all rather than preferring the newer
-    one. Neither is set here today; this test exists so that whoever adds
-    reporting adds exactly one of them.
+
+def test_a_named_report_to_group_is_actually_defined():
+    """`report-to <group>` is inert unless `Reporting-Endpoints` defines <group>.
+
+    The failure this guards is silence, which looks exactly like "no
+    violations": a policy that names a group nobody declared sends nothing, and
+    the sibling repo spent a measurement on that before recognising it. Note
+    what is NOT asserted — `report-uri` beside `report-to` is a legitimate
+    migration setup, since Chromium prefers `report-to` and keeps `report-uri`
+    as the fallback for clients that lack it (Copilot review). Neither is set
+    here today; this exists for whoever adds reporting.
     """
-    directives = csp_directives()
-    assert not ("report-to" in directives and "report-uri" in directives), (
-        "CSP carries both report-to and report-uri — Chromium then reports nothing. Keep one."
+    named = csp_directives().get("report-to", [])
+    missing = [group for group in named if group not in reporting_endpoint_groups()]
+    assert not missing, (
+        f"CSP names report-to group(s) {missing} that no Reporting-Endpoints header defines — "
+        "reports would go nowhere, and nowhere reads as 'no violations'."
     )
 
 
@@ -199,3 +220,29 @@ def test_the_api_host_stamps_its_own_baseline_headers():
     # NOT X-Frame-Options: the SPA embeds /proxy/html cross-origin in an iframe,
     # which SAMEORIGIN would break.
     assert "X-Frame-Options" not in response.headers
+
+
+def test_an_unhandled_500_carries_them_too():
+    """The exit the header middleware cannot reach.
+
+    `ServerErrorMiddleware` wraps every user middleware, so a route that RAISES
+    makes `await call_next(request)` raise with it and the response
+    `generic_exception_handler` builds never passes back through the stack
+    (Copilot review). The handler stamps the headers itself, through the same
+    helper — this is what proves the two exits agree.
+    """
+
+    # `app` is the ASGI wrapper (HeadAsGetMiddleware); `fastapi_app` is the
+    # instance that owns the router and the exception handlers.
+    @fastapi_app.get("/_test/raises", include_in_schema=False)
+    async def _boom() -> None:
+        raise RuntimeError("boom")
+
+    try:
+        response = TestClient(app, raise_server_exceptions=False).get("/_test/raises")
+        assert response.status_code == 500
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    finally:
+        routes = fastapi_app.router.routes
+        routes[:] = [r for r in routes if getattr(r, "path", None) != "/_test/raises"]

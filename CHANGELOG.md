@@ -141,16 +141,20 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `'unsafe-inline'`** — api.anyplot.ai is a separate origin with no nginx in front of it,
   so it inherited none of `app/security-headers.conf`: only `/proxy/html` set
   `nosniff` and a `Referrer-Policy`, on that one response. An outermost middleware now
-  `setdefault`s both on every response, including CORS preflights, the origin gate's 403
-  and the exception handlers' 500s — but deliberately **not** `X-Frame-Options`, because
+  `setdefault`s both on every response that leaves through the stack — CORS preflights, the
+  origin gate's 403, an `HTTPException`'s 4xx — and the unhandled-500 handler stamps the
+  same pair through the same helper, because `ServerErrorMiddleware` wraps every user
+  middleware and builds that response outside the stack, which is the one exit a middleware
+  cannot reach. Deliberately **not** `X-Frame-Options`, because
   the SPA embeds `/proxy/html` cross-origin in an iframe and `SAMEORIGIN` would break
   every interactive preview. On the website, both `/_health` locations set an
   `add_header` of their own without re-including the snippet, and nginx drops every
   inherited header in such a location — the rule the file states at the top and the one
   place that had missed it. Both were found by the new
   `tests/unit/api/test_csp_policy.py`, which also pins that the CSP keeps `object-src
-  'none'` and `base-uri 'self'`, that it never carries `report-to` beside `report-uri`
-  (measured in the sibling repo: Chromium then reports nothing at all), and that the
+  'none'` and `base-uri 'self'`, that a `report-to` group it names is actually defined by a
+  `Reporting-Endpoints` header (reports to an undeclared group go nowhere, and nowhere reads
+  exactly like "no violations"), and that the
   three sha256 hashes the policy holds in reserve still describe `app/index.html`'s
   inline scripts. Those hashes are in reserve rather than in force for a measured
   reason: mounted over the live production bundle through a local proxy, a hash-only

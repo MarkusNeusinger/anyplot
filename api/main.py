@@ -46,6 +46,7 @@ from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
 from api.routers.specs import _refresh_specs_list, _refresh_specs_map  # noqa: E402
 from api.routers.stats import _refresh_stats  # noqa: E402
+from api.security_headers import stamp as stamp_security_headers  # noqa: E402
 from api.version import APP_VERSION  # noqa: E402
 from core.config import settings  # noqa: E402
 from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA  # noqa: E402
@@ -286,34 +287,22 @@ async def add_cache_headers(request: Request, call_next):
     return response
 
 
-# Added LAST, so it is the OUTERMOST http middleware and every response passes
-# back through it — including CORS preflights, the origin gate's 403 and the
-# exception handlers' 500s.
+# Added LAST, so it is the OUTERMOST http middleware and every response that
+# leaves through the stack passes back through it — CORS preflights, the origin
+# gate's 403, an HTTPException's 4xx.
+#
+# It cannot be the only place, though. `ServerErrorMiddleware` wraps every user
+# middleware, so a route that RAISES makes `await call_next(request)` raise too
+# and the registered `Exception` handler's 500 is built outside this stack. That
+# path stamps the same headers itself, through the same helper
+# (`api/security_headers.py`, `api/exceptions.py::generic_exception_handler`).
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
-    """Stamp the two host-level security headers the API host was missing.
+    """Stamp the baseline security headers the API host was missing.
 
-    `app/security-headers.conf` gives the website these, but api.anyplot.ai is
-    a separate origin with its own nginx-less delivery, and it served none of
-    them: only `/proxy/html` set a pair by hand, on that one response. The two
-    that belong on every API response:
-
-    * `nosniff` — the API returns JSON, PNG and (on /proxy/html) HTML from the
-      same host, so content-type sniffing is exactly the confusion to forbid.
-    * `Referrer-Policy` — the same value the website sends, so a link followed
-      out of an API-served page leaks no path.
-
-    Deliberately NOT `X-Frame-Options`: the SPA embeds `/proxy/html` in an
-    iframe from a different origin (`frame-src https://api.anyplot.ai` in the
-    site's CSP), and `SAMEORIGIN` would break every interactive plot preview.
-
-    `setdefault`, so a route that has a reason to say something else — as
-    `/proxy/html` does — keeps its own value.
+    Which headers, and why not `X-Frame-Options`: `api/security_headers.py`.
     """
-    response: Response = await call_next(request)
-    response.headers.setdefault("X-Content-Type-Options", "nosniff")
-    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    return response
+    return stamp_security_headers(await call_next(request))
 
 
 # Mount MCP server for AI assistant integration
