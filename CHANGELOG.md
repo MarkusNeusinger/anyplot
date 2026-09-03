@@ -230,7 +230,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   the bot then surfaces "previously missed" findings in files the push never touched — which draws
   another push, and another request (the sibling repo's PR #406 collected ~15 in a day over a
   one-line docstring fix). A fresh review is requested only after a substantive rework, and a PR
-  that is green with no open threads needs no further round. (#PRNUM)
+  that is green with no open threads needs no further round. (#11216)
 
 - **The frontend deploys through a candidate revision instead of straight onto live
   traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
