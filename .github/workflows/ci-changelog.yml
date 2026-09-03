@@ -18,6 +18,12 @@ run-name: "Changelog: ${{ github.ref_name }}"
 
 on:
   pull_request:
+    # `labeled`/`unlabeled` on top of the default three. The `skip-changelog`
+    # escape hatch is applied AFTER the gate has gone red, and the default
+    # activity types do not include labelling — so without these the label would
+    # be documented as the way out while the check stayed red until the next
+    # push (Copilot review).
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches:
       - main
       - develop

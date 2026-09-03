@@ -70,21 +70,27 @@ def cmd_preview(args: argparse.Namespace) -> int:
 
 def cmd_release(args: argparse.Namespace) -> int:
     release = plan_release(version=args.version, date=args.date, title=args.title)
-    verb = "would write" if args.dry_run else "wrote"
-    for path in release.writes:
-        print(f"{verb} {path.relative_to(REPO_ROOT)}")
-    for path in release.deletes:
-        print(f"{'would delete' if args.dry_run else 'deleted'} {path.relative_to(REPO_ROOT)}")
     if args.dry_run:
+        for path in release.writes:
+            print(f"would write {path.relative_to(REPO_ROOT)}")
+        for path in release.deletes:
+            print(f"would delete {path.relative_to(REPO_ROOT)}")
         text = release.writes[REPO_ROOT / CHANGELOG_NAME]
         start = text.index(f"## [{args.version}]")
         end = text.find("\n## [", start + 1)
         print("\n" + text[start : end if end > 0 else len(text)].rstrip() + "\n")
         return 0
+    # Apply BEFORE reporting. Printing the plan first read as a record of what
+    # had happened, so a failed write or unlink left a list of "wrote …" lines
+    # above the traceback that caused them (Copilot review).
     apply_release(release)
+    for path in release.writes:
+        print(f"wrote {path.relative_to(REPO_ROOT)}")
+    for path in release.deletes:
+        print(f"deleted {path.relative_to(REPO_ROOT)}")
     print(
         f"\nnext: add the window's aggregate lines by hand (the italic *Catalog* line and the\n"
-        f"single **Dependencies:** bullet — agentic/commands/release.md step 2), review the diff,\n"
+        f"single **Dependencies:** bullet — agentic/commands/release.md step 3), review the diff,\n"
         f"then on a release/v{args.version} branch\n"
         f"  git add -A CHANGELOG.md changelog.d pyproject.toml uv.lock app/package.json\n"
         f'  git commit -m "release: v{args.version} — {args.title}"\n'

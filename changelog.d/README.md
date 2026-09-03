@@ -54,4 +54,4 @@ The two aggregate lines stay by hand: the italic `*Catalog: …*` at the end of
 the section and the single `**Dependencies:**` bullet that stands in for the
 window's Dependabot bumps. Both summarize a release window rather than a PR, so
 they are written at cut time into the section the tool has just laid out
-(`agentic/commands/release.md` step 2).
+(`agentic/commands/release.md` step 3 — step 2 is the cut itself).

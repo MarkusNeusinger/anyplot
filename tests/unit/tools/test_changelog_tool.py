@@ -46,6 +46,15 @@ Header prose.
 """
 
 
+def test_a_title_that_closes_on_the_continuation_line_is_accepted() -> None:
+    """The reason the closing `**` is checked over the whole bullet, not the
+    opening line: the entries in CHANGELOG.md wrap their titles like this."""
+    wrapped = "### Added\n\n- **A title long enough to run\n  onto the next line** — and then the body (#1).\n"
+    assert cl.parse_entries(wrapped, where="f.md")["Added"] == [
+        "- **A title long enough to run\n  onto the next line** — and then the body (#1)."
+    ]
+
+
 def test_a_fragment_parses_into_categories_with_wrapped_bullets() -> None:
     entries = cl.parse_entries(FRAGMENT, where="f.md")
     assert list(entries) == ["Added", "Fixed"]
@@ -64,6 +73,12 @@ def test_a_fragment_parses_into_categories_with_wrapped_bullets() -> None:
         ("### Added\n\n- plain bullet\n", "f.md:3: .*bold title"),
         ("### Added\n\nprose\n", "f.md:3: stray text"),
         ("### Added\n\n- **x.**\n\n### Added\n\n- **y.**\n", "f.md:5: .*twice"),
+        # The bold title is never closed. Not catchable on the opening line —
+        # a real title regularly runs onto the continuation line before its
+        # `**` — so this is checked when the bullet ends, and the error names
+        # the line the bullet OPENED on.
+        ("### Added\n\n- **unterminated title\n", "f.md:3: .*never closed"),
+        ("### Added\n\n- **still going\n  and going\n", "f.md:3: .*never closed"),
     ],
 )
 def test_a_malformed_fragment_names_its_line(text: str, complaint: str) -> None:

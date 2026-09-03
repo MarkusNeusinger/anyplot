@@ -66,6 +66,9 @@ COMPARE_BASE = "https://github.com/MarkusNeusinger/anyplot/compare"
 
 _VERSION_HEADING = re.compile(r"^## \[(\d+\.\d+\.\d+)\]")
 _CATEGORY_LINE = re.compile(r"^### (\S+)\s*$")
+# The bold title, over the WHOLE bullet: it regularly runs onto the continuation
+# line before its closing `**`, so DOTALL and the non-greedy body are both load-bearing.
+_BOLD_TITLE = re.compile(r"- \*\*.+?\*\*", re.DOTALL)
 _SEMVER = re.compile(r"\d+\.\d+\.\d+")
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _UNRELEASED_LINK = re.compile(r"^\[Unreleased\]: (\S+)/compare/v(\d+\.\d+\.\d+)\.\.\.HEAD$", re.M)
@@ -103,11 +106,25 @@ def parse_entries(text: str, *, where: str) -> Entries:
     entries: Entries = {}
     current: list[str] | None = None
     bullet: list[str] | None = None
+    opened_at = 0
 
     def close() -> None:
+        """Finish the bullet in hand, checking the one thing only the WHOLE
+        bullet can answer: that its bold title is closed.
+
+        Not checkable on the opening line — a title regularly runs onto the
+        continuation line before its `**`, as the entries in CHANGELOG.md do.
+        Left unchecked, `- **unterminated title` parsed as well-formed and the
+        release published it unchanged (Copilot review)."""
         nonlocal bullet
         if bullet is not None and current is not None:
-            current.append("\n".join(bullet).rstrip())
+            text = "\n".join(bullet).rstrip()
+            if not _BOLD_TITLE.match(text):
+                raise ChangelogError(
+                    f"{where}:{opened_at}: the bullet's bold title is never closed — "
+                    "it opens with '- **' and needs the matching '**'"
+                )
+            current.append(text)
         bullet = None
 
     for n, line in enumerate(text.splitlines(), 1):
@@ -126,6 +143,7 @@ def parse_entries(text: str, *, where: str) -> Entries:
             if not line.startswith("- **"):
                 raise ChangelogError(f"{where}:{n}: a bullet opens with its bold title: '- **Title.** …'")
             bullet = [line]
+            opened_at = n
         elif not line.strip():
             if bullet is not None:
                 bullet.append("")
