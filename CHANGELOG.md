@@ -228,8 +228,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   triggers nothing. `CLAUDE.md`'s PR follow-through and `agentic/commands/pull_request.md` now say
   so, and say not to re-request one per push: each request is a full re-read of the whole diff, and
   the bot then surfaces "previously missed" findings in files the push never touched — which draws
-  another push, and another request (the sibling repo's PR #406 collected ~15 in a day over a
-  one-line docstring fix). A fresh review is requested only after a substantive rework, and a PR
+  another push, and another request (the sibling repo's
+  [kurrentschrift#406](https://github.com/MarkusNeusinger/kurrentschrift/pull/406) collected ~15 in
+  a day over a one-line docstring fix). A fresh review is requested only after a substantive
+  rework, and a PR
   that is green with no open threads needs no further round. (#11216)
 
 - **The frontend deploys through a candidate revision instead of straight onto live
