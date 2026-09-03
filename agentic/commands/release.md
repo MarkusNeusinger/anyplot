@@ -16,33 +16,40 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
   precedent), minor for feature batches, patch for fix-only releases.
 - **Never work on `main` directly** — do the changelog/version edits on a `release/vX.Y.Z` branch
   and open a PR.
-- The release PR should touch exactly four files: `CHANGELOG.md`, `pyproject.toml`, `uv.lock`
-  (the lock pins the project's own version — v3.0.0 precedent, commit d05e1f2a7) and
-  `app/package.json` (step 4). Keep the diff tiny and auditable.
+- The release PR should touch exactly four files plus the fragments it consumes: `CHANGELOG.md`,
+  `pyproject.toml`, `uv.lock` (the lock pins the project's own version — v3.0.0 precedent, commit
+  d05e1f2a7), `app/package.json`, and the deleted `changelog.d/*.md`. Keep the diff tiny and
+  auditable; `uv run python -m tools.changelog release` produces exactly that set.
 - Pick a short **codename** (release theme, a few words) — it appears in three synchronized
   places: the changelog heading, the annotated tag message, and the GitHub release title.
 
 ## Run
 
-1. **Verify completeness.** Compare `CHANGELOG.md`'s `[Unreleased]` section against
-   `git log v<last>..origin/main --oneline --no-merges`, ignoring the exempt classes (spec-create,
-   impl-generate/review/repair/merge, spec auto-polish, daily-regen commits, individual Dependabot
-   bumps). Add any missing notable entries first. Run `git fetch origin main` before comparing, and
-   check the state of any in-flight PRs the release should include yourself
-   (`gh pr view <num> --json state,mergedAt`) — do not rely on the user to report merge status.
-2. **Add the aggregate lines.** Summarize the exempt classes for the release window:
+1. **Verify completeness.** Run `uv run python -m tools.changelog preview` — that is the pending
+   section, every fragment in `changelog.d/` merged with whatever `[Unreleased]` still holds — and
+   compare it against `git log v<last>..origin/main --oneline --no-merges`, ignoring the exempt
+   classes (spec-create, impl-generate/review/repair/merge, spec auto-polish, daily-regen commits,
+   individual Dependabot bumps). A missing entry is added as a fragment in `changelog.d/`, never as
+   a bullet in `CHANGELOG.md`. Run `git fetch origin main` before comparing, and check the state of
+   any in-flight PRs the release should include yourself (`gh pr view <num> --json state,mergedAt`)
+   — do not rely on the user to report merge status.
+2. **Cut the section.** `uv run python -m tools.changelog release X.Y.Z --title "<Codename>"`
+   (`--dry-run` first prints the section it would write and touches nothing). One command folds
+   every fragment under `## [X.Y.Z] — YYYY-MM-DD — <Codename>` — newest first within a category, by
+   the commit that added the fragment — leaves an empty `## [Unreleased]` above it, repoints the
+   compare links at the bottom of the file, bumps `pyproject.toml`, `uv.lock` and
+   `app/package.json`, and deletes the fragments. `app/package.json` matters as much as the others:
+   the masthead falls back to it whenever the GitHub releases lookup is unavailable, and
+   `tests/unit/test_version_sync.py` fails the PR if the two drift.
+3. **Add the aggregate lines by hand**, into the section just written. They are the one part the
+   tool deliberately leaves alone, because they summarize a release window rather than any PR:
    - An italic `*Catalog: ...*` line at the end of the section (counts of new implementations,
      regenerations, coverage milestones — query merged impl PRs or `impl:*:done` labels).
-   - Create or update the single `**Dependencies:**` bullet under `### Changed` grouping the
-     Dependabot bumps of the window (never one bullet per bump).
-3. **Move the section.** Retitle `## [Unreleased]` to `## [X.Y.Z] — YYYY-MM-DD — <Codename>` and
-   recreate an empty `## [Unreleased]` heading above it. At the bottom of the file, repoint the
-   `[Unreleased]` compare link to `vX.Y.Z...HEAD` and add the new `[X.Y.Z]` compare link — one
-   link per bracketed heading, this step is easy to forget.
-4. **Bump the version** in `pyproject.toml` to `X.Y.Z`, then run `uv lock` so `uv.lock` picks up
-   the project's own version. Bump `app/package.json` to the same `X.Y.Z` — the masthead falls
-   back to it whenever the GitHub releases lookup is unavailable, and
-   `tests/unit/test_version_sync.py` fails the PR if the two drift.
+   - The single `**Dependencies:**` bullet under `### Changed` grouping the Dependabot bumps of
+     the window (never one bullet per bump).
+4. **Read the diff.** It touches `CHANGELOG.md`, `pyproject.toml`, `uv.lock`, `app/package.json`
+   and the deleted fragments — nothing else. Run `uv lock` if the lock needs more than its own
+   version line.
 5. **Open the release PR** (`release: vX.Y.Z` title) and follow the standard PR follow-through
    from `CLAUDE.md`. Ask the user to merge unless explicitly authorized to merge autonomously.
 6. **Tag after merge** (on the updated `main`):

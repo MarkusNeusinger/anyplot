@@ -11,6 +11,11 @@
 # path in .venv/pyvenv.cfg and writes /app/.venv/bin shebangs, so the runtime
 # stage has to offer the same interpreter at the same path (hence WORKDIR /app
 # on both sides too).
+#
+# The build CONTEXT is the repo root — `core/`, `pyproject.toml` and `uv.lock`
+# all live above `api/` — and what that context may contain is decided by the
+# root `.dockerignore`, not by one under `api/`. Read that file before adding a
+# COPY: it is an allowlist, so a path it does not name simply is not there.
 
 FROM python:3.13-slim AS builder
 
@@ -22,7 +27,31 @@ WORKDIR /app
 # `plotting` extra, which this image does not install.) The toolchain was
 # ~110 MB that only ever sat there. If a future dependency arrives sdist-only,
 # the build fails loudly at this step — the right place to notice.
-RUN pip install --no-cache-dir uv
+#
+# uv is PINNED — the unpinned link in the DEPENDENCY chain, nothing wider than
+# that. uv.lock fixes every package, but the resolver that reads it floated on
+# whatever PyPI served that morning, and a resolver change is exactly the kind
+# of difference that makes "it built yesterday" true and useless. The image as
+# a whole is still not reproducible: `python:3.13-slim` is a mutable tag, and
+# the apt packages in the runtime stage are deliberately unpinned for the reason
+# given at their DL3008 line. Pinning uv also retires the DL3013 exception.
+RUN pip install --no-cache-dir uv==0.10.9
+
+# Write .pyc next to every installed module. Without this the venv ships source
+# only — and the root `.dockerignore` excludes `__pycache__`, so the COPYs bring
+# none either — which leaves every cold start compiling the whole import graph.
+# Measured on this dependency set (2026-09-03): `import api.main` takes
+# 3.56–4.43 s with nothing cached against 1.79–2.26 s with bytecode present,
+# i.e. ~1.8 s off every cold start. It is not free — the compiled venv is
+# 686.6 MB unpacked / 210.3 MB compressed against 493.1 / 142.3 — so the trade
+# is ~68 MB of pulled layer against ~1.8 s of every container's first request.
+ENV UV_COMPILE_BYTECODE=1
+# Which interpreter the venv is built on, said out loud. uv otherwise picks one
+# by discovery and may DOWNLOAD a managed CPython — a different build of 3.13
+# than the runtime stage offers at the same path, which is the one thing the
+# two-stage split cannot survive (see the note above about pyvenv.cfg).
+ENV UV_PYTHON=/usr/local/bin/python3.13
+ENV UV_PYTHON_DOWNLOADS=never
 
 # Copy requirements first for better caching.
 COPY pyproject.toml uv.lock README.md ./
@@ -44,6 +73,11 @@ WORKDIR /app
 # #10813's regression — and why the guard it added has failed every build of
 # this image since (the deploy-api trigger has been red since 2026-08-30).
 # The Debian package is 32 KB plus its HarfBuzz/FriBiDi dependencies.
+#
+# DL3008 (pin the apt versions) is declined here, not repo-wide: pinning a
+# Debian point release breaks the build on every security update of the base
+# image, and these two packages carry no version-sensitive behaviour.
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libraqm0 \
@@ -59,10 +93,14 @@ RUN useradd -m -u 1000 appuser
 # so the `chmod -R 755 .venv/bin` that used to ride along is gone too.
 COPY --from=builder --chown=appuser:appuser /app/.venv ./.venv
 
-# Copy application code
+# Copy application code. `plots/` used to be copied here too and was never read:
+# the implementations this API serves come from Postgres (core/database), and
+# nothing under api/ or core/ opens a path below plots/ — ci-image.yml already
+# says so where it explains why plots/** is not a build trigger. It cost 16.6 MB
+# of every pulled image (69.2 MB unpacked, 9,166 files), measured as layer 10 of
+# the `latest` manifest on 2026-09-03.
 COPY --chown=appuser:appuser api/ ./api/
 COPY --chown=appuser:appuser core/ ./core/
-COPY --chown=appuser:appuser plots/ ./plots/
 
 # Fail the build if Pillow cannot shape text. Without it Pillow falls back to
 # its BASIC layout engine: the OG cards lose MonoLisa's italic `ss02` swashes
@@ -79,6 +117,16 @@ assert features.check('raqm'), \
 # Switch to non-root user
 USER appuser
 
+# The other half of UV_COMPILE_BYTECODE above: that one covers the venv, this
+# one covers OUR code, which arrives through the COPYs and therefore has no
+# .pyc of its own. Run as appuser, after the USER switch, so the __pycache__
+# directories belong to the process that will read them — a root-owned cache in
+# an appuser tree works, but only by accident of file modes.
+# `-q` keeps the build log readable; a compile error still fails the build,
+# which is the second thing this line buys: a syntax error in a module that
+# only some request path imports now stops the IMAGE instead of a request.
+RUN .venv/bin/python -m compileall -q api core
+
 # Expose port 8000 for FastAPI
 EXPOSE 8000
 
@@ -86,7 +134,9 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
 
-# Health check
+# Health check. DL3025 wants the JSON exec form, which cannot express the
+# `|| exit 1` fallback — that needs a shell.
+# hadolint ignore=DL3025
 HEALTHCHECK CMD curl --fail http://localhost:8000/health || exit 1
 
 # Run FastAPI app with uvicorn

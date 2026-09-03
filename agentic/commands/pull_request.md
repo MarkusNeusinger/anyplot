@@ -27,12 +27,15 @@ branch state matches what the PR description claims.
 1. Run `git diff origin/main...HEAD --stat` to see changed files summary
 2. Run `git log origin/main..HEAD --oneline` to see commits in this branch
 3. Run `git branch --show-current` to get the current branch name
-4. **Changelog gate** — verify `CHANGELOG.md`'s `[Unreleased]` section covers the notable changes in
-   this branch (Keep-a-Changelog categories, English, bold-titled bullets for headline entries —
-   like the existing entries);
-   add and commit the entry if missing. Exempt: automated pipeline PRs (spec-create, impl-*,
-   auto-polish, daily-regen) and Dependabot bumps — those are aggregated at release time. This rule
-   is duplicated in `CLAUDE.md` and `.github/copilot-instructions.md`; keep all three in sync.
+4. **Changelog gate** — the branch carries `changelog.d/<slug>.md` and does NOT touch
+   `CHANGELOG.md` (Keep-a-Changelog categories, English, bold-titled bullets — the format and an
+   example are in `changelog.d/README.md`); add and commit the fragment if missing, and run
+   `uv run python -m tools.changelog check --base origin/main`, which is the same check the CI job
+   "Changelog (fragment)" makes. Exempt: catalogue-only PRs (everything under `plots/`), automated
+   pipeline PRs (`github-actions[bot]`: spec-create, impl-*, auto-polish, daily-regen) and
+   Dependabot bumps — those are aggregated at release time — plus a PR labelled `skip-changelog`.
+   This rule is duplicated in `CLAUDE.md` and `.github/copilot-instructions.md`; keep all three in
+   sync.
 5. Run `git push -u origin $(git branch --show-current)` to push the branch (do NOT use `--force` or
    `--no-verify` unless the user explicitly asks for it)
 6. Create the PR — non-draft, ready for review:

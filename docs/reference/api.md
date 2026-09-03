@@ -581,19 +581,36 @@ curl -s "https://api.anyplot.ai/health"   # expect "off" or "off-seen"
 Removing the Worker's binding is **not** a rollback — while the service is armed
 that takes the apex route down rather than freeing it. Roll back here first.
 
-**Rotating the secret** means changing two sides that must agree, and the gate
+**Rotating the secret** means changing every side that must agree, and the gate
 accepts exactly one value — so there is no overlap window. Roll back first,
-rotate the Secret Manager version, the Transform Rule and the Worker binding,
-then arm again on the new version number. The gate is off in between, which is
-the documented safe state; `/health` shows `off-seen` throughout, and `ok` when
-the new value is live on both sides.
+rotate the Secret Manager version, the Transform Rule, the Worker binding **and
+the `ORIGIN_SECRET` repository secret** in GitHub Actions settings, then arm
+again on the new version number. The gate is off in between, which is the
+documented safe state; `/health` shows `off-seen` throughout, and `ok` when the
+new value is live on both sides.
 
-**Exempt paths** — exact matches, no prefixes, and only these two:
+The repository secret is the copy that is easiest to forget, because nothing
+about it lives in the Google Cloud console: `sync-postgres.yml` sends it as
+`X-Origin-Secret` on the cache flush, which goes to the direct `run.app` URL and
+therefore never passes the edge. Skip it in a rotation and the sync's last step
+starts failing with `Cache invalidation was refused by the origin gate (HTTP
+403)` — loudly, by design, but a day after the rotation rather than during it.
+
+**Exempt paths** — exact matches, no prefixes, and only this one:
 
 | Path | Why |
 |---|---|
 | `/health` | the deploy smoke probes the candidate revision on its `run.app` tag URL, which never passes the edge |
-| `/debug/cache/invalidate` | `sync-postgres.yml` posts here from a GitHub runner over the direct URL, because Cloudflare's bot challenge answers an unauthenticated curl POST with a 403 HTML page. The endpoint has its own token (`CACHE_INVALIDATE_TOKEN`, constant-time compared, 503 when unconfigured) |
+
+`/debug/cache/invalidate` was the second until `sync-postgres.yml` learned to
+send `X-Origin-Secret` itself, out of the `ORIGIN_SECRET` repository secret. It
+still posts to the direct `run.app` URL — Cloudflare's bot challenge answers an
+unauthenticated curl POST against `api.anyplot.ai` with a 403 HTML page — but it
+now arrives carrying the header the edge would have stamped, so it needs no hole
+in the gate. Its own `CACHE_INVALIDATE_TOKEN` (constant-time compared, 503 when
+unconfigured) is the second lock behind the first. If the repository secret goes
+missing, that step fails with a message naming it rather than letting the flush
+go quietly stale.
 
 `OPTIONS` is exempt too — a browser cannot attach a custom header to a CORS
 preflight, so a gate that refused one would break every cross-origin call

@@ -1091,19 +1091,28 @@ pytest --pdb       # Debug on failure
 The release notes ARE the changelog — they accumulate PR-by-PR, so cutting a release is pure
 mechanics (see `agentic/commands/release.md` for the executable flow).
 
-- **`CHANGELOG.md`** (repo root) follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
-  every non-exempt PR adds bold-titled bullets with PR refs under `[Unreleased]`. **Exempt** (would
-  drown the file): the automated plot pipeline's output (spec-create, impl-generate/review/repair/
+- **`changelog.d/<slug>.md`**, one fragment per PR, is what a PR writes — never a bullet in
+  `CHANGELOG.md` itself, which is the line two sibling PRs then conflict on. A fragment is a slice
+  of the changelog in the changelog's own format ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+  categories over bold-titled bullets with PR refs; rules and an example in
+  `changelog.d/README.md`), and the CI job "Changelog (fragment)" refuses both a missing fragment
+  and a bullet written into `[Unreleased]`. **Exempt** (would drown the file): catalogue-only PRs
+  under `plots/`, the automated plot pipeline's output (spec-create, impl-generate/review/repair/
   merge, spec auto-polish, daily-regen PRs) and individual Dependabot bumps — these are summarized
   in aggregate at release time (an italic *Catalog* line at the end of the version section and a
-  single **Dependencies:** bullet under `### Changed`).
+  single **Dependencies:** bullet under `### Changed`) — plus any PR labelled `skip-changelog`.
 - **Versioning** is product communication: major for milestone releases (new language waves,
   rebrands, breaking URL/schema changes — v2.0.0/v3.0.0 precedent), minor for feature batches,
-  patch for fix-only. Version lives in `pyproject.toml`.
-- **Release flow**: a small `release/vX.Y.Z` PR moves `[Unreleased]` under
-  `## [X.Y.Z] — YYYY-MM-DD — <Codename>` and bumps `pyproject.toml` + `uv.lock`; after merge, an
-  annotated tag `vX.Y.Z` is pushed and `gh release create` publishes the changelog section
-  verbatim as the release body, titled `vX.Y.Z — <Codename>`.
+  patch for fix-only. Version lives in `pyproject.toml`, mirrored in `uv.lock` and
+  `app/package.json`.
+- **Release flow**: on a small `release/vX.Y.Z` PR,
+  `uv run python -m tools.changelog release X.Y.Z --title "<Codename>"` folds every fragment under
+  `## [X.Y.Z] — YYYY-MM-DD — <Codename>`, bumps `pyproject.toml`, `uv.lock` and `app/package.json`,
+  repoints the compare links and deletes the fragments; the two aggregate lines are added by hand
+  afterwards. After merge, an annotated tag `vX.Y.Z` is pushed and `gh release create` publishes
+  that section **condensed** — never verbatim (owner rule, 2026-08-28; the v3.1.0 page ran to 640
+  lines) — titled `vX.Y.Z — <Codename>`. The shape of the condensation is in `CLAUDE.md`
+  § "Changelog + releases".
 - **Product integration**: the site masthead displays the latest release tag live
   (`app/src/hooks/useLatestRelease.ts` fetches the GitHub `releases/latest` API with a 1 h
   localStorage cache) and the About page links to the GitHub releases, so publishing the release
