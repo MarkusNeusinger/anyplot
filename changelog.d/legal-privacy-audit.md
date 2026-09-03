@@ -13,4 +13,4 @@
   Plausible's, only served from here), Cloudflare's edge processing of the IP is named, and
   the "all services in the EU" line no longer swallows a global CDN and a separate analytics
   service. The crawler body in `api/routers/seo.py` mirrored the same wrong sentence and was
-  corrected with it.
+  corrected with it (#11217).
