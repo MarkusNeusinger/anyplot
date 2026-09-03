@@ -188,22 +188,26 @@ export function LegalPage() {
 
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
             <Typography sx={subheadingStyle}>data controller</Typography>
-            <Typography sx={textStyle}>Markus Neusinger (see legal notice above)</Typography>
+            <Typography sx={textStyle}>
+              Markus Neusinger (see legal notice above). the ground for all of it is an
+              operator&apos;s legitimate interest in protecting the site and knowing how often it is
+              read; swiss data protection law applies, and the GDPR on top for visitors from the EU.
+            </Typography>
 
             <Typography sx={subheadingStyle}>what we collect</Typography>
             <Typography sx={textStyle}>
-              <strong>anonymized analytics.</strong> we use{' '}
+              <strong>anonymized analytics.</strong> the counting is done by{' '}
               <Link href="https://plausible.io" target="_blank" rel="noopener" sx={proseLinkStyle}>
                 Plausible Analytics
               </Link>
-              , a privacy-focused analytics tool. it collects no personal data, uses no cookies, and
-              does not track you across websites. we track: page views, navigation patterns, code
-              copies, image downloads, search queries, filter usage, UI interactions (tab toggles,
-              theme preference, banner dismissals), and anonymized performance metrics (Core Web
-              Vitals: LCP, CLS, INP) to keep the site fast. when you share a link, we read the
-              requesting bot&apos;s user-agent to detect the platform (e.g., LinkedIn, WhatsApp) —
-              no data about the eventual viewer is collected at that step. all data is aggregated
-              and anonymous.
+              . the script is theirs, but it is served over a path on this domain: no cookies, no
+              identifier that would recognize you on other sites, no IP address kept there, and your
+              browser talks only to us. counted are page views, search queries and filter usage,
+              code copies and image downloads, theme and navigation clicks, and Core Web Vitals
+              (LCP, CLS, INP) to keep the site fast. when you share a link, we read the requesting
+              bot&apos;s user-agent to detect the platform (e.g., LinkedIn, WhatsApp) — no data
+              about the eventual viewer is collected at that step. all data is aggregated and
+              anonymous.
             </Typography>
             <Typography sx={textStyle}>
               <strong>public dashboard.</strong> our analytics are{' '}
@@ -230,16 +234,31 @@ export function LegalPage() {
               </Link>{' '}
               for security and debugging purposes.
             </Typography>
+            <Typography sx={textStyle}>
+              <strong>feedback.</strong> the feedback widget keeps what you send it: the message,
+              the reaction, anything you put in the optional contact field, the page you were on,
+              your user-agent, and a one-way hash of your IP address that limits spam. only the
+              operator can read those entries, and nothing deletes them on a timer — ask and yours
+              is gone.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>the edge.</strong> Cloudflare stands in front of the site and processes your
+              IP address there to rate-limit, to filter bots — which can put a short check page in
+              front of a request — and to absorb DDoS attacks.
+            </Typography>
 
             <Typography sx={subheadingStyle}>what we do not collect</Typography>
             <Typography sx={textStyle}>
               • no user accounts or personal profiles
               <br />
-              • no personal data (names, emails, etc.)
+              • no personal data unless you type it — the optional contact field in the feedback
+              widget is the only one that asks for a name or an email
               <br />
-              • no cookies at all (we use localStorage for UI preferences only)
-              <br />• <strong>no ai training</strong>: your interactions are not used to train ai
-              models
+              • no cookies at all (localStorage holds UI preferences — theme, image size — and a
+              cached release number)
+              <br />• <strong>no ai training</strong>: nothing you send is used to train ai models.
+              the ai in this project writes the catalogue, at build time; it never sees a
+              visitor&apos;s request
             </Typography>
 
             <Typography sx={textStyle}>
@@ -250,7 +269,9 @@ export function LegalPage() {
 
             <Typography sx={subheadingStyle}>hosting &amp; third parties</Typography>
             <Typography sx={textStyle}>
-              all services are hosted in the EU (Netherlands, europe-west4):
+              the site, its database and its images run in the EU (Netherlands, europe-west4);
+              Cloudflare&apos;s network is global, and Plausible is a service of its own on its own
+              EU servers:
             </Typography>
             <Table sx={{ ...tableStyle, ...firstColStyle }}>
               <TableBody>
@@ -279,13 +300,14 @@ export function LegalPage() {
 
             <Typography sx={subheadingStyle}>your rights</Typography>
             <Typography sx={textStyle}>
-              you have the right to access, rectify, erase, and export your data. since we do not
-              store personal data, there is typically nothing to delete or export. for questions,
-              contact{' '}
+              you can ask what is stored about you and have it corrected, erased or its use
+              restricted, object to the processing on grounds relating to your particular situation,
+              and complain to a supervisory authority. in practice that means a feedback entry or a
+              log line; a few lines to{' '}
               <Link href="mailto:admin@anyplot.ai" sx={proseLinkStyle}>
                 admin@anyplot.ai
-              </Link>
-              .
+              </Link>{' '}
+              are enough.
             </Typography>
           </Box>
         </Box>
@@ -554,7 +576,7 @@ export function LegalPage() {
             mt: 2,
           }}
         >
-          last updated: July 2026
+          last updated: September 2026
         </Typography>
       </Box>
     </>
