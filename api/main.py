@@ -166,7 +166,7 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # `@app.middleware` both wrap what is already there — so reading this file from
 # here down gives the order a request actually travels, in reverse:
 #
-#   cache headers → CORS → origin gate → bot counter → gzip → router
+#   security headers → cache headers → CORS → origin gate → bot counter → gzip → router
 #
 # (`HeadAsGetMiddleware` and `MCPTrailingSlashMiddleware` wrap the whole app
 # further out still; both only rewrite the scope.)
@@ -283,6 +283,36 @@ async def add_cache_headers(request: Request, call_next):
     elif path.startswith("/insights/"):
         response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
 
+    return response
+
+
+# Added LAST, so it is the OUTERMOST http middleware and every response passes
+# back through it — including CORS preflights, the origin gate's 403 and the
+# exception handlers' 500s.
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Stamp the two host-level security headers the API host was missing.
+
+    `app/security-headers.conf` gives the website these, but api.anyplot.ai is
+    a separate origin with its own nginx-less delivery, and it served none of
+    them: only `/proxy/html` set a pair by hand, on that one response. The two
+    that belong on every API response:
+
+    * `nosniff` — the API returns JSON, PNG and (on /proxy/html) HTML from the
+      same host, so content-type sniffing is exactly the confusion to forbid.
+    * `Referrer-Policy` — the same value the website sends, so a link followed
+      out of an API-served page leaks no path.
+
+    Deliberately NOT `X-Frame-Options`: the SPA embeds `/proxy/html` in an
+    iframe from a different origin (`frame-src https://api.anyplot.ai` in the
+    site's CSP), and `SAMEORIGIN` would break every interactive plot preview.
+
+    `setdefault`, so a route that has a reason to say something else — as
+    `/proxy/html` does — keeps its own value.
+    """
+    response: Response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
     return response
 
 
