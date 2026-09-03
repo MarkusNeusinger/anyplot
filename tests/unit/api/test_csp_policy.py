@@ -49,7 +49,11 @@ INCLUDE_LINE = "include /etc/nginx/security-headers.conf;"
 # regex that reads that as a tag hashes the comment prose instead of the
 # script — silently, and with a hash that looks perfectly plausible.
 _COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
-_SCRIPT = re.compile(r"<script(?P<attrs>[^>]*)>(?P<body>.*?)</script>", re.DOTALL | re.IGNORECASE)
+# `</script\s*>`, not `</script>`: HTML lets whitespace sit before the `>` of a
+# closing tag, and a regex that misses `</script >` would silently swallow the
+# rest of the document into one "script body" and hash that. CodeQL's
+# py/bad-tag-filter says so, and it is right — this parses a file people edit.
+_SCRIPT = re.compile(r"<script(?P<attrs>[^>]*)>(?P<body>.*?)</script\s*>", re.DOTALL | re.IGNORECASE)
 _TYPE = re.compile(r"""type\s*=\s*["']?([^"'\s>]+)""", re.IGNORECASE)
 # A <script> whose type is none of these is a DATA BLOCK (the three JSON-LD
 # blocks in index.html): the browser never executes it, and CSP never asks for
