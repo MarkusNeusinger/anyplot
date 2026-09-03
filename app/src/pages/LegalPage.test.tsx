@@ -50,6 +50,49 @@ describe('LegalPage', () => {
     expect(plausibleLinks.length).toBeGreaterThan(0);
   });
 
+  // The privacy section's load-bearing claims, each pinned where it is true.
+  // A shortening pass is exactly what drops a qualifier — "30 days" silently
+  // spreading over a store that has no timer, or the objection right losing
+  // the condition that makes it one.
+  it('names the legal basis, the jurisdiction and the whole set of rights', () => {
+    render(<LegalPage />);
+
+    expect(screen.getByText(/legitimate interest in protecting the site/)).toBeInTheDocument();
+    expect(screen.getByText(/swiss data protection law applies/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/object to the processing on grounds relating to your particular situation/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/complain to a supervisory authority/)).toBeInTheDocument();
+  });
+
+  it('gives each store its own retention, and no store a borrowed one', () => {
+    render(<LegalPage />);
+
+    // Cloud Logging has the 30 days; the feedback table has no timer at all.
+    expect(screen.getByText(/retained for 30 days/)).toBeInTheDocument();
+    expect(screen.getByText(/nothing deletes them on a timer/)).toBeInTheDocument();
+  });
+
+  it('does not claim more privacy than the code delivers', () => {
+    render(<LegalPage />);
+
+    // The feedback widget asks for "Name or email (optional)", so the old
+    // blanket "no personal data" was false — and so is any restatement of it:
+    // an IP address, an IP hash and the feedback session id are personal data
+    // whether or not you typed them, so the bullet promises only name/email.
+    expect(screen.getByText(/no name or email unless you type one/)).toBeInTheDocument();
+    // Everything the feedback record actually holds, so a later trim cannot
+    // quietly drop the two identifiers a reader would care about most.
+    expect(screen.getByText(/your window size/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/a random id that ties your own submissions together/)
+    ).toBeInTheDocument();
+    // Plausible's real property is cookieless and identifier-free, not that
+    // the script is ours — it is Plausible's, only served from our domain.
+    expect(screen.getByText(/the script is theirs/)).toBeInTheDocument();
+    expect(screen.getByText(/Cloudflare stands in front of the site/)).toBeInTheDocument();
+  });
+
   it('renders the technology stack', () => {
     render(<LegalPage />);
 

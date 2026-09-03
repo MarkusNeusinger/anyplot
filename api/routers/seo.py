@@ -1054,8 +1054,10 @@ _LEGAL_BOT_BODY = (
     '<a href="https://x.com/MarkusNeusinger">X</a>). Full legal notice with '
     'contact details on the <a href="https://anyplot.ai/legal">interactive page</a>.</p>'
     "<h2>Privacy</h2>"
-    "<p>Analytics: Plausible Analytics (EU, proxied) — no cookies, no personal data collected. "
-    "Hosting: Google Cloud Run (Netherlands).</p>"
+    "<p>Analytics: Plausible Analytics (EU), served over a path on this domain — no cookies, no "
+    "cross-site identifier, no IP address stored. Server logs are kept 30 days; a feedback entry "
+    "is kept until it is deleted by hand and is readable only by the operator. Hosting: Google "
+    "Cloud Run (Netherlands), with Cloudflare at the edge.</p>"
     "<h2>Transparency</h2>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source at "
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
