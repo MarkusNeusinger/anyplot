@@ -77,8 +77,16 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     // The feedback widget asks for "Name or email (optional)", so the old
-    // blanket "no personal data" was false.
-    expect(screen.getByText(/no personal data unless you type it/)).toBeInTheDocument();
+    // blanket "no personal data" was false — and so is any restatement of it:
+    // an IP address, an IP hash and the feedback session id are personal data
+    // whether or not you typed them, so the bullet promises only name/email.
+    expect(screen.getByText(/no name or email unless you type one/)).toBeInTheDocument();
+    // Everything the feedback record actually holds, so a later trim cannot
+    // quietly drop the two identifiers a reader would care about most.
+    expect(screen.getByText(/your window size/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/a random id that ties your own submissions together/)
+    ).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free, not that
     // the script is ours — it is Plausible's, only served from our domain.
     expect(screen.getByText(/the script is theirs/)).toBeInTheDocument();

@@ -237,9 +237,9 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               <strong>feedback.</strong> the feedback widget keeps what you send it: the message,
               the reaction, anything you put in the optional contact field, the page you were on,
-              your user-agent, and a one-way hash of your IP address that limits spam. only the
-              operator can read those entries, and nothing deletes them on a timer — ask and yours
-              is gone.
+              your window size, your user-agent, a random id that ties your own submissions
+              together, and a one-way hash of your IP address that limits spam. only the operator
+              can read those entries, and nothing deletes them on a timer — ask and yours is gone.
             </Typography>
             <Typography sx={textStyle}>
               <strong>the edge.</strong> Cloudflare stands in front of the site and processes your
@@ -251,11 +251,11 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               • no user accounts or personal profiles
               <br />
-              • no personal data unless you type it — the optional contact field in the feedback
-              widget is the only one that asks for a name or an email
+              • no name or email unless you type one — the optional contact field in the feedback
+              widget is the only place that asks
               <br />
-              • no cookies at all (localStorage holds UI preferences — theme, image size — and a
-              cached release number)
+              • no cookies at all (localStorage holds UI preferences — theme, image size — a cached
+              release number, and, once you use the feedback widget, the random id above)
               <br />• <strong>no ai training</strong>: nothing you send is used to train ai models.
               the ai in this project writes the catalogue, at build time; it never sees a
               visitor&apos;s request

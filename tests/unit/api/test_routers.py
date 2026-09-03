@@ -1171,7 +1171,10 @@ class TestSeoProxyRouter:
         # the feedback widget's optional contact field made false. It now
         # carries the same per-store retention the human page does.
         assert "no personal data collected" not in response.text
+        # BOTH retentions, not only the logs' — pinning just the 30 days is how
+        # that figure silently spreads over the store it is not true for.
         assert "kept 30 days" in response.text
+        assert "until it is deleted by hand" in response.text
 
     def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
         """The /mcp page's audience is AI agents — the bot body must carry the
