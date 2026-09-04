@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bar-3d-categorical
 created: '2026-09-04T22:18:47Z'
-updated: '2026-09-04T22:26:16Z'
+updated: '2026-09-04T22:41:19Z'
 generated_by: claude-sonnet
 workflow_run: 33923902935
 issue: 5248
@@ -12,62 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - Creative isometric 3D bar rendering built entirely from ECharts' `graphic` custom-shape
-    API (polygon/rect/text) with a correct back-to-front painter's algorithm, since
-    native 3D bars require the disallowed echarts-gl extension.
-  - Value magnitude is correctly encoded via the Imprint `imprint_seq` sequential
-    colormap (brand green -> blue), with a clearly labeled color-bar legend showing
-    the min/max range -- the right colormap choice for single-polarity continuous
-    data.
-  - Triple redundant encoding of value (bar height + color + numeric label) makes
-    the chart accessible without relying on color alone.
+  - 'Fixed the main Library Mastery gap from attempt 1: the chart now drives its geometry
+    through a real `series: [{ type: "custom", renderItem }]` bound to `cells` data
+    plus a `visualMap` for continuous color, instead of a static, data-detached `graphic`
+    array — this restores idiomatic tooltip/data-binding while keeping the identical
+    isometric visual.'
+  - 'Fixed the label-collision weakness: value labels are now anchored at each bar''s
+    own top-face centroid (`topCenter`, the centroid of the diamond top) rather than
+    the back-top vertex, so the ''69'' label no longer bleeds onto the neighboring
+    taller ''82'' bar in either render.'
+  - 'Consolidated the color-shading code: 5 hand-rolled hex/RGB/lerp helper functions
+    from attempt 1 are replaced by the built-in `echarts.color.lift(topColor, level)`
+    for the left/right face shading — fewer moving parts, same visual richness.'
+  - Triple redundant encoding of value (bar height + imprint_seq color + numeric label)
+    keeps the chart accessible without relying on color alone, and the color-bar legend
+    clearly labels the 69–97 range.
   - 'Theme-adaptive chrome is correct in both renders: warm off-white/near-black backgrounds,
-    ink-colored text stays legible, and the data colors are identical between light
-    and dark.'
-  - 'All spec-required features are present: slight bar spacing, floor grid lines
-    relating bars to their categorical position, value labels on the small (16-bar)
-    grid, and a legend indicating the color mapping.'
+    ink-colored text and label boxes (using `t.elevatedBg` for the label background)
+    stay legible, and the data colors are pixel-identical between light and dark.'
   weaknesses:
-  - 'The chart never calls ECharts'' `series`, `visualMap`, or any data-bound API
-    -- every shape is drawn via the low-level `graphic` array with `silent: true`,
-    so the HTML export has zero interactivity (no tooltip, no hover state, no legend
-    binding) despite echarts being an interactive-capable library. A `series: [{type:
-    ''custom'', renderItem}]` binding (or `visualMap` for the color mapping) would
-    keep the identical visual while restoring idiomatic, data-driven ECharts usage
-    -- this is the main thing holding back Library Mastery.'
-  - Value labels are positioned above each bar's own back-top vertex (`topBack[1]
-    - 12`); when a short bar sits directly behind/beside a much taller neighbor (e.g.
-    the '69' label for Apparel/South next to the '82' Electronics/North bar), the
-    label renders over the taller bar's face instead of floating clearly above its
-    own bar, creating ambiguous attribution. Offset the label further from the bar
-    top or clip it to stay within the bar's own footprint.
-  - The code defines 9 helper functions (projectRaw, barHeight, hexToRgb, rgbToHex,
-    lerpColor, shade, colorForValue, gridLine, polygon) for the isometric math. This
-    is understandable given the manual 3D projection, but it departs from the KISS
-    Imports -> Data -> Plot -> Save structure expected elsewhere in the catalog; consolidate
-    where possible without losing readability.
-  - No explicit 'Region' / 'Product Line' axis-group title is shown -- only the category
-    tick labels (North/South/... and Electronics/Apparel/...). Minor since the labels
-    are self-explanatory, but an axis title would remove ambiguity for first-time
+  - Still 5-6 helper functions (projectRaw, barHeight, project, gridLine, the nested
+    face() closure, renderItem) for the manual isometric math, departing from the
+    catalog's usual flat Imports -> Data -> Plot -> Save structure. This is largely
+    unavoidable given echarts-gl is disallowed for real 3D bars, so only a light deduction
+    remains.
+  - No explicit 'Region' / 'Product Line' axis-group title is shown — only the category
+    tick labels (North/South/... and Electronics/Apparel/...). Minor, since the labels
+    are self-explanatory, but an axis-group title would remove ambiguity for first-time
     readers.
+  - 'Data Quality: the 16 values span 69-97, a fairly narrow, upper-range band; a
+    wider spread (e.g. down into the 40s-50s for a couple of underperforming cells)
+    would better showcase the full imprint_seq range and the height-encoding contrast.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1), not pure white -- correct.
-      Chrome: Title "bar-3d-categorical · javascript · echarts · anyplot.ai" is dark, bold, centered at top -- fully readable. Category tick labels (North/South/East/West on the base x-lane; Electronics/Apparel/Home Goods/Grocery on the y-lane) are dark-gray/ink and clearly legible. Numeric value labels sit above each bar in dark ink and are legible against the light background. The color-bar legend on the right is titled "Satisfaction score" with min (69) / max (97) labels, both legible.
-      Data: 16 bars in a 4x4 isometric grid, each shaded top/left/right face for a 3D cube look. Bar color follows the Imprint imprint_seq sequential ramp: green (~#009E73) for lower values (69, 74, 76) transitioning to blue (~#4467A3) for higher values (91, 95, 97). Floor grid lines (light gray) relate each bar to its base-plane position. Bars have visible gaps between them.
-      Legibility verdict: PASS -- all text is clearly readable against the light background. One caveat: the numeric value label "69" (Apparel/South) visually overlaps the base of the much taller "82" (Electronics/North) bar behind it, which is a placement/attribution issue rather than a raw legibility failure (the digits themselves remain fully visible).
+      Chrome: Title "bar-3d-categorical · javascript · echarts · anyplot.ai" is dark, bold, centered at top -- fully readable. Category tick labels (North/South/East/West along the base x-lane; Electronics/Apparel/Home Goods/Grocery along the y-lane) are dark-gray/ink and clearly legible. Numeric value labels sit centered on each bar's own top face in dark ink on a light label box, and are fully legible against the light background with no bleed onto neighboring bars. The color-bar legend on the right is titled "Satisfaction score" with min (69) / max (97) labels, both legible.
+      Data: 16 bars in a 4x4 isometric grid, each shaded top/left/right face (via echarts.color.lift) for a 3D cube look. Bar color follows the Imprint imprint_seq sequential ramp: green (~#009E73) for lower values (69, 74, 76) transitioning to blue (~#4467A3) for higher values (91, 95, 97). Bar height is also proportional to value (the "69" cube is visibly the shortest, "97" the tallest). Floor grid lines (light gray) relate each bar to its base-plane position at the unoccluded silhouette edges. Bars have visible gaps between them for depth perception.
+      Legibility verdict: PASS -- all text is clearly readable against the light background; the attempt-1 "69"-over-"82" label collision is resolved (each label now sits within its own bar's top-face footprint).
 
     Dark render (plot-dark.png):
       Background: Warm near-black (~#1A1A17), not pure black -- correct.
-      Chrome: Title, axis category labels, and value labels all render in light/white ink and are clearly readable against the dark background -- no dark-on-dark failures observed. The legend title and min/max labels are light-colored and legible.
-      Data: Same 16 bars, identical Imprint imprint_seq green-to-blue color mapping as the light render -- confirmed the data colors do not shift between themes; only the chrome (background, text, grid) flips as expected.
-      Legibility verdict: PASS -- all text is clearly readable against the dark background. The same "69"-over-"82"-bar overlap noted in the light render is also present here.
+      Chrome: Title, axis category labels, and value labels all render in light/white ink (label boxes flip to a dark `elevatedBg` fill) and are clearly readable against the dark background -- no dark-on-dark failures observed. The legend title and min/max labels are light-colored and legible.
+      Data: Same 16 bars, identical Imprint imprint_seq green-to-blue color mapping and identical bar heights as the light render -- confirmed the data colors and geometry do not shift between themes; only the chrome (background, text, grid, label-box fill) flips as expected.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background; no clipping or dark-on-dark failures found.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -75,15 +68,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, category labels/legend 14-15px),
+        comment: Explicit font sizes (title 22px, category/legend labels 14-15px),
           legible in both themes, no overflow or clipping
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Generally clean, but the '69' value label renders over the base of
-          the taller '82' bar behind it due to the height disparity
+        comment: Attempt-1 label collision fixed by anchoring labels at each bar's
+          own top-face centroid; no overlap remains in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -102,47 +95,47 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced canvas usage, generous margins, legend near the plot, nothing
-          cut off
+        comment: Canvas gate passed (3200x1800); balanced margins, legend well-placed,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Category labels are descriptive; color-bar legend explicitly titled
-          'Satisfaction score'
+        comment: Category labels descriptive; color-bar legend explicitly titled 'Satisfaction
+          score'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: imprint_seq correctly used for continuous single-polarity magnitude
-          data; theme-correct chrome (background/text) in both renders
+          data; theme-correct chrome in both renders
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Polished isometric shading (top/left/right face shading), clearly
-          above a configured default
+        comment: Polished isometric shading via echarts.color.lift, depth-compensated
+          projection angle to avoid row collisions, correct painter's-algorithm z-ordering
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Subtle floor grid, no visible frame/spines, generous whitespace;
-          minor deduction for the label-collision issue
+        comment: Subtle floor grid, no visible frame/spines, generous whitespace,
+          label-collision issue from attempt 1 resolved
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Color + height jointly draw the eye to the highest-value (bluest,
-          tallest) bars; no explicit annotation or callout
+          tallest) bars; no explicit annotation or callout beyond the dual encoding
     spec_compliance:
       score: 15
       max: 15
@@ -158,8 +151,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Bar spacing, floor grid, value labels for <25 bars, and color legend
-          all present
+        comment: Bar spacing, floor grid, value labels for the <25-bar grid, and color
+          legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -200,16 +193,17 @@ review:
         comment: Values (69-97 out of 100) are realistic for a satisfaction-score
           domain
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: 9 helper functions defined for the manual isometric projection/coloring,
-          departing from the Imports -> Data -> Plot -> Save structure
+        passed: true
+        comment: Consolidated from 9 to ~5 helper functions by replacing hand-rolled
+          color math with echarts.color.lift; still departs from the flat Imports->Data->Plot->Save
+          shape due to the inherent isometric-projection math
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -227,8 +221,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the constraint (no native 3D bar support),
-          no fake UI
+        comment: Appropriate complexity for the constraint (no native 3D bar support,
+          echarts-gl disallowed), no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -236,25 +230,26 @@ review:
         passed: true
         comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 3
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Bypasses ECharts' series/coordinate-system model entirely; uses only
-          the low-level graphic API, essentially treating ECharts as a raw canvas
+        passed: true
+        comment: Now uses the documented custom-series pattern (series/renderItem
+          bound to real data, visualMap for continuous color, tooltip formatter) instead
+          of a static graphic array -- restores idiomatic, data-driven ECharts usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses echarts.graphic.LinearGradient for the legend fill, but the
-          core technique (hand-rolled isometric projection) could be replicated in
-          any canvas-drawing environment
-  verdict: REJECTED
+        passed: true
+        comment: visualMap continuous color mapping, echarts.color.lift for face shading,
+          and a data-bound custom renderItem group are distinctive; the core isometric
+          projection math is still hand-rolled since echarts-gl is unavailable
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -268,4 +263,3 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - gradient-fill
