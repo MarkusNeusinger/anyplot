@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: bar-3d-categorical
+created: '2026-09-04T22:34:20Z'
+updated: '2026-09-04T22:59:03Z'
+generated_by: claude-sonnet
+workflow_run: 33924452324
+issue: 5248
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) are threaded consistently through nearly
+    every Axis3 element (panels, grids, spines, tick/axis labels, title) producing
+    correctly theme-adaptive chrome in both light and dark renders.
+  - 'Correct Imprint sequential colormap (#009E73 -> #4467A3) drives the continuous
+    revenue encoding, with identical data colors between the two themes.'
+  - 'Idiomatic workaround for Makie''s lack of a native 3D bar primitive: meshscatter
+    + Rect3 markers with per-value flat coloring (NoShading) is a legitimate, well-reasoned
+    technique, documented with a comment explaining the shading choice.'
+  - Title format, axis labels with units ("Revenue ($k)"), and colorbar label are
+    all correct and consistent with the spec.
+  - Code is clean, reproducible (Random.seed!(42)), and follows KISS structure with
+    only used imports.
+  weaknesses:
+  - 'Significant bar occlusion: with a 5x4=20-bar grid, many rear bars are substantially
+    hidden behind taller front bars at the current view (elevation 30deg, azimuth
+    225deg) -- only roughly half the individual bars are distinguishable in the render.
+    Try a higher elevation (more top-down) or reordering which axis faces the camera
+    so shorter bars aren''t lost behind taller ones, and/or add subtle edge/stroke
+    highlighting on bar faces so overlapping silhouettes stay distinguishable.'
+  - Spec explicitly suggests "adding value labels on top of bars when the grid is
+    small (under 25 bars)" -- this grid has 20 bars and no value labels were added.
+    Consider text! annotations above each bar top (at least for the front, unoccluded
+    bars) showing the revenue value.
+  - 'Data Storytelling is limited: color redundantly encodes the same information
+    as bar height rather than adding a new dimension or highlighting a specific insight
+    (e.g. the standout Electronics/North combination). A brief annotation or emphasis
+    on the top performer would strengthen the narrative.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), no pure white or dark tones.
+      Chrome: Title "bar-3d-categorical · julia · makie · anyplot.ai" in dark ink, clearly readable at top center. Axis titles "Product Category", "Region", "Revenue ($k)" and category tick labels (Electronics, Apparel, Home & Garden, Sports, Books / West, East, South, North) render in dark/soft-dark ink against the light panels, all legible with no clipping at canvas edges. Grid lines on the axis panels are faint and subtle, not distracting.
+      Data: A grid of 3D rectangular bars rising from the base plane, colored on a green-to-blue continuous scale (#009E73 for lower revenue values through #4467A3 for the highest, per the IMPRINT_SEQ colormap) matching a colorbar on the right labeled "Revenue ($k)". The tallest, most blue bar sits front-center (Electronics/North). Many bars toward the back of the grid are partially or fully occluded by taller bars in front, so not all 20 category/region combinations are individually distinguishable.
+      Legibility verdict: PASS (all text is readable; occlusion is a data-visibility issue, not a text-legibility one).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), no pure black.
+      Chrome: Same title and axis/tick labels now rendered in light ink (title white/near-white, tick labels light gray) against the dark panels -- clearly readable, no dark-on-dark failures observed. Grid lines remain faint but visible against the dark background.
+      Data: Identical green-to-blue bar colors and colorbar as the light render -- confirms data colors are held constant across themes. Same bar arrangement and occlusion pattern as the light render (expected, since it's the same 3D scene with only chrome flipped).
+      Legibility verdict: PASS (all text readable; no dark-on-dark issues).
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axis labels, and tick labels
+          readable in both themes with no clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text; category tick labels are cleanly spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Significant bar-to-bar occlusion: roughly half of the 20 bars in
+          the grid are hidden or heavily obscured behind taller front bars at the
+          current view angle.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient is CVD-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization and balance; some whitespace concentrated
+          at the top of the frame.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units on the revenue axis.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct Imprint sequential colormap (#009E73 -> #4467A3); theme-correct
+          backgrounds and chrome in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful theme-token threading and matched panel/background colors
+          go clearly beyond a library default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid alpha, matched panel colors, soft-ink spines -- refined
+          but not flawless.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color is redundant with height rather than adding a new dimension
+          or highlighting a specific insight; no annotation calling out the standout
+          combination.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D bar chart via meshscatter + Rect3 markers.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: Missing value labels on bars, which the spec explicitly recommends
+          for grids under 25 bars (this grid has 20).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/Z correctly map to product category, region, and revenue.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar label matches the encoded value.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Base revenue and regional factors create meaningful variation across
+          both categorical axes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic quarterly-revenue-by-category-and-region business
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values and relative proportions across categories/regions
+          are plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear imports -> data -> plot -> save flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random -- all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for the 3D-bar workaround; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png at px_per_unit=2, matching the canonical
+          canvas.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, well-configured Axis3 + meshscatter usage, the recommended
+          Makie pattern for 3D bar grids.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: meshscatter with Rect3 markers and explicit shading control is a
+          technique fairly distinctive to Makie's declarative 3D API.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
