@@ -54,11 +54,11 @@ function correlatedPoint(meanX: number, sdX: number, meanY: number, sdY: number,
 
 const points: { id: number; x: number; y: number }[] = [];
 for (let i = 0; i < 900; i += 1) {
-  const p = correlatedPoint(24.0, 0.15, 46.0, 0.9, 0.55);
+  const p = correlatedPoint(23.92, 0.13, 45.6, 0.7, 0.5);
   points.push({ id: points.length, x: p.x, y: p.y });
 }
 for (let i = 0; i < 500; i += 1) {
-  const p = correlatedPoint(24.42, 0.13, 47.35, 0.8, 0.5);
+  const p = correlatedPoint(24.58, 0.12, 48.4, 0.65, 0.45);
   points.push({ id: points.length, x: p.x, y: p.y });
 }
 
@@ -231,19 +231,20 @@ function ContourLines() {
 }
 
 function DensityLegend({ height }: { height: number }) {
-  const swatches = LEVEL_FRACTIONS.map((_, level) =>
-    mixHex(t.seq[0], t.seq[1], level / (LEVEL_FRACTIONS.length - 1)),
-  ).reverse();
+  const rows = LEVEL_FRACTIONS.map((fraction, level) => ({
+    fraction,
+    color: mixHex(t.seq[0], t.seq[1], level / (LEVEL_FRACTIONS.length - 1)),
+  })).reverse();
   return (
     <Box sx={{ width: 168, height, display: "flex", flexDirection: "column", justifyContent: "center", pl: "18px" }}>
       <Typography sx={{ color: t.inkSoft, fontSize: 14, fontWeight: 600, mb: "10px", fontFamily: "inherit" }}>
         KDE density
       </Typography>
-      {swatches.map((color, i) => (
+      {rows.map(({ fraction, color }, i) => (
         <Box key={color} sx={{ display: "flex", alignItems: "center", mb: "8px" }}>
           <Box sx={{ width: 22, height: 6, borderRadius: "3px", bgcolor: color, mr: "10px", flexShrink: 0 }} />
           <Typography sx={{ color: t.inkSoft, fontSize: 13, fontFamily: "inherit" }}>
-            {i === 0 ? "Highest" : i === swatches.length - 1 ? "Lowest" : ""}
+            {i === 0 ? "Highest" : i === rows.length - 1 ? "Lowest" : `~${Math.round(fraction * 100)}%`}
           </Typography>
         </Box>
       ))}
@@ -306,10 +307,16 @@ export default function Chart() {
               label: "Weight (g)",
               labelStyle: { fontSize: 16, fill: t.inkSoft },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              // MUI X positions the rotated axis label at a fixed offset of
+              // `tickFontSize + tickSize + 10` from the axis line — that offset
+              // uses this deprecated prop, NOT `tickLabelStyle.fontSize` above,
+              // so it must be set wide enough on its own to clear the actual
+              // (wider) rendered tick-label text at every tick position.
+              tickFontSize: 46,
             },
           ]}
           grid={{ horizontal: true, vertical: true }}
-          margin={{ top: 20, right: 40, bottom: 90, left: 130 }}
+          margin={{ top: 20, right: 40, bottom: 90, left: 150 }}
           sx={{
             "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
           }}
