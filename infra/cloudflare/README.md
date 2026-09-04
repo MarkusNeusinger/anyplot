@@ -20,12 +20,11 @@ verdicts, and one rollout procedure — the API's is done, the app's is
 **The `.js` is the source, not a draft.** Change it here and deploy it; change
 it in the dashboard and pull it back here.
 
-> **After this lands, the Worker needs a redeploy.** The
-> `X-Origin-Secret` lines are newer than the running script, so the repository
-> and the deployment are out of step until it is pushed. Until then the Worker
-> stamps nothing, `anyplot.ai/api/health` answers `off`, and arming the gate
-> would take that route down — which is exactly what the rollout order in the
-> pull-request description prevents.
+> **Deployed state (2026-09-04).** The Worker was redeployed from the current
+> `.js` after #11221; the Transform Rule now covers `anyplot.ai`,
+> `www.anyplot.ai` and `api.anyplot.ai`, and `/api/event` measured `off-seen`.
+> The standing rule still holds: the `.js` here mirrors the deployed bytes, so
+> the next edit to it needs its own redeploy.
 
 ## The Worker
 
@@ -131,9 +130,16 @@ json.dump({
     "https://api.cloudflare.com/client/v4/accounts/{account}/workers/scripts/anyplot-api-proxy" \
     --config <(printf 'header = "Authorization: Bearer %s"\n' "$CF_API_TOKEN") \
     -F 'metadata=<-;type=application/json' \
-    -F 'worker.js=@infra/cloudflare/anyplot-api-proxy.js;type=application/javascript+module'
+    -F 'worker.js=@infra/cloudflare/anyplot-api-proxy.js;filename=worker.js;type=application/javascript+module'
 )
 ```
+
+**The explicit `filename=worker.js` is required.** Cloudflare resolves the
+`main_module` named in the metadata (`worker.js`) against each part's
+*filename*, not its form-field name; curl otherwise defaults the filename to
+the local file's basename (`anyplot-api-proxy.js`), which does not match, and
+the API answers `400 — Uncaught Error: No such module: worker.js` (observed
+live 2026-09-04).
 
 `pipefail` so a failing `python3` cannot be masked by a succeeding `curl`;
 `--fail-with-body` so an HTTP error is a non-zero exit and still prints
