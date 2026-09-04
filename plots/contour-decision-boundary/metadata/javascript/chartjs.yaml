@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: contour-decision-boundary
 created: '2026-09-04T23:05:08Z'
-updated: '2026-09-04T23:11:01Z'
+updated: '2026-09-04T23:22:51Z'
 generated_by: claude-sonnet
 workflow_run: 33927560915
 issue: 2921
@@ -12,52 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Clever true-class-vs-predicted-region color encoding: markers are colored by
-    the point''s TRUE class while the background mesh shows the classifier''s PREDICTED
-    class for that location, so misclassified points visually clash with their surrounding
-    region — a genuinely insightful storytelling device unique to this implementation.'
-  - Correct vs. misclassified points are distinguished by marker shape (circle vs.
-    triangle) in addition to color, exactly as the spec suggests.
+  - 'Fixed the prior review''s crosshatch artifact: replaced the rect-marker mesh
+    approximation with an exact pixel-rectangle painting plugin (beforeDatasetsDraw
+    + scale.getPixelForValue) that tiles decision regions edge-to-edge with no gaps,
+    confirmed by close crops of both renders showing a solid, seamless fill.'
+  - Raised mesh resolution from 100x56 (5,600 cells) to 120x110 (13,200 cells), now
+    comfortably inside the spec's 100x100-200x200 target, producing a visibly smoother
+    boundary curve.
+  - Reordered dataset draw order so misclassified triangle markers paint last; the
+    previously-hidden triangle near (-0.2, 0.6) is now fully visible with an unobstructed
+    outline in both themes.
+  - 'Genuinely insightful storytelling device: marker color encodes the TRUE class
+    while the background region encodes the classifier''s PREDICTED class, so a misclassified
+    point visually clashes with its surrounding region.'
   - Fully hand-rolled, deterministic k-NN classifier (k=15) plus a seeded LCG/Box-Muller
-    PRNG for the make_moons-style data — no fake interactivity, faithful to Chart.js's
-    lack of a native contour type.
-  - 'Both themes are correctly threaded end-to-end: chrome (background, text, grid)
-    flips between #FAF8F1 and #1A1A17 while data colors (Imprint green + lavender)
-    stay identical.'
-  - Legend correctly filters out the two internal mesh-region datasets via a `filter`
-    callback, leaving only the four meaningful class-label entries.
+    PRNG for the make_moons-style data - no fake interactivity, faithful to Chart.js's
+    lack of a native contour type, and reproducible.
+  - 'Both themes correctly threaded end-to-end: chrome (background #FAF8F1/#1A1A17,
+    text, grid) flips while data colors (Imprint green + lavender) stay pixel-identical
+    between renders.'
+  - Correct/misclassified points are distinguished by both marker shape (circle vs
+    triangle) and border treatment, exactly as the spec suggests, which also helps
+    CVD accessibility.
   weaknesses:
-  - The mesh-region fill (rect-point approximation of a filled contour) shows a visible
-    crosshatch/graph-paper texture in both themes — adjacent rect markers (pointRadius=11)
-    don't fully tile against the grid-line spacing, so background grid lines show
-    through in a regular pattern instead of a smooth solid fill. Increase pointRadius
-    slightly (or increase nx/ny density) so adjacent mesh squares overlap and cover
-    the gaps completely.
-  - Mesh grid resolution is 100 x 56 (5,600 cells), below the spec's suggested 100x100-200x200
-    minimum — the y-dimension in particular is coarse. Raise ny to at least 100 for
-    a smoother, higher-fidelity boundary contour.
-  - One 'Class B (misclassified)' triangle near (-0.2, 0.6) in the light render is
-    almost entirely hidden behind a larger circle marker drawn on top of it — consider
-    a small dodge/offset or z-order adjustment so every misclassified marker stays
-    visible.
+  - The decision boundary still shows a visible staircase/pixelation pattern along
+    the curve (inherent to the 120x110 rectangle-tiling approach) - a higher mesh
+    density (closer to the 200x200 upper end of the spec range) or edge anti-aliasing
+    would give a more polished contour look, though it doesn't hurt legibility.
+  - Grid remains a full default grid across the whole plot area in both themes; lightening
+    it further or dropping one axis's gridlines would read as more deliberate visual
+    refinement against the now much cleaner region fill.
+  - In a few dense marker clusters (e.g. around X1=0.5, X2=-0.3) closely spaced circles
+    overlap slightly - a natural consequence of the noisy synthetic data rather than
+    a rendering bug, but a marginally smaller point radius would keep every point
+    fully separable.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches the Imprint light-theme surface.
-      Chrome: Title "contour-decision-boundary · javascript · chartjs · anyplot.ai" in bold dark ink at top, fully visible and centered; legend row below it with 4 entries (Class A, Class A (misclassified), Class B, Class B (misclassified)); axis titles "Feature 1 (X1)" / "Feature 2 (X2)" in dark ink; tick labels in a softer dark gray. All chrome text reads clearly against the light background.
-      Data: Two decision regions fill the plot — a green (#009E73) region for Class A predictions and a lavender/purple region for Class B predictions, separated by a wavy, roughly-diagonal boundary. Training points are overlaid as circles (correctly classified, colored by true class) and a few triangles (misclassified, also colored by true class, with a dark border) — the triangles sit inside the *opposite*-colored region from their own fill color, which is exactly how misclassification should read visually. The mesh fill itself shows a faint but visible crosshatch/grid-line texture rather than a perfectly smooth fill.
-      Legibility verdict: PASS (all title/legend/axis/tick text is clearly readable; no light-on-light text).
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "contour-decision-boundary · javascript · chartjs · anyplot.ai" centered at top, fully legible. Legend directly below with 4 entries (Class A, Class B, Class A (misclassified), Class B (misclassified)) with green/lavender swatches in dark text. Axis titles "Feature 1 (X1)" / "Feature 2 (X2)" and tick labels in dark ink, subtle warm-gray gridlines - all readable.
+      Data: Two solid, gapless translucent regions (mint green upper-left, pale lavender lower-right) meet along a smooth curved decision boundary. ~220 circular markers (brand green #009E73 and lavender, cream-colored strokes) trace two interleaving crescents. Three triangular "misclassified" markers with contrasting dark outlines sit near the boundary and are all fully visible, none occluded by other markers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches the Imprint dark-theme surface.
-      Chrome: Same title, legend, and axis labels, now rendered in light/off-white ink against the dark background — all clearly legible, no dark-on-dark failures observed.
-      Data: The two mesh regions and point colors are pixel-identical to the light render (green #009E73 and the lavender Class B color) — only the chrome (background, grid, text) flipped, confirming correct theme-adaptive token usage. The same crosshatch grid texture is visible through the mesh fill in this theme as well.
-      Legibility verdict: PASS (all chrome text reads clearly against the dark background; data colors confirmed identical to the light render).
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title and legend now rendered in white/light text, fully legible against the dark surface. Axis titles and tick labels render in light gray/white with clear contrast. Gridlines remain subtle but visible.
+      Data: The decision regions become deep forest green and muted dark purple - both are clearly distinguishable from each other and from the near-black canvas background (verified via a pixel crop showing a clean, gapless boundary edge and legible axis tick labels). Marker colors (green #009E73, lavender) are pixel-identical to the light render - only the chrome flipped. Triangle misclassified markers retain visible contrasting strokes; no dark-on-dark or light-on-light failures anywhere.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -65,50 +71,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, legend, axis labels and ticks are all legible with good contrast
-          in both themes
+        comment: Title, axis titles, tick labels, and legend all explicitly sized
+          and fully readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: One small misclassified triangle near (-0.2, 0.6) is nearly hidden
-          behind a larger circle marker
+        comment: Legend and text never collide; a few natural marker-on-marker overlaps
+          remain in dense clusters.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Mesh fill shows a visible crosshatch/grid-line texture instead of
-          a smooth solid region fill
+        comment: Region fill is now solid/gapless (crosshatch fix confirmed); markers
+          sized appropriately for ~220 points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green vs. lavender is CVD-safe and not a red/green pairing
+        comment: Imprint palette, marker shape doubles as a redundant channel to color
+          (circle vs triangle).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title, legend and axes are well-proportioned
-          with no overflow or clipping
+        comment: Canvas dimension gate passed; no overflow or clipping; balanced axis
+          labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with feature names and abbreviations
+        comment: Descriptive feature axis titles; mandated title format followed exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series is #009E73; backgrounds are #FAF8F1/#1A1A17;
-          data colors identical across themes'
+        comment: 'First series is #009E73; chrome backgrounds correct in both themes;
+          data colors identical across themes.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -116,24 +123,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Creative true-class/predicted-region color encoding shows real design
-          thought, undercut somewhat by the mesh crosshatch texture
+        comment: True-class-vs-predicted-region color encoding and a custom pixel-perfect
+          fill plugin show real design thought beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid lines are not subtle where they show through the mesh fill,
-          producing a busy graph-paper texture across the decision regions
+        passed: true
+        comment: Region fill is now clean and gapless, but the boundary curve still
+          shows a mesh staircase and the grid is left at full default treatment.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Region = prediction, marker color = truth, shape = correct/incorrect
-          is a clear, well-executed visual hierarchy
+        comment: Misclassified triangles stand out clearly against the color-clash
+          background, creating an obvious focal point for classifier errors.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,52 +148,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly renders a decision-boundary visualization with colored
-          regions and overlaid points
+        comment: Correct decision-boundary visualization with predicted-class regions.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All required features present, but mesh grid (100x56) is coarser
-          than the spec's suggested 100x100-200x200 minimum
+        comment: Distinct translucent region colors, overlaid training points, correct/misclassified
+          marker styles, legend, and a real classifier (hand-rolled k-NN) are all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X1/X2 correctly mapped to x/y axes, full data range shown
+        comment: X1/X2 correctly mapped to axes; full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend labels match class names
+        comment: Title matches the mandated format exactly; legend labels match class
+          semantics.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows regions, training points, and correct/incorrect distinction;
-          mesh density slightly under spec's suggested minimum
+        comment: Shows decision regions, training points, and correct/misclassified
+          distinction - all aspects of the plot type.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic make_moons-style synthetic classification data, neutral and
-          plausible for an ML teaching example
+        comment: Standard make_moons-style synthetic classification data, neutral
+          and plausible for a demo.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 220 training points within the spec's 50-500 range, sensible feature-space
-          scale
+        comment: Feature values in a sensible normalized 2D range.
     code_quality:
       score: 10
       max: 10
@@ -196,55 +203,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat, readable script with only small pure helper functions
+        comment: No classes; only small arrow-function helpers, flat script structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG PRNG makes the data fully deterministic
+        comment: Seeded LCG PRNG, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the provided Chart.js global is used
+        comment: No imports beyond the Chart.js global - nothing unused.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; appropriate complexity
+        comment: Custom plugin is an appropriately-complex, non-fake solution to a
+          genuine Chart.js capability gap.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts a canvas into #container, animation disabled, current Chart.js
-          API'
+        comment: 'Follows the #container mount contract, animation:false set, current
+          Chart.js API used throughout.'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic scatter datasets, legend filter callback, theme tokens
-          threaded correctly
+        comment: Core scatter type plus a beforeDatasetsDraw plugin is the idiomatic
+          Chart.js way to extend beyond built-in chart types.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Genuinely distinctive workaround for Chart.js's lack of a native
-          contour type, plus the true-class-vs-predicted-region encoding
-  verdict: REJECTED
+        comment: Direct use of scale.getPixelForValue for pixel-perfect custom rendering
+          is a distinctive, non-trivial technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - patches
   patterns:
   - data-generation
   - matrix-construction
