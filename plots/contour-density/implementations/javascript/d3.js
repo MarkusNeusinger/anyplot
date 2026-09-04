@@ -58,6 +58,31 @@ const y = d3
   .range([ih, 0])
   .nice();
 
+// --- Background grid (subtle, sits behind the contour fill) ---------------
+g.append("g")
+  .attr("class", "grid")
+  .selectAll("line.x-grid")
+  .data(x.ticks(7))
+  .join("line")
+  .attr("x1", (d) => x(d))
+  .attr("x2", (d) => x(d))
+  .attr("y1", 0)
+  .attr("y2", ih)
+  .attr("stroke", t.grid)
+  .attr("stroke-opacity", 0.4);
+
+g.append("g")
+  .attr("class", "grid")
+  .selectAll("line.y-grid")
+  .data(y.ticks(7))
+  .join("line")
+  .attr("x1", 0)
+  .attr("x2", iw)
+  .attr("y1", (d) => y(d))
+  .attr("y2", (d) => y(d))
+  .attr("stroke", t.grid)
+  .attr("stroke-opacity", 0.4);
+
 // --- Density contours ---------------------------------------------------
 const densityData = d3
   .contourDensity()
@@ -87,16 +112,19 @@ g.append("g")
   .join("circle")
   .attr("cx", (d) => x(d.duration))
   .attr("cy", (d) => y(d.wait))
-  .attr("r", 2.5)
+  .attr("r", 2.75)
   .attr("fill", t.ink)
-  .attr("fill-opacity", 0.25);
+  .attr("fill-opacity", 0.35)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 0.6)
+  .attr("stroke-opacity", 0.5);
 
 // --- Axes ---------------------------------------------------------------
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(7));
 const yAxis = g.append("g").call(d3.axisLeft(y).ticks(7));
 for (const ax of [xAxis, yAxis]) {
-  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
-  ax.selectAll("line").attr("stroke", t.grid);
+  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
+  ax.selectAll("line").attr("stroke", t.inkSoft);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
 
@@ -168,7 +196,7 @@ svg
   .attr("y", legendY - 16)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "15px")
+  .style("font-size", "16px")
   .text("High");
 
 svg
@@ -177,7 +205,7 @@ svg
   .attr("y", legendY + legendHeight + 26)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "15px")
+  .style("font-size", "16px")
   .text("Low");
 
 svg
@@ -188,5 +216,5 @@ svg
   )
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
+  .style("font-size", "15px")
   .text("Point density");
