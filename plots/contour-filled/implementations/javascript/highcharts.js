@@ -132,6 +132,20 @@ function cellContourSegments(a, b, c, d, level) {
 const TITLE_TEXT = 'Synthetic Mountain Range Elevation · contour-filled · javascript · highcharts · anyplot.ai';
 const TITLE_FS = Math.max(Math.round(22 * Math.min(1, 67 / TITLE_TEXT.length)), 14);
 
+// Fixed, theme-independent isoline stroke (not derived from t.ink): the data
+// colors are already identical between light/dark, so the boundary lines
+// must be too, or they read faint on light-theme bands and bright on
+// dark-theme bands (a prior review flagged exactly this).
+const ISOLINE_STROKE = 'rgba(26, 26, 23, 0.45)';
+// Elevation levels get labeled with a "nice" round number rather than the
+// raw computed boundary, and only a few are called out directly on the map.
+const roundNice = (v) => Math.round(v / 50) * 50;
+const LABELED_LEVEL_INDICES = new Set([
+  Math.round(LEVELS * 0.25),
+  Math.round(LEVELS * 0.5),
+  Math.round(LEVELS * 0.75),
+]);
+
 const drawn = [];
 function clearDrawn() {
   drawn.forEach((el) => {
@@ -192,6 +206,7 @@ function drawAll() {
   for (let lvlIdx = 1; lvlIdx < LEVELS; lvlIdx++) {
     const level = levelBounds[lvlIdx];
     const pathArr = [];
+    const segments = [];
     for (let j = 0; j < NY - 1; j++) {
       for (let i = 0; i < NX - 1; i++) {
         const a = { x: xs[i], y: ys[j], z: Z[j][i] };
@@ -200,6 +215,7 @@ function drawAll() {
         const d = { x: xs[i], y: ys[j + 1], z: Z[j + 1][i] };
         for (const [p1, p2] of cellContourSegments(a, b, c, d, level)) {
           pathArr.push('M', xAxis.toPixels(p1.x), yAxis.toPixels(p1.y), 'L', xAxis.toPixels(p2.x), yAxis.toPixels(p2.y));
+          segments.push([p1, p2]);
         }
       }
     }
@@ -207,9 +223,34 @@ function drawAll() {
     drawn.push(
       r
         .path(pathArr)
-        .attr({ fill: 'none', stroke: t.ink, 'stroke-width': 1, 'stroke-opacity': 0.25, zIndex: 3 })
+        .attr({ fill: 'none', stroke: ISOLINE_STROKE, 'stroke-width': 1.1, zIndex: 3 })
         .add()
     );
+
+    // Direct elevation callout on a few isolines — picks the longest segment
+    // for that level as a stable, uncluttered anchor point for the label.
+    if (LABELED_LEVEL_INDICES.has(lvlIdx)) {
+      let longest = segments[0];
+      let longestLenSq = -1;
+      for (const seg of segments) {
+        const dx = seg[1].x - seg[0].x;
+        const dy = seg[1].y - seg[0].y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq > longestLenSq) {
+          longestLenSq = lenSq;
+          longest = seg;
+        }
+      }
+      const midX = xAxis.toPixels((longest[0].x + longest[1].x) / 2);
+      const midY = yAxis.toPixels((longest[0].y + longest[1].y) / 2);
+      drawn.push(
+        r
+          .label(`${roundNice(level)} m`, midX, midY, 'rect')
+          .attr({ fill: t.elevatedBg, stroke: t.inkSoft, 'stroke-width': 1, r: 4, padding: 3, zIndex: 4 })
+          .css({ color: t.ink, fontSize: '11px', fontWeight: '600' })
+          .add()
+      );
+    }
   }
 
   // Discrete colorbar (right of the plot area) — one swatch per band.
@@ -235,13 +276,13 @@ function drawAll() {
       .add()
   );
   [
-    [zMax, 0],
-    [(zMin + zMax) / 2, 0.5],
-    [zMin, 1],
+    [roundNice(zMax), 0],
+    [roundNice((zMin + zMax) / 2), 0.5],
+    [roundNice(zMin), 1],
   ].forEach(([value, frac]) => {
     drawn.push(
       r
-        .text(Math.round(value).toString(), barLeft + barWidth + 10, barTop + frac * barHeight + 5)
+        .text(value.toString(), barLeft + barWidth + 10, barTop + frac * barHeight + 5)
         .attr({ align: 'left', zIndex: 3 })
         .css({ color: t.inkSoft, fontSize: '14px' })
         .add()
