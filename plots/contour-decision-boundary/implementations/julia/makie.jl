@@ -53,6 +53,29 @@ for p in eachindex(species_idx)
     correctly_classified[p] = argmax(votes) == species_idx[p]
 end
 
+# Deterministic jitter for exact-duplicate (petal_length, petal_width) pairs so
+# that overlapping hit/miss markers don't collapse into a single confusing
+# glyph. Classification above uses the true coordinates; only the plotted
+# marker positions are nudged.
+plot_x = copy(petal_length)
+plot_y = copy(petal_width)
+duplicate_groups = Dict{Tuple{Float64,Float64},Vector{Int}}()
+for (i, key) in enumerate(zip(petal_length, petal_width))
+    push!(get!(duplicate_groups, key, Int[]), i)
+end
+jitter_rx = 0.018 * (maximum(petal_length) - minimum(petal_length))
+jitter_ry = 0.018 * (maximum(petal_width) - minimum(petal_width))
+for idxs in values(duplicate_groups)
+    n_dup = length(idxs)
+    if n_dup > 1
+        for (rank, i) in enumerate(idxs)
+            angle = 2π * (rank - 1) / n_dup
+            plot_x[i] += jitter_rx * cos(angle)
+            plot_y[i] += jitter_ry * sin(angle)
+        end
+    end
+end
+
 # --- Plot ---------------------------------------------------------------------
 fig = Figure(size = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
 
@@ -67,8 +90,8 @@ ax = Axis(
     ylabelsize = 14,
     xlabelcolor = INK,
     ylabelcolor = INK,
-    xticklabelsize = 12,
-    yticklabelsize = 12,
+    xticklabelsize = 14,
+    yticklabelsize = 14,
     xticklabelcolor = INK_SOFT,
     yticklabelcolor = INK_SOFT,
     xtickcolor = INK_SOFT,
@@ -82,11 +105,22 @@ ax = Axis(
     ygridvisible = false,
 )
 
-heatmap!(
-    ax, xs, ys, region;
-    colormap = cgrad(IMPRINT_PALETTE; categorical = true),
-    colorrange = (0.5, n_classes + 0.5),
-    alpha = 0.35,
+region_f = Float64.(region)
+
+# Smooth filled decision surface (interpolated boundaries, unlike a blocky
+# heatmap!) plus a thin boundary line between adjacent classes for extra
+# polish beyond a flat, unrefined region fill.
+fill_colors = [RGBAf(c.r, c.g, c.b, 0.35) for c in IMPRINT_PALETTE[1:n_classes]]
+contourf!(
+    ax, xs, ys, region_f;
+    levels = 0.5:1:(n_classes + 0.5),
+    colormap = cgrad(fill_colors; categorical = true),
+)
+contour!(
+    ax, xs, ys, region_f;
+    levels = collect(1.5:1:(n_classes - 0.5)),
+    color = (INK_SOFT, 0.5),
+    linewidth = 1.2,
 )
 
 for c in 1:n_classes
@@ -94,12 +128,12 @@ for c in 1:n_classes
     hit = in_class .& correctly_classified
     miss = in_class .& .!correctly_classified
     scatter!(
-        ax, petal_length[hit], petal_width[hit];
+        ax, plot_x[hit], plot_y[hit];
         color = IMPRINT_PALETTE[c], markersize = 16, marker = :circle,
         strokewidth = 1.5, strokecolor = PAGE_BG, label = class_names[c],
     )
     scatter!(
-        ax, petal_length[miss], petal_width[miss];
+        ax, plot_x[miss], plot_y[miss];
         color = IMPRINT_PALETTE[c], markersize = 20, marker = :xcross,
         strokewidth = 2, strokecolor = INK,
     )
