@@ -83,10 +83,15 @@ const visitMin = Math.min(...trainVisits) - margin * visitRange;
 const visitMax = Math.max(...trainVisits) + margin * visitRange;
 
 // Grid resolution follows the mount's pixel aspect so each cell renders ~square.
-const gridCols = 70;
-const gridRows = Math.max(20, Math.round(gridCols * (size.height / size.width)));
+// Dense enough (per spec: 100x100-200x200) that the boundary reads as a smooth
+// frontier rather than a staircase-stepped mesh.
+const gridCols = 130;
+const gridRows = Math.max(36, Math.round(gridCols * (size.height / size.width)));
 const cellPx = (size.width - 150) / gridCols;
-const cellRadius = Math.round(cellPx / 2) + 2;
+// Squares overlap heavily (each cell covered by several neighbors) so the
+// per-square alpha compounds into a flat, seamless wash instead of a visible
+// grid of tile edges; the per-square opacity below is lowered to compensate.
+const cellRadius = Math.ceil(cellPx * 2.4);
 
 const regionPoints = segments.map(() => []);
 for (let i = 0; i < gridCols; i++) {
@@ -108,7 +113,7 @@ const regionSeries = segments.map((segment, classIndex) => ({
   marker: {
     symbol: "square",
     radius: cellRadius,
-    fillColor: Highcharts.color(t.palette[classIndex]).setOpacity(0.28).get(),
+    fillColor: Highcharts.color(t.palette[classIndex]).setOpacity(0.035).get(),
     lineWidth: 0,
   },
   enableMouseTracking: false,
@@ -164,7 +169,7 @@ Highcharts.chart("container", {
     endOnTick: false,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineColor: t.grid,
+    gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   yAxis: {
@@ -175,7 +180,7 @@ Highcharts.chart("container", {
     endOnTick: false,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineColor: t.grid,
+    gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   legend: {
