@@ -54,12 +54,16 @@ fig = Figure(
 
 ax = Axis(
     fig[1, 1];
-    title              = "confusion-matrix · julia · makie · anyplot.ai",
+    title              = rich(
+        "confusion-matrix · julia · makie · anyplot.ai",
+        "\n",
+        rich(
+            "Overall accuracy: $(round(overall_accuracy, digits = 1))% · cells show count and row-normalized recall";
+            fontsize = 13, color = INK_SOFT,
+        ),
+    ),
     titlesize          = 20,
     titlecolor         = INK,
-    subtitle           = "Overall accuracy: $(round(overall_accuracy, digits = 1))% · cells show count and row-normalized recall",
-    subtitlesize       = 13,
-    subtitlecolor      = INK_SOFT,
     xlabel             = "Predicted Label",
     ylabel             = "True Label",
     xlabelsize         = 14,
@@ -91,9 +95,10 @@ hm = heatmap!(
     colormap = IMPRINT_SEQ, colorrange = (0, max_count),
 )
 
-# Cell annotations — raw count (bold, larger) above the row-normalized
-# recall percentage (smaller); text color adapts to cell luminance so it
-# stays legible across the full green-to-blue sequential range.
+# Cell annotations — raw count above the row-normalized recall percentage,
+# combined into a single two-line text! call per cell (a separate text!
+# call per line risked being dropped); text color adapts to cell luminance
+# so it stays legible across the full green-to-blue sequential range.
 for i in 1:n_classes, j in 1:n_classes
     value = counts[i, j]
     t = max_count == 0 ? 0.0 : value / max_count
@@ -101,12 +106,8 @@ for i in 1:n_classes, j in 1:n_classes
     luminance = 0.2126 * red(cell_color) + 0.7152 * green(cell_color) + 0.0722 * blue(cell_color)
     text_color = luminance > 0.55 ? INK : colorant"#FFFFFF"
     text!(
-        ax, j, i - 0.15, text = string(value),
-        align = (:center, :center), color = text_color, fontsize = 16,
-    )
-    text!(
-        ax, j, i + 0.2, text = "$(row_pct[i, j])%",
-        align = (:center, :center), color = text_color, fontsize = 11,
+        ax, j, i, text = "$(value)\n$(row_pct[i, j])%",
+        align = (:center, :center), color = text_color, fontsize = 15,
     )
 end
 
