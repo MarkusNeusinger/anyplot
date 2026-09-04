@@ -1,0 +1,256 @@
+library: d3
+language: javascript
+specification_id: confusion-matrix
+created: '2026-09-04T22:10:38Z'
+updated: '2026-09-04T22:26:54Z'
+generated_by: claude-sonnet
+workflow_run: 33923979637
+issue: 2272
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Full normalization toggle (Counts / Row % / Column % / Total %) implemented with
+    real click handlers and correct math (row=recall, column=precision, total=share
+    of total), directly matching the spec's normalization requirement.
+  - Diagonal (correct-prediction) cells are highlighted with a thicker ink-colored
+    border plus a subtle drop-shadow glow filter, giving the matrix a clear focal
+    point without faking interactivity.
+  - 'Theme-adaptive cell-text contrast: text color switches between ink and pageBg
+    based on value/max ratio, keeping digits legible against both the saturated fill
+    and the light/dark chrome in both renders.'
+  - Correct use of imprint_seq (brand green -> blue) for the continuous count data,
+    with a colorbar whose axis label updates per normalization mode.
+  - Axis labeling follows the spec's notes exactly ('True Label' on Y, 'Predicted
+    Label' on X), and all five classes are shown with realistic, varied off-diagonal
+    error patterns.
+  weaknesses:
+  - In the default 'Counts' view, the linear sequential scale is dominated by the
+    diagonal (max=180), so most off-diagonal error counts (1-8) compress into a narrow,
+    visually similar low-end shade of green -- differences are only readable via the
+    annotated numbers, not the color itself.
+  - 'Design Excellence is strong but stops short of publication-tier: no summary statistic
+    (e.g., overall accuracy) is surfaced, which would sharpen the data-storytelling
+    focal point further (not spec-required, just an opportunity).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white.
+      Chrome: Title "confusion-matrix · javascript · d3 · anyplot.ai" in dark ink, centered and fully visible. Four toggle pills (Counts / Row % / Column % / Total %) below the title, "Counts" shown active (filled brand green). "True Label" (rotated) and "Predicted Label" axis titles in dark ink, class-name ticks (OK, Scratch, Dent, Crack, Stain) on both axes in secondary ink. Colorbar on the right with "Sample Count" label and tick values (0/50/100/150) in secondary ink.
+      Data: 5x5 grid of rounded cells. First (highest-value, diagonal) cells range from brand-green through a blue-shifted teal following imprint_seq; diagonal cells carry a thicker dark border and a soft glow, clearly marking correct predictions. Cell values are annotated as bold numbers, using off-white text on the two highest-value diagonal cells (180, 92) and dark ink text elsewhere -- all clearly readable against their respective fills.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Same title, toggle pills, and axis titles now rendered in light ink/off-white, fully readable against the dark background. Colorbar ticks and "Sample Count" label in light secondary ink. Tick labels for both axes are light-colored and legible.
+      Data: Identical cell fill colors to the light render (imprint_seq green-to-blue), confirming positions 1-8 data colors are unchanged between themes -- only chrome flipped. Diagonal glow/border still visible against the dark backdrop. Cell-value text remains readable: near-black text on the two brightest diagonal cells (180, 92, which have enough luminance to contrast against dark ink text) and light/off-white text on the remaining green cells. No dark-on-dark or light-on-light failures observed anywhere.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 18px axis titles, 16px
+          ticks, 24px cell values, 14px colorbar); well-proportioned, readable in
+          both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cells clearly visible and annotated with exact values, but the linear
+          scale compresses small off-diagonal counts into similar low-end shades.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adaptive ink/pageBg text switching keeps contrast strong across all
+          cell fills in both themes; sequential green->blue is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid fills ~84% of canvas width, colorbar and toggle UI balanced
+          around it, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'True Label' / 'Predicted Label' axis titles matching
+          spec notes.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green->blue) used for continuous counts; backgrounds
+          and chrome theme-correct in both renders.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded cells, glow filter, matched colorbar and toggle UI styling
+          -- clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No competing grid, generous whitespace, refined cell borders and
+          colorbar stroke.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Diagonal highlight (border+glow) creates an immediate focal point
+          on correct predictions; normalization toggle adds analytical depth.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct confusion-matrix heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Axis labels, cell annotations, none/row/column/total normalization,
+          sequential colormap, colorbar, and diagonal highlighting all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Predicted on X, True on Y, all 5 classes shown on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar substitutes for legend appropriately
+          (no separate legend needed).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows a strong diagonal plus varied off-diagonal misclassification
+          patterns across all 5 classes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quality-control defect classifier (OK/Scratch/Dent/Crack/Stain) is
+          a real, neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts and error rates are plausible for a decent industrial classifier.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses renderMatrix/flatCellsFor helper functions, justified by the
+          real normalization-toggle interactivity, but deviates from strict linear
+          KISS structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic confusion matrix data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real click handlers drive real re-renders; no fake UI or simulated
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a single svg into #container per the harness contract; current
+          d3 v7 API throughout.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic data-join with keyed .join(), d3.scaleSequential/interpolateRgbBasis,
+          d3.axisRight for colorbar.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Real dynamic re-render on click via keyed data joins, plus an SVG
+          feDropShadow filter for the diagonal glow -- genuinely D3-specific and hard
+          to replicate cheaply in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - annotations
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - gradient-fill
+  - edge-highlighting
