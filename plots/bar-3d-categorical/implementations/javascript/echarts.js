@@ -19,8 +19,13 @@ const scores = [
   [95, 91, 89, 97],
 ];
 
-const values = [];
-scores.forEach((row) => row.forEach((v) => values.push(v)));
+const cells = [];
+productLines.forEach((yLabel, row) => {
+  regions.forEach((xLabel, col) => {
+    cells.push({ col, row, xLabel, yLabel, value: scores[row][col] });
+  });
+});
+const values = cells.map((c) => c.value);
 const minValue = Math.min(...values);
 const maxValue = Math.max(...values);
 
@@ -47,41 +52,6 @@ function barHeight(value) {
   return (value / 100) * MAX_BAR_H;
 }
 
-// --- Color: value magnitude -> Imprint sequential gradient ------------------
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function rgbToHex(rgb) {
-  return (
-    "#" +
-    rgb
-      .map((c) => Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, "0"))
-      .join("")
-  );
-}
-function lerpColor(hexA, hexB, frac) {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  return rgbToHex(a.map((c, i) => c + (b[i] - c) * frac));
-}
-function shade(hex, factor) {
-  return rgbToHex(hexToRgb(hex).map((c) => c * factor));
-}
-function colorForValue(value) {
-  const frac = (value - minValue) / (maxValue - minValue);
-  return lerpColor(t.seq[0], t.seq[1], frac);
-}
-
-// --- Bars, back-to-front (painter's algorithm) ------------------------------
-const bars = [];
-productLines.forEach((yLabel, row) => {
-  regions.forEach((xLabel, col) => {
-    bars.push({ col, row, xLabel, yLabel, value: scores[row][col] });
-  });
-});
-bars.sort((a, b) => a.col + a.row - (b.col + b.row));
-
 // --- Center the isometric grid inside the mount -----------------------------
 const TOP_MARGIN = 110;
 const BOTTOM_MARGIN = 70;
@@ -96,7 +66,7 @@ for (const rowEdge of [-PAD, productLines.length - 1 + PAD]) {
     rawPoints.push(projectRaw(colEdge, rowEdge, 0));
   }
 }
-bars.forEach(({ col, row, value }) => {
+cells.forEach(({ col, row, value }) => {
   rawPoints.push(projectRaw(col - PAD, row - PAD, barHeight(value)));
 });
 // Axis label lanes: a straight line below (x-axis) and to the left (y-axis)
@@ -125,7 +95,7 @@ function project(col, row, z) {
   return [x + originX, y + originY];
 }
 
-// --- Graphic elements --------------------------------------------------------
+// --- Floor grid — relates bars to their categorical position ---------------
 function gridLine(p1, p2) {
   return {
     type: "line",
@@ -134,31 +104,63 @@ function gridLine(p1, p2) {
     silent: true,
   };
 }
-function polygon(points, fill) {
-  return {
-    type: "polygon",
-    shape: { points },
-    style: { fill, stroke: t.pageBg, lineWidth: 1.5 },
-    silent: true,
-  };
-}
 
-const graphicElements = [];
-
-// Floor grid — relates bars to their categorical position
+const chromeElements = [];
 for (let row = 0; row <= productLines.length; row++) {
-  graphicElements.push(gridLine(project(-PAD, row - PAD, 0), project(regions.length - 1 + PAD, row - PAD, 0)));
+  chromeElements.push(gridLine(project(-PAD, row - PAD, 0), project(regions.length - 1 + PAD, row - PAD, 0)));
 }
 for (let col = 0; col <= regions.length; col++) {
-  graphicElements.push(gridLine(project(col - PAD, -PAD, 0), project(col - PAD, productLines.length - 1 + PAD, 0)));
+  chromeElements.push(gridLine(project(col - PAD, -PAD, 0), project(col - PAD, productLines.length - 1 + PAD, 0)));
 }
 
-// Bars — each drawn as three shaded faces (top, left, right) for a 3D look
-bars.forEach(({ col, row, value }) => {
+// Axis category labels — straight lanes outside the grid silhouette
+regions.forEach((label, col) => {
+  const x = project(col, midRow, 0)[0];
+  chromeElements.push({
+    type: "text",
+    style: { text: label, x, y: frontTipYRaw + originY + LABEL_MARGIN, fill: t.inkSoft, fontSize: 15, align: "center", verticalAlign: "top" },
+    silent: true,
+  });
+});
+productLines.forEach((label, row) => {
+  const y = project(midCol, row, 0)[1];
+  chromeElements.push({
+    type: "text",
+    style: { text: label, x: leftTipXRaw + originX - LABEL_MARGIN, y, fill: t.inkSoft, fontSize: 15, align: "right", verticalAlign: "middle" },
+    silent: true,
+  });
+});
+
+// Legend title above the visualMap color bar (visualMap draws the gradient + min/max itself)
+const legendWidth = 26;
+const legendTop = TOP_MARGIN + 40;
+const legendHeight = 340;
+const legendRight = 84; // = 110 - legendWidth, mirrors the grid's RIGHT_MARGIN framing
+chromeElements.push({
+  type: "text",
+  style: {
+    text: "Satisfaction\nscore",
+    x: size.width - legendRight - legendWidth / 2,
+    y: legendTop - 20,
+    fill: t.inkSoft,
+    fontSize: 14,
+    align: "center",
+    verticalAlign: "bottom",
+  },
+  silent: true,
+});
+
+// --- Custom series: each data item renders one isometric 3D bar ------------
+// Bound to the real dataset (value, col, row) so ECharts drives color via
+// visualMap and keeps tooltip/hover interactivity, instead of static shapes.
+function renderItem(params, api) {
+  const value = api.value(0);
+  const col = api.value(1);
+  const row = api.value(2);
   const h = barHeight(value);
-  const topColor = colorForValue(value);
-  const rightColor = shade(topColor, 0.82);
-  const leftColor = shade(topColor, 0.62);
+  const topColor = api.visual("color");
+  const rightColor = echarts.color.lift(topColor, -0.18);
+  const leftColor = echarts.color.lift(topColor, -0.38);
 
   const baseFront = project(col + PAD, row + PAD, 0);
   const baseLeft = project(col - PAD, row + PAD, 0);
@@ -169,82 +171,43 @@ bars.forEach(({ col, row, value }) => {
   const topBack = project(col - PAD, row - PAD, h);
   const topCenter = project(col, row, h);
 
-  graphicElements.push(polygon([baseLeft, baseFront, topFront, topLeft], leftColor));
-  graphicElements.push(polygon([baseFront, baseRight, topRight, topFront], rightColor));
-  graphicElements.push(polygon([topBack, topLeft, topFront, topRight], topColor));
-
-  graphicElements.push({
-    type: "text",
-    style: {
-      text: String(value),
-      x: topCenter[0],
-      y: topBack[1] - 12,
-      fill: t.ink,
-      fontSize: 15,
-      fontWeight: 600,
-      align: "center",
-      verticalAlign: "bottom",
-    },
-    silent: true,
+  const face = (points, fill) => ({
+    type: "polygon",
+    shape: { points },
+    style: { fill, stroke: t.pageBg, lineWidth: 1.5 },
   });
-});
 
-// Axis category labels — straight lanes outside the grid silhouette
-regions.forEach((label, col) => {
-  const x = project(col, midRow, 0)[0];
-  graphicElements.push({
-    type: "text",
-    style: { text: label, x, y: frontTipYRaw + originY + LABEL_MARGIN, fill: t.inkSoft, fontSize: 15, align: "center", verticalAlign: "top" },
-    silent: true,
-  });
-});
-productLines.forEach((label, row) => {
-  const y = project(midCol, row, 0)[1];
-  graphicElements.push({
-    type: "text",
-    style: { text: label, x: leftTipXRaw + originX - LABEL_MARGIN, y, fill: t.inkSoft, fontSize: 15, align: "right", verticalAlign: "middle" },
-    silent: true,
-  });
-});
-
-// Color legend — value magnitude -> Imprint sequential gradient
-const legendX = size.width - 110;
-const legendTop = TOP_MARGIN + 40;
-const legendHeight = 340;
-const legendWidth = 26;
-
-graphicElements.push({
-  type: "text",
-  style: {
-    text: "Satisfaction\nscore",
-    x: legendX + legendWidth / 2,
-    y: legendTop - 20,
-    fill: t.inkSoft,
-    fontSize: 14,
-    align: "center",
-    verticalAlign: "bottom",
-  },
-});
-graphicElements.push({
-  type: "rect",
-  shape: { x: legendX, y: legendTop, width: legendWidth, height: legendHeight },
-  style: {
-    fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-      { offset: 0, color: t.seq[1] },
-      { offset: 1, color: t.seq[0] },
-    ]),
-    stroke: t.inkSoft,
-    lineWidth: 1,
-  },
-});
-graphicElements.push({
-  type: "text",
-  style: { text: String(maxValue), x: legendX + legendWidth + 10, y: legendTop, fill: t.inkSoft, fontSize: 14, verticalAlign: "middle" },
-});
-graphicElements.push({
-  type: "text",
-  style: { text: String(minValue), x: legendX + legendWidth + 10, y: legendTop + legendHeight, fill: t.inkSoft, fontSize: 14, verticalAlign: "middle" },
-});
+  return {
+    type: "group",
+    z2: col + row,
+    children: [
+      face([baseLeft, baseFront, topFront, topLeft], leftColor),
+      face([baseFront, baseRight, topRight, topFront], rightColor),
+      face([topBack, topLeft, topFront, topRight], topColor),
+      {
+        // Anchored at the top face's own centroid (not its back edge) so the
+        // label always sits within its own bar's footprint, never drifting
+        // over a taller neighbor drawn at a different depth.
+        type: "text",
+        style: {
+          text: String(value),
+          x: topCenter[0],
+          y: topCenter[1],
+          fill: t.ink,
+          fontSize: 14,
+          fontWeight: 600,
+          align: "center",
+          verticalAlign: "middle",
+          backgroundColor: t.elevatedBg,
+          borderColor: t.grid,
+          borderWidth: 1,
+          borderRadius: 4,
+          padding: [2, 5],
+        },
+      },
+    ],
+  };
+}
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -257,5 +220,38 @@ chart.setOption({
     top: 30,
     textStyle: { color: t.ink, fontSize: 22 },
   },
-  graphic: graphicElements,
+  tooltip: { trigger: "item" },
+  visualMap: {
+    dimension: 0,
+    min: minValue,
+    max: maxValue,
+    inRange: { color: t.seq },
+    orient: "vertical",
+    right: legendRight,
+    top: legendTop,
+    itemWidth: legendWidth,
+    itemHeight: legendHeight,
+    text: [String(maxValue), String(minValue)],
+    textGap: 10,
+    textStyle: { color: t.inkSoft, fontSize: 14 },
+  },
+  graphic: chromeElements,
+  series: [
+    {
+      type: "custom",
+      // No axis-based coordinate system backs this chart (the isometric
+      // projection is computed manually in renderItem); without this,
+      // ECharts' custom series defaults to cartesian2d and throws for
+      // missing xAxis/yAxis components.
+      coordinateSystem: null,
+      renderItem,
+      data: cells.map((c) => ({
+        name: `${c.xLabel} · ${c.yLabel}`,
+        value: [c.value, c.col, c.row],
+      })),
+      tooltip: {
+        formatter: (params) => `${params.name}<br/><b>${params.value[0]}</b> satisfaction score`,
+      },
+    },
+  ],
 });
