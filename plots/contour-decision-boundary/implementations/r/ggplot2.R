@@ -4,7 +4,6 @@
 #' Quality: 86/100 | Created: 2026-09-04
 
 library(ggplot2)
-library(dplyr)
 library(class)
 library(ragg)
 
@@ -65,7 +64,7 @@ train_df$status <- ifelse(
 title_text <- "Iris Species by Petal Size · contour-decision-boundary · r · ggplot2 · anyplot.ai"
 
 p <- ggplot() +
-  geom_raster(
+  geom_tile(
     data = grid_df,
     aes(x = petal_length, y = petal_width, fill = predicted),
     alpha = 0.32
