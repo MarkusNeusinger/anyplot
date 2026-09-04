@@ -219,11 +219,13 @@ nginx cannot read the environment; the base image already ships the official
 entrypoint's `20-envsubst-on-templates.sh`, so the secret arrives as an ordinary
 Cloud Run environment variable and nothing new runs at container start.
 
-**Modes.** `ORIGIN_GATE` unset or anything but `on` = off; `ORIGIN_GATE=on` =
-403 without a matching header. `ORIGIN_SECRET` is the value. Unset means off,
-which is the rollback and the state the code ships in. `ORIGIN_GATE=on` with no
-secret fails CLOSED — the map keys are tagged so an empty secret cannot become
-"match anything".
+**Modes.** `ORIGIN_GATE` unset, or anything that is not some casing of `on`, =
+off; `ORIGIN_GATE=on` (or `On`, or `ON` — a plain `map` key is matched without
+regard to case, and that is the direction to be wrong in) = 403 without a
+matching header. `ORIGIN_SECRET` is the value. Unset means off, which is the
+rollback and the state the code ships in. `ORIGIN_GATE=on` with no secret fails
+CLOSED — the map keys are tagged so an empty secret cannot become "match
+anything".
 
 **There is a length ceiling on the secret**, and it is worth knowing before a
 rotation rather than during one. nginx cannot hash a `map` key longer than one
@@ -331,12 +333,7 @@ gh secret list --repo MarkusNeusinger/anyplot | grep ORIGIN_SECRET
 gcloud secrets get-iam-policy ORIGIN_SECRET --project=anyplot
 gh workflow run bot-serving-check.yml --repo MarkusNeusinger/anyplot   # expect: "origin gate: off-seen"
 
-# (d) arm. A new revision is created and traffic moves to it; if the rendered
-#     config were invalid, nginx would not start, the revision would never
-#     become ready, and traffic would stay where it is.
-gcloud run services update anyplot-app --region=europe-west4 --project=anyplot \
-  --update-secrets=ORIGIN_SECRET=ORIGIN_SECRET:latest \
-  --update-env-vars=ORIGIN_GATE=on
+# (d) arm — the block below, not two flags. See "Arming, in full".
 
 # (e) verify, in this order:
 curl -sI https://anyplot.ai/_health | grep -i x-origin-gate                       # ok
@@ -346,15 +343,105 @@ curl -s -A 'Mozilla/5.0 (compatible; Googlebot/2.1)' https://anyplot.ai/scatter-
 curl -si -X POST -A 'Googlebot' https://anyplot.ai/api/event -d '{}' | head -1    # 202, not 403
 gh workflow run bot-serving-check.yml --repo MarkusNeusinger/anyplot              # green
 
-# (f) rollback, either half on its own:
-gcloud run services update anyplot-app --region=europe-west4 --project=anyplot \
-  --remove-env-vars=ORIGIN_GATE
-#     or straight back to the revision that was serving before (d):
-gcloud run revisions list --service anyplot-app --region europe-west4 --project anyplot \
-  --format='table(name, creationTimestamp)' --limit 5
-gcloud run services update-traffic anyplot-app --region europe-west4 --project anyplot \
-  --to-revisions=<that-revision>=100
+# (f) rollback — also its own block, below.
 ```
+
+### Arming, in full
+
+`gcloud run services update` alone is **not** the arm, and the reason is the
+same one `docs/reference/api.md` § "Origin gate" writes out for the API: this
+service pins traffic to a named revision (`app/cloudbuild.yaml` promotes with
+`--to-revisions=<name>=100`), so an update creates a revision that serves
+nothing, and `/_health` would still answer `off` while everything looked done
+(Copilot review). Three more things each cost a comparable rollout somewhere,
+so the block mirrors the API's, and runs fail-fast because half of these
+commands feed the next one.
+
+```bash
+(
+set -euo pipefail
+SERVICE=anyplot-app
+LOC="--project=anyplot --region=europe-west4"
+
+# 0. Do not race the deploy pipeline: a build that already deployed its
+#    candidate promotes it at the end, and that revision was cloned from the
+#    pre-arm template — the promote would silently undo the arm, and its own
+#    smoke accepts `off` by design.
+gcloud builds list --project=anyplot --region=europe-west4 --ongoing --format="value(id)" | grep -q . && {
+  echo "a Cloud Build is in flight; wait for it to finish (or fail) before arming."
+  exit 1
+}
+
+# 1. Build the new revision from the image that is SERVING, not from whatever
+#    is latest: `services update` clones the latest template, and this pipeline
+#    deliberately leaves each build's smoked-but-unpromoted candidate there.
+read -r SERVING LATEST <<<"$(gcloud run services describe "$SERVICE" $LOC --format=json \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); \
+      t=[x for x in d['status']['traffic'] if x.get('percent')==100]; \
+      print(t[0]['revisionName'], d['status']['latestReadyRevisionName'])")"
+IMAGE=$(gcloud run revisions describe "$SERVING" $LOC --format="value(spec.containers[0].image)")
+test -n "$SERVING" && test -n "$IMAGE" || { echo "could not resolve the serving revision or its image"; exit 1; }
+test "$SERVING" = "$LATEST" || echo "note: latest ($LATEST) is not serving ($SERVING) — image pinned to the serving one"
+
+# 2. Pin the secret to a NUMBER, never `:latest`. Cloud Run resolves a
+#    secret-backed variable when each instance starts, so with `:latest` a new
+#    secret version reaches new instances while older ones keep the old value —
+#    and since the edge stamps exactly one value, that shows up as intermittent
+#    403s inside a single revision.
+VERSION=$(gcloud secrets versions list ORIGIN_SECRET --project=anyplot \
+  --filter="state=ENABLED" --sort-by=~createTime --limit=1 --format="value(name)")
+test -n "$VERSION" || { echo "no ENABLED version of ORIGIN_SECRET"; exit 1; }
+
+# 3. Update, then promote BY NAME. `--to-latest` would hand traffic to whatever
+#    the pipeline last built.
+SUFFIX="arm-$(date -u +%Y%m%d%H%M)"
+gcloud run services update "$SERVICE" $LOC --image="$IMAGE" \
+  --update-secrets="ORIGIN_SECRET=ORIGIN_SECRET:$VERSION" \
+  --update-env-vars="ORIGIN_GATE=on" --revision-suffix="$SUFFIX"
+gcloud run services update-traffic "$SERVICE" $LOC --to-revisions="$SERVICE-$SUFFIX=100"
+
+# 4. Confirm, and confirm which revision answered. A build that promoted over
+#    the arm shows up here as `off` on a path that carries the header.
+curl -sI https://anyplot.ai/_health | grep -i x-origin-gate
+gcloud run services describe "$SERVICE" $LOC --format="value(status.traffic)"
+)
+```
+
+If the rendered config were invalid, nginx would not start, the revision would
+never become ready, and the `update-traffic` would fail with traffic still on
+the old revision — a safe failure, and the reason step 4 is not optional.
+
+### Rolling back
+
+Its own block, not the one above with a flag swapped: it has to run in the worst
+state the service can be in, which includes the secret having been disabled
+during the incident, so it looks nothing up.
+
+```bash
+(
+set -euo pipefail
+SERVICE=anyplot-app
+LOC="--project=anyplot --region=europe-west4"
+
+SERVING=$(gcloud run services describe "$SERVICE" $LOC --format=json \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); \
+      print(next(x['revisionName'] for x in d['status']['traffic'] if x.get('percent')==100))")
+IMAGE=$(gcloud run revisions describe "$SERVING" $LOC --format="value(spec.containers[0].image)")
+test -n "$IMAGE" || { echo "could not resolve the serving image"; exit 1; }
+
+SUFFIX="disarm-$(date -u +%Y%m%d%H%M)"
+gcloud run services update "$SERVICE" $LOC --image="$IMAGE" \
+  --remove-env-vars=ORIGIN_GATE --revision-suffix="$SUFFIX"
+gcloud run services update-traffic "$SERVICE" $LOC --to-revisions="$SERVICE-$SUFFIX=100"
+
+curl -sI https://anyplot.ai/_health | grep -i x-origin-gate   # expect "off" or "off-seen"
+)
+```
+
+Removing `ORIGIN_GATE` is enough; the secret may stay attached, which is what
+makes re-arming one flag rather than two. Removing the Worker's binding is **not**
+a rollback — while the service is armed, that takes `anyplot.ai/api/event` down
+rather than freeing it.
 
 `--update-secrets` and `--update-env-vars`, never the `--set-` forms: those
 replace the whole set, so the next deploy would strip whatever was attached out

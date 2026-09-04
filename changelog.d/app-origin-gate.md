@@ -10,8 +10,10 @@
   every server block refuses what the Cloudflare edge did not stamp.
   `ORIGIN_GATE` unset means off, `on` means 403, and armed with no secret fails
   CLOSED — the map keys are tagged so an empty value cannot become "match
-  anything". Nothing is armed by merging: the rollout, the hostnames the
-  Transform Rule has to cover and the rollback are in
+  anything". The header is consumed by that server and never forwarded: every
+  `proxy_pass` clears it, so the Plausible hops cannot hand a third party the
+  key both services take. Nothing is armed by merging: the rollout, the
+  hostnames the Transform Rule has to cover and the rollback are in
   `infra/cloudflare/README.md`. (#11221)
 
 - **`X-Origin-Gate` on `/_health` makes arming a measurement rather than a

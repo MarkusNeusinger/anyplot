@@ -96,6 +96,12 @@ map $host $origin_gate_mode {
     default  "${ORIGIN_GATE}";
 }
 
+# Case-INSENSITIVE, like every plain `map` key, so `On` and `ON` arm it too.
+# That is the direction to be wrong in and it is chosen rather than inherited
+# (Copilot review): nobody sets this variable to `ON` without meaning to arm,
+# and the alternative failure — an operator who armed the gate, was told
+# nothing, and is left with an origin that is still open — is the one worth
+# avoiding. Anything that is not some casing of `on` leaves the gate off.
 map $origin_gate_mode $origin_gate_armed {
     default  0;
     "on"     1;

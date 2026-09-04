@@ -144,6 +144,48 @@ def test_every_gate_variable_nginx_conf_uses_is_defined_by_the_template():
     )
 
 
+def location_blocks() -> list[str]:
+    """Every `location …{ … }` block of app/nginx.conf, as raw text."""
+    conf = NGINX_CONF.read_text(encoding="utf-8")
+    blocks = []
+    for match in re.finditer(r"^\s*location\s[^{]*\{", conf, re.MULTILINE):
+        depth = 0
+        for i in range(match.end() - 1, len(conf)):
+            if conf[i] == "{":
+                depth += 1
+            elif conf[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    blocks.append(conf[match.start() : i + 1])
+                    break
+    return blocks
+
+
+def test_no_upstream_is_ever_handed_the_gate_header():
+    """nginx forwards incoming request headers to an upstream by default.
+
+    So the moment the edge stamps `X-Origin-Secret` on this host, every location
+    that proxies would pass the shared secret on — to `plausible.io` among
+    others, a third party that would thereby also hold the API service's key
+    (Copilot review). The rule is that the header is CONSUMED by this server and
+    never forwarded, which is one rule for every proxy_pass rather than a list of
+    the dangerous ones; `proxy_set_header X-Origin-Secret ""` makes nginx send no
+    such header at all.
+    """
+    leaking = []
+    for block in location_blocks():
+        text = _without_comments(block)
+        if not re.search(r"^\s*proxy_pass\s", text, re.MULTILINE):
+            continue
+        if 'proxy_set_header X-Origin-Secret "";' not in text:
+            leaking.append(block.strip().splitlines()[0].strip())
+    assert not leaking, (
+        f"these app/nginx.conf locations proxy without clearing the gate header: "
+        f'{leaking}. Add `proxy_set_header X-Origin-Secret "";` — nginx forwards '
+        "request headers by default, so the upstream would receive the secret."
+    )
+
+
 def test_the_map_bucket_holds_a_real_secret():
     """The tag that makes the gate fail closed is also what overflows the hash.
 
