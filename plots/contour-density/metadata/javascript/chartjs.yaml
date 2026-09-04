@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: contour-density
 created: '2026-09-04T23:05:33Z'
-updated: '2026-09-04T23:10:32Z'
+updated: '2026-09-04T23:19:30Z'
 generated_by: claude-sonnet
 workflow_run: 33927670750
 issue: 2552
@@ -12,53 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
+  - 'All four weaknesses from the Attempt-1 review are demonstrably fixed: a density-level
+    legend now maps each contour ring to its percentage, the two clusters are explicitly
+    named via a custom afterDatasetsDraw plugin ("Stable operation" / "High-load operation"),
+    the raw-scatter alpha was nudged from 0.25 to ~0.35 (`${t.inkSoft}59` = 0.349
+    alpha), and the marching-squares geometry helpers are now grouped under a clearly
+    delimited `====` comment block'
   - Creative from-scratch marching-squares contour renderer built purely on Chart.js's
-    mixed scatter+line dataset types — genuine library mastery since Chart.js has
-    no native contour chart type and the alternative would have been NOT_FEASIBLE
-  - Correct Imprint imprint_seq continuous colormap (green→blue) applied across the
-    5 density levels, matching the spec's requirement that 'multiple contour levels
-    show density gradients'
-  - Deterministic, seeded LCG + Box-Muller data generation — fully reproducible with
+    mixed scatter+line dataset types and the public afterDatasetsDraw plugin hook
+    - genuine library mastery since Chart.js has no native contour chart type
+  - Correct Imprint imprint_seq continuous colormap (brand green -> blue) applied
+    across the 5 density levels via lerpColor, matching the spec's requirement that
+    'multiple contour levels show density gradients'
+  - Deterministic, seeded LCG + Box-Muller data generation - fully reproducible with
     no external RNG dependency
   - Realistic, neutral bivariate scenario (reactor temperature vs. pressure across
-    two operating modes) that naturally produces a bimodal density surface, showcasing
-    exactly what a density-contour plot is for
+    two operating modes) that naturally produces a bimodal density surface, directly
+    showcasing the spec's clustering use case
   - Theme-adaptive chrome correctly threaded through title, subtitle, axis titles,
-    ticks, and grid — both renders are clean and the data colors (scatter + contour
-    gradient) are pixel-identical between light and dark
-  - 'Correct mandated title format and full mount-node contract compliance (animation:
-    false, single canvas append, no fixed sizing)'
+    ticks, grid, legend, and the custom cluster-label plugin - both renders are clean
+    and the data colors (scatter + contour gradient) are pixel-identical between light
+    and dark
+  - 'Correct mandated title format, mount-node contract compliance (animation: false,
+    single canvas append, no fixed sizing), and idiomatic use of Chart.js''s public
+    plugin API rather than an unpinned community plugin'
   weaknesses:
-  - 'No density-scale legend/colorbar: the subtitle explains direction ("light green
-    → blue") but a viewer cannot map a specific contour to an exact density percentage
-    — add a compact colorbar or level labels to reach publication polish'
-  - The two operating-mode clusters are visually distinguishable via the contours
-    but are never called out (the code's own comments say 'stable operation' / 'high-load
-    operation') — a callout/annotation naming the two modes would turn 'visible' into
-    'told' and raise data storytelling
-  - Raw scatter points use pointRadius 2.5 with ~0.25 alpha, which is slightly on
-    the faint side for 1100 points — nudging alpha to ~0.35 or radius to ~3 would
-    keep the raw texture legible without competing with the contour lines
-  - The from-scratch marching-squares implementation is necessarily helper-function-heavy
-    (lcg, gaussian, edgeInterp, marchingSquares, hexToRgb, lerpColor); the complexity
-    is justified by the algorithm but grouping the geometry helpers into one clearly
-    delimited block (or a short header comment marking the section) would improve
-    scanability
+  - Cluster-name annotations ('Stable operation', 'High-load operation') are drawn
+    directly over the densest part of each scatter cluster, sitting close to the innermost
+    88% contour ring - legible but slightly crowded; a touch more vertical offset
+    or a small background chip behind the text would give it more breathing room
+  - The from-scratch marching-squares implementation is still necessarily helper-function-heavy
+    (lcg, gaussian, edgeInterp, marchingSquares, hexToRgb, lerpColor, mean) - the
+    complexity is justified by the algorithm and is already well-sectioned, but it
+    keeps CQ-01 (KISS structure) from a perfect score versus a flatter script
+  - Raw scatter markers (pointRadius 2.5) blend into the background at the densest
+    cluster cores under the innermost contour ring - a marginally smaller radius or
+    slightly lower alpha specifically inside the 88% ring would keep the raw texture
+    legible without competing with the tightest contour line
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 (not pure white, not dark).
-      Chrome: Title "contour-density · javascript · chartjs · anyplot.ai" centered at top in dark ink; subtitle "Contours light green → blue as point density rises" below it in secondary gray. Axis titles "Reactor Temperature (°C)" (x) and "Reactor Pressure (bar)" (y) are descriptive with units. Tick labels and subtle gridlines on both axes are all clearly visible against the light background.
-      Data: ~1100 semi-transparent gray scatter points (muted ink-soft tone) form the raw-data context layer, revealing two overlapping clusters — one centered near 70°C/4.3 bar, one near 86°C/6.1 bar. Five nested contour lines per cluster follow a green-to-blue gradient (outer = lightest green, inner = most blue), correctly using the Imprint imprint_seq sequential colormap for the continuous density signal.
-      Legibility verdict: PASS — no light-on-light or unreadable text found.
+      Chrome: Title "contour-density · javascript · chartjs · anyplot.ai" centered at top in dark ink; subtitle "Contours light green → blue as point density rises" below it in secondary gray. Axis titles "Reactor Temperature (°C)" (x) and "Reactor Pressure (bar)" (y) are descriptive with units. Tick labels and subtle gridlines on both axes are clearly visible against the light background. A right-side legend lists all 5 density levels (12%/30%/50%/70%/88%) with color swatches matching the contour gradient.
+      Data: ~1100 semi-transparent gray scatter points form the raw-data context layer, revealing two overlapping clusters - one centered near 70°C/4.3 bar labeled "Stable operation", one near 86°C/6.1 bar labeled "High-load operation" (both labels rendered in bold dark ink, legible against the light background and the underlying points). Five nested contour lines per cluster follow a green-to-blue gradient (outer = lightest green, inner = most blue), correctly using the Imprint imprint_seq sequential colormap for the continuous density signal. First/outermost contour reads as brand green #009E73.
+      Legibility verdict: PASS - no light-on-light or unreadable text found; cluster labels are slightly crowded against the underlying scatter but remain fully legible.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 (not pure black, not light).
-      Chrome: Same title/subtitle now rendered in light text (white/light-gray), axis titles and tick labels also light-colored and fully legible against the dark background — no dark-on-dark failures observed. Gridlines are faint light lines, still visible but subtle, matching the light render's grid role.
-      Data: Scatter points and the green→blue contour gradient are visually identical in hue/position to the light render — confirms only chrome (background, text, grid) flips between themes while the 5 contour levels' colors stay fixed.
-      Legibility verdict: PASS — no dark-on-dark or unreadable text found.
+      Chrome: Same title/subtitle now rendered in light text (white/light-gray), axis titles and tick labels also light-colored and fully legible against the dark background - no dark-on-dark failures observed. Gridlines are faint light lines, still visible but subtle. Legend swatches and labels are light-colored and legible; cluster labels ("Stable operation" / "High-load operation") render in light ink, correctly flipped from the light render's dark ink.
+      Data: Scatter points and the green→blue contour gradient are visually identical in hue/position to the light render - confirms only chrome (background, text, grid, legend/label ink) flips between themes while the 8-position Imprint colors and the imprint_seq gradient stay pixel-identical.
+      Legibility verdict: PASS - no dark-on-dark failures; all text (title, subtitle, axis labels, ticks, legend, cluster labels) is clearly readable against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -66,55 +71,56 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit (title 22, subtitle 14, axis titles 16, ticks
-          14); readable and well-proportioned in both themes, title comfortably under
-          50% width
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis titles
+          16px, ticks 14px, legend 12px, cluster labels 13px); well-proportioned and
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No text-on-text overlap; cluster-name labels sit close to dense scatter/innermost
+          contour but remain fully legible
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Small markers + low alpha correctly chosen for 1100+ dense points,
-          though alpha is slightly on the faint side
+        comment: Contour lines (width 2.5) clearly visible; scatter alpha ~0.35 /
+          radius 2.5 appropriate for ~1100 points, though markers blend slightly at
+          the densest cluster cores
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient plus alpha-blended context scatter give good
-          contrast and CVD-safe distinction; no red-green sole signal
+        comment: Green-to-blue gradient plus muted gray scatter gives good contrast
+          and CVD-safe distinguishability
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: Plot fills a large, balanced share of the canvas; legend sits close
+          to the plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles descriptive with units (°C, bar)
+        comment: Descriptive axis titles with units (°C, bar)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous density correctly uses imprint_seq (#009E73 -> #4467A3);
-          theme-correct backgrounds and chrome in both renders; data colors identical
-          across themes'
+        comment: Correct imprint_seq continuous colormap for density levels, theme-correct
+          chrome in both renders
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -122,23 +128,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful gradient-coded contours and de-emphasized context scatter
-          go clearly above defaults, but lacks a density-scale legend/colorbar for
-          full precision
+        comment: Custom gradient-colored contours, thoughtful legend and cluster annotations
+          - clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, consistent theme tokens; good but
-          not maximally polished
+        comment: Subtle grid, generous whitespace, refined thin-swatch legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Subtitle plus color/muting hierarchy guides the reader to the bimodal
-          structure, but the two operating modes are never explicitly named/annotated
+        comment: Explicit cluster naming plus density gradient gives an immediate,
+          clear insight into the bimodal process behavior
     spec_compliance:
       score: 15
       max: 15
@@ -148,27 +152,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D KDE density-contour plot with scatter overlay
+        comment: Correct density-contour plot with scatter overlay for context, per
+          spec notes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE computed, 5 contour levels, scatter overlay for context, bandwidth
-          choice all present per spec notes
+        comment: KDE-based density, 5 contour levels showing gradient, bandwidth/smoothing
+          parameter used, scatter overlay present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = temperature, Y = pressure, axes show full data range
+        comment: Temperature on X, pressure on Y, axes cover full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; legend intentionally
-          omitted for the continuous-density encoding, explained via subtitle instead
+        comment: Title matches mandated format exactly; legend labels correctly map
+          to density percentages
     data_quality:
       score: 15
       max: 15
@@ -178,22 +183,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution with two distinct density modes clearly shown
-          via nested contour levels
+        comment: Bimodal density, multiple gradient levels, raw scatter context -
+          covers all spec notes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral industrial scenario (reactor temperature vs. pressure,
-          two operating modes)
+        comment: Neutral, comprehensible reactor temperature/pressure scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature/pressure ranges and their joint distribution are physically
-          plausible for a process reactor
+        comment: Plausible temperature/pressure ranges and cluster separation for
+          an industrial process
     code_quality:
       score: 9
       max: 10
@@ -203,27 +207,26 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (lcg, gaussian, edgeInterp, marchingSquares,
-          hexToRgb, lerpColor) are necessary for the from-scratch contour algorithm;
-          justified but deviates from the flat imports->data->plot->save ideal
+        comment: Necessarily helper-function-heavy for a from-scratch marching-squares
+          contour; well-sectioned but not a flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) makes the data fully deterministic
+        comment: Seeded LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the Chart.js global; nothing unused
+        comment: No unused imports, only browser globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity is appropriate to the algorithm; no fake functionality
+        comment: No fake functionality; complexity is appropriate for the algorithm
       - id: CQ-05
         name: Output & API
         score: 1
@@ -232,7 +235,7 @@ review:
         comment: Correct mount-node contract, animation disabled, current Chart.js
           API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -240,22 +243,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses Chart.js's mixed scatter+line dataset capability, the
-          library's recommended pattern for combining chart types
+        comment: Mixed scatter+line datasets and the public afterDatasetsDraw plugin
+          hook used idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Marching-squares contour extraction is a clever workaround for Chart.js's
-          missing native contour type, but the geometry algorithm itself is generic
-          and could be layered onto any line/scatter-capable library
-  verdict: REJECTED
+        comment: Bespoke contour rendering built on Chart.js's plugin system and mixed
+          dataset types - distinctive integration, though the marching-squares algorithm
+          itself is library-agnostic
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - contour-extraction
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
@@ -263,4 +265,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - gradient-fill
+  - custom-colormap
