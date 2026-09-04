@@ -1,7 +1,7 @@
 # anyplot.ai
 # bar-3d-categorical: 3D Bar Chart for Categorical Comparison
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-09-04
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 80/100 | Created: 2026-09-04
 
 using CairoMakie
 using Colors
