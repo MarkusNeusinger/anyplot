@@ -86,6 +86,45 @@ def test_a_malformed_fragment_names_its_line(text: str, complaint: str) -> None:
         cl.parse_entries(text, where="f.md")
 
 
+def test_a_bullet_is_identified_by_its_title_whatever_the_line_breaks() -> None:
+    """The identity is the title's words, so a reflow of the very line it runs over keeps it."""
+    assert cl.bullet_title("- **A title that runs onto the\n  next line.** Its body.") == (
+        "- **A title that runs onto the next line.**"
+    )
+    assert cl.bullet_title("- **A title that runs\n  onto the next line.** Its body, corrected.") == (
+        "- **A title that runs onto the next line.**"
+    )
+
+
+@pytest.mark.parametrize(
+    "bullet", ["- **A thing.** Done (#NNN).", "- **A thing.** Done (#NNNNN).", "- **A thing.** Done\n  (#NNN)."]
+)
+def test_the_unfilled_placeholder_is_refused(bullet: str) -> None:
+    with pytest.raises(cl.ChangelogError, match="placeholder"):
+        cl.check_placeholder(bullet + "\n", where="f.md")
+
+
+@pytest.mark.parametrize(
+    "bullet",
+    [
+        "- **A thing.** Done (#11215).",
+        "- **A thing.** Done.",  # the reference is appended when the PR opens
+        "- **A thing.** The `(#NNN)` placeholder, quoted — prose about it, not a reference.",
+    ],
+)
+def test_a_number_no_number_and_a_quoted_placeholder_all_pass(bullet: str) -> None:
+    cl.check_placeholder(bullet + "\n", where="f.md")
+
+
+def test_the_placeholder_complaint_names_the_fragment_file(tmp_path: Path) -> None:
+    (tmp_path / cl.FRAGMENT_DIR_NAME).mkdir()
+    (tmp_path / cl.FRAGMENT_DIR_NAME / "topic.md").write_text(
+        "### Added\n\n- **A thing.** Done (#NNNNN).\n", encoding="utf-8"
+    )
+    with pytest.raises(cl.ChangelogError, match=r"changelog\.d/topic\.md:3: .*placeholder"):
+        cl.load_fragments(tmp_path)
+
+
 def test_merge_puts_fragments_above_the_old_section_in_category_order() -> None:
     older = cl.Fragment(Path("a.md"), {"Fixed": ["- **old fix.**"], "Added": ["- **old add.**"]})
     newer = cl.Fragment(Path("b.md"), {"Added": ["- **new add.**"]})
@@ -276,6 +315,35 @@ def test_a_bullet_written_into_unreleased_directly_is_refused(repo: Path) -> Non
     (problem,) = cl.check_pr("main", root=repo)
     assert "belongs in a fragment" in problem
     assert "Sneaked in" in problem
+
+
+def test_correcting_a_bullet_unreleased_already_carries_passes(repo: Path) -> None:
+    """A re-worded entry is a CHANGED bullet, not an added one — the gate refuses only new titles."""
+    text = (repo / "CHANGELOG.md").read_text(encoding="utf-8")
+    text = text.replace("Written before the fragments existed (#0).", "Written before they existed, said better (#0).")
+    (repo / "CHANGELOG.md").write_text(text, encoding="utf-8")
+    (repo / "changelog.d" / "topic.md").write_text(FRAGMENT, encoding="utf-8")
+    _commit_all(repo, "correct the wording")
+    assert cl.check_pr("main", root=repo) == []
+
+
+def test_a_correction_that_reflows_a_wrapped_title_is_not_a_new_bullet(repo: Path) -> None:
+    """The one case a line-by-line identity gets wrong: the title itself runs over the wrap."""
+    _git(repo, "checkout", "-q", "main")
+    old = "- **An old-style entry.** Written before the fragments existed (#0)."
+    wrapped = "- **An old-style entry with a title long enough to run onto the\n  next line.** Its body (#0)."
+    base = (repo / "CHANGELOG.md").read_text(encoding="utf-8").replace(old, wrapped)
+    (repo / "CHANGELOG.md").write_text(base, encoding="utf-8")
+    _commit_all(repo, "a wrapped title")
+    _git(repo, "checkout", "-q", "-b", "reflow")
+
+    reflowed = (
+        "- **An old-style entry with a title long enough to run\n  onto the next line.** Its body, corrected (#0)."
+    )
+    (repo / "CHANGELOG.md").write_text(base.replace(wrapped, reflowed), encoding="utf-8")
+    (repo / "changelog.d" / "topic.md").write_text(FRAGMENT, encoding="utf-8")
+    _commit_all(repo, "reflow the correction")
+    assert cl.check_pr("main", root=repo) == []
 
 
 def test_the_cut_orders_fragments_by_their_commit_and_passes_the_gate(repo: Path) -> None:

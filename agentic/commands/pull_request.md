@@ -27,9 +27,12 @@ branch state matches what the PR description claims.
 1. Run `git diff origin/main...HEAD --stat` to see changed files summary
 2. Run `git log origin/main..HEAD --oneline` to see commits in this branch
 3. Run `git branch --show-current` to get the current branch name
-4. **Changelog gate** — the branch carries `changelog.d/<slug>.md` and does NOT touch
+4. **Changelog gate** — the branch carries `changelog.d/<slug>.md` and does NOT add bullets to
    `CHANGELOG.md` (Keep-a-Changelog categories, English, bold-titled bullets — the format and an
-   example are in `changelog.d/README.md`); add and commit the fragment if missing, and run
+   example are in `changelog.d/README.md`); write the bullets WITHOUT a PR reference (step 7 adds
+   the real number — a bare `(#NNNNN)` placeholder is refused, and correcting the wording of a
+   bullet `[Unreleased]` already carries is allowed: identity is the bold title, not the full
+   text); add and commit the fragment if missing, and run
    `uv run python -m tools.changelog check --base origin/main`, which is the same check the CI job
    "Changelog (fragment)" makes. Exempt: catalogue-only PRs (everything under `plots/`), automated
    pipeline PRs (`github-actions[bot]`: spec-create, impl-*, auto-polish, daily-regen) and
@@ -56,8 +59,8 @@ EOF
 )"
 ```
 
-7. If step 4 added changelog entries without a PR reference, append the new PR number to those
-   bullets (e.g. `(#1234)`) and push the follow-up commit.
+7. Append the new PR number to the fragment's bullets (e.g. `(#1234)` — the real number, never
+   the `(#NNNNN)` placeholder, which the gate refuses) and push the follow-up commit.
 8. **The Copilot review runs ONCE**, when the PR opens (or leaves draft) — review-on-push is off in
    the "Automated Copilot Code Review" ruleset (owner, 2026-09-03), so step 7's follow-up commit and
    every later push trigger nothing. Do not re-request a review per push; the rule and its one
