@@ -1,0 +1,256 @@
+library: d3
+language: javascript
+specification_id: circos-basic
+created: '2026-09-04T22:09:34Z'
+updated: '2026-09-04T22:13:32Z'
+generated_by: claude-sonnet
+workflow_run: 33923846611
+issue: 3005
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct Imprint palette applied in canonical order via t.palette[d.index] — first
+    series (Frontend) is #009E73, and data colors are identical across both themes
+    with theme-correct chrome'
+  - Idiomatic, distinctive use of the d3-chord + d3-ribbon modules plus a hand-built
+    secondary latency-arc track — a genuinely D3-specific layout that is hard to replicate
+    in most other libraries
+  - 'Realistic, neutral microservices dataset (asymmetric call volumes 5-85 calls/min,
+    latency 3-40ms) that exercises the full spec: source/target/value ribbons, segment
+    sizing derived from row/column sums, and one optional track_data layer'
+  - 'Clean KISS-structured code: deterministic in-memory data, no unused imports,
+    explicit font sizes throughout, correct mount-node/output contract'
+  - Caption clearly documents the dual encoding (ribbon width proportional to calls/min,
+    track height proportional to latency), effectively substituting for a traditional
+    legend
+  weaknesses:
+  - Dense ribbon overlap near the plot center (particularly the API Gateway lavender
+    ribbons) creates some visual murkiness where individual connections are hard to
+    trace — slightly lower alpha or z-ordering by value could improve clarity
+  - 'Design Excellence is solid but not exceptional: the layout follows the standard
+    chord-diagram template closely; a stronger focal point (e.g. highlighting the
+    highest-latency or highest-volume link) would elevate the storytelling'
+  - Some segments (e.g. Analytics) are extremely thin given their low connection values,
+    making their color band barely visible — consider a minimum arc width or a leader
+    line back to the label
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Bold dark-ink title "circos-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Eight segment labels (Frontend, API Gateway, Auth Service, User DB, Payment DB, Cache, Message Queue, Analytics) in dark ink around the circle, all legible. A muted-gray caption at the bottom explains the dual encoding.
+      Data: Eight segments each in a distinct Imprint palette color (Frontend = brand green #009E73, API Gateway = lavender, Auth Service = blue, User DB = ochre, Payment DB = red, Cache = cyan, Message Queue = rose, Analytics = lime). Ribbons connecting segments are colored by source at ~0.7 opacity, width proportional to calls/min. A light-gray inner track ring shows the latency baseline, with colored latency bars layered on top, height proportional to avg. response time.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Title and all segment labels render in light off-white ink, clearly readable against the dark background — no dark-on-dark failures observed. The inner track background band is dark gray, still distinguishable from the near-black canvas. Caption text is light muted gray, legible.
+      Data: All segment and ribbon colors are identical to the light render (brand green Frontend, lavender API Gateway, blue Auth Service, ochre User DB, red Payment DB, cyan Cache, rose Message Queue, lime Analytics) — confirming the Imprint palette is theme-independent for data while only chrome flips.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px segment labels, 14px
+          caption); readable in both themes with no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Segment labels are evenly spaced around the circle with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ribbons and track bars visible and distinguishable; dense overlap
+          near center for high-volume flows slightly muddies individual connections
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette provides CVD-safe hue separation; not reliant on
+          red-green alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Circle fills a large, well-balanced portion of the square canvas
+          with generous margins for labels; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Segment labels are descriptive service names; caption gives units
+          (calls/min, ms)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Frontend) is #009E73, remaining segments follow canonical
+          Imprint order, identical across themes, theme-correct chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful addition of a secondary latency track above a standard
+          chord diagram, but overall composition follows the familiar chord-diagram
+          template
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle track background, generous whitespace, clean stroke separation
+          between segments/ribbons and background; some polish lost to dense ribbon
+          overlap
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ribbon width and track height create visual hierarchy highlighting
+          the busiest/slowest services, though no explicit callout of the key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct circos/chord plot with segments, gaps, and ribbons
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Gaps between segments, value-proportional ribbon width, distinct
+          segment colors, and an inner data track are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: source/target/value correctly drive the chord matrix; latency correctly
+          drives the secondary track
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; caption/labels substitute
+          correctly for a legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Asymmetric bidirectional flows, varied connection strengths (5-85),
+          and varied latencies (3-40ms) across all 8 services
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral microservices architecture scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Call volumes and latency values are plausible for a real microservices
+          deployment
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear Data -> Layout -> Draw structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused references
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a chord diagram + custom track, no fake
+          functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly, sizes svg from ANYPLOT_SIZE,
+          no deprecated API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of d3.chord(), d3.ribbon(), d3.arc(), and data joins with
+          selection.data().join()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The d3-chord module and custom secondary arc track are genuinely
+          distinctive to D3, hard to replicate elsewhere with equal fidelity
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - bezier-curves
+  - layer-composition
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
