@@ -1,3 +1,7 @@
+// anyplot.ai
+// circos-basic: Circos Plot
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 84/100 | Created: 2026-09-04
 //# anyplot-orientation: square
 // anyplot.ai
 // circos-basic: Circos Plot
