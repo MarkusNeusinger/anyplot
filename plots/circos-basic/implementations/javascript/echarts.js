@@ -1,7 +1,7 @@
 // anyplot.ai
 // circos-basic: Circos Plot
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-04
+// Quality: 90/100 | Created: 2026-09-04
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;

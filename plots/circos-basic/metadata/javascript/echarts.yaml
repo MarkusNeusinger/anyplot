@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: circos-basic
 created: '2026-09-04T22:16:33Z'
-updated: '2026-09-04T22:20:51Z'
+updated: '2026-09-04T22:34:22Z'
 generated_by: claude-sonnet
 workflow_run: 33924032626
 issue: 3005
@@ -12,54 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Faithful custom implementation of a circos/chord diagram entirely from ECharts'
-    declarative `graphic` primitives (ring, polygon, bezier-sampled ribbons) — a genuinely
-    difficult feat since ECharts has no native chord/circos chart type, and the library
-    rules explicitly call for exactly this workaround.
-  - 'Correct Imprint palette usage: the first module (API Gateway) renders as brand
-    green #009E73, remaining modules follow canonical palette order (lavender, blue,
-    ochre, matte red, cyan, rose, lime), and data colors are pixel-identical between
-    light and dark renders.'
-  - Inner coverage track correctly uses the imprint_seq (green→blue) continuous colormap
-    for the coverage-percentage data via min-max normalization, in line with the style
-    guide's continuous-data rule — no arbitrary gradient.
-  - 'Both renders are fully theme-correct: warm off-white / near-black backgrounds,
-    all title and module-label text clearly readable, no dark-on-dark or light-on-light
-    failures.'
-  - Angle allocation is chord-diagram-idiomatic — each module's arc span is proportional
-    to its total connection value, with consistent 4° gaps for visual separation between
-    segments.
-  - Deterministic, self-contained, realistic data (a software module call graph with
-    plausible calls/sec and test-coverage values) — neutral business/tech scenario.
+  - Faithful custom circos/chord implementation built entirely from ECharts' declarative
+    graphic primitives (ring, polygon, bezier-sampled ribbons) — a genuinely hard
+    feat since ECharts has no native circos chart type.
+  - 'Correct Imprint palette usage: first module (API Gateway) is brand green #009E73,
+    remaining modules follow canonical palette order, and data colors are pixel-identical
+    between light and dark renders.'
+  - Inner coverage track now carries a clear legend (gradient swatch + caption) explaining
+    what it encodes, resolving the attempt-1 weakness.
+  - 'Visual hierarchy added: the 3 strongest connections are drawn last with brighter
+    fill and a colored stroke, giving the reader a focal point instead of a uniform
+    hairball, while width already encodes value via the chord-diagram angle allocation.'
+  - 'Both renders are fully theme-correct with no dark-on-dark or light-on-light failures;
+    backgrounds match #FAF8F1 / #1A1A17.'
+  - Deterministic, realistic, neutral data (software module call graph with plausible
+    calls/sec and coverage percentages).
   weaknesses:
-  - The inner coverage track has no legend/label explaining what it encodes — a viewer
-    can see a gradient ring but has no way to know it represents test-coverage percentage
-    without reading the source; add a small legend entry or annotation identifying
-    the track.
-  - 'No visual hierarchy or storytelling emphasis: all 16 ribbons render at the same
-    fixed opacity (0.5) regardless of connection strength or importance, so the busy
-    center reads as a uniform ''hairball'' with no guided focal point — consider emphasizing
-    the strongest 2-3 connections (higher opacity/thicker stroke, or a brief callout)
-    to give the reader an entry point into the data.'
-  - Design polish is solid but standard for a chord diagram (Imprint palette, subtle
-    baseline ring, generous whitespace) without additional refinement beyond the expected
-    default treatment — e.g. no subtle drop/inner shadow or refined hover-adjacent
-    static cue that would push this toward publication-grade distinctiveness.
+  - With 16 ribbons still crossing the center, the emphasis on the top 3 connections
+    helps but the plot remains visually busy — a brief callout or label on the single
+    strongest connection would push storytelling further.
+  - 'CQ-01 KISS: several geometry helper functions (arcPoints, quadBezierPoints, sectorPoints,
+    ribbonPoints, hexToRgb, lerpColor) deviate from the plain imports->data->plot->save
+    structure — justified here since ECharts has no native chord/circos primitive,
+    but still a minor code-quality deduction relative to library-native implementations.'
+  - Title sits around ~45% of plot width — comfortably inside the readable range,
+    but on the low end; not a deduction, just noting there's headroom for a slightly
+    larger title if desired.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "circos-basic · javascript · echarts · anyplot.ai" in bold dark text, centered top, comfortably sized (~35% of canvas width, well under the 90% overflow threshold). Eight module labels (API Gateway, Auth Service, Database, Cache Layer, Job Queue, Web UI, Analytics, Notifications) arranged around the circle in dark ink text, all clearly legible with no overlap between adjacent labels. A thin light-gray baseline ring separates the coverage track from the ribbon area.
-      Data: Outer ring segments in 8 distinct Imprint colors (API Gateway = brand green #009E73 first, then lavender, blue, ochre, matte red, cyan, rose, lime — canonical order). A middle track of green-to-blue gradient bars (imprint_seq) sized by each module's test-coverage percentage. Semi-transparent ribbons (opacity 0.5) connect modules, width proportional to connection value, colored by source module.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "circos-basic · javascript · echarts · anyplot.ai" centered at top; a small gradient legend swatch with caption "Inner track: test coverage % (low -> high)" beneath it; eight module labels (API Gateway, Auth Service, Database, Cache Layer, Job Queue, Web UI, Analytics, Notifications) around the circle in dark ink text. All chrome text is clearly readable against the light background.
+      Data: Outer ring uses 8 distinct Imprint colors in canonical order (API Gateway = brand green #009E73 first, then lavender, blue, ochre, matte red, cyan, rose, lime). Middle track is a green-to-blue imprint_seq gradient sized by each module's test-coverage %. Ribbons connect modules with width proportional to connection value; the 3 strongest connections are drawn on top with brighter fill and a colored outline, giving a visible focal point against the fainter weaker ribbons.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and eight module labels, now rendered in light/white text, fully legible against the dark background. No dark-on-dark failures — every label and the title are crisp and high-contrast. The baseline ring remains subtly visible.
-      Data: Segment ring, coverage track, and ribbon colors are pixel-identical to the light render (same 8 Imprint hues, same imprint_seq gradient stops) — confirming only chrome (background, text) flipped between themes, as required. Ribbons remain distinguishable from the dark background at 0.5 opacity.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures observed.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend caption, and module labels, now rendered in light/white text, fully legible against the dark background. No dark-on-dark failures observed.
+      Data: Segment ring, coverage track, and ribbon colors are pixel-identical to the light render (only chrome flipped, as required) — the same brand green, lavender, blue, ochre, matte red, cyan, rose, and lime hues, and the same top-3 ribbon emphasis pattern.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -70,77 +63,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, labels 18px), fully readable in
-          both themes; dense 8-label circle leaves slightly less margin than a simpler
-          chart
+        comment: All font sizes explicitly set (title 22px, labels 18px, legend 14px),
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or with the ring/ribbons in either
-          render
+        comment: No overlap between labels, ribbons, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ribbon widths and track-bar heights scale with data value/coverage;
-          alpha=0.5 appropriately manages the density of 16 overlapping ribbons
+        comment: Segment ring, coverage track, and ribbons all clearly visible and
+          value-proportional
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green-only signaling; opacity
-          keeps overlaps distinguishable
+        comment: CVD-safe Imprint palette, sufficient contrast, no red-green-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circle fills the majority of the square canvas with balanced margins
-          on all sides; nothing cut off
+        comment: Circle fills a large, balanced portion of the square canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes for a circos plot; module labels are descriptive
-          and title is fully formed
+        comment: Title format correct, module labels descriptive, legend explains
+          the inner track
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining modules follow canonical Imprint
-          order, track uses imprint_seq; theme-correct chrome in both renders'
+        comment: 'First series is #009E73, canonical Imprint order, imprint_seq on
+          continuous coverage data, theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Technically sophisticated custom geometry, but visual treatment is
-          a standard chord-diagram look without extra polish
+        passed: true
+        comment: Custom geometry, gradient legend, and intentional emphasis on top
+          connections — clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
         comment: Subtle baseline ring, page-bg strokes for separation, generous whitespace
-          around the circle
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: All ribbons rendered at uniform opacity/weight regardless of value
-          — no emphasis or focal point guides the viewer; inner track has no legend
-          explaining what it encodes
+        passed: true
+        comment: Top-3 connections emphasized with brighter fill and colored stroke
+          create a visible focal point; still a busy 16-ribbon chart short of 'immediately
+          obvious insight'
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct circos/chord plot with concentric tracks and ribbons
+        comment: Correct circos/chord-style circular plot with segments and ribbons
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Segments with gaps, ribbon width proportional to value, distinct
-          segment colors, one concentric data track — all present
+        comment: Segments with gaps, value-proportional ribbons, distinct colors,
+          and a concentric data track all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target/value correctly mapped to ribbons; all 8 modules and
-          16 connections rendered
+        comment: Source/target/value and coverage all mapped correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the required pattern; module labels
-          double as the legend for segment identity
+        comment: Title format correct; legend now explains the coverage track
     data_quality:
       score: 15
       max: 15
@@ -181,21 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8 modules, 16 connections with varying strengths, plus a secondary
-          coverage-% track
+        comment: 16 connections of varying strength, 8 modules with varying coverage
+          — good spread
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software module call graph is a real, neutral, comprehensible scenario
+        comment: Neutral, plausible software-architecture scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Calls/sec (9-60k) and coverage percentages (55-90%) are plausible
-          for the domain
+        comment: Calls/sec and coverage % values are realistic and internally consistent
     code_quality:
       score: 9
       max: 10
@@ -205,34 +191,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (polar, arcPoints, quadBezierPoints, sectorPoints,
-          ribbonPoints, hexToRgb, lerpColor) — necessary given ECharts has no native
-          chord/circos geometry, but deviates from strict imports→data→plot flow
+        comment: Several geometry helper functions needed since ECharts lacks a native
+          chord/circos primitive
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Fully deterministic in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided echarts global
+        comment: No extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for custom polar geometry; no fake UI or interactivity
+        comment: Appropriate complexity for a manually-built circos layout, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, chart.on('finished')
-          readiness signal
+        comment: Correct mount-node contract, animation disabled, finished-event ready
+          signal
     library_mastery:
       score: 7
       max: 10
@@ -242,23 +228,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses echarts.init + setOption correctly; falls back to the declarative
-          graphic layer exactly as the library rules prescribe for shapes ECharts
-          lacks natively
+        comment: Idiomatic use of ECharts' declarative graphic layer for a chart type
+          it has no native support for
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Leverages ECharts' declarative graphic component (ring/polygon/text
-          types, silent flag) but the underlying technique (sampled-point polygons
-          for curves) isn't unique to ECharts
-  verdict: REJECTED
+        passed: true
+        comment: Sampled-polygon/bezier-ribbon technique is ECharts-graphic-specific,
+          though the geometry approach itself isn't unique to the library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - polar-projection
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -266,4 +251,5 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - custom-colormap
+  - edge-highlighting
+  - gradient-fill
