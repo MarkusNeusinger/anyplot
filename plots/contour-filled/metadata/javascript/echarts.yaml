@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: contour-filled
 created: '2026-09-04T23:21:19Z'
-updated: '2026-09-04T23:26:04Z'
+updated: '2026-09-04T23:34:46Z'
 generated_by: claude-sonnet
 workflow_run: 33928768936
 issue: 2500
@@ -12,130 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/echarts/plot-dark.html
-quality_score: 77
+quality_score: 85
 review:
   strengths:
-  - 'Correct workaround for ECharts'' lack of a native contour series: category-axis
-    heatmap + piecewise visualMap approximates filled-contour bands without shelling
-    out to another library or echarts-gl.'
-  - Sequential colormap is built from the mandated Imprint tokens (t.seq) with brand
-    green at the low end and blue at the high end, identical between light and dark
-    renders.
-  - Theme chrome (title, axis labels, ticks, colorbar text) is fully readable in both
-    light and dark renders with no dark-on-dark or light-on-light failures.
-  - Data is deterministic (two fixed Gaussian storm cells, no RNG) and the rainfall-intensity
-    scenario (0-49 mm/hr) is realistic and neutral.
-  - Canvas is exactly 2400x2400 as declared by the square orientation directive; grid/spines
-    are cleanly hidden (splitLine off, axisTick off) for a minimal-chrome look.
+  - 'Repair fixed the core issue from attempt 1: the two storm cells (centers now
+    (-25,-18) and (25,20), tighter sigma 11/13) read as two clearly distinct concentric
+    lobes in both renders, not a merged blob.'
+  - Piecewise visualMap banding (9 levels, 5 mm/hr steps) now shows sharp, perceptible
+    color-band boundaries — the plot genuinely reads as a filled-contour with discrete
+    levels rather than a smooth gradient.
+  - Colorbar is fully labeled per band ("0–45 mm/hr" in 5-unit steps) so intermediate
+    values can be read precisely, fixing the under-labeling from attempt 1.
+  - Sequential Imprint colormap (t.seq) is correctly applied and identical between
+    light/dark renders; only chrome (background, title, axis, colorbar text) flips
+    theme.
+  - Deterministic, realistic rainfall-intensity scenario with no RNG; canvas is exactly
+    2400×2400 as declared; theme chrome fully legible in both renders with no dark-on-dark
+    or light-on-light failures.
   weaknesses:
-  - The 14-piece visualMap banding is barely perceptible in the render — adjacent
-    bands blend into what reads as a smooth gradient rather than the distinct color
-    bands a 'filled contour' should show. Widen the perceptual contrast between pieces
-    (fewer, higher-contrast bands, e.g. 8-10 levels spanning more of the seq range)
-    so the level structure is visible at a glance.
-  - The two storm cells (centers at (-15,-10) and (22,16), sigma 18/22, peaks 45/30)
-    merge into a single indistinguishable blob — no two separate local maxima are
-    visible in either render. This undercuts the 'combined field from two storm cells'
-    data story; increase the center separation or shrink sigma so both peaks read
-    as distinct lobes.
-  - The piecewise colorbar only labels the two extremes ('0 mm/hr' / '49 mm/hr') across
-    its 14 swatches, so a viewer cannot read off intermediate level values precisely
-    — label more pieces (e.g. every other swatch) or switch to a continuous visualMap
-    with tick labels.
-  - No contour/isolines are overlaid to mark precise level boundaries, which the spec
-    calls out as a nice-to-have for a filled contour plot — a thin line series tracing
-    a few key levels would strengthen the 'contour' identity beyond a plain heatmap
-    look.
+  - No contour-line overlay marking precise level boundaries — the spec lists this
+    as a nice-to-have ('consider overlaying contour lines for precise level identification')
+    that would push the 'contour' identity further beyond a banded heatmap.
+  - Colorbar swatch labels are fairly small (fontSize 12) relative to the rest of
+    the chrome — still legible but could be bumped slightly for better mobile readability.
+  - Still a heatmap-as-contour approximation (grid cells rather than true isoline-derived
+    polygons), which is the accepted ECharts workaround given no echarts-gl/contour
+    series, but caps SC-01/LM-02 slightly below a native contour implementation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Storm Rainfall Intensity · contour-filled · javascript · echarts · anyplot.ai" in bold dark ink, centered top. X-axis label "Distance East-West (km)" and Y-axis label "Distance North-South (km)" both dark ink, legible. Tick labels (-50 to 41 in steps) in a softer dark gray, evenly spaced and readable. Piecewise colorbar on the right with 14 small swatches, labeled "49 mm/hr" at top and "0 mm/hr" at bottom in soft gray text.
-      Data: A single square heatmap field filling most of the plot area. Color runs from brand green (#009E73-ish) at the low-value periphery through teal to a darker blue-violet in a blob roughly centered left-of-middle. No hard band edges are visible — the color transition reads as a smooth gradient rather than distinct contour levels, and the two underlying storm cells are not separately distinguishable as two peaks.
-      Legibility verdict: PASS (all text clearly readable against the light background).
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark-ink title "Storm Rainfall Intensity · contour-filled · javascript · echarts · anyplot.ai" centered at top, comfortably within plot width. Axis titles "Distance East-West (km)" and "Distance North-South (km)" in dark ink; tick labels in soft-dark ink at regular intervals. A vertical piecewise colorbar sits to the right with 9 fully labeled swatches ("0-5 mm/hr" through "40-45 mm/hr").
+      Data: A square field fills most of the plot area, banded in the Imprint sequential palette from brand green (#009E73) at the periphery/background through teal to darker blue-green at the two storm cores. Two clearly separate concentric-ring lobes are visible: a larger, more intense one in the lower-left quadrant (peak ~45 mm/hr) and a smaller one in the upper-right quadrant (peak ~30 mm/hr, visibly less saturated blue than the first). Band boundaries are sharp and perceptible, not a smooth gradient.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/white text, all clearly legible against the dark background. Colorbar text also light-colored and legible.
-      Data: Identical color field and colors to the light render (green-to-blue gradient, same blob position and shape) — confirms data colors are theme-invariant as required. Same banding/two-peak weakness as noted for light render.
-      Legibility verdict: PASS (no dark-on-dark text found; all chrome elements are clearly visible).
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink, fully legible against the dark background. Colorbar labels are light-colored and readable.
+      Data: The banded field and colorbar swatch colors are pixel-identical to the light render — only the chrome (background, text) flipped theme, as required. The two storm lobes remain clearly distinguishable.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome text reads clearly against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit, title scaled for length, readable in both
-          themes; colorbar text slightly small at 13px
+        comment: Explicit sizes, readable in both themes; colorbar text still on the
+          small side (12px)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render
+        comment: No collisions between text, data, or colorbar
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Heatmap field is visible, but the piecewise bands are not distinctly
-          perceptible from one another
+        comment: 9 color bands now have sharp, perceptible boundaries; two storm lobes
+          clearly distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential ramp is CVD-safe, no red-green reliance
+        comment: Sequential Imprint colormap, CVD-safe, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 2400x2400; plot fills a large, balanced portion
-          of the square canvas
+        comment: 2400x2400 canvas gate passed, good fill, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels descriptive with units (km)
+        comment: Descriptive axis labels with units (km, mm/hr)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green-to-blue) correctly applied via t.seq, identical
-          across themes, theme-correct chrome and backgrounds
+        comment: imprint_seq correctly applied, theme-correct backgrounds, data colors
+          identical across themes
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library default look via mandated tokens; no distinctive
-          design treatment beyond that
+        comment: Banding creates genuine visual interest via mandated tokens, but
+          chrome otherwise defaults
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Spines/gridlines/ticks cleanly hidden, but colorbar and banding lack
-          refinement
+        comment: Grid/ticks cleanly hidden, minimal chrome, but banding polish is
+          functional rather than refined
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Color gradient creates a focal point at the intensity peak, but the
-          two-storm narrative is not visually legible
+        comment: Two storm cells now read as clear, distinct focal points telling
+          the combined-field story
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -143,87 +134,85 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct filled-contour approximation via heatmap + piecewise visualMap,
+        comment: Correct filled-contour approximation (heatmap + piecewise visualMap),
           the accepted ECharts workaround
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Levels/bands present but barely visible, colorbar under-labeled,
-          no contour-line overlay
+        passed: true
+        comment: 9 visible levels, fully labeled colorbar; optional contour-line overlay
+          still absent
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid coordinates correctly mapped, full data range shown
+        comment: X/Y axes correct, full grid shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar labels match units
+        comment: Title format matches spec exactly
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Two storm cells specified in code but not visually distinguishable
-          as separate peaks in the render
+        passed: true
+        comment: Two storm cells now visually distinguishable as separate local maxima
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Storm rainfall-intensity scenario is realistic, neutral, and comprehensible
+        comment: Realistic, neutral storm rainfall scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-49 mm/hr rainfall intensity is a realistic range for storm cells
+        comment: 0-45 mm/hr is a realistic rainfall-intensity range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly flat script; one small pure helper function for the field
-          calculation
+        comment: Flat structure with one small pure helper function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Deterministic, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the echarts global is used
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately scoped, no fake functionality
+        comment: No fake UI, clean structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract, animation disabled, no explicit size/DPR
+        comment: Mount-node contract followed correctly, animation disabled
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -231,16 +220,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic setOption with heatmap series and category axes correctly
-          paired
+        comment: Idiomatic heatmap + category axes + piecewise visualMap
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Piecewise visualMap for banding is a reasonably distinctive ECharts
-          technique, though the heatmap-as-contour pattern is a known workaround
-  verdict: REJECTED
+        comment: Piecewise visualMap banding is well-executed but remains a known
+          workaround pattern
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -251,3 +239,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - minimal-chrome
