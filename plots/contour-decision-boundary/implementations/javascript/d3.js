@@ -67,7 +67,9 @@ const trainZ = points.map((d) => ({
   label: d.label,
 }));
 
-function classify(zx, zy, excludeIdx) {
+// Fraction of the k nearest neighbors labeled Fail — a continuous field
+// suitable for marching-squares contouring (0 = unanimous Pass, 1 = unanimous Fail).
+function knnFailFraction(zx, zy, excludeIdx) {
   const dists = [];
   for (let i = 0; i < trainZ.length; i++) {
     if (i === excludeIdx) continue;
@@ -76,13 +78,15 @@ function classify(zx, zy, excludeIdx) {
     dists.push([dx * dx + dy * dy, trainZ[i].label]);
   }
   dists.sort((a, b) => a[0] - b[0]);
-  let pass = 0;
   let fail = 0;
   for (let i = 0; i < K; i++) {
-    if (dists[i][1] === 0) pass++;
-    else fail++;
+    if (dists[i][1] === 1) fail++;
   }
-  return pass >= fail ? 0 : 1;
+  return fail / K;
+}
+
+function classify(zx, zy, excludeIdx) {
+  return knnFailFraction(zx, zy, excludeIdx) > 0.5 ? 1 : 0;
 }
 
 // Leave-one-out prediction flags which training points the classifier misses.
@@ -104,37 +108,62 @@ const y = d3
   .domain([d3.min(points, (d) => d.x2) - x2Pad, d3.max(points, (d) => d.x2) + x2Pad])
   .range([ih, 0]);
 
-// --- Mesh grid: classify a dense grid to paint the decision regions ---------
+// --- Decision regions: marching-squares contour of the classifier field ----
+// Sample a dense grid (edge-to-edge, so the contoured fill reaches the plot
+// borders) of the continuous Fail-fraction field, then let d3.contours()
+// trace a single smooth boundary per class instead of a raster mesh of rects.
 const GRID = 100;
-const cellW = iw / GRID;
-const cellH = ih / GRID;
+const cellW = iw / (GRID - 1);
+const cellH = ih / (GRID - 1);
 const classColors = [t.palette[0], t.palette[4]]; // Pass -> brand green, Fail -> semantic red
 
-const mesh = [];
+const failField = new Float64Array(GRID * GRID);
 for (let row = 0; row < GRID; row++) {
-  const dataX2 = y.invert((row + 0.5) * cellH);
+  const dataX2 = y.invert(row * cellH);
   const zy = (dataX2 - mean2) / std2;
   for (let col = 0; col < GRID; col++) {
-    const dataX1 = x.invert((col + 0.5) * cellW);
+    const dataX1 = x.invert(col * cellW);
     const zx = (dataX1 - mean1) / std1;
-    mesh.push({ col, row, pred: classify(zx, zy, -1) });
+    failField[row * GRID + col] = knnFailFraction(zx, zy, -1);
   }
 }
+const passField = failField.map((v) => 1 - v);
+
+const contourGen = d3.contours().size([GRID, GRID]);
+const failGeo = contourGen.contour(failField, 0.5);
+const passGeo = contourGen.contour(passField, 0.5);
+
+// Grid-index space -> plot-pixel space (grid samples are cellW/cellH apart).
+const gridToPixel = d3.geoTransform({
+  point(gx, gy) {
+    this.stream.point(gx * cellW, gy * cellH);
+  },
+});
+const contourPath = d3.geoPath(gridToPixel);
+
+// A distinct marker shape for Fail (in addition to color) so class is never
+// signaled by color alone.
+const failSymbol = d3.symbol().type(d3.symbolSquare).size(190);
 
 // --- SVG mount ----------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
 // Decision regions (drawn first, everything else layers on top)
-g.append("g")
-  .selectAll("rect")
-  .data(mesh)
-  .join("rect")
-  .attr("x", (d) => d.col * cellW)
-  .attr("y", (d) => d.row * cellH)
-  .attr("width", cellW + 0.6)
-  .attr("height", cellH + 0.6)
-  .attr("fill", (d) => classColors[d.pred])
+const regionsG = g.append("g");
+regionsG
+  .append("path")
+  .datum(passGeo)
+  .attr("d", contourPath)
+  .attr("fill", classColors[0])
+  .attr("stroke", "none")
+  .attr("opacity", 0.22);
+regionsG
+  .append("path")
+  .datum(failGeo)
+  .attr("d", contourPath)
+  .attr("fill", classColors[1])
+  .attr("stroke", "none")
   .attr("opacity", 0.22);
 
 // --- Axes -----------------------------------------------------------------
@@ -166,17 +195,30 @@ g.append("text")
   .style("font-size", "18px")
   .text("Temperature Deviation (°C)");
 
-// --- Training points: filled dot, misclassified ones get an ink ring -------
+// --- Training points: Pass = filled circle, Fail = filled square (shape
+// carries the class distinction alongside color); misclassified points also
+// get an ink ring -------------------------------------------------------
 const pointsG = g.append("g");
 pointsG
   .selectAll("circle.sample")
-  .data(trainWithPred)
+  .data(trainWithPred.filter((d) => d.label === 0))
   .join("circle")
   .attr("class", "sample")
   .attr("cx", (d) => x(d.x1))
   .attr("cy", (d) => y(d.x2))
   .attr("r", 8)
-  .attr("fill", (d) => classColors[d.label])
+  .attr("fill", classColors[0])
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 1.5);
+
+pointsG
+  .selectAll("path.sample")
+  .data(trainWithPred.filter((d) => d.label === 1))
+  .join("path")
+  .attr("class", "sample")
+  .attr("d", failSymbol())
+  .attr("transform", (d) => `translate(${x(d.x1)},${y(d.x2)})`)
+  .attr("fill", classColors[1])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
 
@@ -196,7 +238,7 @@ pointsG
 const legend = svg.append("g").attr("transform", `translate(${width / 2 - 300},${102})`);
 const legendItems = [
   { label: "Pass", color: classColors[0], shape: "dot" },
-  { label: "Fail", color: classColors[1], shape: "dot" },
+  { label: "Fail", color: classColors[1], shape: "square" },
   { label: "Misclassified", color: t.ink, shape: "ring" },
 ];
 let lx = 0;
@@ -204,6 +246,8 @@ for (const item of legendItems) {
   const entry = legend.append("g").attr("transform", `translate(${lx},0)`);
   if (item.shape === "dot") {
     entry.append("circle").attr("r", 9).attr("fill", item.color);
+  } else if (item.shape === "square") {
+    entry.append("path").attr("d", failSymbol()).attr("fill", item.color);
   } else {
     entry.append("circle").attr("r", 9).attr("fill", "none").attr("stroke", item.color).attr("stroke-width", 2);
   }
