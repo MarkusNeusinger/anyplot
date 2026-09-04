@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-3d-categorical: 3D Bar Chart for Categorical Comparison
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-04
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-04
 //# anyplot-orientation: square
 
 // Chart.js has no native 3D chart type — this hand-builds an isometric bar
