@@ -77,10 +77,13 @@ A `/verify-*` gate only counts if the **diff's own flow** was driven —
 rendering a proxy or asserting a 200 is not verification.
 
 **Changelog gate:** every non-exempt PR adds `changelog.d/<slug>.md`
-before the PR opens and touches `CHANGELOG.md` not at all — that shared
+before the PR opens and adds nothing to `CHANGELOG.md` — that shared
 spot is where sibling PRs conflict (rule + exemptions in CLAUDE.md,
 format in `changelog.d/README.md`; the `/pull_request` command enforces
-the same gate and appends the PR number after creation). Locally:
+the same gate and appends the PR number after creation). Correcting the
+wording of a bullet `[Unreleased]` already carries is allowed — identity
+is the bold title, so only a new title is an added bullet — and a
+fragment never ships the bare `(#NNNNN)` placeholder. Locally:
 `uv run python -m tools.changelog check --base origin/main`.
 
 Then the local CI equivalents — the same commands the pipeline runs.
