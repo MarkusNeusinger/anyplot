@@ -64,7 +64,10 @@ function imprintDivInterpolator(stops) {
   };
 }
 
-const divColor = imprintDivInterpolator(t.div);
+// Reversed so position 0 (coolest/lowest z) lands on the blue end and
+// position 1 (warmest/highest z) lands on the red end -- matching the
+// universal warm=red / cool=blue temperature-anomaly convention.
+const divColor = imprintDivInterpolator([...t.div].reverse());
 
 // --- Band levels: symmetric around zero so the midpoint band sits at anomaly=0 ---
 const NUM_BANDS = 10;
@@ -202,7 +205,7 @@ function FilledContourLayer() {
 // --- Chart (default-exported component — the harness mounts it) -------------
 const TITLE = "Sea-Surface Temperature Anomaly · contour-filled · javascript · muix · anyplot.ai";
 const TITLE_FONT_SIZE = Math.max(15, Math.round(22 * Math.min(1, 67 / TITLE.length)));
-const MARGIN = { top: 130, right: 200, bottom: 90, left: 100 };
+const MARGIN = { top: 130, right: 200, bottom: 90, left: 115 };
 
 export default function Chart() {
   return (
@@ -230,6 +233,10 @@ export default function Chart() {
           label: "Meridional offset (°)",
           labelStyle: { fontSize: 15, fill: t.ink },
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          // Push the rotated axis label further from the axis line than the
+          // library's default offset, which collides with wide tick digits
+          // like "-3.0" -- see ChartsYAxis's labelRefPoint formula.
+          slotProps: { axisLabel: { x: -62 } },
         },
       ]}
       zAxis={[
