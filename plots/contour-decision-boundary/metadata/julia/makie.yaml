@@ -1,0 +1,278 @@
+library: makie
+language: julia
+specification_id: contour-decision-boundary
+created: '2026-09-04T23:17:13Z'
+updated: '2026-09-04T23:40:03Z'
+generated_by: claude-sonnet
+workflow_run: 33928387150
+issue: 2921
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Deterministic jitter on duplicate (petal_length, petal_width) pairs fixes the
+    prior overlapping-marker defect — the two misclassified points near (5.0, 1.5)
+    that previously rendered as a single confusing hybrid glyph are now individually
+    legible circle/xcross markers, confirmed by zoomed inspection of both renders.
+  - Switched the region fill from heatmap! to contourf! plus a thin theme-adaptive
+    contour! boundary line, producing a smoother interpolated decision surface with
+    clear class-separation lines instead of a blocky, unrefined fill — a genuinely
+    distinctive Makie technique for a spec named 'contour-decision-boundary'.
+  - Tick label size raised from 12 to 14, matching the axis-label hierarchy and improving
+    legibility at reduced/mobile widths.
+  - 'Title matches the required format exactly: ''contour-decision-boundary · julia
+    · makie · anyplot.ai''.'
+  - 'First categorical series (setosa) correctly uses Imprint brand green #009E73,
+    with versicolor/virginica following canonical Imprint positions 2 and 3 identically
+    in both themes; theme-adaptive chrome (background, title, axis labels, ticks,
+    spines) is fully correct and legible in both renders.'
+  - Marker shape (circle = correctly classified vs. xcross = misclassified) cleanly
+    encodes leave-one-out validation results, adding genuine data-storytelling value
+    beyond a plain scatter overlay.
+  - Canvas is exactly 3200×1800, plot area uses the large majority of the canvas,
+    and nothing is clipped at any edge.
+  weaknesses:
+  - 'Design Excellence still has room to grow: the decision regions are a single fixed
+    alpha (0.35) with no further variation, and the data-storytelling focal point
+    (misclassified points near the versicolor/virginica boundary) could be emphasized
+    further, e.g. with a subtle callout or slightly higher-contrast stroke, to push
+    past ''well-executed default'' territory.'
+  - Title occupies only ~30% of the plot width at the current titlesize=20 — comfortably
+    legible and not a defect, but there is headroom to grow it slightly for a stronger
+    visual anchor given how short this particular spec-id/library title is.
+  - 'Library Mastery (LM-02) is good but not maximal: consider one more Makie-distinctive
+    touch (e.g. a Colorbar-adjacent confidence gradient, or per-class stroke variation)
+    to fully differentiate from a generic contourf+scatter port from another library.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), consistent with the light-theme surface, not pure white, not dark.
+      Chrome: Bold dark title "contour-decision-boundary · julia · makie · anyplot.ai" centered at top, dark-ink axis labels "Petal Length (cm)" / "Petal Width (cm)", softer dark-gray tick labels (now sized to match, 14pt) along both axes. Only left/bottom spines are visible (top/right removed), no gridlines. Legend sits close to the right of the plot with dark text on the off-white background.
+      Data: Three contourf-filled, alpha-blended (0.35) decision regions in pastel green / lavender / blue-gray tones, separated by a thin soft-ink boundary line, sit behind ~150 scattered training points. Points are colored circles (green = setosa, lavender = versicolor, blue = virginica) with a white stroke for correctly-classified points, and larger X-cross markers (colored fill, dark stroke) for leave-one-out misclassified points. First series (setosa) confirmed #009E73 Imprint brand green; versicolor/virginica follow the next two canonical Imprint positions. Zoomed inspection of the cluster near Petal Length≈5.0, Petal Width≈1.5-1.8 confirms the previously-overlapping circle/xcross pair is now cleanly separated by a small deterministic jitter — both markers are individually legible with no hybrid "target" glyph.
+      Legibility verdict: PASS (all text clearly readable against the light background; no overlap issues remain).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), consistent with the dark-theme surface, not pure black, not light.
+      Chrome: Title and axis labels render in light off-white ink, tick labels in a softer light-gray, spines and legend text correctly flipped to light-on-dark. No dark-on-dark or light-on-light failures observed anywhere.
+      Data: The same three contourf regions now render as darker saturated green/purple/navy blends (alpha-blended against the dark background — expected, since the fill is a translucent overlay), while all data marker colors (green/lavender/blue circles/xcrosses) are pixel-identical to the light render, confirming only chrome flipped. The same jitter fix is reproduced identically — the two misclassified markers near the boundary are cleanly separated (white-stroke "X" glyphs replacing the black-stroke ones from the light render, consistent with the ink token flipping).
+      Legibility verdict: PASS (all text clearly readable against the dark background; no dark-on-dark failures; no overlap issues remain).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
+          tick label sizes now raised to 14, legend labelsize=12); readable in both
+          themes with no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Deterministic jitter on duplicate-coordinate pairs fixed the prior
+          stacked circle/xcross defect near (5.0, 1.5-1.8) — verified via zoomed crop
+          that both markers are now individually legible in both themes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker sizes (16px hit / 20px miss) and contourf regions are clearly
+          visible for ~150 training points; well adapted to this density, and no longer
+          occluded by overlap.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint categorical hues plus white/ink strokes give good
+          contrast; no red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the 3200x1800 canvas, legend
+          sits close to the plot, nothing clipped at any edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Petal Length (cm)'' / ''Petal Width (cm)'' are descriptive and
+          include units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; remaining two series follow canonical Imprint
+          order; backgrounds are theme-correct #FAF8F1/#1A1A17 in both renders; data
+          marker colors identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom theme tokens, misclassification encoding, and the new contourf+contour-line
+          region rendering push this past a bare default, though a single fixed fill
+          alpha keeps it short of full publication polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, no gridlines, generous whitespace, and
+          the added thin boundary line between regions is a genuine refinement over
+          the prior flat fill; the fixed overlap defect also removes a visual blemish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Circle-vs-xcross encoding of leave-one-out correctness creates a
+          real focal point (where the classifier fails), but nothing further emphasizes
+          it beyond marker shape.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct decision-boundary visualization: colored predicted-class
+          regions with training points overlaid.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct region colors with transparency, training point overlay,
+          correct/incorrect marker distinction, legend with class labels, and a real
+          trained classifier (KNN) on a dense mesh grid are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Petal length on X, petal width on Y, full data range shown on both
+          axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated convention; legend labels
+          match the three species plus the misclassification marker.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows well-separated (setosa) and overlapping/ambiguous (versicolor/virginica)
+          regions plus classifier errors, though the overlap zone is relatively small.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fisher's iris dataset — real, neutral, comprehensible scientific
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Petal length/width values and ranges match real iris measurements
+          in cm.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Straightforward top-to-bottom script: imports, data, classifier,
+          jitter, plot, save — no functions/classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; iris dataset load and KNN computation are otherwise
+          deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, RDatasets, DataFrames all used (DataFrames
+          backs the dot-accessor column access on the iris DataFrame).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Manual KNN implementation is appropriately simple given no ML library
+          is available in Julia; jitter logic is clear and well-commented; no fake
+          functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current CairoMakie save() API with px_per_unit=2.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses contourf!/contour! for the decision surface (matching the
+          spec's 'contour' name) alongside idiomatic Axis/scatter!/Legend usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered contourf+contour boundary line, custom MarkerElement-built
+          Legend, and leave-one-out jitter handling are meaningful Makie-specific
+          touches beyond a generic port.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
