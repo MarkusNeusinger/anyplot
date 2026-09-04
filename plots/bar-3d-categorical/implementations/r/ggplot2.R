@@ -122,7 +122,7 @@ labels_df <- bind_rows(labels_rows)
 # (cells sharing fertilizer_index - soil_index land on one diagonal); when their
 # heights are close, the value labels collide. Nudge later labels (bottom-to-top)
 # apart from earlier ones sharing a column so every value stays legible.
-MIN_LABEL_GAP <- 0.22
+MIN_LABEL_GAP <- 0.34
 label_order <- order(labels_df$py)
 for (k in seq_along(label_order)[-1]) {
   cur <- label_order[k]
@@ -157,7 +157,7 @@ grid_df <- bind_rows(grid_lines)
 
 # --- Category tick labels along the two front edges ---------------------------
 fert_ticks <- bind_rows(lapply(seq_along(fertilizer_types) - 1L, function(i) {
-  p <- project_iso(i + 0.5, -0.35, 0)
+  p <- project_iso(i + 0.5, -0.45, 0)
   data.frame(px = p$x, py = p$y, label = fertilizer_types[i + 1])
 }))
 soil_ticks <- bind_rows(lapply(seq_along(soil_types) - 1L, function(j) {
@@ -172,7 +172,8 @@ anyplot_theme <- theme_void(base_size = 8) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
-    legend.text        = element_text(color = INK_SOFT, size = 8),
+    legend.margin      = margin(t = 6, r = 12, b = 6, l = 8),
+    legend.text        = element_text(color = INK_SOFT, size = 7.5, margin = margin(r = 6)),
     legend.title       = element_text(color = INK, size = 10),
     plot.title         = element_text(color = INK, size = 12, face = "bold", hjust = 0.5),
     plot.caption       = element_text(color = INK_SOFT, size = 7, hjust = 0.5),
@@ -189,8 +190,8 @@ p <- ggplot() +
     data = data.frame(fertilizer = factor(fertilizer_types, levels = fertilizer_types)),
     aes(x = 0, y = 0, color = fertilizer), alpha = 0
   ) +
-  geom_text(data = labels_df, aes(x = px, y = py, label = label), color = INK, size = 2.8, fontface = "bold") +
-  geom_text(data = fert_ticks, aes(x = px, y = py, label = label), color = INK_SOFT, size = 2.7, angle = 30) +
+  geom_text(data = labels_df, aes(x = px, y = py, label = label), color = INK, size = 2.5, fontface = "bold") +
+  geom_text(data = fert_ticks, aes(x = px, y = py, label = label), color = INK_SOFT, size = 2.3, angle = 30) +
   geom_text(data = soil_ticks, aes(x = px, y = py, label = label), color = INK_SOFT, size = 2.7, angle = -30) +
   annotate("text", x = fert_axis_label$x, y = fert_axis_label$y, label = "Fertilizer", color = INK, size = 3.0, angle = 30, fontface = "italic") +
   annotate("text", x = soil_axis_label$x, y = soil_axis_label$y, label = "Soil Type", color = INK, size = 3.0, angle = -30, fontface = "italic") +
