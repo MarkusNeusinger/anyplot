@@ -1,13 +1,9 @@
-// anyplot.ai
-// bar-3d-categorical: 3D Bar Chart for Categorical Comparison
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-04
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-3d-categorical: 3D Bar Chart for Categorical Comparison
 // Library: MUI X Charts | React | Node 22
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-04
+// Quality: 88/100 | Created: 2026-09-04
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
@@ -47,12 +43,18 @@ const series = treatments.map((label, i) => ({
   color: ROW_COLORS[i],
 }));
 
-// Isometric depth vector, in CSS px within the mount's coordinate space.
-// Shared by the per-bar cuboid thickness and the per-treatment stagger so the
-// four rows read as one continuous grid receding into the screen, rather than
-// four unrelated offsets.
+// Isometric depth vector, in CSS px within the mount's coordinate space —
+// this is each cuboid's own front-to-back thickness.
 const ISO_DX = 20;
 const ISO_DY = -13;
+
+// Per-treatment row stagger: slightly larger than the cuboid depth vector so
+// consecutive rows don't sit edge-to-edge — the extra step opens a thin gap
+// between the back face of one row and the front face of the next, per the
+// spec's "slight spacing between them for visual clarity and depth
+// perception".
+const STAGGER_DX = ISO_DX * 1.3;
+const STAGGER_DY = ISO_DY * 1.3;
 
 const TITLE = "bar-3d-categorical · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 64;
@@ -96,6 +98,7 @@ function YAxisTitle() {
 function Bars3D() {
   const xScale = useXScale();
   const yScale = useYScale();
+  const { left, width } = useDrawingArea();
   const bandwidth = xScale.bandwidth();
   const barWidth = bandwidth * 0.55;
   const baseline = yScale(0);
@@ -103,11 +106,51 @@ function Bars3D() {
   // Paint back row first so nearer (lower-index) rows correctly occlude it.
   const paintOrder = [...treatments.keys()].sort((a, b) => b - a);
 
+  // Base-plane grid: faint iso-projected floor lines tying each bar back to
+  // its (alloy, treatment) cell — one receding line per treatment depth, and
+  // one line per alloy running front-to-back through all four depths.
+  const floorRowLines = treatments.map((_, row) => {
+    const dx = row * STAGGER_DX;
+    const dy = row * STAGGER_DY;
+    return (
+      <line
+        key={`row-${row}`}
+        x1={left + dx}
+        y1={baseline + dy}
+        x2={left + width + dx}
+        y2={baseline + dy}
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+        opacity={0.35}
+      />
+    );
+  });
+  const floorColumnLines = alloys.map((alloy) => {
+    const cx = xScale(alloy) + bandwidth / 2;
+    const points = treatments
+      .map((_, row) => `${cx + row * STAGGER_DX},${baseline + row * STAGGER_DY}`)
+      .join(" ");
+    return (
+      <polyline
+        key={`col-${alloy}`}
+        points={points}
+        fill="none"
+        stroke={t.inkSoft}
+        strokeWidth={1.5}
+        opacity={0.35}
+      />
+    );
+  });
+
   return (
     <>
+      <g>
+        {floorRowLines}
+        {floorColumnLines}
+      </g>
       {paintOrder.map((row) => {
-        const dx = row * ISO_DX;
-        const dy = row * ISO_DY;
+        const dx = row * STAGGER_DX;
+        const dy = row * STAGGER_DY;
         const color = ROW_COLORS[row];
         const topColor = shade(color, 0.34);
         const sideColor = shade(color, -0.3);
@@ -164,7 +207,7 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 22,
+          fontSize: 26,
           fontWeight: 500,
           color: t.ink,
           fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
