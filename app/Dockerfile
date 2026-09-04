@@ -55,8 +55,19 @@ COPY --chown=nginx:nginx origin-gate.conf.template /etc/nginx/templates/00-origi
 # shell's. The filter is a regex over variable NAMES; `^ORIGIN_` is exactly
 # ORIGIN_GATE and ORIGIN_SECRET.
 ENV ORIGIN_GATE=off \
-    ORIGIN_SECRET="" \
     NGINX_ENVSUBST_FILTER="^ORIGIN_"
+
+# On its own instruction so the exception below excuses this line and nothing
+# else. DL3064 reads the NAME and warns that a secret may be baked into the
+# image; the value here is the empty string, and it is declared for the opposite
+# reason — so that a service which supplies no secret renders a config that
+# refuses everyone, rather than one nginx cannot parse. The real value arrives at
+# runtime from Secret Manager and never reaches a layer. Renaming the variable
+# would silence the rule and break the contract instead: the API service, the
+# Worker binding, the GitHub repository secret and the Secret Manager entry all
+# carry this name.
+# hadolint ignore=DL3064
+ENV ORIGIN_SECRET=""
 
 # Copy built assets from builder stage
 COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html

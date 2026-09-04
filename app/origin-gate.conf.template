@@ -50,6 +50,22 @@
 # not constant-time. nginx offers no constant-time string primitive; the answer
 # to both is the entropy of the secret, not the comparison.
 
+# nginx cannot hash a `map` key longer than one bucket, and the default bucket
+# is the processor's cache line — 64 bytes on x86-64. The tagged key below is
+# `presented:` plus the whole secret, so a 32-byte secret written as hex is 74
+# characters and nginx refuses to start with
+#
+#     [emerg] could not build map_hash, you should increase map_hash_bucket_size
+#
+# — with the gate OFF it starts fine, because the key is short; with the gate
+# armed the container never becomes ready. Cloud Run would keep the previous
+# revision serving, so the failure is safe, but it is invisible until the moment
+# of arming. Found by the container smoke in ci-image.yml, which is the only
+# thing in this repository that could have found it. 512 leaves room for a
+# base64 or longer secret, and is a multiple of the cache line as the directive
+# asks; the cost is a slightly larger hash table for seven small maps.
+map_hash_bucket_size 512;
+
 # What the caller presented, TAGGED. The tag is what makes an unset secret fail
 # closed: `map` compares literally, so an empty `${ORIGIN_SECRET}` would produce
 # the key `""` — which is exactly what an absent header looks like, and the gate

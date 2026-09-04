@@ -144,6 +144,34 @@ def test_every_gate_variable_nginx_conf_uses_is_defined_by_the_template():
     )
 
 
+def test_the_map_bucket_holds_a_real_secret():
+    """The tag that makes the gate fail closed is also what overflows the hash.
+
+    nginx cannot hash a `map` key longer than one bucket, and the default bucket
+    is the processor's cache line — 64 bytes. The key is `presented:` plus the
+    whole secret, so 32 random bytes written as hex is 74 characters and nginx
+    refuses to start with "could not build map_hash". It starts perfectly with
+    the gate off, because the key is short then; the failure appears at the
+    moment of arming and nowhere earlier. Found by the container smoke, which is
+    the only thing here that runs the rendered config.
+    """
+    template = _without_comments(GATE_TEMPLATE.read_text(encoding="utf-8"))
+    match = re.search(r"map_hash_bucket_size\s+(\d+);", template)
+    assert match, (
+        "app/origin-gate.conf.template does not raise map_hash_bucket_size. The "
+        "tagged secret key is longer than nginx's default 64-byte bucket, so the "
+        "container starts with the gate off and refuses to start the moment it is "
+        "armed."
+    )
+    # `presented:` + a 64-character hex secret is 74; the headroom is for a
+    # longer or base64 value, and the directive wants a multiple of the cache
+    # line either way.
+    assert int(match.group(1)) >= 128, (
+        f"map_hash_bucket_size is {match.group(1)}, which leaves no room for a "
+        "secret longer than a few dozen characters."
+    )
+
+
 def test_the_secret_is_written_exactly_once_and_is_tagged():
     """An untagged key would open the gate the day the variable is forgotten.
 

@@ -225,6 +225,16 @@ which is the rollback and the state the code ships in. `ORIGIN_GATE=on` with no
 secret fails CLOSED — the map keys are tagged so an empty secret cannot become
 "match anything".
 
+**There is a length ceiling on the secret**, and it is worth knowing before a
+rotation rather than during one. nginx cannot hash a `map` key longer than one
+bucket; the key here is `presented:` plus the whole secret, and the template
+therefore sets `map_hash_bucket_size 512`. A secret past roughly 500 characters
+makes nginx refuse to start — with the gate *off* it starts fine, because the
+key is short then, so the failure would appear only at the moment of arming.
+Cloud Run keeps the previous revision serving in that case, so it is a safe
+failure rather than an outage, and the container smoke in `ci-image.yml` runs a
+production-length secret on every relevant change.
+
 **Why a header and not a `Host` rule.** Both would work here, which was an open
 question until 2026-09-04: `anyplot.ai` and `www.anyplot.ai` are Cloud Run
 **domain mappings**, so Cloudflare forwards the original Host and `$host` really

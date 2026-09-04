@@ -235,9 +235,12 @@ jobs:
       # still caught — which a file-wide `ignore:` silently swallowed. The third
       # former exception, DL3013, is simply gone: `pip install uv==<version>` is
       # pinned. DL3066 (non-numeric USER) still fires at info level, below the
-      # threshold, so it stays visible without blocking. app/Dockerfile needs no
-      # exceptions at all — verified against hadolint 2.15.1, the version this
-      # action pins.
+      # threshold, so it stays visible without blocking. app/Dockerfile declines
+      # exactly one, DL3064 on the origin gate's `ORIGIN_SECRET=""` default: the
+      # rule reads the variable NAME, the value is the empty string, and the
+      # reason it has to be declared at all is written beside the ignore. It sits
+      # on an ENV instruction of its own so it excuses that line and nothing
+      # else. Verified against hadolint 2.15.1, the version this action pins.
       - name: Hadolint (api/Dockerfile)
         if: steps.check.outputs.should_build == 'true'
         uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
@@ -375,8 +378,15 @@ jobs:
           set -euo pipefail
           # Not a production value and never one: this container is thrown away
           # at the end of the job, and the real secret has no business on a
-          # runner that prints its own logs on failure.
-          SECRET="ci-origin-gate-not-a-production-secret"
+          # runner that prints its own logs on failure. It is the LENGTH of a
+          # real one on purpose — 64 characters, what `openssl rand -hex 32`
+          # produces. A short placeholder passed this job while the production
+          # length did not: the tagged map key is `presented:` plus the secret,
+          # and nginx cannot hash a key longer than one bucket, so with the gate
+          # armed the container refused to start. That is the bug this line now
+          # keeps caught (see map_hash_bucket_size in
+          # app/origin-gate.conf.template).
+          SECRET="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
           start() {  # start <name> <host-port> [docker run args...]
             local name="$1" port="$2"; shift 2
