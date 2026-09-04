@@ -158,6 +158,43 @@ steps:
         }
         # Humans get the SPA shell.
         expect "$$HUMAN" "/" '<div id="root">' "a browser did not get the SPA shell"
+        # …and every <script> tag in that shell carries the CSP nonce from its
+        # own response header. The two halves are one `$$request_id` read twice
+        # — `add_header` in security-headers.conf, `sub_filter` in nginx.conf —
+        # and losing the stamp is the silent failure this probe exists for: a
+        # precompressed shell served by `gzip_static`, a location the filter
+        # never reaches, a renamed variable. The page keeps its `<div id="root">`
+        # and looks perfectly healthy to every probe above while the browser
+        # blocks every inline script on it, because a nonce in the policy makes
+        # 'unsafe-inline' inert. Cheap to check here, four weeks of nobody
+        # noticing if it is not.
+        #
+        # `--compressed` is the load-bearing flag, not a courtesy. Plain curl
+        # sends no Accept-Encoding, so `gzip_static` never reaches for the
+        # `.gz` — and the single most likely way to lose the stamp is exactly a
+        # precompressed shell coming back, which this probe would then pass
+        # while every browser got the untouched file (Copilot review).
+        # Reproduced against a local nginx with an index.html.gz planted in the
+        # docroot: plain curl saw 7 stamped tags, `curl --compressed` saw 0.
+        curl -fsS $$RETRY --compressed -A "$$HUMAN" -D head.out -o body.out "$$URL/" \
+          || { echo "candidate did not serve the shell for the nonce probe"; exit 1; }
+        # Exactly 32 hex digits, which is what nginx's $$request_id always is.
+        # `[0-9a-f]*` would have accepted a bare `nonce-` — and `test -n` calls
+        # that non-empty — so a policy with an empty nonce and `nonce=""` on
+        # every tag would have matched itself all the way through this probe
+        # while the browser blocked the lot (Copilot review).
+        NONCE=$$(grep -i '^content-security-policy:' head.out | grep -oE 'nonce-[0-9a-f]{32}' | head -1)
+        test -n "$$NONCE" || { echo "the shell's Content-Security-Policy carries no 32-hex-digit nonce"; exit 1; }
+        # Every tag against THAT nonce, not "has some nonce": a stale or
+        # mismatched value is refused by the browser exactly like a missing one,
+        # and counting attributes rather than comparing them would wave it
+        # through (Copilot review).
+        TAGS=$$(grep -o '<script[^>]*>' body.out | wc -l)
+        MATCHING=$$(grep -o "<script nonce=\"$${NONCE#nonce-}\"" body.out | wc -l)
+        test "$$TAGS" -gt 0 || { echo "the shell served no <script> tag at all"; exit 1; }
+        test "$$MATCHING" = "$$TAGS" \
+          || { echo "$$MATCHING of $$TAGS <script> tag(s) carry the header's $$NONCE — the rest would be blocked"; exit 1; }
+        echo "OK: all $$TAGS script tags of the shell carry the header's nonce"
         # Crawlers get the prerendered page through @seo_proxy. The canonical
         # link is the marker: the SPA shell carries none at all, and its value
         # names the route, so one grep proves both "the bot hop ran" and "the

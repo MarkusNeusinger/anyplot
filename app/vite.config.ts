@@ -21,8 +21,16 @@ export default defineConfig({
       overlay: { initialIsOpen: false },
       enableBuild: false,
     }),
-    compression({ algorithm: 'gzip', threshold: 1024 }),
-    compression({ algorithm: 'brotliCompress', threshold: 1024 }),
+    // index.html is EXCLUDED, and that is load-bearing rather than tidiness.
+    // nginx rewrites the shell per request to stamp the CSP nonce onto its
+    // <script> tags (app/nginx.conf, app/security-headers.conf), and
+    // `gzip_static on` would hand out the precompressed copy instead —
+    // untouched, unstamped, and with a policy that then blocks every inline
+    // script on the page. sub_filter only ever sees uncompressed bodies. The
+    // hashed chunks under /assets/ are what precompression is actually for,
+    // and they keep it; the shell is 11 kB and nginx still gzips it on the fly.
+    compression({ algorithm: 'gzip', threshold: 1024, exclude: [/index\.html$/] }),
+    compression({ algorithm: 'brotliCompress', threshold: 1024, exclude: [/index\.html$/] }),
   ],
   server: {
     port: 3000,
