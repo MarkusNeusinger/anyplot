@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bar-3d-categorical
 created: '2026-09-04T22:08:58Z'
-updated: '2026-09-04T22:14:19Z'
+updated: '2026-09-04T22:27:07Z'
 generated_by: claude-sonnet
 workflow_run: 33923712159
 issue: 5248
@@ -12,51 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Correct isometric 3D projection with three-tone face shading (darker left face,
-    medium right face, colored top face) that reads as genuine depth rather than a
-    flat gimmick.
-  - Imprint sequential colormap (brand green -> blue) correctly encodes value magnitude,
-    with identical data colors between light and dark renders.
-  - 'Theme-adaptive chrome is fully correct in both renders: title, rotated category
+  - 'Canvas utilization is now well-balanced: the isometric grid and legend fill roughly
+    70-80% of the 3200x1800 canvas with even margins on both sides, directly fixing
+    the prior review''s ''quarter of the canvas is empty'' complaint.'
+  - A new amber-ring focal-point highlight rings the single highest-value bar (91),
+    giving the sequential color ramp an explicit visual-hierarchy cue instead of relying
+    on color alone.
+  - 'Theme-adaptive chrome remains fully correct in both renders: title, rotated category
     labels, base-plane grid, and legend text all flip appropriately with no dark-on-dark
-    or light-on-light failures.'
-  - 'Distinctive D3-specific technique: manual isometric polygon construction combined
-    with d3.color().darker() for per-face shading and d3.interpolateRgbBasis for the
-    continuous legend gradient -- not something a high-level charting library could
-    replicate easily.'
-  - Value labels on all 20 bars (grid < 25) with a stroke halo for legibility, correct
-    mandated title format, and deterministic in-memory data.
+    or light-on-light failures, and the Imprint imprint_seq data colors are pixel-identical
+    between themes.'
+  - 'Distinctive D3-specific technique: hand-built isometric polygon projection with
+    three-tone per-face shading (d3.color().darker()) and a d3.interpolateRgbBasis
+    legend gradient -- not something a high-level charting library could replicate
+    easily.'
+  - The spec's 'viewing angle should be adjustable' note is now explicitly acknowledged
+    in code via the named ELEVATION_DEG constant and an explanatory comment on the
+    isometric decomposition, addressing the prior attempt's minor SC-02 gap.
   weaknesses:
-  - Significant unused canvas space to the right of the color legend (roughly a quarter
-    of the canvas width is empty background) and unbalanced margins -- scale the isometric
-    grid up and/or recenter it to use more of the 3200x1800 canvas.
-  - Spec note 'viewing angle should be adjustable' is not addressed even as a static
-    design choice (e.g. no alternate azimuth offered); minor since the fixed ~30/45
-    isometric view otherwise matches the spec's default recommendation.
-  - Design storytelling relies solely on the sequential color ramp for hierarchy;
-    consider a stronger focal point (e.g. subtly emphasizing the single highest-value
-    bar) to push Data Storytelling further.
-  - The densest cluster of bars (center of the grid) packs several value labels close
-    together; a touch more spacing or slightly smaller labels there would reduce visual
-    crowding.
+  - Bars and chrome (grid lines, legend, category labels) are drawn with imperative
+    for-loops and one-off .append() calls rather than D3's canonical data-join (.data(...).join(...))
+    pattern -- functionally correct but not the most idiomatic D3 approach for 20
+    repeated marks.
+  - The densest cluster of bars (center of the grid, values 39/55/42/33/61/44/36/28)
+    still packs several value labels close together; slightly smaller labels or a
+    touch more spacing there would reduce the perceived crowding.
+  - Design storytelling still leans heavily on the sequential color ramp plus the
+    single new focal ring; a secondary cue (e.g. subtly dimming the lowest-value bars)
+    could push the hierarchy further.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Bold dark title "bar-3d-categorical · javascript · d3 · anyplot.ai" centered at top, clearly readable. Rotated category tick labels ("Electronics".."Toys" at +30deg, "North".."West" at -30deg) in soft dark gray, all legible. Thin light-gray grid lines trace the base plane. Legend "Sales ($k)" with min/max value labels (28/91) in soft ink gray to the right of a vertical gradient swatch.
-      Data: 20 isometric bars (5 x-categories x 4 y-categories) colored via the Imprint sequential ramp (brand green -> blue) encoding value magnitude; white-haloed value labels on every bar top face; three-tone face shading (dark left, medium right, colored top) gives real depth cues.
+      Chrome: Bold dark title "bar-3d-categorical · javascript · d3 · anyplot.ai" centered at top, clearly readable. Rotated category tick labels ("Electronics".."Toys" at +30deg, "North".."West" at -30deg) in soft dark gray, all legible and none clipped at the canvas edges. Thin light-gray grid lines trace the base plane. Legend "Sales ($k)" with min/max value labels (91/28) in soft ink gray beside a vertical gradient swatch, now positioned snugly against the grid's right edge instead of floating in empty space.
+      Data: 20 isometric bars (5 x-categories x 4 y-categories) colored via the Imprint imprint_seq ramp (brand green -> blue) encoding value magnitude; white-haloed value labels on every bar top face; three-tone face shading (dark left, medium right, colored top) gives real depth cues; the highest-value bar (91) is ringed in amber as an explicit focal point.
       Legibility verdict: PASS -- all text reads clearly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 -- not pure black.
       Chrome: Title, category tick labels, grid lines, and legend text all switch to light/soft-light tones and remain fully readable. Bar-separator strokes (which use the page-background token) correctly render as near-black lines against the dark surface instead of the near-white lines seen in the light render.
-      Data: Same 20 bars in the identical Imprint sequential green->blue gradient as the light render -- confirmed no data-color drift between themes.
+      Data: Same 20 bars in the identical Imprint imprint_seq green->blue gradient as the light render, including the same amber focal ring on the 91 bar -- confirmed no data-color drift between themes.
       Legibility verdict: PASS -- no dark-on-dark failures observed; all chrome text and grid lines remain visible against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,7 +66,7 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (14/15/22px); readable in both themes;
-          only the dense central cluster of value labels keeps this from a perfect
+          the dense central cluster of value labels keeps this just short of a perfect
           score
       - id: VQ-02
         name: No Overlap
@@ -75,25 +76,26 @@ review:
         comment: No text-on-text or text-on-data collisions found in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bar sizing appropriate for a 20-bar grid; slight crowding of value
-          labels in the busiest area
+        comment: Bar sizing and spacing appropriate for a 20-bar grid, all faces and
+          labels clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential ramp with white-haloed labels gives good contrast; no
-          red-green reliance
+        comment: Sequential ramp with white-haloed labels and an amber focal ring
+          gives good contrast; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Chart+legend cluster leaves roughly a quarter of the canvas empty
-          on the right with unbalanced margins
+        passed: true
+        comment: Canvas utilization and margin balance markedly improved vs. attempt
+          1 (grid+legend now ~75% of canvas width, near-even side margins); a touch
+          of empty space still remains right of the legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,7 +111,7 @@ review:
         comment: Correct Imprint imprint_seq (green->blue) for continuous value encoding;
           theme-correct chrome in both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -117,24 +119,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom isometric shading and gradient legend clearly above a library
-          default, though not yet publication-grade polish
+        comment: Custom isometric shading, gradient legend, and focal-point ring are
+          clearly above a library default, though not yet publication-grade polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle base grid, label halos, and spaced bars show refinement; unbalanced
-          whitespace holds it back from perfect
+        comment: Subtle base grid, label halos, and now-balanced whitespace show real
+          refinement over attempt 1
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-by-magnitude creates a visible hierarchy/focal peak, but no
-          explicit emphasis beyond the color ramp
+        comment: Color-by-magnitude ramp plus the new amber focal ring on the highest
+          bar creates a clear, explicit hierarchy cue
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,11 +147,11 @@ review:
         comment: Correct 3D bar chart across two categorical axes
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Spacing, grid, value labels, and legend all present; the spec's 'adjustable
-          viewing angle' note is not addressed
+        comment: Spacing, base-plane grid, value labels, legend, and an explicit note
+          on the adjustable elevation/azimuth parameters are all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -196,7 +198,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-to-bottom script, no functions/classes
+        comment: Linear top-to-bottom script; the small isoUnit/iso/pts helpers are
+          coordinate-math utilities, not classes or over-structuring
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -223,24 +226,26 @@ review:
         passed: true
         comment: 'Correctly mounts to #container at ANYPLOT_SIZE; current d3 v7 API'
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expertly uses d3's data-join/projection philosophy with d3.scaleSequential,
-          d3.color, d3.interpolateRgbBasis
+        comment: Idiomatic use of d3.scaleSequential/d3.color/d3.interpolateRgbBasis,
+          but marks are built with manual for-loops and .append() rather than D3's
+          canonical .data(...).join(...) pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Manual isometric geometry plus color.darker() face-shading is a technique
-          unique to D3 among the JS libraries in this catalog
-  verdict: REJECTED
+        comment: Manual isometric geometry plus color.darker() face-shading and an
+          interpolateRgbBasis gradient legend is a technique unique to D3 among the
+          JS libraries in this catalog
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
