@@ -1,7 +1,7 @@
 // anyplot.ai
 // contour-decision-boundary: Decision Boundary Classifier Visualization
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 83/100 | Created: 2026-09-04
+// Quality: 91/100 | Created: 2026-09-04
 
 //# anyplot-orientation: square
 

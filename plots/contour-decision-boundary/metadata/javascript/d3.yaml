@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: contour-decision-boundary
 created: '2026-09-04T23:06:51Z'
-updated: '2026-09-04T23:11:11Z'
+updated: '2026-09-04T23:23:34Z'
 generated_by: claude-sonnet
 workflow_run: 33927717084
 issue: 2921
@@ -12,49 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
+  - Decision regions are now traced with d3.contours() (d3-contour marching squares)
+    on the classifier's continuous fail-fraction field, producing a single smooth
+    boundary path per class instead of the previous rect-mesh - the checkerboard seam
+    artifact from attempt 1 is gone in both renders
+  - Pass and Fail are now encoded with both color AND shape (filled circle vs. filled
+    square), fixing the red/green-only signal flagged in attempt 1 - class is readable
+    even under CVD simulation
   - Real k-NN classifier implemented from scratch (standardized features, k=5, leave-one-out
     validation) rather than faked/hardcoded misclassification flags
-  - 'Correct semantic-exception palette use: brand green for the positive class, the
-    designated semantic-red anchor for the negative class'
+  - 'Correct semantic-exception palette use: brand green #009E73 for Pass, the designated
+    semantic-red anchor #AE3030 for Fail, identical across both themes'
   - Clean, fully deterministic synthetic data (seeded LCG) producing two well-separated,
-    non-linearly-interleaved classes appropriate for showcasing a curved decision
-    boundary
+    non-linearly-interleaved crescent classes appropriate for showcasing a curved
+    decision boundary
   - Clear legend distinguishing Pass / Fail / Misclassified with an intuitive ring-highlight
-    convention
+    convention that doubles as a data-storytelling focal point
   - 'Both renders are fully theme-correct: chrome flips appropriately, data colors
     are identical, no legibility failures in either theme'
   - Correct mandated title format and descriptive, unit-carrying axis labels
   weaknesses:
-  - Decision-region fill uses a 100x100 grid of individually-opacity-filled rects
-    with a 0.6px overlap to hide seams; the overlap still leaves a faint checkerboard/grid-line
-    texture visible in both renders where cell edges double up opacity. Use d3.contours()
-    (d3-contour, part of the full d3 bundle) on the classifier's predicted-class grid
-    to generate a proper marching-squares contour path and fill that as a single smooth
-    path per class instead.
-  - Pass/Fail training points are encoded by fill color alone (green vs. red circles,
-    same shape) - a red/green-only signal for the primary class distinction. Give
-    Pass and Fail distinct marker shapes (e.g. circle vs. square/triangle) in addition
-    to color, keeping the ring convention layered on top for misclassified points.
+  - In the densest mixed-class band (roughly x=6-10, y=1-3) many Fail squares crowd
+    and partially overlap each other, slightly reducing individual marker visibility
+    - a touch more transparency or slightly smaller markers in that band would help
+  - Aesthetic sophistication is solid but still fairly standard chart construction
+    (default sans-serif type, no additional typographic hierarchy beyond size/weight)
+    - there is room to push further toward a truly publication-grade look
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1, square 2400x2400 canvas.
-      Chrome: Title "contour-decision-boundary · javascript · d3 · anyplot.ai" in dark ink, fully legible. Axis labels "Vibration Amplitude (mm/s)" and "Temperature Deviation (°C)" dark and legible, tick labels legible. Legend (Pass/Fail/Misclassified) above plot, fully readable.
-      Data: Decision regions in light green (Pass) and light red/pink (Fail) separated by a wavy non-linear boundary. ~250 points overlaid: emerald green #009E73 (Pass) and matte red #AE3030 (Fail) filled circles with thin off-white ring stroke; 8 misclassified points additionally circled in black ink. First series confirmed as brand green #009E73.
+      Chrome: Title "contour-decision-boundary · javascript · d3 · anyplot.ai" in dark ink, fully legible, ~55% of canvas width. Axis labels "Vibration Amplitude (mm/s)" and "Temperature Deviation (°C)" dark and legible with units; tick labels legible. Legend (Pass/Fail/Misclassified) sits between title and plot, fully readable, close to the chart.
+      Data: Decision regions rendered as a single smooth marching-squares contour boundary (d3.contours()) - light mint green for the Pass region and light pink/salmon for the Fail region, no checkerboard/seam artifacts. ~250 training points overlaid: emerald green #009E73 filled circles (Pass) and matte red #AE3030 filled squares (Fail), each with a thin off-white stroke; misclassified points additionally get a black ink ring - color AND shape both carry the class signal now. First series confirmed as brand green #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17.
       Chrome: Title, axis labels, and tick labels render in light-colored text, fully legible against the dark background. Legend text also light and legible. No dark-on-dark failures.
-      Data: Decision regions render as darker green/darker maroon variants of the same theme; point colors (emerald green, matte red) are identical to the light render - confirmed only chrome flipped, not data colors.
+      Data: Decision regions render as darker green / darker maroon variants of the same theme via identical opacity blending; point colors (emerald green circles, matte red squares) are pixel-identical to the light render - confirmed only chrome flipped, not data colors. Misclassification rings render in light ink (white), correctly theme-adaptive.
       Legibility verdict: PASS
 
-    Both renders show the same faint mesh-seam checkerboard texture within the colored decision regions (see weaknesses) - a minor rendering artifact from the overlapping rect-based fill technique, not a legibility failure.
+    Both renders show a clean, single smooth contour boundary per class with no seam texture - the mesh-rect artifact and color-only class encoding flagged in the previous review attempt are both resolved.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,7 +66,7 @@ review:
         max: 8
         passed: true
         comment: Title, axes, ticks, legend all readable in both themes at sensible
-          sizes
+          explicit sizes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -76,20 +79,21 @@ review:
         max: 6
         passed: true
         comment: Markers and misclassification rings well-sized for ~250 points; minor
-          overlap in densest mixed-class band
+          crowding in the densest mixed-class band
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Pass vs Fail distinguished by fill color alone (green vs red, same
-          shape) - red/green-as-sole-signal for primary class distinction
+        passed: true
+        comment: 'Fixed from prior attempt: Pass (circle) vs Fail (square) now carry
+          a shape cue in addition to color, no longer a red/green-only signal'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no clipping or overflow
+        comment: Canvas gate passed; contour fills edge-to-edge, no clipping or overflow,
+          ~64% canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,25 +106,25 @@ review:
         max: 2
         passed: true
         comment: 'First series is brand green #009E73, Fail uses semantic-anchor matte
-          red #AE3030 correctly; backgrounds theme-correct'
+          red #AE3030 correctly; backgrounds and chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color choice and misclassification highlighting
-          beyond generic defaults
+        comment: Smooth contour boundary plus thoughtful semantic color/shape choices
+          read clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Mesh-fill rect overlap technique leaves a faint checkerboard seam
-          texture across decision regions
+        passed: true
+        comment: 'Fixed from prior attempt: d3.contours() marching-squares boundary
+          replaces the rect-mesh, eliminating the checkerboard seam texture'
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -151,7 +155,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X1/X2 mapped to axes; class label drives color
+        comment: X1/X2 correctly mapped to axes; class label drives color and shape
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -174,8 +178,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing QA pass/fail based on vibration and temperature is
-          plausible and neutral
+        comment: Manufacturing QA pass/fail based on vibration and temperature deviation
+          is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -191,7 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions justified by classifier logic
+        comment: Helper functions justified by classifier/PRNG logic, not over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,7 +213,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Genuine k-NN classifier with leave-one-out validation, not faked
+        comment: Genuine k-NN classifier with leave-one-out validation; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
@@ -217,7 +221,7 @@ review:
         passed: true
         comment: Correct mount-node contract, sizes from ANYPLOT_SIZE, no animation
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -228,12 +232,13 @@ review:
         comment: Idiomatic scaleLinear, axisBottom/Left, selection.join usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 5
         max: 5
-        passed: false
-        comment: Missed opportunity to use d3.contours() for a true marching-squares
-          contour boundary instead of a raster rect mesh
-  verdict: REJECTED
+        passed: true
+        comment: 'Fixed from prior attempt: now uses d3.contours() (d3-contour) with
+          a custom geoTransform for marching-squares boundary tracing, plus d3.symbol
+          - a combination distinctive to D3 and hard to replicate in other libraries'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
