@@ -267,10 +267,10 @@ def test_the_shell_is_never_stored():
     the shell is checked instead.
     """
     shells = locations_serving_the_shell_in_place()
-    assert len(shells) >= 3, (
-        f"only {len(shells)} location(s) look like they serve the shell — expected the "
-        "exact match in each server block plus the two python-host spec routes. Did the "
-        "try_files shapes change?"
+    assert len(shells) >= 4, (
+        f"only {len(shells)} location(s) look like they serve the shell — expected at "
+        "least four: the exact match in each server block plus the two python-host spec "
+        "routes. Did the try_files shapes change?"
     )
     missing = [b.strip().splitlines()[0].strip() for b in shells if "no-store" not in _without_comments(b)]
     assert not missing, (
