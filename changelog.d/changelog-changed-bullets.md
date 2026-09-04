@@ -6,9 +6,10 @@
   same refusal — "gained a bullet, it belongs in a fragment" — for a change
   that added nothing. A bullet is now identified by its bold title
   (`tools/changelog`, `bullet_title`), collapsed over the line breaks so a
-  correction may reflow the very line the title runs over: a title the base
-  lacks is an ADDED bullet and is still refused, a title it has is a CHANGED
-  one and passes.
+  correction may reflow the very line the title runs over, and counted rather
+  than set-differenced so a second copy of a title cannot slip in behind the
+  first: a title the base lacks is an ADDED bullet and is still refused, a
+  title it has is a CHANGED one and passes.
 
 ### Added
 

@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -403,13 +404,27 @@ def _changed_files(root: Path, base: str) -> dict[str, str]:
     return changed
 
 
-def _bullets(section: str) -> dict[str, str]:
-    """`title → bullet` for the section, keyed by the identity `bullet_title` gives it."""
-    return {
-        bullet_title(b): b
-        for bullets in parse_entries(section, where=f"{CHANGELOG_NAME} [Unreleased]").values()
-        for b in bullets
-    }
+def _bullets(section: str) -> list[str]:
+    return [b for bullets in parse_entries(section, where=f"{CHANGELOG_NAME} [Unreleased]").values() for b in bullets]
+
+
+def _added_bullets(before: str, after: str) -> list[str]:
+    """The bullets `after` holds beyond `before`, by the identity `bullet_title` gives them.
+
+    Counted, not set-differenced. Two bullets may legitimately carry the same
+    title, and a set of titles would let a second copy of one the section
+    already holds pass unseen — the gate has to notice the COPY as much as the
+    newcomer (Copilot review).
+    """
+    held = Counter(bullet_title(b) for b in _bullets(before))
+    seen: Counter[str] = Counter()
+    added: list[str] = []
+    for bullet in _bullets(after):
+        title = bullet_title(bullet)
+        seen[title] += 1
+        if seen[title] > held[title]:
+            added.append(bullet)
+    return added
 
 
 def check_pr(base: str, *, root: Path = REPO_ROOT) -> list[str]:
@@ -425,9 +440,9 @@ def check_pr(base: str, *, root: Path = REPO_ROOT) -> list[str]:
     Added, not merely different. A bullet is identified by its bold title
     (`bullet_title`), so re-wording the body of an entry the base already
     carries — a typo in a shipped line, a sharper clause — is a change and
-    passes; only a title the base does not have is a new entry and is refused
-    into a fragment. Set-of-bullets identity could not tell the two apart and
-    refused both.
+    passes; only a title the base does not have — or one more copy of a title
+    it has — is a new entry and is refused into a fragment. Set-of-bullets
+    identity could not tell the two apart and refused both.
     """
     changed = _changed_files(root, base)
     problems: list[str] = []
@@ -437,9 +452,8 @@ def check_pr(base: str, *, root: Path = REPO_ROOT) -> list[str]:
         before = split_changelog(_git(root, "show", f"{merge_base}:{CHANGELOG_NAME}", required=True))
         after = split_changelog((root / CHANGELOG_NAME).read_text(encoding="utf-8"))
         release_cut = after.newest_version != before.newest_version
-        gained = _bullets(after.unreleased)
-        for key in sorted(gained.keys() - _bullets(before.unreleased).keys()):
-            title = gained[key].split("\n", 1)[0][:72]
+        for bullet in sorted(_added_bullets(before.unreleased, after.unreleased)):
+            title = bullet.split("\n", 1)[0][:72]
             problems.append(f"{CHANGELOG_NAME} [Unreleased] gained a bullet — it belongs in a fragment: {title}…")
     touches_fragments = any(p.startswith(f"{FRAGMENT_DIR_NAME}/") for p in changed)
     exempt = bool(changed) and all(p.startswith(EXEMPT_PREFIXES) for p in changed)
