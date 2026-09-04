@@ -1,7 +1,7 @@
 // anyplot.ai
 // confusion-matrix: Confusion Matrix Heatmap
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-09-04
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-04
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
