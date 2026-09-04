@@ -17,16 +17,29 @@ function gaussian() {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
+const stableCount = 650;
+const highLoadCount = 450;
 const temperature = [];
 const pressure = [];
-for (let i = 0; i < 650; i++) {
+for (let i = 0; i < stableCount; i++) {
   temperature.push(72 + gaussian() * 3.2); // stable operation
   pressure.push(4.2 + gaussian() * 0.55);
 }
-for (let i = 0; i < 450; i++) {
+for (let i = 0; i < highLoadCount; i++) {
   temperature.push(85 + gaussian() * 3.8); // high-load operation
   pressure.push(6.1 + gaussian() * 0.65);
 }
+
+// Cluster centroids (sample means), used to place the operating-mode labels.
+const mean = (arr) => arr.reduce((s, v) => s + v, 0) / arr.length;
+const stableCentroid = {
+  x: mean(temperature.slice(0, stableCount)),
+  y: mean(pressure.slice(0, stableCount)),
+};
+const highLoadCentroid = {
+  x: mean(temperature.slice(stableCount)),
+  y: mean(pressure.slice(stableCount)),
+};
 
 // --- Kernel density estimate on a grid --------------------------------------
 const xMin = Math.min(...temperature) - 3;
@@ -55,7 +68,9 @@ for (let j = 0; j < ny; j++) {
 }
 const maxDensity = Math.max(...grid.map((row) => Math.max(...row)));
 
-// --- Marching squares: extract iso-density line segments at a given level --
+// =============================================================================
+// Marching-squares geometry helpers (extract iso-density line segments)
+// =============================================================================
 function edgeInterp(level, va, pa, vb, pb) {
   const denom = vb - va;
   const frac = denom === 0 ? 0.5 : (level - va) / denom;
@@ -136,6 +151,7 @@ function marchingSquares(level) {
   }
   return segments;
 }
+// =============================================================================
 
 // --- Sequential Imprint gradient (imprint_seq) for the density levels ------
 function hexToRgb(hex) {
@@ -173,9 +189,33 @@ const rawReadings = {
   type: "scatter",
   label: "Process readings",
   data: temperature.map((value, i) => ({ x: value, y: pressure[i] })),
-  backgroundColor: `${t.inkSoft}40`,
+  backgroundColor: `${t.inkSoft}59`,
   borderWidth: 0,
   pointRadius: 2.5,
+};
+
+// --- Custom plugin: name the two operating-mode clusters --------------------
+// Uses Chart.js's own public plugin hook (afterDatasetsDraw) — no external
+// annotation package, just the core Canvas 2D API drawn onto the chart ctx.
+const clusterLabelPlugin = {
+  id: "clusterLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const labels = [
+      { text: "Stable operation", point: stableCentroid },
+      { text: "High-load operation", point: highLoadCentroid },
+    ];
+    ctx.save();
+    ctx.font = "600 13px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textAlign = "center";
+    labels.forEach(({ text, point }) => {
+      const px = scales.x.getPixelForValue(point.x);
+      const py = scales.y.getPixelForValue(point.y) - 55;
+      ctx.fillText(text, px, py);
+    });
+    ctx.restore();
+  },
 };
 
 // --- Mount -------------------------------------------------------------------
@@ -186,6 +226,7 @@ document.getElementById("container").appendChild(canvas);
 new Chart(canvas, {
   type: "scatter",
   data: { datasets: [rawReadings, ...contourDatasets] },
+  plugins: [clusterLabelPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -204,7 +245,17 @@ new Chart(canvas, {
         font: { size: 14 },
         padding: { bottom: 12 },
       },
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: "right",
+        labels: {
+          color: t.inkSoft,
+          font: { size: 12 },
+          boxWidth: 20,
+          boxHeight: 3,
+          filter: (item, data) => data.datasets[item.datasetIndex].type === "line",
+        },
+      },
     },
     scales: {
       x: {
