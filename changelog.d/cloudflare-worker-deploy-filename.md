@@ -12,6 +12,6 @@
 
 - **The README's "needs a redeploy" callout is replaced with the deployed
   state.** The Worker was redeployed from the current `.js` after #11221, the
-  Transform Rule now covers `anyplot.ai`, `www.anyplot.ai` and
+  Transform Rule now covers `anyplot.ai`, `www.anyplot.ai`, and
   `api.anyplot.ai`, and `/api/event` measured `off-seen` — the callout named a
   pending step that had already happened. (#11222)

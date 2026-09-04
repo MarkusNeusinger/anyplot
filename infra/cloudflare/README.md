@@ -22,7 +22,7 @@ it in the dashboard and pull it back here.
 
 > **Deployed state (2026-09-04).** The Worker was redeployed from the current
 > `.js` after #11221; the Transform Rule now covers `anyplot.ai`,
-> `www.anyplot.ai` and `api.anyplot.ai`, and `/api/event` measured `off-seen`.
+> `www.anyplot.ai`, and `api.anyplot.ai`, and `/api/event` measured `off-seen`.
 > The standing rule still holds: the `.js` here mirrors the deployed bytes, so
 > the next edit to it needs its own redeploy.
 
