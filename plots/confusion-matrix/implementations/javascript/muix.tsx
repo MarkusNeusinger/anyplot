@@ -58,10 +58,14 @@ function mixHex(hexA, hexB, ratio) {
 }
 
 // `t` arrives pre-normalized to [0, 1] by the zAxis colorMap's scaleSequential
-// (from the 0..maxCount domain below).
+// (from the 0..maxCount domain below). The diagonal's high counts dominate
+// that domain, crushing every off-diagonal misclassification count into a
+// near-identical sliver near t=0 — gamma-compress so low counts spread across
+// more of the range while t=1 (the diagonal) still lands on the same `high`
+// endpoint, keeping it visually dominant.
 function sequentialColor(t) {
   const [low, high] = tokens.seq;
-  return mixHex(low, high, t);
+  return mixHex(low, high, Math.pow(t, 0.45));
 }
 
 function relativeLuminance(hex) {
