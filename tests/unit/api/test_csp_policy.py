@@ -77,11 +77,8 @@ def _without_comments(text: str) -> str:
     return "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
 
 
-def locations_with_add_header() -> list[str]:
-    """Every `location …{ … }` block of app/nginx.conf that sets a header itself.
-
-    Returned as the raw block text, so the caller can check what is inside it.
-    """
+def location_blocks() -> list[str]:
+    """Every `location …{ … }` block of app/nginx.conf, as raw text."""
     conf = NGINX_CONF.read_text(encoding="utf-8")
     blocks = []
     for match in re.finditer(r"^\s*location\s[^{]*\{", conf, re.MULTILINE):
@@ -95,7 +92,40 @@ def locations_with_add_header() -> list[str]:
                 if depth == 0:
                     blocks.append(conf[start : i + 1])
                     break
-    return [b for b in blocks if _ADD_HEADER.search(_without_comments(b))]
+    return blocks
+
+
+def locations_with_add_header() -> list[str]:
+    """Every location block that sets a header itself, and so drops the rest."""
+    return [b for b in location_blocks() if _ADD_HEADER.search(_without_comments(b))]
+
+
+_TRY_FILES = re.compile(r"try_files\s+([^;]+);")
+
+
+def locations_serving_the_shell_in_place() -> list[str]:
+    """Every location that answers with index.html under its OWN headers.
+
+    Two shapes, and the difference is the whole point. `try_files … /index.html`
+    with the shell LAST is a URI fallback: nginx redirects internally and re-runs
+    location matching, so the response is built by `location = /index.html` and
+    inherits its headers. `try_files /index.html =404` has the shell as a
+    non-last argument, which is a FILE — served right here, with this location's
+    headers and no others. Both shapes exist in app/nginx.conf, the second twice
+    in the python server block, and only the first is obvious from reading it.
+    """
+    out = []
+    for block in location_blocks():
+        head = block.strip().splitlines()[0].strip()
+        if head.startswith("location = /index.html"):
+            out.append(block)
+            continue
+        for match in _TRY_FILES.finditer(_without_comments(block)):
+            arguments = match.group(1).split()
+            if "/index.html" in arguments[:-1]:
+                out.append(block)
+                break
+    return out
 
 
 def server_blocks() -> list[str]:
@@ -229,36 +259,51 @@ def test_the_shell_is_never_stored():
     `sub_filter` drops `Last-Modified` and `ETag` on its own whenever it
     rewrites a body (so nothing can be revalidated), and these locations say
     `no-store` (so nothing is kept to revalidate).
+
+    Checking only `location = /index.html` is what the first version did, and it
+    passed while python.anyplot.ai/<spec> answered with no Cache-Control at all:
+    that route serves the shell as a FILE inside its own location and never
+    reaches the exact match (Copilot review). Every location that can produce
+    the shell is checked instead.
     """
-    shells = [b for b in locations_with_add_header() if b.lstrip().startswith("location = /index.html")]
-    assert shells, "app/nginx.conf no longer has a `location = /index.html` — where does the shell get its headers?"
-    missing = [b.splitlines()[0].strip() for b in shells if "no-store" not in b]
+    shells = locations_serving_the_shell_in_place()
+    assert len(shells) >= 3, (
+        f"only {len(shells)} location(s) look like they serve the shell — expected the "
+        "exact match in each server block plus the two python-host spec routes. Did the "
+        "try_files shapes change?"
+    )
+    missing = [b.strip().splitlines()[0].strip() for b in shells if "no-store" not in _without_comments(b)]
     assert not missing, (
-        f"these shell locations do not send `no-store`: {missing}. The shell carries a "
-        "per-request CSP nonce and must not be reusable."
+        f"these locations answer with the shell but do not send `no-store`: {missing}. "
+        "The shell carries a per-request CSP nonce and must not be reusable."
     )
 
 
-def test_strict_dynamic_needs_the_stamp_to_reach_the_module_preloads():
-    """It reads as the stricter policy and would load the app from nothing.
+def test_strict_dynamic_would_have_to_widen_the_stamp_to_the_module_preloads():
+    """The keyword and the stamp are one decision, taken in two files.
 
     `'strict-dynamic'` makes a browser ignore `'self'` for scripts and trust
-    only what an already-trusted script pulls in. `yarn build` links every
-    chunk from the shell with `<link rel="modulepreload">` — a link element,
-    which trust propagation does not cover and which the `<script` stamp does
-    not touch. So adopting the keyword means widening the stamp in the same
-    breath; adopting it alone means the preloads are refused. Absent today, and
-    the reasoning is in security-headers.conf — this only has to hold whoever
-    adds it to the second half.
+    only what an already-trusted script pulls in. The entry module is a nonced
+    `<script>`, so it and the imports it fetches still run — the casualty is
+    narrower and easy to miss: `yarn build` links every chunk from the shell
+    with `<link rel="modulepreload">`, and a link element is neither something
+    trust propagation reaches nor something a `<script`-only stamp touches. The
+    hints are refused, which costs a console full of violations and a slower
+    first paint rather than a blank page (Copilot review corrected an earlier,
+    louder claim here).
+
+    So this is not a ban on the keyword. It is the requirement that whoever
+    adopts it widens the stamp in the same change instead of discovering the
+    cost in production. Nothing to check while the keyword is absent.
     """
     if "'strict-dynamic'" not in csp_directives()["script-src"]:
         return
     conf = _without_comments(NGINX_CONF.read_text(encoding="utf-8"))
     assert re.search(r"sub_filter\s+'<link", conf), (
         "script-src carries 'strict-dynamic', which drops 'self' for scripts, but "
-        "app/nginx.conf still stamps only <script> tags. Vite's <link "
-        'rel="modulepreload"> chunk hints would be blocked and the SPA would never '
-        "boot."
+        "app/nginx.conf still stamps only <script> tags — so Vite's <link "
+        'rel="modulepreload"> chunk hints are refused and every chunk waits for the '
+        "entry module to ask for it. Stamp <link> too, or drop the keyword."
     )
 
 

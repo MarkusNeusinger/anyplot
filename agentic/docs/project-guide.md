@@ -1068,24 +1068,31 @@ page known to be broken.
 ### Rollback
 
 Every deploy names its revision deterministically (`--revision-suffix=b$BUILD_ID`) and
-promotes it explicitly, so the previous revision is still there, still healthy, and one
+promotes it explicitly, so earlier revisions are still there, still healthy, and one
 command away. Rolling back needs no rebuild and takes under a minute:
 
 ```bash
-# 1. Find the revision that served before the current one.
+# 1. List recent revisions with their creation times.
 gcloud run revisions list --service anyplot-app --region europe-west4 \
-  --format='table(name, creationTimestamp, status.conditions[0].status)' --limit 5
+  --format='table(name, creationTimestamp, status.conditions[0].status)' --limit 10
 
-# 2. Send all traffic back to it.
+# 2. Send all traffic to the one you want back.
 gcloud run services update-traffic anyplot-app --region europe-west4 \
-  --to-revisions=<previous-revision>=100
+  --to-revisions=<chosen-revision>=100
 ```
 
-Same shape for `anyplot-backend`. This is the lever for anything that ships inside the
-image and only reveals itself in production. The current example is the CSP nonce path in
-`app/security-headers.conf`: if Cloudflare ever stops stamping its edge-injected script
-with the nonce it reads from our response header, the previous revision still serves the
-`'unsafe-inline'` policy byte for byte.
+Same shape for `anyplot-api`. This is the lever for anything that ships inside the image
+and only reveals itself in production.
+
+**Pick the target by what it contains, not by its position.** "The previous revision" is
+the right answer only while the change you are undoing is the most recent deploy; one more
+deploy later, the previous revision carries it too. The creation timestamps in step 1 are
+there for that — find the last revision created before the change landed. The current
+example is the CSP nonce path in `app/security-headers.conf`: if Cloudflare ever stops
+stamping its edge-injected script with the nonce it reads from our response header, any
+revision from before that PR still serves the `'unsafe-inline'` policy byte for byte.
+Once no such revision is left, the lever is a revert PR through the normal pipeline
+instead — slower, but by then the question has long been answered live.
 
 Deliberately NOT built for that case: a Cloud Run environment variable that flips the
 policy inside a running revision. nginx cannot read the process environment from its

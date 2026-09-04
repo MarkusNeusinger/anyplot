@@ -172,12 +172,16 @@ steps:
           || { echo "candidate did not serve the shell for the nonce probe"; exit 1; }
         NONCE=$$(grep -i '^content-security-policy:' head.out | grep -o 'nonce-[0-9a-f]*' | head -1)
         test -n "$$NONCE" || { echo "the shell's Content-Security-Policy carries no nonce"; exit 1; }
-        grep -qF "<script nonce=\"$${NONCE#nonce-}\"" body.out \
-          || { echo "no <script> tag carries the header's $$NONCE — the sub_filter stamp did not run"; exit 1; }
-        UNSTAMPED=$$(grep -o '<script[^>]*>' body.out | grep -v 'nonce=' | wc -l)
-        test "$$UNSTAMPED" = "0" \
-          || { echo "$$UNSTAMPED <script> tag(s) in the shell carry no nonce and would be blocked"; exit 1; }
-        echo "OK: CSP nonce on every script tag of the shell"
+        # Every tag against THAT nonce, not "has some nonce": a stale or
+        # mismatched value is refused by the browser exactly like a missing one,
+        # and counting attributes rather than comparing them would wave it
+        # through (Copilot review).
+        TAGS=$$(grep -o '<script[^>]*>' body.out | wc -l)
+        MATCHING=$$(grep -o "<script nonce=\"$${NONCE#nonce-}\"" body.out | wc -l)
+        test "$$TAGS" -gt 0 || { echo "the shell served no <script> tag at all"; exit 1; }
+        test "$$MATCHING" = "$$TAGS" \
+          || { echo "$$MATCHING of $$TAGS <script> tag(s) carry the header's $$NONCE — the rest would be blocked"; exit 1; }
+        echo "OK: all $$TAGS script tags of the shell carry the header's nonce"
         # Crawlers get the prerendered page through @seo_proxy. The canonical
         # link is the marker: the SPA shell carries none at all, and its value
         # names the route, so one grep proves both "the bot hop ran" and "the
