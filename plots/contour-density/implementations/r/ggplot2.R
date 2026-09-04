@@ -25,14 +25,17 @@ df <- data.frame(
 )
 
 # stat_density_2d evaluates its KDE grid exactly over the trained scale
-# range, so a data point sitting right at the min/max of that range leaves
-# no room for its contour to close and the outermost isoband gets cut into
-# a wedge. Padding the scale limits beyond the data range gives the KDE
-# grid slack on all sides so every contour closes cleanly.
+# range (ggplot2 passes `scales$x$dimension()` straight to MASS::kde2d's
+# `lims`), so a data point sitting right at the min/max of that range
+# leaves no room for its contour to close and the outermost isoband gets
+# cut into a jagged notch. The smaller cluster is tighter than the overall
+# spread that the shared bandwidth is fit to, so 8% slack was not enough
+# room for its isoband to taper to zero before hitting the grid edge;
+# 25% is enough for both clusters to close cleanly.
 x_rng  <- range(df$eruption_duration)
 y_rng  <- range(df$waiting_time)
-x_pad  <- diff(x_rng) * 0.08
-y_pad  <- diff(y_rng) * 0.08
+x_pad  <- diff(x_rng) * 0.25
+y_pad  <- diff(y_rng) * 0.25
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x = eruption_duration, y = waiting_time)) +
@@ -41,10 +44,10 @@ p <- ggplot(df, aes(x = eruption_duration, y = waiting_time)) +
     geom        = "polygon",
     color       = NA,
     contour_var = "density",
-    n           = 200,
+    n           = 300,
     bins        = 8
   ) +
-  geom_point(color = INK, size = 1.3, alpha = 0.35) +
+  geom_point(color = INK, size = 1.0, alpha = 0.25) +
   scale_fill_gradient(low = "#009E73", high = "#4467A3", name = "Density") +
   scale_x_continuous(limits = c(x_rng[1] - x_pad, x_rng[2] + x_pad), expand = expansion(mult = 0.02)) +
   scale_y_continuous(limits = c(y_rng[1] - y_pad, y_rng[2] + y_pad), expand = expansion(mult = 0.02)) +
