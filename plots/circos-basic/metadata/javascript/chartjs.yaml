@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: circos-basic
 created: '2026-09-04T22:08:42Z'
-updated: '2026-09-04T22:13:22Z'
+updated: '2026-09-04T22:23:58Z'
 generated_by: claude-sonnet
 workflow_run: 33923654339
 issue: 3005
@@ -12,54 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Chromosome segment lengths (248, 242, 198, 190, 181, 170, 159, 145 Mb) match the
-    real human chr1-chr8 karyotype, and structural-variant read counts and log2FC
-    expression values fall in realistic ranges for genomic data
-  - 'Correct Imprint palette usage: Chr1 is #009E73, segments follow canonical order,
-    and the differential-expression track correctly uses the diverging imprint_div
-    colormap (appropriate given the signed log2FC data has a meaningful zero midpoint)'
-  - 'Genuinely creative use of the Chart.js plugin API: circosRibbons reads the live
-    doughnut-arc geometry (start/end angles, inner radius) from getDatasetMeta() to
-    draw proportionally-sized ribbons bowing through the centre - a technique that
-    could not be replicated with basic Chart.js configuration, and the only viable
+  - 'All three weaknesses from the attempt-1 review are directly and thoughtfully
+    addressed: a per-link opacity/stroke floor keeps the weakest ribbons (e.g. value=8
+    Chr1-Chr7) legible under denser overlaps, the top-2 links by supporting-read count
+    (Chr2-Chr4=55, Chr5-Chr7=48) are now redrawn last with full opacity and a heavier
+    stroke to create a clear focal point, and normal-strength ribbons are layered
+    strongest-first/weakest-last so crossings read more cleanly'
+  - 'Genuinely creative, idiomatic use of the Chart.js plugin API: circosRibbons reads
+    live doughnut-arc geometry (startAngle/endAngle/innerRadius via getDatasetMeta().data[i].getProps())
+    to draw proportionally-sized ribbons bowing through the centre - a technique that
+    could not be replicated with basic Chart.js configuration and the only viable
     path since Chart.js has no native circos/chord type'
-  - Exact mandated title format, clear bottom legend, well-utilized canvas, correct
-    theme-adaptive chrome and identical data colors in both light and dark renders,
-    no edge clipping
+  - 'Correct Imprint palette usage: Chr1 is #009E73, all 8 segments follow canonical
+    palette order, and the differential-expression track correctly uses the diverging
+    imprint_div colormap (appropriate since the signed log2FC data has a meaningful
+    zero midpoint)'
+  - 'Realistic, well-researched data: chromosome segment lengths (248, 242, 198, 190,
+    181, 170, 159, 145 Mb) match the real human chr1-chr8 karyotype, and structural-variant
+    read counts / log2FC expression values fall in plausible ranges for genomic data'
+  - Exact mandated title format, clear bottom legend, well-utilized square canvas,
+    correct theme-adaptive chrome, identical data colors in both light and dark renders,
+    and no edge clipping
   weaknesses:
-  - The centre ribbon area is visually dense with many overlapping semi-transparent
-    ribbons, making individual connections hard to trace and reducing overall polish
-    - consider capping simultaneous overlap opacity, adding a subtle sort/layering
-    strategy, or thinning the lowest-value ribbons so crossings read more cleanly
-  - No single connection or segment is emphasized as a focal point - the highest-value
-    link (Chr2–Chr4, 55 reads) reads the same visual weight as the rest; a distinct
-    stroke or slightly higher opacity on the top 1-2 links would give the plot a clearer
-    story
-  - Thinnest ribbons (value=8, e.g. Chr1–Chr7) risk getting visually lost under denser
-    overlapping ribbons - consider a small minimum ribbon width/opacity floor so low-value
-    links stay legible
-  - The custom ribbon-drawing plugin and small color-math helpers (hexToRgb/rgbToHex/lerpRgb)
-    add function-based structure beyond the simplest KISS script shape - necessary
-    here since Chart.js has no native circos/chord chart type, but keep an eye on
-    whether any of it can be simplified further
+  - The centre still gets visually dense where 3+ ribbons stack (e.g. the red/purple
+    overlap zone on the lower-left), so individual low-to-mid-value connections remain
+    harder to trace than the two now-emphasized focal links - a further layering pass
+    or slightly narrower normal-ribbon opacity could sharpen this more
+  - The custom ribbon-drawing plugin plus the small color-math helpers (hexToRgb/rgbToHex/lerpRgb/hexToRgba)
+    push the file beyond the simplest KISS shape - necessary here since Chart.js has
+    no native circos/chord chart type, so this is a minor, expected deduction rather
+    than a real defect
+  - No direct label or short caption calls out that the two bold ribbons are the strongest
+    structural-variant links - the visual hierarchy makes them stand out, but a one-line
+    annotation would make the story explicit rather than implicit
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Title "circos-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, clearly legible. Bottom legend (Chr1-Chr8) with colored swatches, dark readable text. All chrome text is dark-on-light and fully readable.
-      Data: Outer ring shows 8 chromosome segments in 8 distinct Imprint hues, first segment (Chr1) is brand green #009E73, arc widths proportional to chromosome size (Mb), thin light-colored gaps between segments. A second concentric ring (differential expression track) sits just inside, colored with the diverging imprint_div colormap (muted red-to-blue depending on sign of log2FC). Ribbons bow through the centre connecting segments, colored by the dominant node's segment hue at ~50% alpha, width proportional to link value. Data colors read clearly against the light background.
+      Chrome: Title "circos-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, clearly legible, comfortably narrower than 70% of plot width. Bottom legend (Chr1-Chr8) with colored swatches and dark, readable text. All chrome text is dark-on-light and fully readable.
+      Data: Outer ring shows 8 chromosome segments in 8 distinct Imprint hues in canonical order (Chr1 = brand green #009E73 first), arc widths proportional to chromosome size (Mb), thin page-background gaps between segments. A second concentric ring (differential-expression track) sits just inside, colored with the diverging imprint_div colormap (matte-red to blue depending on the sign of log2FC, alternating around the ring to match the alternating-sign data). Ribbons bow through the centre connecting segments; the two highest-value links (Chr2-Chr4, Chr5-Chr7) are clearly bolder, more opaque, and more saturated than the rest, forming an obvious visual focal point, while the weakest ribbons still read clearly thanks to the opacity/stroke floor. Data colors are crisp against the light background.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title and legend text render in light/white ink, clearly legible against the dark background. No dark-on-dark text found anywhere (title, legend, or any other chrome element).
-      Data: Segment colors, track colors, and ribbon colors are visually identical to the light render - only the background and text chrome flipped as expected. Brand green Chr1 segment still reads clearly on the dark surface.
+      Chrome: Title and legend text render in light ink, clearly legible against the dark background. No dark-on-dark text found anywhere (title, legend, or any other chrome element).
+      Data: Segment colors, track colors, and ribbon colors (including the two emphasized focal ribbons) are visually identical to the light render - only the background and text chrome flipped as expected. Brand-green Chr1 segment still reads clearly on the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -77,11 +80,11 @@ review:
         comment: No text overlap in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ribbon width scales with link value; thinnest links (value=8) risk
-          getting lost under denser overlapping ribbons
+        comment: New opacity/stroke floor keeps the thinnest ribbons (value=8) visible
+          under denser overlaps; ribbon width still scales with link value
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -94,8 +97,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Rings and legend use canvas well with balanced margins, nothing cut
-          off
+        comment: Rings and legend use the square canvas well with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -111,31 +114,31 @@ review:
         comment: 'Chr1 = #009E73, canonical palette order, imprint_div correctly used
           for signed log2FC track, theme-correct backgrounds and chrome in both renders'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom two-ring layout plus hand-built ribbon rendering is clearly
-          above library defaults, but centre area's density keeps it short of publication-level
-          polish
+        comment: Custom two-ring layout, hand-built ribbon rendering, and the new
+          layering/emphasis strategy push this close to publication-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean segment borders, generous whitespace, no grid needed, but dense
-          overlapping ribbons in the centre reduce refinement
+        comment: Clean segment borders, generous whitespace, no grid needed; strongest-first/weakest-last
+          layering makes crossings read more cleanly than the previous attempt
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Visual hierarchy exists via segment/track size and color, but no
-          single connection or segment is emphasized as a focal point
+        comment: The two highest-value links are now redrawn last with full opacity
+          and a heavier stroke, giving the plot a clear, immediately visible focal
+          point that was missing in attempt 1
     spec_compliance:
       score: 15
       max: 15
@@ -153,7 +156,7 @@ review:
         max: 4
         passed: true
         comment: Segments with gaps, value-proportional ribbon widths, distinct segment
-          colors, and one concentric data track all present
+          colors, and a concentric data track all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -190,7 +193,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Chromosome lengths match real chr1-chr8 karyotype values; read counts
+        comment: Chromosome lengths match the real chr1-chr8 karyotype; read counts
           and log2FC values are plausible
     code_quality:
       score: 9
@@ -237,8 +240,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses doughnut datasets plus the plugin API as the library's own docs
-          recommend for chord/circos-style extensions
+        comment: Uses doughnut datasets plus the official plugin API exactly as Chart.js
+          docs recommend for chord/circos-style extensions
       - id: LM-02
         name: Distinctive Features
         score: 4
@@ -247,18 +250,18 @@ review:
         comment: afterDatasetsDraw reading live arc geometry to draw ribbons is a
           genuinely Chart.js-specific technique, not easily replicated in another
           library
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - patches
+  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
-  - custom-colormap
+  - gradient-fill
