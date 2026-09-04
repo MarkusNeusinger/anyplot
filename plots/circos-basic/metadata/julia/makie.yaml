@@ -1,0 +1,269 @@
+library: makie
+language: julia
+specification_id: circos-basic
+created: '2026-09-04T22:27:42Z'
+updated: '2026-09-04T22:46:06Z'
+generated_by: claude-sonnet
+workflow_run: 33924583800
+issue: 3005
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - 'Addresses the prior review''s library-mastery weakness directly: ribbons are
+    now drawn through a custom Makie.@recipe (CircosChord) with Makie.plot!, @extract,
+    and a reactive lift pipeline — a distinctly Makie-idiomatic extension mechanism,
+    not a generic poly!/text! call'
+  - 'Ribbon overlap muddiness from attempt 1 is measurably reduced: draw order is
+    now grouped by source-module hue family (heavier flows drawn first within each
+    family) and ribbon alpha was lowered from 0.5 to 0.4, keeping the center readable
+    instead of criss-crossing unrelated hues'
+  - Canvas utilization improved from the 'conservative margins' weakness — the ring
+    now fills a clearly larger share of the 2400x2400 square with balanced whitespace
+    above the title and below the footnote
+  - 'Correct Imprint palette in canonical order with the first module (Frontend) in
+    brand green #009E73, identical data colors across both themes, and fully theme-correct
+    chrome (title, 8 module labels, footnote) with no dark-on-dark or light-on-light
+    failures'
+  - Direct per-segment text labels double as redundant encoding beyond hue, correctly
+    compensating for 8 categorical colors sitting below the CVD discrimination floor
+  - Realistic, neutral backend service-call-volume dataset with meaningful variation
+    in edge weight and node degree, giving Database/API clear hub roles versus lighter-weight
+    Frontend/Analytics — degree track adds a second data layer as the spec suggests
+  weaknesses:
+  - A faint muddy blended patch is still visible near the circle's center where 3+
+    ribbon hues cross (e.g. ochre/red/lavender in the lower-middle) — a small residual
+    of the attempt-1 issue, now reduced but not eliminated; consider grouping draw
+    order by destination as well as source, or a slightly lower alpha still
+  - Only one concentric data track (degree) is used; the spec allows up to 3 — a second
+    track (e.g. total call volume per module, or an error-rate proxy) would deepen
+    data storytelling and push DQ-01 to full marks
+  - Title renders at roughly 45% of plot width at titlesize=20, under the 50-70% guideline
+    band for a title this length (~64 chars with descriptive prefix) — a modest fontsize
+    bump would improve proportional balance without risking overflow
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Service Call Volume · circos-basic · julia · makie · anyplot.ai" centered near the top, clearly readable against the light background. Eight bold module labels (Frontend, Analytics, Logging, Database, Queue, Cache, Auth, API) sit just outside the ring, anchored per quadrant (left/right/center alignment based on angular position), all in dark ink and fully legible with no overlap between labels or with the ring. A muted gray footnote below the circle ("Ribbon width ∝ call volume · inner bar ∝ number of linked modules") is smaller but still legible.
+      Data: Eight colored ring segments in Imprint canonical order (Frontend=brand green #009E73, API=lavender, Auth=blue, Cache=ochre, Queue=matte red, Database=cyan, Logging=rose, Analytics=lime), separated by small gaps with a thin page-background stroke between segments. Just inside the ring, an inner bar track varies in radial height per module, encoding node degree (number of distinct links). Semi-transparent ribbons (drawn via a custom Makie recipe, grouped by source-module hue and alpha=0.4) connect module arcs with width proportional to call volume; ribbons converge near the center with a modest, but not severe, color-blended patch where several hues cross.
+      Legibility verdict: PASS — all title, module-label, and footnote text is clearly readable against the light background; no light-on-light issues detected.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and eight module labels now rendered in light ink, fully legible against the dark background. The footnote uses the lighter secondary ink tone and remains clearly readable, matching the theme-adaptive INK/INK_SOFT tokens.
+      Data: All ring segments, degree-track bars, and ribbons use identical hues to the light render — verified the brand-green Frontend segment and the full palette order are unchanged; only the chrome (background, text color) has flipped between renders, as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text elements (title, module labels, footnote) are clearly distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (computed titlesize, fontsize=22 module labels,
+          fontsize=16 footnote); readable in both themes; title renders at only ~45%
+          of plot width, slightly under the 50-70% guideline band for its length
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text or data elements; quadrant-anchored module
+          labels are well spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ribbons and degree track sized appropriately for 16 edges; residual
+          central overlap creates minor clutter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Direct per-segment text labels provide redundant encoding beyond
+          hue for all 8 series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Ring now fills a clearly larger share of the 2400x2400 canvas than
+          attempt 1; balanced margins above title and below footnote, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a circos plot; title and module labels are fully
+          descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Frontend) is brand green #009E73, canonical Imprint
+          order, backgrounds theme-correct, data colors identical across both themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Fully custom circos geometry delivered through a proper Makie recipe
+          (segment gaps, Bezier-style ribbon curves, hue-grouped draw order, quadrant-anchored
+          labels) — well beyond a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/decorations hidden, thin page-background strokes separate
+          ring segments, generous whitespace, lower ribbon alpha (0.4) and hue-grouped
+          draw order reduce the attempt-1 muddiness; a faint blended patch remains
+          at the very center
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Ribbon width plus the degree track together highlight hub modules
+          (API, Database) at a glance; footnote clarifies the dual encoding
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct circos plot with segments, gaps, and ribbons
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Segment gaps, value-proportional ribbon width, distinct per-segment
+          colors, and an inner concentric degree track are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: source/target/value correctly mapped to ribbons; segment size mapped
+          to total call volume touching each module
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with a descriptive prefix; module
+          labels substitute for a legend appropriately
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Varying edge weights and node degree produce a clear hub-and-spoke
+          structure; only 1 of the spec's allowed 1-3 concentric data tracks is used
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible backend service call-volume scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Call volumes (8-60k/day) and module relationships (Database/API as
+          hubs) are plausible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straight-line imports -> data -> geometry -> plot -> save; the @recipe/Makie.plot!
+          block is Makie's own plot-type extension mechanism defining the chord mark
+          itself, not an unrelated helper abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Makie, Colors, Random imported, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is appropriate for a circos layout; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Figure/Axis, DataAspect, hidespines!/hidedecorations!,
+          colorant string macro, and the recipe's @extract/lift reactive pipeline
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Defines a genuine Makie.@recipe (CircosChord) with its own Makie.plot!
+          implementation — the plot-type extension mechanism unique to Makie, directly
+          resolving attempt 1's distinctiveness gap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - publication-ready

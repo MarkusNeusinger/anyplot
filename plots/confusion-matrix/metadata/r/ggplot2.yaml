@@ -1,0 +1,243 @@
+library: ggplot2
+language: r
+specification_id: confusion-matrix
+created: '2026-09-04T22:15:47Z'
+updated: '2026-09-04T22:35:26Z'
+generated_by: claude-sonnet
+workflow_run: 33924344752
+issue: 2272
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Directly addressed the attempt-1 weakness: added row-normalized recall and column-normalized
+    precision as margin cells, plus an overall-accuracy corner cell — satisfies the
+    spec''s normalization note without sacrificing the raw-count view'
+  - 'Data reconciles exactly: row sums match the declared class_sizes, and every displayed
+    recall/precision/accuracy percentage checks out against the raw counts'
+  - 'Correct Imprint sequential colormap (#009E73 -> #4467A3) for the continuous count
+    fill, unchanged and theme-correct in both renders'
+  - Theme-adaptive chrome fully correct in both renders, including the diagonal-highlight
+    border and the elevated margin-cell background flipping via ELEVATED_BG
+  - Clean KISS code, reproducible via set.seed(42), explicit font sizes throughout
+  weaknesses:
+  - Margin cells (Recall/Precision/Accuracy) use flat italic text with no color emphasis
+    to flag the weakest classes (e.g. Jay's 77% precision) — a subtle background tint
+    or bold weight on the lowest values would sharpen the story further
+  - Visual refinement is solid but still fairly conventional (thin page-colored tile
+    gaps as the only separation) — could push further with more generous whitespace
+    around the whole grid or a lighter diagonal border treatment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), matching the required light-theme page surface.
+      Chrome: Title "confusion-matrix · r · ggplot2 · anyplot.ai" and axis titles "Predicted Label" / "True Label" render in dark ink, fully legible. Tick labels (Sparrow, Finch, Robin, Cardinal, Jay) render in a softer dark gray. The new margin row/column headers ("Recall", "Precision") use the same tick styling. The "Count" legend title/labels are dark ink, legible.
+      Data: 5x5 tile grid uses the green->blue Imprint sequential gradient for count; diagonal cells (126, 110, 75, 62, 50) are boxed with a dark border. Cell-count text switches between near-black and near-white per cell for contrast and is legible in every cell observed. New margin cells (pale-cream ELEVATED_BG tiles) show per-class Recall (84%, 85%, 83%, 89%, 83%) along the right edge, per-class Precision (88%, 86%, 86%, 81%, 77%) along the bottom edge, and overall accuracy (85%) in the bottom-right corner, all in italic dark ink.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), matching the required dark-theme page surface.
+      Chrome: Title, axis titles render in light ink; tick labels, margin headers, and legend text render in a lighter soft gray — all clearly readable against the dark background, no dark-on-dark failures observed anywhere including the new margin row/column.
+      Data: Fill colors are pixel-identical to the light render (same green->blue gradient, same diagonal-highlight values); only chrome flipped — the diagonal border switched from dark to light, and the margin-cell background switched to the dark ELEVATED_BG (#242420) token, distinguishable from the page background. Margin percentages are identical to the light render (84/85/83/89/83 recall, 88/86/86/81/77 precision, 85% accuracy), confirming the numbers are theme-independent.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout, readable in both themes, but sizing matches
+          style-guide defaults rather than pushing beyond them
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions, including the new margin row/column
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Generous tile size on the 2400x2400 canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe gradient, adaptive per-cell text contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format is the right call; margin row/column integrate cleanly
+          without crowding
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Matches spec wording exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) for count data, theme-correct backgrounds
+          and chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: The margin-quadrant layout (recall/precision/accuracy framing the
+          grid) reads as a genuinely polished, above-default design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid/spines removed with tile-gap separation and an elevated margin
+          background; still a fairly conventional overall treatment
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Per-class recall, per-class precision, and overall accuracy are now
+          visible at a glance alongside the diagonal highlight — directly resolves
+          the prior review's weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct confusion-matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts, colorbar, axis labels, diagonal highlight, and now row/column
+          normalization (recall/precision) plus overall accuracy are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Predicted on x, True on y, all 5 classes shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format and legend correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Imbalanced classes, varied realistic confusion patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral bird-species classifier scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Row sums reconcile exactly with declared class sizes; recall/precision/accuracy
+          all verify against raw counts
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used packages
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave via ragg::agg_png, plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered geom_tile (fill + diagonal border + margin quadrant) with
+          scale_color_identity for per-cell text contrast
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The margin-quadrant confusion matrix (separate inherit.aes=FALSE
+          geom_tile/geom_text layers for recall/precision/accuracy) is a distinctive
+          ggplot2 layering pattern, not just generic heatmap usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - groupby-aggregation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - edge-highlighting
