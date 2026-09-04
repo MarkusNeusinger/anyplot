@@ -5,9 +5,6 @@
 
 using CairoMakie
 using Colors
-using Random
-
-Random.seed!(42)
 
 # --- Theme tokens -----------------------------------------------------------
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
@@ -37,6 +34,14 @@ for i in 1:n_classes
 end
 max_count = maximum(counts)
 
+# Row-normalized percentages (recall): each cell as a share of its true-class
+# row total — satisfies the spec's "support normalization by row" requirement
+# alongside the raw counts.
+row_sums = vec(sum(counts; dims = 2))
+row_pct = [round(Int, 100 * counts[i, j] / row_sums[i]) for i in 1:n_classes, j in 1:n_classes]
+diag_counts = [counts[i, i] for i in 1:n_classes]
+overall_accuracy = 100 * sum(diag_counts) / sum(counts)
+
 # --- Colormap: Imprint sequential (single-polarity count data) --------------
 const IMPRINT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 
@@ -52,6 +57,9 @@ ax = Axis(
     title              = "confusion-matrix · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
+    subtitle           = "Overall accuracy: $(round(overall_accuracy, digits = 1))% · cells show count and row-normalized recall",
+    subtitlesize       = 13,
+    subtitlecolor      = INK_SOFT,
     xlabel             = "Predicted Label",
     ylabel             = "True Label",
     xlabelsize         = 14,
@@ -83,7 +91,8 @@ hm = heatmap!(
     colormap = IMPRINT_SEQ, colorrange = (0, max_count),
 )
 
-# Cell annotations (counts) — text color adapts to cell luminance so it
+# Cell annotations — raw count (bold, larger) above the row-normalized
+# recall percentage (smaller); text color adapts to cell luminance so it
 # stays legible across the full green-to-blue sequential range.
 for i in 1:n_classes, j in 1:n_classes
     value = counts[i, j]
@@ -92,8 +101,12 @@ for i in 1:n_classes, j in 1:n_classes
     luminance = 0.2126 * red(cell_color) + 0.7152 * green(cell_color) + 0.0722 * blue(cell_color)
     text_color = luminance > 0.55 ? INK : colorant"#FFFFFF"
     text!(
-        ax, j, i, text = string(value),
+        ax, j, i - 0.15, text = string(value),
         align = (:center, :center), color = text_color, fontsize = 16,
+    )
+    text!(
+        ax, j, i + 0.2, text = "$(row_pct[i, j])%",
+        align = (:center, :center), color = text_color, fontsize = 11,
     )
 end
 
