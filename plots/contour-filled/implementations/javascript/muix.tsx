@@ -207,6 +207,13 @@ const TITLE = "Sea-Surface Temperature Anomaly · contour-filled · javascript �
 const TITLE_FONT_SIZE = Math.max(15, Math.round(22 * Math.min(1, 67 / TITLE.length)));
 const MARGIN = { top: 130, right: 200, bottom: 90, left: 115 };
 
+// ContinuousColorLegend anchors flush against the literal SVG width, ignoring
+// MARGIN.right entirely (its `position: "right"` offset is `svgWidth -
+// legendWidth`, ie. the very last canvas column) -- so the whole right-side
+// cluster (legend + its rotated axis title) is wrapped in this leftward shift
+// to keep tick-label glyphs off the true edge.
+const RIGHT_EDGE_INSET = 48;
+
 export default function Chart() {
   return (
     <ChartContainer
@@ -253,19 +260,23 @@ export default function Chart() {
       <FilledContourLayer />
       <ChartsXAxis />
       <ChartsYAxis />
-      <ContinuousColorLegend
-        position={{ horizontal: "right", vertical: "middle" }}
-        direction="column"
-        length="55%"
-        thickness={18}
-        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-      />
-      <ChartsText
-        text="Temperature anomaly (°C)"
-        x={SIZE.width - 26}
-        y={SIZE.height / 2}
-        style={{ fontSize: 12, fill: t.inkSoft, textAnchor: "middle", angle: -90 }}
-      />
+      <g transform={`translate(${-RIGHT_EDGE_INSET}, 0)`}>
+        <ContinuousColorLegend
+          position={{ horizontal: "right", vertical: "middle" }}
+          direction="column"
+          length="55%"
+          thickness={18}
+          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+          minLabel={({ value }) => value.toFixed(1)}
+          maxLabel={({ value }) => value.toFixed(1)}
+        />
+        <ChartsText
+          text="Temperature anomaly (°C)"
+          x={SIZE.width - 26}
+          y={SIZE.height / 2}
+          style={{ fontSize: 12, fill: t.inkSoft, textAnchor: "middle", angle: -90 }}
+        />
+      </g>
       <ChartsText
         text={TITLE}
         x={SIZE.width / 2}
