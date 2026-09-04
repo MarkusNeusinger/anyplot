@@ -1,7 +1,7 @@
 # anyplot.ai
 # confusion-matrix: Confusion Matrix Heatmap
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-09-04
+# Quality: 79/100 | Created: 2026-09-04
 
 using CairoMakie
 using Colors
