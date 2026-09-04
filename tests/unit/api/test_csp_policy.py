@@ -170,8 +170,9 @@ def test_the_policy_takes_its_nonce_from_a_per_request_variable():
     A literal would be a shared secret baked into an image and reused for the
     lifetime of a revision — which is to say, not a secret. `$request_id` is
     nginx's own 16 random bytes as 32 hex digits: hex is inside the CSP nonce
-    grammar's charset, and 128 bits is at the ceiling of what the spec asks
-    for.
+    grammar's charset, and 16 bytes meets the at-least-128-bits the spec
+    recommends (a recommendation, not a ceiling and not a requirement — the
+    same wording as security-headers.conf, deliberately).
     """
     script_src = csp_directives()["script-src"]
     nonces = [t for t in script_src if t.startswith("'nonce-")]
@@ -286,11 +287,18 @@ def test_strict_dynamic_would_have_to_widen_the_stamp_to_the_module_preloads():
     only what an already-trusted script pulls in. The entry module is a nonced
     `<script>`, so it and the imports it fetches still run — the casualty is
     narrower and easy to miss: `yarn build` links every chunk from the shell
-    with `<link rel="modulepreload">`, and a link element is neither something
-    trust propagation reaches nor something a `<script`-only stamp touches. The
-    hints are refused, which costs a console full of violations and a slower
-    first paint rather than a blank page (Copilot review corrected an earlier,
-    louder claim here).
+    with `<link rel="modulepreload">`, and a link element is not something trust
+    propagation reaches. The hints are refused, which costs a console full of
+    violations and a slower first paint rather than a blank page (a review
+    corrected an earlier, louder claim here).
+
+    Why the remedy is a WIDER stamp rather than a ban: a preload request carries
+    the link element's nonce as its cryptographic nonce metadata, and a
+    nonce-source in `script-src` matches it. That is not theory — it is why
+    React (#26781), Next.js (#64091), Vite (#9719) and Rails (#53794) all
+    carry the same bug report and the same fix, "put the nonce on the preload
+    link". A later review round suggested the opposite, that a nonce cannot
+    authorize a modulepreload; it can, and the sources are in the PR.
 
     So this is not a ban on the keyword. It is the requirement that whoever
     adopts it widens the stamp in the same change instead of discovering the
