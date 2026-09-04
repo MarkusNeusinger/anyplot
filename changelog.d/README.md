@@ -3,8 +3,8 @@
 Every PR that changes code adds ONE file here instead of editing
 `CHANGELOG.md`: `changelog.d/<slug>.md`, the slug naming the change (the branch
 name minus its prefix does fine — `origin-gate-rest.md`, `csp-hashes.md`).
-Nothing else touches `CHANGELOG.md` between releases, so two PRs never meet at
-the same line again — the reason this directory exists (three conflicts in one
+Nothing else is ADDED to `CHANGELOG.md` between releases, so two PRs never meet
+at the same line again — the reason this directory exists (three conflicts in one
 night on 2026-09-02/03, each a hand-resolved rebase for text neither branch
 disagreed about; a union merge driver heals only the local rebase, and GitHub's
 own mergeability check ignores merge drivers).
