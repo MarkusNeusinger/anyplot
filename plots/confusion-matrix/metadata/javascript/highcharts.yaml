@@ -1,0 +1,263 @@
+library: highcharts
+language: javascript
+specification_id: confusion-matrix
+created: '2026-09-04T22:21:06Z'
+updated: '2026-09-04T22:31:09Z'
+generated_by: claude-sonnet
+workflow_run: 33924530149
+issue: 2272
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correctly implements a full heatmap-style confusion matrix using only the core
+    Highcharts bundle (no heatmap module loaded), drawing cells with the SVG renderer
+    while layering an invisible scatter series underneath for genuine hover tooltips
+  - Diagonal cells are highlighted with a theme-adaptive stroke (t.ink) that flips
+    correctly between light and dark, reinforcing the naturally high-recall blue fill
+    for correct predictions
+  - Per-cell text color is computed from the WCAG relative-luminance formula against
+    the actual cell fill, keeping count/percentage labels legible on both the green
+    (low-recall) and blue (high-recall) ends of the imprint_seq scale
+  - Realistic, semantically motivated confusion pattern (Fox/Raccoon mixed up as both
+    are nocturnal similar-size species, Rabbit/Squirrel mixed up as both are small
+    and fast) rather than random noise
+  - Title fontsize is dynamically scaled against the 67-char baseline so the long
+    mandated title (with descriptive prefix) never overflows the square canvas
+  - Both renders show identical data colors with correctly flipped chrome (background,
+    ink, grid tokens threaded throughout axes, colorbar, and cell text)
+  weaknesses:
+  - Only row-normalized recall is shown; the spec's suggested column/total normalization
+    options aren't offered as alternatives (acceptable for a single static plot, but
+    worth noting since the spec calls out multiple normalization modes)
+  - The manual cell-drawing approach requires several small helper functions (hexToRgb,
+    lerp, cellRgb, cellFill, cellTextColor, clearDrawn, drawAll) which pushes past
+    the ideal 'no functions' KISS baseline — largely justified by the core-bundle
+    constraint (no heatmap module) but still adds indirection versus a simpler declarative
+    chart
+  - No summary annotation (e.g. overall accuracy or total sample count) beyond per-cell
+    counts/percentages, which some confusion-matrix treatments surface as a quick
+    top-line metric
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Title "Camera-Trap Species ID · confusion-matrix · javascript · highcharts · anyplot.ai" in dark ink, subtitle in soft gray, "True Label" / "Predicted Label" axis titles and Deer/Fox/Rabbit/Raccoon/Squirrel tick labels all in dark/soft-dark text — all clearly legible against the light background. Vertical "Recall" colorbar on the right with 0%/50%/100% labels in soft-dark text.
+      Data: A 5x5 grid of rounded-corner cells. Diagonal cells (correct predictions: 180, 142, 156, 138, 149) are colored blue (high recall, 83.6–98.4%) and outlined with a black stroke. Off-diagonal cells are colored green (low recall). Each cell shows a bold count and a smaller percentage below it, in white or near-black text chosen per-cell for contrast against that cell's fill.
+      Legibility verdict: PASS — no light-on-light text anywhere; every label and cell annotation reads cleanly.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Same title/subtitle/axis titles/tick labels now rendered in light ink tones, clearly visible against the dark background. The diagonal-cell stroke is now a light/white outline instead of black, correctly flipped via the ink token. Colorbar and its labels remain legible in light text.
+      Data: Cell fill colors (green/blue) are pixel-identical to the light render — confirmed only chrome changed. Per-cell text colors are unchanged from light (they're chosen by cell-fill luminance, not page theme), and remain legible in both cases.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome text and cell annotations are readable.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title dynamically
+          scaled to the 67-char baseline so the long descriptive+mandated title never
+          crowds the square canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Count/percentage pairs, axis labels, and colorbar text are all cleanly
+          separated with no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 25 cells at 2400x2400 give each cell ample size; rounded corners
+          and stroke highlight are clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue imprint_seq gradient with per-cell luminance-computed
+          text color; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas gate passed; colorbar fits the right margin,
+          nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''True Label'' / ''Predicted Label'' are descriptive and correctly
+          mapped to y/x'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous cell fill built from imprint_seq stops (t.seq[0]/t.seq[1])
+          per the library guide; backgrounds match #FAF8F1/#1A1A17 in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom gradient colorbar, rounded cell corners, luminance-aware text
+          contrast — well beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chart chrome clutter, no gridlines needed since cells form the
+          grid, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Diagonal stroke + naturally blue high-recall diagonal draws the eye
+          straight to correct-vs-confused predictions
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct confusion-matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Axes labeled True/Predicted, counts+percentages annotated, sequential
+          colormap, colorbar, diagonal highlighted
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Predicted on x, True on y (reversed), all 5 classes shown on both
+          axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; colorbar serves as the legend, labeled 'Recall'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Counts, percentages, colorbar, and diagonal highlight all present;
+          only row normalization is shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Camera-trap wildlife classifier is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample counts (~150-200/class) and semantically motivated confusion
+          pairs (nocturnal Fox/Raccoon, small-fast Rabbit/Squirrel) are realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions are needed to manually draw the heatmap
+          since the core bundle has no heatmap module — justified but not minimal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only Highcharts global and window tokens used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity — the invisible scatter overlay drives a real
+          Highcharts tooltip
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; animation disabled on chart and
+          series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly works around the missing heatmap module using the SVG renderer
+          over a categorical axis pair, exactly as the library guide suggests
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Invisible square-marker scatter series aligned to each cell bridges
+          static drawing with a real interactive tooltip — a clever, library-specific
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  patterns:
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - edge-highlighting
