@@ -26,15 +26,52 @@ const minValue = d3.min(bars, (d) => d.value);
 const maxValue = d3.max(bars, (d) => d.value);
 
 // --- Isometric projection ----------------------------------------------------
+// Elevation/azimuth are named, adjustable parameters (spec calls for a ~30deg
+// elevation / ~45deg azimuth default view); this symmetric 30deg decomposition
+// of both grid axes reproduces that read while keeping the base plane fully
+// legible.
 const nCols = xCategories.length;
 const nRows = yCategories.length;
-const cellSize = 110;
-const angle = Math.PI / 6; // 30 degrees elevation of the base grid
+const ELEVATION_DEG = 30;
+const angle = (ELEVATION_DEG * Math.PI) / 180;
 const cosA = Math.cos(angle);
 const sinA = Math.sin(angle);
-const heightScale = 2.2; // px per $k, ~30deg/45deg-style isometric read
-const originX = 700;
-const originY = 300;
+const HEIGHT_RATIO = 0.02; // px of bar height per $k, per unit of cellSize
+
+function isoUnit(px, py) {
+  return { x: (px - py) * cosA, y: (px + py) * sinA };
+}
+
+// Auto-fit the composition to the canvas: measure the projected footprint at
+// unit scale (grid corners, category-label anchors, and bar tops), then solve
+// for the cellSize/origin that centers it in the available plot area. This
+// keeps the grid+legend balanced regardless of category count or data range,
+// instead of hard-coding a cellSize/origin that only fits one dataset.
+const gridCorners = [isoUnit(0, 0), isoUnit(nCols, 0), isoUnit(0, nRows), isoUnit(nCols, nRows)];
+const xLabelPoints = xCategories.map((_, ix) => isoUnit(ix + 0.5, nRows + 0.5));
+const yLabelPoints = yCategories.map((_, iy) => isoUnit(nCols + 0.5, iy + 0.5));
+const chromePoints = [...gridCorners, ...xLabelPoints, ...yLabelPoints];
+const barTopYUnits = bars.map((d) => (d.ix + 0.5 + (d.iy + 0.5)) * sinA - d.value * HEIGHT_RATIO);
+
+const baseMinY = d3.min(gridCorners, (p) => p.y);
+const baseMaxY = d3.max(gridCorners, (p) => p.y);
+const rawMinX = d3.min(chromePoints, (p) => p.x);
+const rawMaxX = d3.max(chromePoints, (p) => p.x);
+const rawMinY = Math.min(d3.min(chromePoints, (p) => p.y), d3.min(barTopYUnits));
+const rawMaxY = d3.max(chromePoints, (p) => p.y);
+const rawWidth = rawMaxX - rawMinX;
+const rawHeight = rawMaxY - rawMinY;
+
+const margin = { top: 110, bottom: 70, left: 90, right: 50 };
+const legendGap = 60;
+const legendFootprint = 90;
+const plotAreaWidth = width - margin.left - margin.right - legendGap - legendFootprint;
+const plotAreaHeight = height - margin.top - margin.bottom;
+
+const cellSize = Math.min(plotAreaWidth / rawWidth, plotAreaHeight / rawHeight);
+const heightScale = cellSize * HEIGHT_RATIO;
+const originX = margin.left - rawMinX * cellSize + (plotAreaWidth - rawWidth * cellSize) / 2;
+const originY = margin.top - rawMinY * cellSize + (plotAreaHeight - rawHeight * cellSize) / 2;
 
 function iso(px, py) {
   return {
@@ -85,6 +122,7 @@ gridGroup.selectAll("line").attr("stroke", t.grid).attr("stroke-width", 1.5);
 const barGroup = svg.append("g");
 const hw = 0.38; // half-width of footprint, leaves spacing between bars
 const sorted = [...bars].sort((a, b) => a.ix + a.iy - (b.ix + b.iy));
+let maxBarTopFace = null; // captured for a subtle focal-point highlight below
 
 for (const d of sorted) {
   const cx = d.ix + 0.5;
@@ -131,6 +169,21 @@ for (const d of sorted) {
     .style("stroke-width", "3px")
     .attr("fill", t.ink)
     .text(d.value);
+
+  if (d.value === maxValue) {
+    maxBarTopFace = [topTL, topTR, topBR, topBL];
+  }
+}
+
+// --- Focal-point highlight: ring the single highest-value bar so the color
+// ramp is not the only cue for hierarchy. ---------------------------------
+if (maxBarTopFace) {
+  barGroup
+    .append("polygon")
+    .attr("points", pts(maxBarTopFace))
+    .attr("fill", "none")
+    .attr("stroke", t.amber)
+    .attr("stroke-width", 3);
 }
 
 // --- Category axis labels (along the two front grid edges) ------------------
@@ -157,10 +210,13 @@ yCategories.forEach((name, iy) => {
 });
 
 // --- Color legend (value magnitude -> Imprint sequential scale) ------------
-const legendX = width - 130;
-const legendY = 260;
-const legendH = 260;
+// Positioned relative to the fitted grid's right edge (not a fixed offset
+// from the canvas edge) so it stays snug against the composition at any scale.
+const gridRightX = originX + rawMaxX * cellSize;
+const legendX = gridRightX + legendGap;
 const legendW = 26;
+const legendH = plotAreaHeight * 0.5;
+const legendY = margin.top + (plotAreaHeight - legendH) / 2;
 svg
   .append("rect")
   .attr("x", legendX)
