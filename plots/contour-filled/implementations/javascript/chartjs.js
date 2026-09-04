@@ -29,7 +29,8 @@ function gaussianBump(x, y, cx, cy, sx, sy, amp) {
   return amp * Math.exp(-0.5 * (dx * dx + dy * dy));
 }
 
-// Two storm cells over ambient drizzle — mm/hr, always >= 0.
+// Three storm cells of different size/intensity over ambient drizzle — mm/hr,
+// always >= 0 — for a more textured field than a symmetric two-bump pair.
 let Z_MIN = Infinity, Z_MAX = -Infinity;
 const zGrid = [];
 for (let i = 0; i < N; i++) {
@@ -39,7 +40,8 @@ for (let i = 0; i < N; i++) {
     const z =
       1.4 +
       gaussianBump(x, y, 42, 48, 16, 12, 44) +
-      gaussianBump(x, y, 88, 22, 13, 10, 24);
+      gaussianBump(x, y, 88, 22, 13, 10, 24) +
+      gaussianBump(x, y, 18, 18, 9, 7, 12);
     zGrid[i].push(z);
     if (z < Z_MIN) Z_MIN = z;
     if (z > Z_MAX) Z_MAX = z;
@@ -195,12 +197,26 @@ const contourPlugin = {
     const barW = 26;
     const barH = areaH;
 
-    const grad = ctx.createLinearGradient(0, ca.bottom, 0, ca.top);
-    grad.addColorStop(0, t.seq[0]);
-    grad.addColorStop(1, t.seq[1]);
-    ctx.fillStyle = grad;
-    ctx.fillRect(barX, ca.top, barW, barH);
+    // Stepped bands matching the plot's own level quantization, so the
+    // colorbar reads as the same 14 discrete bands rather than a smooth ramp.
+    for (let level = 0; level < NUM_LEVELS; level++) {
+      const [r, g, b] = bandRgb(level);
+      const bandTop = ca.bottom - ((level + 1) / NUM_LEVELS) * barH;
+      const bandHeight = barH / NUM_LEVELS;
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.fillRect(barX, bandTop, barW, bandHeight);
+    }
     ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 0.75;
+    ctx.globalAlpha = 0.5;
+    for (let level = 1; level < NUM_LEVELS; level++) {
+      const boundaryY = ca.bottom - (level / NUM_LEVELS) * barH;
+      ctx.beginPath();
+      ctx.moveTo(barX, boundaryY);
+      ctx.lineTo(barX + barW, boundaryY);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
     ctx.lineWidth = 1;
     ctx.strokeRect(barX, ca.top, barW, barH);
 
@@ -214,8 +230,8 @@ const contourPlugin = {
     ctx.font = "15px sans-serif";
     ctx.textAlign = "left";
     const ticks = [
-      { frac: 1, label: Z_MAX.toFixed(0) },
-      { frac: 0.5, label: ((Z_MIN + Z_MAX) / 2).toFixed(0) },
+      { frac: 1, label: Z_MAX.toFixed(1) },
+      { frac: 0.5, label: ((Z_MIN + Z_MAX) / 2).toFixed(1) },
       { frac: 0, label: Z_MIN.toFixed(1) },
     ];
     for (const tk of ticks) {
