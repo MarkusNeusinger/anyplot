@@ -1,0 +1,261 @@
+library: ggplot2
+language: r
+specification_id: circos-basic
+created: '2026-09-04T22:16:42Z'
+updated: '2026-09-04T22:30:53Z'
+generated_by: claude-sonnet
+workflow_run: 33924214668
+issue: 3005
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses are fixed: a caption now explains the diverging inner
+    track ring ("red = deficit, cream = balanced, blue = surplus"), and ribbon alpha
+    was lowered from 0.55 to 0.42 with explicit largest-value-first draw order, noticeably
+    reducing the muddy crossing zone at the circle''s center'
+  - 'Correct Imprint palette usage: first segment (North America) is exactly #009E73,
+    all 7 segments follow canonical order 1-7, and colors are pixel-identical between
+    light and dark renders — only chrome flips'
+  - Genuinely custom circos geometry (bezier ribbon chords, arc polygons, angular
+    gap spacing, sub-arc allocation proportional to per-connection value) built entirely
+    from ggplot2 primitives, despite the library having no native chord/circos support
+  - 'Diverging track ring correctly implements the imprint_div spec: colorRamp(c(''#AE3030'',
+    PAGE_BG, ''#4467A3'')) uses the theme-adaptive midpoint exactly as prescribed
+    by the style guide'
+  - Segment labels are flipped upright on the left hemisphere so no text ever renders
+    upside-down, and title fontsize auto-scales with title length via the prescribed
+    linear formula
+  - theme_void() + PAGE_BG-colored polygon borders + generous margins give a clean,
+    chartjunk-free composition; no clipping at any canvas edge in either theme
+  weaknesses:
+  - Several custom geometry helper functions (deg2rad, arc_path, bezier_path, polar_xy,
+    ribbon_polygon) depart from the simple Imports -> Data -> Plot -> Save structure
+    — largely unavoidable given ggplot2 has no native circos/chord support, but still
+    a KISS deduction
+  - The bezier-curve chord approximation (quadratic bezier through the circle center)
+    is a common cross-library technique for faking chord diagrams rather than a distinctive
+    ggplot2-specific feature, capping Library Mastery
+  - With 18 connections funneling through the circle's center, a few thin low-value
+    ribbons are still hard to trace individually even with the improved alpha and
+    draw order — acceptable but not perfect
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Inter-regional Trade Flows · circos-basic · r · ggplot2 · anyplot.ai" renders in dark ink at the top, fully visible with generous margin to the canvas edge (verified via edge crop). Seven segment labels (North America, Latin America, Europe, Africa, South Asia, East Asia, Oceania) render in dark ink, rotated tangentially and flipped upright on the left hemisphere for legibility. Caption "Inner ring: net trade balance (red = deficit, cream = balanced, blue = surplus)" renders in soft gray ink at the bottom, fully visible with margin below it.
+      Data: Seven distinctly colored outer-ring segments (green North America = #009E73, lavender Latin America, blue Europe, ochre Africa, red South Asia, cyan East Asia, rose Oceania). A thinner track ring inside the segment ring is colored on a red-cream-blue diverging scale representing net trade balance. Semi-transparent bezier ribbons (alpha 0.42) fill the interior, colored by source segment, width proportional to flow value.
+      Legibility verdict: PASS — all text (title, 7 labels, caption) is clearly readable against the light background; no clipping at any canvas edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and all 7 region labels render in light ink, clearly legible against the dark background — no dark-on-dark failures anywhere. Caption renders in light gray ink, fully visible.
+      Data: The 7 segment/ribbon colors are pixel-identical to the light render (same green/lavender/blue/ochre/red/cyan/rose hues) — only chrome (background, ink, and the track ring's diverging midpoint, which uses PAGE_BG per the imprint_div spec) flips between themes.
+      Legibility verdict: PASS — both renders pass the theme-readability checklist; brand green is visible and identical in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title fontsize auto-scaled by length, all labels explicitly sized,
+          fully readable in both themes, no clipping at edges
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, all 7 segment labels, and caption cleanly separated with no
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ribbon alpha lowered to 0.42 with largest-value-first draw order
+          (fixed from attempt 1); connections are traceable through the crossing zone
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, sensible alpha blending, no red-green as
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas, ring fills most of the canvas, balanced
+          margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive region labels and mandated title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for all 7 segments,
+          correct theme-adaptive imprint_div track ring, theme-correct chrome in both
+          renders'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom circos geometry and thoughtful diverging track color, clearly
+          above a default look
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: theme_void, no grid, no spines, generous whitespace, clean polygon
+          borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: caption now explains the track ring''s second
+          data layer, making the insight immediately obvious'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct circos/chord layout with ribbons, gaps, and a concentric
+          track
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Segment gaps, value-proportional ribbons, distinct colors, extra
+          concentric track all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source/target and values correctly drive geometry
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Fixed from attempt 1: title format correct and the track ring now
+          has an explanatory caption'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 18 asymmetric bidirectional flows across 7 regions with varied values,
+          plus a derived net-balance track
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Inter-regional trade flows (USD billions) is realistic and politically
+          neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values are internally consistent and plausible for regional trade
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several geometry helper functions needed since ggplot2 has no native
+          circos support
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded/deterministic data, no randomness to seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct 2400x2400
+          square dimensions
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered geom_polygon/geom_text with scale_fill_identity and theme_void
+          is a solid grammar-of-graphics approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Bezier ribbons + scale_fill_identity showcase ggplot2's extensibility,
+          but the underlying chord technique is common across libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - layer-composition
+  patterns:
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - custom-colormap
