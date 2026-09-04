@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: confusion-matrix
 created: '2026-09-04T22:26:42Z'
-updated: '2026-09-04T22:44:20Z'
+updated: '2026-09-04T22:54:35Z'
 generated_by: claude-sonnet
 workflow_run: 33924715831
 issue: 2272
@@ -12,53 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 87
 review:
   strengths:
-  - 'Correct square 2400x2400 canvas matches the heatmap''s aspect (DataAspect + yreversed),
-    and the Imprint sequential colormap (#009E73 -> #4467A3) is used correctly for
-    the count data'
-  - Diagonal (correct-prediction) cells get a theme-adaptive outline (ink-colored
-    in light, near-white in dark) that gives the plot a clear focal point without
-    a legend
-  - Cell text color adapts to per-cell luminance so annotations stay legible across
-    the entire green-to-blue color range in both themes
-  - Realistic, neutral bird-species classifier data with a plausible confusion pattern
-    (songbirds confused with each other, raptors rarely confused with songbirds)
-  - Backgrounds, ink tokens, and chrome are correctly theme-adaptive between plot-light.png
-    and plot-dark.png; data colors are identical between renders
+  - Sequential imprint_seq (brand green -> blue) colormap correctly chosen for single-polarity
+    sample-count data, with per-cell text color adapted to cell luminance for legibility
+    across the full color range
+  - Diagonal cells (correct predictions) are outlined with a bold stroke, giving the
+    plot a clear focal point and visual hierarchy without extra chrome
+  - 'Realistic, neutral example data: visually-similar songbirds (Sparrow/Finch/Robin)
+    show meaningfully higher cross-confusion than the visually-distinct raptors (Owl/Hawk),
+    which is exactly the kind of structured signal a confusion matrix should demonstrate'
+  - Theme-adaptive chrome (background, ink, spines, tick colors) is correctly threaded
+    through Figure and Axis in both renders, with identical data colors between light
+    and dark
   weaknesses:
-  - The row-normalized recall percentage (e.g. '90%') that the code computes and draws
-    via the second text!() call per cell (text!(ax, j, i + 0.2, text = "$(row_pct[i,
-    j])%", ...)) never appears in either rendered PNG -- pixel inspection of plot-light.png
-    confirms only a single ~22px-tall white text cluster per cell (the raw count),
-    with no second glyph cluster anywhere nearby. Every cell shows only the raw count,
-    so the spec's required row-normalization display is effectively missing from the
-    shipped artifact even though the underlying row_pct data is correctly computed.
-  - 'The Axis ''subtitle'' ("Overall accuracy: XX% . cells show count and row-normalized
-    recall") also does not render -- cropping the top 220px of plot-light.png shows
-    the title sitting directly above the heatmap frame with no subtitle line, so the
-    axis did not reserve any vertical space for it. This is a second instance of code
-    declaring content that never reaches the output.'
-  - Because both of the above are silently dropped, SC-02's 'support normalization
-    options' requirement and DQ-01's 'shows all aspects of plot type' are not actually
-    satisfied by the rendered PNG -- fix by combining the count and percentage into
-    a single text!() call per cell (e.g. a two-line string with \n) rather than two
-    separate text!() calls, and verify the 'subtitle' Axis keyword is actually supported/rendering
-    in the installed Makie/CairoMakie version before relying on it -- if not, fold
-    the accuracy line into the title or a separate text!() placed above the axis.
+  - 'BUG (persists from prior attempts): the two-line cell annotation `text!(ax, j,
+    i, text = "$(value)\n$(row_pct[i, j])%", ...)` renders ONLY the first line (raw
+    count) in every cell of both renders -- the row-normalized recall percentage never
+    appears anywhere on the plot, even though it is computed and the code comment
+    claims it satisfies the spec''s normalization requirement. Verified by pixel-cropping
+    the top-left cell: only "162" is drawn, no "90%" line above/below/behind it. The
+    same silent second-line drop affects the Axis title: the intended subtitle `rich("Overall
+    accuracy: 89.7% * cells show count and row-normalized recall"; fontsize=13, color=INK_SOFT)`
+    never renders in either theme -- only the single line "confusion-matrix * julia
+    * makie * anyplot.ai" is visible, with no second line and no leftover clipped
+    pixels (so this is a rendering/layout bug, not AR-09 edge clipping). Root cause
+    is almost certainly that a single text!/rich() call carrying an embedded "\n"
+    does not reserve/allocate the extra line height in this Axis/heatmap-cell context,
+    so the second line is pushed out of the drawn region and dropped entirely. Fix
+    by using two separate text! calls per cell/title with explicit manual vertical
+    offsets (e.g. `text!(ax, j, i - 0.15, text="$(value)"...)` and `text!(ax, j, i
+    + 0.15, text="$(row_pct[i,j])%"...)`, and similarly two separate stacked text!
+    elements for the title/subtitle) instead of relying on an in-string line break.'
+  - Because of the bug above, the plot visually only ever shows raw counts -- the
+    spec's requirement to support normalized views (by row/recall) is computed in
+    code but has zero visual presence, so a viewer cannot tell the matrix supports
+    normalization at all.
+  - 'The intended "Overall accuracy: X%" callout -- the one piece of explicit data
+    storytelling in the design -- never reaches the viewer, so the plot relies entirely
+    on the diagonal highlight for visual hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches spec.
-      Chrome: Title "confusion-matrix · julia · makie · anyplot.ai" is bold and dark, clearly readable directly above the heatmap. No subtitle line is present beneath the title even though the source computes one ("Overall accuracy: XX% · cells show count and row-normalized recall") -- the axis frame starts immediately after the title. "True Label" (rotated, left) and "Predicted Label" (bottom) axis titles are dark and legible; tick labels (Sparrow/Finch/Robin/Owl/Hawk on both axes) are legible in soft ink gray. Colorbar on the right labeled "Sample Count" with tick labels 0/50/100/150 is fully readable.
-      Data: 5x5 heatmap using the Imprint sequential colormap from brand green (#009E73, low counts) to blue (#4467A3, high counts). Each cell shows only ONE number -- the raw sample count -- in white or dark text depending on cell luminance; the intended second line showing row-normalized recall percentage is absent from every cell. The five diagonal cells (correct predictions) are outlined with a solid dark border, correctly drawing the eye to correct-prediction cells.
-      Legibility verdict: PASS for all text that IS present (title, axis labels, ticks, colorbar, cell counts) -- no text is illegible or low-contrast. However, the row-normalized-recall annotation and the accuracy subtitle are simply missing from the render, which is a content/completeness defect rather than a legibility defect.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "confusion-matrix · julia · makie · anyplot.ai" in bold dark ink at top-center; "True Label" (y-axis, rotated) and "Predicted Label" (x-axis) in dark ink; class-name tick labels (Sparrow, Finch, Robin, Owl, Hawk) on both axes in soft ink; thin dark spines frame the heatmap; colorbar on the right labeled "Sample Count" with soft-ink tick labels. All chrome text is clearly legible against the light background. NOTE: the code attempts a second subtitle line ("Overall accuracy: ...% · cells show count and row-normalized recall") under the title via a nested rich() call, but it does NOT appear in the render -- only the single mandated title line is visible.
+      Data: 5x5 heatmap, sequential green (#009E73) to blue (#4467A3) fill scaled by sample count. Diagonal cells (correct predictions) are outlined with a bold dark stroke box. Each cell shows a single white or dark (luminance-adaptive) number -- the raw count (e.g. "162", "9", "142", "84", "87"). NOTE: the row-normalized recall percentage that the code computes and intends to print as a second line under the count ("90%", etc.) does NOT appear in any cell -- only the count is visible.
+      Legibility verdict: PASS for all elements that are actually drawn; the missing subtitle/percentage lines are a rendering bug (feature never reaches the canvas), not a legibility failure of visible text.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches spec.
-      Chrome: Same title, same missing subtitle. Axis labels and tick labels flip to light ink tones and remain clearly readable against the dark background -- no dark-on-dark issues found. Colorbar labels are readable.
-      Data: Identical cell colors and data-color mapping to the light render (Imprint sequential palette, same counts) -- only chrome flipped, correctly. Diagonal outline flips to a near-white color, remaining clearly visible on the dark cells. Same missing-percentage-annotation issue as the light render (verified same code path, same defect).
-      Legibility verdict: PASS for text that is present, same completeness defect (missing recall percentage / subtitle) carried over from the light render.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title, axis labels, and tick labels as the light render, now in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark background -- fully readable, no dark-on-dark issues. Spines and colorbar recolored consistently for the dark surface.
+      Data: Identical cell values and identical green-to-blue data colors as the light render (confirmed pixel-for-pixel color match on sampled cells) -- only chrome flipped, as required. Diagonal highlight boxes now drawn in light ink. Same missing-percentage-line and missing-subtitle bug as the light render.
+      Legibility verdict: PASS for all visible text; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,73 +74,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All rendered text (title, axis labels, ticks, colorbar, cell counts)
-          is legible in both themes; the missing row-percentage annotation is a completeness
-          gap, not an illegibility issue
+        comment: All rendered text is explicitly sized and reads clearly in both themes;
+          only deduction is that intended secondary text (subtitle, percentage line)
+          silently never renders at all, so it can't be 'perfect' by the letter of
+          the criterion
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or legend elements
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells, diagonal outline, and colorbar are all clearly visible
+        comment: Heatmap cells, diagonal highlight boxes, and colorbar are all clearly
+          visible and well-proportioned for a 5x5 matrix
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue colormap with luminance-adaptive text contrast;
-          not red-green dependent
+        comment: Per-cell text color adapts to cell luminance for contrast; sequential
+          colormap varies in luminance and hue, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas, good proportions, nothing clipped
+        comment: Heatmap plus colorbar fill the majority of the 2400x2400 canvas with
+          balanced margins; canvas-dimension gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"True Label"/"Predicted Label" present, title format correct'
+        comment: '"True Label" / "Predicted Label" are descriptive and match the spec''s
+          exact wording'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 -> #4467A3) used for count data; correct light/dark
-          backgrounds'
+        comment: imprint_seq (brand green -> blue) used for single-polarity count
+          data; backgrounds and chrome are theme-correct in both renders
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Diagonal highlight and adaptive text contrast show real polish, but
-          the planned subtitle/accuracy narrative element never renders
+        comment: Custom sequential colormap and luminance-adaptive cell text show
+          real design thought, clearly above a raw default heatmap, but the broken
+          subtitle undercuts the intended polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Clean square heatmap, subtle cell borders, no unnecessary grid
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Diagonal outline creates a focal point, but the intended two-tier
-          count+recall storytelling is broken since only the count renders
+        comment: Grid off, ink-soft spines, generous margins; solid but not exceptional
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Diagonal highlight boxes create a clear visual hierarchy pointing
+          at correct predictions, but the intended narrative payoff (the accuracy
+          subtitle) never reaches the viewer
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,46 +158,51 @@ review:
         comment: Correct confusion-matrix heatmap
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 3
         max: 4
         passed: false
-        comment: Raw counts and colorbar are shown, but row-normalization (recall
-          %) is computed yet never rendered -- effectively unmet in the shipped output
+        comment: Cell annotation with counts is present, but the intended row-normalization
+          display is computed and never visually rendered, so 'support normalization
+          options' has no on-canvas evidence
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Predicted, Y=True correctly mapped and labeled
+        comment: Rows = true label, columns = predicted label, standard orientation,
+          all classes shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; colorbar serves as the value legend
+        comment: Title format exactly matches the mandated pattern; colorbar label
+          is clear and no separate legend is needed
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Normalization (a core listed spec aspect) is computed but invisible
-          in the render
+        passed: true
+        comment: Shows both strong diagonal accuracy and realistic structured misclassification
+          (similar songbirds confused with each other, distinct raptors rarely confused)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral bird-species classifier scenario
+        comment: Bird-species classifier is a neutral, comprehensible, real-world-plausible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample sizes and count ranges match a realistic classifier test set
+        comment: Sample sizes and per-class accuracy rates (86-93%) are realistic
+          for a trained classifier
     code_quality:
       score: 9
       max: 10
@@ -195,34 +212,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward top-to-bottom script
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness used
+        comment: Data is fully deterministic (hardcoded sample sizes and confusion
+          rates), no randomness to seed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie and Colors both used
+        comment: CairoMakie and Colors are both actually used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Contains a text!() call and a subtitle attribute that compute correct
-          data but never reach the rendered output -- effectively dead code
+        comment: The row_pct calculation and the subtitle rich() text are dead weight
+          in practice -- they are computed/constructed but never actually render,
+          a real correctness bug carried over from prior review rounds
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png correctly via save() with px_per_unit=2
+        comment: Saves plot-$(THEME).png via save(...; px_per_unit=2), current CairoMakie
+          API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -230,16 +250,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: DataAspect, yreversed, Colorbar, cgrad all used idiomatically
+        comment: Idiomatic Axis/heatmap!/Colorbar composition with proper DataAspect
+          and yreversed for matrix orientation
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Diagonal highlight and luminance-adaptive text are nice touches,
-          but the intended distinctive dual-annotation (count + recall) feature does
-          not actually render
-  verdict: REJECTED
+        comment: Uses Makie-specific rich() text composition and per-cell luminance-adaptive
+          coloring, distinctive touches beyond a generic heatmap, though the rich()-based
+          multi-line title does not actually work
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -247,8 +268,8 @@ impl_tags:
   - annotations
   - manual-ticks
   patterns:
-  - data-generation
   - matrix-construction
+  - data-generation
   dataprep:
   - normalization
   styling:
