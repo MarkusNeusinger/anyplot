@@ -24,23 +24,35 @@ df <- data.frame(
   waiting_time      = faithful$waiting
 )
 
+# stat_density_2d evaluates its KDE grid exactly over the trained scale
+# range, so a data point sitting right at the min/max of that range leaves
+# no room for its contour to close and the outermost isoband gets cut into
+# a wedge. Padding the scale limits beyond the data range gives the KDE
+# grid slack on all sides so every contour closes cleanly.
+x_rng  <- range(df$eruption_duration)
+y_rng  <- range(df$waiting_time)
+x_pad  <- diff(x_rng) * 0.08
+y_pad  <- diff(y_rng) * 0.08
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x = eruption_duration, y = waiting_time)) +
   stat_density_2d(
     aes(fill = after_stat(level)),
-    geom      = "polygon",
-    color     = NA,
+    geom        = "polygon",
+    color       = NA,
     contour_var = "density",
-    bins      = 9
+    n           = 200,
+    bins        = 8
   ) +
-  geom_point(color = INK, size = 1.1, alpha = 0.25) +
+  geom_point(color = INK, size = 1.3, alpha = 0.35) +
   scale_fill_gradient(low = "#009E73", high = "#4467A3", name = "Density") +
-  scale_x_continuous(expand = expansion(mult = 0.04)) +
-  scale_y_continuous(expand = expansion(mult = 0.04)) +
+  scale_x_continuous(limits = c(x_rng[1] - x_pad, x_rng[2] + x_pad), expand = expansion(mult = 0.02)) +
+  scale_y_continuous(limits = c(y_rng[1] - y_pad, y_rng[2] + y_pad), expand = expansion(mult = 0.02)) +
   labs(
-    title = "Old Faithful Eruptions · contour-density · r · ggplot2 · anyplot.ai",
-    x     = "Eruption Duration (min)",
-    y     = "Waiting Time to Next Eruption (min)"
+    title    = "Old Faithful Eruptions · contour-density · r · ggplot2 · anyplot.ai",
+    subtitle = "Two distinct eruption modes: short/frequent and long/rare bursts",
+    x        = "Eruption Duration (min)",
+    y        = "Waiting Time to Next Eruption (min)"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -52,6 +64,7 @@ p <- ggplot(df, aes(x = eruption_duration, y = waiting_time)) +
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
     plot.title        = element_text(color = INK, size = 12, face = "bold"),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 9),
     legend.title      = element_text(color = INK, size = 10),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.background = element_blank(),
