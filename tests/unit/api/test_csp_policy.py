@@ -237,12 +237,19 @@ def test_the_shell_is_never_precompressed():
     The prettiest way to break this whole mechanism: leave a build artefact in
     place. nginx would serve `index.html.gz` byte for byte, the stamp would
     never run, the header would still carry its nonce, and every inline script
-    on the page would be refused — with nothing in any log to say why.
+    on the page would be refused — with nothing in any log to say why. Measured
+    on a local nginx with the `.gz` planted back: `curl --compressed` saw zero
+    stamped tags where the plain shell had seven.
+
+    The pattern is matched, not merely searched for the word "index" — a first
+    version accepted `/index\\.js$/` and even `/not-index\\.html$/`, both of
+    which leave `index.html.gz` in `dist/` (Copilot review).
     """
     config = VITE_CONFIG.read_text(encoding="utf-8")
     calls = re.findall(r"compression\(\{[^}]*\}\)", config)
     assert calls, "app/vite.config.ts declares no compression plugin — did it move?"
-    unguarded = [c for c in calls if "index" not in c.split("exclude")[-1]]
+    excludes_the_shell = re.compile(r"exclude\s*:\s*\[[^\]]*(?<![\w-])index\\?\.html\$?/")
+    unguarded = [c for c in calls if not excludes_the_shell.search(c)]
     assert not unguarded, (
         "a compression plugin in app/vite.config.ts does not exclude index.html: "
         f"{unguarded}. The shell is rewritten per request for the CSP nonce and "

@@ -1098,7 +1098,7 @@ revision from before that PR still serves the `'unsafe-inline'` policy byte for 
 Once no such revision is left, the lever is a revert PR through the normal pipeline
 instead — slower, but by then the question has long been answered live.
 
-Deliberately NOT built for that case: a Cloud Run environment variable that flips the
+One thing is deliberately not built for that case: a Cloud Run environment variable that flips the
 policy inside a running revision. nginx cannot read the process environment from its
 configuration, so it would take a startup templating step (`envsubst` into a writable
 path — and `/etc/nginx` is read-only in the unprivileged image), which neither CI nor a
