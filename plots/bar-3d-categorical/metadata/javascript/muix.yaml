@@ -1,0 +1,242 @@
+library: muix
+language: javascript
+specification_id: bar-3d-categorical
+created: '2026-09-04T22:33:53Z'
+updated: '2026-09-04T22:57:25Z'
+generated_by: claude-sonnet
+workflow_run: 33924637353
+issue: 5248
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/muix/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Both weaknesses from attempt 1 are resolved with clear visual evidence: a visible
+    gap/side-face separation between depth-staggered cuboids within each alloy column,
+    and a faint iso-projected floor grid (row + column lines) tying each bar back
+    to its (alloy, treatment) cell.'
+  - Zero clipping, zero text/element overlap in either render, including the tightest
+    value-label clusters (Al 6061, Mg AZ31).
+  - 'Exemplary theme handling: identical data colors between light/dark, correct #FAF8F1/#1A1A17
+    chrome, all text readable in both themes with no dark-on-dark or light-on-light
+    failures.'
+  - First categorical series is brand green (#009E73); Imprint palette used correctly
+    across all 4 treatment series.
+  - Deterministic, realistic, domain-plausible tensile-strength data with sensible
+    scale; row-ordering choice explained in a code comment and deliberately avoids
+    label collisions.
+  - Clean, idiomatic MUI X composition, no unused imports, no fake interactivity,
+    skipAnimation set, current community-only API.
+  weaknesses:
+  - The 5 alloy columns carry roughly equal visual weight, so there's no single dramatic
+    focal point beyond following the height/color pattern.
+  - Axis lines are still drawn (soft inkSoft stroke) rather than fully removed; a
+    spine-free treatment would push visual refinement further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "bar-3d-categorical · javascript · muix · anyplot.ai" centered top in dark ink; X-axis "Alloy" and Y-axis "Tensile Strength (MPa)" labels dark and legible; Y ticks 0-1,500 and 5 alloy names legible; subtle horizontal gridlines; legend (Annealed/Tempered/Quenched/Aged) fully visible at right, not clipped.
+      Data: 5 alloy columns x 4 isometric-shaded cuboids each (Annealed = brand green #009E73 first series, then purple/blue/tan). Visible side-face gap between depth-staggered cuboids (new vs. attempt 1) and faint iso floor grid lines under the bars (new vs. attempt 1). Value labels legible on every face, no overlap even in tightest cluster (Al 6061, Mg AZ31).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, axis labels, and tick labels render in light ink, clearly legible. Gridlines and floor lines subtle light grey, still visible. Legend text light-colored and fully legible.
+      Data: Colors confirmed identical to light render (green/purple/blue/tan) - only chrome flipped. Value labels switch to white text, clearly legible against every bar color including darker blue/tan faces. No clipping at any edge; no dark-on-dark failures.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text legible in both themes; title fontsize bumped since attempt
+          1
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions anywhere, including tightest value-label clusters
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: New inter-bar gap makes each cuboid distinctly readable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, adequate contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; nothing clipped; base-plane floor grid now present
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive, with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical data colors, correct theme backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom isometric shading, occlusion-correct paint order, new floor
+          grid
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Generous margins, subtle grid, visible per-cuboid spacing; axis lines
+          still drawn
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear two-factor comparison; no single dramatic focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Well-executed community-library interpretation of a 3D bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Spacing, floor grid, value labels, legend, viewing-angle approximation
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 20 data points shown and labeled correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 5x4 grid with labels, legend, axes, floor grid
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible materials-science data, neutral subject matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 124-1400 MPa range realistic for alloys/treatments shown
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Functions are required React composition, not incidental complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-reasoned custom geometry, explanatory comments, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-conformant, skipAnimation set, community-only API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic hooks-based composition over ChartContainer, matching documented
+          custom-geometry pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Demonstrates a chart type the declarative BarChart can't express,
+          community-only building blocks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - custom-svg-geometry
+  - value-labels
+  - legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - hooks-based-composition
+  dataprep: []
+  styling:
+  - publication-ready
+  - isometric-shading
+  - theme-adaptive
