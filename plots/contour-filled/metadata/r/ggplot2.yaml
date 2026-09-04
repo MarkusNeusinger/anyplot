@@ -1,0 +1,232 @@
+library: ggplot2
+language: r
+specification_id: contour-filled
+created: '2026-09-04T23:21:27Z'
+updated: '2026-09-04T23:33:34Z'
+generated_by: claude-sonnet
+workflow_run: 33928939398
+issue: 2500
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Correct diverging palette (matte-red -> theme-adaptive midpoint -> blue) chosen
+    because the surface has a genuine zero midpoint (valley vs. peak)
+  - 'Theme-adaptive chrome is fully correct in both renders: no dark-on-dark or light-on-light
+    failures'
+  - Peak/Valley annotations give the chart a clear narrative focal point instead of
+    an unlabeled generic surface
+  - Overlaid thin contour lines add precise level boundaries on top of the filled
+    bands, per the spec's notes
+  - Title format, axis labels with units, and canvas size are all exactly correct
+  weaknesses:
+  - Peak/Valley point markers (geom_point(size = 2.2, stroke = 0.6)) are small at
+    full resolution and will likely shrink to near-invisible at the 400px mobile srcset
+    - increase marker size (~3-3.5) and stroke (~1)
+  - Library mastery is solid but generic for ggplot2's contour ecosystem - consider
+    inline contour-level labels (e.g. via metR::geom_text_contour or directlabels)
+    to more clearly distinguish the level bands without relying solely on the legend
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "contour-filled · r · ggplot2 · anyplot.ai" in dark ink; axis titles "X Coordinate (km)" / "Y Coordinate (km)" and tick labels (-2, 0, 2) in dark/soft-dark ink; legend "Elevation (m)" with 16 discrete bands. All readable.
+      Data: Filled contour bands from matte-red (valley) through a near-white midpoint to blue (peak), with thin overlaid isolines. Two white-filled, dark-ringed point markers mark the peak and valley, each with a bold "Peak"/"Valley" label.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Same title, axis titles, and tick labels now in light ink, fully legible against the dark surface. No dark-on-dark issues.
+      Data: Identical matte-red -> blue diverging scale (only the theme-adaptive midpoint darkens from near-white to near-black, as expected). Peak/valley markers flip fill to the dark page background with a light ring; "Peak"/"Valley" labels render in light ink, clearly visible against both dark-blue and dark-red regions.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text legible in both themes; tick labels at 8pt are at the small
+          end of comfortable at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak/Valley markers small relative to canvas, risk near-invisibility
+          at mobile scale
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging red/blue reads with good contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correct, nothing cut off, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes carry descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_div-equivalent diverging scale, correct theme backgrounds
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful palette choice tied to real semantics, solid but not exceptional
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean minimal theme, generous whitespace; full panel border is a
+          reasonable exception here
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Labeled Peak/Valley extrema give a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled contour plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging colormap, colorbar, overlaid isolines, appropriate level
+          count, sufficient grid resolution
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/z correctly mapped across full domain
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels are clear
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Filled bands + isolines + colorbar + annotations cover every aspect
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic peaks surface framed as plausible, neutral elevation field
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Domain and elevation range are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; one small deterministic math helper is appropriate
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct ggsave + ragg device pattern
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_contour_filled + geom_contour overlay, coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Competent but not exceptional use of ggplot2's contour ecosystem
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
