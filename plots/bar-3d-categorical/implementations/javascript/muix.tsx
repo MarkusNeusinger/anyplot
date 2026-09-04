@@ -1,3 +1,7 @@
+// anyplot.ai
+// bar-3d-categorical: 3D Bar Chart for Categorical Comparison
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 95/100 | Created: 2026-09-04
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-3d-categorical: 3D Bar Chart for Categorical Comparison
