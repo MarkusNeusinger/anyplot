@@ -21,3 +21,16 @@
   that same response's header. A lost stamp leaves a page that looks healthy to
   every other probe and runs no inline script at all, so it is worth the two
   extra curls.
+
+### Fixed
+
+- **The python.anyplot.ai spec routes sent the SPA shell with no
+  `Cache-Control` at all.** `try_files /index.html =404` answers with the shell
+  as a file inside that location, so it never reaches `location =
+  /index.html` and never inherited its `no-store` — measured against a local
+  nginx while the main host answered correctly on the same path. A stale shell
+  asks for `/assets/` hashes a later deploy no longer has; with the nonce it
+  would additionally pair an old `nonce="…"` with a fresh header. Both routes
+  now send the shell's `Cache-Control` and re-include the security-header
+  snippet beside it, since an `add_header` of their own would otherwise have
+  dropped the whole inherited set.

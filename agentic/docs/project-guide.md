@@ -1071,15 +1071,19 @@ Every deploy names its revision deterministically (`--revision-suffix=b$BUILD_ID
 promotes it explicitly, so earlier revisions are still there, still healthy, and one
 command away. Rolling back needs no rebuild and takes under a minute:
 
-```bash
-# 1. List recent revisions with their creation times.
-gcloud run revisions list --service anyplot-app --region europe-west4 \
-  --format='table(name, creationTimestamp, status.conditions[0].status)' --limit 10
+1. List the recent revisions with their creation times:
 
-# 2. Send all traffic to the one you want back.
-gcloud run services update-traffic anyplot-app --region europe-west4 \
-  --to-revisions=<chosen-revision>=100
-```
+   ```bash
+   gcloud run revisions list --service anyplot-app --region europe-west4 \
+     --format='table(name, creationTimestamp, status.conditions[0].status)' --limit 10
+   ```
+
+2. Send all traffic to the revision you want back:
+
+   ```bash
+   gcloud run services update-traffic anyplot-app --region europe-west4 \
+     --to-revisions=<chosen-revision>=100
+   ```
 
 Same shape for `anyplot-api`. This is the lever for anything that ships inside the image
 and only reveals itself in production.

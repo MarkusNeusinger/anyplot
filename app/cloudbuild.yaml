@@ -168,7 +168,15 @@ steps:
         # blocks every inline script on it, because a nonce in the policy makes
         # 'unsafe-inline' inert. Cheap to check here, four weeks of nobody
         # noticing if it is not.
-        curl -fsS $$RETRY -A "$$HUMAN" -D head.out -o body.out "$$URL/" \
+        #
+        # `--compressed` is the load-bearing flag, not a courtesy. Plain curl
+        # sends no Accept-Encoding, so `gzip_static` never reaches for the
+        # `.gz` — and the single most likely way to lose the stamp is exactly a
+        # precompressed shell coming back, which this probe would then pass
+        # while every browser got the untouched file (Copilot review).
+        # Reproduced against a local nginx with an index.html.gz planted in the
+        # docroot: plain curl saw 7 stamped tags, `curl --compressed` saw 0.
+        curl -fsS $$RETRY --compressed -A "$$HUMAN" -D head.out -o body.out "$$URL/" \
           || { echo "candidate did not serve the shell for the nonce probe"; exit 1; }
         NONCE=$$(grep -i '^content-security-policy:' head.out | grep -o 'nonce-[0-9a-f]*' | head -1)
         test -n "$$NONCE" || { echo "the shell's Content-Security-Policy carries no nonce"; exit 1; }
