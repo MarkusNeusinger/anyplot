@@ -1,0 +1,261 @@
+library: echarts
+language: javascript
+specification_id: contour-decision-boundary
+created: '2026-09-04T23:12:04Z'
+updated: '2026-09-04T23:16:49Z'
+generated_by: claude-sonnet
+workflow_run: 33927886227
+issue: 2921
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Imprint palette usage throughout: Setosa is brand green #009E73, Versicolor/Virginica
+    follow palette positions 2-3, and chrome (background, text, grid) is theme-correct
+    in both the light (#FAF8F1) and dark (#1A1A17) renders'
+  - Region fill uses pre-blended flat colors (blend() mixing class color with page
+    background) instead of canvas alpha, avoiding the seam/moire artifacts that stacked-alpha
+    rects would create where mesh cells overlap
+  - Genuine trained k-NN classifier (K=9) with leave-one-out evaluation to detect
+    real misclassifications - not faked; the two misclassified points are highlighted
+    with an amber-bordered diamond that creates an immediate visual focal point for
+    classifier errors, directly supporting the spec's 'debugging misclassified samples'
+    use case
+  - Deterministic synthetic data calibrated to realistic Iris petal measurements (Setosa
+    ~1.5cm, Versicolor ~4.3cm, Virginica ~5.6cm length) - factually plausible and
+    neutral scientific scenario
+  - Idiomatic use of ECharts custom series (renderItem) for the decision-region fill
+    - the correct approach since ECharts has no built-in contour/region type for irregular
+    classifier boundaries
+  weaknesses:
+  - 'Design polish is good but stops short of publication-level (DE-01): the layout
+    is competent but fairly standard scatter-over-region composition without an extra
+    distinguishing refinement - consider tightening whitespace/margins slightly or
+    adding a subtle refinement to legend/grid treatment to push toward FiveThirtyEight-level
+    polish'
+  - Data storytelling relies solely on the two misclassified diamonds for emphasis
+    (DE-03); consider adding a small text annotation stating the misclassification
+    count or accuracy percentage to make the insight more explicit at a glance
+  - The decision-boundary edges show a visible staircase/pixelated pattern from the
+    130x130 mesh resolution - increasing mesh density (e.g. 180x180) would produce
+    a smoother, more polished boundary while keeping render time reasonable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - clearly not pure white.
+      Chrome: Title "contour-decision-boundary · javascript · echarts · anyplot.ai" in dark bold text, centered near top, fully visible and readable. Legend below title (Setosa, Versicolor, Virginica, Misclassified) in dark text with clear swatches/markers. Axis titles "Petal Length (cm)" and "Petal Width (cm)" in dark ink, tick labels in slightly softer dark gray - all clearly legible against the light background.
+      Data: Three pale/pastel decision regions (green, lavender-purple, blue-gray) fill the plot area corresponding to the three classes. Training points overlaid as solid circles: green cluster (Setosa) bottom-left, tightly grouped; lavender/purple cluster (Versicolor) center; blue cluster (Virginica) upper-right, more spread out. First series (Setosa) is #009E73 brand green, matching the Imprint palette. Two amber-bordered diamond markers near the Versicolor/Virginica boundary highlight leave-one-out misclassified points.
+      Legibility verdict: PASS - all text (title, legend, axis titles, tick labels) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - clearly not pure black.
+      Chrome: Same title and legend text now rendered in white/light gray, fully legible against the dark background. Axis titles and tick labels are also light-colored and clearly readable. No dark-on-dark text problems observed anywhere.
+      Data: Decision regions now render as darker, desaturated versions of the same three hues (dark green, dark plum/purple, dark slate-blue) appropriate for the dark surface. Training point marker colors (green, lavender-purple, blue) are visually identical to the light render - only the chrome and region-fill intensity adapted to the theme, exactly as required. The two amber-bordered misclassified diamonds remain clearly visible and in the same data positions.
+      Legibility verdict: PASS - all text remains clearly readable in the dark theme; brand green #009E73 reads well on the dark surface as expected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, legend 16, axis name 18,
+          tick 14); readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker overlap; legend, title, axes all clear
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers visible and appropriately sized for ~150 points; dense Setosa
+          cluster shows some circle overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue hues are CVD-distinguishable; misclassified points
+          also use a distinct shape (diamond), not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas, balanced margins, legend near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis titles with units: ''Petal Length (cm)'', ''Petal
+          Width (cm)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; palette positions 2-3 used for other classes;
+          identical data colors across themes; correct #FAF8F1/#1A1A17 backgrounds'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful blended region colors and semantic amber highlight go
+          beyond defaults, but overall composition is a fairly standard scatter-over-region
+          layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid lines hidden, borders on markers for separation from regions;
+          some polish visible but not exhaustive
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber diamond highlighting of misclassified points creates a clear
+          focal point guiding the viewer to classifier errors
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision-boundary visualization with filled classification
+          regions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct region colors, training points overlaid, different marker
+          styles for misclassified points, legend present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Petal Length, Y=Petal Width, axes cover full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match class
+          names plus Misclassified
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows regions, training points, and misclassified points - all core
+          aspects of decision-boundary visualization
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral scientific scenario (flower species classification
+          by petal measurements)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Petal length/width means and stds closely match real Iris species
+          statistics
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom structure; small helper functions are necessary
+          in JS for the PRNG/KNN and are appropriately minimal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) makes all data and predictions deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the browser globals are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex custom KNN implementation, no fake UI or simulated
+          interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set, echarts.init with no explicit size/DPR, harness
+          handles output correctly
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series with renderItem is the correct, recommended ECharts
+          pattern for irregular region fills; scatter series used idiomatically for
+          point overlays
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom renderItem region rendering and pre-blended anti-seam color
+          trick are distinctive techniques not trivially replicated in a generic chart
+          library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
