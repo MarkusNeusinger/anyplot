@@ -145,6 +145,35 @@ def server_blocks() -> list[str]:
     return blocks
 
 
+def _server_level_of(block: str) -> str:
+    """One server block with every nested `location { … }` cut out.
+
+    What is left is the directives that apply to the whole vhost. A directive
+    found only inside a location governs that location alone, and for the CSP
+    stamp that difference is the whole point — so the search has to be able to
+    tell them apart.
+    """
+    out = []
+    index = 0
+    for match in re.finditer(r"^\s*location\s[^{]*\{", block, re.MULTILINE):
+        if match.start() < index:
+            continue
+        out.append(block[index : match.start()])
+        depth = 0
+        for i in range(match.end() - 1, len(block)):
+            if block[i] == "{":
+                depth += 1
+            elif block[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    index = i + 1
+                    break
+        else:
+            index = len(block)
+    out.append(block[index:])
+    return _without_comments("".join(out))
+
+
 # The nonce as the stamp spells it (`nonce="$request_id"`). Its counterpart in
 # the header is read out of the parsed DIRECTIVE, never out of the raw file:
 # security-headers.conf explains itself at length and quotes `'nonce-…'` in its
@@ -207,25 +236,30 @@ def test_the_header_and_the_stamp_name_the_same_variable():
     )
 
 
-def test_every_server_block_stamps_the_nonce():
-    """Both vhosts, at server level, because four locations serve the shell.
+def test_every_server_block_stamps_the_nonce_at_server_level():
+    """Both vhosts, at SERVER level, because four locations serve the shell.
 
     The exact `= /index.html`, the SPA fallback, and — in the python block —
     two regex routes whose `try_files /index.html =404` serves the file in
     place, with no internal redirect to re-run location matching. A stamp
     placed per-location is a stamp missing from whichever one is forgotten,
-    and it fails on those routes alone.
+    and it fails on those routes alone — which the deploy smoke would not
+    notice either, since it probes `/` on the main host.
+
+    Hence `_server_level_of`: searching the whole block would be satisfied by a
+    stamp buried in one `location`, which is exactly the regression this guard
+    exists to refuse (Copilot review).
     """
+    servers = [(b, _server_level_of(b)) for b in server_blocks()]
     missing = [
-        block.splitlines()[0]
-        for block in server_blocks()
-        if INCLUDE_LINE in block and not _STAMP.search(_without_comments(block))
+        block.strip().splitlines()[0] for block, top in servers if INCLUDE_LINE in block and not _STAMP.search(top)
     ]
     assert not missing, (
-        f"these server blocks send the CSP but never stamp its nonce: {missing}. "
-        "Every <script> tag they serve would be blocked."
+        f"these server blocks do not stamp the CSP nonce at server level: {missing}. "
+        "A stamp inside one location leaves every other route that serves the shell "
+        "unstamped, and each of its <script> tags would be blocked."
     )
-    assert all("sub_filter_once off;" in block for block in server_blocks() if _STAMP.search(block)), (
+    assert all("sub_filter_once off;" in top for _, top in servers if _STAMP.search(top)), (
         "sub_filter replaces only the FIRST match without `sub_filter_once off` — "
         "the shell has seven script tags and six of them would go unstamped."
     )

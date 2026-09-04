@@ -18,9 +18,10 @@
 
 - **The frontend deploy smoke checks the nonce before promoting.** The
   candidate has to serve a shell whose `<script>` tags all carry the nonce from
-  that same response's header. A lost stamp leaves a page that looks healthy to
-  every other probe and runs no inline script at all, so it is worth the two
-  extra curls.
+  that same response's header, fetched with `--compressed` so a precompressed
+  shell cannot slip past. A lost stamp leaves a page that looks healthy to every
+  other probe and runs no inline script at all, so it is worth the one extra
+  curl.
 
 ### Fixed
 
