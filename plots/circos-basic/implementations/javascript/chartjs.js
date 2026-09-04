@@ -64,11 +64,17 @@ const hexToRgba = (hex, alpha) => {
 // Chart.js has no native circos/chord type, but its plugin API exposes the
 // live canvas plus the doughnut's computed arc geometry. Ribbons anchor to
 // the inner edge of the expression track (dataset 1) and bow through the
-// centre; ribbon end-width is proportional to link strength, drawn
-// strongest-first so thin links stay visible on top. No external library,
-// no community plugin: pure Chart.js extensibility (same technique used for
-// chord-basic's ribbons, generalised here to a sparse link list plus a
-// second concentric data track).
+// centre; ribbon end-width is proportional to link strength. Weak links get
+// an opacity/stroke floor so they stay legible under denser overlaps, and
+// the top 2 links by supporting-read count are redrawn last (on top of
+// everything) with a heavier stroke so the strongest relationships read as
+// a clear focal point. No external library, no community plugin: pure
+// Chart.js extensibility (same technique used for chord-basic's ribbons,
+// generalised here to a sparse link list plus a second concentric data
+// track).
+const linkValues = links.map(([, , value]) => value);
+const lowValueThreshold = Math.min(...linkValues) + (Math.max(...linkValues) - Math.min(...linkValues)) * 0.25;
+const focalLinkCount = 2;
 const circosRibbons = {
   id: "circosRibbons",
   afterDatasetsDraw(chart) {
@@ -95,12 +101,15 @@ const circosRibbons = {
 
     const pointAt = (angle, r) => [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
 
-    const pairs = links.map(([i, j, value]) => [i, j, value]).sort((a, b) => b[2] - a[2]);
+    const pairsByValue = links.map(([i, j, value]) => [i, j, value]).sort((a, b) => b[2] - a[2]);
+    const focalPairs = pairsByValue.slice(0, focalLinkCount);
+    const normalPairs = pairsByValue.slice(focalLinkCount);
 
     const ctx = chart.ctx;
     ctx.save();
     ctx.lineJoin = "round";
-    for (const [i, j] of pairs) {
+
+    const drawRibbon = (i, j, { fillAlpha, strokeAlpha, lineWidth }) => {
       const [si0, si1] = slot[i][j];
       const [sj0, sj1] = slot[j][i];
       const [xi, yi] = pointAt(si0, innerR);
@@ -115,11 +124,28 @@ const circosRibbons = {
       ctx.closePath();
 
       const dominant = linkMatrix[i][j] >= linkMatrix[j][i] ? i : j;
-      ctx.fillStyle = hexToRgba(segmentColors[dominant], 0.5);
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = hexToRgba(segmentColors[dominant], 0.85);
+      ctx.fillStyle = hexToRgba(segmentColors[dominant], fillAlpha);
+      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = hexToRgba(segmentColors[dominant], strokeAlpha);
       ctx.fill();
       ctx.stroke();
+    };
+
+    // Strongest-of-the-rest first, weakest last (so weak links sit on top of
+    // the normal group); each weak link gets an opacity/stroke floor so it
+    // does not disappear under denser overlaps.
+    for (const [i, j, value] of normalPairs) {
+      const isFaint = value <= lowValueThreshold;
+      drawRibbon(i, j, {
+        fillAlpha: isFaint ? 0.65 : 0.5,
+        strokeAlpha: isFaint ? 0.95 : 0.85,
+        lineWidth: isFaint ? 2 : 1.5,
+      });
+    }
+    // Focal links redrawn last, on top of every other ribbon, with a
+    // heavier stroke so the strongest relationships read as a clear story.
+    for (const [i, j] of focalPairs) {
+      drawRibbon(i, j, { fillAlpha: 0.8, strokeAlpha: 1, lineWidth: 2.5 });
     }
     ctx.restore();
   },
