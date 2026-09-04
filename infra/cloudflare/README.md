@@ -1,9 +1,15 @@
-# Cloudflare: the apex Worker in front of the API
+# Cloudflare: the edge in front of both Cloud Run services
 
 This directory is the source for Cloudflare configuration that would otherwise
 exist only in the dashboard. It was created with the origin gate
 (`api/origin_gate.py`), because until then the Worker went unmentioned in the
 repository and nobody without dashboard access could see what it does.
+
+Two services stand behind the edge and both have an origin gate now. The API's
+is in Python (`api/origin_gate.py`); the site's is in nginx
+(`app/origin-gate.conf.template`). They share one secret, one set of five
+verdicts, and one rollout procedure — the API's is done, the app's is
+[at the end of this file](#the-sites-own-origin-anyplot-app).
 
 ## What is here
 
@@ -28,6 +34,14 @@ it in the dashboard and pull it back here.
 one path it does not forward is `/api/event`: that is the Plausible analytics
 endpoint (the same one `app/nginx.conf` proxies for the app service), and it
 goes to Plausible untouched.
+
+**`/api/event` is the one path that reaches the SITE's origin**, and that makes
+it the second place the same-zone finding below bites. `fetch(request)` on that
+path goes to the app service's nginx, which has an origin gate of its own — and
+being a Worker subrequest inside the zone, it carries no Transform Rule header.
+So the Worker stamps that branch too. Without it, arming the app gate answers
+every Plausible pageview on the site with a 403, quietly, because a page does
+not tell its visitor that analytics failed.
 
 **Why it stamps the origin secret itself.** This is the finding the directory
 exists for:
@@ -186,3 +200,159 @@ curl -sI https://anyplot.ai/llms-full.txt
 
 After any change to the Worker, the Transform Rule or the secret: measure
 first, arm second.
+
+---
+
+## The site's own origin (`anyplot-app`)
+
+The same door, on the other service. `anyplot-app` also stands with
+`ingress=all`, so `https://anyplot-app-r3tvmejsmq-ez.a.run.app` serves the whole
+site with no bot challenge, no WAF and no rate limit — and a crawler user agent
+sent there is relayed by `@seo_proxy` to `https://api.anyplot.ai`, where the
+edge stamps the API's secret legitimately. The API gate cannot see that: the
+request it receives really did come through the front door. Every such relay is
+a repository query on a cache miss plus an outbound Plausible event, on someone
+else's terms.
+
+`app/origin-gate.conf.template` is the enforcing half. It is a template because
+nginx cannot read the environment; the base image already ships the official
+entrypoint's `20-envsubst-on-templates.sh`, so the secret arrives as an ordinary
+Cloud Run environment variable and nothing new runs at container start.
+
+**Modes.** `ORIGIN_GATE` unset or anything but `on` = off; `ORIGIN_GATE=on` =
+403 without a matching header. `ORIGIN_SECRET` is the value. Unset means off,
+which is the rollback and the state the code ships in. `ORIGIN_GATE=on` with no
+secret fails CLOSED — the map keys are tagged so an empty secret cannot become
+"match anything".
+
+**Why a header and not a `Host` rule.** Both would work here, which was an open
+question until 2026-09-04: `anyplot.ai` and `www.anyplot.ai` are Cloud Run
+**domain mappings**, so Cloudflare forwards the original Host and `$host` really
+does tell the edge from the raw URL — Google's frontend answers a foreign Host
+on a `run.app` address with its own 404 before the container is reached, so the
+value cannot be spoofed. A Host rule still cannot be the mechanism:
+`bot-serving-check.yml` probes this origin with crawler user agents *because*
+Cloudflare 403s GitHub-runner IPs, it cannot spoof the Host either, and any
+exception keyed on something public — a header it invents, a user agent — is
+public with this repository. The exception has to be the shared secret; and once
+the workflow carries the secret, the Host rule buys nothing the header does not.
+
+### Hostnames this container serves
+
+The Transform Rule has to cover every one of them, or arming the gate locks out
+the visitors it was meant to protect.
+
+| Hostname | Reaches the container via | Transform Rule |
+|---|---|---|
+| `anyplot.ai` | Cloud Run domain mapping, proxied by Cloudflare | **required** |
+| `www.anyplot.ai` | Cloud Run domain mapping, proxied by Cloudflare — serves the site, it does not redirect | **required** |
+| `anyplot.ai/api/event` | the apex Worker, `fetch(request)` to this origin | none: same-zone subrequest, the **Worker** stamps it |
+| `python.anyplot.ai` | nothing today — `server_name` in `app/nginx.conf`, but no DNS record and no domain mapping (checked 2026-09-04) | add it in the same breath as the DNS record |
+| `anyplot-app-r3tvmejsmq-ez.a.run.app` | direct | none — this is the door being closed |
+| `anyplot-app-239660669828.europe-west4.run.app` | direct, the same service's second URL | none, same door |
+| `candidate---anyplot-app-r3tvmejsmq-ez.a.run.app` | direct, the pre-traffic tag URL | none — `app/cloudbuild.yaml` sends the header itself |
+
+The rule is a **Set**, not an Add: a caller that supplies its own
+`X-Origin-Secret` must have it replaced, not appended.
+
+### Callers that reach this origin without the edge
+
+Each one is legitimate, each one would be 403'd into silence, and each now
+carries the header itself.
+
+| Caller | What it now sends |
+|---|---|
+| `app/cloudbuild.yaml` pre-traffic smoke | reads `ORIGIN_SECRET` from Secret Manager **inside the step** (not `availableSecrets`, which resolves at build start) and sends `X-Origin-Secret` on every probe. The build service account `239660669828-compute@developer.gserviceaccount.com` already holds `roles/secretmanager.secretAccessor` on the secret — it is the same account both triggers run as, and the API build already reads it. |
+| `.github/workflows/bot-serving-check.yml` | sends the header from the `ORIGIN_SECRET` repository secret — the same one `sync-postgres.yml` already uses — and reads `/_health` first, so a missing or half-rotated secret fails with a message naming itself instead of reddening all ~36 crawler checks. |
+| the apex Worker, `/api/event` | stamps from its own `ORIGIN_SECRET` binding (see above). |
+| Cloud Run startup probe | nothing, and needs nothing: it is a `tcpSocket` check on 8080, not an HTTP probe (verified 2026-09-04). |
+| IndexNow (`indexnow-submit.yml`, and Bing's verification fetch) | nothing, and needs nothing: both go to `https://anyplot.ai/<key>.txt`, i.e. through the edge. |
+
+There are no Cloud Monitoring uptime checks on this project and no Lighthouse CI
+(checked 2026-09-04); if one is added later it joins this table.
+
+### Measuring: `/_health`
+
+`/_health` is the gate's one exempt path — exact match, no prefix — and reports
+`X-Origin-Gate` with the same five verdicts as the API's `/health`, for the
+request it was asked with, never the value.
+
+```bash
+curl -sI https://anyplot.ai/_health           | grep -i x-origin-gate   # edge, apex
+curl -sI https://www.anyplot.ai/_health       | grep -i x-origin-gate   # edge, www
+curl -sI https://anyplot-app-r3tvmejsmq-ez.a.run.app/_health | grep -i x-origin-gate
+#   the last one must stay "off" and become "missing": it is the closed door
+```
+
+The Worker's path cannot be asked through `/_health` — the Worker forwards only
+`/api/event` to this origin — so it is measured on that endpoint instead. A
+mapped crawler UA gets nginx's analytics shield (`202`) before Plausible is ever
+called, so the probe costs no event:
+
+```bash
+curl -si -X POST -A 'Mozilla/5.0 (compatible; Googlebot/2.1)' \
+  https://anyplot.ai/api/event -d '{}' | grep -i -e '^HTTP' -e x-origin-gate
+#   202 + "off-seen"  the Worker is stamping — the state to reach before arming
+#   202 + "off"       the Worker is NOT stamping; arming now kills site analytics
+```
+
+### Rollout
+
+Ordered so that nothing is armed before it has been measured. Steps (a) and (b)
+are safe on their own and can sit for days.
+
+```bash
+# (a) merge and deploy. Nothing is armed: the image defaults ORIGIN_GATE=off,
+#     and the service declares no environment variables at all.
+curl -sI https://anyplot.ai/_health | grep -i x-origin-gate     # expect: off
+
+# (b) widen the Transform Rule to the app hostnames (dashboard: Rules →
+#     Transform Rules → Modify Request Header), and redeploy the Worker so its
+#     /api/event branch stamps too (see "Deploying" above). Then measure EVERY
+#     path — each one must read off-seen before anything is armed:
+curl -sI https://anyplot.ai/_health                          | grep -i x-origin-gate
+curl -sI https://www.anyplot.ai/_health                      | grep -i x-origin-gate
+curl -si -X POST -A 'Googlebot' https://anyplot.ai/api/event -d '{}' | grep -i x-origin-gate
+curl -sI https://anyplot-app-r3tvmejsmq-ez.a.run.app/_health | grep -i x-origin-gate  # off
+
+# (c) the two callers. The repository secret already exists (sync-postgres.yml
+#     uses it) — confirm it, and confirm the build account can read the secret:
+gh secret list --repo MarkusNeusinger/anyplot | grep ORIGIN_SECRET
+gcloud secrets get-iam-policy ORIGIN_SECRET --project=anyplot
+gh workflow run bot-serving-check.yml --repo MarkusNeusinger/anyplot   # expect: "origin gate: off-seen"
+
+# (d) arm. A new revision is created and traffic moves to it; if the rendered
+#     config were invalid, nginx would not start, the revision would never
+#     become ready, and traffic would stay where it is.
+gcloud run services update anyplot-app --region=europe-west4 --project=anyplot \
+  --update-secrets=ORIGIN_SECRET=ORIGIN_SECRET:latest \
+  --update-env-vars=ORIGIN_GATE=on
+
+# (e) verify, in this order:
+curl -sI https://anyplot.ai/_health | grep -i x-origin-gate                       # ok
+curl -s -o /dev/null -w '%{http_code}\n' https://anyplot.ai/                      # 200
+curl -s -o /dev/null -w '%{http_code}\n' https://anyplot-app-r3tvmejsmq-ez.a.run.app/  # 403
+curl -s -A 'Mozilla/5.0 (compatible; Googlebot/2.1)' https://anyplot.ai/scatter-basic | grep canonical
+curl -si -X POST -A 'Googlebot' https://anyplot.ai/api/event -d '{}' | head -1    # 202, not 403
+gh workflow run bot-serving-check.yml --repo MarkusNeusinger/anyplot              # green
+
+# (f) rollback, either half on its own:
+gcloud run services update anyplot-app --region=europe-west4 --project=anyplot \
+  --remove-env-vars=ORIGIN_GATE
+#     or straight back to the revision that was serving before (d):
+gcloud run revisions list --service anyplot-app --region europe-west4 --project anyplot \
+  --format='table(name, creationTimestamp)' --limit 5
+gcloud run services update-traffic anyplot-app --region europe-west4 --project anyplot \
+  --to-revisions=<that-revision>=100
+```
+
+`--update-secrets` and `--update-env-vars`, never the `--set-` forms: those
+replace the whole set, so the next deploy would strip whatever was attached out
+of band — the same trap `api/cloudbuild.yaml` documents for the API side. The
+app's own `cloudbuild.yaml` names neither variable, so a deploy carries both
+forward untouched.
+
+**Rotation** is roll back, rotate, arm again, and there are now **five** copies
+of one value: Secret Manager, the API service, the app service, the Worker
+binding and the GitHub repository secret. The gate is off in between, which is
+the documented safe state.

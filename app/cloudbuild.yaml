@@ -141,8 +141,45 @@ steps:
         # candidate is ALWAYS cold, and the crawler probes additionally wait on
         # the first upstream call to api.anyplot.ai.
         RETRY="--retry 5 --retry-delay 5 --retry-all-errors"
+        # The candidate is probed on its `run.app` tag URL, which by definition
+        # never passes the Cloudflare edge — so once ORIGIN_GATE=on is set on the
+        # service (app/origin-gate.conf.template) every probe but /_health needs
+        # the header the edge would have stamped. Read here rather than through
+        # `availableSecrets` on purpose, exactly as api/cloudbuild.yaml does:
+        # that resolves at build start and would fail every build until the
+        # secret exists. Missing secret or missing permission => empty => the
+        # probes run bare, which is correct while the gate is off and is caught
+        # by the /_health verdict below once it is on. The value is captured,
+        # never echoed; the step runs without `set -x`.
+        ORIGIN_SECRET=$$(gcloud secrets versions access latest --secret=ORIGIN_SECRET 2>/dev/null || true)
+        HDR=()
+        if [ -n "$$ORIGIN_SECRET" ]; then HDR=(-H "X-Origin-Secret: $$ORIGIN_SECRET"); fi
         HUMAN="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
         GOOGLEBOT="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+        # Ask the gate what it makes of this build BEFORE any content probe, so
+        # a wired-up-wrong secret is reported as itself rather than as a
+        # mystifying 403 on the home page. /_health is the gate's one exempt
+        # path, so it answers whatever the gate is doing, and it reports the
+        # verdict for the request it was asked with — never the value.
+        # `off`/`off-seen` are ACCEPTED, not failures: they are the gate before
+        # it is armed and after a rollback, and a build that refused to run then
+        # would break the deploy pipeline exactly when it is needed most. An
+        # ABSENT header is a failure of its own: it means the templated maps
+        # never rendered, which is the one way this mechanism can fail quietly.
+        #
+        # Fetched to a file rather than piped: `-ceu` carries no `pipefail`, so a
+        # curl that never reached the candidate at all would leave `$$gate` empty
+        # and be reported below as a config that failed to render — a wrong
+        # answer, on the log someone reads while a deploy is blocked.
+        curl -fsS $$RETRY "$${HDR[@]}" -o /dev/null -D gate.out "$$URL/_health" \
+          || { echo "the candidate never answered /_health"; exit 1; }
+        gate=$$(tr -d '\r' < gate.out | sed -n 's/^[Xx]-[Oo]rigin-[Gg]ate: //p')
+        case "$$gate" in
+          ok|off|off-seen) echo "origin gate: $$gate" ;;
+          missing) echo "the candidate's gate is armed and this build sent no secret — every probe below would be a 403"; exit 1 ;;
+          mismatch) echo "the candidate's gate is armed and this build's secret is not the one it was given"; exit 1 ;;
+          *) echo "/_health carries no X-Origin-Gate header ('$$gate') — the templated origin-gate maps did not render"; exit 1 ;;
+        esac
         # `expect <ua> <path> <needle> <what-it-means>`: fetch to a file rather
         # than piping into `grep -q`. `grep -q` exits at the first match and
         # SIGPIPEs curl, so the pipe form only ever passes because `-ceu`
@@ -151,7 +188,7 @@ steps:
         # probe failed and what was expected, which is the whole value of a log
         # someone reads while a deploy is blocked.
         expect() {
-          curl -fsS $$RETRY -A "$$1" -o body.out "$$URL$$2" \
+          curl -fsS $$RETRY "$${HDR[@]}" -A "$$1" -o body.out "$$URL$$2" \
             || { echo "candidate did not serve $$2 to UA '$$1'"; exit 1; }
           grep -qF "$$3" body.out || { echo "$$4 ($$2 is missing: $$3)"; exit 1; }
           echo "OK: $$2"
@@ -176,7 +213,7 @@ steps:
         # while every browser got the untouched file (Copilot review).
         # Reproduced against a local nginx with an index.html.gz planted in the
         # docroot: plain curl saw 7 stamped tags, `curl --compressed` saw 0.
-        curl -fsS $$RETRY --compressed -A "$$HUMAN" -D head.out -o body.out "$$URL/" \
+        curl -fsS $$RETRY "$${HDR[@]}" --compressed -A "$$HUMAN" -D head.out -o body.out "$$URL/" \
           || { echo "candidate did not serve the shell for the nonce probe"; exit 1; }
         # Exactly 32 hex digits, which is what nginx's $$request_id always is.
         # `[0-9a-f]*` would have accepted a bare `nonce-` — and `test -n` calls
@@ -213,7 +250,7 @@ steps:
           "robots.txt did not come from the location = bypass"
         expect "$$GOOGLEBOT" "/llms.txt" '# anyplot' \
           "llms.txt did not come from the location = bypass"
-        ct=$$(curl -fsS $$RETRY -A "$$GOOGLEBOT" -o /dev/null -w '%{content_type}' "$$URL/llms.txt")
+        ct=$$(curl -fsS $$RETRY "$${HDR[@]}" -A "$$GOOGLEBOT" -o /dev/null -w '%{content_type}' "$$URL/llms.txt")
         case "$$ct" in
           *charset=utf-8*) ;;
           *) echo "llms.txt served as '$$ct' (expected a utf-8 charset)"; exit 1 ;;
