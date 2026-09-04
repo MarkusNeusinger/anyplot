@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: contour-decision-boundary
 created: '2026-09-04T23:15:12Z'
-updated: '2026-09-04T23:19:15Z'
+updated: '2026-09-04T23:28:49Z'
 generated_by: claude-sonnet
 workflow_run: 33928534484
 issue: 2921
@@ -12,43 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Uses a real classifier (class::knn) trained on real iris petal measurements, with
-    leave-one-out cross-validation (class::knn.cv) to flag misclassified training
-    points — a genuinely informative decision-boundary story rather than synthetic
-    filler.
-  - 'Correct Imprint palette order (position 1 #009E73 green for setosa, position
-    2 #C475FD lavender for versicolor, position 3 #4467A3 blue for virginica), identical
-    across light and dark renders with only chrome flipping.'
-  - Marker shape (circle vs. X) redundantly encodes classification correctness alongside
-    color, improving accessibility beyond color alone.
-  - Title fontsize (10pt) correctly follows the length-scaling formula for the descriptive-prefixed
-    mandated title, so the ~84-char title fits cleanly without overflow.
-  - Canvas passes the 3200×1800 landscape gate; both themes are legible with no dark-on-dark
-    or light-on-light chrome failures.
+  - Decision-boundary shading reuses the exact same Imprint palette colors as the
+    training-point species colors, creating an intuitive, immediate visual link between
+    predicted region and true class.
+  - Misclassified vs. correctly classified points are distinguished by shape (circle
+    vs. X), directly implementing the spec's suggestion to highlight misclassification
+    — computed honestly via leave-one-out cross-validation (knn.cv), not faked.
+  - Real iris dataset (petal length/width, 3 species) driving an actual k-NN classifier
+    on a 150x150 mesh grid — a genuine ML workflow rather than a synthetic decoration.
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) are threaded consistently through plot/panel
+    background, axis text, titles, and legend chrome; both light and dark renders
+    stay fully legible with identical data colors.
+  - Canvas size, mandated title format (with descriptive prefix), and dual legends
+    (Species + Prediction) all match the spec and style guide exactly.
   weaknesses:
-  - Raster fill shows a subtle rendering seam artifact at the setosa/versicolor and
-    versicolor/virginica boundary — thin lighter-colored notches/gaps interrupt the
-    fill where the 150x150 geom_raster grid meets the boundary edge, visible in both
-    themes on close inspection. Switch to geom_tile() (vector-based, no antialiasing
-    seam) or verify the raster grid resolution aligns cleanly to the output pixel
-    grid.
-  - library(dplyr) is imported but never used — the script only calls tibble::tibble(),
-    class::knn(), and class::knn.cv(). Drop the unused import.
+  - Decision-region background is built with geom_tile() over the dense 150x150 mesh
+    grid, which produces faint but visible horizontal seam/streak artifacts across
+    the solid-colored regions in both renders (most noticeable in the mid-tone versicolor/virginica
+    areas). Switch to geom_raster() for a regular mesh-grid fill — it rasterizes without
+    inter-cell seams and is faster for this data shape.
+  - panel.grid is fully removed (element_blank()) — a reasonable call given the colored
+    background, but a very faint reference grid (low-alpha INK line) would help readers
+    read off precise petal length/width values without competing with the region fills.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Iris Species by Petal Size · contour-decision-boundary · r · ggplot2 · anyplot.ai" is bold dark ink, fully visible, not clipped. Axis titles "Petal Length (cm)" / "Petal Width (cm)" and tick labels render in dark/soft-dark ink, clearly legible. Two legends ("Prediction": circle=Correctly classified, X=Misclassified; "Species": setosa/versicolor/virginica swatches) sit in elevated cream boxes with dark text, fully readable.
-      Data: Three flat-filled decision regions (green/lavender/blue, alpha ~0.32) partition the petal-length x petal-width space. Training points are colored by true species (green, lavender, blue matching the Imprint palette) with circle markers for correct predictions and X markers for the handful of misclassified versicolor/virginica points near the boundary. First series (setosa) is #009E73 green as required.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues found. Minor note: a faint seam/notch artifact is visible in the raster fill along the setosa/versicolor boundary edge on close inspection (does not affect text legibility).
+      Background: Warm off-white (#FAF8F1), matches the required light-theme background.
+      Chrome: Bold dark title "Iris Species by Petal Size · contour-decision-boundary · r · ggplot2 · anyplot.ai" at top-left, fully visible, not clipped. Axis titles "Petal Length (cm)" / "Petal Width (cm)" and numeric tick labels (0/2/4/6, 0/1/2) render in dark ink, clearly legible. Two legend boxes on the right ("Prediction": circle/X, "Species": color swatches) sit inside a light elevated panel with visible borders, fully within canvas bounds.
+      Data: Three shaded decision-region bands (green/lavender/blue-gray, alpha ~0.32) fill the plot area, with training points overlaid as green/lavender/blue-purple dots (first series #009E73 = setosa). A handful of points near the versicolor/virginica boundary are marked with X instead of a dot, flagging leave-one-out misclassifications. Faint horizontal seam lines are visible within the solid-colored regions (geom_tile rendering artifact) — a minor blemish, not a legibility problem.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis titles render in light ink (near-white), tick labels and legend text in a softer light gray — both clearly visible against the dark background. Legend boxes use the elevated dark surface (#242420-like) with light text and borders, fully legible.
-      Data: Same three decision regions and point colors as the light render — green/lavender/blue data hues are visually identical between themes, confirming only chrome (background, text, legend boxes) flipped. Misclassification X markers remain distinguishable.
-      Legibility verdict: PASS — no dark-on-dark failures found; all title/axis/tick/legend text is clearly visible against the dark background. Same minor raster-seam artifact as the light render, visible on close inspection along the class-boundary edges.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme background.
+      Chrome: Same title, now in light ink, fully visible against the dark background — no dark-on-dark issues. Axis titles and tick labels render in soft light gray, clearly readable. Legend boxes use the elevated dark panel background with visible borders; legend text is light and readable.
+      Data: Same three decision-region colors (deep green/muted purple/slate blue at same alpha), and the same point colors as the light render — confirmed identical to light render, only chrome (background/text/legend panel) flipped. Same misclassification X markers in the same positions. The same faint geom_tile seam artifact is visible in the dark regions, consistent with the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 27
@@ -59,73 +59,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title fontsize correctly scaled
-          for the descriptive-prefixed mandated title length
+        comment: All text readable in both themes; sizes explicit throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Markers appropriately sized for ~150-point density; minor deduction
-          for the raster-fill seam artifact at class boundaries
+        comment: geom_tile mesh produces faint horizontal seam artifacts across solid-colored
+          regions in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Marker shape redundantly encodes correct/misclassified alongside
-          color
+        comment: Green/lavender/blue is not a red-green pairing, shape also encodes
+          misclassification
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, good proportions; minor deduction for the boundary-fill
-          seam artifact
+        comment: 3200x1800 canvas confirmed, title ~77% width (expected for long mandated
+          title), no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (cm)
+        comment: Descriptive axis labels with units (cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue), correct theme backgrounds,
-          data colors identical across themes
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Correct palette application and a thoughtful correct/misclassified
-          encoding; above generic defaults but not exceptional polish
+        comment: Region fill reuses species colors for an intuitive link; tile seams
+          slightly undercut polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis lines, grid intentionally omitted since raster fill
-          already provides structure
+        comment: Spines/grid minimized deliberately; seam artifact and grid removal
+          are a mild refinement gap
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: X markers for misclassified points create a clear focal point at
-          the decision boundary
+        comment: Boundary shading + misclassification markers create a clear, guided
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -135,20 +134,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct decision-boundary visualization
+        comment: Correct decision-boundary visualization via classified mesh grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colored regions with transparency, overlaid training points, correct/misclassified
-          marker styles, legend, real trained classifier — all present
+        comment: Distinct region colors + transparency, point overlay, correct/incorrect
+          marker styles, legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, full data range shown with padding
+        comment: X1/X2 mapped correctly, axes cover full data + mesh range
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -165,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Decision regions, training points, correctness status, legend — full
-          coverage
+        comment: Regions, boundary shape, points, and misclassification all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic iris petal dataset, real and neutral
+        comment: Real iris measurements, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible petal length/width ranges in cm
+        comment: Petal length/width ranges realistic for iris
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -188,49 +186,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but never used
+        passed: true
+        comment: ggplot2, class, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png
+        comment: Saves plot-{theme}.png via ragg::agg_png
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: geom_raster + geom_point layering, scale_*_manual — idiomatic ggplot2
-          grammar
+        comment: Mostly idiomatic, but geom_raster is the more idiomatic choice for
+          a dense regular mesh grid than geom_tile
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Dual aesthetic mapping (color + shape) is a nice ggplot-specific
-          touch, but not an exceptional showcase of unique library features
+        comment: shape aesthetic for misclassification plus alpha-linked region/point
+          palette goes beyond baseline usage
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -240,6 +238,7 @@ impl_tags:
   patterns:
   - dataset-loading
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - classification
   styling:
   - alpha-blending
