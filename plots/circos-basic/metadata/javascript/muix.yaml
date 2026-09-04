@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: circos-basic
+created: '2026-09-04T22:32:53Z'
+updated: '2026-09-04T22:53:30Z'
+generated_by: claude-sonnet
+workflow_run: 33925059701
+issue: 3005
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Imprint palette throughout: first segment is brand green #009E73, remaining
+    segments follow canonical order, coverage track correctly uses imprint_seq — verified
+    identical across both themes.'
+  - 'Clever engineering: reuses MUI X''s actual d3 pie() layout (via two real PiePlot
+    series) to render both rings, and mathematically reconciles the resulting angles
+    with the hand-drawn ribbon geometry so everything lines up exactly — a resourceful
+    way to work around the community package''s missing chord/ribbon mark.'
+  - 'All three plot layers required by the spec are present and correctly encoded:
+    segments (sized by code size), ribbons (widths by call volume), and a concentric
+    test-coverage track.'
+  - Clean, deterministic, realistic dataset with genuine variation across every dimension.
+  - Title format and legend documentation exactly match spec requirements.
+  weaknesses:
+  - Dense chord crossings near the circle's center create visual muddiness where multiple
+    translucent ribbons overlap — consider slightly lower ribbon opacity or curvature
+    tuning to reduce clutter in the busiest region.
+  - No explicit visual emphasis singles out an insight (e.g., the highest-volume connection
+    or the lowest-coverage service) — a small callout or subtle highlight would strengthen
+    data storytelling (DE-03).
+  - Segment label font size (15px) is on the smaller side relative to the 2400px canvas;
+    could be nudged up slightly for stronger mobile legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title ("circos-basic · javascript · muix · anyplot.ai"), italic subtitle explaining the ribbon/ring/track encoding, and a small gradient legend ("Test coverage track: 58% -> 95%") are all dark ink and clearly readable. Radially rotated segment-name labels (Gateway, Auth, Catalog, Orders, Payments, Inventory, Notify, Analytics) sit just outside the outer ring and are fully legible.
+      Data: Eight outer-ring segments in distinct Imprint hues, first segment (Gateway) is brand green #009E73. A green->blue sequential gradient track (imprint_seq) sits just inside the outer ring, encoding test coverage. 21 translucent ribbons (colored by source segment, width proportional to call volume) connect segments through the center.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/legend/segment labels, now rendered in light-colored text against the dark background. No dark-on-dark failures observed — every label, including the small legend percentages, is clearly legible.
+      Data: Segment colors, ribbon colors, and the coverage-track gradient are identical to the light render — only the chrome (background + text) flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; segment labels
+          could be marginally larger for mobile.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions with other text, rings, or ribbons.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ribbons visible and appropriately styled, but dense central crossings
+          get somewhat muddy.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues with stroke definition on ribbons.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-balanced square canvas, circle centered, no wasted space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title/subtitle/legend fully descriptive with units (%).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, imprint_seq for continuous
+          track, theme-correct chrome in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Layered rings + hand-drawn ribbons + gradient legend show real design
+          intent, above configured-default look.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, generous margins, refined gradient legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy present via ring segmentation and gradient track,
+          but no explicit insight emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine circos/chord diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Segments with gaps, ribbon widths by value, distinct colors, one
+          concentric track all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Segments/ribbons/track correctly mapped to code size/call volume/coverage.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches spec format exactly; legend documents the coverage
+          scale.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Genuine variation across segment sizes, connection strengths, and
+          coverage values.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible microservice-architecture scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: kLOC, call-volume, and coverage-% values internally consistent and
+          realistic.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions needed since MUI X lacks a native chord
+          mark; more structure than a basic plot.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded dataset.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the three @mui/x-charts imports actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity justified and well-commented; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default export, skipAnimation set.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative, correct use of ChartContainer + PiePlot real pie() layout
+          for both rings, reconciled with hand-drawn geometry.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses ChartsTooltip and MUI X pie-angle math distinctively, but core
+          chord visuals are hand-drawn SVG.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - colorbar
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - gradient-fill
+  - alpha-blending
