@@ -235,9 +235,12 @@ jobs:
       # still caught — which a file-wide `ignore:` silently swallowed. The third
       # former exception, DL3013, is simply gone: `pip install uv==<version>` is
       # pinned. DL3066 (non-numeric USER) still fires at info level, below the
-      # threshold, so it stays visible without blocking. app/Dockerfile needs no
-      # exceptions at all — verified against hadolint 2.15.1, the version this
-      # action pins.
+      # threshold, so it stays visible without blocking. app/Dockerfile declines
+      # exactly one, DL3064 on the origin gate's `ORIGIN_SECRET=""` default: the
+      # rule reads the variable NAME, the value is the empty string, and the
+      # reason it has to be declared at all is written beside the ignore. It sits
+      # on an ENV instruction of its own so it excuses that line and nothing
+      # else. Verified against hadolint 2.15.1, the version this action pins.
       - name: Hadolint (api/Dockerfile)
         if: steps.check.outputs.should_build == 'true'
         uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
@@ -255,3 +258,210 @@ jobs:
       - name: Skip notice
         if: steps.check.outputs.should_build == 'false'
         run: echo "::notice::Image build skipped - no changes to api/, core/, the dependency lock or a Dockerfile"
+
+  # The same idea for the frontend container, and for a sharper reason: what
+  # app/Dockerfile produces is not a program that fails to import, it is an
+  # nginx that either boots or does not — and since the origin gate
+  # (app/origin-gate.conf.template) the config it boots with is RENDERED at
+  # container start from two environment variables. Nothing before this job
+  # ever ran that entrypoint: the deploy's pre-traffic smoke is the first place
+  # the rendered config exists, and it lives in Cloud Build, after the merge.
+  #
+  # A separate job rather than more steps in the one above, so an SPA build
+  # never delays the API smoke and neither failure hides the other. Its change
+  # detection is deliberately narrow: `app/src/**` cannot affect any of this,
+  # and the frontend opens far too many PRs to pay for a container build each
+  # time. The event-shape handling is the one above in short form — the long
+  # rationale for each branch is written out there.
+  app-image:
+    name: Build app image and smoke the origin gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # yarn install + vite build cold is minutes; the gate matrix below is
+    # seconds. 20 fails loudly instead of hanging on a slow package index.
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Check for app-container changes
+        id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+          FORCE_RUN: ${{ inputs.force_run }}
+        run: |
+          set -uo pipefail
+          CHANGED_FILES=""
+          case "$EVENT_NAME" in
+            pull_request)
+              if ! CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA"); then
+                echo "::error::could not diff $PR_BASE_SHA..$PR_HEAD_SHA — refusing to decide whether the app image needs building"
+                exit 1
+              fi ;;
+            merge_group)
+              if ! CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA"); then
+                echo "::error::could not diff $MG_BASE_SHA..$MG_HEAD_SHA — refusing to decide whether the app image needs building"
+                exit 1
+              fi ;;
+            push)
+              if [[ "$PUSH_BEFORE" =~ ^0+$ ]] || ! CHANGED_FILES=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_AFTER"); then
+                echo "::warning::the pushed range is not diffable — building the app image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+            *)
+              if ! CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD); then
+                echo "::warning::no parent commit to diff against — building the app image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+          esac
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # What can change how this container boots or what it serves: the
+          # Dockerfile, the three nginx files, the build inputs, and what the
+          # build context can see. Not app/src — the gate is upstream of every
+          # line of it.
+          APP_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(app/(Dockerfile|nginx\.conf|security-headers\.conf|origin-gate\.conf\.template|package\.json|yarn\.lock|vite\.config\.ts|index\.html|\.dockerignore)$|\.github/workflows/ci-image\.yml$)' || true)
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
+            echo "Manual trigger with force_run=true, will build the app image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$APP_CHANGES" ]]; then
+            echo "Found app-container changes, will build the app image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No app-container changes, skipping the build"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Buildx
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4.3.0
+
+      # Its own cache scope: this image shares no layer with the API's, and one
+      # shared scope would have them evicting each other.
+      - name: Build the app image
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
+        with:
+          context: app
+          file: app/Dockerfile
+          push: false
+          load: true
+          tags: anyplot-app:ci
+          build-args: |
+            VITE_API_URL=https://api.anyplot.ai
+            VITE_DEBUG_API_URL=/api
+          cache-from: type=gha,scope=app-image
+          cache-to: type=gha,mode=max,scope=app-image
+
+      # THE assert this job exists for: the gate's three states, against the
+      # real image, through the real entrypoint. A test over the config text can
+      # only say what the file says; only a running container can say that
+      # envsubst rendered it, that nginx accepted the result, and that the maps
+      # decide what they were meant to decide.
+      - name: Origin gate matrix (off / armed / armed with no secret)
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          # Not a production value and never one: this container is thrown away
+          # at the end of the job, and the real secret has no business on a
+          # runner that prints its own logs on failure. It is the LENGTH of a
+          # real one on purpose — 64 characters, what `openssl rand -hex 32`
+          # produces. A short placeholder passed this job while the production
+          # length did not: the tagged map key is `presented:` plus the secret,
+          # and nginx cannot hash a key longer than one bucket, so with the gate
+          # armed the container refused to start. That is the bug this line now
+          # keeps caught (see map_hash_bucket_size in
+          # app/origin-gate.conf.template).
+          SECRET="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+          start() {  # start <name> <host-port> [docker run args...]
+            local name="$1" port="$2"; shift 2
+            docker run -d --name "$name" -p "$port:8080" "$@" anyplot-app:ci >/dev/null
+            for _ in $(seq 30); do
+              if curl -fsS "localhost:$port/_health" >/dev/null 2>&1; then return 0; fi
+              sleep 1
+            done
+            echo "::error::container $name never answered /_health within 30 s"
+            docker logs "$name" || true
+            exit 1
+          }
+          code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+          verdict() { curl -sI "$@" | tr -d '\r' | sed -n 's/^[Xx]-[Oo]rigin-[Gg]ate: //p'; }
+          want() {  # want <what> <got> <expected>
+            if [ "$2" != "$3" ]; then echo "::error::$1: got '$2', expected '$3'"; exit 1; fi
+            echo "OK: $1 = $3"
+          }
+
+          # 1. Unset — the state this change ships in and rolls back to. Nothing
+          #    is refused, and /_health already reports whether a header arrived,
+          #    which is what makes arming a measurement instead of a leap.
+          start gate-off 8081
+          want "gate off: the shell still serves"     "$(code localhost:8081/)"          200
+          want "gate off: no header"                  "$(verdict localhost:8081/_health)" off
+          want "gate off: a header arrived"           "$(verdict -H 'X-Origin-Secret: anything' localhost:8081/_health)" off-seen
+
+          # 2. Armed. The door is shut, the exempt path is not, and the refusal
+          #    says which of the two armed failures it is.
+          start gate-on 8082 -e ORIGIN_GATE=on -e ORIGIN_SECRET="$SECRET"
+          want "armed: no header is refused"          "$(code localhost:8082/)"          403
+          want "armed: wrong secret is refused"       "$(code -H "X-Origin-Secret: wrong" localhost:8082/)" 403
+          want "armed: the right secret passes"       "$(code -H "X-Origin-Secret: $SECRET" localhost:8082/)" 200
+          want "armed: /_health stays exempt"         "$(code localhost:8082/_health)"   200
+          want "armed: /_health names the failure"    "$(verdict localhost:8082/_health)" missing
+          want "armed: a wrong secret is a mismatch"  "$(verdict -H "X-Origin-Secret: wrong" localhost:8082/_health)" mismatch
+          want "armed: the right secret is ok"        "$(verdict -H "X-Origin-Secret: $SECRET" localhost:8082/_health)" ok
+          # The refusal is a page, not nginx's stock one — which would print the
+          # exact nginx version to anyone knocking on the raw origin.
+          curl -s localhost:8082/ -o denied.html
+          grep -qF "answers only requests that came through the edge" denied.html \
+            || { echo "::error::the 403 body is not the gate's own page"; cat denied.html; exit 1; }
+          # The one thing that must never leak, in the two places it could.
+          # `if !` rather than `grep … && exit`: under `set -e` a grep that
+          # finds nothing — the passing case — would end the script itself.
+          if grep -qF "$SECRET" denied.html; then
+            echo "::error::the 403 body carries the secret"; exit 1
+          fi
+          if docker logs gate-on 2>&1 | grep -qF "$SECRET"; then
+            echo "::error::the container logged the secret"; exit 1
+          fi
+          echo "OK: the secret is in neither the refusal nor the logs"
+          # The rendered config has to be valid nginx, and `nginx -t` says so
+          # without dumping it — `nginx -T` would print the secret into this log.
+          docker exec gate-on nginx -t
+          echo "OK: the rendered config validates"
+
+          # 3. Armed with NO secret must fail CLOSED. This is the whole reason
+          #    the map keys are tagged: an untagged `"${ORIGIN_SECRET}"` key
+          #    would render as `""`, which is exactly what an absent header
+          #    looks like — and a forgotten variable would open the door to the
+          #    entire internet while looking armed.
+          start gate-shut 8083 -e ORIGIN_GATE=on
+          want "armed, no secret: refused"            "$(code localhost:8083/)"          403
+          want "armed, no secret: empty header too"   "$(code -H 'X-Origin-Secret;' localhost:8083/)" 403
+          want "armed, no secret: /_health exempt"    "$(code localhost:8083/_health)"   200
+
+      - name: Container logs on failure
+        if: failure() && steps.check.outputs.should_build == 'true'
+        run: |
+          for c in gate-off gate-on gate-shut; do
+            echo "=== $c ==="
+            docker logs "$c" 2>&1 || true
+          done
+
+      - name: Skip notice
+        if: steps.check.outputs.should_build == 'false'
+        run: echo "::notice::App image build skipped - no changes to app/Dockerfile, the nginx configuration or the build inputs"

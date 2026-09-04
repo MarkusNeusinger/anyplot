@@ -627,16 +627,18 @@ to end while the gate is still off (below), not with an exemption:
 curl -s -A 'Mozilla/5.0 (compatible; Googlebot/2.1)' https://anyplot.ai/scatter-basic | head -5
 ```
 
-**What the gate does not close.** It protects the API service's door. The app
-service (`anyplot-app`) also stands with `ingress=all`, and its nginx relays a
-crawler user agent through `@seo_proxy` to `https://api.anyplot.ai`, where the
-edge stamps the header legitimately — so a caller who sends a crawler user
-agent to the app's raw `*.run.app` URL still reaches the prerendered render and
-its DB queries. That is a second door on a second service rather than a hole in
-this one: the request the API sees really did come through the edge. Closing it
-means gating the app service or refusing to proxy for `run.app` hosts in
-`app/nginx.conf`, and `bot-serving-check.yml` probes that exact flow on the app
-origin every night — so it is a separate change with its own blast radius.
+**The second door, and where it is.** This gate protects the API service. The
+app service (`anyplot-app`) also stands with `ingress=all`, and its nginx relays
+a crawler user agent through `@seo_proxy` to `https://api.anyplot.ai`, where the
+edge stamps the header legitimately — so a caller who sent a crawler user agent
+to the app's raw `*.run.app` URL used to reach the prerendered render and its DB
+queries, and this gate could not tell: the request it saw really did come
+through the edge. That was never a hole in this one. It is a second door on a
+second service, and it has a gate of its own now —
+`app/origin-gate.conf.template`, the same secret and the same five verdicts,
+reported on the app's `/_health` as `X-Origin-Gate`. Its rollout, the hostnames
+it covers and the callers that reach that origin without the edge are in
+[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#the-sites-own-origin-anyplot-app).
 
 **Observing it.** `GET /health` reports `origin_gate` for the request it was
 asked with, never the value:

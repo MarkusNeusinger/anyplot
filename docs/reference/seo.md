@@ -184,6 +184,29 @@ location @seo_proxy {
 }
 ```
 
+### The crawler path only exists behind the edge
+
+Since the app's origin gate, every server block in `app/nginx.conf` refuses a
+request that does not carry the `X-Origin-Secret` Cloudflare stamps — so this
+whole path is reachable at `https://anyplot.ai/...` and nowhere else. That is
+the point: on the raw `*.run.app` URL, the `$is_bot` map above was a free relay
+into `@seo_proxy`, which is a repository query on a cache miss and an outbound
+Plausible event per request, for anyone who set a user agent.
+
+Two consequences for anything that measures this path:
+
+- **`bot-serving-check.yml` sends the header** out of the `ORIGIN_SECRET`
+  repository secret, because it probes the Cloud Run origin on purpose
+  (Cloudflare 403s runner IPs even for a UA-spoofed Googlebot). It reads the
+  origin's `/_health` first and fails with a message naming the secret rather
+  than reporting ~36 403s as a broken crawler path.
+- **A manual crawler probe goes through the edge**, which it always should have:
+  `curl -A "Googlebot" https://anyplot.ai/scatter-basic`. The same curl against
+  the `run.app` URL now answers 403 by design.
+
+The gate itself, its rollout and the hostnames it covers:
+[`infra/cloudflare/README.md`](../../infra/cloudflare/README.md#the-sites-own-origin-anyplot-app).
+
 ## SEO proxy endpoints
 
 Backend endpoints that serve HTML with correct meta tags for bots.

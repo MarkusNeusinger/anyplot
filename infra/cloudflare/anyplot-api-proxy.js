@@ -4,8 +4,26 @@ export default {
     // The Plausible proxy shares this route. `/api/event` is the analytics
     // endpoint the site's nginx also proxies (app/nginx.conf); it is not an
     // anyplot API path and must reach Plausible untouched.
+    //
+    // It is also the ONE path under this route that goes to the SITE's origin
+    // instead of the API host — and the app has an origin gate of its own now
+    // (app/origin-gate.conf.template). The same finding applies a second time:
+    // a Worker subrequest to a host in the same zone skips that zone's
+    // Transform Rules, so the app gate can only ever see the header if it is
+    // stamped right here. Without these three lines, arming the app gate takes
+    // every Plausible pageview on anyplot.ai down — quietly, because analytics
+    // failing is not something a page tells its visitor about.
+    //
+    // Deleted before it is set, for the same reason as below: the headers are
+    // cloned from the incoming request, so a caller could otherwise supply its
+    // own value and have it forwarded whenever the binding is unset — which
+    // would make an unarmed probe report a false `off-seen` and corrupt the one
+    // measurement the rollout hangs on.
     if (url.pathname === '/api/event') {
-      return fetch(request);
+      const eventHeaders = new Headers(request.headers);
+      eventHeaders.delete('X-Origin-Secret');
+      if (env.ORIGIN_SECRET) eventHeaders.set('X-Origin-Secret', env.ORIGIN_SECRET);
+      return fetch(new Request(request, { headers: eventHeaders }));
     }
     const targetPath = url.pathname.replace(/^\/api/, '');
     const targetUrl = `https://api.anyplot.ai${targetPath}${url.search}`;
