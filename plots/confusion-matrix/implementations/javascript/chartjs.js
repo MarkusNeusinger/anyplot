@@ -11,17 +11,21 @@ const t = window.ANYPLOT_TOKENS;
 // Wildlife camera-trap classifier: true vs. predicted species over 400 test images.
 const classNames = ["Deer", "Fox", "Rabbit", "Owl"];
 const matrix = [
-  [96, 3, 1, 0], // true: Deer
-  [4, 89, 5, 2], // true: Fox
-  [2, 6, 88, 4], // true: Rabbit
-  [0, 3, 7, 90], // true: Owl
+  [96, 4, 2, 1], // true: Deer
+  [5, 91, 6, 3], // true: Fox
+  [3, 7, 90, 5], // true: Rabbit
+  [1, 4, 9, 93], // true: Owl
 ];
 const maxCount = Math.max(...matrix.flat());
 
+// Row-normalized percentages (recall per true class) shown as a secondary
+// annotation per cell, covering the spec's normalization-options note.
 const cells = [];
 matrix.forEach((rowCounts, row) => {
+  const rowTotal = rowCounts.reduce((sum, c) => sum + c, 0);
   rowCounts.forEach((count, col) => {
-    cells.push({ x: classNames[col], y: classNames[row], row, col, count });
+    const pct = (count / rowTotal) * 100;
+    cells.push({ x: classNames[col], y: classNames[row], row, col, count, pct });
   });
 });
 
@@ -59,7 +63,7 @@ const heatmapPlugin = {
     const cellH = scales.y.getPixelForTick(1) - scales.y.getPixelForTick(0);
     const gap = 3;
 
-    cells.forEach(({ row, col, count }) => {
+    cells.forEach(({ row, col, count, pct }) => {
       const cx = scales.x.getPixelForTick(col);
       const cy = scales.y.getPixelForTick(row);
       const { rgb, luminance } = cellFill(count);
@@ -73,11 +77,14 @@ const heatmapPlugin = {
         ctx.strokeRect(cx - cellW / 2 + gap, cy - cellH / 2 + gap, cellW - gap * 2, cellH - gap * 2);
       }
 
-      ctx.fillStyle = luminance > 0.55 ? "#1A1A17" : "#F0EFE8";
-      ctx.font = "600 32px sans-serif";
+      const textColor = luminance > 0.55 ? "#1A1A17" : "#F0EFE8";
+      ctx.fillStyle = textColor;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(String(count), cx, cy);
+      ctx.font = "600 30px sans-serif";
+      ctx.fillText(String(count), cx, cy - 16);
+      ctx.font = "500 18px sans-serif";
+      ctx.fillText(`${pct.toFixed(1)}%`, cx, cy + 22);
     });
   },
   afterDraw(chart) {
@@ -138,6 +145,13 @@ new Chart(canvas, {
         color: t.ink,
         font: { size: 22, weight: "500" },
       },
+      subtitle: {
+        display: true,
+        text: "Counts with row-normalized (recall) percentage below",
+        color: t.inkSoft,
+        font: { size: 14 },
+        padding: { bottom: 10 },
+      },
       legend: { display: false },
       tooltip: {
         callbacks: {
@@ -153,8 +167,8 @@ new Chart(canvas, {
         type: "category",
         labels: classNames,
         offset: true,
-        title: { display: true, text: "Predicted Label", color: t.ink, font: { size: 18 } },
-        ticks: { color: t.inkSoft, font: { size: 16 } },
+        title: { display: true, text: "Predicted Label", color: t.ink, font: { size: 16, weight: "500" } },
+        ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { display: false },
         border: { display: false },
       },
@@ -162,8 +176,8 @@ new Chart(canvas, {
         type: "category",
         labels: classNames,
         offset: true,
-        title: { display: true, text: "True Label", color: t.ink, font: { size: 18 } },
-        ticks: { color: t.inkSoft, font: { size: 16 } },
+        title: { display: true, text: "True Label", color: t.ink, font: { size: 16, weight: "500" } },
+        ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { display: false },
         border: { display: false },
       },
