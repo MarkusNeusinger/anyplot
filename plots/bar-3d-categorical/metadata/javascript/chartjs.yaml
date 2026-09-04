@@ -1,0 +1,264 @@
+library: chartjs
+language: javascript
+specification_id: bar-3d-categorical
+created: '2026-09-04T22:17:16Z'
+updated: '2026-09-04T22:27:43Z'
+generated_by: claude-sonnet
+workflow_run: 33923523124
+issue: 5248
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Technically sophisticated hand-rolled isometric 3D bar chart with true perspective
+    projection, camera basis vectors, and painter's-algorithm depth sorting -- no
+    external 3D library or plugin, matching the Chart.js constraint
+  - Continuous sales-magnitude color mapping correctly uses imprint_seq (brand green
+    to blue), with data colors identical between light and dark renders
+  - Smart nearest-floor-corner axis anchor placement keeps category tick labels clear
+    of tall bars regardless of which cell is tallest
+  - Value labels shown for all 20 bars per the spec's under-25-bars guidance, and
+    a gradient color-key legend clearly maps color to Sales ($k)
+  - Floor grid on the base plane correctly relates bars to their categorical grid
+    positions, and default elevation/azimuth (30/45 deg) matches the spec
+  - 'Both renders are fully theme-correct: warm off-white/near-black backgrounds,
+    ink-adaptive text and grid, no dark-on-dark or light-on-light failures'
+  weaknesses:
+  - 'Confirmed label collision at the shared axis-origin corner (bottom of both renders):
+    the Product axis''s last tick label "Toys" and the Region axis''s last tick label
+    "West" render with zero gap between them, visually merging into "ToysWest" in
+    both plot-light.png and plot-dark.png. Because both axis edges share that corner
+    as an endpoint, their perpendicular tick-label offsets end up nearly collinear
+    at that specific point. Fix: add a small additional lateral offset (e.g. along
+    each edge''s own direction, not just the perpendicular) specifically for the tick
+    nearest the shared corner, so the two labels separate.'
+  - Code relies on several top-level helper arrow functions (project, colorForValue,
+    addFace, etc.) for the 3D math -- more structure than the CQ-01 'no functions'
+    ideal, though justified by the hand-rolled projection technique this plot type
+    requires.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "bar-3d-categorical · javascript · chartjs · anyplot.ai" in bold dark ink at top, clearly legible. "Product" and "Region" axis titles in bold dark ink; "Toys", "West", "Sports", "Home", "Apparel", "Electronics", "North", "South", "East" category tick labels in medium-gray ink, all legible EXCEPT the "Toys" / "West" pair at the shared near-corner, which render with no gap and visually merge into "ToysWest" (confirmed via a zoomed crop of that region). Floor grid lines are thin, subtle mid-gray, visible but not competing with the bars. A "Sales ($k)" gradient color-key sits bottom-left with min (22) / max (90) labels, fully legible.
+      Data: 20 bars arranged in a 5 (Product) x 4 (Region) grid, each with a lighter top face and two darker camera-facing side faces (shaded from the same base hue), colored on a green-to-blue continuous gradient (imprint_seq) by sales magnitude -- tallest bars (82, 90) are blue, shortest (22, 25) are green. White value labels sit atop each bar giving the exact $k figure. All bars and labels are otherwise clearly distinguishable from the light background and from each other.
+      Legibility verdict: PASS overall, with one flagged FAIL -- the "Toys"/"West" corner tick-label collision noted above.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same title, now in light/off-white ink, clearly legible against the dark background. Axis titles ("Product", "Region") in light ink, category tick labels in lighter gray, all legible with the SAME "Toys"/"West" corner collision reproduced identically (it's a geometry issue independent of theme, not a color/contrast issue). Floor grid lines are thin, subtle light-gray, visible without dominating. The color-key legend and its min/max labels are legible in light ink against the dark surface.
+      Data: Colors are identical to the light render (same green-to-blue gradient by value, same face shading) -- only the chrome (background, text, grid) flipped as required. No dark-on-dark failures: all title/axis/tick text is light-colored against the near-black surface and reads cleanly. Value labels remain in white/near-white and are clearly visible atop every bar.
+      Legibility verdict: PASS overall, with the same "Toys"/"West" corner collision as the light render (FAIL for that one label pair specifically).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full size; explicit font sizes
+          set (13-22px). Minor dock for the corner tick-label pair (see VQ-02).
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Confirmed collision: the ''Toys'' (Product) and ''West'' (Region)
+          tick labels at the shared axis-origin corner render with zero gap and merge
+          into ''ToysWest'' in both renders. No other overlaps observed.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 20 bars at appropriate size for the grid density; value labels legible
+          on every bar.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient is CVD-safe and high-contrast on
+          both surfaces; not used as sole categorical signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing clipped at canvas edges, scales fit content
+          with margin for labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Product / Region / Sales ($k) axis titles are descriptive; Sales
+          carries units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous value mapped via imprint_seq (green->blue) per style
+          guide; backgrounds are #FAF8F1 / #1A1A17; both renders theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hand-rolled 3D projection with shaded faces (lighter top,
+          darker sides) shows real design intent beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chart borders/frame, subtle floor grid, generous whitespace around
+          the isometric scene.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color gradient by magnitude plus per-bar value labels create a clear
+          visual hierarchy pointing at the highest/lowest cells.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D bar chart rising from a 2D categorical grid.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bar spacing, magnitude color encoding, 30/45 default view, floor
+          grid, value labels (<25 bars), color-bar legend -- all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Product, Y=Region, Z=Sales; all 20 cells (5x4, within the 9-100
+          bar range) shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'bar-3d-categorical · javascript · chartjs · anyplot.ai';
+          color-key legend correctly maps the continuous variable.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid, magnitude color, value labels, legend, and axis box all present
+          -- full feature set for the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly sales ($k) by product category and sales region -- plausible,
+          neutral business data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sales values (22-90 $k) are sensible for the domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several top-level helper functions for the 3D math (project, colorForValue,
+          addFace) -- justified by the hand-rolled projection technique, not classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data array.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart.js instance.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity is proportional to what a hand-rolled
+          3D bar chart requires.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract; animation: false set; harness captures
+          the PNG/HTML.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's plugin hook system (beforeDatasetsDraw/afterDatasetsDraw)
+          idiomatically to layer custom canvas drawing onto a scatter host chart.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative use of Chart.js's plugin architecture to fake a capability
+          (3D) the library doesn't natively support, without reaching for another
+          library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - manual-ticks
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - gradient-fill
