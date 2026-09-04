@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: confusion-matrix
 created: '2026-09-04T22:10:07Z'
-updated: '2026-09-04T22:14:35Z'
+updated: '2026-09-04T22:25:56Z'
 generated_by: claude-sonnet
 workflow_run: 33923790109
 issue: 2272
@@ -12,46 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/confusion
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/confusion-matrix/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Custom Chart.js plugin (beforeDatasetsDraw/afterDraw hooks) cleanly builds the
-    heatmap cells, diagonal highlight, and gradient colorbar without reaching for
-    an unpinned matrix plugin — exactly the approach the library rules call for when
-    a chart type isn't native
-  - Sequential imprint_seq colormap (green→blue) correctly applied to continuous count
-    data with a labeled colorbar (0–max), rather than misusing the categorical palette
-  - Diagonal cells get a redundant (non-color) encoding via a bold stroke border,
-    satisfying the spec's 'highlight correct predictions' note and improving CVD accessibility
-  - Luminance-based text color switching (per-cell) keeps count labels legible against
-    both the green and blue fills
-  - Both renders are pixel-identical for data colors and only chrome (background,
-    ink, borders) flips between light and dark, with no clipping at any edge and no
-    text collisions
-  - Realistic, neutral synthetic dataset (wildlife camera-trap classifier, 4 classes,
-    ~400 samples) with plausible per-class accuracy and error patterns
+  - Custom Chart.js plugin (beforeDatasetsDraw/afterDraw) cleanly builds the heatmap
+    cells, diagonal highlight, and gradient colorbar without reaching for an unpinned
+    matrix plugin — exactly the approach the library rules call for
+  - imprint_seq sequential colormap correctly applied to continuous count data with
+    a labeled 0-96 colorbar
+  - This attempt adds a row-normalized (recall) percentage annotation per cell plus
+    an explanatory subtitle, directly resolving the prior review's missing-normalization
+    weakness
+  - New two-tier typographic hierarchy (bold 30px count, lighter 18px percentage)
+    sharpens the visual read of magnitude vs. rate
+  - Diagonal correct-prediction cells get a redundant stroke-border encoding, improving
+    CVD accessibility beyond color alone
+  - Axis-title/tick font sizes were trimmed this attempt, resolving the prior 'fonts
+    competing with the title' note
+  - Both renders keep identical data colors with correctly-flipped chrome, no clipping,
+    and a realistic, neutral wildlife camera-trap dataset
   weaknesses:
-  - Spec's Notes section calls for support of normalization options (none/row/column/total)
-    — the implementation only ever shows raw counts, with no percentage/normalized
-    view represented anywhere (even as a secondary annotation line in each cell)
-  - 'Design polish is solid but not exceptional: cell gaps and stroke-based diagonal
-    highlight are functional rather than distinctive; a subtle drop-shadow or tighter
-    color ramp between adjacent counts (e.g. 88 vs 90) could sharpen the visual hierarchy
-    further'
-  - The 'Samples' colorbar label and axis titles are all fontsize 18, competing for
-    visual weight with the title — a slightly more restrained title-to-axis-label
-    size ratio would sharpen hierarchy (very minor, no overlap or overflow observed)
+  - Only raw counts and row-normalized (recall) percentages are shown — column (precision)
+    and total normalization from the spec's Notes are still not represented in any
+    form
+  - Design is solid but not yet distinctive at the DE-01 'publication-ready' tier
+    — e.g. uniform cell sizing regardless of magnitude, no subtle elevation/shadow
+    treatment
+  - Data storytelling still requires the viewer to compare cells manually to find
+    the weakest-performing class (e.g. Rabbit at 85.7% recall); an explicit visual
+    callout would sharpen the story further
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1), consistent across the full canvas including the colorbar gutter.
-      Chrome: Title "confusion-matrix · javascript · chartjs · anyplot.ai" in dark ink, clearly centered and fully visible top edge with no clipping. "True Label" (y, rotated) and "Predicted Label" (x) axis titles in dark ink at 18px. Class tick labels (Deer/Fox/Rabbit/Owl) in inkSoft gray, evenly spaced, no overlap. Colorbar on the right labeled "Samples" (rotated) with "0" and "96" endpoint labels, fully inside the canvas with generous right-side padding.
-      Data: 4x4 grid of cells colored via imprint_seq (green #009E73 for low counts, blue #4467A3 for high counts near the diagonal), each annotated with a bold white/light count label. Diagonal cells (correct predictions: 96, 89, 88, 90) carry an additional dark stroke border for redundant highlighting beyond color alone.
-      Legibility verdict: PASS — all text (title, axis labels, ticks, cell counts, colorbar labels) is clearly readable against the light background; confirmed legible even at the 400px thumbnail scale.
+      Chrome: Title "confusion-matrix · javascript · chartjs · anyplot.ai" in dark ink, fully visible, no clipping. New subtitle "Counts with row-normalized (recall) percentage below" directly under the title in soft ink. "True Label" (y, rotated) and "Predicted Label" (x) axis titles in dark ink at 16px. Class tick labels (Deer/Fox/Rabbit/Owl) in soft gray, evenly spaced, no overlap. Colorbar on the right labeled "Samples" with "0" and "96" endpoint labels, fully inside the canvas with generous right-side padding.
+      Data: 4x4 grid of cells colored via imprint_seq (green #009E73 for low counts, blue #4467A3 for high counts near the diagonal), each cell showing a bold count number above a smaller row-normalized recall percentage. Diagonal cells (correct predictions: 96, 91, 90, 93) carry an additional dark stroke border for redundant highlighting beyond color alone.
+      Legibility verdict: PASS — all text (title, subtitle, axis labels, ticks, cell counts/percentages, colorbar labels) is clearly readable against the light background.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (~#1A1A17), consistent across the full canvas including the colorbar gutter.
-      Chrome: Same title text now in light ink, fully visible with no clipping. Axis titles and tick labels flip to light/soft-light tones, remaining clearly legible against the dark background — no dark-on-dark failures observed anywhere (axis titles, ticks, colorbar "0"/"96" labels, and diagonal cell borders all correctly switch to light strokes/text). Colorbar and "Samples" label fully visible and correctly positioned, matching the light render's layout.
-      Data: Identical cell fill colors and count values to the light render (verified pixel-for-pixel color match on inspection) — only the chrome (background, ink, grid/border strokes) changed between themes, exactly as required.
+      Chrome: Same title and subtitle text now in light ink, fully visible with no clipping. Axis titles and tick labels flip to light/soft-light tones, remaining clearly legible against the dark background — no dark-on-dark failures observed anywhere. Diagonal cell borders correctly switch to a light stroke for visibility against the dark cell fills. Colorbar and "Samples" label fully visible and correctly positioned, matching the light render's layout.
+      Data: Identical cell fill colors, count values, and percentage annotations as the light render — only the chrome (background, ink, borders) changed between themes.
       Legibility verdict: PASS — no dark-on-dark or light-on-light issues; diagonal highlight borders correctly switched to a light stroke for visibility against the dark cell fills.
   criteria_checklist:
     visual_quality:
@@ -63,77 +63,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes, confirmed
-          legible down to the 400px thumbnail
+        comment: All font sizes explicit; axis title/tick sizes trimmed this attempt
+          (18->16, 16->14), still fully legible at full size and mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axis labels, ticks, cell text, or colorbar
+        comment: Title, new subtitle, axis labels, cell text, and colorbar all cleanly
+          separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells are large and clearly bounded with a 3px gap; diagonal cells
-          get an extra stroke border for visibility
+        comment: Large bounded cells with 3px gaps; diagonal cells get an added stroke
+          border
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-blue scale plus a non-color (stroke) diagonal encoding;
+        comment: Sequential green-blue scale plus non-color (stroke) diagonal encoding;
           no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400 square); colorbar and labels fit with
-          margin, nothing clipped
+        comment: 2400x2400 canvas gate passed; heatmap + colorbar use the majority
+          of the canvas with balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"True Label"/"Predicted Label" match spec exactly; title format
-          compliant'
+        comment: '''True Label''/''Predicted Label'' match the spec exactly'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used for continuous count data (not the categorical palette);
-          light/dark backgrounds match spec hex values; data colors identical across
-          themes
+        comment: imprint_seq correctly used for continuous count data; both backgrounds
+          theme-correct; data colors identical across themes
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom plugin architecture with luminance-adaptive text and gradient
-          colorbar shows above-default polish, though not exceptional
+        comment: Custom plugin-built heatmap with a new two-tier typographic hierarchy
+          (bold count / lighter percentage); solid, not yet publication-exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No axis grid clutter, no chart border/spines, clean cell gaps for
-          separation
+        comment: No grid, no spines, clean cell gaps, and trimmed axis-title/tick
+          sizes reduce competition with the title
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Diagonal highlighting draws the eye to correct predictions; color
-          intensity communicates count magnitude at a glance
+        passed: false
+        comment: Diagonal stroke + color intensity create a visual hierarchy, but
+          viewer must compare cells manually to spot the weakest class
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,21 +140,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct confusion matrix heatmap
+        comment: Correct confusion-matrix heatmap
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Count annotations, sequential colormap, colorbar, and diagonal highlight
-          all present; normalization options (row/column/total) from the spec's Notes
-          are not represented anywhere
+        comment: Counts, sequential colormap, colorbar, diagonal highlight, and now
+          a row-normalized (recall) percentage annotation + subtitle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows=true, columns=predicted, all 4 classes shown on both axes
+        comment: Rows=true label, columns=predicted label, all 4 classes shown on
+          both axes
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -163,16 +162,16 @@ review:
         passed: true
         comment: Title format compliant; colorbar serves as the value-scale legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Counts, diagonal highlight, and colorbar cover most aspects; missing
-          normalization view
+        comment: Counts, recall percentages, diagonal highlight, and colorbar together
+          cover the spec's feature list
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -184,7 +183,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Realistic per-class sample counts (~100) and error rates
+        comment: Realistic per-class sample counts (~100-107) and error-rate proportions;
+          percentages compute correctly against row totals
     code_quality:
       score: 10
       max: 10
@@ -231,15 +231,16 @@ review:
         max: 5
         passed: true
         comment: Correct use of plugin lifecycle hooks (beforeDatasetsDraw/afterDraw)
-          and a category-scale scatter base, following the library's documented workaround
-          pattern instead of an unpinned plugin
+          and a category-scale scatter base, following the documented workaround pattern
+          instead of an unpinned matrix plugin
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Custom heatmap-via-plugin technique is a genuinely distinctive use
-          of Chart.js's extension API
+        passed: false
+        comment: Custom heatmap-via-plugin technique leverages Chart.js's extension
+          API distinctively, though the core approach is conceptually portable to
+          other canvas-based libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -251,7 +252,8 @@ impl_tags:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - gradient-fill
