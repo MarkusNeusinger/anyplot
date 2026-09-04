@@ -1,13 +1,13 @@
-// anyplot.ai
-// circos-basic: Circos Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-09-04
 //# anyplot-orientation: square
 // anyplot.ai
 // circos-basic: Circos Plot
 // Library: MUI X Charts | React | Node 22
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-09-04
+import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { PiePlot } from "@mui/x-charts/PieChart";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data: microservice call graph -----------------------------------------
@@ -54,7 +54,11 @@ const CONNECTIONS = [
 const GAP_DEG = 3;
 
 // Segments arranged clockwise from 12 o'clock, span ∝ code size, fixed gaps
-// between neighbors for visual separation.
+// between neighbors for visual separation. This is the single source of
+// truth for the ribbon/label geometry below, AND it exactly matches what MUI
+// X's <PiePlot> renders for the two pie series further down (see
+// PIE_START_ANGLE/PIE_END_ANGLE) — both use the real @mui/x-charts-vendored
+// d3 `pie()` layout: cumulative value share + trailing `paddingAngle`.
 const buildSegments = () => {
   const totalSize = CODE_SIZE_KLOC.reduce((a, b) => a + b, 0);
   const availableDeg = 360 - GAP_DEG * MODULES.length;
@@ -115,27 +119,15 @@ const buildRibbons = () => {
 
 const RIBBONS = buildRibbons();
 
-// --- Geometry helpers (angle 0 = 12 o'clock, increasing = clockwise) -------
+// --- Geometry helpers for the ribbons (chords) and radial labels -----------
+// MUI X's community chart types have no ribbon/chord mark, so these two marks
+// stay hand-drawn (angle 0 = 12 o'clock, increasing = clockwise, same
+// convention d3/MUI X uses for its own pie arcs).
 const toRad = (deg) => (deg * Math.PI) / 180;
 const polarPoint = (cx, cy, angleDeg, radius) => ({
   x: cx + radius * Math.sin(toRad(angleDeg)),
   y: cy - radius * Math.cos(toRad(angleDeg)),
 });
-
-const ringArcPath = (cx, cy, startAngle, endAngle, rInner, rOuter) => {
-  const large = endAngle - startAngle > 180 ? 1 : 0;
-  const outerStart = polarPoint(cx, cy, startAngle, rOuter);
-  const outerEnd = polarPoint(cx, cy, endAngle, rOuter);
-  const innerEnd = polarPoint(cx, cy, endAngle, rInner);
-  const innerStart = polarPoint(cx, cy, startAngle, rInner);
-  return [
-    `M ${outerStart.x} ${outerStart.y}`,
-    `A ${rOuter} ${rOuter} 0 ${large} 1 ${outerEnd.x} ${outerEnd.y}`,
-    `L ${innerEnd.x} ${innerEnd.y}`,
-    `A ${rInner} ${rInner} 0 ${large} 0 ${innerStart.x} ${innerStart.y}`,
-    "Z",
-  ].join(" ");
-};
 
 const ribbonPath = (cx, cy, sStart, sEnd, tStart, tEnd, radius) => {
   const largeS = sEnd - sStart > 180 ? 1 : 0;
@@ -170,6 +162,54 @@ const lerpColor = (hexA, hexB, ratio) => {
 const COVERAGE_MIN = Math.min(...TEST_COVERAGE);
 const COVERAGE_MAX = Math.max(...TEST_COVERAGE);
 
+// --- The two rings as genuine @mui/x-charts pie series ----------------------
+// A circos ring (segments with gaps, arc length ∝ value) is exactly what a
+// MUI X pie series already computes via d3's pie() layout: cumulative value
+// share + a trailing `paddingAngle`. `PIE_START_ANGLE`/`PIE_END_ANGLE` cancel
+// out d3's half-`paddingAngle` offset (its first slice starts at
+// `startAngle + paddingAngle / 2`) so the rendered ring lands on the exact
+// same angles as SEGMENTS above — that's what lets the hand-drawn ribbons
+// attach cleanly to the MUI-rendered outer ring.
+const PIE_START_ANGLE = -GAP_DEG / 2;
+const PIE_END_ANGLE = 360 - GAP_DEG / 2;
+
+const segmentSeriesData = SEGMENTS.map((s) => ({
+  id: s.name,
+  value: s.codeSize,
+  label: `${s.name} · ${s.codeSize} kLOC`,
+  color: s.color,
+}));
+
+const trackSeriesData = SEGMENTS.map((s) => {
+  const ratio =
+    (s.coverage - COVERAGE_MIN) / (COVERAGE_MAX - COVERAGE_MIN || 1);
+  return {
+    id: `${s.name}-coverage`,
+    value: s.codeSize, // same values as the segments series => identical angular spans
+    label: `${s.name} · ${s.coverage}% test coverage`,
+    color: lerpColor(t.seq[0], t.seq[1], ratio),
+  };
+});
+
+const RADIUS_RATIO = {
+  segOuter: 0.85,
+  segThickness: 0.07,
+  trackGap: 0.02,
+  trackThickness: 0.12,
+  ribbonGap: 0.015,
+  labelGap: 0.05,
+};
+
+const computeRadii = (r) => {
+  const rSegOuter = r * RADIUS_RATIO.segOuter;
+  const rSegInner = rSegOuter - r * RADIUS_RATIO.segThickness;
+  const rTrackOuter = rSegInner - r * RADIUS_RATIO.trackGap;
+  const rTrackBase = rTrackOuter - r * RADIUS_RATIO.trackThickness;
+  const rRibbon = rTrackBase - r * RADIUS_RATIO.ribbonGap;
+  const rLabel = rSegOuter + r * RADIUS_RATIO.labelGap;
+  return { rSegOuter, rSegInner, rTrackOuter, rTrackBase, rRibbon, rLabel };
+};
+
 // --- Chrome ------------------------------------------------------------------
 const TITLE = "circos-basic · javascript · muix · anyplot.ai";
 const TITLE_FONT_DEFAULT = 30;
@@ -178,109 +218,112 @@ const titleFontSize =
     ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length))
     : TITLE_FONT_DEFAULT;
 const SUBTITLE =
-  "Ribbon width ∝ API call volume · outer ring ∝ code size · inner track ∝ test coverage (light→dark = low→high)";
+  "Ribbon width ∝ API call volume · outer ring ∝ code size · inner track ∝ test coverage";
 const TITLE_H = 58;
-const SUBTITLE_H = 32;
+const SUBTITLE_H = 28;
+const LEGEND_H = 26;
+
+// Ribbons (chords) sit below both pie rings; MUI X has no chord/ribbon mark,
+// so they're hand-drawn — see the geometry helpers above.
+function RibbonsLayer({ cx, cy, radius }) {
+  return (
+    <g>
+      {RIBBONS.map((rb, i) => (
+        <path
+          key={`ribbon-${i}`}
+          d={ribbonPath(cx, cy, rb.sStart, rb.sEnd, rb.tStart, rb.tEnd, radius)}
+          fill={rb.color}
+          fillOpacity={0.45}
+          stroke={rb.color}
+          strokeOpacity={0.55}
+          strokeWidth={1}
+        />
+      ))}
+    </g>
+  );
+}
+
+// Segment name labels, radially rotated around the outer ring.
+function SegmentLabelsLayer({ cx, cy, radius }) {
+  return (
+    <g>
+      {SEGMENTS.map((s) => {
+        const mid = (s.startAngle + s.endAngle) / 2;
+        const p = polarPoint(cx, cy, mid, radius);
+        const rotate = mid < 180 ? mid - 90 : mid + 90;
+        const anchor = mid < 180 ? "start" : "end";
+        return (
+          <text
+            key={`label-${s.name}`}
+            x={p.x}
+            y={p.y}
+            textAnchor={anchor}
+            dominantBaseline="middle"
+            fontSize={15}
+            fill={t.ink}
+            transform={`rotate(${rotate}, ${p.x}, ${p.y})`}
+          >
+            {s.name}
+          </text>
+        );
+      })}
+    </g>
+  );
+}
 
 function CircosDiagram({ size }) {
   const cx = size / 2;
   const cy = size / 2;
-  const r = size / 2;
-  const rSegOuter = r * 0.85;
-  const segThickness = r * 0.07;
-  const rSegInner = rSegOuter - segThickness;
-  const trackGap = r * 0.02;
-  const rTrackOuter = rSegInner - trackGap;
-  const trackThickness = r * 0.12;
-  const rTrackBase = rTrackOuter - trackThickness;
-  const rRibbon = rTrackBase - r * 0.015;
-  const rLabel = rSegOuter + r * 0.05;
+  const { rSegOuter, rSegInner, rTrackOuter, rTrackBase, rRibbon, rLabel } =
+    computeRadii(size / 2);
 
   return (
-    <svg
+    <ChartContainer
       width={size}
       height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      style={{ overflow: "visible" }}
+      margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+      colors={t.palette}
+      sx={{ overflow: "visible" }}
+      skipAnimation
+      series={[
+        {
+          type: "pie",
+          id: "segments",
+          data: segmentSeriesData,
+          innerRadius: rSegInner,
+          outerRadius: rSegOuter,
+          startAngle: PIE_START_ANGLE,
+          endAngle: PIE_END_ANGLE,
+          paddingAngle: GAP_DEG,
+          sortingValues: "none",
+        },
+        {
+          type: "pie",
+          id: "track",
+          data: trackSeriesData,
+          innerRadius: rTrackBase,
+          outerRadius: rTrackOuter,
+          startAngle: PIE_START_ANGLE,
+          endAngle: PIE_END_ANGLE,
+          paddingAngle: GAP_DEG,
+          sortingValues: "none",
+        },
+      ]}
     >
-      <g>
-        {RIBBONS.map((rb, i) => (
-          <path
-            key={`ribbon-${i}`}
-            d={ribbonPath(cx, cy, rb.sStart, rb.sEnd, rb.tStart, rb.tEnd, rRibbon)}
-            fill={rb.color}
-            fillOpacity={0.45}
-            stroke={rb.color}
-            strokeOpacity={0.55}
-            strokeWidth={1}
-          />
-        ))}
-      </g>
-      <g>
-        {SEGMENTS.map((s) => {
-          const ratio = (s.coverage - COVERAGE_MIN) / (COVERAGE_MAX - COVERAGE_MIN || 1);
-          const barHeight = trackThickness * (0.2 + 0.8 * ratio);
-          return (
-            <path
-              key={`track-${s.name}`}
-              d={ringArcPath(
-                cx,
-                cy,
-                s.startAngle + 0.6,
-                s.endAngle - 0.6,
-                rTrackBase,
-                rTrackBase + barHeight,
-              )}
-              fill={lerpColor(t.seq[0], t.seq[1], ratio)}
-            />
-          );
-        })}
-      </g>
-      <g>
-        {SEGMENTS.map((s) => (
-          <path
-            key={`seg-${s.name}`}
-            d={ringArcPath(cx, cy, s.startAngle, s.endAngle, rSegInner, rSegOuter)}
-            fill={s.color}
-            stroke={t.pageBg}
-            strokeWidth={1.5}
-          />
-        ))}
-      </g>
-      <g>
-        {SEGMENTS.map((s) => {
-          const mid = (s.startAngle + s.endAngle) / 2;
-          const p = polarPoint(cx, cy, mid, rLabel);
-          const rotate = mid < 180 ? mid - 90 : mid + 90;
-          const anchor = mid < 180 ? "start" : "end";
-          return (
-            <text
-              key={`label-${s.name}`}
-              x={p.x}
-              y={p.y}
-              textAnchor={anchor}
-              dominantBaseline="middle"
-              fontSize={15}
-              fill={t.ink}
-              transform={`rotate(${rotate}, ${p.x}, ${p.y})`}
-            >
-              {s.name}
-            </text>
-          );
-        })}
-      </g>
-    </svg>
+      <RibbonsLayer cx={cx} cy={cy} radius={rRibbon} />
+      <PiePlot skipAnimation />
+      <SegmentLabelsLayer cx={cx} cy={cy} radius={rLabel} />
+      <ChartsTooltip trigger="item" />
+    </ChartContainer>
   );
 }
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const chromeH = TITLE_H + SUBTITLE_H;
+  const chromeH = TITLE_H + SUBTITLE_H + LEGEND_H;
   // Margin so rotated segment labels never reach the viewport edge (the
-  // harness clips at the exact ANYPLOT_SIZE bounds; the <svg> itself uses
-  // overflow: visible since its own viewBox would otherwise clip labels
-  // that extend past the ring radius).
+  // harness clips at the exact ANYPLOT_SIZE bounds).
   const svgSize = Math.min(width, height - chromeH) * 0.78;
 
   return (
@@ -307,6 +350,28 @@ export default function Chart() {
           }}
         >
           {SUBTITLE}
+        </div>
+        <div
+          style={{
+            height: `${LEGEND_H}px`,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontSize: "12px",
+            color: t.inkSoft,
+          }}
+        >
+          <span>Test coverage track:</span>
+          <span>{COVERAGE_MIN}%</span>
+          <div
+            style={{
+              width: "70px",
+              height: "8px",
+              borderRadius: "4px",
+              background: `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})`,
+            }}
+          />
+          <span>{COVERAGE_MAX}%</span>
         </div>
       </div>
       <div
