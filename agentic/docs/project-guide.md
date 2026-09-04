@@ -1065,6 +1065,36 @@ place, and the residual is narrow: it needs the previous candidate to pass every
 well, so the worst case is promoting a revision that was believed smoked, not shipping a
 page known to be broken.
 
+### Rollback
+
+Every deploy names its revision deterministically (`--revision-suffix=b$BUILD_ID`) and
+promotes it explicitly, so the previous revision is still there, still healthy, and one
+command away. Rolling back needs no rebuild and takes under a minute:
+
+```bash
+# 1. Find the revision that served before the current one.
+gcloud run revisions list --service anyplot-app --region europe-west4 \
+  --format='table(name, creationTimestamp, status.conditions[0].status)' --limit 5
+
+# 2. Send all traffic back to it.
+gcloud run services update-traffic anyplot-app --region europe-west4 \
+  --to-revisions=<previous-revision>=100
+```
+
+Same shape for `anyplot-backend`. This is the lever for anything that ships inside the
+image and only reveals itself in production. The current example is the CSP nonce path in
+`app/security-headers.conf`: if Cloudflare ever stops stamping its edge-injected script
+with the nonce it reads from our response header, the previous revision still serves the
+`'unsafe-inline'` policy byte for byte.
+
+Deliberately NOT built for that case: a Cloud Run environment variable that flips the
+policy inside a running revision. nginx cannot read the process environment from its
+configuration, so it would take a startup templating step (`envsubst` into a writable
+path — and `/etc/nginx` is read-only in the unprivileged image), which neither CI nor a
+local checkout here can exercise. A mechanism whose failure mode is "the container does
+not start", and which nothing can test, is a worse rollback than a traffic split the
+deploy pipeline already proves on every build.
+
 ## Debugging Tips
 
 ### Database Connection Issues

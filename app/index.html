@@ -25,9 +25,14 @@
     </script>
 
     <!-- On-device debug console (Eruda), gated behind ?debug=1 so it never
-         ships to normal users. Plain <script> (not type="module") so it runs
-         before module parse-time errors and can capture them — critical for
-         debugging mobile-only crashes where remote DevTools aren't available. -->
+         ships to normal users. A classic script element (not type="module") so
+         it runs before module parse-time errors and can capture them — critical
+         for debugging mobile-only crashes where remote DevTools aren't
+         available. The opening tag is described rather than written out: nginx
+         stamps the CSP nonce with a blunt `sub_filter` over the literal string,
+         so a comment containing it comes back to the browser with a stray
+         `nonce=` inside — harmless, but confusing in the one artefact anyone
+         debugging CSP will read. -->
     <script>
       (function () {
         try {
