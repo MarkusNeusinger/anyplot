@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: contour-density
 created: '2026-09-04T23:06:43Z'
-updated: '2026-09-04T23:11:02Z'
+updated: '2026-09-04T23:19:08Z'
 generated_by: claude-sonnet
 workflow_run: 33927836789
 issue: 2552
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
   - Correct, idiomatic use of d3.contourDensity() + d3.geoPath() to compute and render
@@ -28,43 +28,41 @@ review:
   - Theme-adaptive chrome throughout (axis text, ticks, spines, scatter ink, contour
     stroke) — both renders pass legibility checks with no dark-on-dark/light-on-light
     issues
-  - Clean deterministic LCG + Box-Muller data generation, no external dependencies,
-    KISS top-level script structure
+  - 'Repair loop directly addressed prior review feedback: added a subtle grid on
+    both axes, increased scatter marker size/opacity and added a page-bg stroke for
+    better separation, and bumped tick/legend font sizes'
   weaknesses:
-  - Legend gradient's 'High'/'Low' labels and axis tick labels are on the smaller
-    side (14-15px) — bump slightly for better mobile legibility
-  - Context-scatter markers (r=2.5, fill-opacity=0.25) are quite subtle inside the
-    denser blue core — fine as auxiliary context but a touch more contrast/size would
-    improve visibility without competing with the contour fill
-  - No grid lines on either axis; the style guide suggests a grid on both axes can
-    aid precise value reading on scatter-like plots — acceptable AI discretion here,
-    not a hard defect
-  - Design execution is solid but fairly standard d3 idiom without extra visual flourishes
-    (e.g. a highlighted density-peak annotation) that would elevate it further
+  - Legend 'High'/'Low'/'Point density' text and axis tick labels remain on the smaller
+    side (15-16px) relative to the very large 3200px canvas — bump a couple more px
+    for stronger mobile legibility
+  - Design execution, while polished, is still fairly standard d3 idiom without a
+    distinguishing visual flourish (e.g. an annotated density-peak label)
+  - Scatter overlay is still fairly subtle over the densest blue contour band, though
+    noticeably improved from the previous attempt
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
-      Chrome: Title "contour-density · javascript · d3 · anyplot.ai" in dark ink, centered top, clearly legible. X-axis label "Eruption Duration (minutes)" and Y-axis label "Waiting Time to Next Eruption (minutes)" in dark ink, both readable. Tick labels in medium-gray ink, legible against the light background. Only left/bottom axis lines drawn (L-shaped frame), no grid.
-      Data: Two clearly separated bimodal clusters of filled density contours, colored with the Imprint sequential ramp (brand green #009E73 at low density, transitioning to blue at the high-density core) — matches the imprint_seq spec for continuous data. A semi-transparent dark-ink scatter overlay shows individual data points for context, plus a handful of light-gray outlier points outside the contour bands. A vertical gradient legend on the right reads "High" at top and "Low" at bottom, labeled "Point density," using the same green→blue ramp.
+      Chrome: Title "contour-density · javascript · d3 · anyplot.ai" in dark ink, centered top, clearly legible. X-axis label "Eruption Duration (minutes)" and Y-axis label "Waiting Time to Next Eruption (minutes)" in dark ink, both readable. Tick labels in medium-gray ink, legible against the light background. A subtle grid now runs on both axes behind the contour fill (new since the previous attempt), plus an L-shaped axis frame.
+      Data: Two clearly separated bimodal clusters of filled density contours, colored with the Imprint sequential ramp (brand green #009E73 at low density, transitioning to blue at the high-density core) — matches the imprint_seq spec for continuous data. A semi-transparent dark-ink scatter overlay (now larger, with a light page-bg stroke) shows individual data points for context, plus a handful of light-gray outlier points outside the contour bands. A vertical gradient legend on the right reads "High" at top and "Low" at bottom, labeled "Point density," using the same green→blue ramp.
       Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
-      Chrome: Title in light/off-white ink, clearly legible against the dark background. Axis labels in light ink, tick labels in lighter gray — all readable, no dark-on-dark failures observed. Axis lines and legend border rendered in a soft light tone, visible against the dark surface.
-      Data: Contour fills use the identical green→blue sequential ramp as the light render — data colors did not shift between themes, only the chrome (background, text, gridless axes, legend border) flipped. Scatter overlay dots now render in light ink (theme-adaptive token), remaining visible against both the dark background and the colored contour fills. Legend gradient and "High"/"Low"/"Point density" labels are legible in light-colored text.
+      Chrome: Title in light/off-white ink, clearly legible against the dark background. Axis labels in light ink, tick labels in lighter gray — all readable, no dark-on-dark failures observed. The same subtle grid is visible on both axes at low opacity. Axis lines and legend border rendered in a soft light tone, visible against the dark surface.
+      Data: Contour fills use the identical green→blue sequential ramp as the light render — data colors did not shift between themes, only the chrome (background, text, grid, legend border) flipped. Scatter overlay dots now render in light ink (theme-adaptive token) with a dark page-bg stroke, remaining clearly visible against both the dark background and the colored contour fills. Legend gradient and "High"/"Low"/"Point density" labels are legible in light-colored text.
       Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All text readable in both themes; explicit font sizes throughout;
-          legend labels slightly small
+        comment: All text readable in both themes with explicit font sizes; legend
+          and tick labels (15-16px) still on the smaller side for the 3200px canvas
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -73,11 +71,11 @@ review:
         comment: No collisions between text, data, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Contours clearly visible; scatter context markers a bit subtle over
-          the dense blue core
+        comment: Contours clearly visible; scatter context markers now larger with
+          a page-bg stroke, clearly distinguishable from the contour fill
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -86,10 +84,11 @@ review:
         comment: imprint_seq green→blue ramp, good contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: No clipping/overflow; title conservatively sized relative to guideline
+        comment: No clipping/overflow; subtle grid added on both axes improves value-reading;
+          good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -104,7 +103,7 @@ review:
         comment: Correct use of imprint_seq for continuous density; theme-correct
           backgrounds; identical data colors across themes
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -116,11 +115,11 @@ review:
           but fairly standard d3 idiom
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: L-shaped axes, no grid, generous whitespace; minimal extra refinement
-          beyond defaults
+        comment: L-shaped axes, new subtle grid, refined marker strokes, generous
+          whitespace — improved over the previous attempt
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -186,7 +185,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat top-level script
+        comment: Flat top-level script; only two tiny RNG helper functions required
+          by the browser's lack of a seeded RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -240,3 +240,4 @@ impl_tags:
   styling:
   - alpha-blending
   - gradient-fill
+  - grid-styling
