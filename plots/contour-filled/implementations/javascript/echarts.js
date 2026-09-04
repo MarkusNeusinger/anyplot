@@ -16,9 +16,11 @@ const step = (DOMAIN_MAX - DOMAIN_MIN) / (N - 1);
 const coords = Array.from({ length: N }, (_, i) => DOMAIN_MIN + i * step);
 
 // Two Gaussian storm cells: [centerX, centerY, sigma, peakIntensityMmPerHr]
+// Centers are far apart relative to sigma so the two peaks read as distinct
+// lobes rather than merging into one blob.
 const storms = [
-  [-15, -10, 18, 45],
-  [22, 16, 22, 30],
+  [-25, -18, 11, 45],
+  [25, 20, 13, 30],
 ];
 
 function rainfallIntensity(x, y) {
@@ -43,8 +45,12 @@ const axisLabels = coords.map((v) => Math.round(v).toString());
 const tickInterval = Math.ceil(N / 8) - 1;
 
 // --- Title size (scale for length > 67 chars) --------------------------------
-const titleText = "Storm Rainfall Intensity · contour-filled · javascript · echarts · anyplot.ai";
-const titleSize = Math.max(15, Math.round(22 * Math.min(1, 67 / titleText.length)));
+const titleText =
+  "Storm Rainfall Intensity · contour-filled · javascript · echarts · anyplot.ai";
+const titleSize = Math.max(
+  15,
+  Math.round(22 * Math.min(1, 67 / titleText.length)),
+);
 
 // --- Render ------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -60,7 +66,7 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: titleSize, fontWeight: "bold" },
   },
 
-  grid: { left: 140, right: 210, top: 130, bottom: 120 },
+  grid: { left: 140, right: 240, top: 130, bottom: 120 },
 
   xAxis: {
     type: "category",
@@ -88,20 +94,24 @@ chart.setOption({
     splitLine: { show: false },
   },
 
-  // Imprint sequential colormap banded into levels — the filled-contour look.
+  // Imprint sequential colormap banded into few, high-contrast levels — the
+  // filled-contour look. Every swatch is labeled with its own range so
+  // intermediate levels can be read off precisely, not just the extremes.
   visualMap: {
     type: "piecewise",
     min: 0,
     max: Math.ceil(zMax),
-    splitNumber: 14,
+    splitNumber: 9,
     calculable: false,
     orient: "vertical",
     right: 30,
     top: "middle",
     itemWidth: 20,
-    itemHeight: 14,
-    text: [`${Math.ceil(zMax)} mm/hr`, "0 mm/hr"],
-    textStyle: { color: t.inkSoft, fontSize: 13 },
+    itemHeight: 18,
+    itemGap: 8,
+    precision: 0,
+    formatter: (min, max) => `${Math.round(min)}–${Math.round(max)} mm/hr`,
+    textStyle: { color: t.inkSoft, fontSize: 12 },
     inRange: { color: t.seq },
     backgroundColor: "transparent",
     borderWidth: 0,
