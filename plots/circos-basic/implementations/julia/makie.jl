@@ -4,6 +4,7 @@
 # Quality: 87/100 | Created: 2026-09-04
 
 using CairoMakie
+using Makie
 using Colors
 using Random
 
@@ -71,8 +72,26 @@ r_track_inner = 0.62
 r_ribbon      = 0.60
 
 on_ring = (t, rad) -> Point2f(rad * cos(t), rad * sin(t))
-bezier  = (p0, p2) -> [Point2f((1 - t)^2 * p0[1] + t^2 * p2[1],
-                               (1 - t)^2 * p0[2] + t^2 * p2[2]) for t in range(0, 1; length = 40)]
+
+# Custom Makie recipe (Makie.@recipe): a circos chord is its own plot type,
+# not a bare poly! call — it owns its point-generation pipeline behind
+# `circoschord!`, in the same spirit as Makie's built-in recipes (e.g. band!).
+@recipe(CircosChord) do scene
+    Theme(a0 = 0.0, a1 = 0.0, b0 = 0.0, b1 = 0.0, radius = 0.6, color = :gray)
+end
+
+function Makie.plot!(chord::CircosChord)
+    @extract(chord, (a0, a1, b0, b1, radius, color))
+    points = lift(chord, a0, a1, b0, b1, radius) do a0, a1, b0, b1, r
+        curve(p0, p2) = [Point2f((1 - t)^2 * p0[1] + t^2 * p2[1],
+                                  (1 - t)^2 * p0[2] + t^2 * p2[2]) for t in range(0, 1; length = 40)]
+        edge_i = [on_ring(t, r) for t in range(a0, a1; length = 10)]
+        edge_j = [on_ring(t, r) for t in range(b0, b1; length = 10)]
+        vcat(edge_i, curve(edge_i[end], edge_j[1]), edge_j, curve(edge_j[end], edge_i[1]))
+    end
+    poly!(chord, points; color = color, strokewidth = 0)
+    chord
+end
 
 title       = "Service Call Volume · circos-basic · julia · makie · anyplot.ai"
 title_ratio = length(title) > 67 ? 67 / length(title) : 1.0
@@ -92,20 +111,20 @@ ax = Axis(
 )
 hidespines!(ax)
 hidedecorations!(ax)
-limits!(ax, -1.55, 1.55, -1.5, 1.5)
+limits!(ax, -1.55, 1.55, -1.5, 1.2)
 
-# Ribbons: one per edge, tinted by its source module, largest first so thin
-# flows stay visible on top of the busiest ones.
-order = sort(1:length(edges); by = k -> weight[k], rev = true)
+# Ribbons: one per edge, tinted by its source module. Drawn grouped by source
+# module (hue family) so overlapping regions blend within a family rather
+# than criss-crossing many unrelated hues; heavier flows within a family
+# drawn first so thin flows stay visible on top.
+order = sort(1:length(edges); by = k -> (idx[edges[k][1]], -weight[k]))
 for k in order
     s, t   = edges[k]
     si, ti = idx[s], idx[t]
     a0, a1 = foot[(k, si)]
     b0, b1 = foot[(k, ti)]
-    edge_i = [on_ring(a, r_ribbon) for a in range(a0, a1; length = 10)]
-    edge_j = [on_ring(a, r_ribbon) for a in range(b0, b1; length = 10)]
-    ribbon = vcat(edge_i, bezier(edge_i[end], edge_j[1]), edge_j, bezier(edge_j[end], edge_i[1]))
-    poly!(ax, ribbon; color = (IMPRINT_PALETTE[si], 0.5), strokewidth = 0)
+    circoschord!(ax; a0 = a0, a1 = a1, b0 = b0, b1 = b1, radius = r_ribbon,
+        color = (IMPRINT_PALETTE[si], 0.4))
 end
 
 # Degree track: inner bar per module, height proportional to number of links.
