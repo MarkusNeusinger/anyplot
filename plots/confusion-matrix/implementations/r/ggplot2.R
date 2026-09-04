@@ -12,6 +12,7 @@ set.seed(42)
 # --- Theme tokens ------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 ANNOT_DARK  <- "#1A1A17"
@@ -47,6 +48,27 @@ cm <- cm %>%
     label_color = if_else(count > max(count) * 0.5, ANNOT_LIGHT, ANNOT_DARK)
   )
 
+# --- Normalization margins: recall (row), precision (column), accuracy ----
+diag_cells   <- filter(cm, is_diagonal)
+row_totals   <- cm %>% group_by(true_label) %>% summarise(total = sum(count), .groups = "drop")
+col_totals   <- cm %>% group_by(predicted_label) %>% summarise(total = sum(count), .groups = "drop")
+overall_acc  <- sum(diag_cells$count) / sum(cm$count)
+
+recall_df <- diag_cells %>%
+  left_join(row_totals, by = "true_label") %>%
+  transmute(x = "Recall", y = as.character(true_label), label = sprintf("%.0f%%", 100 * count / total))
+
+precision_df <- diag_cells %>%
+  left_join(col_totals, by = "predicted_label") %>%
+  transmute(x = as.character(predicted_label), y = "Precision", label = sprintf("%.0f%%", 100 * count / total))
+
+corner_df <- data.frame(x = "Recall", y = "Precision", label = sprintf("%.0f%%", 100 * overall_acc))
+
+margin_df <- bind_rows(recall_df, precision_df, corner_df)
+
+x_levels <- c(class_names, "Recall")
+y_levels <- c("Precision", rev(class_names))
+
 # --- Plot ----------------------------------------------------------------
 p <- ggplot(cm, aes(x = predicted_label, y = true_label, fill = count)) +
   geom_tile(color = PAGE_BG, linewidth = 1.5) +
@@ -55,10 +77,18 @@ p <- ggplot(cm, aes(x = predicted_label, y = true_label, fill = count)) +
     fill = NA, color = INK, linewidth = 1.2
   ) +
   geom_text(aes(label = count, color = label_color), size = 4.2, fontface = "bold") +
+  geom_tile(
+    data = margin_df, aes(x = x, y = y),
+    inherit.aes = FALSE, fill = ELEVATED_BG, color = PAGE_BG, linewidth = 1.5
+  ) +
+  geom_text(
+    data = margin_df, aes(x = x, y = y, label = label),
+    inherit.aes = FALSE, color = INK, size = 4.0, fontface = "italic"
+  ) +
   scale_color_identity() +
   scale_fill_gradient(low = "#009E73", high = "#4467A3", name = "Count") +
-  scale_x_discrete(expand = c(0, 0)) +
-  scale_y_discrete(limits = rev(class_names), expand = c(0, 0)) +
+  scale_x_discrete(limits = x_levels, expand = c(0, 0)) +
+  scale_y_discrete(limits = y_levels, expand = c(0, 0)) +
   coord_fixed() +
   labs(
     x     = "Predicted Label",
