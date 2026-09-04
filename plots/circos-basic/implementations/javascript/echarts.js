@@ -65,7 +65,9 @@ const trackBase = trackOuter - trackBandHeight;
 const ribbonRadius = trackBase - 10;
 
 const GAP_DEG = 4;
-const moduleColor = Object.fromEntries(modules.map((m, i) => [m, t.palette[i]]));
+const moduleColor = Object.fromEntries(
+  modules.map((m, i) => [m, t.palette[i]]),
+);
 
 // --- Angle allocation (chord-diagram convention: arc span ∝ total connection
 // value touching each module) --------------------------------------------
@@ -87,7 +89,9 @@ modules.forEach((m) => {
   cursor += span + GAP_DEG;
 });
 
-const segmentCursor = Object.fromEntries(modules.map((m) => [m, segmentAngle[m].start]));
+const segmentCursor = Object.fromEntries(
+  modules.map((m) => [m, segmentAngle[m].start]),
+);
 const ribbons = connections.map(([source, target, value]) => {
   const width = value * degPerValue;
   const sStart = segmentCursor[source];
@@ -121,8 +125,10 @@ function quadBezierPoints(p0, pControl, p1, steps) {
   const pts = [];
   for (let i = 1; i <= steps; i++) {
     const u = i / steps;
-    const x = (1 - u) * (1 - u) * p0[0] + 2 * (1 - u) * u * pControl[0] + u * u * p1[0];
-    const y = (1 - u) * (1 - u) * p0[1] + 2 * (1 - u) * u * pControl[1] + u * u * p1[1];
+    const x =
+      (1 - u) * (1 - u) * p0[0] + 2 * (1 - u) * u * pControl[0] + u * u * p1[0];
+    const y =
+      (1 - u) * (1 - u) * p0[1] + 2 * (1 - u) * u * pControl[1] + u * u * p1[1];
     pts.push([x, y]);
   }
   return pts;
@@ -130,15 +136,37 @@ function quadBezierPoints(p0, pControl, p1, steps) {
 
 function sectorPoints(rOuter, rInner, startDeg, endDeg) {
   const steps = Math.max(4, Math.round((endDeg - startDeg) / 3));
-  return arcPoints(rOuter, startDeg, endDeg, steps).concat(arcPoints(rInner, endDeg, startDeg, steps));
+  return arcPoints(rOuter, startDeg, endDeg, steps).concat(
+    arcPoints(rInner, endDeg, startDeg, steps),
+  );
 }
 
 function ribbonPoints(r, sStart, sEnd, tStart, tEnd) {
   const curveSteps = 20;
-  const arcS = arcPoints(r, sStart, sEnd, Math.max(4, Math.round((sEnd - sStart) / 3)));
-  const arcT = arcPoints(r, tStart, tEnd, Math.max(4, Math.round((tEnd - tStart) / 3)));
-  const curve1 = quadBezierPoints(arcS[arcS.length - 1], [cx, cy], arcT[0], curveSteps);
-  const curve2 = quadBezierPoints(arcT[arcT.length - 1], [cx, cy], arcS[0], curveSteps);
+  const arcS = arcPoints(
+    r,
+    sStart,
+    sEnd,
+    Math.max(4, Math.round((sEnd - sStart) / 3)),
+  );
+  const arcT = arcPoints(
+    r,
+    tStart,
+    tEnd,
+    Math.max(4, Math.round((tEnd - tStart) / 3)),
+  );
+  const curve1 = quadBezierPoints(
+    arcS[arcS.length - 1],
+    [cx, cy],
+    arcT[0],
+    curveSteps,
+  );
+  const curve2 = quadBezierPoints(
+    arcT[arcT.length - 1],
+    [cx, cy],
+    arcS[0],
+    curveSteps,
+  );
   return arcS.concat(curve1, arcT, curve2);
 }
 
@@ -161,12 +189,39 @@ const covValues = Object.values(coverage);
 const covMin = Math.min(...covValues);
 const covMax = Math.max(...covValues);
 
-const ribbonElements = ribbons.map((rb) => ({
-  type: "polygon",
-  shape: { points: ribbonPoints(ribbonRadius, rb.sStart, rb.sEnd, rb.tStart, rb.tEnd) },
-  style: { fill: moduleColor[rb.source], opacity: 0.5, stroke: t.pageBg, lineWidth: 1 },
-  silent: true,
-}));
+// Visual hierarchy: weaker connections fade back, the 3 strongest are drawn
+// last (so they layer on top) and get a brighter fill + colored outline —
+// giving the reader a focal point instead of a uniform hairball.
+const connectionValues = ribbons.map((rb) => rb.value);
+const valueMin = Math.min(...connectionValues);
+const valueMax = Math.max(...connectionValues);
+const emphasisCutoff = [...connectionValues].sort((a, b) => b - a)[2];
+
+const ribbonElements = [...ribbons]
+  .sort((a, b) => a.value - b.value)
+  .map((rb) => {
+    const frac = (rb.value - valueMin) / (valueMax - valueMin);
+    const emphasized = rb.value >= emphasisCutoff;
+    return {
+      type: "polygon",
+      shape: {
+        points: ribbonPoints(
+          ribbonRadius,
+          rb.sStart,
+          rb.sEnd,
+          rb.tStart,
+          rb.tEnd,
+        ),
+      },
+      style: {
+        fill: moduleColor[rb.source],
+        opacity: 0.22 + frac * 0.45 + (emphasized ? 0.1 : 0),
+        stroke: emphasized ? moduleColor[rb.source] : t.pageBg,
+        lineWidth: emphasized ? 2 : 1,
+      },
+      silent: true,
+    };
+  });
 
 const trackBaseline = {
   type: "ring",
@@ -182,7 +237,11 @@ const trackElements = modules.map((m) => {
   return {
     type: "polygon",
     shape: { points: sectorPoints(barOuter, trackBase, start, end) },
-    style: { fill: lerpColor(t.seq[0], t.seq[1], frac), stroke: t.pageBg, lineWidth: 1 },
+    style: {
+      fill: lerpColor(t.seq[0], t.seq[1], frac),
+      stroke: t.pageBg,
+      lineWidth: 1,
+    },
     silent: true,
   };
 });
@@ -218,6 +277,45 @@ const labelElements = modules.map((m) => {
   };
 });
 
+// A small swatch + caption identifying the inner ring, so its meaning reads
+// from the static image alone (no need to inspect the source for what the
+// green→blue gradient track encodes).
+const circleTop = cy - segmentOuter;
+const legendSwatchY = Math.max(70, circleTop / 2 - 7);
+const legendSwatchWidth = 120;
+const legendSwatchHeight = 14;
+const coverageGradient = new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+  { offset: 0, color: t.seq[0] },
+  { offset: 1, color: t.seq[1] },
+]);
+
+const legendElements = [
+  {
+    type: "rect",
+    shape: {
+      x: cx - legendSwatchWidth / 2,
+      y: legendSwatchY,
+      width: legendSwatchWidth,
+      height: legendSwatchHeight,
+    },
+    style: { fill: coverageGradient, stroke: t.grid, lineWidth: 1 },
+    silent: true,
+  },
+  {
+    type: "text",
+    style: {
+      text: "Inner track: test coverage % (low → high)",
+      x: cx,
+      y: legendSwatchY + legendSwatchHeight + 16,
+      fill: t.inkSoft,
+      fontSize: 14,
+      align: "center",
+      verticalAlign: "middle",
+    },
+    silent: true,
+  },
+];
+
 // --- Init & option ------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -230,7 +328,14 @@ chart.setOption({
     top: 30,
     textStyle: { color: t.ink, fontSize: 22 },
   },
-  graphic: [...ribbonElements, trackBaseline, ...trackElements, ...segmentElements, ...labelElements],
+  graphic: [
+    ...ribbonElements,
+    trackBaseline,
+    ...trackElements,
+    ...segmentElements,
+    ...labelElements,
+    ...legendElements,
+  ],
 });
 
 chart.on("finished", () => {
