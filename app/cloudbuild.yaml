@@ -178,8 +178,13 @@ steps:
         # docroot: plain curl saw 7 stamped tags, `curl --compressed` saw 0.
         curl -fsS $$RETRY --compressed -A "$$HUMAN" -D head.out -o body.out "$$URL/" \
           || { echo "candidate did not serve the shell for the nonce probe"; exit 1; }
-        NONCE=$$(grep -i '^content-security-policy:' head.out | grep -o 'nonce-[0-9a-f]*' | head -1)
-        test -n "$$NONCE" || { echo "the shell's Content-Security-Policy carries no nonce"; exit 1; }
+        # Exactly 32 hex digits, which is what nginx's $$request_id always is.
+        # `[0-9a-f]*` would have accepted a bare `nonce-` — and `test -n` calls
+        # that non-empty — so a policy with an empty nonce and `nonce=""` on
+        # every tag would have matched itself all the way through this probe
+        # while the browser blocked the lot (Copilot review).
+        NONCE=$$(grep -i '^content-security-policy:' head.out | grep -oE 'nonce-[0-9a-f]{32}' | head -1)
+        test -n "$$NONCE" || { echo "the shell's Content-Security-Policy carries no 32-hex-digit nonce"; exit 1; }
         # Every tag against THAT nonce, not "has some nonce": a stale or
         # mismatched value is refused by the browser exactly like a missing one,
         # and counting attributes rather than comparing them would wave it

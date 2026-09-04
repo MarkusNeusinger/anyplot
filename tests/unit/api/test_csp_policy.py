@@ -231,6 +231,31 @@ def test_every_server_block_stamps_the_nonce():
     )
 
 
+_EXCLUDE_LIST = re.compile(r"exclude\s*:\s*\[([^\]]*)\]")
+_JS_REGEX_LITERAL = re.compile(r"/((?:[^/\\\n]|\\.)+)/([gimsuy]*)")
+
+
+def _js_regex_literals_after_exclude(call: str) -> list[re.Pattern[str]]:
+    """The `exclude:` regex literals of one plugin call, as Python patterns.
+
+    JavaScript and Python agree on the small subset a filename filter uses —
+    literal characters, `\\.`, `^`, `$`, character classes — so a JS literal can
+    simply be run here. Flags other than `i` have no counterpart worth
+    translating and are ignored; an unparseable literal is skipped rather than
+    crashing the suite, and skipping it can only make the test stricter.
+    """
+    listed = _EXCLUDE_LIST.search(call)
+    if not listed:
+        return []
+    patterns = []
+    for source, flags in _JS_REGEX_LITERAL.findall(listed.group(1)):
+        try:
+            patterns.append(re.compile(source, re.IGNORECASE if "i" in flags else 0))
+        except re.error:
+            continue
+    return patterns
+
+
 def test_the_shell_is_never_precompressed():
     """`gzip_static` hands out the `.gz` untouched, and sub_filter never sees it.
 
@@ -241,19 +266,21 @@ def test_the_shell_is_never_precompressed():
     on a local nginx with the `.gz` planted back: `curl --compressed` saw zero
     stamped tags where the plain shell had seven.
 
-    The pattern is matched, not merely searched for the word "index" — a first
-    version accepted `/index\\.js$/` and even `/not-index\\.html$/`, both of
-    which leave `index.html.gz` in `dist/` (Copilot review).
+    The declared pattern is RUN against the emitted name rather than read for
+    the word "index", because two rounds of review found the reading version
+    accepting patterns that exclude nothing: `/index\\.js$/`,
+    `/not-index\\.html$/`, and then `/foo/index\\.html$/`, which matches a
+    nested file while `dist/index.html` is still compressed. Whatever the next
+    plausible near-miss is, `re.search(pattern, "index.html")` answers it.
     """
     config = VITE_CONFIG.read_text(encoding="utf-8")
     calls = re.findall(r"compression\(\{[^}]*\}\)", config)
     assert calls, "app/vite.config.ts declares no compression plugin — did it move?"
-    excludes_the_shell = re.compile(r"exclude\s*:\s*\[[^\]]*(?<![\w-])index\\?\.html\$?/")
-    unguarded = [c for c in calls if not excludes_the_shell.search(c)]
+    unguarded = [c for c in calls if not any(p.search("index.html") for p in _js_regex_literals_after_exclude(c))]
     assert not unguarded, (
-        "a compression plugin in app/vite.config.ts does not exclude index.html: "
-        f"{unguarded}. The shell is rewritten per request for the CSP nonce and "
-        "must not exist as a precompressed file."
+        "a compression plugin in app/vite.config.ts declares no exclude pattern that "
+        f"actually matches the emitted shell: {unguarded}. index.html is rewritten per "
+        "request for the CSP nonce and must not exist as a precompressed file."
     )
 
 
