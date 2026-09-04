@@ -1,0 +1,273 @@
+library: chartjs
+language: javascript
+specification_id: contour-filled
+created: '2026-09-04T23:17:45Z'
+updated: '2026-09-04T23:30:48Z'
+generated_by: claude-sonnet
+workflow_run: 33928442379
+issue: 2500
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'All three weaknesses from the previous review are fixed: the colorbar now renders
+    as 14 stepped bands with boundary tick lines matching the quantized fill exactly
+    (not a smooth 2-stop gradient), all three tick labels use consistent toFixed(1)
+    precision (45.3 / 23.4 / 1.4), and a third smaller storm cell (centered near x=18,
+    y=18) was added for richer feature coverage.'
+  - Correctly identifies Chart.js's lack of a native contour/isoband chart type and
+    builds a from-scratch raster + marching-squares renderer via the native afterDraw
+    plugin hook -- the sanctioned workaround, not a forbidden community plugin or
+    sibling library.
+  - 'Data colors are pixel-identical between light and dark renders (only chrome flips);
+    imprint_seq (green to blue) is applied correctly for this single-polarity precipitation
+    field, with the lowest band matching brand green #009E73.'
+  - Three storm cells of different size, intensity, and extent (large primary cell,
+    mid-size secondary cell, small tertiary cell) create genuine textured topology
+    with a visible saddle and a small nested closed contour around the tertiary peak.
+  - Title fontsize scaling formula correctly shrinks the longer descriptive+mandated
+    title to avoid overflow; both renders stay legible with theme-adaptive ink/inkSoft
+    tokens threaded through title, axis labels, ticks, and the custom colorbar text.
+  - No clipping, overlap, or theme-readability failures in either render; canvas dimensions
+    pass the landscape 3200x1800 gate.
+  weaknesses:
+  - The afterDraw body still bundles several responsibilities inline (raster blit,
+    marching-squares isoline loop with its edgePx closure, and colorbar drawing) in
+    one ~110-line function -- pulling the edge-interpolation math and the colorbar
+    draw into their own small named helpers would shorten the plugin body without
+    losing necessary complexity (CQ-01).
+  - The colorbar shows only 3 tick labels (max/mid/min) for 14 discrete bands -- a
+    few more tick marks at intermediate band boundaries would make it easier to read
+    off intermediate values precisely, though this is a nice-to-have, not a spec requirement.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "Storm System Precipitation · contour-filled · javascript · chartjs · anyplot.ai" in dark bold text, clearly readable and not overflowing the canvas. Axis titles "Distance east (km)" and "Distance north (km)" in dark ink; tick labels in a softer dark grey. Colorbar labeled "mm/hr" at top with three tick labels (45.3 / 23.4 / 1.4, consistent one-decimal precision) down the right side, all legible against the light background.
+      Data: Three elliptical storm cells -- a large primary cell centered near x=42,y=48, a mid-size secondary cell near x=88,y=22, and a small tertiary cell near x=18,y=18 (visible as a small nested pentagon-shaped closed contour around its own local peak) -- rendered as smooth green-to-blue color bands with thin dark isolines at each of the 14 level boundaries, over a uniform green "ambient drizzle" background. The lowest band is brand green (#009E73-ish) and the highest band is Imprint blue (#4467A3-ish), matching imprint_seq. The colorbar itself is now rendered as 14 discrete stepped bands with boundary lines, matching the fill's quantization (fixed from the previous smooth-gradient colorbar).
+      Legibility verdict: PASS -- no dark-on-light or unreadable text; no clipping observed at any canvas edge (verified top-left, bottom-left, top-right corners at full resolution).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/white tones (title and axis titles brighter white, tick labels softer light grey), fully readable against the dark background. Isolines and colorbar tick text also flip to light tones. Colorbar "mm/hr" label and the three tick values (45.3/23.4/1.4) remain legible.
+      Data: Identical three-storm-cell field with the same green-to-blue band colors, the same stepped colorbar, and the same band boundaries as the light render -- confirms data colors are unchanged between themes, only chrome (background, text, isoline color) flipped.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all text and isolines are clearly visible against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, title fontsize formula scales correctly
+          for the longer title with no overflow; colorbar tick precision inconsistency
+          from the previous review is fixed (all three ticks use toFixed(1)).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 60x60 grid with 14 quantized levels gives smooth, clearly visible
+          bands and isolines, appropriately subtle (alpha 0.3).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue sequential ramp (imprint_seq) is CVD-safe and high-contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart area fills most of the canvas with a well-integrated colorbar;
+          balanced margins; nothing cut off; canvas dimension gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (km) and a units-labeled colorbar
+          (mm/hr).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) used correctly for single-polarity
+          continuous data; theme-correct chrome in both renders; data colors identical
+          across themes; colorbar now visually matches the banded fill.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom raster+isoline rendering with a now-consistent banded colorbar
+          and a third storm cell add polish and texture beyond the previous attempt.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid hidden, subtle isolines (alpha 0.3), generous margins, and the
+          colorbar/fill banding mismatch from the previous review is resolved.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three storm cells of different size/intensity create a clear visual
+          hierarchy with a primary focal point and two secondary features, though
+          no explicit numeric callouts (not required by spec).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine filled-contour rendering (color bands + isolines) via the
+          sanctioned native-plugin workaround for Chart.js's missing contour type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color bands, overlaid isolines, colorbar, 14 levels (within 10-20),
+          60x60 grid (within 30-100) all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = distance east, Y = distance north, Z = color/isoline mapping;
+          full grid extent shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · contour-filled · javascript
+          · chartjs · anyplot.ai' format; colorbar substitutes correctly for a legend
+          on continuous data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three differently-sized/intensity storm cells with a visible saddle
+          and a small nested peak -- addresses the previous review's request for more
+          textured feature coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible regional precipitation-intensity scenario, neutral topic
+          (meteorology).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ambient ~1.4 mm/hr drizzle and ~45 mm/hr storm-core peaks are both
+          physically realistic precipitation rates.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions beyond simple imports->data->plot, justified
+          by implementing bilinear interpolation, quantization, and marching squares
+          from scratch; the afterDraw body itself still bundles raster/isoline/colorbar
+          drawing inline.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, formula-based data generation, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch contour renderer; no fake
+          UI or fake-interactivity code.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; animation disabled; no
+          filesystem writes.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's native plugin/afterDraw hook and scale pixel-mapping
+          API exactly as the library rules recommend for chart types Chart.js doesn't
+          natively support.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combining a scatter chart's linear scale system with a custom afterDraw
+          raster + marching-squares overlay is a technique fairly distinctive to Chart.js's
+          canvas-level plugin architecture.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - marching-squares
+  - bilinear-interpolation
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - interpolation
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill

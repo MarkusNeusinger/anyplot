@@ -1,0 +1,256 @@
+library: makie
+language: julia
+specification_id: contour-density
+created: '2026-09-04T23:15:43Z'
+updated: '2026-09-04T23:37:53Z'
+generated_by: claude-sonnet
+workflow_run: 33928502546
+issue: 2552
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Classic, real-world bimodal dataset (Old Faithful geyser eruption duration vs.
+    waiting time) perfectly showcases density contour clusters and gradient levels
+    — an ideal, factually accurate example for this spec.
+  - Correct use of the Imprint `imprint_seq` sequential colormap (brand green → blue)
+    for single-polarity density data, with data colors identical across both themes.
+  - 'Thoughtful layered composition: filled contours + subtle bg-colored contour outlines
+    + translucent scatter overlay for point-level context, all with explicit font
+    sizes and fully theme-adaptive chrome (backgrounds, spines, ticks, colorbar).'
+  - Title format, axis labels with units, canvas dimensions, and spine/grid minimalism
+    are all spec- and style-guide-compliant.
+  weaknesses:
+  - 'The ''Short eruptions'' / ''Long eruptions'' text!() annotations do not render
+    in either theme. Verified with full-resolution crops around the data coordinates
+    (2.0, 40) and (4.3, 100), plus a full-canvas quadrant scan of both plot-light.png
+    and plot-dark.png — no text glyphs appear anywhere near those points or elsewhere
+    on the canvas. This is dead/non-functional code: either fix why text!() produces
+    no visible output (check axis limits vs. padded xgrid/ygrid range, z-order relative
+    to contourf!/scatter!, or a Makie API argument issue) or remove the two text!()
+    blocks and the ANNOTATION_INK/ANNOTATION_HALO constants entirely.'
+  - The scatter overlay (markersize=6, alpha=0.35) reads a little too faint against
+    the density fill — bumping to markersize~8 and alpha~0.45 would make the point-level
+    context easier to see, especially at mobile scale.
+  - 'Library Mastery is solid but generic: beyond the custom colsize!/Colorbar layout,
+    no Makie-distinctive feature (e.g. Legend, faceted GridLayout, custom Colorbar
+    tick formatting) sets the implementation apart from a generic contour+scatter
+    plot.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Old Faithful Geyser · contour-density · julia · makie · anyplot.ai" clearly visible; dark-ink axis labels "Eruption Duration (min)" / "Waiting Time to Next Eruption (min)" readable; softer-ink tick labels on both axes and the colorbar ("Density", 0.005-0.020) all legible; top/right spines removed, left/bottom spines in soft ink; no grid lines.
+      Data: Filled contours run from Imprint brand green (low density) to blue (high density) via the imprint_seq sequential colormap, revealing two clear density clusters (short vs. long eruption regimes) connected by a low-density "bridge". Semi-transparent dark scatter dots overlay the raw 272 Old Faithful data points for context. Two text!() annotations ("Short eruptions", "Long eruptions") are present in the source code but DO NOT actually render anywhere on the canvas — confirmed via full-resolution crops around their intended data coordinates and a full quadrant scan of the image.
+      Legibility verdict: PASS (all rendered text is readable; the missing annotations are a functional/code bug, not a legibility failure, since no text pixels exist there at all).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and axis labels in light ink, tick labels in softer light-gray ink, colorbar labels light and readable — no dark-on-dark issues found. Spines flip to the light soft-ink tone correctly.
+      Data: Density colormap is pixel-identical to the light render (green → blue), confirming data-color consistency across themes. Scatter overlay dots use the theme's INK token (so they appear light-colored against the fill in dark mode) — an intentional, theme-adaptive contextual overlay rather than a categorical data color, so this does not violate palette consistency. The same two annotation labels are again completely absent from the render.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures for any text that actually renders).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axis labels, ticks, and colorbar
+          text readable in both themes and at 400px mobile width; title comfortably
+          within width bounds
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Contour levels clearly visible; scatter overlay (markersize=6, alpha=0.35)
+          is a bit faint for its context-providing role
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq sequential colormap is CVD-safe; scatter overlay uses
+          theme-adaptive ink with adequate contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot + colorbar fill the canvas well with balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels descriptive with units (min)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used correctly for single-polarity density data, identical
+          across themes; backgrounds and chrome theme-correct in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom brand-colored sequential colormap, layered contour+scatter+colorbar
+          composition — clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines minimized, no grid, generous whitespace, subtle bg-colored
+          contour outline strokes
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal density naturally guides the viewer to the two eruption regimes
+          via color/shape, but the intended explicit callout annotations ('Short eruptions'/'Long
+          eruptions') do not render, so no credit for that layer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled + line density contour plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE-based multiple contour levels, scatter overlay for context, all
+          spec notes addressed
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Eruption duration on X, waiting time on Y, full data range shown
+          with sensible padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai' format; colorbar serves as the legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full Old Faithful dataset shows both dense clusters and sparse tails,
+          multiple density levels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, well-known scientific dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values match the real Old Faithful geyser dataset exactly
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports → data → plot → save script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic built-in dataset (RDatasets), no randomness to seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, RDatasets, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Two text!() annotation calls are dead code that produce no visible
+          output in either render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct convention
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of Axis/Figure/contourf!/contour!/scatter!/Colorbar
+          and colsize! for layout ratio
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Makie's GridLayout colsize! ratio control and custom cgrad,
+          but nothing highly distinctive to Makie beyond that
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - dataset-loading
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
