@@ -12,7 +12,7 @@
   CLOSED — the map keys are tagged so an empty value cannot become "match
   anything". Nothing is armed by merging: the rollout, the hostnames the
   Transform Rule has to cover and the rollback are in
-  `infra/cloudflare/README.md`.
+  `infra/cloudflare/README.md`. (#11221)
 
 - **`X-Origin-Gate` on `/_health` makes arming a measurement rather than a
   leap.** The same five verdicts the API reports — `off`, `off-seen`, `ok`,
@@ -22,7 +22,7 @@
   Worker's path cannot be asked that way, so `/api/event` reports it too: that
   is the one path the Worker sends to this container, a Worker subrequest skips
   its own zone's Transform Rules, and arming it blind would have answered every
-  Plausible pageview on the site with a 403.
+  Plausible pageview on the site with a 403. (#11221)
 
 ### Changed
 
@@ -36,7 +36,7 @@
   would have been a real boundary here — `anyplot.ai` is a Cloud Run domain
   mapping, so `$host` does tell the edge from the raw URL — but the bot monitor
   cannot spoof a Host either, and any exception it could present instead is
-  public with this repository.
+  public with this repository. (#11221)
 
 ### Added
 
@@ -46,4 +46,4 @@
   config is now RENDERED at container start. The new job in `ci-image.yml` runs
   the real image three ways: off, armed, and armed with no secret, checking the
   403, the exempt path, each verdict, and that the secret reaches neither the
-  refusal page nor the container log.
+  refusal page nor the container log. (#11221)
