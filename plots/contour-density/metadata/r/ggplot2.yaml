@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: contour-density
 created: '2026-09-04T23:11:40Z'
-updated: '2026-09-04T23:29:15Z'
+updated: '2026-09-04T23:40:24Z'
 generated_by: claude-sonnet
 workflow_run: 33928307073
 issue: 2552
@@ -12,138 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 89
 review:
   strengths:
-  - 'Correct Imprint gradient (#009E73 -> #4467A3) used for the density fill via scale_fill_gradient,
-    exactly matching the documented imprint_seq stops, identical between light and
-    dark renders'
-  - Uses the real, built-in Old Faithful dataset (faithful$eruptions vs faithful$waiting),
-    a well-known, neutral, and genuinely bimodal dataset that is an ideal showcase
-    for density contours
+  - 'Both defects flagged in attempts 1 and 2 are now fixed: the smaller cluster''s
+    outer contour band closes cleanly (verified via zoomed crops in both themes) and
+    the subtitle "Two distinct eruption modes: short/frequent and long/rare bursts"
+    now renders correctly, restoring the intended data-storytelling cue'
+  - 'Correct Imprint imprint_seq gradient (#009E73 -> #4467A3) for the density fill,
+    identical between light and dark renders'
+  - Uses the real, built-in Old Faithful dataset (faithful$eruptions vs faithful$waiting)
+    -- a textbook-neutral, genuinely bimodal showcase for density contours
   - Idiomatic stat_density_2d(geom = "polygon", contour_var = "density") with after_stat(level)
-    fill mapping, plus a semi-transparent geom_point() overlay for point-level context
-    per the spec's optional feature
-  - Theme-adaptive chrome (background, ink, grid) correctly implemented and verified
-    working in both plot-light.png and plot-dark.png; canvas size gate passed (3200x1800)
-  - 'Thoughtful (if incompletely effective) engineering to prevent contour clipping:
-    padding scale_x/y limits by 8% of the data range beyond the raw min/max, documented
-    with a clear code comment explaining the KDE grid-edge rationale'
+    plus a low-alpha geom_point() overlay gives both density gradient and raw-data
+    context, matching the spec's optional scatter-overlay note
+  - Theme-adaptive chrome (background, ink, grid, legend) correctly threaded through
+    both renders; canvas size gate passed (3200x1800)
+  - Well-documented padding rationale (25% scale-range padding) explaining why the
+    KDE grid needs slack beyond the raw data range for both clusters to close
   weaknesses:
-  - 'Visible polygon artifact on the smaller (short-eruption) cluster: the outer density
-    band has a jagged notch/bite cut into its top-left edge (around eruption_duration
-    ~1.6-1.9, waiting_time ~63-68) in BOTH plot-light.png and plot-dark.png -- reproducible,
-    not a rendering fluke. This looks like a self-intersecting or improperly closed
-    contour polygon from stat_density_2d on the smaller cluster. The 8% scale padding
-    added in this attempt did not fully fix contour closure. Try increasing n (grid
-    resolution) further, tuning the `h` (bandwidth) argument of stat_density_2d explicitly
-    instead of relying on the default per-axis bandwidth, or widening the padding
-    beyond 8% -- and re-inspect both clusters after the change.'
-  - 'labs(subtitle = "Two distinct eruption modes: short/frequent and long/rare bursts")
-    and theme(plot.subtitle = element_text(...)) are both set in the code but the
-    subtitle text does not render at all in either PNG -- there is a completely blank
-    gap between the title and the plot panel where it should appear (confirmed by
-    pixel-diffing the top 200px band against the background color, no text pixels
-    found in that band besides the title itself). Either fix whatever is suppressing
-    the subtitle so it actually renders, or remove the dead subtitle/plot.subtitle
-    configuration -- shipping code that has no visible effect is misleading and wastes
-    the intended data-storytelling hook.'
-  - Center of the large (long-eruption) cluster is heavily overplotted -- with ~170
-    points at size=1.3/alpha=0.35 packed into the densest density band, many points
-    fully overlap into solid dark blobs, losing individual point resolution exactly
-    where the KDE already communicates density; consider slightly smaller size or
-    lower alpha in the densest region, or reduce point size further since the contour
-    fill already carries the density signal.
+  - Center of the large (long-eruption) cluster still shows some point overplotting
+    at size = 1.0, alpha = 0.25, though noticeably reduced from attempt 2's size =
+    1.3, alpha = 0.35 -- a slightly lower alpha (~0.15-0.2) in the densest core would
+    further sharpen individual-point resolution without losing the overlay's value
+  - Design Excellence is solid but not exceptional -- the two-cluster composition
+    is clean and correctly polished now, but nothing (e.g. a peak-pointing annotation
+    or emphasis technique) pushes it beyond "well-executed" into genuinely distinctive
+    storytelling territory
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1, not pure white and not dark.
-      Chrome: Bold dark title "Old Faithful Eruptions · contour-density · r · ggplot2 · anyplot.ai" at top, fully legible against the light background. X-axis "Eruption Duration (min)" and Y-axis "Waiting Time to Next Eruption (min)" labels are dark-ink, readable. Tick labels are a softer gray, still clearly legible. A "Density" legend with a green-to-blue vertical color bar sits on the right. Subtle light-gray gridlines are visible but unobtrusive. NOTE: the code specifies a subtitle ("Two distinct eruption modes...") but it does NOT appear anywhere in the rendered image -- the gap between title and plot panel is blank.
-      Data: Two separate density-contour "islands" over a scatter of ~270 points. Fill goes from brand green (#009E73, low density) to blue (#4467A3, high density) in both islands. Points are drawn in dark ink at low alpha, visible as small dots atop the green/blue fill and as gray dots outside the contour bands. The smaller (bottom-left) island shows a visible notch/bite cut into its outer green band near its top-left corner -- looks like a contour-polygon closure artifact, not a data feature.
-      Legibility verdict: PASS (all rendered text is readable; the missing subtitle is a content-completeness issue, not a legibility failure).
+      Chrome: Bold dark title "Old Faithful Eruptions · contour-density · r · ggplot2 · anyplot.ai" at top, fully visible and uncropped. Subtitle "Two distinct eruption modes: short/frequent and long/rare bursts" now renders correctly directly beneath it in softer gray (this was missing in attempt 2). Dark-ink axis titles "Eruption Duration (min)" / "Waiting Time to Next Eruption (min)" and softer gray tick labels are all clearly legible. A "Density" colorbar legend sits to the right with generous margin from the canvas edge.
+      Data: Two filled density-contour islands use the Imprint imprint_seq gradient (#009E73 -> #4467A3), green outer / blue core, over the classic Old Faithful scatter points in low-alpha dark ink. Zoomed inspection of the smaller cluster's outer boundary (notched in attempts 1-2) confirms it is now a clean, smoothly closed ellipse with no gaps.
+      Legibility verdict: PASS (all text readable, no clipping).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17, not pure black and not light.
-      Chrome: Title, axis titles, tick labels, and legend text all render in light/off-white tones, clearly legible against the dark background -- no dark-on-dark failures observed. Gridlines are a faint light gray, subtle but visible. Same missing-subtitle blank gap as the light render.
-      Data: Data colors are identical to the light render (#009E73 -> #4467A3 gradient, same two islands, same point pattern) -- only the chrome flipped, as required. Points now render in a light ink tone at low alpha (theme-adaptive), visible against the colored fill and dark background. The same notch/bite artifact on the smaller cluster's outer band is present in the exact same location, confirming it is a reproducible rendering defect rather than noise.
-      Legibility verdict: PASS (all rendered text is readable in the dark theme; no dark-on-dark or light-on-light issues found).
+      Chrome: Title, subtitle, axis titles, and tick labels all flip to light/off-white tones and remain fully legible -- no dark-on-dark failures. Subtitle renders correctly here too.
+      Data: Data colors are pixel-identical to the light render (same green->blue gradient, same two islands, same point pattern) -- only chrome flipped. Zoomed inspection confirms the smaller cluster's outer band is likewise a clean, closed ellipse in this theme, matching the light-render fix.
+      Legibility verdict: PASS (all text readable in dark theme, no dark-on-dark or light-on-light issues).
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All rendered text legible in both themes; deducted because the coded
-          subtitle never actually renders, losing an intended text-hierarchy layer
+        comment: Explicit sizes, readable in both themes, title and now-working subtitle
+          both fit without clipping
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No text overlaps; some point-on-point overplotting in the dense cluster
-          core
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: Contour bands mostly clear, but the notch/bite artifact on the small
-          cluster's outer band compromises element integrity
+        comment: Contour bands and points visible; some residual overplotting in the
+          dense core of the larger cluster
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient, no red-green reliance, adequate contrast
+        comment: Imprint sequential gradient is CVD-safe and high-contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, title fits, no clipping; minor deduction for
-          the visual glitch in the contour geometry
+        comment: Balanced margins, legend near plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units, compliant title format
+        comment: Descriptive axis labels with units (min)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq gradient stops used correctly, backgrounds correct in
-          both themes
+        comment: imprint_seq gradient correct, theme-correct chrome in both renders
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Custom gradient and clean minimal theme, but the contour artifact
-          undercuts polish
+        comment: Thoughtful gradient and clean composition, both prior defects resolved,
+          but short of publication-tier polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Spines/grid handled well, but the notch in the small cluster's outer
-          band looks like a rendering bug, not refinement
+        passed: true
+        comment: Contour bands now close cleanly in both themes; subtle grid, minimal
+          chrome, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Bimodal shape is visually apparent from the two islands, but the
-          intended subtitle framing ('two distinct eruption modes') never renders,
-          losing an explicit storytelling cue
+        comment: Working subtitle explicitly states the bimodal insight and gradient
+          reinforces it, but no further emphasis technique beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -153,52 +134,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D KDE density contour plot
+        comment: Correct filled density-contour plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE, multiple contour levels, filled polygons, and optional scatter
-          overlay all present
+        comment: Contour levels, density gradient, scatter overlay all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapped correctly, padded limits show all data without truncation
+        comment: X/Y correctly assigned, full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with descriptive prefix; legend clearly
-          labeled 'Density'
+        comment: Title format correct, legend label matches data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers KDE, gradient levels, and point overlay; slight deduction
-          for the contour artifact reducing perceived completeness
+        comment: Both bimodal clusters, inner/outer density gradient, scatter overlay
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral, well-known Old Faithful geyser dataset
+        comment: Real, neutral, well-known Old Faithful dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic eruption duration and waiting time ranges
+        comment: Values match known real-world eruption/waiting ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -212,7 +191,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; dataset itself is fixed
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -221,17 +200,16 @@ review:
         comment: ggplot2, ragg, scales all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Dead subtitle/plot.subtitle configuration has no visible effect on
-          output
+        passed: true
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct ggsave + ragg::agg_png usage, plot-{theme}.png naming
+        comment: Correct ggsave + ragg::agg_png, plot-{theme}.png naming
     library_mastery:
       score: 7
       max: 10
@@ -241,28 +219,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic stat_density_2d + after_stat(level) pattern; contour closure
-          tuning left incomplete
+        comment: Canonical stat_density_2d(geom="polygon") + after_stat(level) usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Explicit contour_var='density' and scale-limit padding show above-basic
-          awareness of ggplot2 density-contour quirks
-  verdict: REJECTED
+        comment: ggplot2's stat-layer contour machinery and NSE after_stat() mapping
+          are reasonably distinctive to the grammar-of-graphics approach
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - ragg
-  - scales
+  dependencies: []
   techniques:
-  - density-contour
   - colorbar
-  - scatter-overlay
+  - layer-composition
   patterns:
-  - built-in-dataset
+  - dataset-loading
   dataprep:
   - kde
   styling:
-  - publication-ready
-  - theme-adaptive
+  - alpha-blending
+  - gradient-fill
