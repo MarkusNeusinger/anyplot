@@ -1,7 +1,7 @@
 // anyplot.ai
 // contour-density: Density Contour Plot
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-04
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-04
 
 const t = window.ANYPLOT_TOKENS;
 
