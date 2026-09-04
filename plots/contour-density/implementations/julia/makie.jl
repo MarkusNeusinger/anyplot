@@ -17,6 +17,13 @@ INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 # Imprint sequential colormap — density is single-polarity (concentration only)
 ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 
+# Fixed (non-theme-flipping) ink for annotations placed on top of the density
+# fill: the fill's colors are identical in both themes, and dark-on-fill
+# measures ~5:1 contrast vs. ~3:1 for light-on-fill, so unlike the chrome,
+# this text should NOT flip with THEME.
+ANNOTATION_INK  = colorant"#1A1A17"
+ANNOTATION_HALO = colorant"#FAF8F1"
+
 # --- Data ---------------------------------------------------------------
 # Old Faithful geyser: eruption duration vs. waiting time until next eruption.
 # The classic bimodal bivariate dataset for demonstrating density contours.
@@ -75,7 +82,34 @@ ax = Axis(
 
 cf = contourf!(ax, xgrid, ygrid, density; levels=10, colormap=ANYPLOT_SEQ)
 contour!(ax, xgrid, ygrid, density; levels=10, color=(PAGE_BG, 0.35), linewidth=1)
-scatter!(ax, duration, waiting; color=(INK, 0.25), markersize=6, strokewidth=0)
+scatter!(
+    ax, duration, waiting;
+    color       = (INK, 0.35),
+    markersize  = 6,
+    strokewidth = 0.5,
+    strokecolor = (PAGE_BG, 0.6),
+)
+
+# Callouts for Old Faithful's two well-known eruption regimes, placed in the
+# low-density (green) margin above/below each cluster.
+text!(
+    ax, 2.0, 40;
+    text        = "Short eruptions",
+    color       = ANNOTATION_INK,
+    fontsize    = 13,
+    strokecolor = (ANNOTATION_HALO, 0.6),
+    strokewidth = 1,
+    align       = (:center, :center),
+)
+text!(
+    ax, 4.3, 100;
+    text        = "Long eruptions",
+    color       = ANNOTATION_INK,
+    fontsize    = 13,
+    strokecolor = (ANNOTATION_HALO, 0.6),
+    strokewidth = 1,
+    align       = (:center, :center),
+)
 
 Colorbar(
     fig[1, 2], cf;
