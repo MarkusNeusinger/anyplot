@@ -155,8 +155,14 @@ ribbon_polygon <- function(row, r) {
         bezier_path(p_s1, p_t0),
         arc_path(row$a0_t, row$a1_t, r),
         bezier_path(p_t1, p_s0)
-    ) %>% mutate(conn_id = row$conn_id, source = row$source)
+    ) %>% mutate(conn_id = row$draw_order, source = row$source)
 }
+
+# Draw larger flows first and smaller ones last (on top) so thin connections
+# stay traceable through the dense crossing zone near the center.
+ribbon_edges <- ribbon_edges %>%
+    arrange(desc(value)) %>%
+    mutate(draw_order = row_number())
 
 ribbons <- bind_rows(lapply(seq_len(nrow(ribbon_edges)), function(i) {
     ribbon_polygon(ribbon_edges[i, ], r_ribbon)
@@ -207,7 +213,7 @@ title_size <- max(8, round(12 * min(1, 67 / nchar(title_text))))
 p <- ggplot() +
     geom_polygon(
         data = ribbons, aes(x, y, group = conn_id, fill = color),
-        color = NA, alpha = 0.55
+        color = NA, alpha = 0.42
     ) +
     geom_polygon(
         data = track_polys, aes(x, y, group = segment, fill = color),
@@ -224,12 +230,16 @@ p <- ggplot() +
     ) +
     scale_fill_identity() +
     coord_fixed(xlim = c(-1.8, 1.8), ylim = c(-1.8, 1.8), clip = "off") +
-    labs(title = title_text) +
+    labs(
+        title   = title_text,
+        caption = "Inner ring: net trade balance (red = deficit, cream = balanced, blue = surplus)"
+    ) +
     theme_void(base_size = 8) +
     theme(
         plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
         panel.background = element_rect(fill = PAGE_BG, color = NA),
         plot.title       = element_text(color = INK, size = title_size, hjust = 0.5, margin = margin(b = 10)),
+        plot.caption     = element_text(color = INK_SOFT, size = 7, hjust = 0.5, margin = margin(t = 10)),
         plot.margin      = margin(t = 15, r = 15, b = 15, l = 15)
     )
 
