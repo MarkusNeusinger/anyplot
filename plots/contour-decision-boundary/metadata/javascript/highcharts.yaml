@@ -1,0 +1,263 @@
+library: highcharts
+language: javascript
+specification_id: contour-decision-boundary
+created: '2026-09-04T23:13:29Z'
+updated: '2026-09-04T23:31:37Z'
+generated_by: claude-sonnet
+workflow_run: 33928223470
+issue: 2921
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/highcharts/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - 'Exact Imprint canonical order preserved across regions, point markers, and legend:
+    Budget = #009E73 (brand green, always-first), Regular = lavender, Premium = blue
+    — identical between light and dark renders.'
+  - Genuinely computes a real leave-one-out 5-NN classifier in vanilla JS (seeded
+    LCG, standardized features) rather than faking a boundary — a solid workaround
+    for the no-sklearn browser constraint and the missing heatmap/contour core module.
+  - Misclassified points (diamonds) are colored by their TRUE class rather than predicted
+    class, so a diamond visually contrasts against the (wrong) region color it landed
+    in — an effective, non-obvious storytelling choice for reading classifier errors
+    at a glance.
+  - Mesh resolution raised from ~70x39 to 130x73 since the previous attempt; the decision
+    boundary frontier itself now reads as a smooth diagonal rather than a visible
+    staircase.
+  - 'Both themes fully legible: correct #FAF8F1 / #1A1A17 chrome, all text readable,
+    deterministic seeded data generation, no imports beyond the Highcharts global,
+    no fake interactivity.'
+  weaknesses:
+  - 'UNRESOLVED from attempt 1: the decision-region fill still shows a strong, distracting
+    plaid/checkerboard texture across all three regions in BOTH renders (confirmed
+    by pixel-level crop inspection) — the repair only raised gridCols/cellRadius,
+    which did not fix the root cause. Overlapping semi-transparent square markers
+    compound opacity differently at their edges, and with many small overlapping squares
+    the browser''s anti-aliasing produces a moire/grid pattern instead of a flat wash.
+    Increasing point density alone will not remove this; either (a) switch to NON-overlapping
+    tiles sized to exactly match the cell pitch (cellRadius ~= half of cellPx, not
+    2.4x) with a single higher solid fillOpacity so tiles butt against each other
+    with zero overlap and zero gaps, or (b) trace the class-boundary per mesh row/column
+    and fill each contiguous class region with a single ''polygon'' series (core Highcharts
+    supports type: ''polygon'') for a true seamless contour fill with no seams at
+    all — option (b) is the more robust fix and better matches a ''contour/decision
+    boundary'' visual.'
+  - 'Header block is missing the required ''// License: Highcharts — commercial license,
+    free for non-commercial use (highcharts.com/license)'' line mandated by prompts/library/highcharts.md
+    — add it back to the header comment block.'
+  - Mesh grid is 130 x 73 (~9.5k cells), still short of the spec's suggested dense
+    grid of 100x100 to 200x200 (10k-40k cells) on the row dimension — consider raising
+    gridRows independent of the fixed aspect-ratio tie so the row count also clears
+    100, without needing to touch the seam-fill fix above.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark-ink title "contour-decision-boundary · javascript · highcharts · anyplot.ai" spans ~60% of plot width; soft-gray subtitle "5-NN decision regions · diamonds mark leave-one-out misclassifications" beneath it. Axis titles ("Monthly Spend ($)", "Visits per Month"), tick labels, and legend (Budget/Regular/Premium) are all clearly legible against the light background — no light-on-light issues.
+      Data: Three tiled decision regions (green bottom-left "Budget", lavender center "Regular", blue-gray top-right "Premium") painted via a scatter-square mesh; ~150 training points overlaid as circles colored by true class (first series is brand green #009E73), plus two diamond markers (dark-ink outline) flagging leave-one-out misclassifications. HOWEVER: a pixel-level crop of the region fill (both mid-region and near the boundary) reveals a persistent, clearly visible plaid/checkerboard grid texture across the entire background — this is not a subtle artifact, it covers 100% of the colored area and reads as unpolished/unfinished rather than a smooth contour wash.
+      Legibility verdict: PASS for text; FAIL for region-fill polish (checkerboard texture, see weaknesses).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title, subtitle, axis titles, tick labels, and legend all render in light gray/white and are fully legible against the dark background. No dark-on-dark failures.
+      Data: All three region colors and every data-point color are pixel-identical to the light render — only chrome flips, as required. The two diamond markers use a light outline in this theme so they stay visible against the region fill. The same plaid/checkerboard texture from the light render is present here too, confirmed via crop inspection (e.g. crop of the blue "Premium" region shows the identical grid pattern) — the artifact is theme-independent, meaning it is a rendering-technique issue, not a token/chrome issue.
+      Legibility verdict: PASS for text; FAIL for region-fill polish (checkerboard texture, see weaknesses).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; font sizes explicit
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: Boundary frontier itself reads smoothly, but the region fill's checkerboard
+          texture (unresolved from attempt 1) makes the mesh elements themselves visually
+          noisy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue is distinguishable and CVD-reasonable; no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title/subtitle proportions correct, nothing clipped, canvas gate
+          passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ($, per month)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct theme-adaptive chrome
+          both renders'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 3
+        max: 8
+        passed: false
+        comment: Thoughtful subtitle and misclassification callout, but the unresolved
+          plaid mesh artifact undercuts overall polish across the whole canvas
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Same visible grid-seam checkerboard flagged in attempt 1 persists
+          essentially unchanged after the repair attempt
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: True-color diamonds on wrong-colored regions is a genuinely effective
+          misclassification cue
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Decision-boundary/region classifier visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colored regions with transparency, true-class point overlay, correct/incorrect
+          marker distinction, legend, real classifier
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X1/X2 mapped correctly to axes, y drives class color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format; legend labels match class names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Mesh grid (130x73) improved over attempt 1 (~70x39) but rows still
+          short of the spec's 100+ suggestion
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral customer-segmentation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Spend/visit ranges are realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat functions, no unneeded classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Hand-rolled KNN justified by no-sklearn browser constraint; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Header block is missing the required '// License:' line mandated
+          by prompts/library/highcharts.md
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter series, per-point marker overrides, Highcharts.color().setOpacity()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Region technique is a reasonable workaround for the missing core
+          heatmap/contour module, but the resulting seam artifact shows the technique
+          isn't fully mastered yet
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - knn-classification
+  styling:
+  - alpha-blending
+  - edge-highlighting

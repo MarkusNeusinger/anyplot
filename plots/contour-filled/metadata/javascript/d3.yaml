@@ -1,0 +1,253 @@
+library: d3
+language: javascript
+specification_id: contour-filled
+created: '2026-09-04T23:18:32Z'
+updated: '2026-09-04T23:22:53Z'
+generated_by: claude-sonnet
+workflow_run: 33928606966
+issue: 2500
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Idiomatic, advanced D3 pipeline: d3.contours() + d3.geoTransform/d3.geoPath renders
+    true smooth isoline-bounded bands instead of a naive rectangle grid, and the polygon
+    boundaries double as precise level isolines per the spec''s suggestion'
+  - Correct diverging Imprint colormap (imprint_div via t.div + interpolateRgbBasis)
+    for signed anomaly data, with a physically meaningful zero-centered domain ([-maxAbs,
+    maxAbs])
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
+    backgrounds, readable ink/inkSoft text, identical data colors between light and
+    dark'
+  - Clean colorbar legend with axis, units label ('Anomaly (hPa)'), and gradient direction
+    consistent with the actual band colors
+  - Correct mandated title format with a sensible descriptive prefix ('Pressure Anomaly
+    · contour-filled · javascript · d3 · anyplot.ai')
+  - Deterministic, in-memory data generation (ridge + trough + ripple) on a 64x40
+    grid — within spec range and smooth enough to avoid jagged boundaries
+  - No canvas clipping, no overlap, generous margins, L-shaped spine convention respected
+  weaknesses:
+  - 14 contour bands with a subtle 0.12-opacity boundary stroke means adjacent bands
+    are distinguished mostly through the colorbar rather than strong visual band separation
+    — a slightly higher stroke opacity (e.g. 0.2-0.25) would sharpen level readability
+    without adding clutter
+  - Three small helper functions (pressureAnomaly, lonAt, latAt) add minor structure
+    beyond a flat script; acceptable for 2D grid generation but slightly more than
+    the KISS ideal
+  - d3.contours()+d3.geoPath is the standard/expected recipe for a d3 filled-contour
+    spec rather than a novel technique choice, so library-mastery distinctiveness
+    is good but not exceptional
+  - No overlaid discrete contour-line pass beyond the band boundaries themselves —
+    the spec's 'consider overlaying contour lines for precise level identification'
+    is only partially addressed via boundary strokes rather than a dedicated isoline
+    layer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the light theme surface.
+      Chrome: Title "Pressure Anomaly · contour-filled · javascript · d3 · anyplot.ai" is bold dark ink, clearly readable and centered. Axis labels "Longitude offset (°E)" and "Latitude offset (°N)" are dark and legible. Tick labels (0°-16° on x, 0°-10° on y) are soft dark gray, legible against the cream background. Colorbar to the right is titled "Anomaly (hPa)" with tick labels 10.0/5.0/0.0/-5.0/-10.0, all legible.
+      Data: Diverging red-to-blue filled contour bands. A blue high-anomaly lobe (ridge) sits in the upper-left (~lon 2-8°, lat 6-9°), a red low-anomaly lobe (trough) sits in the lower-right (~lon 8-16°, lat 0-4°), with a muted neutral-toned transition zone between them. Colorbar orientation (blue=high, red=low) matches the plotted bands.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — matches the dark theme surface.
+      Chrome: Title is bold near-white/cream and clearly readable. Axis labels and tick labels are light gray/off-white and legible against the dark background. Colorbar title and tick labels are light-colored and legible; no chrome element is unreadable.
+      Data: Same blue ridge (upper-left) and red trough (lower-right) bands as the light render — the data-color hues are visually identical between the two renders (only the chrome — background, text, gridline colors — has flipped), consistent with the Imprint palette rule that categorical/continuous data colors do not change between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/colorbar text is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/axis/tick/colorbar text explicitly sized (13-22px) and
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bands are distinguishable but rely mostly on the colorbar since boundary
+          stroke opacity (0.12) is very subtle at 14 levels
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-blue diverging Imprint scale, not red-green, CVD-safe by design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, generous margins, no overflow, balanced title
+          proportion
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Units present (°E, °N, hPa)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct use of imprint_div for signed data, theme-correct backgrounds
+          in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Smooth true-isoline contour bands with a physically-centered diverging
+          scale — above generic default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, no competing grid, generous whitespace, subtle band
+          outlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two clear extrema (ridge/trough) visible but no additional emphasis
+          (e.g. labeled peaks) beyond the default contour rendering
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled contour plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar present, 14 levels (within 10-20 range), 64x40 grid (within
+          30x30-100x100 range), smooth boundaries
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y grid correct, z encoded via color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; colorbar labeled
+          with units
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full domain covered, two distinct extrema, smooth gradient
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral sea-level pressure anomaly framing
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomaly magnitude (~±11 hPa) is realistic for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three small helper functions for grid/coordinate generation — reasonable
+          but slightly beyond flat-script ideal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for the technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container via ANYPLOT_SIZE, no animation'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook-correct use of d3-contour + d3-geo + scaleSequential/interpolateRgbBasis
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.contours()+geoPath is the expected/standard recipe for this spec
+          in D3, competent but not a novel technique choice
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
