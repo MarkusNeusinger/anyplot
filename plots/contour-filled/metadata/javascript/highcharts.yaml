@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: contour-filled
 created: '2026-09-04T23:33:54Z'
-updated: '2026-09-04T23:38:16Z'
+updated: '2026-09-04T23:46:35Z'
 generated_by: claude-sonnet
 workflow_run: 33929099392
 issue: 2500
@@ -12,136 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Clever, well-documented workaround for the missing colorAxis/heatmap module:
-    a hand-rolled marching-squares/Sutherland-Hodgman isoband extraction cleanly reproduces
-    genuine filled-contour semantics from the core Highcharts bundle.'
-  - Correct Imprint imprint_seq sequential colormap (brand green to blue) for single-polarity
-    elevation data, with identical data colors between the light and dark renders
-    and theme-correct chrome (backgrounds, text, borders) in both.
-  - Discrete colorbar with clear min/mid/max value labels plus overlaid isolines at
-    each level boundary, matching the spec's suggestions for a colorbar and 'consider
-    overlaying contour lines for precise level identification'.
-  - 'Real Highcharts interactivity (not faked): an invisible scatter overlay drives
-    a native tooltip reporting exact elevation at sampled grid points, without affecting
-    the static PNG.'
-  - Title font size scales with title length via an explicit formula, keeping the
-    long mandated title comfortably within canvas bounds in both renders.
+  - 'Both attempt-1 weaknesses are directly and correctly fixed: isoline stroke is
+    now a fixed neutral color instead of theme-derived, giving identical visual weight
+    in both renders; colorbar ticks are rounded to clean values (0/600/1200) instead
+    of raw decimals.'
+  - New direct elevation callouts on three isolines ("350 m", "600 m", "950 m") add
+    concrete storytelling value without cluttering the render.
+  - Correct imprint_seq sequential colormap (brand green to blue) for single-polarity
+    elevation data, identical across themes with theme-correct chrome.
+  - 'Real (not faked) interactivity: an invisible scatter overlay drives a native
+    Highcharts tooltip with exact elevation at sampled points.'
+  - Title fontsize scales with title length via an explicit formula, keeping the long
+    mandated title comfortably within bounds in both renders.
   weaknesses:
-  - 'Isoline contrast is inconsistent between themes: the boundary lines use t.ink
-    at 25% opacity, which reads as faint on the light render''s mid-tone bands but
-    noticeably brighter/more prominent on the dark render''s bands — pick a stroke
-    treatment (e.g. a fixed neutral tone or opacity tuned per theme) that reads with
-    similar visual weight in both.'
-  - 'Design Excellence is still at ''good default'' level rather than exceptional:
-    the plot is a clean two-hue gradient with no additional depth cues (e.g. selectively
-    labeling a few isolines with their elevation value) that would elevate the storytelling
-    beyond ''color intensity shows where peaks are''.'
-  - Library Mastery is necessarily generic here (hand-drawn SVG paths via chart.renderer)
-    because the required heatmap/colorAxis module isn't loaded — acceptable given
-    the constraint, but the repair loop should look for any additional Highcharts-native
-    touches (e.g. leveraging renderer clipping, marker states, or built-in colorAxis-style
-    legend formatting) that would demonstrate more idiomatic mastery of the SVGRenderer
-    API.
-  - Colorbar tick values (1191 / 595 / 0) are raw computed min/mid/max rather than
-    round, human-friendly numbers — consider rounding to a cleaner scale (e.g. nearest
-    50 or 100 m) for a more polished feel.
+  - Library Mastery remains capped by the missing heatmap/colorAxis module in the
+    core bundle -- the hand-drawn SVG-path approach is the correct workaround per
+    the library rules, but it is inherently less "idiomatic Highcharts" than a native
+    series type.
+  - Design Excellence, while improved, is still shy of exceptional -- the cartographic
+    labeling is a nice touch but the overall composition doesn't yet have a truly
+    distinctive focal-point treatment beyond the color gradient itself.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Synthetic Mountain Range Elevation · contour-filled · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle in softer gray directly beneath it, both fully visible and not clipped. Axis titles "X (km)" / "Y (km)" and tick labels (-10..10) in soft dark gray, clearly legible against the light background. Colorbar on the right labeled "Elevation (m)" with value labels 1191/595/0 in soft gray.
-      Data: Smooth filled isobands transitioning from brand green (#009E73, low elevation) through teal to blue (high elevation), with three overlapping Gaussian peaks visible as darker blue lobes around (2,2), (-4,-3), and a smaller one near (1,-5.5). Thin darker isolines subdivide the bands but are fairly subtle against the mid-tone teal/blue fill.
-      Legibility verdict: PASS — all text reads clearly against the light background, no dark-on-light or washed-out elements.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Title "Synthetic Mountain Range Elevation · contour-filled · javascript · highcharts · anyplot.ai" in bold dark ink; subtitle in soft gray; axis titles "X (km)"/"Y (km)" and tick labels (-10..10) in soft dark gray. All fully legible against the light background.
+      Data: Filled isobands sweep from brand green (#009E73, low elevation ~0m) through teal to blue (high elevation ~1200m) across three overlapping Gaussian peaks. Thin dark isolines subdivide bands with consistent, moderate contrast. Three isolines carry direct elevation callouts ("350 m", "600 m", "950 m") in white label boxes with dark text. Discrete colorbar on the right shows clean rounded ticks (0 / 600 / 1200).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and subtitle, now in light/off-white text, fully visible and not clipped. Axis titles and tick labels in light gray, clearly legible against the dark background. Colorbar and its value labels also rendered in light gray, legible.
-      Data: Identical green-to-blue gradient and peak positions as the light render — confirming data colors are unchanged across themes. Isolines are noticeably more visible here than in the light render (lighter stroke color pops more against the darker-toned bands), which is a minor cross-theme consistency issue but not a legibility failure.
-      Legibility verdict: PASS — no dark-on-dark text; all chrome elements are clearly readable, though the isoline prominence differs from the light render.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Title/subtitle in light/off-white text; axis titles and tick labels in light gray. All fully legible against the dark background. No dark-on-dark failures.
+      Data: Green-to-blue gradient and peak positions are pixel-identical to the light render, confirming data colors are unchanged across themes. Isoline stroke is now a fixed neutral tone (rgba(26,26,23,0.45)) rather than theme-derived, so it reads with the same visual weight as in the light render -- resolves the attempt-1 cross-theme inconsistency. The three labeled isoline callouts use the same light box/dark text styling and stay legible against the dark bands.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title fontsize scales with title length
-          via an explicit formula, staying well-proportioned in both renders.
+        comment: Explicit sizing throughout; title fontsize scales with title length;
+          all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No collisions, including the newly added isoline value labels
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bands and peaks clearly visible; isolines are subtle in the light
-          render and comparatively more prominent in the dark render (theme-inconsistent
-          contrast).
+        comment: Isoline stroke is now a fixed neutral tone instead of theme-derived,
+          so contrast is consistent between light and dark renders -- fixes the attempt-1
+          weakness
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq sequential gradient is CVD-safe and offers good contrast
-          between low and high bands.
+        comment: imprint_seq gradient is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the majority of the canvas with balanced margins;
-          colorbar sits close to the plot, not isolated.
+        comment: Exact 3200x1800 canvas, plot fills the frame, colorbar sits close
+          with no cutoff
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axis titles include units: ''X (km)'' / ''Y (km)''; colorbar labeled
-          ''Elevation (m)''.'
+        comment: Axis units present (km), colorbar labeled Elevation (m)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses imprint_seq (brand green to blue) for single-polarity elevation
-          data, identical across themes; backgrounds and chrome are theme-correct
-          in both renders.
+        comment: imprint_seq (green to blue) for single-polarity data, identical across
+          themes, theme-correct chrome
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Well-crafted custom isoband rendering with a coherent two-hue gradient
-          and discrete colorbar; clearly above a library default but not yet publication-level
-          distinctive design.
+        passed: true
+        comment: Hand-rolled isoband rendering plus direct elevation callouts gives
+          it a genuinely custom, cartographic feel; not quite top-tier bespoke polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: No gridlines, L-shaped axis frame, generous whitespace, refined colorbar
-          with border — good refinement, some polish (round tick values) still missing.
+        passed: true
+        comment: Rounded colorbar ticks and consistent isoline weight remove the roughness
+          noted in attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Color intensity plus isolines clearly guide the eye to the elevation
-          peaks, giving visual hierarchy, though no explicit callouts/labels highlight
-          the peak values.
+        passed: true
+        comment: Three labeled isolines give the viewer concrete anchor values directly
+          on the map
     spec_compliance:
       score: 15
       max: 15
@@ -151,29 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine filled contour plot with color bands between level curves.
+        comment: Genuine filled contour with color bands between level curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, isolines overlaid for precise level identification,
-          14 levels, smooth 40x40 grid.
+        comment: Colorbar, overlaid isolines with direct labels, 14 levels, smooth
+          40x40 grid
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to the grid; full domain (-10..10) shown on
-          both axes.
+        comment: X/Y correctly mapped, full domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · contour-filled · javascript
-          · highcharts · anyplot.ai'; colorbar serves as the legend for continuous
-          data.
+        comment: Title format correct with descriptive prefix; colorbar serves as
+          legend for continuous data
     data_quality:
       score: 15
       max: 15
@@ -183,22 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three overlapping Gaussian peaks of different amplitudes/widths produce
-          varied terrain covering the full elevation range (0-1191 m).
+        comment: Three overlapping peaks of varying amplitude/width cover the full
+          elevation range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral, real-world plausible scenario: synthetic mountain-range
-          elevation field.'
+        comment: Neutral, plausible mountain-elevation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation range and spatial extent are plausible for a mountainous
-          20km x 20km area.
+        comment: Elevation range and spatial extent plausible for a mountainous area
     code_quality:
       score: 9
       max: 10
@@ -207,36 +185,33 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Uses several helper functions for isoband/isoline computation; necessary
-          given the missing colorAxis/heatmap module, but not the flat imports-data-plot-save
-          structure.
+        passed: true
+        comment: Several helper functions needed for hand-rolled isoband/isoline computation
+          (no heatmap/colorAxis module available)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic closed-form Gaussian data, no randomness.
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the Highcharts global and provided tokens are used.
+        comment: Only the provided globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the constraint (no fake UI, no over-engineering
-          beyond what marching-squares requires).
+        comment: Appropriately complex for the constraint, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract correctly; animation disabled on
-          both chart and series.
+        comment: Mount-node contract followed, animation disabled everywhere
     library_mastery:
       score: 6
       max: 10
@@ -246,28 +221,28 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct but low-level usage (chart.renderer path/rect/text calls)
-          rather than a high-level series API, forced by the missing heatmap/colorAxis
-          module.
+        comment: Correct but low-level chart.renderer usage, forced by the missing
+          heatmap/colorAxis module
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Highcharts' SVGRenderer directly with load/redraw events and
-          an invisible scatter layer for native tooltips — a Highcharts-specific technique,
-          though not leveraging a marquee built-in feature.
-  verdict: REJECTED
+        comment: SVGRenderer, load/redraw events, invisible-scatter tooltip layer,
+          and labeled isoline callouts are Highcharts-specific but still a workaround
+          rather than a marquee built-in feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
   dataprep:
-  - binning
+  - interpolation
   styling:
   - custom-colormap
-  - minimal-chrome
+  - gradient-fill
