@@ -28,9 +28,11 @@ section this tool has just laid out.
 
 Three verbs (`python -m tools.changelog …`, see `__main__`):
 
-* `check [--base REF]` — every fragment parses; with `--base`, the diff against
-  REF must carry a fragment (or be a release cut, or catalogue-only) and must
-  not add bullets to `[Unreleased]` directly.
+* `check [--base REF]` — every fragment parses and carries no unfilled `(#NNN)`
+  placeholder; with `--base`, the diff against REF must carry a fragment (or be
+  a release cut, or catalogue-only) and must not ADD bullets to `[Unreleased]`
+  directly (correcting one that is already there is fine — a bullet is
+  identified by its bold title, not by its full text).
 * `preview` — the merged `[Unreleased]` as the next cut would write it.
 * `release VERSION --title …` — the cut itself.
 """
@@ -39,6 +41,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -69,6 +72,10 @@ _CATEGORY_LINE = re.compile(r"^### (\S+)\s*$")
 # The bold title, over the WHOLE bullet: it regularly runs onto the continuation
 # line before its closing `**`, so DOTALL and the non-greedy body are both load-bearing.
 _BOLD_TITLE = re.compile(r"- \*\*.+?\*\*", re.DOTALL)
+# The unfilled reference placeholder, in any width of N. Quoted in backticks it
+# is a fragment TALKING about the placeholder (this rule's own entry does), which
+# is prose like any other — only a bare one is a reference nobody filled in.
+_PLACEHOLDER = re.compile(r"(?<!`)\(#N+\)(?!`)")
 _SEMVER = re.compile(r"\d+\.\d+\.\d+")
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _UNRELEASED_LINK = re.compile(r"^\[Unreleased\]: (\S+)/compare/v(\d+\.\d+\.\d+)\.\.\.HEAD$", re.M)
@@ -158,6 +165,18 @@ def parse_entries(text: str, *, where: str) -> Entries:
     return entries
 
 
+def bullet_title(bullet: str) -> str:
+    """The bold title, whitespace-collapsed — a bullet's identity across edits.
+
+    Two bullets are the same entry when they open with the same title, whatever
+    the body behind it now says. That is what lets the gate below tell a
+    CORRECTED bullet from an ADDED one, and the collapse is what makes it hold
+    when the correction rewraps the lines the title itself runs over.
+    """
+    match = _BOLD_TITLE.match(bullet)
+    return " ".join((match.group(0) if match else bullet).split())
+
+
 @dataclass(frozen=True)
 class Changelog:
     """`CHANGELOG.md` split at its `[Unreleased]` section."""
@@ -220,6 +239,23 @@ def _added_at(root: Path, path: Path) -> float:
     return float(stamp) if stamp else float("inf")
 
 
+def check_placeholder(text: str, *, where: str) -> None:
+    """Refuse `(#NNN)` left standing where a number was meant to go.
+
+    The reference itself is optional at write time — the number does not exist
+    until the PR does, and `/pull_request` appends it once it opens. What is
+    never right is the placeholder shipped as written: it reads as a reference
+    in the released section and points nowhere. So: a number, or nothing, but
+    not the letter N.
+    """
+    for n, line in enumerate(text.splitlines(), 1):
+        if match := _PLACEHOLDER.search(line):
+            raise ChangelogError(
+                f"{where}:{n}: '{match.group(0)}' is the unfilled placeholder — put the PR number in, "
+                "or take the reference out (it is appended when the PR opens)"
+            )
+
+
 def load_fragments(root: Path = REPO_ROOT) -> list[Fragment]:
     """Every `changelog.d/*.md` but the README, newest first.
 
@@ -234,9 +270,11 @@ def load_fragments(root: Path = REPO_ROOT) -> list[Fragment]:
         if path.name == "README.md":
             continue
         where = str(path.relative_to(root))
-        entries = parse_entries(path.read_text(encoding="utf-8"), where=where)
+        text = path.read_text(encoding="utf-8")
+        entries = parse_entries(text, where=where)
         if not any(entries.values()):
             raise ChangelogError(f"{where}: no bullets")
+        check_placeholder(text, where=where)
         fragments.append(Fragment(path, entries))
     return sorted(fragments, key=lambda f: (-_added_at(root, f.path), f.path.name))
 
@@ -366,8 +404,27 @@ def _changed_files(root: Path, base: str) -> dict[str, str]:
     return changed
 
 
-def _bullets(section: str) -> set[str]:
-    return {b for bullets in parse_entries(section, where=f"{CHANGELOG_NAME} [Unreleased]").values() for b in bullets}
+def _bullets(section: str) -> list[str]:
+    return [b for bullets in parse_entries(section, where=f"{CHANGELOG_NAME} [Unreleased]").values() for b in bullets]
+
+
+def _added_bullets(before: str, after: str) -> list[str]:
+    """The bullets `after` holds beyond `before`, by the identity `bullet_title` gives them.
+
+    Counted, not set-differenced. Two bullets may legitimately carry the same
+    title, and a set of titles would let a second copy of one the section
+    already holds pass unseen — the gate has to notice the COPY as much as the
+    newcomer (Copilot review).
+    """
+    held = Counter(bullet_title(b) for b in _bullets(before))
+    seen: Counter[str] = Counter()
+    added: list[str] = []
+    for bullet in _bullets(after):
+        title = bullet_title(bullet)
+        seen[title] += 1
+        if seen[title] > held[title]:
+            added.append(bullet)
+    return added
 
 
 def check_pr(base: str, *, root: Path = REPO_ROOT) -> list[str]:
@@ -377,9 +434,15 @@ def check_pr(base: str, *, root: Path = REPO_ROOT) -> list[str]:
     one corrected), when it is the release cut (a version heading the base
     lacks — the cut moves bullets OUT and needs no fragment of its own), or
     when everything it touches is exempt (catalogue-only, `plots/`). Fails when
-    it carries no fragment, and — independently — when it writes bullets into
-    `[Unreleased]` directly: that is the shared spot the fragments exist to
-    retire.
+    it carries no fragment, and — independently — when it ADDS a bullet to
+    `[Unreleased]`: that is the shared spot the fragments exist to retire.
+
+    Added, not merely different. A bullet is identified by its bold title
+    (`bullet_title`), so re-wording the body of an entry the base already
+    carries — a typo in a shipped line, a sharper clause — is a change and
+    passes; only a title the base does not have — or one more copy of a title
+    it has — is a new entry and is refused into a fragment. Set-of-bullets
+    identity could not tell the two apart and refused both.
     """
     changed = _changed_files(root, base)
     problems: list[str] = []
@@ -389,8 +452,7 @@ def check_pr(base: str, *, root: Path = REPO_ROOT) -> list[str]:
         before = split_changelog(_git(root, "show", f"{merge_base}:{CHANGELOG_NAME}", required=True))
         after = split_changelog((root / CHANGELOG_NAME).read_text(encoding="utf-8"))
         release_cut = after.newest_version != before.newest_version
-        gained = _bullets(after.unreleased) - _bullets(before.unreleased)
-        for bullet in sorted(gained):
+        for bullet in sorted(_added_bullets(before.unreleased, after.unreleased)):
             title = bullet.split("\n", 1)[0][:72]
             problems.append(f"{CHANGELOG_NAME} [Unreleased] gained a bullet — it belongs in a fragment: {title}…")
     touches_fragments = any(p.startswith(f"{FRAGMENT_DIR_NAME}/") for p in changed)

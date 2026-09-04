@@ -267,11 +267,14 @@ MIRRORED_RULES = {
         "docs/reference/style-guide.md",
     ],
     # The keywords carry the PROHIBITION as well as the duty: a fragment is
-    # added AND `CHANGELOG.md` is left alone. A pin on "changelog.d" alone would
-    # stay green if a guide were rewritten to allow both.
-    "every PR adds a changelog fragment, never a CHANGELOG.md bullet": [
+    # added AND no bullet is added to `CHANGELOG.md`. A pin on "changelog.d"
+    # alone would stay green if a guide were rewritten to allow both. "new" is
+    # part of the pin since 2026-09-04, when the gate learned to tell a
+    # CORRECTED bullet from an added one — the prohibition is on adding, and
+    # the phrase has to say so.
+    "every PR adds a changelog fragment, never a new CHANGELOG.md bullet": [
         "changelog.d/<slug>.md",
-        "never a bullet in `changelog.md`",
+        "never a new bullet in `changelog.md`",
         'changelog (fragment)"',
     ],
     "a release is condensed, never copied": ["condensed, never copied", "agentic/commands/release.md"],

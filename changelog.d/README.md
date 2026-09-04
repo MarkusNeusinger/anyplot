@@ -3,8 +3,8 @@
 Every PR that changes code adds ONE file here instead of editing
 `CHANGELOG.md`: `changelog.d/<slug>.md`, the slug naming the change (the branch
 name minus its prefix does fine — `origin-gate-rest.md`, `csp-hashes.md`).
-Nothing else touches `CHANGELOG.md` between releases, so two PRs never meet at
-the same line again — the reason this directory exists (three conflicts in one
+Nothing else is ADDED to `CHANGELOG.md` between releases, so two PRs never meet
+at the same line again — the reason this directory exists (three conflicts in one
 night on 2026-09-02/03, each a hand-resolved rebase for text neither branch
 disagreed about; a union merge driver heals only the local rebase, and GitHub's
 own mergeability check ignores merge drivers).
@@ -16,12 +16,20 @@ A fragment is a slice of the changelog in the changelog's own format:
 
 - **The thing, named as the reader will meet it.** One clause on what it
   does and where, then why it is the right shape — the rationale a diff
-  cannot carry. Ends with the PR reference once known (#NNNNN).
+  cannot carry.
 
 ### Fixed
 
-- **What was wrong, as a title.** What it did, what it does now (#NNNNN).
+- **What was wrong, as a title.** What it did, what it does now.
 ```
+
+**Leave the PR reference out; `/pull_request` appends it.** The number does
+not exist until the PR does, so write the bullet without one and let step 7
+of `agentic/commands/pull_request.md` add the real `(#11215)` afterwards. What
+`check` refuses is the letter N left standing where a number was meant to go:
+`(#NNNNN)` shipped as written reads as a reference in the released section and
+points nowhere. So: a number, or nothing. (Quoted in backticks it is prose
+ABOUT the placeholder — this paragraph included — and passes.)
 
 Rules, all enforced by `uv run python -m tools.changelog check`:
 
@@ -31,7 +39,9 @@ Rules, all enforced by `uv run python -m tools.changelog check`:
 - A bullet opens with its bold title and wraps with two-space indentation,
   exactly like the entries already in `CHANGELOG.md`; English (`CLAUDE.md`
   § "Always write in English"), written like the existing entries: what,
-  where, why.
+  where, why. The closing `**` may sit on the continuation line — a long
+  title is allowed to wrap — but it has to be there.
+- No bare `(#NNNNN)`: fill the number in or leave the reference out.
 - Nothing else in the file — no prose above the first heading, no `##`.
 
 The CI job "Changelog (fragment)" requires a fragment in every PR — except
@@ -39,8 +49,13 @@ catalogue-only PRs (everything under `plots/`), PRs labelled `skip-changelog`,
 and the two bot authors: the automated plot pipeline (`github-actions[bot]`:
 spec-create, impl-generate/review/repair/merge, spec auto-polish, daily-regen)
 and Dependabot. Those are exactly the classes `CLAUDE.md` already exempts and
-the release summarizes in aggregate. The job also refuses bullets written into
+the release summarizes in aggregate. The job also refuses bullets ADDED to
 `[Unreleased]` directly.
+
+Added, not merely different: a bullet is identified by its bold title, so
+correcting the wording of an entry `[Unreleased]` already carries — a typo in a
+shipped line, a sharper clause — passes, and only a title the base does not
+have counts as a new entry that belongs in a fragment.
 `uv run python -m tools.changelog check --base origin/main` is the same check
 locally; `uv run python -m tools.changelog preview` prints the pending section.
 

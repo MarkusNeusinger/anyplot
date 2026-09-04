@@ -1091,16 +1091,20 @@ pytest --pdb       # Debug on failure
 The release notes ARE the changelog — they accumulate PR-by-PR, so cutting a release is pure
 mechanics (see `agentic/commands/release.md` for the executable flow).
 
-- **`changelog.d/<slug>.md`**, one fragment per PR, is what a PR writes — never a bullet in
+- **`changelog.d/<slug>.md`**, one fragment per PR, is what a PR writes — never a NEW bullet in
   `CHANGELOG.md` itself, which is the line two sibling PRs then conflict on. A fragment is a slice
   of the changelog in the changelog's own format ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-  categories over bold-titled bullets with PR refs; rules and an example in
+  categories over bold-titled bullets, the PR ref appended by `/pull_request` once the number
+  exists — a bare `(#NNNNN)` placeholder is refused; rules and an example in
   `changelog.d/README.md`), and the CI job "Changelog (fragment)" refuses both a missing fragment
-  and a bullet written into `[Unreleased]`. **Exempt** (would drown the file): catalogue-only PRs
-  under `plots/`, the automated plot pipeline's output (spec-create, impl-generate/review/repair/
-  merge, spec auto-polish, daily-regen PRs) and individual Dependabot bumps — these are summarized
-  in aggregate at release time (an italic *Catalog* line at the end of the version section and a
-  single **Dependencies:** bullet under `### Changed`) — plus any PR labelled `skip-changelog`.
+  and a bullet ADDED to `[Unreleased]`. Added, not merely different: a bullet is identified by its
+  bold title, so correcting the wording of one already there passes, and only a new title (or one
+  more copy of a title already there) belongs in a fragment. **Exempt** (would drown the file):
+  catalogue-only PRs under `plots/`, the automated plot pipeline's output (spec-create,
+  impl-generate/review/repair/merge, spec auto-polish, daily-regen PRs) and individual Dependabot
+  bumps — these are summarized in aggregate at release time (an italic *Catalog* line at the end
+  of the version section and a single **Dependencies:** bullet under `### Changed`) — plus any PR
+  labelled `skip-changelog`.
 - **Versioning** is product communication: major for milestone releases (new language waves,
   rebrands, breaking URL/schema changes — v2.0.0/v3.0.0 precedent), minor for feature batches,
   patch for fix-only. Version lives in `pyproject.toml`, mirrored in `uv.lock` and
