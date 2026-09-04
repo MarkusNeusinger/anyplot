@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: contour-decision-boundary
 created: '2026-09-04T23:22:15Z'
-updated: '2026-09-04T23:27:09Z'
+updated: '2026-09-04T23:40:55Z'
 generated_by: claude-sonnet
 workflow_run: 33928713466
 issue: 2921
@@ -12,54 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-decision-boundary/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Real leave-one-out KNN classifier (k=9) computed in-browser drives the mesh predictions
-    — not a hand-drawn boundary — and the resulting staircase boundary line genuinely
-    reflects the classifier's decision surface.
-  - 'Correct Imprint palette in canonical order: Setosa = #009E73 (brand green, position
-    1), Versicolor/Virginica follow palette positions 2-3, with the semantic amber
-    anchor reserved for the misclassified point — no palette misuse.'
-  - Creative, distinctive use of MUI X's `useDrawingArea` hook to render a custom
-    SVG boundary overlay inside the ScatterChart's own coordinate system — a composition
-    pattern that showcases MUI X's React architecture rather than generic chart config.
-  - 'Both themes are fully legible: explicit font sizes throughout (title 22px, axis
-    labels 15px, ticks 14px, legend 13px), correct #FAF8F1/#1A1A17 backgrounds, and
-    all text correctly recolored for dark mode.'
-  - 'Data is realistic and well-scaled: synthetic iris-like petal measurements with
-    class means/spreads that closely match the real iris dataset''s known separability
-    pattern (Setosa fully separable, Versicolor/Virginica overlapping).'
+  - 'Clever engineering workaround: MUI X community has no contour/decision-region
+    primitive, so the implementation rasterizes classifier predictions into an off-screen
+    canvas region-fill image and overlays a genuine SVG boundary trace (via useDrawingArea)
+    computed from the same mesh grid — a real decision-boundary visualization, not
+    a simulated one.'
+  - Misclassified training points are distinctly highlighted in the amber semantic-warning
+    anchor via honest leave-one-out KNN evaluation (predicting each point against
+    a set excluding itself), giving the plot a genuine analytical story instead of
+    just displaying raw data.
+  - 'Imprint palette used correctly and consistently: first class (Setosa) is #009E73,
+    subsequent classes follow canonical order, and colors are identical across light/dark
+    themes with only chrome flipping.'
+  - Deterministic, seeded data generation (fixed-seed LCG + Box-Muller) with realistic
+    iris-like petal measurements showing genuine class overlap near the Versicolor/Virginica
+    boundary.
+  - Clean use of MUI X's compositional API (ScatterChart children + useDrawingArea)
+    to align a custom SVG overlay with the chart's internal coordinate system — a
+    technique fairly distinctive to this library's architecture.
   weaknesses:
-  - The class-region fill is built from ~4,900 overlapping circular markers per class
-    (70x70 mesh, markerSize 10) rather than a smooth area fill, producing a visible
-    stippled/scale-like texture across the whole background in both renders. It reads
-    correctly but looks less polished than a clean contiguous region fill — consider
-    reducing marker size/increasing grid density, or increasing fill alpha slightly
-    so the texture reads as a smoother wash from normal viewing distance.
-  - Only one misclassified training point is shown (the amber dot near x=4.8). Feature
-    coverage would be stronger with 2-3 misclassifications scattered near different
-    class boundaries (not just the Versicolor/Virginica edge), better demonstrating
-    the 'correctly vs incorrectly classified' comparison the spec calls out.
-  - 'Visual refinement is good but not exceptional: the dot-textured region fill keeps
-    Design Excellence from reaching the top tier — a smoother-looking region rendering
-    or a subtler mesh (e.g., smaller/more numerous cells at lower alpha) would read
-    as more deliberately designed rather than as a scatter-chart workaround.'
+  - Title occupies only ~44% of the plot width — narrower than the 50-70% guideline
+    range (not a violation, just leaves the fontsize slightly conservative for a title
+    this short); could grow the title fontsize slightly for stronger visual hierarchy.
+  - Misclassified points are distinguished only by color (amber), not by a different
+    marker shape as the spec suggests ('different marker styles to highlight correctly
+    vs incorrectly classified points') — a shape distinction would add redundant encoding
+    beyond color alone.
+  - The decision boundary is rendered as a visible staircase (grid-resolution artifact)
+    rather than a smoothed curve — an honest representation of the underlying mesh,
+    but a finer GRID resolution or light smoothing could make it look more polished.
+  - Right-hand side of the canvas has noticeably more whitespace than the left/top
+    margins, since the legend sits in a fixed 200px margin column with empty space
+    beyond it — slightly unbalanced canvas utilization.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "contour-decision-boundary · javascript · muix · anyplot.ai" is centered, dark ink, fully readable. X-axis label "Petal length (cm)" and Y-axis label "Petal width (cm)" are dark and legible with units. Tick labels are a slightly softer dark gray, all readable. Legend (Setosa / Versicolor / Virginica / Misclassified) sits to the right of the plot, dark text, clearly legible.
-      Data: Three translucent class-region fields (green/purple/blue-gray) fill the mesh grid, built from a dense scatter of small overlapping circles that create a stippled texture. A dark gray staircase line traces the decision boundary between regions. Training points are drawn as solid, saturated circles in matching hues (green Setosa cluster bottom-left, purple Versicolor cluster center, blue Virginica cluster top-right), with one amber point flagged as misclassified near the Versicolor/Virginica boundary. First series (Setosa) reads as #009E73 brand green.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "contour-decision-boundary · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. Axis labels "Petal length (cm)" / "Petal width (cm)" in dark ink, tick labels in a softer gray — all legible. Legend at right (Setosa / Versicolor / Virginica / Misclassified) with color swatches, fully readable.
+      Data: Three region fills (green/Setosa, lavender/Versicolor, blue/Virginica) partition the feature space, each with a subtle staircase boundary line. Training points overlay as filled circles in matching class colors; 4 misclassified points render in amber/gold, clearly distinguishable from the surrounding correctly-classified points. First class series is #009E73 (brand green) as required.
+      Legibility verdict: PASS — no light-on-light issues, all text and data elements clearly visible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels, and tick labels have all flipped to light/white text, fully readable against the dark background. Legend text is also light-colored and legible. No dark-on-dark failures observed.
-      Data: The three class-region fills, training-point colors, the amber misclassified marker, and the boundary line color are visually identical in hue/saturation to the light render — only the chrome (background, text, boundary-line tint) adapted for the theme, as required.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; data colors are consistent with the light render.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and axis labels render in light/off-white text, clearly visible against the dark background. Tick labels use a lighter gray, still legible. Legend text is light-colored and readable. Boundary line renders as a light gray stroke, visible against the darker region fills.
+      Data: Region-fill and point colors are identical to the light render (green/lavender/blue for the three classes, amber for misclassified) — only the chrome (background, text, boundary-line color, region opacity blending against the darker base) has adapted to the theme, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly legible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -67,47 +69,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes, well-proportioned
-          title
+        comment: All font sizes explicitly set; readable in both themes; title slightly
+          narrower than ideal (~44% of width) but not a violation
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or legend collisions
+        comment: No text/data overlap in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Training points and boundary are visible; the dense mesh-fill dots
-          create a busy texture that slightly competes with the data
+        comment: Markers (size 9-11) and region fills clearly visible; boundary staircase
+          is a bit jagged
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue/amber are distinguishable, no red-green sole signal
+        comment: Good contrast, CVD-safe hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills most of the canvas, legend sits close to the plot, balanced
-          margins
+        comment: Good canvas utilization; slightly unbalanced whitespace on the right
+          due to fixed legend margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (cm)
+        comment: Both axes have descriptive labels with units (cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, palette in canonical order, amber reserved
-          for the semantic misclassified anchor, theme-correct chrome in both renders'
+        comment: 'First class is #009E73, canonical Imprint order for classes 2-3,
+          amber semantic anchor for misclassified, theme-correct chrome in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -117,23 +119,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful translucent regions, boundary overlay, and misclassification
-          highlight — clearly above defaults, but the stippled fill texture keeps
-          it from publication-ready
+        comment: Custom rasterized region fill + traced boundary line, thoughtful
+          use of amber for misclassified points — clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axis lines removed, generous legend spacing, but the dot-matrix region
-          fill reads as a workaround rather than a fully polished region rendering
+        comment: Axis lines disabled, no grid clutter, generous whitespace, subtle
+          boundary stroke
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The amber misclassified point creates a clear focal point against
-          the region fill, guiding the viewer to the classifier's one mistake
+        comment: Amber highlighting of misclassified points plus visible boundary
+          immediately conveys classifier accuracy and behavior
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Decision boundary regions plus training-point overlay, correct chart
-          type
+        comment: Genuine decision-region visualization with boundary trace and overlaid
+          training points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct translucent regions, overlaid training points, misclassification
-          highlight, legend, real classifier all present
+        comment: Distinct transparent class regions, training-point overlay, legend,
+          misclassified highlighting all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = petal length, Y = petal width, axes show full data range
+        comment: X/Y correctly mapped to the two features, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match the three
-          species plus Misclassified
+        comment: Title format exact; legend labels match the class names plus Misclassified
     data_quality:
       score: 14
       max: 15
@@ -174,20 +174,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows separable and overlapping classes, but only one misclassified
-          point is visible
+        comment: Shows separable class, overlapping classes, and misclassifications
+          near the boundary
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like petal measurements, real, neutral, comprehensible scenario
+        comment: Neutral, realistic iris-like petal measurement scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Class means/spreads closely track the real iris dataset's known statistics
+        comment: Petal length/width ranges and class separations match real iris data
+          proportions
     code_quality:
       score: 9
       max: 10
@@ -197,33 +198,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions (LCG, KNN, boundary tracer) are necessary for the
-          spec's 'trained classifier' requirement, not over-engineering, but add more
-          structure than a minimal script
+        comment: Several helper functions (knnPredict, boundarySegments, buildRegionFillDataUrl)
+          but necessary for the underlying classifier/rasterization logic
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only ScatterChart, useDrawingArea, Box, Typography — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for a real classifier
+        comment: Complexity is proportionate to a genuinely hard problem (no native
+          contour primitive in MUI X); no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, tooltip disabled, current MUI X API
+        comment: Relies correctly on the harness mount contract; skipAnimation set;
+          tooltip disabled appropriately
     library_mastery:
       score: 8
       max: 10
@@ -233,16 +235,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: High-level ScatterChart API with multiple series and slotProps.legend
-          configuration
+        comment: Correct use of ScatterChart composition, xAxis/yAxis config, margin,
+          slotProps.legend
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useDrawingArea custom SVG overlay is a distinctive MUI X composition
-          pattern not easily replicated elsewhere
-  verdict: REJECTED
+        comment: useDrawingArea-based custom SVG overlay composed as a ScatterChart
+          child is a technique fairly specific to MUI X's compositional architecture
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -250,6 +252,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
