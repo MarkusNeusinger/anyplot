@@ -43,9 +43,15 @@ ax = Axis3(
     xlabel = "Product Category",
     ylabel = "Region",
     zlabel = "Revenue (\$k)",
+    xlabelsize = 14,
+    ylabelsize = 14,
+    zlabelsize = 14,
     xlabelcolor = INK,
     ylabelcolor = INK,
     zlabelcolor = INK,
+    xticklabelsize = 12,
+    yticklabelsize = 12,
+    zticklabelsize = 12,
     xticklabelcolor = INK_SOFT,
     yticklabelcolor = INK_SOFT,
     zticklabelcolor = INK_SOFT,
@@ -84,6 +90,10 @@ meshscatter!(
     color = bar_values,
     colormap = IMPRINT_SEQ,
     colorrange = extrema(bar_values),
+    # Directional lighting on adjacent instanced Rect3 faces causes a
+    # visible z-fight crease on tall bars near the axis corner; flat
+    # per-value color reads more accurately against the Colorbar anyway.
+    shading = NoShading,
 )
 
 Colorbar(
