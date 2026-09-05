@@ -67,6 +67,34 @@ for (let j = 0; j < macdValues.length; j++) {
   }
 }
 
+// Find the deepest bearish stretch (the contiguous run of negative histogram
+// bars around the global minimum) and shade it; the bar right after it is,
+// by construction, the bullish crossover that ends the stretch — call it out.
+let troughIdx = 0;
+for (let k = 1; k < histogramSeries.length; k++) {
+  if (histogramSeries[k][1] < histogramSeries[troughIdx][1]) troughIdx = k;
+}
+let bearStart = troughIdx;
+while (bearStart > 0 && histogramSeries[bearStart - 1][1] < 0) bearStart--;
+let bearEnd = troughIdx;
+while (
+  bearEnd < histogramSeries.length - 1 &&
+  histogramSeries[bearEnd + 1][1] < 0
+)
+  bearEnd++;
+const bearBandFrom = histogramSeries[bearStart][0];
+const bearBandTo = histogramSeries[bearEnd][0];
+
+const crossoverIdx = bearEnd + 1;
+const crossoverPoint =
+  crossoverIdx < histogramSeries.length && histogramSeries[crossoverIdx][1] >= 0
+    ? {
+        x: histogramSeries[crossoverIdx][0],
+        y: signalSeries[crossoverIdx][1] + histogramSeries[crossoverIdx][1],
+      }
+    : null;
+const mutedMacdColor = Highcharts.color(t.palette[2]).setOpacity(0.35).get();
+
 // --- Chart -----------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -89,6 +117,14 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: bearBandFrom,
+        to: bearBandTo,
+        color: Highcharts.color(t.palette[4]).setOpacity(0.1).get(),
+        zIndex: 0,
+      },
+    ],
   },
   yAxis: {
     title: {
@@ -123,6 +159,12 @@ Highcharts.chart("container", {
       name: "MACD Line",
       data: macdSeries,
       color: t.palette[2],
+      zoneAxis: "x",
+      zones: [
+        { value: bearBandFrom, color: t.palette[2] },
+        { value: bearBandTo, color: mutedMacdColor },
+        { color: t.palette[2] },
+      ],
     },
     {
       type: "line",
@@ -130,5 +172,36 @@ Highcharts.chart("container", {
       data: signalSeries,
       color: t.palette[3],
     },
+    ...(crossoverPoint
+      ? [
+          {
+            type: "scatter",
+            name: "Bullish Crossover",
+            data: [crossoverPoint],
+            color: t.ink,
+            marker: {
+              symbol: "diamond",
+              radius: 7,
+              lineWidth: 1.5,
+              lineColor: t.pageBg,
+            },
+            dataLabels: {
+              enabled: true,
+              format: "Bullish crossover",
+              align: "left",
+              x: 10,
+              y: -12,
+              style: {
+                color: t.ink,
+                fontSize: "13px",
+                fontWeight: "600",
+                textOutline: "none",
+              },
+            },
+            enableMouseTracking: false,
+            showInLegend: false,
+          },
+        ]
+      : []),
   ],
 });
