@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: indicator-macd
 created: '2026-09-05T05:50:21Z'
-updated: '2026-09-05T05:55:35Z'
+updated: '2026-09-05T06:05:39Z'
 generated_by: claude-sonnet
 workflow_run: 33947944302
 issue: 3181
@@ -12,61 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Correct Imprint palette usage: MACD line uses brand green #009E73 (always-first
-    rule), Signal line uses canonical position 2 (#C475FD lavender), and the histogram''s
-    green/red bullish-bearish split is a well-justified semantic exception (finance
-    profit/loss) explicitly endorsed by the style guide.'
+  - 'All four attempt-1 weaknesses are fixed precisely as requested: the legend now
+    shows "MACD Line (12, 26)" / "Signal Line (9)" (SC-02), the y-axis label gained
+    its unit ("MACD Value ($)", VQ-06), line strokes are explicitly widened to 2.75px
+    for better prominence, and a new "Latest crossover" reference line adds a genuine
+    storytelling focal point (DE-01/DE-03).'
+  - 'Correct Imprint palette usage carries over unchanged: MACD line uses brand green
+    #009E73 (always-first rule), Signal line uses canonical position 2 (#C475FD lavender),
+    and the histogram''s green/red split is the style guide''s explicitly-endorsed
+    semantic exception for profit/loss, redundantly encoded by bar position above/below
+    the zero line.'
   - Both themes render pixel-identical data colors with fully theme-adaptive chrome
-    (title, axis labels, tick labels, grid, zero-reference line) — no dark-on-dark
-    or light-on-light legibility failures found in either render.
-  - 'Idiomatic and distinctive MUI X composition: a dedicated ''value-hist'' y-axis
-    carries a piecewise colorMap to conditionally color histogram bars by sign, while
-    sharing the same numeric domain as the ''value'' axis so bars and lines stay visually
-    comparable.'
-  - All spec data fields (date, macd, signal, histogram) are present; the synthetic
-    120-day dataset shows a full uptrend-to-downtrend-to-uptrend cycle with clear
-    bullish and bearish histogram regions and a visible dashed zero-crossing reference
-    line.
-  - Deterministic, self-contained data generation via a fixed-seed LCG — no network
-    fetch, reproducible across renders.
+    (title, axis labels, ticks, grid, zero-reference line, and the new crossover line)
+    - no dark-on-dark or light-on-light failures in either render.
+  - 'Idiomatic, distinctive MUI X composition: a dedicated value-hist y-axis carries
+    a piecewise colorMap to conditionally color histogram bars by sign while sharing
+    the same numeric domain as the value axis, so bars and lines stay visually comparable.'
+  - Deterministic, self-contained data generation via a fixed-seed LCG; the crossover
+    index is computed from the actual histogram sign flips rather than hardcoded.
   weaknesses:
-  - Standard MACD parameters (12, 26, 9) only surface via the interactive tooltip's
-    series labels ('MACD (12, 26)', 'Signal (9)') — the static legend below the chart
-    just reads 'MACD Line' / 'Signal Line' with no parameter values, so the spec's
-    'standard parameters ... should be noted in the chart' isn't visible in the PNG.
-    Add '(12, 26)' / '(9)' to the visible legend text or a small title/subtitle annotation.
-  - Y-axis label 'MACD Value' has no unit even though MACD is derived from the underlying
-    closing price (same unit) — consider 'MACD Value ($)' or similar for full VQ-06
-    credit.
-  - Histogram bullish/bearish bars rely on green/red hue with only bar position (above/below
-    zero) as redundant encoding — for stronger CVD safety, consider a subtle edge
-    stroke or slightly higher contrast between the two hues near the zero line where
-    bars are shortest.
-  - MACD and Signal line strokeWidth is left at the LinePlot default rather than explicitly
-    set — with only two lines on the chart, bumping stroke width to ~2.5-3 CSS px
-    would give them more visual prominence.
-  - Design excellence is solid but still reads as a well-configured MUI X default
-    beyond the palette choice — consider removing the visible axis line entirely or
-    adding a subtle callout on the most recent crossover to push past 'good' into
-    genuinely distinctive design.
+  - The last y-axis gridline/tick ("-3.5") sits right at the same height as the x-axis
+    tick row, producing a slightly cluttered corner where the tick stub and the axis
+    boundary meet - tightening the bottom margin or the Y_MIN padding slightly would
+    clean this up.
+  - Design excellence, while improved, still reads primarily as a well-configured
+    MUI X composition with palette and one callout applied rather than a fully bespoke
+    layout - no distinct visual treatment differentiates the 'Latest crossover' moment
+    beyond a thin dotted line and small label.
+  - Histogram bullish/bearish still relies on green/red hue as the primary signal
+    (position redundancy makes it acceptable, but a secondary cue could push CVD-safety
+    further as optional extra polish).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "indicator-macd · javascript · muix · anyplot.ai" centered at top, clearly readable. "MACD Value" y-axis label and "Trading Date" x-axis label in dark ink, both legible. Tick labels (dates on x, numeric values -3.5 to 4.0 on y) rendered in a soft gray, subtle but readable. Horizontal grid lines are faint and don't compete with the data. A dashed black zero-reference line runs across the plot to mark the MACD/signal crossover baseline.
-      Data: MACD line in brand green (#009E73), Signal line in lavender/purple (#C475FD) — both clearly distinguishable from each other and from the background. Histogram bars flip between green (above zero, bullish) and matte red (below zero, bearish), tracking the sign of the MACD-minus-signal difference. A bottom legend row (MACD Line / Signal Line / Histogram bullish / Histogram bearish) matches the plotted colors exactly.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no light-on-light issues found.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "indicator-macd · javascript · muix · anyplot.ai" centered at top; y-axis label "MACD Value ($)" and x-axis label "Trading Date" in dark ink; date/numeric tick labels in soft gray. Faint horizontal-only grid lines. Dashed black zero-reference line. New dotted vertical "Latest crossover" reference line with small label near the right edge. All chrome clearly readable.
+      Data: MACD line in brand green (#009E73), Signal line in lavender (#C475FD), both now rendered with a visibly thicker 2.75px stroke than attempt 1. Histogram bars flip green (bullish, above zero) / matte red (bearish, below zero). Legend reads "MACD Line (12, 26)", "Signal Line (9)", "Histogram (bullish)", "Histogram (bearish)" - the 12/26/9 parameters are now visible in the static PNG.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels have all flipped to light/off-white text, clearly visible against the dark background. Grid lines are faint light gray, still subtle. The zero-reference dashed line has flipped to a light/white dash, remaining visible against the dark plot area.
-      Data: MACD line, Signal line, and histogram bar colors are pixel-identical to the light render (green #009E73, lavender #C475FD, green/red histogram split) — only the chrome (background, text, grid, reference line) changed as expected.
-      Legibility verdict: PASS — no dark-on-dark failures found; every title/label/tick is clearly legible against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all flipped to light/off-white text, clearly visible. Grid lines remain faint light gray. Zero-reference dashed line and the new "Latest crossover" dotted line both flipped to light strokes, still visible and legible. No dark-on-dark failures found anywhere.
+      Data: MACD (green), Signal (lavender), and histogram (green/red) colors are pixel-identical to the light render - only chrome flipped, as expected.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -74,102 +67,99 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick font sizes explicitly set (22/14/13px), readable
-          in both themes; tick label size at 13px is on the low end for mobile scaling
+        comment: All text readable in both themes; minor tick/label crowding in the
+          bottom-left corner
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap; x-axis tick interval (every 10th) and legend spacing
-          avoid clutter
+        comment: No collisions between text, data, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines and bars visible and appropriate for 120-point density; line
-          strokeWidth left at library default rather than explicitly bumped
+        comment: Lines now use a visibly thicker 2.75px stroke; histogram bars clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Histogram uses green/red hue for bullish/bearish with bar position
-          as the only redundant encoding — acceptable but not optimal for CVD safety
+        comment: Green/red histogram sign is redundantly encoded by bar position above/below
+          zero, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); chart fills a large, balanced portion
-          of the canvas with legend directly below
+        comment: Canvas dimension gate passed; well-proportioned title and axes
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels ('MACD Value', 'Trading Date') but no unit on
-          the y-axis despite MACD sharing the underlying price unit
+        comment: 'Y-axis now includes unit: ''MACD Value ($)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: MACD=#009E73 (first series, brand green), Signal=#C475FD (canonical
-          position 2), histogram green/red is a valid finance semantic exception;
-          theme-correct chrome and identical data colors across both renders
+        comment: Brand green first, lavender second, semantic red anchor for bearish
+          histogram; correct backgrounds both themes
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Custom Box-based title/legend layout and theme-adaptive tokens throughout,
-          above a bare default but not exceptional
+        passed: false
+        comment: Custom title/legend layout, thicker strokes, and a crossover callout
+          push past a bare default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Subtle horizontal-only grid, soft axis line opacity, generous margins;
-          visible axis line and default tick marks remain
+        passed: true
+        comment: Axis lines removed, subtle horizontal-only grid, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Color-coded histogram either side of the zero line and the dashed
-          reference line create real visual hierarchy for reading crossovers, though
-          no explicit annotation calls out the insight
+        passed: false
+        comment: New 'Latest crossover' callout adds a focal point on top of the histogram
+          hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct combo bar+line MACD indicator chart with all three components
-          (MACD, signal, histogram)
+        passed: true
+        comment: Correct MACD indicator chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Zero reference line and bullish/bearish histogram coloring present;
-          the mandated 12/26/9 parameter note is only visible via interactive tooltip,
-          not in the static legend
+        passed: true
+        comment: 12/26/9 parameters now visible in the static legend text
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Date on x-axis, MACD value on y-axis, all 120 periods shown
+        passed: true
+        comment: Date/MACD/signal/histogram all correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the exact mandated format; legend labels correctly
-          describe each series
+        passed: true
+        comment: Title format matches spec exactly; legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -178,19 +168,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Full uptrend/downtrend/uptrend cycle with both bullish and bearish
-          histogram regions and multiple crossovers
+        passed: true
+        comment: MACD line, signal line, histogram, zero line, and crossover all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible stock-price technical analysis scenario
+        passed: true
+        comment: Plausible synthetic stock-price-derived MACD, neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: EMA(12,26,9) computed correctly from a realistic price series; MACD
-          magnitude plausible for a ~$148 stock
+        passed: true
+        comment: MACD swings of a few dollars are sensible for a ~$150 stock
     code_quality:
       score: 10
       max: 10
@@ -199,56 +190,62 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Flat imports -> data -> chart structure; small ema()/lcg() helpers
-          are necessary computation, not over-structuring
+        passed: true
+        comment: Small, necessary ema/lcg helper functions only
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG (seed 42) makes data generation deterministic
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Every import is used
+        passed: true
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI or over-engineering
+        passed: true
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Uses current ChartContainer/BarPlot/LinePlot composition API correctly;
-          harness owns save/screenshot
+        passed: true
+        comment: skipAnimation set on ChartContainer/BarPlot/LinePlot; current MUI
+          X API
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: Uses the ChartContainer composition pattern (BarPlot+LinePlot+multi-axis),
-          the recommended approach for composed multi-series MUI X charts
+        passed: true
+        comment: ChartContainer composition with BarPlot+LinePlot+ChartsReferenceLine+ChartsGrid
+          is the idiomatic multi-series pattern
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
-        comment: Piecewise colorMap on a dedicated y-axis to conditionally color histogram
-          bars by sign is a genuinely MUI X-specific technique
-  verdict: REJECTED
+        passed: true
+        comment: Piecewise colorMap on a dedicated axis plus a dynamically-computed
+          crossover reference line
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - twin-axes
+  - annotations
   - manual-ticks
-  - custom-legend
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
   - publication-ready
+  - alpha-blending
