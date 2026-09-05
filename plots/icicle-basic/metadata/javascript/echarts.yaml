@@ -1,0 +1,265 @@
+library: echarts
+language: javascript
+specification_id: icicle-basic
+created: '2026-09-05T05:23:48Z'
+updated: '2026-09-05T05:39:24Z'
+generated_by: claude-sonnet
+workflow_run: 33946772710
+issue: 2497
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct Imprint palette usage by hierarchy depth (green/lavender/blue/ochre),
+    first series is the brand green #009E73, and colors stay identical between light
+    and dark renders.'
+  - 'Clean theme-adaptive chrome: backgrounds are exactly #FAF8F1 (light) / #1A1A17
+    (dark), title/subtitle use ink tokens, and each rectangle''s label text color
+    is computed per-fill for contrast (luminance-based textColorFor).'
+  - Idiomatic, expert-level use of ECharts' custom series + renderItem — the documented,
+    correct way to build a chart type (icicle) that ECharts has no native series for.
+  - 'Genuine data storytelling: the ancestor chain to the largest leaf (Inter.woff2)
+    is outlined with a stroke, giving the chart a clear focal point.'
+  - Realistic, well-scaled file-system dataset spanning 4 hierarchy depths with varying
+    branch depths (Docs/Tests terminate at depth 2, others reach depth 3), correctly
+    demonstrating icicle-specific adjacency behavior.
+  - No edge clipping in either render; canvas is the correct 3200x1800; all text fully
+    legible in both themes.
+  weaknesses:
+  - 'Side margins are tight (~2% of canvas width on each side, grid.left/right: 30)
+    compared to the generous 130px top margin reserved for the title — consider widening
+    left/right to ~50-60 for more balanced whitespace.'
+  - The largest-contributor highlight stroke is also applied to the root 'Project'
+    node, which is trivially an ancestor of every leaf and dilutes the intended 'path
+    to the biggest file' storytelling — consider skipping the root and only outlining
+    from the first branching ancestor downward.
+  - Data-label font size (13px) sits slightly below the JS-library guideline of ~14px;
+    a small bump would improve legibility on the largest, most-visible cells without
+    risking overflow.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, sampled #FAF8F1 — matches the required light-theme surface exactly, not pure white.
+      Chrome: Title "icicle-basic · javascript · echarts · anyplot.ai" in bold dark ink, centered near the top; subtitle "Rectangle width = file size in KB · color = hierarchy depth · outline = largest contributor" in a lighter gray-brown directly below. Both fully visible, not clipped, comfortably legible against the light background.
+      Data: Four rows of adjacent rectangles stacked top-to-bottom by hierarchy depth. Row 0 (root "Project") is brand green (#009E73), row 1 (Src/Docs/Tests/Assets) is lavender (#C475FD), row 2 (Components/Api/leaf docs/Fonts + small leaves) is blue (#4467A3), row 3 (leaf files) is ochre (#BD8233). Label text automatically switches between light and dark per-cell for contrast (e.g. white text on green/blue/ochre, dark text on lavender). A thin dark stroke outlines the "Project → Assets → Fonts → Inter.woff2" chain, calling out the single largest file. Small leaf cells below the 48×18px label threshold show no text, just color, avoiding clutter.
+      Legibility verdict: PASS — no dark-on-light or light-on-light failures; all title, subtitle, and cell-label text is clearly readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, sampled #1A1A17 — matches the required dark-theme surface exactly, not pure black.
+      Chrome: Same title and subtitle, now in light ink (#F0EFE8 title, softer gray subtitle) against the dark background — fully visible, not clipped.
+      Data: Identical rectangle layout and identical fill colors to the light render — green (#009E73), lavender (#C475FD), blue (#4467A3), ochre (#BD8233) sampled pixel-for-pixel the same as light. Only the chrome (background, title/subtitle ink, stroke tone) flips; the highlight stroke on the "Project → Assets → Fonts → Inter.woff2" path remains visible against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures found; all label text remains legible via the same per-cell contrast logic used in the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22px, subtitle 14px, cell labels 13px);
+          well-proportioned, no overflow, readable in both themes. Cell-label font
+          (13px) sits slightly below the ~14px JS-library guideline.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; labels truncate with an ellipsis inside their
+          cell when space is tight, small cells simply hide labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rectangle sizes are proportional to value; even unlabeled small leaf
+          cells remain visibly distinct with a thin gap between them.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-cell adaptive text-fill contrast (luminance-based); the largest-contributor
+          emphasis uses a stroke, not hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Chart fills a large share of the canvas but left/right margins (~2%
+          of width) are much thinner than the top margin reserved for the title, giving
+          an imbalanced whitespace feel; nothing is cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (custom-rendered chart), but the subtitle explicitly
+          states the unit (KB) and the color/outline encoding.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for depths 0-3 (green/lavender/blue/ochre),
+          identical across themes; backgrounds are exactly #FAF8F1 / #1A1A17.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful depth-based color encoding and adaptive per-cell text
+          contrast go clearly beyond a library default, though the visual remains
+          flat blocks without further typographic refinement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Consistent 4px gaps between cells, no grid/spines needed for this
+          chart type; whitespace is slightly uneven due to the thin side margins noted
+          in VQ-05.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The ancestor-chain highlight on the largest leaf (Inter.woff2) creates
+          a clear focal point, though the same stroke redundantly outlines the root
+          node (trivially an ancestor of every leaf), diluting the effect slightly.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine icicle chart: adjacent stacked rectangles by depth via a
+          manual partition layout, not a nested treemap.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec notes implemented: top-to-bottom orientation, color by
+          hierarchy depth, labels hidden for small nodes, root at top with children
+          below.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = cumulative value (rectangle width), y = depth (row); every node
+          in the tree is rendered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; no legend needed since the
+          subtitle explains the color/outline encoding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows varying branch depths (some subtrees end at depth 2, others
+          at depth 3), variable leaf sizes, and a dominant-contributor highlight —
+          covers the full range of icicle-chart behavior.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral project file-tree scenario (src/docs/tests/assets).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Plausible relative file sizes: source files a few KB, docs single-digit
+          KB, font files 38-45KB — realistic proportions for a real project.'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (aggregate, layout, renderItem, textColorFor)
+          are used, but these are necessary for the recursive tree/partition computation
+          an icicle chart requires — not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded in-memory dataset.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided echarts global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no deprecated API usage.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series + renderItem is the documented, correct ECharts pattern
+          for chart types with no native series (ECharts has no built-in icicle series).
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: renderItem with api.coord/api.size for pixel-accurate partition rendering
+          is a distinctive ECharts extensibility feature not easily replicated in
+          another charting library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-render-item
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
