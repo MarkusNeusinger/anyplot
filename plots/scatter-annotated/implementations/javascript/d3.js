@@ -60,7 +60,7 @@ const yAxis = g.append("g").call(d3.axisLeft(y).ticks(7));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px").style("font-family", "sans-serif");
   ax.selectAll("line").attr("stroke", t.inkSoft);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  ax.select(".domain").remove();
 }
 
 // --- Axis labels --------------------------------------------------------
@@ -83,27 +83,62 @@ svg.append("text")
 
 // --- Marker + label layout --------------------------------------------------
 const markerRadius = 10;
-const points = data.map((d) => ({ ...d, px: x(d.x), py: y(d.y) }));
 
-// --- Points -------------------------------------------------------------
+// --- Trend-relative highlight: which company earns the most revenue per
+// R&D dollar (the story's focal point), and which points are worth naming --
+const n = data.length;
+const sumX = d3.sum(data, (d) => d.x);
+const sumY = d3.sum(data, (d) => d.y);
+const sumXY = d3.sum(data, (d) => d.x * d.y);
+const sumXX = d3.sum(data, (d) => d.x * d.x);
+const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+const intercept = (sumY - slope * sumX) / n;
+const withResidual = data.map((d) => ({ ...d, residual: d.y - (slope * d.x + intercept) }));
+const standout = withResidual.reduce((a, b) => (b.residual > a.residual ? b : a));
+
+// Label only the notable subset — biggest over/under-performers relative to
+// the trend, plus the R&D and revenue extremes — per the spec's guidance to
+// annotate a subset rather than every point once the dataset gets dense.
+const maxX = d3.max(data, (d) => d.x);
+const maxY = d3.max(data, (d) => d.y);
+const keyLabels = new Set(
+  [...withResidual]
+    .sort((a, b) => Math.abs(b.residual) - Math.abs(a.residual))
+    .slice(0, 8)
+    .map((d) => d.label)
+);
+keyLabels.add(standout.label);
+for (const d of data) if (d.x === maxX || d.y === maxY) keyLabels.add(d.label);
+
+// The trend-beating standout renders larger and at full opacity to act as a
+// focal point; the rest stay uniform to keep the density-driven alpha~0.7.
+const points = data.map((d) => ({
+  ...d,
+  px: x(d.x),
+  py: y(d.y),
+  r: d.label === standout.label ? markerRadius + 5 : markerRadius,
+}));
+
+// --- Points ---------------------------------------------------------------
 g.selectAll(".point")
   .data(points)
   .join("circle")
   .attr("class", "point")
   .attr("cx", (d) => d.px)
   .attr("cy", (d) => d.py)
-  .attr("r", markerRadius)
+  .attr("r", (d) => d.r)
   .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.7)
+  .attr("fill-opacity", (d) => (d.label === standout.label ? 1 : 0.7))
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 1.5);
+  .attr("stroke-width", (d) => (d.label === standout.label ? 2.5 : 1.5));
 
 // --- Greedy label placement (a hand-rolled adjustText equivalent) ---------
 // D3 has no adjustText port, but the render harness runs in a real browser,
 // so text width is measured with actual SVG layout (getBBox) rather than
 // estimated — jsdom can't do this, a headless Chromium can.
+const labeledPoints = points.filter((d) => keyLabels.has(d.label));
 const measure = svg.append("text").attr("opacity", 0).style("font-size", "13px").style("font-family", "sans-serif");
-const labelWidth = new Map(points.map((d) => {
+const labelWidth = new Map(labeledPoints.map((d) => {
   measure.text(d.label);
   return [d.label, measure.node().getBBox().width];
 }));
@@ -130,18 +165,19 @@ function overlaps(a, b) {
 }
 
 const markerBoxes = points.map((d) => ({
-  x0: d.px - markerRadius - pad, y0: d.py - markerRadius - pad,
-  x1: d.px + markerRadius + pad, y1: d.py + markerRadius + pad,
+  label: d.label,
+  x0: d.px - d.r - pad, y0: d.py - d.r - pad,
+  x1: d.px + d.r + pad, y1: d.py + d.r + pad,
 }));
 
 const placedBoxes = [];
-const placed = points.map((d, i) => {
+const placed = labeledPoints.map((d) => {
   const w = labelWidth.get(d.label);
   let chosen = null;
   outer: for (const r of radii) {
     for (const dir of compass) {
       const box = labelBox(d.px, d.py, dir, r, w, labelHeight);
-      const hitsMarker = markerBoxes.some((m, j) => j !== i && overlaps(box, m));
+      const hitsMarker = markerBoxes.some((m) => m.label !== d.label && overlaps(box, m));
       const hitsLabel = placedBoxes.some((p) => overlaps(box, p));
       if (!hitsMarker && !hitsLabel) {
         chosen = { box, dir, r };
@@ -166,8 +202,8 @@ g.selectAll(".leader")
   .data(placed)
   .join("line")
   .attr("class", "leader")
-  .attr("x1", (d) => d.px + d.dir.dx * (markerRadius + 3))
-  .attr("y1", (d) => d.py + d.dir.dy * (markerRadius + 3))
+  .attr("x1", (d) => d.px + d.dir.dx * (d.r + 3))
+  .attr("y1", (d) => d.py + d.dir.dy * (d.r + 3))
   .attr("x2", (d) => d.anchorX - d.dir.dx * 5)
   .attr("y2", (d) => d.anchorY - d.dir.dy * 5)
   .attr("stroke", t.inkSoft)
@@ -183,8 +219,9 @@ g.selectAll(".label")
   .attr("y", (d) => d.anchorY)
   .attr("text-anchor", (d) => d.textAnchor)
   .attr("dominant-baseline", (d) => d.baseline)
-  .attr("fill", t.inkSoft)
+  .attr("fill", (d) => (d.label === standout.label ? t.ink : t.inkSoft))
   .style("font-size", "13px")
+  .style("font-weight", (d) => (d.label === standout.label ? "600" : "400"))
   .style("font-family", "sans-serif")
   .text((d) => d.label);
 
