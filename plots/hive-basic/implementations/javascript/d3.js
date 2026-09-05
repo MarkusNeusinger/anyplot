@@ -84,10 +84,11 @@ for (const e of edges) {
 // --- Layout -------------------------------------------------------------------
 // Geometry tuned for the 1200x1200 square mount: the "core" axis points up,
 // the other two point down-left/down-right, so the triangle is taller above
-// its center than below — cy is pulled down from the mount's midpoint so the
-// shape fills the canvas evenly instead of leaving empty space at the bottom.
+// its center than below — cy is pulled down from the mount's midpoint, but
+// only slightly, so the single upward axis still starts close under the
+// subtitle instead of leaving a dead gap across the top of the canvas.
 const cx = width / 2;
-const cy = 790;
+const cy = 760;
 const innerR = 55;
 const outerR = 580;
 
@@ -135,8 +136,8 @@ edgeLayer
     return `M${s.x},${s.y} Q${qx},${qy} ${t2.x},${t2.y}`;
   })
   .attr("stroke", (e) => nodePos.get(e.source).color)
-  .attr("stroke-width", 1.4)
-  .attr("stroke-opacity", 0.32);
+  .attr("stroke-width", 1.1)
+  .attr("stroke-opacity", 0.22);
 
 // --- Axes -------------------------------------------------------------------
 const axisLayer = svg.append("g");
