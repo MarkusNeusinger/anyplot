@@ -1,0 +1,261 @@
+library: muix
+language: javascript
+specification_id: parallel-categories-basic
+created: '2026-09-05T10:16:15Z'
+updated: '2026-09-05T10:31:07Z'
+generated_by: claude-sonnet
+workflow_run: 33959788852
+issue: 2501
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Fixed CVD accessibility from attempt 1: a diagonal hatch pattern now covers every
+    "Did not survive" ribbon and its legend swatch, so outcome is distinguishable
+    by texture as well as green-vs-red color.'
+  - 'Fixed thin-ribbon visibility from attempt 1: a MIN_SEG=8px floor keeps the near-zero
+    n=3 (1st-class female, did not survive) segment a visible sliver in both link
+    stages instead of vanishing.'
+  - Added hover-highlight interactivity (setHoveredRow) that brightens one passenger
+    group's full class->sex->outcome ribbon path and dims all others - a genuine,
+    spec-relevant use of MUI X's React composition model for "interactive highlighting
+    helps trace paths".
+  - Real, historically accurate Titanic aggregate data (891 total, 342 survived, 549
+    did not survive) with node totals labeled at every stage of all three columns.
+  - Both themes render correctly with pixel-identical data colors; all chrome (title,
+    subtitle, legend, node labels) is fully theme-adaptive and legible on both the
+    warm off-white and warm near-black surfaces.
+  weaknesses:
+  - ChartContainer does not set the library-mandated skipAnimation prop; harmless
+    here since series=[] and all visible content is custom SVG rendered synchronously,
+    but should be added on general principle per the muix rule to set it on every
+    chart component.
+  - Legend and highlight interaction are still hand-rolled SVG/DOM event handlers
+    rather than MUI X's own ChartsLegend/tooltip primitives - a fine approach given
+    there's no native parallel-categories chart, but leaves LM-02 short of full marks.
+  - Category order within each dimension is fixed by domain convention (class rank,
+    then sex, then outcome) rather than crossing-minimized, leaving a busy braided
+    middle section - acceptable since the spec only "considers" this, not requires
+    it.
+  - 3 categorical dimensions (class/sex/outcome) sits at the low end of the spec's
+    stated 3-6 dimension range.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: dark-ink title "Titanic Passengers · parallel-categories-basic · javascript · muix · anyplot.ai", gray-ink subtitle, a two-swatch legend (Survived / Did not survive, the latter with a diagonal hatch swatch), bold "Class / Sex / Outcome" column headers, and dark node-total labels ("1st · 216", "Female · 314", "Survived · 342", etc.) — all clearly readable against the light background, no light-on-light issues.
+      Data: three columns of dark node bars connected by two stages of curved, semi-transparent ribbons whose width is visibly proportional to passenger count (3rd-class/Male/Did-not-survive is by far the widest; 1st-class/Female/Did-not-survive, n=3, is a thin but now-visible sliver thanks to the MIN_SEG floor). Ribbons are colored by outcome: brand green (#009E73, palette position 1) for Survived, matte red (#AE3030, palette position 5) for Did not survive, with the red ribbons additionally carrying a diagonal hatch texture as a CVD-safe secondary cue.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 - not pure black.
+      Chrome: title, subtitle, legend, column headers, and node labels all switch to light ink (#F0EFE8 / #B8B7B0-equivalent) and remain fully readable — no dark-on-dark failures anywhere.
+      Data: ribbon fill colors and the hatch texture are pixel-identical to the light render (same green/red, same widths, same positions) — only the chrome and node-bar fill (dark charcoal -> light gray) flipped, exactly as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title fontsize correctly scaled
+          down for the descriptive-prefixed length
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, nodes, or ribbons; generous margins on
+          every edge
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: MIN_SEG=8px floor keeps the n=3 sliver ribbon
+          visible in both link stages'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: diagonal hatch pattern on ''Did not survive''
+          ribbons and legend swatch gives a CVD-safe secondary cue beyond green-vs-red'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, verified no clipping at any canvas
+          edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title and subtitle; column headers and node totals label
+          every stage
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, semantic-exception matte red for ''Did
+          not survive''; correct theme backgrounds in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom bezier ribbons, node totals, hatch texture, and hover-highlight
+          interactivity show real design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean chrome, generous whitespace, subtle ribbon stroke, no chartjunk
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Outcome coloring gives a clear focal point; hover highlighting adds
+          path-tracing storytelling in the HTML output
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine width-proportional ribbon/parallel-categories construction
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Ribbon width proportional to count, colored by outcome dimension,
+          interactive highlighting present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 3 dimensions and all 891 passengers represented across both link
+          stages
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec-id/language/library convention; legend
+          labels match outcome categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 3 dimensions x 2-3 values each - covers the mechanic but sits at
+          the low end of the spec's 3-6 dimension range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic, neutral, real-world Titanic dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts match real Kaggle Titanic totals (891/342/549)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions are justified - no native MUI X parallel-categories
+          chart exists
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only useState, ChartContainer, useDrawingArea - all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; appropriate complexity for a hand-built chart
+          type
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Renders via ChartContainer into the harness mount; series=[] with
+          custom SVG so skipAnimation is not functionally required, though adding
+          it is still best practice
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: useDrawingArea + ChartContainer composition is the recommended pattern
+          for custom chart types not natively supported
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Improved from attempt 1: hover-highlight interactivity traces a
+          full path across all 3 columns, though legend/tooltip are still hand-rolled
+          rather than MUI X primitives'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
