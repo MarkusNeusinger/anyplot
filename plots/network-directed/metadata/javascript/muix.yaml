@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: network-directed
+created: '2026-09-05T10:07:50Z'
+updated: '2026-09-05T10:21:41Z'
+generated_by: claude-sonnet
+workflow_run: 33959225913
+issue: 2858
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Both weaknesses from the attempt-1 review are addressed: the spec''s optional
+    weight field now drives edge/arrow stroke width, and non-flagged edge opacity
+    was bumped from 0.55 to 0.68, making the dense mid-graph cluster easier to trace'
+  - 'Correct, idiomatic Imprint palette use: brand green is the first series, and
+    the implementation makes a well-reasoned semantic exception (skips palette[4],
+    reserved matte-red, for the five layer groups, then reuses that slot for the flagged
+    circular-dependency edge)'
+  - 'Sophisticated, idiomatic MUI X composition: repurposes ScatterPlot with a custom
+    scatter slot plus useXScale/useYScale/useDrawingArea hooks to build a bespoke
+    directed-graph renderer since the community package has no native network-graph
+    type'
+  - Bidirectional edges are bowed apart using a canonical (direction-independent)
+    normal vector so the two opposing curves don't cancel out, correctly implementing
+    the spec's curved-edge guidance
+  - The circular dependency (config <-> auth) is surfaced as real signal with a thicker/opaque
+    red arrow plus a dedicated annotation explaining it
+  - 'Both renders are theme-correct: identical data colors between light/dark, correct
+    chrome backgrounds, all text legible in both themes, no clipping at any edge'
+  weaknesses:
+  - There is still a noticeable empty region on the right side of the canvas below
+    the legend/beyond the UI & Apps node column; the layout could be rebalanced to
+    use that space more evenly
+  - The layered build-order layout still produces a visually busy mesh of crossing
+    edges in the middle cluster (orders/inventory/billing/rest-api/graphql-api) -
+    improved by the opacity/weight change but still the densest part of the diagram
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title "network-directed · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. No axis chrome (correct for a network diagram). Top-right legend lists the five layer groups with colored swatches, plus a separate "Circular dependency" red-arrow annotation below it. All text readable.
+      Data: 13 nodes colored by Imprint palette group hues (first group = #009E73 brand green), each with a light stroke ring for edge-crossing separation. Grey directed arrows with weight-driven thickness; one flagged edge (config -> auth) in matte red #AE3030, thicker and more opaque.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title, legend text, and node labels render in light ink, fully legible. No dark-on-dark failures.
+      Data: Node/edge colors (including the flagged red edge) are pixel-identical to the light render; only chrome (background, text ink, node stroke rings) flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, sized appropriately
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/label collisions; dense edge crossings in mid-graph but no
+          overlap of readable elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Weight-driven stroke width and higher opacity (0.68) resolved prior
+          faintness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues, red flag reinforced by shape/annotation not color
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Nothing cut off, legend and title fit cleanly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; axes correctly omitted for a network
+          diagram
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, Imprint palette with documented semantic
+          exception, correct theme backgrounds
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom semantic color mapping, node stroke rings, deliberate red-anchor
+          reservation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean chrome-free canvas but unused whitespace on the right
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Circular dependency is a clear, well-signposted focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network graph
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes, directed edges with arrows, weight-driven thickness all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Layered x/y layout correct for a build-order graph
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches exactly; legend labels match node groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Edge weight now demonstrated via stroke thickness, closing the prior
+          gap
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral software module dependency data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13 nodes, ~23 edges, within spec's 10-50 node range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Component structure is idiomatic for a React/MUI X composition
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real computed edge routing, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, sizes from window.ANYPLOT_SIZE
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartContainer composition with scale/drawing-area hooks and custom
+          scatter slot
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG arrow markers, canonical-normal bezier bowing, drawing-area-anchored
+          annotation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - bezier-curves
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
