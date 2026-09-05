@@ -46,6 +46,14 @@ const cumulativeData = binCounts.map((count, i) => {
 // Anchor the curve at the first bin's lower edge so the ogive starts at zero.
 cumulativeData.unshift([Math.round(minValue * 10) / 10, 0]);
 
+const firstX = cumulativeData[0][0];
+const lastX = cumulativeData[cumulativeData.length - 1][0];
+
+// 90th percentile delivery time — the spec's VaR/quantile use case, called
+// out as a distinctive plotLines marker.
+const sortedTimes = [...deliveryTimes].sort((a, b) => a - b);
+const p90 = sortedTimes[Math.floor(0.9 * (sortedTimes.length - 1))];
+
 // --- Chart -----------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -66,6 +74,24 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    min: firstX,
+    max: lastX,
+    plotLines: [
+      {
+        value: p90,
+        color: t.amber,
+        width: 2,
+        dashStyle: "Dash",
+        zIndex: 5,
+        label: {
+          text: `P90: ${p90.toFixed(1)} min`,
+          style: { color: t.amber, fontSize: "13px", fontWeight: "600" },
+          align: "left",
+          x: 6,
+          y: 16,
+        },
+      },
+    ],
   },
   yAxis: {
     title: { text: "Cumulative Deliveries", style: { color: t.inkSoft, fontSize: "16px" } },
