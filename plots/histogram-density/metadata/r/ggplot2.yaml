@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: histogram-density
+created: '2026-09-05T04:31:25Z'
+updated: '2026-09-05T04:35:50Z'
+generated_by: claude-sonnet
+workflow_run: 33944577214
+issue: 2442
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Clean, idiomatic ggplot2 density histogram using the current API (`aes(y = after_stat(density))`),
+    not the deprecated `..density..` syntax
+  - Bar borders are colored to match PAGE_BG, creating crisp bin separation that adapts
+    correctly between light and dark themes
+  - Fitted normal PDF overlay directly visualizes goodness-of-fit against the empirical
+    distribution, addressing the spec's suggested 'theoretical PDF overlay' feature
+    and giving the plot a clear analytical narrative
+  - Legend is generated via an aes(color=) mapping trick and placed inside the plot
+    area, which is compact and avoids wasting canvas space
+  - 'Both renders are fully theme-correct: backgrounds match the spec hex values,
+    all text is legible, and data colors (green bars, blue curve) are identical across
+    themes'
+  - Realistic, neutral dataset (simulated adult height, n=800) is an appropriate,
+    classic choice for demonstrating a density histogram against a fitted normal curve
+  weaknesses:
+  - 'The fitted-curve series uses IMPRINT_PALETTE[3] (blue, canonical position 3)
+    instead of canonical position 2 (lavender #C475FD) for the second series, with
+    no strong semantic justification for skipping position 2 — per the Imprint canonical-order
+    rule, default to position 2 unless the category has a widely-shared real-world
+    color association (a theoretical/reference curve arguably fits the ''neutral''
+    semantic anchor better than an arbitrary jump to blue).'
+  - '`library(dplyr)` is imported but never used anywhere in the script (data prep
+    only uses `tibble::tibble`, `rnorm`, and `dnorm`) — remove the unused import.'
+  - The mandated title occupies only ~40-45% of the canvas width, noticeably more
+    modest than typical implementations of the same bare `{spec-id} · {lang} · {lib}
+    · anyplot.ai` format — consider bumping `plot.title` size slightly (e.g. 12 ->
+    14) for better visual prominence on the 3200x1800 canvas without hurting legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches the expected #FAF8F1 — not pure white.
+      Chrome: Title "histogram-density · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible with no clipping. X-axis label "Height (cm)" and Y-axis label "Density" in dark ink, clearly legible. Tick labels (160-200 on x, 0.00-0.06 on y) in a slightly softer dark gray, all readable. Only horizontal (y) gridlines are drawn, subtle and unobtrusive. Legend "Normal density" sits inside the plot's top-right, over empty space where the histogram has already tapered to near-zero, so it doesn't collide with any bars.
+      Data: Histogram bars are solid Imprint brand green (#009E73) with thin off-white (PAGE_BG-colored) borders separating bins, forming a clear right-skewed-then-symmetric near-normal bell shape peaking around 174-175 cm. A smooth blue (#4467A3) line traces the fitted normal PDF closely following the bar heights. No text overlaps data or other text.
+      Legibility verdict: PASS — all title, axis, and tick text is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches the expected #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels have flipped to light ink/off-white and near-white respectively, all clearly legible against the dark background. Gridlines are now a faint light color, still subtle. Legend text "Normal density" is light-colored and readable in the same top-right in-plot position.
+      Data: Bars remain the identical Imprint brand green (#009E73), now with dark (PAGE_BG-colored) borders instead of light ones, still crisply separating the bins. The fitted-curve line remains the identical blue (#4467A3) as in the light render — confirms the data colors are unchanged between themes and only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; every text element is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set, fully readable in both themes, no clipping;
+          title is somewhat smaller/less prominent (~40-45% width) than typical for
+          the bare mandated title format
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, legend, and data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 bins for n=800 gives well-sized bars; 1.2pt curve line is clearly
+          visible without overpowering the bars
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green bars vs. blue curve are CVD-safe and clearly distinguishable
+          by luminance and hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; canvas-dimension
+          gate passed (no gate file present)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Height (cm)'' has units; ''Density'' is the correct unitless term
+          for the y-axis'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly #009E73; backgrounds and chrome are theme-correct
+          in both renders; but second series uses palette position 3 (blue) instead
+          of canonical position 2 (lavender) with no clear semantic justification'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful touches (PAGE_BG-colored bar borders, in-plot legend)
+          go clearly above library defaults, though the palette is limited to two
+          flat colors
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal with only y-gridlines, no visible spines, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Histogram + fitted-PDF overlay creates a clear visual comparison
+          and focal point (empirical vs. theoretical), guiding the reader toward the
+          goodness-of-fit story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct density histogram via after_stat(density)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Density y-axis, area-normalized bars, and the spec-suggested theoretical
+          PDF overlay are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = height_cm, Y = density, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend label 'Normal density'
+          correctly identifies the curve
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Unimodal near-normal shape is the appropriate choice for demonstrating
+          a fitted normal PDF overlay
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Adult height is a real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: mean=175cm, sd=7cm are factually plausible for adult height
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: library(dplyr) is imported but never used in the script
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Current after_stat() API, proper layered grammar-of-graphics composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: aes(color=) mapping trick to auto-generate a single-entry legend
+          for the overlay curve is a nice ggplot2-specific idiom
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
