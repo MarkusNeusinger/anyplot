@@ -1,0 +1,239 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-adjacency
+created: '2026-09-05T03:14:13Z'
+updated: '2026-09-05T03:29:40Z'
+generated_by: claude-sonnet
+workflow_run: 33940893448
+issue: 5240
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Block-diagonal cluster structure is immediately visible thanks to lab-ordered
+    nodes and thick block-boundary dividers
+  - Full symmetric matrix (both triangles filled) correctly represents the undirected
+    graph
+  - Three-way visual distinction (weighted color scale / "No papers" swatch / "Self-pair
+    (n/a)" hatch) cleanly disambiguates all data states per the spec
+  - Correct, theme-consistent imprint_seq colorbar with clear labeling
+  - Clever invisible-scatter-overlay technique restores native tooltip interactivity
+    despite the missing native heatmap module
+  - Title font size scales with title length so the long mandated string never overflows
+  weaknesses:
+  - 'Layout balance: noticeable extra whitespace below the colorbar/legend column
+    compared to the matrix area — tighten the vertical margins or grow the grid slightly
+    to use the canvas more evenly'
+  - No overarching axis label (e.g., "Researcher") beyond the per-block lab names
+    — a small addition would make the row/column semantics fully explicit at a glance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark title "Co-authorship Network by Lab · heatmap-adjacency · javascript · highcharts · anyplot.ai" and gray subtitle, both clearly readable. Lab block labels on x-axis (bottom) and y-axis (left), colorbar titled "Joint papers" with numeric ticks, plus "No papers" and "Self-pair (n/a)" legend swatches — all dark/readable text on the light surface.
+      Data: 40x40 matrix, sequential green (#009E73) to blue (#4467A3) fill for joint-paper counts, off-white/elevated fill for absent edges, X-hatch overlay on diagonal self-pairs. First/low end of scale is the brand green as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same title/subtitle/labels/colorbar/legend now rendered in light tones (light gray/white), clearly readable against the dark background. No dark-on-dark text found anywhere.
+      Data: Colors identical to the light render (green #009E73 to blue #4467A3 sequential ramp) — confirmed no shift between themes; only chrome (background, text, divider/hatch stroke color) flips.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, title scales with length; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cell size and dividers well suited to a 40x40 matrix
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe sequential ramp; absent/self-pair states use fill+hatch,
+          not hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good composition but uneven whitespace below the legend column
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Lab-group labels plus labeled colorbar describe the encoding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq gradient, identical across themes, theme-correct
+          chrome
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful palette and legend system, above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, generous whitespace, careful detail work (hatching,
+          divider weight)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Lab-ordered nodes make the block-diagonal cluster insight immediately
+          visible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct adjacency-matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric matrix, distinct absent-edge fill, colorbar, cluster-exposing
+          ordering, group-boundary labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows/columns map correctly to source/target; tooltip confirms per-cell
+          mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend/colorbar labels match encoded data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: High/low weights, absent edges, self-pairs, dense and sparse regions
+          all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Co-authorship network across university labs is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Joint-paper counts and intra/inter-lab collaboration rates are domain-plausible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions needed since core Highcharts bundle lacks a heatmap
+          module
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, credits disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct chart/event/tooltip API usage, but the matrix itself is low-level
+          SVG drawing (forced by missing heatmap module)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Invisible scatter overlay recovering native hover/tooltip on hand-drawn
+          SVG shapes is a clever Highcharts-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
