@@ -1,0 +1,252 @@
+library: muix
+language: javascript
+specification_id: manhattan-gwas
+created: '2026-09-05T09:11:55Z'
+updated: '2026-09-05T09:28:21Z'
+generated_by: claude-sonnet
+workflow_run: 33956981274
+issue: 2925
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Fixed all three attempt-1 weaknesses: ''Even chromosomes'' now uses the canonical
+    t.palette[1] (lavender) instead of skipping to palette[2]'
+  - Added 80% alpha (MARKER_ALPHA = "CC") to all series to combat overplotting in
+    the dense association-peak clusters
+  - New dedicated amber-highlighted 'Genome-wide significant' series (larger markerSize=5
+    vs 3) creates a clear, immediate focal point on the actual GWAS hits, directly
+    sharpening the data storytelling
+  - Realistic, deterministic simulated GWAS data with chromosome lengths tracking
+    real human chromosome proportions, three distinct association peaks with proper
+    distance-based signal decay, plus a borderline suggestive-only point
+  - Theme-correct in both renders — no dark-on-dark/light-on-light issues, no edge
+    clipping
+  - 'Idiomatic MUI X usage: ChartsReferenceLine for both threshold lines, custom tickInterval
+    + valueFormatter for chromosome-center labels, disableVoronoi + skipAnimation
+    per the harness contract'
+  weaknesses:
+  - 'VQ-01: title still measures only ~37% of canvas width — improved from ~31% in
+    attempt 1 but still under the ~50-70% guideline; a further fontsize bump has headroom
+    before overflow'
+  - 'DE-02: grid and spine styling are minimal-but-default MUI X chrome; still room
+    for further visual refinement polish'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "manhattan-gwas · javascript · muix · anyplot.ai" centered at top (fontSize 26, explicit). Top-center legend with three swatches: green "Odd chromosomes", lavender "Even chromosomes", amber "Genome-wide significant". Y-axis "-log10(p-value)" 0-16 with subtle horizontal-only gridlines; X-axis "Chromosome" with tick labels 1-22 centered under each chromosome's cumulative-position span. Two labeled dashed reference lines: amber "Genome-wide significance (p < 5×10⁻⁸)" at ~7.3, muted-ink dashed "Suggestive (p < 1×10⁻⁵)" at 5.
+      Data: First series green (#009E73) = odd chromosomes, second series lavender (#C475FD, palette[1]) = even chromosomes, third series amber = genome-wide-significant hits (larger markers, alpha ~80%). Dense baseline cloud near y=0-2 across the full genome, plus three clear amber-highlighted association peaks on chr6 (~16), chr11 (~11.5), chr17 (~12.3), and one borderline point just under/over the significance line on chr11.
+      Legibility verdict: PASS — all text dark-on-light and clearly readable, no clipping at any canvas edge, no overlap between reference-line labels and data/legend.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, and axis labels now rendered in light ink — clearly legible, no dark-on-dark failures anywhere. Gridlines are subtle light lines at low opacity. The amber threshold line keeps its color; the suggestive line switches to a light dashed style to stay visible against the dark background.
+      Data: Green (#009E73), lavender (#C475FD), and amber significant-hit markers are pixel-identical in hue and position to the light render — only chrome (background, text, grid) adapted to the theme, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light issues; brand green and amber remain clearly visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicit, readable in both themes, no overflow; title improved
+          to ~37% of canvas width (was ~31%) but still under the 50-70% guideline
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Alpha (~80%) now applied to all series, resolving the attempt-1 overplotting
+          deduction in the dense peak clusters
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, amber highlight adds redundant
+          (color + size + position) encoding for significance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills most of the canvas, legend near plot,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with implied units (-log10(p-value))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: second series now uses canonical t.palette[1] (lavender)
+          instead of skipping to palette[2]; amber used correctly as semantic anchor
+          for the significance highlight; theme-correct backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color use (Imprint palette + semantic amber anchor + alpha
+          blending), clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace; some refinement
+          above default but not maximal polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New dedicated amber-highlighted significant-hit series creates an
+          immediate, clear focal point on the three GWAS peaks — directly addresses
+          the attempt-1 storytelling weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Manhattan plot: cumulative genomic position on x, -log10(p)
+          on y, alternating chromosome colors'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alternating colors, genome-wide significance line, suggestive threshold
+          line, chromosome-centered tick labels, density-aware marker sizing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match data (Odd/Even chromosomes,
+          Genome-wide significant)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Null baseline, suggestive-only point, and three genome-wide-significant
+          peaks with realistic decay; optional SNP-id labeling not included but is
+          explicitly optional in the spec
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral scientific GWAS scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Chromosome lengths track real proportions; thresholds correctly at
+          -log10(5e-8)≈7.3 and -log10(1e-5)=5
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level structure, one small helper function for point classification
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ScatterChart and ChartsReferenceLine imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component contract, skipAnimation set, no
+          deprecated API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level ScatterChart API usage with proper series/xAxis/yAxis
+          config
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine, custom tickInterval + valueFormatter for genomic
+          axis, disableVoronoi
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
