@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: maze-printable
 created: '2026-09-05T09:19:01Z'
-updated: '2026-09-05T09:23:07Z'
+updated: '2026-09-05T09:32:42Z'
 generated_by: claude-sonnet
 workflow_run: 33957429742
 issue: 3232
@@ -12,42 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/d3/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - 'Correct theme-adaptive chrome: both light and dark renders are fully readable,
-    with the brand green Start marker (#009E73) and lavender Goal marker (palette[1])
-    identical across themes — only chrome (background, title, subtitle, legend text)
-    flips.'
-  - Guaranteed single-solution 'perfect maze' generated via a seeded randomized DFS
-    backtracker (mulberry32 PRNG), fully deterministic and reproducible.
-  - Clean square-canvas layout (correct orientation choice for a grid-based puzzle)
-    with well-proportioned margins, centered maze, legend, and consistent 4px wall
-    stroke that is print-friendly and gives ample passage width for pen/pencil marking.
-  - Correct Imprint palette usage and a legend that clearly explains the Start/Goal
-    color coding — satisfies SC-04 title format and legend requirements exactly.
+  - 'Both identified weaknesses from Attempt 1 are directly and correctly addressed:
+    outer border (6px) vs. interior walls (3px) now gives the maze visual hierarchy,
+    and interior walls are merged via d3.path run-length encoding into far fewer path
+    elements.'
+  - Guaranteed single-solution 'perfect maze' via a seeded randomized DFS backtracker
+    (mulberry32 PRNG), fully deterministic and reproducible.
+  - 'Correct theme-adaptive chrome: both renders are fully readable, with brand-green
+    Start and lavender Goal markers identical across themes — only chrome flips.'
+  - Clean square-canvas layout with well-proportioned margins, correct mandated title
+    format, and a legend that clearly explains the Start/Goal color coding.
   weaknesses:
-  - 'DE-01/DE-03: All walls (outer border and inner passages) share the same flat
-    4px black stroke, so there''s no visual hierarchy between the maze boundary and
-    interior walls. A slightly heavier outer border (e.g. 6px) versus thinner inner
-    walls (e.g. 3px) would add polish and guide the eye to the puzzle frame without
-    hurting print legibility.'
-  - 'LM-02: The implementation relies solely on basic `selectAll().data().join()`
-    line/circle elements; no more distinctive D3 feature (e.g. merging same-direction
-    adjacent wall segments into fewer `d3.line`/path elements, or `d3.range` for grid
-    construction) is used to reduce DOM node count or showcase D3-specific capability
-    beyond a simple line list.'
+  - 'DE-03: The border/interior hierarchy is a genuine improvement but still subtle
+    at full-canvas viewing distance — a slightly larger contrast between the two stroke
+    weights (e.g. 7px vs 3px) would make the puzzle frame pop more.'
+  - 'LM-02: Could push further into distinctive D3-only territory (e.g., a solution-path
+    highlight overlay or a Voronoi-based passage-width visualization) if a future
+    iteration wants to chase full marks here — not required for approval.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
       Chrome: Bold dark title "maze-printable · javascript · d3 · anyplot.ai" centered at top, clearly legible; lighter gray subtitle "22 × 22 grid · single guaranteed solution path" beneath it, also legible. Legend ("Start" / "Goal") at the bottom in soft-ink gray text, fully readable.
-      Data: A 22x22 black-walled maze on the off-white surface, consistent ~4px wall stroke throughout, maximum contrast. Start cell (top-left) marked with a solid #009E73 (Imprint brand green) circle containing a white "S"; Goal cell (bottom-right) marked with a lavender (#C475FD, palette position 2) circle containing a white "G". No overlapping text, no clipped elements at any canvas edge.
+      Data: A 22x22 maze on the off-white surface with a clearly heavier outer border (6px, mitered) framing lighter-weight interior walls (3px) — a visible hierarchy that reads the puzzle boundary first. Start cell (top-left) marked with a solid #009E73 (Imprint brand green) circle containing a white "S"; Goal cell (bottom-right) marked with a lavender (#C475FD, palette position 2) circle containing a white "G". No overlapping text, no clipped elements at any canvas edge.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Title and subtitle render in light ink tones (near-white / soft gray) and are clearly legible against the dark surface; legend text at the bottom is likewise light-colored and readable. No dark-on-dark text anywhere.
-      Data: Maze walls render in a light/cream stroke (inverted from the light theme, correct chrome behavior), maintaining the same 4px consistent thickness. Start marker is the identical #009E73 green circle with white "S", Goal marker is the identical lavender circle with white "G" — both data colors are unchanged from the light render, confirming only chrome flipped.
+      Data: Maze walls render in a light/cream stroke (inverted from the light theme, correct chrome behavior), preserving the same border-vs-interior weight hierarchy. Start marker is the identical #009E73 green circle with white "S", Goal marker is the identical lavender circle with white "G" — both data colors are unchanged from the light render, confirming only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,7 +54,7 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (26px), subtitle (16px) and legend (16px) all explicitly sized
+        comment: Title (26px), subtitle (16px), and legend (16px) all explicitly sized
           and readable in both themes.
       - id: VQ-02
         name: No Overlap
@@ -72,22 +67,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 4px wall stroke on ~76px cells gives ample, clearly visible passage
-          width appropriate for a 22x22 grid.
+        comment: Wall stroke and ~45px cells give ample passage width for a 22x22
+          grid.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast black/white walls plus green/lavender markers; no red-green
-          sole signal.
+        comment: High-contrast walls plus green/lavender markers; no red-green sole
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas correctly chosen for a symmetric grid puzzle; generous
-          margins, nothing cut off, nothing overflowing.
+        comment: Square canvas correctly chosen; generous, balanced margins; nothing
+          cut off or overflowing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,33 +95,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Start = palette[0] #009E73, Goal = palette[1]; backgrounds match
-          Imprint light/dark surfaces; data colors identical across themes.'
+        comment: 'Start = palette[0] #009E73, Goal = palette[1] #C475FD; backgrounds
+          match Imprint light/dark surfaces; data colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Correct palette and clean typography, but styling is fairly standard
-          beyond that — walls have no hierarchy between border and interior.
+        passed: true
+        comment: 'Previous weakness (flat, uniform wall weight) fixed: outer border
+          (6px, miter join) is now visibly heavier than interior walls (3px), giving
+          the puzzle frame real hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Generous whitespace, consistent stroke weight, clean legend placement.
+        passed: false
+        comment: Generous whitespace, consistent legend placement; solid but not maximally
+          polished.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Default score — a puzzle format doesn't lend itself to strong data
-          storytelling, and no additional visual hierarchy technique was used to elevate
-          it.
+        comment: Border/interior weight contrast now creates a clear focal point on
+          the puzzle boundary, an improvement over the prior flat-weight default.
     spec_compliance:
       score: 15
       max: 15
@@ -189,7 +185,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; flat top-level script.
+        comment: No functions/classes beyond trivial arrow helpers; flat top-level
+          script.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,13 +198,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used, no unused imports.
+        comment: Only the d3 global is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the algorithm, no fake UI/interactivity.
+        comment: The new run-length wall-merging logic is clean and well-commented,
+          no over-engineering, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -216,7 +214,7 @@ review:
         comment: 'Correctly appends a single svg to #container sized from ANYPLOT_SIZE;
           no animation.'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -224,14 +222,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of d3.select/selectAll/data/join and the mount-node contract.
+        comment: Correct use of d3.select/selectAll/data/join plus d3.path and d3.range
+          for grid/path construction.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Default score — no distinctive D3-specific feature (e.g. path merging,
-          d3.range) beyond basic selection/join.
+        comment: 'Previous weakness fixed: interior walls are now run-length-encoded
+          into merged d3.path subpaths instead of one line per grid edge, meaningfully
+          reducing DOM node count.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
