@@ -1,0 +1,247 @@
+library: muix
+language: javascript
+specification_id: maze-printable
+created: '2026-09-05T09:32:23Z'
+updated: '2026-09-05T09:47:51Z'
+generated_by: claude-sonnet
+workflow_run: 33958007924
+issue: 3232
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Creative, honest solution to a real library limitation: MUI X community has no
+    maze/graph primitive, so a single-point ScatterChart plus a custom `slots.scatter`
+    component draws the raw SVG walls while `useDrawingArea()` inherits MUI''s own
+    margin/aspect math — no manual layout guesswork.'
+  - 'Maze generation genuinely guarantees a single solution: a randomized DFS spanning
+    tree carves the passages, and a separate BFS independently verifies/reports the
+    solution length (116 steps) in the footnote without ever drawing the spoiler path.'
+  - Deterministic and reproducible via a seeded mulberry32 PRNG (seed 42) since the
+    browser has no native seeded RNG.
+  - 'Clear print-oriented visual hierarchy: border stroke is 1.75x the interior wall
+    stroke, both scaled from cell size (not flat pixel constants) so the maze stays
+    legible at thumbnail sizes.'
+  - 'Correct theme handling: the page chrome (background, title, footnote) follows
+    ANYPLOT_THEME while the maze card intentionally keeps fixed ink-on-paper colors,
+    matching the spec''s explicit ''black walls on white background for maximum contrast
+    and ink efficiency'' requirement; both renders are fully readable with no dark-on-dark
+    or light-on-light failures.'
+  - 'Goal marker uses brand green #009E73 with a white ''G'' for contrast; start marker
+    is a plain bold ''S'' — clean, unambiguous, print-friendly.'
+  weaknesses:
+  - Data storytelling is minimal beyond the wall-weight hierarchy and the footnote's
+    step-count difficulty cue — there's no additional visual emphasis (e.g. a subtle
+    distance/heat cue) to guide the solver's eye toward structure.
+  - Grid size is hardcoded to a single 22x22 instance; the spec's recommended range
+    (15-40) is never varied or demonstrated, so only one difficulty level is shown.
+  - The maze-generation and pathfinding logic (mulberry32, neighborsOf, solutionLength,
+    MazeMark) pulls the file away from a flat KISS script into several helper functions
+    — necessary for a real maze algorithm, but worth noting against the KISS baseline.
+  - Footnote text (seed/grid/solution metadata) is quite small relative to the 2400x2400
+    canvas — still legible at full size, but among the first elements to soften when
+    the PNG is scaled down for thumbnails.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white page (#FAF8F1-consistent), matching Imprint light chrome.
+      Chrome: Title "maze-printable · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. Footnote "22×22 grid · seed 42 · 116-step solution" in soft gray ink below the maze card, clearly legible.
+      Data: A square maze card (off-white paper, black ink walls) sits centered below the title. Border is visibly heavier than interior corridor walls, creating a clear frame/corridor weight hierarchy. Start cell top-left marked with bold black "S". Goal cell bottom-right marked with a brand-green (#009E73) filled circle containing a white "G". No other colors used.
+      Legibility verdict: PASS — all text (title, footnote, S, G) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black page (#1A1A17-consistent), matching Imprint dark chrome.
+      Chrome: Same title, now rendered in light ink, clearly legible against the dark page. Footnote text rendered in a light soft-gray tone, clearly legible against the dark page (theme-adaptive via ANYPLOT_TOKENS.inkSoft).
+      Data: The maze card itself intentionally keeps fixed ink-on-paper colors (black walls on off-white paper) regardless of theme — a deliberate design choice matching the spec's print-artifact requirement ("black walls on white background for maximum contrast and ink efficiency"). The goal marker is identical brand green (#009E73) with white "G", confirming data colors are unchanged from the light render; only the surrounding page chrome flips.
+      Legibility verdict: PASS — no dark-on-dark failures; title and footnote both flip correctly to light-on-dark, and the maze card's fixed print colors remain fully legible since they sit on their own off-white surface rather than directly on the dark page.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 30px, footnote 16px, S/G scaled
+          off cellSize); readable in both themes; footnote is small relative to canvas
+          but still legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wall strokes scaled from cell size with a clear border/corridor weight
+          hierarchy; fully visible at full resolution.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochrome walls plus a single high-contrast brand-green goal marker
+          with white text; CVD-safe, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Maze card fills the majority of the square canvas with balanced margins;
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No conventional x/y axes (intentionally disabled for a print artifact);
+          mandated title format present and correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Goal marker uses exact Imprint brand green #009E73; page chrome
+          correctly follows ANYPLOT_THEME in both renders; maze ink/paper colors are
+          a deliberate, spec-driven fixed exception (print artifact), not a theme-chrome
+          failure.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Thoughtful print-card metaphor, rounded corners, deliberate weight
+          hierarchy — clearly above a configured default, though still a simple monochrome+accent
+          palette.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: All chart axes/ticks/lines explicitly disabled, generous whitespace,
+          rounded card corners — real refinement beyond library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        comment: Modest hierarchy (border weight, solution-length footnote as a difficulty
+          cue) but no stronger visual emphasis guiding the solver.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: 'Correct: a rectangular maze grid with walls.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Single-solution guarantee (spanning-tree DFS), S/G markers, print-friendly
+          consistent wall thickness, margins, black-on-white ink.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Grid coordinates correctly map to wall/passage geometry; full grid
+          shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title exactly matches the mandated format; no legend needed for a
+          single-series print artifact.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Shows the core maze feature set (guaranteed path, start/goal, difficulty
+          cue) but only one grid size/difficulty is demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, real-world puzzle scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: 22x22 grid sits well within the spec's recommended 15-40 range.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Several helper functions (PRNG, neighbors, BFS, maze mark component)
+          — necessary for a genuine maze algorithm, but more structure than a flat
+          script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Seeded mulberry32(42) PRNG, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only Box, Typography, ScatterChart, useDrawingArea — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, well-commented, no fake UI or fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Default-exported component sized to window.ANYPLOT_SIZE, skipAnimation
+          set; harness owns saving.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Correct, idiomatic use of ScatterChart's slots API and useDrawingArea()
+          to inherit MUI's own layout math rather than reimplementing it.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: 'The slots={{ scatter: MazeMark }} + useDrawingArea() combination
+          is a genuinely MUI X-specific technique for hosting custom SVG content inside
+          chart layout, not trivially replicated in another library.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
