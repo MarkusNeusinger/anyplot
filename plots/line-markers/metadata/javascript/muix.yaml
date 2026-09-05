@@ -1,0 +1,250 @@
+library: muix
+language: javascript
+specification_id: line-markers
+created: '2026-09-05T07:53:12Z'
+updated: '2026-09-05T07:57:10Z'
+generated_by: claude-sonnet
+workflow_run: 33953379410
+issue: 2599
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - First series matches brand green (#009E73), second series lavender (#C475FD) —
+    correct Imprint canonical order, identical between light and dark renders.
+  - Distinct marker shapes (filled circle for Station A, hollow diamond for Station
+    B) plus solid vs dashed line styling gives triple redundant encoding for series
+    differentiation.
+  - Custom marker overlay via useXScale/useYScale/getValueToPositionMapper hooks demonstrates
+    real library mastery beyond the basic showMark API, since community MUI X only
+    natively draws circular marks.
+  - ChartsReferenceLine with a clear 'Target 42.5 N·m' label adds meaningful data-storytelling
+    context for a QC chart.
+  - Clean L-shaped axis frame, subtle horizontal grid, and generous margins give good
+    visual refinement in both themes.
+  weaknesses:
+  - Reference-line label 'Target 42.5 N·m' is set at 12px, the smallest text on the
+    chart — bump to ~13-14px so it stays legible when the mobile 400px srcset variant
+    is generated.
+  - Title comfortably occupies only ~40-45% of plot width at the current 22px size
+    — well within readable range and not a violation, but a touch more presence (e.g.
+    24-26px) would strengthen the visual hierarchy since this title is short (~66
+    chars, under the 67-char scaling threshold).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-range), not pure white, not dark.
+      Chrome: Title "Fastener Torque QC · line-markers · javascript · muix · anyplot.ai" in bold dark ink, centered above the plot. X-axis label "QC Checkpoint (sequential reading)" and Y-axis label "Torque (N·m)" (rotated) both in dark ink. Tick labels for both axes are dark gray and clearly legible. Horizontal gridlines are subtle (low opacity). L-shaped axis frame (left + bottom only). A dashed gray "Target 42.5 N·m" reference line runs horizontally near the top of the data band. Legend at the bottom center reads "Station A" (solid green line) and "Station B" (dashed lavender line).
+      Data: Station A is a solid brand-green (#009E73) line with filled green circle markers, ringed with a thin page-background stroke for definition. Station B is a dashed lavender (#C475FD) line with hollow diamond markers (lavender stroke, page-background fill). 14 sequential checkpoints per series, torque values clustered between ~41.5 and ~42.8 N·m.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, reference-line label) reads clearly against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-range), not pure black, not light.
+      Chrome: Same title, axis labels, and legend text now rendered in light/off-white ink, clearly visible against the dark background. Tick labels are a lighter gray, still legible. Gridlines remain subtle. The "Target 42.5 N·m" reference-line label is light gray and readable against the dark surface.
+      Data: Station A (brand green #009E73) and Station B (lavender #C475FD) use identical hex values to the light render — only the chrome (background, text, grid, axis lines) flipped polarity, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, both axis labels, tick labels, legend, reference-line label) is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicit and readable in both themes; reference-line label
+          at 12px is the smallest element on the chart
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/marker/legend collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse 14-point series get large, prominent markers (r=10-11) with
+          thick lines, matching the data-density heuristic
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender plus redundant shape (circle/diamond) and line-style
+          (solid/dashed) encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins, no overflow or clipping; title comfortably sized,
+          no squeeze
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units (Torque (N·m), QC Checkpoint)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Series 1 = #009E73 (brand green), series 2 = #C475FD (canonical
+          position 2); backgrounds theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom SVG marker overlay (filled circle / hollow diamond), dashed
+          secondary line, hand-rolled reference line — clearly above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped frame, subtle low-opacity grid and axis lines, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Target reference line plus triple-redundant series encoding (color/shape/linestyle)
+          gives a clear focal comparison, though no per-point callouts
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line plot with visible markers at every point
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Markers clearly visible, different shapes per series, marker size
+          proportional to line thickness, filled vs hollow distinction
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=checkpoint, y=torque; both axes show the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows line + markers + multiple series + distinct shapes, covering
+          every facet of the spec
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Torque-wrench QC readings — plausible, neutral, non-controversial
+          industrial context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 41-43 N·m range is realistic for a fastener torque spec; 14 sparse
+          points matches the spec's 'sparse data' emphasis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small functional components are the idiomatic React way to express
+          custom marks; no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only @mui/x-charts, @mui/x-charts/hooks, and @mui/material imports,
+          all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; appropriate complexity for
+          the custom-marker technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exported component, skipAnimation set, current community
+          MUI X API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-axis IDs, valueFormatter, tickLabelStyle, slotProps.legend
+          all used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Low-level useXScale/useYScale/getValueToPositionMapper hooks for
+          custom marker shapes and a hand-rolled ChartsText y-axis title — goes well
+          beyond basic API usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
