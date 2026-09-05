@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-markers
 created: '2026-09-05T07:36:02Z'
-updated: '2026-09-05T07:39:54Z'
+updated: '2026-09-05T07:49:40Z'
 generated_by: claude-sonnet
 workflow_run: 33952812911
 issue: 2599
@@ -12,50 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mark
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'First series correctly uses brand green #009E73, with the full three-series slice
-    of the Imprint palette (green, lavender, blue) held identical between light and
-    dark renders — only chrome flips'
-  - Distinct marker shapes (circle, square, triangle) per series via d3.symbol give
-    redundant shape+color encoding, satisfying the spec's 'different marker shapes
-    for multiple series' requirement and helping CVD accessibility
-  - Marker size (d3.symbol size=260) is large and prominent relative to line thickness
-    (3px), correctly matching the sparse-data (13 points/series) heuristic from the
-    style guide
-  - Custom legend combines a line swatch, the matching marker symbol, and the series
-    label per row — clearer than a plain color swatch and reinforces the shape/color
-    pairing
-  - Bell-curve enzyme-activity-vs-pH domain data is realistic, neutral, and appropriately
-    scaled (0-100% activity, pH 4-10), with a deterministic seeded LCG for reproducibility
-  - 'Theme-adaptive chrome is threaded correctly throughout: axis text/ticks use inkSoft,
-    title/axis labels use ink, grid uses grid token at 0.15 opacity, marker strokes
-    use pageBg for definition — verified legible in both PNGs'
-  - Canvas gate passed (3200x1800 landscape) and no edge-clipping in either render
+  - Peak-emphasis halos plus enlarged markers at each series' pH optimum now give
+    the chart a clear visual hierarchy and focal point, resolving the attempt-1 storytelling
+    weakness
+  - Legend line swatch was lengthened to 60px so the overlaid marker no longer makes
+    the line look broken/dashed, resolving the attempt-1 legend weakness
+  - 'First series correctly uses brand green #009E73, with the full three-series Imprint
+    palette slice held pixel-identical between light and dark renders'
+  - Distinct marker shapes (circle, square, triangle) via d3.symbol give redundant
+    shape+color encoding, aiding CVD accessibility for the 3-series comparison
+  - Theme-adaptive chrome (ink, inkSoft, grid, pageBg-stroked markers) threaded correctly
+    throughout; canvas gate passed with no edge clipping in either render
   weaknesses:
-  - 'Design excellence is competent but generic: no annotation or emphasis calls out
-    the three optimum peaks (pH~5 Pepsin, ~7.5 Trypsin, ~9.5 Alkaline phosphatase),
-    which would give the crossing-curves layout a clearer focal point/storytelling
-    hook'
-  - Markers for all three series cluster and slightly overlap near pH 4-4.5 where
-    activity is near zero for all enzymes — shapes/colors keep them distinguishable
-    but it's visually the busiest spot on the chart
-  - Legend swatch line length (36px) is short enough that the overlaid marker makes
-    the line look broken/dashed rather than clearly a solid line matching the plotted
-    line style
+  - Trypsin (square) and Alkaline phosphatase (triangle) markers at pH 4 nearly fully
+    overlap where both series sit near-zero activity -- the triangle occludes most
+    of the square; offset or shrink the low-activity markers slightly so both shapes
+    stay distinguishable
+  - Pepsin's modeled optimum sits at pH 5.0, but the real enzyme's optimal pH is strongly
+    acidic (~1.5-2.5, gastric conditions) -- shifting the modeled optimum toward that
+    range would improve factual accuracy of the Pepsin curve
+  - Design excellence is solid but still short of publication-level distinctiveness
+    -- the halo + enlarged-marker emphasis communicates focal points without any direct
+    peak value labels
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "line-markers · javascript · d3 · anyplot.ai" in bold dark ink, centered top. Axis labels "pH Level" (x) and "Enzyme Activity (%)" (y) in dark ink, matching size. Tick labels and legend text in a softer dark gray. Subtle horizontal-only gridlines at low opacity. All text clearly legible against the light background.
-      Data: Three bell-shaped curves — Pepsin (green #009E73, circle markers) peaking near pH 5, Trypsin (lavender, square markers) peaking near pH 7.5, Alkaline phosphatase (blue, triangle markers) peaking near pH 9.5. Markers have a light-colored stroke matching the page background for separation from the lines. Legend at right lists all three series with line+marker+label.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold centered title "line-markers · javascript · d3 · anyplot.ai" in dark ink; axis labels "pH Level" and "Enzyme Activity (%)" in dark ink; tick labels in soft dark gray; subtle y-axis-only gridlines at low opacity; custom legend (line + symbol + label) for the three series. All chrome text is clearly readable against the light background.
+      Data: Three bell-shaped curves -- Pepsin (brand green #009E73, circle markers) peaking near pH 5; Trypsin (lavender #C475FD, square markers) peaking near pH 7.5; Alkaline phosphatase (blue #4467A3, triangle markers) peaking near pH 9.5. Each series' peak point carries a soft color-matched halo and an enlarged marker, giving the chart clear focal points. Markers have a light page-background stroke for edge definition.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white text, clearly legible. Axis labels and tick labels flipped to light-gray/white tones, all readable against the dark surface. No dark-on-dark text anywhere.
-      Data: Identical green/lavender/blue curve colors and marker shapes/positions as the light render — confirms data colors are held constant across themes. Marker strokes now use the dark page background color for edge separation, matching the theme.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis labels, tick labels, gridlines, and legend, all correctly flipped to light-toned ink; no dark-on-dark text anywhere. Marker edge strokes correctly flip to the dark page background for separation.
+      Data: Identical colors, marker shapes, halo emphasis, and curve positions as the light render -- confirms the three Imprint data colors (green/lavender/blue) are held constant across themes; only chrome flipped.
       Legibility verdict: PASS
+
+    Both renders pass the theme-readability check; no dark-on-dark or light-on-light failures observed. Minor marker overlap between Trypsin and Alkaline phosphatase near pH 4 (both near-zero activity) is visible in both renders but does not affect chrome legibility.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -66,69 +61,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes with correct theme-adaptive tokens;
-          font sizes appropriate for the 3200px canvas
+        comment: Explicit font sizes (16/18/22px), readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Markers cluster slightly near pH 4-4.5 (all series near baseline)
-          but remain distinguishable by shape and color
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (260) is prominent and well-proportioned to the 13-point
-          sparse series and 3px line width
+        comment: Legend swatch lengthened to 60px, no longer reads as broken; no text
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized for sparse 13-point series with peak emphasis,
+          but Trypsin/Alkaline markers nearly fully overlap near pH 4
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues plus distinct marker shapes give redundant encoding
-          for CVD safety
+        comment: Redundant shape+color encoding, good contrast, page-bg marker strokes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), generous margins, no overflow/clipping
+        comment: Balanced margins, legend adjacent to plot, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (pH Level, Enzyme Activity (%))
+        comment: Descriptive labels with units (Enzyme Activity (%))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, palette identical across themes, correct FAF8F1/1A1A17
-          backgrounds'
+        comment: 'First series #009E73, Imprint palette canonical order, correct theme-adaptive
+          chrome in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Coordinated palette, shapes, and legend; competent but not exceptional
-          polish
+        passed: true
+        comment: Coordinated palette + shapes + peak halos, clearly above library
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Spines removed, subtle y-only grid, generous whitespace
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, tidied legend spacing
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        comment: Crossing bell curves create some natural narrative, but no annotation
-          highlights the three optima to sharpen the focal point
+        passed: true
+        comment: Halo + enlarged marker at each series' optimum creates clear visual
+          hierarchy and focal points
     spec_compliance:
       score: 15
       max: 15
@@ -144,22 +140,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Markers visible against lines, distinct shapes per series, marker
-          size proportional to line thickness
+        comment: Visible markers, distinct shapes per series, marker size proportional
+          to line thickness
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=pH, Y=activity correct, full data range shown
+        comment: X=pH Level, Y=Enzyme Activity (%), all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match enzyme names
+        comment: Title matches mandated format exactly; legend labels match series
+          names
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -167,19 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple series, line+marker combination, distinct shapes all present
+        comment: Three distinct bell curves with different amplitudes and optima
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Enzyme activity vs pH is realistic, neutral biochemistry domain
+        comment: Neutral, comprehensible enzyme-activity-vs-pH science scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: pH 4-10 and 0-100% activity are sensible domain values
+        passed: false
+        comment: Trypsin (~7.5) and alkaline phosphatase (~9.5) optima are realistic,
+          but Pepsin's modeled optimum of pH 5.0 is well off its real strongly-acidic
+          optimum (~1.5-2.5)
     code_quality:
       score: 10
       max: 10
@@ -189,32 +188,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only small pure helper functions (lcg, bellActivity) for deterministic
-          data generation; no unnecessary abstraction
+        comment: Linear imports/data/plot flow; helper functions limited to necessary
+          RNG/data-gen
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, no extraneous imports
+        comment: No extraneous imports; d3 global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract correctly, current d3 7.9 API
+        comment: Follows mount-node contract correctly, current d3 v7 API
     library_mastery:
       score: 7
       max: 10
@@ -223,23 +222,24 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic use of d3 scales, axes, line generator
+        passed: true
+        comment: Idiomatic scales/axes/data-join usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: d3.symbol generator used for multiple distinct marker shapes, a non-trivial
-          D3-specific technique
-  verdict: REJECTED
+        passed: true
+        comment: d3.symbol generator drives per-series shape encoding, a solid but
+          not maximal use of D3-specific capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
