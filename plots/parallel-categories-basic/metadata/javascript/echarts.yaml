@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: parallel-categories-basic
 created: '2026-09-05T10:06:21Z'
-updated: '2026-09-05T10:10:28Z'
+updated: '2026-09-05T10:26:19Z'
 generated_by: claude-sonnet
 workflow_run: 33959338978
 issue: 2501
@@ -12,41 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/echarts/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Clear, well-reasoned documentation in code comments explaining why a Sankey diagram
-    was chosen over a native (nonexistent) parallel-categories chart type in ECharts.
-  - 'Semantically meaningful color mapping: brand green/matte red reused correctly
-    for the Purchased/Abandoned outcome per the style guide''s semantic-exception
-    rule, while channel nodes use canonical palette order.'
+  - 'All three prior-attempt weaknesses addressed in this revision: a 4th dimension
+    (device type) was added, category nodes now carry their own semantic hue instead
+    of staying neutral, and node labels gained a background pill (padding + borderRadius)
+    that lifts them clearly off the ribbons in both themes.'
+  - 'The four-stage flow (channel -> category -> device -> outcome) is fully mass-conserved:
+    every intermediate node''s inbound sum equals its outbound sum (e.g. Electronics
+    630+420=1050 matches its channel inflow of 420+380+160+90=1050), which is the
+    kind of data discipline that makes a Sankey trustworthy.'
+  - layoutIterations raised to 100 is a genuine, documented attempt at the spec's
+    crossing-minimization guidance rather than a cosmetic tweak, and the code comment
+    explains why.
   - Clean, fully deterministic, dependency-free code with correct theme-adaptive chrome
-    in both renders.
+    in both renders; colors are pixel-identical between light and dark, only chrome
+    flips.
   weaknesses:
-  - Heavy ribbon crossing in the channel-to-category band reduces traceability of
-    individual paths - reorder category or channel nodes to reduce crossings, per
-    the spec's own guidance.
-  - Only 3 categorical dimensions used (spec allows 3-6) - consider adding a 4th dimension
-    (e.g. device type or region) to better demonstrate the multi-dimensional nature
-    of a parallel-categories/alluvial chart.
-  - Node labels sit directly over the ribbons rather than in clear whitespace, creating
-    minor visual crowding - consider a small background halo behind labels or shifting
-    the label anchor further from the node edge.
+  - Adding the device stage increased the ribbon count between category and device
+    to a dense criss-cross (Electronics/Apparel/Home & Garden each splitting into
+    both Desktop and Mobile), so the middle of the diagram still reads as a busy blend
+    of overlapping semi-transparent colors - individual paths remain hard to trace
+    by eye even with the higher layoutIterations.
+  - The Desktop/Mobile waypoint nodes are thin and neutral-colored, which is correct
+    per the plan, but they sit close enough together that the small gap between their
+    two flows narrows to almost nothing near the middle crossing point - a touch more
+    nodeGap there would help separate them visually.
+  - Category node colors (cyan/rose/lime) are a nice semantic touch but aren't explained
+    anywhere in the UI (title/subtitle/legend) - a first-time viewer has to infer
+    that hue changes at each stage rather than reading a mapping.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "parallel-categories-basic · javascript · echarts · anyplot.ai" and descriptive subtitle centered at top in dark ink, fully legible. Node labels (channel/category/outcome names) in dark ink, readable against background and ribbons.
-      Data: Four channel nodes (Organic Search = brand green #009E73, Paid Ads = lavender, Social Media = blue, Email Campaign = ochre), three neutral category nodes (Electronics, Apparel, Home & Garden), two outcome nodes (Purchased = green, Abandoned = matte red). Ribbons colored by source channel (stage 1) and by target outcome (stage 2), width proportional to count.
+      Chrome: Title "parallel-categories-basic · javascript · echarts · anyplot.ai" and descriptive subtitle "Customer journey: acquisition channel → product category → device → purchase outcome" centered at top in dark ink, fully legible against the light surface. Node labels (channel/category/device/outcome names) now sit on a small light-background pill with rounded corners, so every label stays sharp even where it crosses a saturated ribbon.
+      Data: Four channel nodes (Organic Search = brand green #009E73, Paid Ads = lavender, Social Media = blue, Email Campaign = ochre), three category nodes now individually colored (Electronics = cyan, Apparel = rose, Home & Garden = lime), two neutral Desktop/Mobile waypoint nodes (light fill, soft ink border), two outcome nodes (Purchased = green, Abandoned = matte red). Ribbon width is proportional to count at every one of the three stages, and flow is mass-conserved node-to-node. The channel-to-category and especially the category-to-device bands still show heavy ribbon crossing, producing a busy blended-color middle section.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and subtitle flipped to light ink, fully legible against dark surface. Node labels flipped to light ink, readable against background and semi-transparent ribbons. No dark-on-dark failures observed.
-      Data: Same colors as light render (green, lavender, blue, ochre, red) — confirmed identical across themes; only chrome flipped.
+      Chrome: Title and subtitle flipped to light ink, fully legible against the dark surface. Node label pills flipped to a dark background with light text, staying readable against both the dark canvas and the semi-transparent ribbons behind them. No dark-on-dark failures observed.
+      Data: Same channel/category/outcome colors as the light render (green, lavender, blue, ochre, cyan, rose, lime, red) - confirmed pixel-identical across themes; only chrome (background, text, label-pill fill) flipped. Same ribbon-crossing density as the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,40 +64,41 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; minor softness where labels sit
-          over solid ribbon segments near source nodes.
+        comment: New label background pills (padding + borderRadius) fix the prior
+          crowding issue; all text reads clearly in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Node labels sit over flowing ribbons rather than clear whitespace;
-          still legible but crowded.
+        comment: Label pills lift text off the ribbons; no more label/data collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 18 ribbons distinguishable via color/opacity, but heavy crossing
-          makes individual paths hard to trace.
+        comment: Adding the device stage increased ribbon crossings between category
+          and device; the middle band still reads as a busy color blend despite layoutIterations=100.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette, redundant text labels for identification.
+        comment: CVD-safe Imprint palette throughout, redundant text labels for identification.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct canvas, generous margins, nothing clipped.
+        comment: Correct 3200x1800 canvas, generous margins, nothing clipped at any
+          edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed; title + subtitle clear and descriptive.
+        comment: No axes needed for a Sankey; title and updated subtitle clearly describe
+          all four stages.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -96,7 +107,7 @@ review:
         comment: 'First series is #009E73; correct semantic exception for Purchased/Abandoned;
           backgrounds correct; colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,24 +115,26 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Thoughtful semantic color mapping, but close to ECharts Sankey defaults
-          otherwise.
+        comment: Category nodes now carry individual semantic hues instead of staying
+          neutral, adding polish, but the overall configuration is still close to
+          ECharts Sankey defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Clean background and margins, ribbon curveness is a nice touch, but
-          little further customization.
+        comment: Label pills, curveness, and clean background are nice touches; still
+          fairly minimal customization beyond that.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Color coding tells a clear channel-to-outcome story; neutral middle
-          stage flattens hierarchy somewhat.
+        passed: true
+        comment: Four color-coded stages (was three, with a flat neutral middle) now
+          carry visual hierarchy end-to-end, telling a clearer channel-to-outcome
+          story.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -129,51 +142,54 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ECharts has no native parallel-categories chart; Sankey is the documented,
-          justified native substitute and reads visually as an alluvial/parallel-categories
+        comment: ECharts has no native parallel-categories chart; Sankey remains the
+          documented, justified substitute that reads visually as an alluvial/parallel-categories
           chart.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Count-proportional ribbon width and color-by-dimension implemented;
-          crossing-minimization guidance not applied.
+        comment: Count-proportional ribbon width, color-by-dimension, and now a genuine
+          crossing-minimization attempt (layoutIterations=100) per the spec's guidance.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All three dimensions and values represented.
+        comment: All four dimensions and values represented and mass-conserved.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; node labels serve as legend.
+        comment: Title matches required format; node labels serve as the legend; subtitle
+          updated to list all four stages.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Uses the spec's minimum of 3 dimensions; a 4th would better showcase
-          the multi-dimensional nature.
+        comment: Now uses 4 categorical dimensions (up from 3), better showcasing
+          the multi-dimensional nature of a parallel-categories/alluvial chart.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral e-commerce customer-journey data.
+        comment: Plausible, neutral e-commerce customer-journey data with sensible
+          device-conversion asymmetry (desktop converts better than mobile).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible count values for a mid-size funnel dataset.
+        comment: Sensible count values for a mid-size funnel dataset; flows conserve
+          exactly across all three transition stages.
     code_quality:
       score: 10
       max: 10
@@ -210,7 +226,7 @@ review:
         comment: 'animation: false set, correct mount-node contract, current Sankey
           API.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -218,14 +234,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct idiomatic use of sankey series options.
+        comment: Correct idiomatic use of sankey series options including nodeAlign
+          and layoutIterations.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses curveness and adjacency-focus emphasis but otherwise fairly
-          standard configuration.
+        passed: true
+        comment: curveness, adjacency-focus emphasis, tuned layoutIterations, and
+          custom label-pill styling go beyond a default Sankey configuration.
   verdict: APPROVED
 impl_tags:
   dependencies: []
