@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: histogram-cumulative
 created: '2026-09-05T04:24:35Z'
-updated: '2026-09-05T04:28:20Z'
+updated: '2026-09-05T04:36:42Z'
 generated_by: claude-sonnet
 workflow_run: 33944253782
 issue: 2549
@@ -12,64 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/muix/plot-dark.html
-quality_score: 78
+quality_score: 87
 review:
   strengths:
-  - Correct implementation of a cumulative histogram as a stepAfter area curve with
-    a monotonically non-decreasing 0-100% scale — matches the ogive convention from
-    the spec exactly.
-  - 'Fully theme-adaptive: brand green (#009E73) data color is identical in both renders,
-    and all chrome (title, axis labels, tick labels, grid) reads clearly against both
-    #FAF8F1 and #1A1A17 backgrounds.'
+  - 'Both attempt-1 weaknesses are fixed: x-axis ticks are now pinned to whole-minute
+    values via tickInterval: binEdges (13 labels instead of 25 auto-generated 0.5-min
+    ticks), removing the mobile-crowding risk, and a ChartsReferenceLine now marks
+    the median wait time as a clear focal point.'
+  - Correct cumulative histogram (ogive) as a stepAfter area curve with a monotonically
+    non-decreasing 0-100% scale, matching the spec's ogive convention exactly.
+  - 'Fully theme-adaptive: brand green (#009E73) data color and area fill are identical
+    in both renders; all chrome (title, axis labels, tick labels, grid, reference-line
+    label) reads clearly against both #FAF8F1 and #1A1A17 backgrounds.'
   - Deterministic, realistic data generation (log-normal call-center wait times via
     a seeded LCG) with the single-series legend correctly hidden per the style guide.
-  - Clean, idiomatic MUI X usage — curve="stepAfter" + area fill, custom margins,
-    sx overrides for stroke/fill opacity, and correct skipAnimation + default-export
-    component contract.
+  - 'Clean, idiomatic MUI X usage: curve="stepAfter" + area fill, ChartsReferenceLine
+    with dashed styling from inkSoft token, custom margins, sx overrides, and correct
+    skipAnimation + default-export component contract.'
   weaknesses:
-  - X-axis auto-generates a tick at every 0.5-minute increment (0.0, 0.5, 1.0 ...
-    12.0 — 25 labels total), which will crowd and become illegible once the image
-    is scaled down to the ~400px mobile srcset variant; constrain the tick count (e.g.
-    explicit tickInterval / tickNumber limiting to whole-minute labels) so the mobile
-    render stays legible.
-  - Styling stays close to MUI X defaults beyond the single-series color/opacity tweak
-    — no reference-line or annotation (e.g. marking the median or a notable percentile
-    threshold) to give the chart a stronger focal point beyond the plain step shape.
-  - Library-mastery surface used is minimal (curve/area/valueFormatter only) — consider
-    a ChartsReferenceLine or similar community-surface feature to better showcase
-    MUI X's distinctive capabilities for this dataset.
+  - Styling is still fairly close to MUI X defaults beyond the color/opacity tweak
+    and the new reference line — no additional distinctive community-surface feature
+    (e.g. a second reference line for a notable percentile like p90, or a subtle gradient
+    on the area fill) to further elevate aesthetic sophistication.
+  - Only one annotation (the median reference line) is used to build hierarchy; a
+    second callout (e.g. labeling the ~5-minute point where the curve crosses ~97%)
+    would strengthen the data-storytelling focal point further.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "histogram-cumulative · javascript · muix · anyplot.ai" in dark ink, centered, clearly legible. Axis labels "Wait Time Before Answer (minutes)" (x) and "Cumulative Calls Answered (%)" (y) in dark, medium-weight text. Tick labels (0.0-12.0 on x in 0.5 increments; 0-100 on y in 10s) all dark and readable. Horizontal grid lines are thin and subtle, don't compete with the data.
-      Data: Single brand-green (#009E73) step line with a light green area fill beneath (fillOpacity ~0.18), rising steeply between 1-4 minutes then flattening as it approaches 100% by ~9 minutes. No legend shown (correct, single series).
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "histogram-cumulative · javascript · muix · anyplot.ai" in dark ink, centered, clearly legible. Axis labels "Wait Time Before Answer (minutes)" (x) and "Cumulative Calls Answered (%)" (y) in dark, medium-weight text. X-axis now shows whole-minute ticks only (0.0-12.0 in 1.0 steps, 13 labels) — no more crowding from the previous 0.5-min increments. Y-axis ticks 0-100 in 10s. Horizontal grid lines are thin and subtle. A dashed vertical reference line at x≈2.2 with label "Median: 2.2 min" in muted ink is clearly readable and does not overlap the step curve.
+      Data: Single brand-green (#009E73) stepAfter line with a light green area fill beneath (fillOpacity ~0.18), rising steeply between 1-4 minutes then flattening as it approaches 100% by ~9 minutes. No legend shown (correct, single series).
+      Legibility verdict: PASS — all text, including the new reference-line label, is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis labels rendered in light ink (near-white), clearly legible against the dark surface. Tick labels also light-colored and readable. Grid lines are subtle light-on-dark hairlines, visible but not dominant.
+      Chrome: Title and axis labels rendered in light ink (near-white), clearly legible against the dark surface. Tick labels also light-colored and readable, with the same reduced whole-minute tick set as the light render. Grid lines are subtle light-on-dark hairlines. The dashed median reference line and its "Median: 2.2 min" label render in a muted light gray, fully legible against the dark background — no dark-on-dark failure.
       Data: Same brand-green (#009E73) step line and area fill as the light render — the green line reads as a bright, high-contrast accent against the dark background; the semi-transparent fill takes on a dark teal cast from blending with the near-black background, which is expected and not a defect.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text remains fully legible.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/annotation text remains fully legible.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at full size, but 25 auto-generated
-          x-axis tick labels (0.5-min increments) will crowd/blur at the ~400px mobile
-          srcset size.
+        comment: 'All text readable in both themes; the previous 25-tick x-axis crowding
+          risk is fixed with whole-minute ticks (tickInterval: binEdges).'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No overlap at full resolution; dense x-tick spacing is a minor risk
-          at smaller scales.
+        comment: No collisions; the new median reference-line label sits clear of
+          the curve and other text.
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -82,14 +80,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast brand-green series, no red-green reliance.
+        comment: Single high-contrast brand-green series plus a neutral dashed reference
+          line, no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins, nothing clipped; dense tick labels add minor visual
-          clutter.
+        comment: Good margins, nothing clipped; reduced tick density removes the prior
+          minor clutter.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -104,29 +103,30 @@ review:
         comment: 'First series is #009E73, identical in both themes; backgrounds match
           #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Reasonable but fairly close to default MUI X look beyond color/opacity
-          tuning.
+        comment: Reference line adds polish but overall styling is still close to
+          defaults beyond color/opacity/reference-line tuning.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Legend correctly omitted, horizontal-only subtle grid, generous margins.
+        comment: Legend correctly omitted, horizontal-only subtle grid, generous margins,
+          dashed reference line styled with inkSoft token.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No annotation/reference line calling out a notable threshold; relies
-          solely on the curve shape.
+        passed: true
+        comment: The new median ChartsReferenceLine gives the chart a clear focal
+          point beyond the plain curve shape, addressing the prior weakness.
     spec_compliance:
       score: 15
       max: 15
@@ -201,7 +201,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart imported.
+        comment: Only LineChart and ChartsReferenceLine imported.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -216,7 +216,7 @@ review:
         comment: Correct default-export component contract, skipAnimation set, sizes
           from ANYPLOT_SIZE.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -227,16 +227,17 @@ review:
         comment: Good use of series/xAxis/yAxis config, margin, grid, sx overrides.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Only curve/area/valueFormatter used; no showcase of more distinctive
-          community-surface features (e.g. reference lines).
+        passed: true
+        comment: ChartsReferenceLine now showcases a distinctive community-surface
+          feature beyond basic curve/area/valueFormatter usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - area-fill
+  - annotations
   patterns:
   - data-generation
   dataprep:
