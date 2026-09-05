@@ -34,6 +34,8 @@ daily_active_users = collect(trend) .+ weekend_dip .+ noise
 
 rolling_days = window:n_days
 rolling_avg = [mean(daily_active_users[(i - window + 1):i]) for i in rolling_days]
+rolling_std = [std(daily_active_users[(i - window + 1):i]) for i in rolling_days]
+growth_pct = round(Int, (rolling_avg[end] - rolling_avg[1]) / rolling_avg[1] * 100)
 
 tick_positions = collect(1:30:n_days)
 if tick_positions[end] != n_days
@@ -79,6 +81,10 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
+band!(
+    ax, rolling_days, rolling_avg .- rolling_std, rolling_avg .+ rolling_std;
+    color = (BRAND, 0.12),
+)
 lines!(
     ax, 1:n_days, daily_active_users;
     color = (INK_MUTED, 0.55), linewidth = 1.5, label = "Raw Data",
@@ -86,6 +92,16 @@ lines!(
 lines!(
     ax, rolling_days, rolling_avg;
     color = BRAND, linewidth = 3.5, label = "$(window)-Day Rolling Average",
+)
+scatter!(ax, [rolling_days[end]], [rolling_avg[end]]; color = BRAND, markersize = 10, strokewidth = 0)
+text!(
+    ax, rolling_days[end], rolling_avg[end];
+    text     = "+$(growth_pct)% growth",
+    color    = INK,
+    fontsize = 13,
+    font     = :bold,
+    align    = (:right, :bottom),
+    offset   = (-8, 10),
 )
 
 axislegend(
