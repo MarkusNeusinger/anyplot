@@ -63,6 +63,11 @@ function meanAndStd(folds) {
 const train = meanAndStd(trainFolds);
 const validation = meanAndStd(validationFolds);
 
+// Remaining generalization gap at the largest training set size — annotated
+// below with a markLine connecting the two final points.
+const lastIndex = trainSizes.length - 1;
+const finalGap = train.mean[lastIndex] - validation.mean[lastIndex];
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -137,7 +142,7 @@ chart.setOption({
     max: 1.0,
     nameTextStyle: { color: t.inkSoft, fontSize: 16 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { show: false },
+    axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
@@ -161,6 +166,26 @@ chart.setOption({
       symbolSize: 10,
       lineStyle: { width: 3.5, color: validationColor },
       itemStyle: { color: validationColor },
+      // Connects the final training/validation points with a labeled
+      // markLine calling out the residual generalization gap — a distinctive
+      // use of ECharts' arbitrary-coordinate markLine feature.
+      markLine: {
+        symbol: ["none", "none"],
+        silent: true,
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          formatter: `Gap: ${finalGap.toFixed(3)}`,
+          color: t.inkSoft,
+          fontSize: 13,
+          position: "middle",
+        },
+        data: [
+          [
+            { coord: [lastIndex, train.mean[lastIndex]] },
+            { coord: [lastIndex, validation.mean[lastIndex]] },
+          ],
+        ],
+      },
     },
   ],
 });
