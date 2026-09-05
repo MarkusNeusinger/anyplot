@@ -1,0 +1,245 @@
+library: muix
+language: javascript
+specification_id: line-loss-training
+created: '2026-09-05T07:29:33Z'
+updated: '2026-09-05T07:43:55Z'
+generated_by: claude-sonnet
+workflow_run: 33952523558
+issue: 2860
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/muix/plot-dark.html
+quality_score: 97
+review:
+  strengths:
+  - 'Genuine data storytelling: the shaded post-early-stop "divergence zone" band
+    plus the dashed reference line at the best-val-loss epoch make the overfitting
+    signature the spec calls out immediately legible, not just plotted.'
+  - 'Correct Imprint palette application: training loss uses #009E73 (palette[0]),
+    validation loss uses the canonical palette[1] violet, identical across light/dark
+    renders with theme-correct chrome flipping.'
+  - 'Idiomatic, distinctive MUI X composition: reads useXScale/useDrawingArea straight
+    from the chart''s render context to build a custom band overlay, combined with
+    ChartsReferenceLine — a genuinely library-specific extension pattern, not generic
+    line-chart code.'
+  - Explicit font sizing throughout via sx overrides keeps title, axis labels, ticks,
+    and legend readable at full resolution and legible when scaled to ~400px mobile
+    width.
+  - 'Deterministic LCG-seeded data (seed=42) produces realistic training/validation
+    dynamics: smooth training decay plus a clean, physically plausible divergence
+    past the best epoch.'
+  weaknesses:
+  - The "Early-stop point · epoch 35" reference-line annotation (13px) is nearly illegible
+    at the ~400px mobile thumbnail scale — bump to ~15-16px or bold it so the callout
+    survives downscaling.
+  - 'Design Excellence is strong but not maxed: a small callout for the minimum validation-loss
+    value itself (not just the epoch) would deepen the storytelling further, though
+    the spec doesn''t require it.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-loss-training · javascript · muix · anyplot.ai" is bold dark ink, clearly visible above the plot. Axis labels ("Epoch", "Cross-Entropy Loss") and tick labels are dark and fully readable against the light background. Horizontal grid lines are subtle gray, visible but not dominant. Legend ("Training loss", "Validation loss") sits centered below the x-axis, not overlapping any data.
+      Data: Training loss is #009E73 (Imprint green, palette[0]) with a soft gradient fill to baseline; validation loss is a violet (Imprint palette[1]) with a matching gradient fill. Both are clearly distinguishable from each other and the background. A dashed ink-colored reference line marks the best-val-loss epoch (35), with a light amber-tinted band shading the post-early-stop divergence zone through epoch 60.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and axis labels render in light/white ink, fully legible against the dark background. Tick labels are light gray, readable. Grid lines are subtle, still visible without dominating. Legend text is light-colored, matching the theme. No dark-on-dark text found anywhere in the chart.
+      Data: Training loss remains #009E73 and validation loss remains the same violet as the light render — colors are identical between themes, only the chrome (background, text, grid) flipped as expected. The dashed reference line and shaded divergence band are still visible and legible in the dark theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via sx overrides; readable at full
+          size and at ~400px mobile scale in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axis, legend, annotation, and data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px lines with gradient area fills, no markers needed for 60-point
+          continuous data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs violet, high contrast, CVD-safe hue separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area uses ~85-90% of canvas, balanced margins, legend near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Epoch" and "Cross-Entropy Loss" — descriptive, loss function named
+          per spec'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0]/palette[1] used correctly, identical across themes, correct
+          theme-adaptive chrome
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Gradient fills, shaded divergence band, thoughtful typography — clearly
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace; minor headroom
+          left for further polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Shaded divergence zone + early-stop reference line make the overfitting
+          insight immediate
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Dual-line loss chart, correct type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, legend, epoch 1-60 x-axis, loss-function y-label,
+          min-val-loss marking all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=epoch, Y=loss, both curves fully shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows smooth decay, noise, and a clean overfitting divergence — full
+          feature set for the spec
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral ML-training scenario, real and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cross-entropy values and divergence magnitude are realistic for a
+          classification task
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data -> Chart component; the DivergenceZone helper is the documented
+          MUI X composition pattern, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness mount contract respected, skipAnimation set
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level LineChart series API with area/curve/baseline, ChartsReferenceLine
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: useXScale/useDrawingArea hook composition to build a custom overlay
+          mark not replicable trivially in another library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending
