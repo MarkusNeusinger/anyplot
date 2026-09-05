@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-density
 created: '2026-09-05T04:29:40Z'
-updated: '2026-09-05T04:34:52Z'
+updated: '2026-09-05T04:47:35Z'
 generated_by: claude-sonnet
 workflow_run: 33944465799
 issue: 2442
@@ -12,52 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
+  - 'Fixed the attempt-1 legend mismatch: the "Normal fit" legend icon now uses itemStyle:
+    { color: t.ink }, correctly matching the ink-colored dashed line in both themes.'
+  - 'Added genuine ECharts-distinctive features: markArea for the ±1σ band and markLine
+    for the mean reference turn a generic bar+line combo into a proper statistical
+    annotation.'
   - Correct density normalization (bar area sums to 1) with consistent binning, plus
     a theoretical normal PDF overlay evaluated from the sample mean/std for a genuine
     goodness-of-fit check.
-  - Theme tokens are threaded through every chrome element (title, legend, axis names,
-    tick labels, grid, axis line) and both renders are fully legible with no dark-on-dark
-    or light-on-light failures.
-  - 'First series uses Imprint brand green #009E73; the overlay curve uses the ink/neutral
-    token, an appropriate semantic choice for a reference-line role.'
-  - Deterministic, seeded LCG + Box-Muller random generation gives full reproducibility
-    with no external dependencies.
-  - 'Clean, minimal chrome: no top/right/left spines, subtle horizontal-only gridlines,
-    generous margins, well-balanced canvas utilization.'
+  - Theme tokens are threaded through every chrome element; both renders are fully
+    legible with no dark-on-dark or light-on-light failures, and no edge clipping
+    on any element.
+  - Reduced x-axis bin count from 26 to 20, easing the tick-label crowding flagged
+    in attempt 1.
   weaknesses:
-  - 'The ''Normal fit'' legend swatch renders as a green dot (ECharts'' auto-assigned
-    palette color for the line series'' default legend icon), but the actual overlay
-    line is drawn in ink color (black in light theme, white in dark theme) via lineStyle.color.
-    Set itemStyle: { color: t.ink } on the line series so the legend icon matches
-    the rendered line color.'
-  - X-axis carries 26 bin-center tick labels packed close together; legible but crowded.
-    Consider a slightly coarser bin count or axisLabel interval so labels breathe
-    more.
-  - 'Design Excellence sits at the well-configured-default tier: green bars + a single
-    dashed reference line follow the token system correctly but don''t go beyond it.
-    Consider a subtle area-fill under the fitted curve, refined legend styling, or
-    an annotation marking the sample mean/std to add a bit more visual sophistication.'
-  - Library Mastery is generic — a bar+line combo chart is easily replicated in any
-    charting library. Consider leveraging an ECharts-distinctive feature (e.g. markLine
-    for the mean, areaStyle gradient under the PDF curve, or markArea for a ±1 std
-    band) to showcase library-specific strengths.
+  - X-axis still carries 20 bin-center tick labels; legible with comfortable spacing
+    now, but a coarser axisLabel.interval would give even more breathing room if revisited.
+  - 'Design Excellence is solid but not exceptional: still a two-tone (green + ink)
+    palette with no gradient fill or typographic hierarchy beyond the mandated title/legend
+    styling.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: title "histogram-density · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend below title shows a green swatch for "Observed density" and a dashed line + circle marker for "Normal fit". Axis names "Reaction Time (ms)" (x) and "Density" (y) in dark ink; tick labels (bin centers 402–907, density values 0.000–0.006) in soft ink. All readable.
-      Data: green (#009E73) bars form a unimodal, roughly bell-shaped histogram of reaction times, overlaid with a black dashed curve (fitted normal PDF) that tracks the bar heights closely.
+      Chrome: title "histogram-density · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend shows a green swatch for "Observed density" and a black line+dot icon for "Normal fit" — the icon color now matches the actual overlay line color (ink), fixing the mismatch from attempt 1. Axis names "Reaction Time (ms)" (x) and "Density" (y) in dark ink; 20 bin-center tick labels (405-904) and y tick labels (0.000-0.006) in soft ink, all readable with comfortable spacing.
+      Data: green (#009E73) bars form a clean unimodal, bell-shaped histogram; a black dashed curve traces the fitted normal PDF closely; a light green ±1σ shaded band and a dotted "Mean" reference line add explicit statistical annotation.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: title, legend text, and axis labels render in light ink (white/near-white) and are clearly legible against the dark surface. Grid lines are faint horizontal lines, subtle but visible. No dark-on-dark text found.
-      Data: bars remain the identical Imprint green (#009E73) — confirmed identical to the light render. The normal-fit overlay curve switches from black to white dashed, preserving contrast against the dark surface.
+      Chrome: title, legend text, and axis labels render in light ink and are clearly legible against the dark surface. No dark-on-dark text found.
+      Data: bars remain the identical Imprint green (#009E73), confirmed identical to the light render. The normal-fit overlay curve and its legend icon switch from black to white, preserving contrast. The ±1σ shaded band and mean line remain visible at reduced opacity.
       Legibility verdict: PASS
 
-    Note: the "Normal fit" legend icon renders as a green dot in both themes even though the actual line is ink-colored — a minor legend/rendering inconsistency (see weaknesses), not a legibility failure.
+    No edge clipping found in either render (title, all four axis-label boundaries, and the rightmost "904" tick label checked specifically).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,33 +58,33 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; x-axis tick
-          labels are a bit densely packed (26 bins)
+        comment: All font sizes explicit, readable in both themes; 20 bin tick labels
+          less crowded than attempt 1's 26 but still moderately dense
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions
+        comment: No text/element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and overlay curve clearly visible, well-sized for a 26-bin histogram
+        comment: Bars, dashed PDF curve, mean line, and ±1σ band all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green bars vs. ink-colored dashed line give strong non-hue contrast,
+        comment: Green bars vs. ink-colored dashed line = strong non-hue contrast,
           CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, good canvas utilization, nothing cut off
+        comment: Correct 3200x1800 canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,32 +96,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, background/chrome theme-correct in both
-          renders, data colors identical across themes'
+        comment: 'First series is #009E73, backgrounds theme-correct in both renders,
+          data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured token defaults, not exceptional design
+        passed: true
+        comment: ±1σ shaded markArea and mean markLine lift this above plain defaults,
+          though still just green+ink with no gradient or typographic flourish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines mostly removed, subtle grid, generous whitespace — some refinement
-          visible
+        passed: true
+        comment: Spines removed, subtle horizontal-only grid, generous whitespace,
+          low-opacity (0.12) shaded band is a refined touch
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: PDF overlay creates a visual hierarchy/comparison point, but no explicit
-          annotation of the insight
+        passed: true
+        comment: Explicit "Mean" label and ±1σ band now narrate the goodness-of-fit
+          story directly
     spec_compliance:
       score: 15
       max: 15
@@ -147,19 +138,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Density normalization, consistent binning, PDF overlay all present
+        comment: Density normalization (area = 1), consistent binning, theoretical
+          PDF overlay all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction time bins, Y = density, all data visible
+        comment: X = reaction-time bins, Y = density; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match series
+        comment: Title format correct; legend labels match series names
     data_quality:
       score: 14
       max: 15
@@ -169,14 +161,14 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows unimodal distribution + goodness-of-fit overlay; no multimodal
-          example (not required by spec)
+        comment: Unimodal distribution + goodness-of-fit overlay covers spec's core
+          ask; no multimodal example, but not spec-required
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cognitive-task reaction times — real, neutral, comprehensible scenario
+        comment: Cognitive-task reaction times is a plausible, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -192,57 +184,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/init/option flow; small RNG helper functions
-          are justified per the library's no-seeded-RNG constraint
+        comment: Linear flow; small RNG/lookup helper functions justified given no-seeded-RNG
+          browser constraint
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42)
+        comment: Seeded LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global echarts/tokens only
+        comment: No unused imports; only global echarts/tokens used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract, animation:false set, current API
+        comment: 'Follows the mount-node contract; animation: false set; current API'
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct declarative setOption usage; markArea/markLine configured
+          idiomatically alongside grid/axis/series
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct declarative setOption usage with grid/axis/series configured
-          idiomatically
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Bar+line combo is a common pattern replicable in most libraries;
-          no ECharts-distinctive feature (markLine/areaStyle gradient/markArea) used
-  verdict: REJECTED
+        comment: Showcases ECharts-distinctive markArea (±1σ band) and markLine (mean
+          reference)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - binning
-  styling: []
+  styling:
+  - alpha-blending
