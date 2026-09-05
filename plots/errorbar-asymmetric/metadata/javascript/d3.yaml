@@ -1,0 +1,244 @@
+library: d3
+language: javascript
+specification_id: errorbar-asymmetric
+created: '2026-09-05T01:05:53Z'
+updated: '2026-09-05T01:22:36Z'
+generated_by: claude-sonnet
+workflow_run: 33934803847
+issue: 2781
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Focal-point treatment (halo, thicker stroke, callout arrow + label) on the widest-spread
+    station creates a clear visual hierarchy and states the insight directly.
+  - Stations are sorted by total spread (upper + lower) descending, guiding the eye
+    from the least-certain reading to the most-certain one.
+  - Explicit font sizes throughout; the mandated long title is dynamically scaled
+    to fit without clipping, and both renders stay well-proportioned.
+  - Correct Imprint palette (#009E73) with identical data color across light/dark,
+    and theme-correct chrome (background, text, grid) in both renders.
+  - Genuine D3-authored annotation connector via d3-shape's linkVertical() + a custom
+    arrow marker, instead of a static line.
+  weaknesses:
+  - Main x/y axis tick marks (the short perpendicular lines) aren't explicitly recolored
+    via `.selectAll('line').attr('stroke', t.grid)` the way the style-guide skeleton
+    does — they inherit `currentColor`/default black instead of a theme token. Not
+    visibly broken in either render at this canvas size, but should be fixed for full
+    theme robustness.
+  - Every station shares the same right-skew direction (upper magnitude > lower magnitude);
+    a left-skewed counter-example would more fully demonstrate the asymmetric-bounds
+    feature space.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent with the light theme spec — not pure white.
+      Chrome: Dark, high-contrast title "Ozone Levels by Monitoring Station · errorbar-asymmetric · javascript · d3 · anyplot.ai" centered at top, softer gray subtitle below it explaining the 10th-90th percentile bars. Y-axis label "Ozone Concentration (ppb)" rotated, dark tick labels on both axes, subtle horizontal gridlines. All clearly legible against the light background.
+      Data: 8 monitoring stations (Industrial, Downtown, Uptown, Harbor, Riverside, Lakeside, Hilltop, Greenfield) sorted by total spread descending. Each shows a green (#009E73) vertical error bar with horizontal caps at the 10th/90th percentile bounds and a filled green dot at the median. The leftmost station (Industrial) has a soft green halo behind its dot, a thicker stroke, and a callout annotation with an arrow reading "Widest spread: −10/+22 ppb (Industrial)".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title and axis label render in white/light text, subtitle and tick labels in light gray, gridlines subtle light gray — all clearly readable against the dark background. No dark-on-dark text observed.
+      Data: Identical green (#009E73) error bars, caps, median dots, halo, and callout annotation as the light render — same station values, same visual hierarchy (Industrial highlighted). Only the chrome (background, text, grid) flipped; data colors are unchanged.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (15-16px ticks/labels, dynamically-scaled
+          title); readable in both themes; title fits without clipping at ~71% width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 data points with 9-11px markers and 3-4px error-bar strokes are
+          well-sized for the density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast green series, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills most of the 3200x1800 canvas with balanced margins; nothing
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Ozone Concentration (ppb)' with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds are
+          #FAF8F1/#1A1A17; chrome theme-correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: focal halo, thicker focus stroke, callout annotation,
+          sorted layout — clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, no boxed spines, generous margins; axis tick-line
+          coloring is the one loose end (see weaknesses).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sort order + halo + explicit callout text state the insight directly;
+          guides the viewer to the widest-spread station.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct asymmetric error-bar plot (median dot + upper/lower whiskers
+          with caps).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible caps present; annotation explains the 10th-90th percentile
+          bounds via subtitle + callout.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=station (categorical), Y=ozone value with error extent; all 8 points
+          visible within axis range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · errorbar-asymmetric · javascript
+          · d3 · anyplot.ai'; no legend needed (single series).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide range of spread magnitudes across stations, but all right-skewed
+          (upper > lower) — no left-skewed counter-example.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Ozone monitoring stations — real, neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ozone values (22-73 ppb) and percentile spreads are realistic for
+          air-quality monitoring.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no custom functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no unused code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriately complex; no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; harness saves plot-{theme}.png/html.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper scaleBand/scaleLinear + axis + data-join(.join()) idioms;
+          misses recoloring axis tick lines like the style-guide skeleton does.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses d3-shape's linkVertical() and a custom SVG marker for a genuine
+          D3-authored annotation connector.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - error-bars
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

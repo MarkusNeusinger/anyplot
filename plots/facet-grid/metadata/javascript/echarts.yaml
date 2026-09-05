@@ -1,0 +1,258 @@
+library: echarts
+language: javascript
+specification_id: facet-grid
+created: '2026-09-05T01:21:14Z'
+updated: '2026-09-05T01:25:00Z'
+generated_by: claude-sonnet
+workflow_run: 33935620852
+issue: 2696
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Idiomatic use of ECharts' low-level multi-grid API (grid/xAxis/yAxis arrays) to
+    build a true 2x3 small-multiples layout, which is exactly how ECharts implements
+    faceting since it has no native FacetGrid primitive.
+  - Shared axis scales are enforced correctly (fixed X_MIN/X_MAX and Y_MIN/Y_MAX across
+    all six panels) and redundant tick labels are suppressed on interior facets (axisLabel.show
+    only on the bottom row / left column), matching the spec's 'subplots share the
+    same axes scales' requirement.
+  - Facet strip labels (species across columns, sex down rows via rotated text) and
+    shared external axis titles are cleanly implemented via the `graphic` overlay
+    with subtle badge backgrounds, avoiding per-facet label repetition.
+  - Realistic, plausible synthetic data (Palmer-Penguins-style bill length vs. body
+    mass, split by species and sex) with genuine between-facet variation in both location
+    and spread — Gentoo penguins are visibly larger/heavier, satisfying DQ-01 feature
+    coverage.
+  - 'Correct Imprint palette usage (first series = #009E73) and correct theme-adaptive
+    chrome — both renders pass the theme-readability check with no dark-on-dark or
+    light-on-light failures.'
+  - Marker size (9px) and opacity (0.75) are well tuned for ~60 points per facet,
+    keeping overlapping points distinguishable without excessive occlusion.
+  weaknesses:
+  - The row facet labels ('Female'/'Male') sit close to the right canvas edge (~48
+    CSS px of margin) — not clipped in this render, but a slightly larger right margin
+    (e.g. gridRight=1520 instead of 1540) would give more safety margin against future
+    tweaks.
+  - Facet strip label badges (species/sex chips) are flat single-color backgrounds
+    with no subtle border/shadow — a small refinement opportunity for extra visual
+    polish, though not required.
+  - No explicit visual emphasis (e.g., callout or highlight) draws attention to the
+    most notable pattern (Gentoo's distinctly larger size) — the facet layout itself
+    communicates it, but an intentional focal point would push data storytelling further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Penguin Measurements · facet-grid · javascript · echarts · anyplot.ai" is centered at top in dark ink, clearly legible. Column facet strip labels ("Adelie", "Chinstrap", "Gentoo") sit as small dark-text badges above each column; row facet labels ("Female", "Male") appear as rotated dark-text badges to the right of each row. Shared axis titles "Bill Length (mm)" (bottom, centered) and "Body Mass (g)" (left, rotated) are dark and readable. Tick labels are shown only on the bottom row (x-axis) and left column (y-axis) to avoid repetition, all in a soft dark-gray ink color against the light background. Grid lines are light gray, subtle but visible.
+      Data: All six facets show green (#009E73) scatter points at consistent opacity/size. Adelie and Chinstrap clusters sit at lower body mass, Gentoo clusters visibly shift up and right (larger bill, heavier mass), and male facets sit slightly higher/right than female facets within each species — showing genuine cross-facet variation.
+      Legibility verdict: PASS — all title, facet-strip, axis-title, and tick text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, facet strip labels, and shared axis titles as the light render, now rendered in light/white text with dark badge backgrounds behind the strip labels for contrast. Tick labels and grid lines are light gray on the dark background, subtle but legible. No element appears washed out.
+      Data: Scatter point color is identical #009E73 green in every facet, matching the light render exactly — confirms data colors are theme-invariant.
+      Legibility verdict: PASS — all text (title, strip labels, axis titles, ticks) is clearly readable light-on-dark; no dark-on-dark failures observed anywhere in the six panels.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (13/14/15/21px); readable in both themes,
+          no overflow, balanced axis labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text across any of the six facets.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 9px markers at 0.75 opacity are well tuned for ~60 points per facet.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue green with alpha, no red-green reliance, good contrast
+          on both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid area covers ~70%+ of canvas, balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Bill Length (mm)'' and ''Body Mass (g)'' are descriptive with
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds are theme-correct #FAF8F1/#1A1A17,
+          chrome flips correctly.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Badge-style facet labels, suppressed redundant ticks, thoughtful
+          shared-axis treatment — clearly above a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, no tick marks, generous gaps between facets; badges
+          are flat with no extra polish (border/shadow).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The row/column arrangement itself creates clear visual hierarchy
+          (Gentoo's size difference is immediately apparent) without explicit annotation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x3 faceted scatter grid.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Row facet (sex), column facet (species), shared scales, and facet
+          labels are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=bill length, Y=body mass, all data visible within fixed axis ranges.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · facet-grid · javascript · echarts
+          · anyplot.ai'; no legend needed (single series).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear location and spread variation across all six species x sex
+          combinations.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible scenario (Palmer-Penguins-style biological
+          measurements).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Bill lengths (~28-60mm) and body mass (~2-7kg) are realistic for
+          penguins with sensible species/sex ordering.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Straightforward top-to-bottom flow: data generation, layout computation,
+          option construction.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG (seed=42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the provided globals are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a manual multi-grid facet layout; no fake
+          functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract: echarts.init(#container), animation:false,
+          current API.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid arrays are the recommended ECharts pattern for small multiples/facets.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Manual grid-position computation combined with `graphic` overlay
+          for facet strips and shared axis titles is a distinctive, library-specific
+          technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - faceting
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
