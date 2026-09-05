@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: contour-filled
 created: '2026-09-04T23:36:26Z'
-updated: '2026-09-04T23:52:34Z'
+updated: '2026-09-05T00:04:06Z'
 generated_by: claude-sonnet
 workflow_run: 33929424173
 issue: 2500
@@ -12,232 +12,243 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-dark.html
-quality_score: 0
+quality_score: 84
 review:
   strengths:
-  - 'Correct plot type: filled contour bands built from a hand-rolled marching-triangles
-    algorithm with a sound painter''s-algorithm layering, avoiding the marching-squares
-    saddle ambiguity'
-  - Diverging Imprint colormap (imprint_div, red↔neutral↔blue) is the right polarity
-    choice for a signed temperature-anomaly field, and data colors are identical between
-    light and dark renders
-  - Two clearly separated warm/cool Gaussian patches give good feature coverage (both
-    polarities, nested super-level-set bands) and a plausible, neutral scientific
-    scenario
-  - Title format is correct ("{Descriptive Title} · contour-filled · javascript ·
-    muix · anyplot.ai") and legible in both themes
-  - Axis labels are descriptive with units (°) and theme-adaptive chrome (ink/inkSoft
-    tokens) is applied correctly elsewhere in the chart
+  - 'Correct diverging-colormap math: t.div stops reversed so position 0 lands on
+    blue (cool/low) and position 1 on red (warm/high), with a theme-adaptive pageBg
+    midpoint'
+  - Creative, functioning custom filled-contour renderer (marching-triangles + painter's
+    algorithm) built via ChartContainer's composition API (useXScale/useYScale) since
+    MUI X has no native contour chart type -- an idiomatic use of the library's advanced
+    composition pattern
+  - Correct title format, descriptive axis labels with units, and a ContinuousColorLegend
+    plus rotated axis title for the value scale
+  - 'Both themes render correctly: identical data colors between light/dark, theme-adaptive
+    chrome, no dark-on-dark or light-on-light legibility failures'
+  - Isolines overlaid on top of the filled bands per the spec's suggestion, aiding
+    precise level identification
+  - Deterministic, reproducible data (fixed analytic formula, no RNG)
   weaknesses:
-  - 'AR-09 EDGE CLIPPING (auto-reject): the ContinuousColorLegend''s max/min tick
-    labels ("1.996" at top, "-1.996" at bottom) have their final digit''s closing
-    curve chopped off at the right canvas edge in BOTH plot-light.png and plot-dark.png
-    — pixel analysis confirms non-background content touches column 3199 (the literal
-    last column of the 3200px-wide canvas) at both the top label (y≈379-396) and bottom
-    label (y≈1404-1423) rows, and a zoomed crop shows the "6" glyph''s right arc is
-    visibly truncated, not merely close to the edge. Fix: increase MARGIN.right beyond
-    200px, or move the ContinuousColorLegend further left / reduce its `thickness`/label
-    offset, so the widest tick label ("-1.996", 6 characters) fits fully inside SIZE.width
-    with margin to spare. Also consider formatting the legend value with fewer decimals
-    (e.g. toFixed(1) instead of the library default 3 decimals) to shorten the label
-    and reduce collision risk.'
-  - The vertical axis-title text "Temperature anomaly (°C)" is placed at x = SIZE.width
-    - 26, i.e. only 26px from the canvas edge — combine this with the legend fix above
-    so the whole right-side cluster (legend bar + its tick labels + the rotated axis
-    title) has consistent breathing room and doesn't re-clip after the margin is widened.
+  - Visible jagged/stair-step artifacts along filled-contour boundaries, most noticeable
+    on the diagonal zero-crossing boundary in the low-gradient region between the
+    two Gaussian patches, in BOTH light and dark renders. The spec explicitly calls
+    for 'grid resolution sufficient to avoid jagged color boundaries' and a smooth
+    gradient visualization. Root cause is likely the 4-triangles-around-centroid cell
+    split in buildTriangles(), which introduces spurious zig-zag kinks along low-gradient
+    level curves independent of grid density -- try increasing GRID and/or replacing
+    the centroid-quad split with a standard 2-triangle-per-cell (fixed-diagonal) split
+    for smoother boundaries.
+  - Title occupies only ~40-47% of the plot width at the current auto-scaled font
+    size (TITLE_FONT_SIZE formula), a bit small/lost relative to the 50-70% guideline
+    -- consider a slightly larger multiplier or minimum size.
+  - The file leans on many small helper functions (hexToRgb, lerpChannel, imprintDivInterpolator,
+    buildTriangles, triangleFill, polysToPath, segmentsToPath) -- justified by the
+    custom contour engine but on the higher end of complexity for a KISS baseline;
+    consider consolidating the color-interpolation helpers.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "Sea-Surface Temperature Anomaly · contour-filled · javascript · muix · anyplot.ai" is centered and readable in dark ink. X-axis "Zonal offset (°)" and Y-axis "Meridional offset (°)" labels and tick labels are dark and legible against the light background. A vertical legend title "Temperature anomaly (°C)" sits at the far right.
-      Data: Two elliptical Gaussian patches — a warm (red) cluster around (1.3, 0.9) and a cool (blue) cluster around (-1.4, -1.0) — rendered as nested filled contour bands using the Imprint diverging colormap (red↔near-white↔blue), with thin isoline strokes at each band boundary. A vertical ContinuousColorLegend colorbar sits to the right of the plot, labeled with max/min values "1.996" / "-1.996".
-      Legibility verdict: FAIL — the colorbar's top tick label "1.996" and bottom tick label "-1.996" both have their final "6" digit's closing curve clipped off at the right edge of the 3200px canvas (confirmed via pixel analysis: non-background pixels touch the literal last column, and a zoomed crop shows only ~2/3 of the "6" glyph rendered before the canvas boundary). This is an AR-09 edge-clipping violation.
+      Background: Warm off-white (#FAF8F1) -- matches the required light-theme surface, not pure white.
+      Chrome: Title "Sea-Surface Temperature Anomaly · contour-filled · javascript · muix · anyplot.ai" centered at top in dark ink; "Zonal offset (°)" / "Meridional offset (°)" axis titles and numeric tick labels (-3.0..3.0) in dark/soft-dark ink; a vertical ContinuousColorLegend on the right with "-2.0"/"2.0" endpoint labels and a rotated "Temperature anomaly (°C)" label. All text is clearly legible against the light background.
+      Data: A filled contour field with a warm red blob (peak near x=1.3, y=0.9) and a cool blue blob (trough near x=-1.4, y=-1.0), each rendered as 4-5 nested elliptical color bands with thin semi-transparent isolines tracing each level boundary; the surrounding low-gradient area is a very pale pinkish-grey (upper right, mildly positive) vs. pale bluish-grey (lower left, mildly negative), split by a diagonal zero-crossing boundary. Colors run blue (low) -> near-neutral (zero) -> red (high), matching the Imprint diverging palette.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same title, axis labels, and legend title, all rendered in light ink (confirmed readable — no dark-on-dark failures). Data colors are identical to the light render (red patch, blue patch, colorbar gradient) — only the chrome (background, text) flipped, as required.
-      Data: Identical geometry and colors to the light render, confirming light/dark data-color consistency.
-      Legibility verdict: FAIL — same AR-09 issue as the light render: the colorbar's "1.996" and "-1.996" tick labels are clipped at the right canvas edge, final digit truncated.
+      Background: Warm near-black (#1A1A17) -- matches the required dark-theme surface, not pure black.
+      Chrome: Same title, axis titles, tick labels, and colorbar layout as the light render, all rendered in light ink/off-white text, clearly readable against the dark background. No dark-on-dark text found.
+      Data: Same red/blue blob positions and same band colors as the light render (data colors are identical between themes; only the neutral background hue shifted from pale grey/beige to a dark warm-grey), confirming chrome-only theme adaptation.
+      Legibility verdict: PASS.
+
+    Shared observation (both renders): the filled-contour band boundaries show a visible jagged/stair-step texture, most noticeable along the diagonal zero-crossing line in the low-gradient area between the two peaks -- flagged as a weakness below.
   criteria_checklist:
     visual_quality:
-      score: 0
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: Colorbar tick labels clipped at canvas edge in both themes (AR-09)
+        passed: true
+        comment: All text readable in both themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 3
         max: 6
         passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        comment: Contour band boundaries show visible jagged/stair-step artifacts,
+          most noticeable on the diagonal zero-crossing line
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Red-blue diverging scale has adequate contrast; not red-green
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 3
         max: 4
-        passed: false
-        comment: Legend tick label content missing at canvas border
+        passed: true
+        comment: Nothing cut off; title is a bit small (~40-47% of plot width) relative
+          to the 50-70% guideline
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Descriptive axis labels with units, correct title format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'N/A - scoring zeroed by AR-09 auto-reject (palette choice itself
-          was correct: imprint_div)'
+        passed: true
+        comment: Correct imprint_div usage, theme-adaptive midpoint, correct backgrounds
+          in both themes
     design_excellence:
-      score: 0
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 0
+        score: 6
         max: 8
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Custom color math and contour geometry show real design intent, but
+          jagged edges undercut full polish
       - id: DE-02
         name: Visual Refinement
-        score: 0
+        score: 2
         max: 6
         passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        comment: Jagged band boundaries are a direct refinement flaw
       - id: DE-03
         name: Data Storytelling
-        score: 0
+        score: 5
         max: 6
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Clear two-focal-point narrative (warm vs. cool anomaly) with colorbar
+          and isolines guiding the reader
     spec_compliance:
-      score: 0
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject (plot type itself is correct)
+        passed: true
+        comment: Correctly a filled contour with color bands
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 3
         max: 4
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Colorbar and overlaid contour lines present; grid resolution/algorithm
+          does not fully avoid jagged boundaries per spec note
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: X/Y correctly mapped, full grid extent shown
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct, but legend tick labels are clipped
+        passed: true
+        comment: Title format matches spec exactly; legend labels correct
     data_quality:
-      score: 0
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Shows fill bands, isolines, and colorbar mapping
       - id: DQ-02
         name: Realistic Context
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Plausible, neutral sea-surface temperature anomaly scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: -2..2 degC anomaly range is realistic for SST anomalies
     code_quality:
-      score: 0
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 2
         max: 3
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Many small helper functions, justified by the custom contour engine
+          but non-trivial structure
       - id: CQ-02
         name: Reproducibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Deterministic analytic formula, no RNG
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Only used @mui/x-charts imports
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Well-commented, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: skipAnimation set, sized from ANYPLOT_SIZE, harness contract respected
     library_mastery:
-      score: 0
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
+        passed: true
+        comment: Good use of ChartContainer composition API and scale hooks for a
+          custom layer
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: N/A - scoring zeroed by AR-09 auto-reject
-  verdict: REJECTED
+        passed: true
+        comment: Continuous zAxis colorMap and ContinuousColorLegend are genuinely
+          distinctive MUI X features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
   - custom-colormap
-  - publication-ready
+  - alpha-blending
