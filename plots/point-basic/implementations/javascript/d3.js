@@ -27,8 +27,14 @@ const maxUpper = d3.max(data, (d) => d.upper);
 const fmt = d3.format(".1f");
 
 // --- SVG mount ---------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
+const g = svg
+  .append("g")
+  .attr("transform", `translate(${margin.left},${margin.top})`);
 
 // --- Scales --------------------------------------------------------------
 const x = d3.scaleLinear().domain([0, 10]).nice().range([0, iw]);
@@ -55,7 +61,14 @@ g.append("g")
 const xAxis = g
   .append("g")
   .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(x).ticks(6).tickSize(0).tickPadding(14).tickFormat(d3.format(".0f")));
+  .call(
+    d3
+      .axisBottom(x)
+      .ticks(6)
+      .tickSize(0)
+      .tickPadding(14)
+      .tickFormat(d3.format(".0f")),
+  );
 const yAxis = g.append("g").call(d3.axisLeft(y).tickSize(0).tickPadding(16));
 
 for (const ax of [xAxis, yAxis]) {
@@ -65,22 +78,25 @@ xAxis.select(".domain").remove();
 yAxis.select(".domain").remove();
 
 // --- Reference line: overall mean, the focal point the ranking is read against ---
+// Sized/opacity-boosted (vs. a thin 1px hairline) so the dashes survive
+// downsampling and stay unmistakable next to the bolder whiskers/caps.
 g.append("line")
   .attr("x1", x(meanEstimate))
   .attr("x2", x(meanEstimate))
   .attr("y1", 0)
   .attr("y2", ih)
   .attr("stroke", t.ink)
-  .attr("stroke-width", 1.5)
-  .attr("stroke-dasharray", "6,4")
-  .attr("opacity", 0.5);
+  .attr("stroke-width", 2.5)
+  .attr("stroke-dasharray", "10,6")
+  .attr("opacity", 0.65);
 
 g.append("text")
   .attr("x", x(meanEstimate))
   .attr("y", -18)
   .attr("text-anchor", "middle")
-  .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .style("font-weight", "600")
   .text(`Mean: ${fmt(meanEstimate)}`);
 
 // --- Axis labels -------------------------------------------------------------
@@ -98,7 +114,10 @@ const rows = g
   .data(data)
   .join("g")
   .attr("class", "row")
-  .attr("transform", (d) => `translate(0,${y(d.category) + y.bandwidth() / 2})`);
+  .attr(
+    "transform",
+    (d) => `translate(0,${y(d.category) + y.bandwidth() / 2})`,
+  );
 
 const capHalf = 9;
 
@@ -150,8 +169,9 @@ rows
   .append("text")
   .attr("x", x(maxUpper) + 24)
   .attr("y", 5)
-  .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .style("font-weight", "600")
   .text((d) => fmt(d.estimate));
 
 // --- Title -------------------------------------------------------------------
