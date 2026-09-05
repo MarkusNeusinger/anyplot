@@ -56,6 +56,20 @@ g.append("g")
   .attr("stroke", t.grid);
 
 // --- Confidence band -----------------------------------------------------------
+// Gradient fill (subtle → stronger opacity left-to-right) makes the growing
+// forecast uncertainty a first-class visual cue, not just an implicit shape.
+const bandGradient = svg
+  .append("defs")
+  .append("linearGradient")
+  .attr("id", "band-gradient")
+  .attr("gradientUnits", "userSpaceOnUse")
+  .attr("x1", x(0))
+  .attr("x2", x(months - 1))
+  .attr("y1", 0)
+  .attr("y2", 0);
+bandGradient.append("stop").attr("offset", "0%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.12);
+bandGradient.append("stop").attr("offset", "100%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.38);
+
 const band = d3
   .area()
   .x((d) => x(d.month))
@@ -63,7 +77,7 @@ const band = d3
   .y1((d) => y(d.upper))
   .curve(d3.curveMonotoneX);
 
-g.append("path").datum(data).attr("d", band).attr("fill", t.palette[0]).attr("fill-opacity", 0.25).attr("stroke", "none");
+g.append("path").datum(data).attr("d", band).attr("fill", "url(#band-gradient)").attr("stroke", "none");
 
 // --- Central forecast line -----------------------------------------------------
 const line = d3
@@ -118,6 +132,30 @@ g.append("text")
   .style("font-size", "18px")
   .text("Units Sold (forecast)");
 
+// --- Annotation: call out the widening uncertainty ----------------------------
+const annotationPoint = data[months - 5];
+const annoX = x(annotationPoint.month);
+const annoTopY = y(annotationPoint.upper);
+const labelY = annoTopY - 46;
+
+g.append("line")
+  .attr("x1", annoX)
+  .attr("y1", labelY + 14)
+  .attr("x2", annoX)
+  .attr("y2", annoTopY - 6)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "3,3");
+
+g.append("text")
+  .attr("x", annoX)
+  .attr("y", labelY)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "15px")
+  .style("font-style", "italic")
+  .text("Interval widens as the forecast horizon grows");
+
 // --- Legend ------------------------------------------------------------------
 const legend = svg.append("g").attr("transform", `translate(${margin.left + 10},${margin.top - 22})`);
 
@@ -130,7 +168,16 @@ legend
   .style("font-size", "16px")
   .text("Forecast");
 
-legend.append("rect").attr("x", 180).attr("y", -9).attr("width", 36).attr("height", 18).attr("fill", t.palette[0]).attr("fill-opacity", 0.25);
+legend
+  .append("rect")
+  .attr("x", 180)
+  .attr("y", -9)
+  .attr("width", 36)
+  .attr("height", 18)
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.25)
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 1);
 legend
   .append("text")
   .attr("x", 226)
@@ -146,6 +193,6 @@ svg
   .attr("y", 54)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "30px")
+  .style("font-size", "40px")
   .style("font-weight", "600")
   .text("line-confidence · javascript · d3 · anyplot.ai");
