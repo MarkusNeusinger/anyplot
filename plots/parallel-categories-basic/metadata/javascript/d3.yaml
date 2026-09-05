@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: parallel-categories-basic
 created: '2026-09-05T10:03:33Z'
-updated: '2026-09-05T10:08:32Z'
+updated: '2026-09-05T10:21:53Z'
 generated_by: claude-sonnet
 workflow_run: 33959229572
 issue: 2501
@@ -12,48 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 81
 review:
   strengths:
-  - Ribbons are colored consistently by source acquisition channel across BOTH link
-    segments (channel→category and category→outcome), letting the viewer trace a full
-    path's origin all the way to its final outcome — strong data storytelling for
-    a flow diagram.
-  - A shared pixels-per-unit scale (ky, computed as the min across all three columns)
-    keeps a flow's ribbon the same height at both ends it touches, avoiding the classic
-    Sankey artifact where a link's band height differs between source and target.
-  - 'Halo-stroke text technique (paint-order: stroke with a pageBg-colored outline)
-    keeps category and outcome labels legible where they sit directly on top of colored
-    ribbons, in both light and dark themes.'
-  - 'Correct Imprint palette usage: first categorical series is #009E73, data colors
-    identical between themes, chrome (background/text) correctly flips per theme.'
-  - 'Clean canvas usage: correct 3200x1800 landscape output, mandated title format,
-    no edge clipping in either render.'
+  - 'First categorical series correctly uses Imprint #009E73 (Organic Search), verified
+    by pixel sampling; channel/category/device colors identical between light and
+    dark renders'
+  - 'Node bars use theme-adaptive ink token correctly — verified #1A1A17 fill in light
+    and #F0EFE8 in dark, exact match to style-guide chrome tokens (not just visually
+    similar)'
+  - Category labels use a paint-order stroke halo (6px, page-bg colored) so text stays
+    legible even when centered directly over crossing ribbons — confirmed via crop
+    inspection at the Electronics/Apparel node
+  - 'Deterministic, well-documented data: device-split ratios (65/35, 40/60, 55/45)
+    are explicit per-channel constants with no RNG, and the code comments explain
+    the rationale'
+  - 'Thoughtful crossing-reduction attempt: a single global dimension-order sort is
+    used consistently to stack every node, and largest-flow-first draw order keeps
+    small ribbons from disappearing under overlaps'
+  - 'Canvas gate passed (3200×1800), backgrounds match the exact style-guide hex values
+    (#FAF8F1 / #1A1A17) on both renders, title format exactly matches the mandated
+    pattern'
   weaknesses:
-  - Only 3 of the spec's allowed 3-6 categorical dimensions are used; a 4th dimension
-    (e.g. customer segment or device type) would better showcase parallel categories'
-    multi-stage value.
-  - Category ordering within each column isn't optimized to reduce ribbon crossings,
-    so the middle band gets visually dense with crossings — consider reordering categories
-    (e.g. sort by dominant flow) per the spec's own suggestion.
-  - Ribbon opacity (0.65) produces muddy blended colors where multiple channel ribbons
-    overlap in the crossing zones; a slightly different opacity or draw-order tweak
-    could keep crossings more legible.
+  - The Device Type → Purchase Outcome transition is a dense, fully-crossed lattice
+    of ribbons (36 channel×category×device×outcome combinations funnel into just 2
+    outcome nodes) — individual paths become hard to trace in that zone even though
+    colors remain distinguishable; consider a barycenter-style crossing-minimization
+    pass instead of a fixed global sort, or reduce ribbon opacity further in the densest
+    zone
+  - No hover/highlight interactivity was implemented despite D3 being a DOM-bound,
+    event-capable library and the spec's Notes explicitly calling out 'interactive
+    highlighting helps trace paths through multiple categories' — a simple mouseenter/mouseleave
+    path-highlight would have leveraged D3's distinctive strength and directly addressed
+    a spec-mentioned feature
+  - The nodePadding gap between adjacent category segments (e.g. Organic Search /
+    Paid Ads) reads as an odd lens/eye-shaped cutout where no ribbon happens to cross
+    it — mostly a byproduct of the fixed padding value colliding with ribbon curvature,
+    purely cosmetic but worth a look in a future pass
+  - Visual hierarchy stays clear only through the first transition (channel → category);
+    by the third transition the chart loses a single clear focal point and reads as
+    uniformly dense rather than guiding the eye toward a takeaway
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Title "parallel-categories-basic · javascript · d3 · anyplot.ai" centered at top in dark ink, clearly readable. Three column headers ("ACQUISITION CHANNEL", "PRODUCT CATEGORY", "PURCHASE OUTCOME") in medium-gray, uppercase, readable. All node labels (Organic Search / Paid Ads / Referral colored by channel; Electronics / Apparel / Home Goods and Purchased / Abandoned in dark gray with a light halo) are legible against both the page background and the colored ribbons behind them.
-      Data: Ribbons flow left-to-right through three vertical node columns (black bars). Ribbon width is proportional to flow count. Ribbons are colored by source acquisition channel: Organic Search = #009E73 (green, first series as required), Paid Ads = light purple/lavender, Referral = blue — consistent across both link segments. Node bars are neutral ink-colored (not overloaded with extra hues), correctly used as structural anchors rather than a categorical series.
-      Legibility verdict: PASS — no light-on-light issues found; category/outcome labels sitting on top of colored ribbons remain legible thanks to the stroke halo.
+      Background: Warm off-white, pixel-sampled at #FAF8F1 (250,248,241) — matches the style-guide exactly, not pure white.
+      Chrome: Title "parallel-categories-basic · javascript · d3 · anyplot.ai" in dark ink at top, centered, ~55% of canvas width. Four dimension headers (ACQUISITION CHANNEL, PRODUCT CATEGORY, DEVICE TYPE, PURCHASE OUTCOME) in bold small-caps gray text above each column, all clearly legible. Node bars rendered as solid near-black (#1A1A17) rectangles. Category labels (Organic Search, Paid Ads, Referral, Electronics, Apparel, Home Goods, Desktop, Mobile, Purchased, Abandoned) all readable via a page-bg-colored stroke halo that keeps them legible even where they sit directly over crossing ribbons.
+      Data: Ribbons colored by acquisition channel using the first 3 Imprint hues — green (#009E73, Organic Search), lavender/purple (Paid Ads), blue (Referral) — confirmed identical hex values to the dark render. Ribbon width is proportional to flow count. The Device→Outcome transition is visually dense with many crossings, but colors stay distinguishable at 0.82 opacity.
+      Legibility verdict: PASS — no light-on-light or illegible text found anywhere, including inside the busiest crossing zone.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Same title and column headers now rendered in light ink/gray, clearly readable against the dark background. Node labels use light halo-stroke text (still dark-gray-ish fill per token, but the paint-order halo inverts to keep contrast against ribbons) — verified via pixel crop that "Electronics" renders as light/cream text with a dark outline on the blue ribbon, fully legible.
-      Data: Same ribbon colors and channel mapping as the light render (#009E73 for Organic Search, etc.) — confirmed data colors are identical between the two renders; only chrome (background, node-bar/gap color, text) flips.
-      Legibility verdict: PASS — no dark-on-dark failures found; all title, header, and node text remain clearly visible against the near-black background.
+      Background: Warm near-black, pixel-sampled at #1A1A17 (26,26,23) — matches the style-guide exactly, not pure black.
+      Chrome: Same title and dimension headers, now rendered in light ink/inkSoft tones, clearly visible against the dark background. Node bars pixel-sampled at #F0EFE8 (240,239,232) — correctly flipped from near-black (light theme) to near-white (dark theme), confirming the "ink" token is genuinely theme-adaptive rather than a fixed color mistakenly reused. Category labels retain their dark-colored stroke halo, which still works because it's set from t.pageBg (now dark) rather than hardcoded white.
+      Data: Ribbon colors are pixel-identical to the light render (same green/purple/blue hues) — only chrome flipped, as required. No dark-on-dark failures found; all text elements were checked and remain readable.
+      Legibility verdict: PASS — no dark-on-dark text, no illegible elements in either theme.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -61,49 +74,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (17/15/24px), halo-stroke technique keeps labels
-          readable over colored ribbons in both themes.
+        comment: Explicit font sizes (24px title, 17px node labels, 15px headers);
+          stroke-halo technique keeps labels readable over crossing ribbons in both
+          themes, verified by pixel sampling
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No text collisions; ribbon crossings in the middle band get visually
-          dense but that is data-driven, not a text-overlap defect.
+        comment: No text-on-text overlap, but the Device->Outcome ribbon lattice is
+          dense enough that individual paths are hard to trace through the busiest
+          crossing zone
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Ribbon opacity 0.65 creates some muddy blended colors at crossing
-          points, but all elements remain distinguishable.
+        comment: Ribbon width proportional to count and opacity tuned (0.82), but
+          same-color ribbons blend where many overlap in the final transition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, no red-green-only encoding.
+        comment: Imprint palette is CVD-safe by design; only 3 hues used, well separated
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no overflow or clipping, balanced margins.
+        comment: Canvas gate passed (3200x1800), title ~55% width, no clipping or
+          overflow at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive column headers, correct mandated title format.
+        comment: Four descriptive dimension headers, correct mandated title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17 correct, both
-          renders theme-correct.'
+        comment: 'First series is #009E73; backgrounds pixel-verified #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,25 +127,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom bezier ribbon paths, halo-text technique, and source-consistent
-          coloring show real craft beyond a default Sankey template.
+        comment: Custom stroke-halo labeling, tuned draw order and opacity, documented
+          layout reasoning — above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines/axes clutter (appropriate for a flow diagram), generous
-          whitespace, clean column headers.
+        comment: Clean whitespace and subtle ribbon dividers, but the nodePadding
+          gap reads as an odd lens-shaped cutout where no ribbon crosses it
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Coloring both link segments by source channel (not just the first
-          hop) lets the viewer trace full acquisition-to-outcome paths, a clear focal
-          narrative.
+        passed: false
+        comment: Clear hierarchy only through the first transition; later stages read
+          as uniform density without a guided focal point
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,27 +152,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel-categories ribbon diagram across categorical dimensions.
+        comment: Correctly implements a parallel-categories ribbon diagram, not parallel
+          coordinates
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Ribbon width proportional to count, colored by source (first) dimension
-          per the spec's notes.
+        comment: Ribbon width proportional to count, colored by source dimension,
+          crossing-reduction attempted; spec-noted interactive highlighting not implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 18 channel x category x outcome combinations represented.
+        comment: All 4 categorical dimensions represented, all data shown at every
+          column
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; colored channel node labels double
-          as an implicit legend.
+        comment: Title matches mandated format exactly; first-column colored labels
+          serve as an implicit legend
     data_quality:
       score: 14
       max: 15
@@ -167,58 +184,59 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Uses the minimum of the spec's 3-6 dimension range; a 4th dimension
-          would better showcase multi-stage flows.
+        comment: Covers 4 dimensions (within spec's 3-6 range) with 2-3 values each,
+          node totals and ribbon widths both shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral e-commerce acquisition-to-purchase funnel.
+        comment: Plausible, neutral e-commerce customer-journey scenario with explicit,
+          documented device-split ratios
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts range 60-420, sensible magnitudes with a clear total.
+        comment: Counts range 27-273, sensible totals per channel
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Small single-purpose helper functions (layout, stacking, ribbon path)
-          are structurally necessary for a flow diagram, consistent with the sankey-basic
-          d3 precedent.
+        comment: A handful of small helper functions (layoutColumn, ribbonPath, etc.)
+          are used, justified by the custom Sankey-layout math but beyond a flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no RNG.
+        comment: Fully deterministic, hardcoded data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3, no unused imports.
+        comment: No extraneous imports; only the global d3 and ANYPLOT tokens are
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the visualization, no fake functionality.
+        comment: Clean, well-commented, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Respects the mount-node contract, sized from ANYPLOT_SIZE, no animation.
+        comment: Builds svg from ANYPLOT_SIZE, single svg mount, no animation
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -226,20 +244,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic d3.select/join data-binding, scaleOrdinal for color mapping.
+        comment: Idiomatic selectAll/data/join and scaleOrdinal usage; hand-rolled
+          bezier ribbons are the correct approach since D3 has no built-in parallel-categories
+          layout
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Hand-built cubic-bezier ribbon paths showcase D3's low-level SVG
-          flexibility rather than a canned chart template.
+        passed: false
+        comment: Custom cubic-bezier ribbon construction is a nice touch, but the
+          implementation never uses D3's DOM-bound event system for hover/highlight
+          interactivity, D3's most distinctive strength over declarative chart libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -247,4 +267,4 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
