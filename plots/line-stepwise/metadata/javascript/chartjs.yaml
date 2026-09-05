@@ -1,0 +1,232 @@
+library: chartjs
+language: javascript
+specification_id: line-stepwise
+created: '2026-09-05T07:54:33Z'
+updated: '2026-09-05T08:06:56Z'
+generated_by: claude-sonnet
+workflow_run: 33953677004
+issue: 2600
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Both renders are fully theme-correct: identical #009E73 data color, correct #FAF8F1/#1A1A17
+    backgrounds, all text legible in both themes'
+  - Data-driven point radius (larger markers at the peak elevator count) creates a
+    genuine focal point without any fake/simulated interactivity
+  - Example data cleanly demonstrates step persistence, both directions of change,
+    and varying segment widths
+  - 'Clean, idiomatic Chart.js code using stepped: "before" and per-point styling
+    arrays'
+  weaknesses:
+  - Design Excellence is still fairly plain for a repeat attempt - consider adding
+    one more deliberate refinement (e.g., a subtle fill under the line, or annotating
+    the peak window explicitly) to push DE-01/DE-03 further
+  - Library Mastery usage is solid but generic; leaning further into a Chart.js-distinctive
+    feature (e.g., a segment-level color/style callback highlighting the peak stretch)
+    would raise LM-02
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "line-stepwise · javascript · chartjs · anyplot.ai" in dark ink at top; axis titles "Time of Day" and "Elevators in Service" in dark ink; tick labels in soft dark gray; subtle horizontal y-axis gridlines only. All fully readable against the light background.
+      Data: Single stepped line in #009E73 teal-green with small circular markers; two markers at the 17:00/18:00 peak (value 5) use a larger radius to draw attention to the peak coverage window.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all render in light colors (light ink / soft light gray), fully legible against the near-black background. No dark-on-dark failures observed. Gridlines are faint light gray, consistent with the light render's subtlety.
+      Data: Identical #009E73 line, markers, and peak-radius emphasis as the light render - data colors unchanged between themes, confirming only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes (24/16/14px), fully readable in both themes and
+          well-proportioned
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers appropriately sized; peak markers enlarged for emphasis without
+          crowding
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong contrast in both themes, single-series green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds match
+          Imprint tokens exactly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Peak-radius accent is thoughtful but overall styling remains fairly
+          plain
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis gridlines removed, subtle y-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Enlarged peak markers create a genuine focal point guiding the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step-line chart with clear horizontal-then-vertical transitions
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step persistence and discrete jumps both clearly visible
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time of day on x, elevator count on y, all points represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches mandated pattern; legend correctly hidden
+          for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Upward and downward steps, varying jump magnitudes and segment durations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Elevators in service over operating hours is a neutral, plausible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2-5 elevators is realistic for a mid-size building with a believable
+          evening peak
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> mount -> chart config, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no manual canvas
+          sizing'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Native stepped: "before" option and per-point pointRadius/pointHoverRadius
+          arrays'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Data-driven point radius is nice but overall a fairly standard single-series
+          configuration
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
