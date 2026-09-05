@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: residual-plot
 created: '2026-09-05T12:23:57Z'
-updated: '2026-09-05T12:28:00Z'
+updated: '2026-09-05T12:37:47Z'
 generated_by: claude-sonnet
 workflow_run: 33965741710
 issue: 2332
@@ -12,77 +12,83 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 94
 review:
   strengths:
-  - 'Correct semantic palette use: brand green for the main residual series, palette[4]
-    matte red AND a triangle marker shape for outliers (redundant, CVD-safe encoding)'
-  - '±2σ threshold bands implemented via Chart.js''s relative fill: "+2" index trick,
-    with the legend filter callback cleanly hiding the two band traces so only meaningful
-    entries show'
-  - Deterministic LCG-seeded data with realistic heteroscedastic noise (variance grows
-    with fitted value) — a textbook regression-diagnostics pattern
-  - Theme-adaptive chrome (zero-reference line, axis borders, tick/text colors) consistently
-    sourced from ANYPLOT_TOKENS in both themes
+  - 'Addressed both attempt-1 weaknesses directly: added alpha transparency (rgba
+    palette[0] at 0.7) on residual markers to soften overlapping clusters, and added
+    a rolling-mean smoothed trend line to surface non-linear patterns in the residuals'
+  - 'Correct semantic palette usage: brand green (palette[0]) for the main residual
+    series, matte-red (palette[4]) AND a triangle marker shape for outliers (redundant,
+    CVD-safe encoding), amber anchor for the ±2σ threshold lines'
+  - 'Theme-adaptive ±2σ band shading: the relative-fill overlay tint flips (dark tint
+    on light bg, light tint on dark bg) so the shaded region stays subtly visible
+    in both themes instead of a single hardcoded color'
+  - Deterministic LCG + Box-Muller-style gaussian data generation with realistic heteroscedastic
+    house-price regression scenario (variance grows with fitted value)
+  - 'Idiomatic Chart.js technique mix: relative `fill: "+2"` dataset-index trick for
+    the band, `legend.filter` callback to suppress duplicate band-line legend entries,
+    mixed scatter+line datasets'
   weaknesses:
-  - No alpha transparency on the residual markers despite the spec's guidance to use
-    alpha for overlapping points — a few clusters (near fitted≈250, fitted≈560) have
-    touching/overlapping circles
-  - No optional LOWESS/kernel smoothing trend line — would add diagnostic value for
-    detecting non-linearity, though this is explicitly optional in the spec
-  - Visual refinement is solid but generic — no standout design flourish beyond the
-    functional band/outlier treatment
+  - A few marker clusters (e.g. near fitted≈250, fitted≈560) still touch slightly
+    even with alpha=0.7 — a marginally lower alpha or smaller point radius in dense
+    regions would separate them further
+  - The two ±2σ threshold lines are filtered out of the legend entirely rather than
+    merged into one labeled entry — a first-time viewer has no textual cue for what
+    the dashed amber lines represent
+  - Visual refinement is professional but not distinctive beyond the functional band/outlier/trend
+    treatments — no standout design flourish beyond what's functionally required
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec target.
-      Chrome: Title "residual-plot · javascript · chartjs · anyplot.ai" and legend ("Zero reference", "Residuals", "Outliers (>2σ)") render in dark ink; axis titles ("Fitted Value ($1,000s)", "Residual ($1,000s)") and tick labels are dark/secondary-tone and clearly legible.
-      Data: ~220 green (#009E73) circular points, solid black zero-reference line, amber dashed ±2σ bands with a faint shaded interior, ~11 red (#AE3030) triangular outlier points beyond the bands.
-      Legibility verdict: PASS
+      Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "residual-plot · javascript · chartjs · anyplot.ai" in dark ink, comfortably sized, not overflowing. Legend row below title (Zero reference / Residuals / Smoothed trend / Outliers (>2σ)) in dark text. Axis titles "Fitted Value ($1,000s)" and "Residual ($1,000s)" in dark ink with units. Tick labels in a softer dark grey. Grid lines light grey, subtle but visible. All fully readable.
+      Data: ~220 green (#009E73) circular residual points at ~0.7 alpha spread over Fitted Value ($150k-$600k) vs Residual (-80 to +80), a solid black zero-reference line, two amber dashed ±2σ lines with a faint shaded band between them, a light-purple dotted rolling-mean smoothed trend line, and ~11 matte-red triangular outlier points beyond the bands. First series correctly uses brand green.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec target.
-      Chrome: Title and legend render in light/white ink; axis titles and tick labels in a lighter secondary tone. Zero-reference line correctly flips to a light/white stroke (theme-adaptive ink token). No dark-on-dark issues found.
-      Data: Brand green circles and matte-red triangle outliers are pixel-identical in color to the light render — confirmed only chrome (background, text, zero-reference line color) flips between themes, not data colors.
-      Legibility verdict: PASS
+      Background: warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title and legend, now rendered in light/white ink, fully readable against the dark surface. Axis titles and tick labels in light tones, no dark-on-dark issues anywhere. Zero-reference line correctly flips to a light/white stroke (theme-adaptive ink token). Grid lines subtle dark-grey, still visible.
+      Data: Green circles, amber dashed bands, purple dotted trend line, and matte-red outlier triangles are pixel-identical in color and position to the light render — confirms only chrome flipped, not data colors.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes; slightly conservative
-          sizing leaves headroom
+        comment: All text readable at appropriate sizes in both themes, no dark-on-dark
+          or light-on-light failures
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: A few marker clusters (near fitted≈250, fitted≈560) touch/overlap
-          slightly
+        comment: Alpha transparency now softens clusters, but a few points near fitted≈250
+          and fitted≈560 still touch slightly
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size reasonable for n=220, but no alpha used for overlapping
-          points despite spec guidance
+        comment: Alpha=0.7 and appropriate marker size added for n=220, addressing
+          the attempt-1 finding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Outliers use both color (matte red) and shape (triangle) — CVD-safe
-          redundant encoding
+        comment: Outliers use both matte-red color and triangle shape — CVD-safe redundant
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Clean proportions, nothing clipped, canvas-gate passed
+        comment: Clean proportions, nothing clipped, canvas-gate not triggered
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -94,31 +100,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, semantic-red outliers, amber threshold
-          bands, correct theme backgrounds, identical data colors across themes
+        comment: Brand green first series, semantic red for outliers, amber anchor
+          for threshold, correct theme backgrounds, identical data colors across themes
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful touches (relative-fill band, filtered legend) but fairly
-          standard composition
+        comment: Theme-adaptive band shading, semantic color use, relative-fill technique,
+          and new trend line show real design thought
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis borders, subtle grid; no standout refinement
+        comment: Subtle grid, L-shaped axis borders, alpha blending; solid but not
+          standout
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Outlier highlighting and shaded ±2σ band create a clear focal hierarchy
+        comment: Outlier highlighting, shaded threshold band, and new smoothed trend
+          line create a clear diagnostic focal hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -128,13 +136,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct residual (scatter) plot
+        comment: Correct residual scatter plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero-reference line, ±2σ bands, outlier color-coding all present
+        comment: Zero-reference line, ±2σ bands, outlier color-coding, alpha, and
+          smoothing trend all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -146,18 +155,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels clear and filtered correctly
+        comment: Title matches mandated format; legend labels are clear and correctly
+          deduplicated
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers all required features; missing advisory alpha treatment for
-          overlap
+        comment: Now covers all spec-listed features including the two previously-missing
+          optional ones (alpha, smoothing trend)
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -180,8 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; tiny RNG helpers are the library-recommended deterministic-RNG
-          pattern
+        comment: Flat script; small RNG/rgba helpers are appropriate, not over-abstracted
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -193,7 +202,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No stray imports; Chart global used directly
+        comment: No stray imports, Chart global used directly
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -205,9 +214,10 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current API
+        comment: 'Correct mount-node contract, animation: false, current scatter/fill
+          API'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -215,22 +225,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of mixed scatter+line datasets and recommended patterns
+        comment: Good use of mixed scatter+line datasets and Chart.js recommended
+          patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Relative dataset fill index technique and legend filter callback
-          beyond generic usage
+        comment: 'Relative fill: ''+2'' index trick, theme-adaptive band tint, legend
+          filter callback, and rolling-window trend computation go well beyond generic
+          usage'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - rolling-window
   styling:
   - alpha-blending
+  - edge-highlighting
