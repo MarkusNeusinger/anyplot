@@ -1,0 +1,254 @@
+library: highcharts
+language: javascript
+specification_id: line-confidence
+created: '2026-09-05T07:05:24Z'
+updated: '2026-09-05T07:19:42Z'
+generated_by: claude-sonnet
+workflow_run: 33951293126
+issue: 2007
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Directly addressed all three Attempt 1 weaknesses: markers now mark each of the
+    41 sampled points on the trend line, the title is larger and bolder for stronger
+    hierarchy, and a new "Diminishing returns" plotLine annotation adds a genuine
+    focal point.'
+  - Confidence band is a realistic bowtie shape — narrowest near the mean fertilizer
+    rate (~100 kg/ha) and widening toward both extremes — reflecting real prediction-interval
+    statistics rather than a naive constant-width band.
+  - 'Correct, idiomatic workaround for the missing highcharts-more `arearange` module:
+    a stacked invisible-base area + visible-area technique renders the band using
+    only the core bundle.'
+  - 'Theme-adaptive chrome is fully correct: data colors (line + band) are pixel-identical
+    between light and dark, only background/text/grid tokens flip, and every text
+    element is legible in both renders with no clipping.'
+  weaknesses:
+  - 'yAxis `min: 1.5` is overridden by Highcharts'' default `startOnTick: true`, so
+    the rendered axis actually starts at 1 (visible as the bottom-most gridline/label
+    in both renders) rather than 1.5 as the code comment intends — set `startOnTick:
+    false` to reclaim that wasted canvas margin below the data.'
+  - Title still occupies only ~40-45% of the plot width even after the size bump;
+    a touch more size or letter-spacing would sharpen the top-of-hierarchy dominance
+    further (minor — not a deduction given the short mandated string).
+  - Chrome still leans on largely standard Highcharts configuration beyond the palette
+    and the one annotation — further bespoke touches (custom marker shape, refined
+    legend swatches, tooltip styling) would push Design Excellence toward the "strong
+    design" tier.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "line-confidence · javascript · highcharts · anyplot.ai" with a softer-grey subtitle beneath it. Both axis titles ("Fertilizer Application Rate (kg/ha)", "Predicted Crop Yield (t/ha)") and tick labels render in soft dark grey, all clearly legible. A vertical dashed guide line at x=150 carries a rotated "Diminishing returns" label, fully visible with no overlap. Legend at the bottom labels both series ("95% confidence interval", "Predicted yield"). Horizontal gridlines are subtle.
+      Data: A solid dark-green (#009E73) spline with small square markers at each of the 41 sampled points traces the predicted yield, wrapped in a light semi-transparent green confidence band (~0.22 alpha) that narrows near the mean fertilizer rate (~100 kg/ha) and widens toward both extremes — the correct bowtie shape for a prediction interval.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, axis titles, tick labels, legend text, and the "Diminishing returns" annotation all render in light/off-white tones and stay clearly legible — no dark-on-dark issues anywhere.
+      Data: The trend line and band use the identical #009E73-derived hue as the light render (the band reads as a deeper green against the darker surface); only chrome (background/text/grid) flipped, exactly as required. Markers remain visible and distinct from the background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 26px, subtitle/axis labels/legend
+          14px, axis titles 16px). Readable in both themes, no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, annotation label, legend, and data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers now mark the 41 sampled points; band alpha (0.22) keeps the
+          line clearly readable through it.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue line/band combination with good contrast against both
+          surfaces; not reliant on red-green.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the canvas; legend sits directly
+          below the plot, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles are descriptive with units (kg/ha, t/ha).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73; band is the same hue at reduced
+          opacity; theme-correct backgrounds and chrome in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Larger/bolder title and monochrome band-derived-from-line color show
+          intent, but overall chrome is still close to configured Highcharts defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed (lineWidth/tickWidth 0), grid subtle and Y-axis-adjacent,
+          legend refined with itemDistance/symbolRadius, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: New "Diminishing returns" plotLine annotation creates a genuine focal
+          point that guides the reader to the inflection in the curve.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line plot with confidence band, correctly implemented via stacked
+          areas.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Prominent solid trend line, semi-transparent band (0.22 alpha, within
+          0.2-0.4 spec range), legend identifying both series, gridlines present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = fertilizer rate, Y = predicted yield, axes show the full data
+          range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels ("95% confidence
+          interval", "Predicted yield") match the data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the classic widening/narrowing prediction-interval bowtie shape
+          and a diminishing-returns trend.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Crop yield vs. fertilizer application rate is a neutral, real-world
+          agronomic scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yield range (~2.8-8.7 t/ha) and fertilizer rates (0-200 kg/ha) with
+          a diminishing-returns curve are plausible for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/chart flow; the tiny LCG helper is the documented
+          pattern for browser-side seeded randomness.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed = 7) makes the data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided Highcharts global and tokens.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for the stacking trick; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Calls Highcharts.chart("container", ...) with animation disabled,
+          per the mount-node contract; no deprecated APIs.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked invisible-base + area technique is the correct idiomatic
+          workaround for the core-bundle-only arearange restriction.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines spline smoothing, stacking-based band construction, and
+          a plotLines annotation with rotated label.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
