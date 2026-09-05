@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: line-markers
 created: '2026-09-05T07:38:36Z'
-updated: '2026-09-05T07:42:49Z'
+updated: '2026-09-05T07:52:20Z'
 generated_by: claude-sonnet
 workflow_run: 33952928474
 issue: 2599
@@ -12,91 +12,82 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mark
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette order (brand green #009E73 for Wild-type, lavender #C475FD
-    for Mutant), identical data colors across light and dark renders'
-  - Distinct marker shapes (circle vs. diamond) per series as required by the spec,
-    sized proportionally to the 3.5px line weight
-  - 'Theme-adaptive marker borders (itemStyle.borderColor: t.pageBg) give the markers
-    definition against the line without introducing off-palette colors'
-  - All font sizes explicitly set (title 22px, axis names 18px, tick/legend 14-16px)
-    and balanced between X and Y axes
+  - 'Correctly addressed the previous review round: added markLine Vmax asymptote
+    annotations (DE-01/DE-03/LM-02) and dropped the X-axis split lines to a Y-only
+    grid (DE-02)'
+  - 'Correct Imprint palette order (#009E73 / #C475FD), identical data colors across
+    light and dark renders'
+  - 'Distinct marker shapes (circle vs. diamond) sized proportionally to the line
+    weight, with theme-adaptive halo borders (itemStyle.borderColor: t.pageBg) for
+    separation from the line'
+  - Deterministic data generation via a fixed-seed LCG - no Math.random, consistent
+    with the offline/reproducibility requirement
   - Realistic, neutral scientific dataset (Michaelis-Menten enzyme kinetics) with
     a clear, factually plausible Vmax/Km contrast between wild-type and mutant
-  - Deterministic data generation via a fixed-seed LCG (no Math.random), consistent
-    with the mount-node contract's offline/reproducibility requirement
-  - Canvas well-utilized (~around 65-70% of the mount) with balanced margins and no
-    clipped or overlapping text in either theme
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level: no visual hierarchy
-    or emphasis beyond the two plain lines - consider a subtle areaStyle fade under
-    one curve, a markLine/markPoint calling out the Vmax asymptote or Km crossover,
-    or a slightly heavier line weight on the primary series to create a focal point'
-  - Grid uses both X and Y split lines at full density for a 2-series line chart -
-    consider dropping the X-axis split lines (keep Y-axis grid only) per the style
-    guide's grid guideline for line charts, which would also declutter the plot
-  - 'Library Mastery is generic: the option object (line + symbol series, standard
-    legend/axes) could be built almost identically in Chart.js or Highcharts - leverage
-    an ECharts-distinctive feature such as markLine (e.g., a dashed asymptote at Vmax)
-    or a smooth/step interpolation toggle to demonstrate library-specific capability'
-  - Only one data-quality dimension is exercised (two smooth saturating curves) -
-    consider adding a visual cue for the 'sparse/discrete measurement' framing from
-    the spec notes, e.g., slightly larger markers or a subtitle noting units, to sharpen
-    the 'quality-control style discrete readings' angle mentioned in the spec's Applications
-    section
+  - 'Confirmed bug: both markLine labels ("Wild-type Vmax", "Mutant Vmax") render
+    at ~50% opacity in both themes. Pixel sampling shows the rendered label color
+    is an exact alpha-blend of t.palette[0]/t.palette[1] at 0.5 over the page background
+    (e.g. light theme: (0,158,115) blended 50% over (250,248,241) = (125,203,178),
+    matching the measured pixel exactly) - the opacity: 0.5 set on markLine.lineStyle
+    is bleeding into the sibling label object even though label does not itself declare
+    opacity. Contrast against the page background is only ~1.7-2.4:1 in both themes,
+    well under the ~4.5:1 needed for reliable legibility. Fix: explicitly set label:
+    { opacity: 1, ... } on each markLine so the ''Vmax'' annotation text renders at
+    full, non-diluted t.palette[n] strength in both themes.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "Enzyme Kinetics · line-markers · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend ("Wild-type" green circle, "Mutant" purple diamond) sits directly below the title, readable in medium-gray text. Axis names ("Substrate Concentration (mM)", "Reaction Rate (µM/min)") and tick labels are dark/soft-gray and fully legible against the light background. Grid lines are light gray and subtle but visible on both axes.
-      Data: Two saturating (Michaelis-Menten) curves with visible markers at each of the 11 data points - Wild-type in brand green (#009E73) with circle markers, Mutant in lavender (#C475FD) with diamond markers. Markers have a thin light-colored border for contrast against the line.
-      Legibility verdict: PASS - no text is light-on-light, no clipping observed.
+      Chrome: Title "Enzyme Kinetics · line-markers · javascript · echarts · anyplot.ai" centered at top in dark ink, fully legible. Legend ("Wild-type" green circle, "Mutant" purple diamond) sits below the title in medium-gray text, readable. Axis names ("Substrate Concentration (mM)", "Reaction Rate (µM/min)") and tick labels are dark/soft-gray, fully legible. Only Y-axis split lines shown (X-axis split lines removed vs. the previous attempt), subtle and visible.
+      Data: Two Michaelis-Menten saturation curves - Wild-type in brand green (#009E73, circle markers) and Mutant in lavender (#C475FD, diamond markers), each marker with a light halo border. New: two dashed horizontal markLine references labeled "Wild-type Vmax" and "Mutant Vmax" call out each curve's asymptote.
+      Legibility verdict: FAIL for the two markLine labels only - both render at ~50% opacity (measured pixel colors are an exact 0.5-alpha blend of the series color over the page background), giving contrast ~1.7-2.4:1 against #FAF8F1, well under the ~4.5:1 needed. All other text (title, legend, axis names, ticks) PASSES with no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title, legend, and axis chrome now rendered in light ink (title/axis names near-white, tick/legend text light gray), fully legible against the dark background. Grid lines are faint light-gray, visible without competing with the data. No dark-on-dark text anywhere.
-      Data: Same two curves in the identical green (#009E73) and lavender (#C475FD) hues as the light render - data colors are unchanged between themes, only chrome (background, text, grid) flips as required. Marker borders now use the dark page background color for contrast.
-      Legibility verdict: PASS - all chrome text is clearly readable on the dark surface, no dark-on-dark failures.
+      Chrome: Same title/legend/axis/tick chrome now in light ink/gray, fully legible, no dark-on-dark failures.
+      Data: Colors are pixel-identical to the light render (#009E73 / #C475FD) - only chrome flips, as required. Same markLine Vmax annotations present.
+      Legibility verdict: FAIL for the two markLine labels only - same opacity-bleed bug produces ~2.0-2.4:1 contrast against #1A1A17, well under the ~4.5:1 needed. All other chrome text PASSES with no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 22px, axis names 18px, ticks/legend
-          14-16px); readable in both themes, no overflow
+        passed: false
+        comment: Title/legend/axis/tick text fully legible in both themes, but the
+          two 'Vmax' markLine annotation labels render at ~50% opacity in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker collisions in either render
+        comment: No collisions between any text, markers, or lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 11-point series get large, prominent markers (16-18px) proportional
+        comment: 11-point sparse series get large, prominent markers (16-18px) relative
           to the 3.5px line weight
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Green/lavender pairing is CVD-safe and reinforced by distinct marker
-          shapes (redundant encoding)
+        passed: false
+        comment: Vmax label contrast measured at ~1.7-2.4:1 in both themes, well under
+          WCAG-AA 4.5:1
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a healthy majority of the mount with balanced top/bottom/left/right
-          margins
+        comment: Canvas gate passed (3200x1800), no clipping, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -111,30 +102,29 @@ review:
         comment: 'First series #009E73, second #C475FD (canonical order); backgrounds
           correctly theme-adaptive; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default - correct palette and marker borders,
-          but no distinctive palette/typography choices beyond the required tokens
+        passed: true
+        comment: New Vmax markLine references with matched color-coding and theme-adaptive
+          halo markers show real design intent, held back by the opacity bug
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: No spines, generous whitespace, but grid is shown on both axes at
-          full density for a simple 2-series line chart
+        passed: true
+        comment: Grid correctly reduced to Y-axis only, spines minimal, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear visual comparison between wild-type and mutant via color, but
-          no focal point or annotation calling out the key insight (Vmax/Km difference)
+        passed: true
+        comment: Asymptote reference lines create a genuine focal point contrasting
+          wild-type vs. mutant Vmax
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line plot with markers at every data point, correct type
+        comment: Correct line-with-markers chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct marker shapes per series, marker size proportional to line
-          thickness, markers clearly visible against lines
+        comment: Distinct marker shapes per series, size proportional to line thickness,
+          markers clearly visible against the line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = substrate concentration, Y = reaction rate, all points visible
-          within axis bounds
+        comment: X = substrate concentration, Y = reaction rate; all points within
+          axis bounds
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · line-markers · javascript ·
-          echarts · anyplot.ai'; legend labels match series names
+        comment: Title matches required format; legend labels match series names
     data_quality:
       score: 14
       max: 15
@@ -175,22 +164,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows saturating kinetics with clearly different Vmax/Km behavior
-          between the two series; no outliers or discrete-measurement framing beyond
-          the smooth curve
+        comment: Clear saturating-kinetics comparison with distinct Vmax/Km behavior;
+          still limited to one data-shape pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Enzyme kinetics is a real, neutral, comprehensible scientific scenario
+        comment: Michaelis-Menten enzyme kinetics is a real, neutral, comprehensible
+          scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Vmax/Km values and resulting reaction rates are realistic for Michaelis-Menten
-          kinetics
+        comment: Vmax/Km values and resulting rates are realistic for this domain
     code_quality:
       score: 9
       max: 10
@@ -200,8 +188,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Flat data-then-option script, but introduces two small helper functions
-          (lcgNoise, michaelisMenten)
+        comment: Flat data-then-option script; two small helper functions (lcgNoise,
+          michaelisMenten)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,22 +201,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts, nothing unused
+        comment: No imports beyond the global echarts
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake functionality
+        comment: Clean, appropriately concise, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows mount-node contract: no explicit size/devicePixelRatio on
-          init, animation: false set'
+        comment: 'Follows the mount-node contract; animation: false set; no explicit
+          size/devicePixelRatio'
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -240,17 +228,19 @@ review:
           config
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic line+symbol series - no ECharts-distinctive feature (markLine,
-          markPoint, areaStyle gradient, etc.) used
+        passed: true
+        comment: markLine asymptote references are a genuine ECharts-distinctive feature;
+          opacity-bleed bug keeps this from a full score
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - edge-highlighting
+  - alpha-blending
