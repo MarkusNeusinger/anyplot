@@ -54,13 +54,32 @@ const rugValues = d3.range(140).map(() => {
   return Math.max(xMin, Math.min(xMax, v));
 });
 
+// ICE (individual conditional expectation): a handful of per-sample curves
+// with their own baseline offset and slope, sitting alongside the averaged PDP.
+const iceCount = 8;
+const iceLines = d3.range(iceCount).map(() => {
+  const offset = 12 * randNormal(rand);
+  const scale = 1 + 0.12 * randNormal(rand);
+  return partialDependence.map((v) => v * scale + offset);
+});
+
 // --- Scales -------------------------------------------------------------
 const x = d3.scaleLinear().domain([xMin, xMax]).range([0, iw]);
+const iceExtent = iceLines.flat();
 const y = d3
   .scaleLinear()
-  .domain([d3.min(ciLower), d3.max(ciUpper)])
+  .domain([d3.min([...ciLower, ...iceExtent]), d3.max([...ciUpper, ...iceExtent])])
   .nice()
   .range([ih, 0]);
+
+// Thin the rug in dense regions so ticks read as texture, not a solid blob.
+const rugBins = d3.bin().domain(x.domain()).thresholds(40)(rugValues);
+const maxTicksPerBin = 4;
+const thinnedRug = rugBins.flatMap((bin) =>
+  bin.length <= maxTicksPerBin
+    ? bin
+    : d3.range(maxTicksPerBin).map((i) => bin[Math.floor((i * bin.length) / maxTicksPerBin)])
+);
 
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -85,6 +104,22 @@ const area = d3
   .curve(d3.curveMonotoneX);
 g.append("path").datum(featureValues).attr("d", area).attr("fill", t.palette[0]).attr("fill-opacity", 0.16);
 
+// ICE lines — faint per-sample curves drawn beneath the averaged PDP curve
+const iceLine = d3
+  .line()
+  .x((d, i) => x(featureValues[i]))
+  .y((d) => y(d))
+  .curve(d3.curveMonotoneX);
+g.selectAll(".ice")
+  .data(iceLines)
+  .join("path")
+  .attr("class", "ice")
+  .attr("d", iceLine)
+  .attr("fill", "none")
+  .attr("stroke", t.palette[0])
+  .attr("stroke-opacity", 0.15)
+  .attr("stroke-width", 1);
+
 // Partial dependence curve
 const line = d3
   .line()
@@ -100,7 +135,7 @@ g.append("path")
 
 // Rug plot — distribution of observed feature values along the x-axis
 g.selectAll(".rug")
-  .data(rugValues)
+  .data(thinnedRug)
   .join("line")
   .attr("class", "rug")
   .attr("x1", (d) => x(d))
@@ -108,7 +143,7 @@ g.selectAll(".rug")
   .attr("y1", ih + 34)
   .attr("y2", ih + 48)
   .attr("stroke", t.inkSoft)
-  .attr("stroke-opacity", 0.5)
+  .attr("stroke-opacity", 0.45)
   .attr("stroke-width", 1.5);
 
 // Direct label for the shaded band (single series → no legend needed)
@@ -118,7 +153,7 @@ g.append("text")
   .attr("text-anchor", "end")
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
-  .text("90% prediction interval");
+  .text("prediction interval");
 
 // --- Axes -----------------------------------------------------------------
 const xAxis = g
