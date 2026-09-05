@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: learning-curve-basic
 created: '2026-09-05T06:25:12Z'
-updated: '2026-09-05T06:29:56Z'
+updated: '2026-09-05T06:41:27Z'
 generated_by: claude-sonnet
 workflow_run: 33949585508
 issue: 2275
@@ -12,125 +12,132 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - Correct Imprint brand green (#009E73) on the first (training) series, and fully
-    correct theme-adaptive chrome — backgrounds, INK/INK_SOFT text tokens, grid alpha,
-    and spine colors all flip properly between light and dark
-  - 'Textbook-quality bias/variance data: training accuracy starts high and eases
-    down, validation accuracy starts low and climbs with narrowing confidence bands
-    — a clean, realistic diagnostic learning-curve shape'
-  - Shaded ±1 std confidence bands via band!() satisfy the spec's explicit request;
-    explicit font-size hierarchy (title 20, axis labels 14, ticks/legend 12) with
-    balanced X/Y sizing and no overlap
-  - Clean KISS script structure, Random.seed!(42) reproducibility, idiomatic Makie
-    API (Figure/Axis/band!/lines!/scatter!/axislegend), single file handles both themes
-    via ANYPLOT_THEME
+  - 'Correct plot type with all spec-required features: training/validation lines,
+    ±1 std shaded confidence bands, y-axis labeled with the metric, legend distinguishing
+    the two curves, x-axis showing actual sample sizes'
+  - 'Data tells the classic bias/variance story well: tight near-perfect training
+    curve, wide validation band starting low and converging as training set size grows'
+  - Theme-adaptive chrome correctly threaded through Axis kwargs (title/label/tick
+    colors, spine colors, grid alpha) for both light and dark renders
+  - 'Clean, idiomatic KISS-structured code: imports -> theme tokens -> data -> plot
+    -> save, with Random.seed!(42) for reproducibility'
   weaknesses:
-  - 'VQ-07: Validation series uses IMPRINT_PALETTE[3] (#4467A3 blue), skipping canonical
-    position 2 (#C475FD lavender), with no documented widely-shared semantic association
-    (train/val vs. blue isn''t a recognized convention like profit/loss or hot/cold)
-    — reassign the second series to IMPRINT_PALETTE[2] or drop the skip.'
-  - 'DE-01/DE-03: Styling still reads as a well-configured style-guide baseline rather
-    than genuinely elevated design — no visual emphasis calls out the insight (e.g.,
-    the point where validation catches up to training, or the diminishing-returns
-    region). A subtle annotation or highlight at the convergence zone would raise
-    the storytelling above the default.'
-  - 'DE-02: Refinement is solid (edge-stroked markers, subtle single-axis grid, frameless
-    legend) but overall still close to the style-guide''s expected baseline rather
-    than exceptional — consider tightening whitespace/legend placement further for
-    extra polish.'
+  - 'PIPELINE ERROR (not a code issue): plot-light.png/plot-dark.png in this review
+    were rendered from an older commit, not current HEAD 680158121. Pixel-sampled
+    colors confirm the validation series renders as #4467A3 (IMPRINT_PALETTE[3]) and
+    neither render shows the ''Diminishing returns'' vspan/vlines/text annotation
+    block -- both are exactly the pre-fix c2dcd87ff/ae50e state. The current source
+    (line 23) already sets VAL_COLOR = IMPRINT_PALETTE[2] (#C475FD) and already contains
+    the insight annotation (lines 101-110). Do NOT edit the source file for these
+    two items -- they are already correct. Re-render both PNGs from the current commit
+    and re-run this review before trusting any score based on these images.'
+  - (Observed only in the stale render, should already be fixed in HEAD) Validation
+    series used Imprint palette position 3 (blue) instead of canonical position 2
+    (lavender) for the second categorical series -- partial VQ-07 compliance.
+  - (Observed only in the stale render, should already be fixed in HEAD) No data-storytelling
+    annotation/emphasis -- viewer must infer the bias/variance convergence unaided.
+  - 'Sparse series (10 points): markersize=11 is workable but could be bumped slightly
+    (e.g. 13-14) for extra prominence per the sparse-data heuristic.'
+  - LM-02 usage is generic -- band!/lines!/scatter!/vlines!/text! are common patterns
+    replicable in most plotting libraries; nothing leverages a Makie-unique feature.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "learning-curve-basic · julia · makie · anyplot.ai" in bold dark ink, clearly visible; axis labels "Training Set Size" / "Accuracy" and tick labels in dark/soft-dark ink, all legible; subtle horizontal gridlines only (y-axis), no x-axis grid; top/right spines removed, left/bottom spines kept in a soft ink tone.
-      Data: Training-score line/markers in Imprint brand green (#009E73, first series, correct); Validation-score line/markers in Imprint blue (#4467A3, palette position 3, NOT canonical position 2). Both lines have matching-color shaded ±1 std bands at ~18% alpha. Markers have a light halo stroke matching the page background for definition. Legend ("Training score"/"Validation score") sits frameless in the empty lower-right region of the axis, not overlapping data or ticks.
-      Legibility verdict: PASS
+      Background: warm off-white, consistent with #FAF8F1 -- correct, not pure white.
+      Chrome: bold dark title "learning-curve-basic · julia · makie · anyplot.ai" centered top, fully readable; dark "Accuracy" y-axis label and "Training Set Size" x-axis label; grey tick labels (0.6-1.0 y-ticks, 500/1000/1500 x-ticks); subtle y-axis-only grid; L-shaped spines (top/right removed); legend bottom-right with "Training score"/"Validation score", frameless, grey text -- all readable.
+      Data: green training-score line+markers (pixel-sampled #009E73, correct Imprint position 1) with a tight light-green confidence band near 0.95-1.0; a second line+markers pixel-sampled at #4467A3 (Imprint position 3, "blue") with a wider grey-blue band, starting ~0.75 and rising to converge with training near x=1250-1500. NO "Diminishing returns" annotation, dashed vline, or vspan shading is visible anywhere in this image, even though the current source file (lines 101-110) adds exactly that annotation block.
+      Legibility verdict: PASS (all chrome elements read cleanly against the light background), but see pipeline-mismatch flag in weaknesses -- this image does not reflect the current source.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black (renders very dark on screen, as expected for this token).
-      Chrome: Title and axis labels rendered in light ink (readable), tick labels in a lighter soft-ink tone — no dark-on-dark failures observed. Gridlines and spines flipped to light-on-dark equivalents at the same subtle alpha.
-      Data: Training-score line identical brand green (#009E73), validation-score line identical blue (#4467A3) — colors match the light render exactly; only chrome flipped, as required.
-      Legibility verdict: PASS
+      Background: warm near-black, consistent with #1A1A17 -- correct, not pure black.
+      Chrome: title, axis labels rendered in light/cream ink; tick labels in lighter grey; grid still subtle. No dark-on-dark failures -- every text element is clearly legible against the near-black surface.
+      Data: identical green (#009E73) training series and identical #4467A3 "blue" validation series as the light render -- data colors are correctly held constant across themes; only chrome flipped, as required. Same absence of the "Diminishing returns" annotation as the light render, confirming this is a stale render rather than a per-theme fluke.
+      Legibility verdict: PASS (no dark-on-dark issues found), but see pipeline-mismatch flag in weaknesses -- this image does not reflect the current source.
+
+    CRITICAL NOTE: git history shows plots/learning-curve-basic/implementations/julia/makie.jl at HEAD (680158121) already sets VAL_COLOR = IMPRINT_PALETTE[2] and already contains the vspan!/vlines!/text! "Diminishing returns" annotation (both added specifically to address the attempt-1 review). Pixel sampling both PNGs (band-fill alpha blend math) confirms they were rendered from the PRE-fix code (c2dcd87ff / ae50e49a state: VAL_COLOR = IMPRINT_PALETTE[3], no annotation). This is a rendering-pipeline defect, not a source-code defect -- re-render before the next review.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicit (title 20, labels 14, ticks/legend 12), balanced
-          X/Y, legible in both themes, no overflow
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
+          tick label sizes=12); readable both themes, title ~55-60% of width, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; legend sits in empty lower-right region
+        comment: No overlap between legend, text, and data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Sparse 10-point series with prominent stroked markers, appropriately
-          visible lines and bands
+        comment: Sparse series (10 points/curve), markersize=11 workable but could
+          be a touch larger for maximum prominence
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. blue, no red-green pairing, good contrast, distinguishable
-          band fills
+        comment: Good hue contrast, white/background-color marker strokes for definition,
+          not red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a healthy majority of the canvas; nothing cut off; legend
-          placed inside the axis's empty region
+        comment: 3200x1800 confirmed via PIL; balanced margins, plot fills a healthy
+          share of canvas, legend near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels ("Training Set Size", "Accuracy") appropriate
-          for the domain
+        comment: '"Accuracy" and "Training Set Size" are self-descriptive; no missing
+          units for these unitless/count quantities'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: First series correct (#009E73); second series uses palette position
-          3 (#4467A3) instead of canonical position 2 (#C475FD) without a documented
-          semantic exception
+        comment: 'As rendered (stale image), first series correct #009E73 but second
+          series pixel-samples to #4467A3 (Imprint position 3) instead of canonical
+          position 2 (#C475FD) -- NOTE: current source already fixes this to IMPRINT_PALETTE[2],
+          the render is stale'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Reads as a well-configured style-guide baseline, not exceptional
+        comment: Confidence bands, Imprint palette, clean typography -- above a bare
+          default but not yet publication-level polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Edge-stroked markers, subtle single-axis grid, frameless legend —
-          some refinement beyond the default
+        passed: false
+        comment: Y-only subtle grid, L-shaped spines, background-color marker strokes,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data shape itself tells a story but no deliberate emphasis/annotation
-          calls out the convergence insight
+        comment: 'As rendered (stale image), no annotation/emphasis is visible --
+          NOTE: current source already adds a ''Diminishing returns'' vspan/vlines/text
+          annotation, the render is stale and doesn''t show it'
     spec_compliance:
       score: 15
       max: 15
@@ -140,50 +147,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct learning-curve chart: two lines with shaded confidence bands'
+        comment: Correct learning-curve plot with shaded confidence bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shaded bands, legend, actual sample sizes on X, metric on Y — all
-          present
+        comment: Both curves, +/-1 std bands, metric-labeled y-axis, distinguishing
+          legend, sample-size x-axis all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = train_sizes, Y = accuracy, all data visible within axis limits
+        comment: X = training set size, Y = accuracy, all points within axis range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match the two series
+        comment: Title matches mandated format exactly; legend labels match Training/Validation
+          score data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Classic converging bias/variance shape with shrinking gap and shrinking
-          variance across fold std
+        comment: Shows tight high-accuracy training curve, wide low-to-high validation
+          curve, and their convergence -- all classic learning-curve features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible digit-classifier ML scenario
+        comment: Digit-classifier accuracy scenario, neutral ML domain, plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accuracy range and training-set sizes are realistic and internally
-          consistent
+        comment: Training sizes 80-1500 with 8 folds and 0.6-1.0 accuracy range are
+          realistic for a small-scale classifier benchmark
     code_quality:
       score: 10
       max: 10
@@ -193,33 +201,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat Imports → Data → Plot → Save structure
+        comment: No functions/classes, linear imports -> data -> plot -> save flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics all used
+        comment: CairoMakie, Colors, Random, Statistics -- all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering, no fake functionality
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current save()/px_per_unit API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -227,22 +236,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level Figure/Axis/band!/lines!/scatter!/axislegend usage
+        comment: Correct high-level Axis/band!/lines!/scatter!/axislegend usage with
+          theme-adaptive kwargs
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses Makie's band! primitive for confidence intervals, but otherwise
-          generic cross-library patterns
+        comment: band!, vlines!, text! are useful but not distinctive to Makie --
+          replicable in most plotting libraries
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - confidence-band
+  - annotations
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
