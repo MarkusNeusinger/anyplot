@@ -52,35 +52,63 @@ g.append("line")
   .attr("y1", y(0))
   .attr("y2", y(inertia[elbowK - 1]))
   .attr("stroke", t.inkSoft)
-  .attr("stroke-dasharray", "5,5")
-  .attr("stroke-width", 1.5);
+  .attr("stroke-dasharray", "4,4")
+  .attr("stroke-width", 1);
 
-// --- Connecting line ---------------------------------------------------------
+// --- Connecting line (curveMonotoneX: a d3-shape interpolation that keeps the
+// curve monotone between points, so the elbow bend reads as a smooth shape
+// instead of jointed straight segments, without overshooting the data) -------
 const line = d3
   .line()
   .x((d, i) => x(kValues[i]))
-  .y((d) => y(d));
+  .y((d) => y(d))
+  .curve(d3.curveMonotoneX);
 g.append("path").datum(inertia).attr("fill", "none").attr("stroke", t.palette[0]).attr("stroke-width", 3.5).attr("d", line);
 
-// --- Markers, with the elbow point picked out in amber -----------------------
-g.selectAll("circle")
+// --- Elbow halo: a non-semantic ink ring (no amber) draws the eye to the
+// optimal point while its size, not its hue, carries the emphasis ------------
+g.append("circle")
+  .attr("cx", x(elbowK))
+  .attr("cy", y(inertia[elbowK - 1]))
+  .attr("r", 17)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5)
+  .attr("opacity", 0.35);
+
+// --- Markers, with the elbow point picked out by size + a bolder page-bg
+// stroke rather than a semantic (warning) color ------------------------------
+g.selectAll("circle.point")
   .data(inertia)
   .join("circle")
+  .attr("class", "point")
   .attr("cx", (d, i) => x(kValues[i]))
   .attr("cy", (d) => y(d))
   .attr("r", (d, i) => (kValues[i] === elbowK ? 11 : 7))
-  .attr("fill", (d, i) => (kValues[i] === elbowK ? t.amber : t.palette[0]))
+  .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 2);
+  .attr("stroke-width", (d, i) => (kValues[i] === elbowK ? 3 : 2));
 
-// --- Elbow annotation (spec explicitly calls for highlighting the optimal k) --
-g.append("text")
-  .attr("x", x(elbowK) + 16)
-  .attr("y", y(inertia[elbowK - 1]) - 16)
+// --- Elbow annotation (spec explicitly calls for highlighting the optimal k) —
+// a small-caps label over a bold value gives the callout its own typographic
+// hierarchy instead of a single line at the axis-label weight ----------------
+const annotation = g
+  .append("g")
+  .attr("transform", `translate(${x(elbowK) + 16},${y(inertia[elbowK - 1]) - 34})`);
+annotation
+  .append("text")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .style("font-weight", "500")
+  .style("letter-spacing", "0.06em")
+  .text("OPTIMAL CLUSTER COUNT");
+annotation
+  .append("text")
+  .attr("y", 22)
   .attr("fill", t.ink)
-  .style("font-size", "16px")
-  .style("font-weight", "600")
-  .text(`Optimal k = ${elbowK}`);
+  .style("font-size", "20px")
+  .style("font-weight", "700")
+  .text(`k = ${elbowK}`);
 
 // --- Axis labels -------------------------------------------------------------
 svg
