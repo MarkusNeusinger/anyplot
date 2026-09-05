@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: gantt-basic
 created: '2026-09-05T02:55:21Z'
-updated: '2026-09-05T03:11:15Z'
+updated: '2026-09-05T03:17:37Z'
 generated_by: claude-sonnet
 workflow_run: 33940088127
 issue: 2377
@@ -12,65 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/muix/plot-dark.html
-quality_score: 70
+quality_score: 88
 review:
   strengths:
-  - Clever use of a stacked horizontal BarChart (invisible offset segment + per-category
-    segments) to fake a native Gantt layout in a library with no Gantt primitive —
-    bars land at the correct start/end days.
-  - 'ChartsReferenceLine gives a clean dashed ''Status: Feb 20'' marker exactly as
-    the spec''s ''vertical line for current date'' requirement asks for, labelled
-    and readable in both themes.'
-  - 'Categorical colors follow the Imprint canonical order exactly (Design=brand green
-    #009E73, Development=lavender, Testing=blue, Launch=ochre) and are pixel-identical
-    between light and dark renders — only chrome flips.'
-  - Tasks are logically grouped by phase and ordered by start date, with generous
-    category gap ratio (0.35) giving each bar clear breathing room.
-  - Date axis uses a plain day-offset linear scale with a valueFormatter rendering
-    calendar dates ('Jan 5', 'Feb 16', ...) at a sensible 14-day tick interval — clean
-    and uncluttered for a ~2.5 month project.
-  - Title, axis labels and legend are all explicitly sized and fully legible in both
-    light and dark renders; no clipping, overlap, or dark-on-dark/light-on-light failures.
+  - Clever offset-stack technique (invisible offset segment + per-category duration
+    segment) renders a true start-to-end Gantt bar from MUI X's community BarChart,
+    which has no native Gantt component
+  - 'Correct Imprint palette usage — first category (Design) is brand green #009E73,
+    remaining three follow canonical positions 2-4, identical between light and dark
+    renders'
+  - Fully theme-adaptive chrome — title, legend, axis ticks, grid and reference-line
+    label all readable in both themes with no dark-on-dark or light-on-light failures
+  - 'Status reference line (''Status: Feb 20'') satisfies the spec''s ''vertical line
+    for current date'' requirement with a clean dashed style and legible label'
+  - Cleanly reverted the previous attempt's broken done/remaining progress-shading
+    — the implementation is back to a simple, fully-functional state with no dead
+    code or non-rendering features
+  - Realistic, well-scaled 11-task project timeline across 4 logically ordered phases
+    (Design → Development → Testing → Launch) spanning ~10 weeks
+  - No overlap or edge clipping in either render; generous margins and adequate category-gap
+    spacing between task bars
   weaknesses:
-  - 'The ''Done'' vs ''Remaining vs. status date'' progress encoding is non-functional:
-    every bar renders as a single full-opacity solid color, with zero visible transition
-    at the status date, in BOTH themes. Verified by pixel sampling: Frontend Development
-    (Development series, expected done=22d solid / remaining=4d at rgba(...,0.4))
-    is uniform (196,117,253) across its entire width with no lighter tail; Unit Testing
-    (Testing series, expected done=0 / remaining=8d, i.e. the WHOLE bar should render
-    at 0.4 alpha) instead renders fully opaque (68,103,163), identical to a ''done''
-    segment. The second legend row (''Done'' solid swatch / ''Remaining vs. status
-    date'' faded swatch) therefore promises a distinction the chart never shows —
-    likely because MUI X BarChart resolves per-segment styling by the shared `label:
-    category` rather than the per-series `color`/`id`, so the ''-done'' and ''-remaining''
-    series for the same category collapse to one visual style. Either fix the color
-    resolution so the 0.4-alpha ''remaining'' segments actually render lighter (e.g.
-    verify per-series `color` truly overrides when two series share a `label`, or
-    differentiate via a distinguishing prop), or drop the done/remaining split and
-    its legend row entirely — the Gantt chart already fully satisfies the spec via
-    the status reference line alone.'
-  - Because the progress split does nothing visually, the ~35 lines of supporting
-    code (OFFSET_SERIES, hexToRgba, PROGRESS mapping, 8 extra done/remaining series
-    feeding CATEGORIES.flatMap) add real complexity for zero delivered value — this
-    is dead/misleading complexity rather than appropriate sophistication.
-  - 'Data Storytelling only partially lands: the status reference line does useful
-    work, but the intended ''which tasks are ahead/behind schedule'' visual hierarchy
-    (via done/remaining shading) is completely absent from the rendered output.'
+  - Title occupies only ~40% of canvas width, on the low side of the 50-70% guideline
+    given the room available — could use a slightly larger title fontsize scaling
+    constant
+  - Design stays close to a standard categorical stacked-bar look; no visual hierarchy
+    differentiates completed vs. upcoming work relative to the status line (acceptable
+    trade-off given the prior attempt's non-functional attempt at this feature)
+  - Only one distinctive MUI X feature (ChartsReferenceLine) is used beyond the base
+    BarChart
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Website Redesign Timeline · gantt-basic · javascript · muix · anyplot.ai" in dark ink at top-left, fully visible and not clipped. A category legend row (Design/Development/Testing/Launch swatches + labels) and a second row (Done / Remaining vs. status date swatches + labels) sit below the title. X-axis shows date labels (Jan 5, Jan 19, Feb 2, Feb 16, Mar 2, Mar 16) with subtle vertical gridlines; axis title "Project Timeline" below. Y-axis lists 11 task names in dark-soft ink. A black dashed vertical reference line labeled "Status: Feb 20" crosses the chart. All text is clearly readable against the light background — no light-on-light issues.
-      Data: 11 horizontal bars positioned at their correct start/end day offsets, colored by category using the Imprint palette (Design=brand green #009E73, Development=lavender #C475FD, Testing=blue #4467A3, Launch=ochre #BD8233) — first category correctly uses the mandatory brand green. However, pixel sampling confirms every bar renders as a single flat, full-opacity color regardless of whether the task is fully complete, fully upcoming, or split by the status date — the "Remaining vs. status date" lighter-tint segment promised by the second legend row never actually appears (e.g. Unit Testing, which starts after the Feb 20 status date and should render entirely in the pale "remaining" tint, instead renders as the same solid blue as any "done" bar).
-      Legibility verdict: PASS (readability), but the done/remaining data encoding itself is broken — see weaknesses.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Website Redesign Timeline · gantt-basic · javascript · muix · anyplot.ai" in dark ink, clearly legible; a 4-item category legend (Design/Development/Testing/Launch) with color swatches below it; y-axis lists 11 task names in secondary ink; x-axis shows calendar-date ticks (Jan 5 … Mar 16) with axis title "Project Timeline"; subtle vertical gridlines every ~2 weeks; dashed reference line labeled "Status: Feb 20" in bold dark text. All chrome text is clearly readable against the light background.
+      Data: 11 horizontal bars, one per task, each floating at its correct start/end offset via the invisible leading segment. Colors follow Imprint canonical order: Design=brand green #009E73, Development=lavender, Testing=blue, Launch=ochre.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend rows, axis labels and task names as the light render, now rendered in light ink/white against the dark background — all clearly legible, no dark-on-dark failures anywhere (title, ticks, legend text, task names all confirmed readable). The status reference line and its "Status: Feb 20" label render in white/light ink with a dashed white line, correctly adapted from the light render's black line.
-      Data: Bar colors are pixel-identical to the light render (verified: Development bar = rgb(196,117,253) in both renders, Testing bar = rgb(68,103,163) in both renders) — only chrome flips between themes, as required. The same done/remaining rendering bug is present here too: Unit Testing (entirely "remaining") still renders as the same solid full-opacity blue seen in tasks that are fully "done," with no alpha-blended lighter segment in either theme.
-      Legibility verdict: PASS (readability), but same broken progress-encoding as the light render.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, legend, axis labels and ticks now render in light ink/off-white, clearly legible; grid lines remain subtle but visible; the dashed reference line and "Status: Feb 20" label render in white — confirmed NOT dark-on-dark.
+      Data: Colors are identical to the light render (only chrome flipped) — Design green, Development lavender, Testing blue, Launch ochre all match pixel-for-pixel across themes.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability checklist; no canvas-dimension gate file was present, so the 3200x1800 landscape canvas gate passed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -78,78 +65,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels and legend text all explicitly sized
-          and fully readable in both light and dark renders; no dark-on-dark/light-on-light
-          issues.
+        comment: All text readable in both themes; title fills only ~40% of width,
+          on the low side of the 50-70% guideline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or bar collisions; generous categoryGapRatio (0.35) keeps
-          rows well separated.
+        comment: No collisions between text, legend, or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars are thick and clearly visible; only 11 tasks so no overplotting,
-          but the intended done/remaining shading distinction is invisible (see weaknesses).
+        comment: Bars are prominent and well-spaced (categoryGapRatio 0.35) for 11
+          tasks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinct hue families (green/purple/blue/ochre), CVD-safe, no
-          red-green pairing.
+        comment: Imprint palette is CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; good margins, no clipping or overflow.
+        comment: No clipping, generous margins, correct 3200x1800 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Project Timeline'' x-axis label present; task names serve as the
-          y categories.'
+        comment: Descriptive 'Project Timeline' axis label; task names on y-axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order used (brand green first); backgrounds correct
-          #FAF8F1/#1A1A17; data colors identical across themes.'
+        comment: 'First series brand green #009E73, canonical order, correct theme
+          backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom two-row legend, rounded bar corners, clean hierarchy — but
-          the flagship progress-encoding idea fails to render.
+        passed: false
+        comment: Clever offset-stack technique but overall look stays close to a standard
+          categorical bar chart
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Vertical-only subtle grid, no chart frame clutter, generous whitespace,
-          borderRadius on bars.
+        comment: Ticks disabled, subtle single-axis grid, minimal axis lines, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Status reference line works well, but the intended 'ahead/behind
-          schedule' visual hierarchy via done/remaining shading is completely absent
-          from the render.
+        comment: Status reference line gives a clear focal point; no further hierarchy
+          (e.g. done vs. remaining work)
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -157,110 +139,103 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal Gantt-style bar chart.
+        comment: Correct Gantt / floating-bar timeline
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Status/current-date vertical line, category color coding, clear date
-          formatting, logical task ordering, adequate bar spacing — all present and
-          working.
+        comment: Category color coding, date formatting, logical ordering, adequate
+          spacing, and current-date line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=tasks, category and dates map correctly.
+        comment: Tasks correctly mapped to start/end day offsets on x-axis, task names
+          on y-axis
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; category legend matches, but the Done/Remaining
-          legend row promises a distinction the chart never actually shows.
+        comment: Title matches required format; legend labels match category data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 11 tasks across 4 phases with realistic overlaps and sequencing;
-          the progress dimension is computed but never surfaced visually.
+        comment: Shows task durations, overlaps, categories, and current-date status
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website redesign project — plausible and neutral.
+        comment: Plausible, neutral website-redesign project schedule
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~2.5 month project, task durations 4-25 days — sensible scale.
+        comment: 11 tasks across ~10 weeks, within the spec's 5-30 task range
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: No classes; functional component, but the done/remaining machinery
-          adds meaningful complexity for the resulting single-color render.
+        comment: No unnecessary functions/classes beyond the required default export
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data.
+        comment: Deterministic hard-coded data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports.
+        comment: Only used imports (BarChart, ChartsReferenceLine, Box, Stack, Typography)
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: OFFSET_SERIES + hexToRgba + PROGRESS split + 8 extra done/remaining
-          series produce zero visible effect in either render — functionally dead
-          complexity masquerading as a working feature via its legend entry.
+        passed: true
+        comment: No fake functionality; previous attempt's dead done/remaining code
+          was cleanly removed
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set; correct default-exported component; no manual
-          save calls.
+        comment: Correct default-export contract for the muix harness; skipAnimation
+          set
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Good use of stacked BarChart, band scale, ChartsReferenceLine, tickInterval
-          — but per-series color resolution for same-label stacked segments is misunderstood,
-          causing the core repair need.
+        comment: Good use of band y-axis, stacking, categoryGapRatio, and ChartsReferenceLine
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Clever offset-stack trick to synthesize floating Gantt bars from
-          a plain BarChart, plus ChartsReferenceLine — genuinely distinctive despite
-          the bug.
-  verdict: REJECTED
+        passed: false
+        comment: ChartsReferenceLine and the offset-stack trick are used well; no
+          further distinctive MUI X features explored
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -268,9 +243,7 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
   styling:
-  - alpha-blending
-  - publication-ready
+  - minimal-chrome
