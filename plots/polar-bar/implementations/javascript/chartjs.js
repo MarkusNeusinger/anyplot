@@ -11,6 +11,7 @@ const t = window.ANYPLOT_TOKENS;
 // coastal weather station over one year.
 const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const frequency = [8, 12, 15, 10, 14, 20, 13, 8];
+const dominantIndex = frequency.indexOf(Math.max(...frequency));
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -27,7 +28,7 @@ new Chart(canvas, {
         data: frequency,
         backgroundColor: directions.map((_, i) => t.palette[i % t.palette.length]),
         borderColor: t.pageBg,
-        borderWidth: 3,
+        borderWidth: directions.map((_, i) => (i === dominantIndex ? 5 : 3)),
       },
     ],
   },
@@ -35,6 +36,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: { padding: 8 },
     plugins: {
       title: {
         display: true,
@@ -42,9 +44,17 @@ new Chart(canvas, {
         color: t.ink,
         font: { size: 22 },
       },
+      subtitle: {
+        display: true,
+        text: "Radial axis: frequency (% of hours)",
+        color: t.inkSoft,
+        font: { size: 14 },
+        padding: { bottom: 12 },
+      },
       legend: {
-        position: "right",
-        labels: { color: t.ink, font: { size: 16 } },
+        position: "bottom",
+        align: "center",
+        labels: { color: t.ink, font: { size: 14 }, boxWidth: 16, padding: 12 },
       },
     },
     scales: {
