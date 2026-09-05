@@ -1,0 +1,251 @@
+library: chartjs
+language: javascript
+specification_id: pdp-basic
+created: '2026-09-05T10:25:59Z'
+updated: '2026-09-05T10:41:57Z'
+generated_by: claude-sonnet
+workflow_run: 33960310874
+issue: 2922
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Zero-crossing callout (dashed reference line + dot + "Median: 1,500 sq ft → $0"
+    label) added via a custom afterDatasetsDraw plugin, directly resolving the attempt-1
+    feedback for a stronger visual focal point and explicit data storytelling'
+  - Title weight/size bumped (700 weight, 21px) and grid switched to Y-axis-only per
+    the style guide's line-chart default, both matching the attempt-1 repair instructions
+    precisely
+  - 'Full spec feature coverage: continuous PD curve, 95% confidence band via relative
+    dataset fill (`fill: "-1"`), and a rug plot (hidden secondary axis + rotated scatter
+    trick) showing training-data density'
+  - Deterministic fixed-seed LCG data generation with a realistic log-shaped diminishing-returns
+    curve, explicitly centered at the median per the spec's centering recommendation
+  - 'Theme-adaptive chrome throughout with data colors identical across light/dark;
+    correct mandated title format, units on both axes, clean KISS structure, `animation:
+    false` set correctly for the harness'
+  weaknesses:
+  - 'Title still occupies only ~47% of plot width (measured: x=823-2336 of 3200px)
+    — up from ~40-45% at attempt 1 but still below the 50-70% guideline; a further
+    fontsize nudge (21 -> ~23-24) would give it more visual prominence without risking
+    overflow'
+  - Design Excellence, while much improved, is still shy of publication-level polish
+    — the callout label font could take a touch more hierarchy (e.g. slightly larger
+    or a subtle background chip) to stand out more clearly from tick labels at the
+    same weight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "House Price vs. Square Footage · pdp-basic · javascript · chartjs · anyplot.ai" in bold dark ink (measured x-extent 823-2336px of 3200px, ~47% width), clearly readable. Axis titles "Living Area (sq ft)" and "Partial Dependence ($k, centered)" in dark ink with units; tick labels in softer dark gray. Legend below title shows "95% confidence band" (pale-green swatch) and "Partial dependence" (brand-green swatch) — helper datasets ("Upper bound", "Training data (rug)") correctly filtered out of the legend. Y-axis grid only (horizontal lines), subtle. A dashed vertical reference line at x=1500 sq ft with a brand-green dot and bold label "Median: 1,500 sq ft → $0" marks the zero-crossing.
+      Data: Solid #009E73 line traces a log-shaped diminishing-returns curve from about -70 at 500 sq ft, crossing zero near the 1500 sq ft median, flattening toward +60 near 4000 sq ft, surrounded by a pale-green alpha-blended confidence band widening toward both tails. A dense row of thin vertical rug ticks along the bottom shows the training-data distribution, clustered between ~1000-2500 sq ft.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title, legend, axis titles, and the zero-crossing callout now rendered in light ink/off-white, clearly readable; tick labels in a softer light gray. Y-axis grid only, subtle white-on-dark lines.
+      Data: The partial-dependence line and callout dot use the identical #009E73 brand green — confirmed unchanged from the light render. The confidence band is the same brand-green alpha-blended fill, appearing darker/desaturated against the dark background (same hue, not a different color). Rug ticks are light gray/white with the same distribution and density.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures on title, axis labels, ticks, legend, or the callout label.
+
+    Both renders confirmed: data colors identical, only chrome (background/text/grid) flips between themes. Canvas verified at exact 3200x1800 landscape target for both PNGs.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Bold 21px title now clearly prominent and fully readable in both
+          themes; title still occupies only ~47% of plot width (below the 50-70% guideline),
+          a minor residual issue from attempt 1
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axis labels, callout label,
+          or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line, band, rug-tick, and callout-dot sizes well matched to sparse
+          data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue data encoding with strong contrast; no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed exactly; nothing cut off; balanced axis
+          label sizing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exactly #009E73, identical across themes; correct theme
+          backgrounds and chrome'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bolder title and the custom zero-crossing callout (dashed line +
+          dot + label) add real typographic and visual hierarchy over attempt 1's
+          bare defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Switched to Y-axis-only grid per the style-guide line-chart default,
+          replacing the previous X-axis-only grid; generous legend/plot spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The zero-crossing annotation now makes the "centered at zero" framing
+          explicit to the viewer instead of only inferable from the curve shape
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line-based PDP chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: PD curve, confidence band, and rug plot all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct X/Y mapping, full feature range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format with descriptive prefix; legend correctly filters
+          out helper datasets
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve, widening band, rug, and now the zero-crossing annotation together
+          cover all key PDP aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: House price vs. square footage is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Diminishing-returns shape and $k-scale swing are consistent with
+          real housing-price behavior
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, single idiomatic plugin object
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; complexity matches the technique
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of relative dataset-fill, mixed line/scatter datasets,
+          hidden secondary axis, legend filter callback
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin drawing directly on the canvas context
+          is a genuinely Chart.js-specific mechanic, beyond the already-strong dataset-fill/hidden-axis
+          tricks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
