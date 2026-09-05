@@ -1,0 +1,269 @@
+library: ggplot2
+language: r
+specification_id: learning-curve-basic
+created: '2026-09-05T06:19:43Z'
+updated: '2026-09-05T06:31:17Z'
+generated_by: claude-sonnet
+workflow_run: 33949358853
+issue: 2275
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Correctly resolves all three attempt-1 weaknesses: the y-axis lower bound now
+    tightens to the actual mean-minus-SD range instead of a fixed 50% floor, x-axis
+    breaks align to every one of the 10 actual train_sizes instead of arbitrary 500/1000
+    marks, and a new annotation ("Gap narrows with more data") gives the chart an
+    explicit storytelling focal point.'
+  - 'Faithfully implements every feature called out in the spec''s Notes: mean +/-1
+    SD shaded confidence ribbons computed across 8 cross-validation folds, a legend
+    distinguishing training vs. validation curves, actual sample sizes on the x-axis,
+    and a clearly labeled percentage y-axis.'
+  - Clean, idiomatic tidyverse pipeline (group_by/summarise/pivot_longer with regex
+    name extraction, native |> pipe), reproducible via set.seed(42), no unused imports,
+    correct ragg/ggsave save pattern producing an exact 3200x1800 canvas, and theme-adaptive
+    chrome with identical data colors between light and dark renders.
+  weaknesses:
+  - Second series uses Imprint palette position 3 (#4467A3 blue) instead of the canonical
+    position 2 (#C475FD lavender). "Blue for validation" is a stylistic convention
+    from the spec's Notes, not a strong real-world semantic cue (unlike grass->green
+    or blood->red), so the hard rule "use positions 1->N in order by default, don't
+    cherry-pick" applies -- switch the second series to lavender unless a stronger
+    semantic justification is added.
+  - The annotation text ("Gap narrows with more data") renders at ~7.4pt (size = 2.6mm),
+    noticeably smaller than the rest of the chrome (axis text is 8pt). It stays legible
+    at full render size but risks becoming illegible once scaled down to the ~400px
+    mobile preview -- bump to ~3.2-3.5mm for parity with the tick-label scale.
+  - Design still reads as a refined tidyverse default (palette + ribbon + single annotation)
+    rather than a distinctive composition -- consider a stronger layout device, e.g.
+    directly labeling the final gap value or shading the gap region between the two
+    curves at the last x, to push Design Excellence further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "learning-curve-basic · r · ggplot2 · anyplot.ai" in dark ink top-left; axis titles "Training set size" / "Accuracy" and tick labels (70%-100%, 80/160/240/.../1,300) in dark/soft-dark ink; only horizontal (y) major gridlines shown, subtle gray, no vertical gridlines; legend "Training score" / "Validation score" top-left with line+point key glyphs; small annotation "Gap narrows with more data" near the right edge in soft-dark ink.
+      Data: Training score (green #009E73) line+points rising from ~93% to ~99.5% with a shaded confidence ribbon; validation score (blue #4467A3) line+points rising from ~78% to ~93% with a wider shaded ribbon. Both curves and their ribbons are clearly distinguishable from the background and from each other.
+      Legibility verdict: PASS -- all title, axis, tick, legend, and annotation text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink / soft-light gray, clearly visible against the dark background; horizontal gridlines rendered as subtle light-gray lines; legend text in soft-light gray, key glyphs unchanged; annotation text in soft-light gray, legible against the dark ribbon area.
+      Data: Same green (#009E73) and blue (#4467A3) curves and ribbon shading as the light render -- data colors are identical across themes, confirming only chrome flipped.
+      Legibility verdict: PASS -- no dark-on-dark failures; all title, axis, tick, legend, and annotation text is clearly legible against the near-black background. Brand green remains vivid on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis titles, tick labels, and legend are clearly readable
+          in both themes with explicit sizes; the small annotation text (~7.4pt) is
+          legible at full size but tight relative to the rest of the chrome.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data collisions; legend, annotation, and curves
+          are all cleanly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size 2.5) and 1.0pt lines are prominent for the sparse 10-point
+          series; ribbon alpha 0.15 avoids overplotting while staying visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue combination has strong contrast in both themes; not relying
+          on red/green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800. Y-axis now tightens to the actual mean±SD
+          range (fixed from attempt 1's empty 50-78% band); x-axis breaks map to every
+          real train_size; nothing clipped or overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis titles 'Training set size' and 'Accuracy' with percentage tick
+          labels are descriptive and unit-clear.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly #009E73; backgrounds correctly #FAF8F1/#1A1A17;
+          chrome flips correctly with identical data colors between themes. However
+          the second series uses palette position 3 (#4467A3) instead of canonical
+          position 2 (#C475FD) without a strong real-world semantic cue.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Imprint palette, layered ribbon+line+point marks, and a storytelling
+          annotation lift this above generic theme_minimal defaults, though the overall
+          composition still reads as a refined default rather than a distinctive design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Ticks removed, only y-axis major gridlines kept, generous whitespace,
+          borderless legend -- clean but not further refined this round.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New annotation ('Gap narrows with more data') gives the chart an
+          explicit focal point on the bias-variance convergence, directly fixing attempt
+          1's flagged absence of emphasis.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct learning-curve chart with train/validation lines and confidence
+          bands.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shaded confidence bands, legend distinguishing curves, actual sample
+          sizes on x-axis, labeled metric on y-axis -- all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = train_size, y = mean score, correctly mapped; axes show the full
+          data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels 'Training
+          score' / 'Validation score' are clear.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 training sizes (80-1300) and 8 cross-validation folds, within
+          the spec's suggested 5-20 sizes / 5-10 folds range; both curves and confidence
+          bands present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible random-forest digit-classifier scenario, neutral and non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Score values (78%->99.5% train, 78%->93% validation) and decay curve
+          are sensible for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes beyond an inline lapply for data generation;
+          straightforward top-to-bottom script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at the top of the script.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the task; no fake interactivity or UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves via ragg::agg_png as plot-{THEME}.png at the correct 8x4.5in/400dpi
+          landscape spec.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic tidyverse pipeline (group_by/summarise/pivot_longer with
+          names_pattern regex, native |> pipe) and correct ggplot2 layering.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: geom_ribbon confidence bands and an annotate() focal point are solid
+          but standard techniques for this plot type; no more distinctive ggplot2-specific
+          feature (e.g. facet_wrap small multiples, custom scale transforms) is used.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - wide-to-long
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
