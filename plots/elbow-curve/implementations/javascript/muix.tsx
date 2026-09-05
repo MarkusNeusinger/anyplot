@@ -12,6 +12,13 @@ const { width, height } = window.ANYPLOT_SIZE;
 const kValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const inertia = [1250, 690, 410, 260, 195, 165, 145, 130, 118, 108];
 const optimalK = 4;
+const optimalKIndex = kValues.indexOf(optimalK);
+// A second series holding a single non-null point (the rest are `null`, with
+// connectNulls off) so only the elbow marker renders — recolored via `sx`
+// below to emphasize the elbow point beyond the reference line alone.
+const elbowMarkerData = kValues.map((_, i) =>
+  i === optimalKIndex ? inertia[optimalKIndex] : null,
+);
 
 const TITLE = "elbow-curve · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 56;
@@ -86,15 +93,42 @@ export default function Chart() {
           ]}
           series={[
             {
+              id: "inertia",
               data: inertia,
               label: "Within-cluster sum of squares",
               color: t.palette[0],
               showMark: true,
-              curve: "linear",
+              curve: "monotoneX",
+              area: true,
+            },
+            {
+              id: "elbowMarker",
+              data: elbowMarkerData,
+              color: t.amber,
+              showMark: true,
+              connectNulls: false,
+              disableHighlight: true,
             },
           ]}
           grid={{ horizontal: true }}
           slotProps={{ legend: { hidden: true } }}
+          sx={{
+            // Subtle brand-green fill under the curve — a deliberate design
+            // touch beyond a bare line, kept low-opacity so it stays a wash
+            // rather than competing with the line/markers.
+            "& .MuiAreaElement-series-inertia": {
+              fill: t.palette[0],
+              opacity: 0.12,
+            },
+            // Solid amber-filled marker at k=4 (vs. the hollow green marks
+            // elsewhere) so the elbow point reads as emphasized, not just
+            // co-located with the dashed reference line.
+            "& .MuiMarkElement-series-elbowMarker": {
+              fill: t.amber,
+              stroke: t.pageBg,
+              strokeWidth: 2.5,
+            },
+          }}
         >
           <ChartsReferenceLine
             x={optimalK}
@@ -105,7 +139,17 @@ export default function Chart() {
               strokeDasharray: "6 6",
               strokeWidth: 2,
             }}
-            labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
+            labelStyle={{
+              fill: t.inkSoft,
+              fontSize: 14,
+              fontWeight: 600,
+              // Text-stroke halo acts as a background chip so the label
+              // stays crisp where it crosses gridlines/the dashed line.
+              paintOrder: "stroke",
+              stroke: t.pageBg,
+              strokeWidth: 6,
+              strokeLinejoin: "round",
+            }}
           />
         </LineChart>
       </div>
