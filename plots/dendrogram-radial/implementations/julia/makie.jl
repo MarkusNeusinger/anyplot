@@ -15,9 +15,9 @@ INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
 IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green, Immune module
-    colorant"#4467A3",  # 3 — blue, Metabolic module
-    colorant"#BD8233",  # 4 — ochre, Neural module
-    colorant"#954477",  # 7 — rose, Cardiac module
+    colorant"#C475FD",  # 2 — lavender, Metabolic module
+    colorant"#4467A3",  # 3 — blue, Neural module
+    colorant"#BD8233",  # 4 — ochre, Cardiac module
 ]
 
 # Data — synthetic gene-expression profiles for four functional modules,
@@ -157,7 +157,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title = title_text,
-    titlesize = 20,
+    titlesize = 26,
     titlecolor = INK,
     aspect = DataAspect(),
     backgroundcolor = PAGE_BG,
@@ -204,7 +204,7 @@ end
 leaf_x = [R_max * cos(node_angle[l]) for l in 1:n]
 leaf_y = [R_max * sin(node_angle[l]) for l in 1:n]
 leaf_colors = [IMPRINT_PALETTE[leaf_group[l]] for l in 1:n]
-scatter!(ax, leaf_x, leaf_y; color = leaf_colors, markersize = 8, strokewidth = 0)
+scatter!(ax, leaf_x, leaf_y; color = leaf_colors, markersize = 11, strokewidth = 0)
 
 label_r = R_max * 1.16
 for l in 1:n
