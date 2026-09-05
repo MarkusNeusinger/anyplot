@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -33,6 +34,7 @@ for (let i = 0; i < DAYS; i++) {
   const noise = 1 + (rand() - 0.5) * 0.16;
   visitors.push(Math.round(baseVisitors * trend * weekendDip * noise));
 }
+const avgVisitors = Math.round(visitors.reduce((sum, v) => sum + v, 0) / visitors.length);
 
 const TITLE = "Website Traffic Growth · line-filled · javascript · muix · anyplot.ai";
 
@@ -110,12 +112,26 @@ export default function Chart() {
           margin={{ top: 24, right: 40, bottom: 64, left: 66 }}
           sx={{
             "& .MuiLineElement-root": { strokeWidth: 3 },
-            "& .MuiAreaElement-root": { fill: t.palette[0], fillOpacity: 0.35 },
+            "& .MuiAreaElement-series-visitors": { fill: "url(#visitorsFillGradient)" },
             "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.4 },
             "& .MuiChartsAxis-tick": { stroke: t.inkSoft, strokeOpacity: 0.4 },
             "& .MuiChartsGrid-line": { stroke: t.grid },
           }}
-        />
+        >
+          <defs>
+            <linearGradient id="visitorsFillGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="5%" stopColor={t.palette[0]} stopOpacity={0.75} />
+              <stop offset="95%" stopColor={t.palette[0]} stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+          <ChartsReferenceLine
+            y={avgVisitors}
+            label={`Avg ${avgVisitors.toLocaleString("en-US")}`}
+            labelAlign="end"
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeOpacity: 0.7 }}
+            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+          />
+        </LineChart>
       </Box>
     </Box>
   );
