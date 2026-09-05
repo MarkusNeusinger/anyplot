@@ -98,7 +98,7 @@ ax = Axis(
 
 # Shade the area between the better-performing curve (Biomarker A) and the
 # diagonal to visualize its AUC advantage over random guessing
-band!(ax, fpr_a, fpr_a, tpr_a; color = (IMPRINT_PALETTE[1], 0.07))
+band!(ax, fpr_a, fpr_a, tpr_a; color = (IMPRINT_PALETTE[1], 0.09))
 
 lines!(
     ax, [0.0, 1.0], [0.0, 1.0];
@@ -119,21 +119,21 @@ lines!(
 # Mark each curve's optimal operating point (Youden's J statistic)
 scatter!(
     ax, [opt_fpr_a], [opt_tpr_a];
-    color = IMPRINT_PALETTE[1], markersize = 14, strokewidth = 1.5, strokecolor = PAGE_BG,
+    color = IMPRINT_PALETTE[1], markersize = 18, strokewidth = 2.0, strokecolor = PAGE_BG,
 )
 text!(
     ax, opt_fpr_a, opt_tpr_a;
     text = "Optimal J = $(round(j_a[opt_idx_a]; digits = 2))",
-    color = INK, fontsize = 11, align = (:left, :bottom), offset = (8, 8),
+    color = INK, fontsize = 13, font = :bold, align = (:left, :bottom), offset = (10, 10),
 )
 scatter!(
     ax, [opt_fpr_b], [opt_tpr_b];
-    color = IMPRINT_PALETTE[2], markersize = 14, strokewidth = 1.5, strokecolor = PAGE_BG,
+    color = IMPRINT_PALETTE[2], markersize = 18, strokewidth = 2.0, strokecolor = PAGE_BG,
 )
 text!(
     ax, opt_fpr_b, opt_tpr_b;
     text = "Optimal J = $(round(j_b[opt_idx_b]; digits = 2))",
-    color = INK, fontsize = 11, align = (:right, :top), offset = (-8, -8),
+    color = INK, fontsize = 13, font = :bold, align = (:right, :top), offset = (-10, -10),
 )
 
 axislegend(ax; position = :rb, labelsize = 12, labelcolor = INK_SOFT, framevisible = false)
