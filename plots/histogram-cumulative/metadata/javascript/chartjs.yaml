@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: histogram-cumulative
 created: '2026-09-05T04:08:47Z'
-updated: '2026-09-05T04:12:44Z'
+updated: '2026-09-05T04:21:46Z'
 generated_by: claude-sonnet
 workflow_run: 33943575561
 issue: 2549
@@ -12,45 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/chartjs/plot-dark.html
-quality_score: 83
+quality_score: 92
 review:
   strengths:
-  - 'Correct plot type: zero-gap bars (barPercentage/categoryPercentage = 1.0) render
-    a genuine step function reaching the plateau at 100%, matching the spec''s ''often
-    displayed as steps'' note for an ogive.'
-  - 'Deterministic, realistic data: fixed-seed LCG generates a right-skewed lognormal-like
-    delivery-time distribution, a plausible and neutral real-world scenario.'
-  - 'Clean theme-adaptive chrome: correct off-white/near-black backgrounds, all text
-    legible in both themes, first series uses Imprint brand green (#009E73), y-axis
-    locked to 0-1 with %-formatted ticks.'
-  - Title matches the exact mandated format, x-grid intentionally suppressed while
-    y-grid stays subtle, and axis titles are descriptive with units (minutes / cumulative
-    share).
+  - 'Directly addresses all three attempt-1 weaknesses: the tail is now trimmed to
+    the 96th percentile with a collapsed overflow bin, so the informative S-curve
+    rise occupies most of the chart width instead of a long flat plateau.'
+  - 'Replaced the solid zero-gap bar workaround with an idiomatic stepped line (`stepped:
+    ''after''`, `fill: ''origin''`) at low-alpha fill, giving the ogive a lighter,
+    more refined look while staying a genuine step function.'
+  - Custom `afterDraw` plugin draws a dashed p90 guide line and label directly against
+    the chart's own scales — a real distinctive Chart.js technique (not a community
+    plugin) that gives the chart a clear percentile-threshold focal point, exactly
+    answering the spec's 'what percentage is below X?' application.
+  - 'Deterministic, realistic data: fixed-seed LCG produces a right-skewed, lognormal-like
+    package-delivery-time distribution; nearest-rank percentile computed on the raw
+    sample (not the coarser bins) for an accurate p90 marker.'
+  - 'Theme-adaptive chrome is clean in both renders: correct backgrounds, all text
+    legible, first series is Imprint brand green, y-axis locked to 0-1 with %-formatted
+    ticks, title matches the exact mandated format.'
   weaknesses:
-  - The cumulative curve reaches ~95-100% by roughly the 40% mark of the x-axis, leaving
-    a long, almost-featureless flat plateau across the remaining ~60% of the chart
-    width — consider trimming the bin range near the observed max or using fewer/wider
-    tail bins so the informative S-curve region gets more horizontal space.
-  - 'Library usage is generic (plain bar chart with zero gaps) rather than showcasing
-    a distinctive Chart.js feature — e.g. a stepped line (`type: ''line'', stepped:
-    true, fill: ''origin''`) or an annotation marking a specific percentile (median/p90),
-    which would also strengthen data storytelling given the spec explicitly calls
-    out percentile visualization as an application.'
-  - Visual treatment is a single solid, fully-opaque fill block; a slightly softer
-    treatment (e.g. a visible step outline plus a lower-alpha fill) would reduce the
-    'wall of color' heaviness and read as more refined.
+  - The p90 label uses the amber anchor color on the light (#FAF8F1) background, which
+    the style guide itself flags as sitting below the 3:1 WCAG contrast threshold
+    for that combination — legible here due to the bold 600-weight font, but worth
+    keeping an eye on if the annotation text ever gets smaller.
+  - The synthetic overflow bin label '50+' collapses all values above the 96th percentile
+    into a single wide bin; this is a reasonable trade-off for spacing but slightly
+    understates the shape of the true tail compared to continuing uniform bins.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "histogram-cumulative · javascript · chartjs · anyplot.ai" in dark ink at top, comfortably sized (~35-40% of plot width). X-axis title "Delivery Time (minutes)" and y-axis title "Cumulative Share of Deliveries" both in dark ink, clearly legible. Tick labels (bin ranges "0-5" ... "105-110" on x, "0%".."100%" on y) in a softer gray-brown, all fully readable, evenly spaced with no overlap or rotation needed. Subtle horizontal gridlines only (x-axis gridlines intentionally removed).
-      Data: Solid brand-green (#009E73) fill forming a step/ogive shape — near-zero at the left, rising steeply through the 10-40 minute bins, then flattening to a plateau near 100% for the remaining bins out to 105-110. Steps are clearly visible at each bin boundary.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white, consistent with #FAF8F1, not pure white and not dark.
+      Chrome: title "histogram-cumulative · javascript · chartjs · anyplot.ai" in dark ink at top, comfortably sized (~55-60% width). Axis titles "Delivery Time (minutes)" (x) and "Cumulative Share of Deliveries" (y) are dark and legible; tick labels (bin ranges 0-5...55+ on x, 0%-100% on y) are a softer gray-brown, all readable with no overlap. Horizontal gridlines are subtle; x-axis gridlines are intentionally hidden.
+      Data: a stepped brand-green (#009E73) line with a low-alpha green fill beneath it forms the ogive: near-zero on the left, rising steadily through the 10-40 minute bins, reaching 100% at the final bin. A dashed amber guide line marks the p90 threshold (~46 min) with a bold amber label near the top-right, positioned clear of the title and other text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, clearly legible against the dark background. Gridlines remain subtle but visible (thin, low-contrast horizontal lines only).
-      Data: Identical brand-green (#009E73) fill and step shape as the light render — same bin boundaries, same plateau starting point, confirming data colors are unchanged between themes; only chrome (background, text, grid) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, and tick text is clearly visible against the near-black background.
+      Background: warm near-black, consistent with #1A1A17, not pure black and not light.
+      Chrome: same title, axis titles, and tick labels now rendered in light/off-white ink, clearly legible against the dark surface; gridlines remain subtle and visible.
+      Data: the stepped line and fill are the same brand-green as light mode (identical data color, confirming only chrome flips), now reading as a bright mint-green line over a darker green fill area. The dashed amber guide line and "p90 ≈ 46 min" label are clearly visible against the dark background — no dark-on-dark failure.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,76 +61,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title 22, axis titles 16, ticks 14);
-          all text readable in both themes; title occupies a comfortable ~35-40% of
-          plot width
+        comment: All text readable in both themes at set font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 22 x-axis bin labels fit without overlap or rotation; no collisions
-          between text and data
+        comment: p90 label placed clear of title and axis; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Solid fill makes the cumulative shape maximally visible; step boundaries
-          clearly discernible
+        comment: Stepped line + fill + dashed marker all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green against neutral background, no red-green
-          reliance
+        comment: Good contrast; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas at correct 3200x1800 landscape target, no clipping or overflow,
-          balanced axis titles
+        comment: Canvas gate passed; title ~55-60% width, balanced axes, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (minutes, % share)
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match Imprint light/dark tokens;
-          identical data color across themes'
+        comment: 'First series #009E73; amber used correctly as a semantic threshold
+          anchor, not an overflow color; correct theme backgrounds'
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Default-level polish; the fully-opaque solid fill reads as a heavy
-          block rather than a refined treatment
+        passed: true
+        comment: Low-alpha stepped fill plus custom percentile annotation reads as
+          intentional, above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: X-axis gridlines intentionally removed, y-axis gridlines kept subtle
-          — a deliberate refinement beyond bare defaults
+        passed: true
+        comment: X-grid removed, y-grid subtle, softer fill than a solid block; still
+          fairly minimal overall
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: No percentile annotation or emphasis despite the spec explicitly
-          calling out percentile visualization as an application; long flat plateau
-          dilutes the focal point
+        passed: true
+        comment: p90 guide line plus trimmed tail gives the chart a clear focal point,
+          directly addressing the spec's percentile-analysis use case
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Zero-gap bars form a genuine step/ogive shape matching the cumulative
-          histogram spec
+        comment: Stepped cumulative ogive matches spec's 'often displayed as steps'
+          note
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Numeric variable binned and accumulated into a monotonically increasing
-          series
+        comment: Numeric variable binned, monotonic cumulative proportion 0-1
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = delivery-time bins, Y = cumulative share, correctly mapped
+        comment: X = binned delivery time, Y = cumulative share, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend appropriately hidden
-          for single series
+        comment: Title matches exact mandated format; legend correctly omitted for
+          single series
     data_quality:
       score: 15
       max: 15
@@ -171,20 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows binning, cumulative accumulation, monotonic increase, and the
-          100% ceiling
+        comment: Binning, cumulative proportion, monotonic step, and percentile marker
+          all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Package delivery times is a plausible, neutral real-world domain
+        comment: Package delivery times, right-skewed and plausible, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5-110 minute right-skewed range is sensible for a delivery-time scenario
+        comment: 400 samples, 5-90+ minute range, sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -194,57 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only small RNG helper functions, no unnecessary classes/abstractions
+        comment: Small necessary helpers (LCG, percentile, plugin) for browser-side
+          determinism and the custom annotation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Chart.js
+        comment: No imports; uses only provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Real canvas-drawn annotation, not fake UI; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows mount-node contract exactly; animation: false set'
+        comment: Correct mount-node contract, animation:false, current Chart.js API
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: stepped:'after' + fill:'origin' is the idiomatic Chart.js technique
+          for a cumulative histogram
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Zero-gap bar chart is the standard Chart.js workaround for histogram
-          rendering
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No distinctive Chart.js feature used (e.g. stepped line, annotation
-          plugin equivalents)
+        comment: Custom afterDraw plugin drawing a dashed threshold marker is a genuine,
+          well-executed distinctive feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - binning
   - cumulative-sum
   styling:
+  - alpha-blending
   - grid-styling
