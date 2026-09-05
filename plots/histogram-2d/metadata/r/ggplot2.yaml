@@ -1,0 +1,239 @@
+library: ggplot2
+language: r
+specification_id: histogram-2d
+created: '2026-09-05T03:49:45Z'
+updated: '2026-09-05T04:10:38Z'
+generated_by: claude-sonnet
+workflow_run: 33942776905
+issue: 2012
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - 'Idiomatic geom_bin2d usage with the correct Imprint sequential gradient (#009E73
+    → #4467A3), fully theme-adaptive chrome, and identical data colors between light
+    and dark renders'
+  - Realistic, well-scaled financial dataset (correlated equity vs. bond daily returns)
+    with a sqrt count transform that reasonably handles the wide density range without
+    a forbidden colormap
+  - Title/axis/legend formatting matches spec exactly, canvas is a correct 2400×2400
+    square with no clipping or overflow
+  weaknesses:
+  - Swiss-cheese pattern of zero-count 'holes' punched through the density cloud in
+    both renders — bins=28 combined with the tight correlated ellipse leaves many
+    isolated empty bins inside the visually continuous cloud, reading as a rendering
+    glitch rather than a smooth density surface. Try coarser bins (e.g. 18-20) so
+    the cloud reads as continuous.
+  - The stat_density_2d contour overlay (color=INK_SOFT, alpha=0.5, linewidth=0.25)
+    is essentially invisible against the fill gradient in both renders — it adds code
+    without visible payoff; either raise its contrast (darker/higher-alpha line) so
+    it reads as a distinct feature, or remove it.
+  - No clearly visible distinguishing flourish beyond the base geom_bin2d fill — since
+    the density-contour overlay doesn't read visually, the implementation currently
+    looks like a default binned heatmap.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-2d · r · ggplot2 · anyplot.ai" in dark ink top-left, fully readable. Axis titles "Equity Daily Return (%)" / "Bond Daily Return (%)" in dark ink, tick labels (-3, 0, 3 / -2..3) in a softer gray — all clearly legible against the light background. Legend "Count" with tick labels 50/100 readable.
+      Data: Elongated diagonal cloud of square bins running from bottom-left to top-right (positive equity/bond correlation), colored from #009E73 (green, low count) through to #4467A3 (blue, high count) at the dense center — matches the required Imprint sequential ramp. Scattered small background-colored gaps ("holes") appear within the cloud, giving a mottled/moth-eaten look rather than a smooth density surface.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels rendered in light/cream ink, fully readable against the dark background — no dark-on-dark failures observed.
+      Data: Same diagonal cloud shape and same green-to-blue gradient as the light render (data colors identical, only chrome flipped, as required). The same speckled hole pattern is present, confirming it's a data/binning artifact rather than a theme-flip regression.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; sizes explicitly set
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Speckled zero-count holes within the density cloud read as a glitch,
+          not smooth density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses the sanctioned imprint_seq gradient, CVD-safe by design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 canvas, no overflow or clipping, balanced axis
+          labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Fill gradient matches imprint_seq exactly; backgrounds correct in
+          both themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Brand-consistent gradient, but hole artifacts undermine polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal, spines removed, but the moth-eaten cloud looks unrefined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Diagonal density gradient clearly tells the correlation story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D histogram heatmap via geom_bin2d
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar present, bins parameter used, sqrt transform for wide density
+          range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapped correctly, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labeled Count
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Binning + colorbar covers core feature set; contour overlay attempt
+          doesn't read visually
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Correlated equity/bond daily returns, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic daily-return percentage ranges and count scale
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: stat_density_2d overlay is dead weight — invisible in the render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level geom_bin2d, correct gradient scale function
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Attempted density-contour overlay doesn't read visually, so no distinguishing
+          flourish lands
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - alpha-blending
