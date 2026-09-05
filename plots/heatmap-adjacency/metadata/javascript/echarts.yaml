@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: heatmap-adjacency
 created: '2026-09-05T03:06:38Z'
-updated: '2026-09-05T03:10:42Z'
+updated: '2026-09-05T03:21:46Z'
 generated_by: claude-sonnet
 workflow_run: 33940652030
 issue: 5240
@@ -12,51 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Node ordering fixed by department membership cleanly exposes block-diagonal structure
-    without an extra clustering step, matching the spec's 'reorderable by cluster'
-    intent
-  - Symmetric weight matrix correctly fills both triangles for the undirected graph,
-    with the diagonal cleanly omitted
+  - 'Bridge-highlight scatter overlay directly addresses the attempt-1 DE-03/LM-02
+    feedback: the top 3 cross-department ties get a ring marker and dedicated tooltip,
+    giving the block-diagonal matrix a clear secondary focal point'
+  - dataZoom (inside, both axes) plus a custom axisPointer with a formatted line label
+    let a viewer inspect individual node pairs in the interactive HTML view without
+    cluttering the static 30x30 matrix with 30 tick labels
+  - Node order fixed by department membership cleanly exposes block-diagonal structure;
+    symmetric weight matrix correctly fills both triangles with the diagonal cleanly
+    omitted
   - Absent edges (weight 0) get an explicit itemStyle override to a near-background
-    fill, clearly distinct from the low end of the continuous scale, exactly per spec
-  - Continuous visualMap correctly built from t.seq (imprint_seq) rather than a default/named
-    colormap, with a 'Strong'/'Weak' labeled colorbar legend
-  - Data colors (blue-to-green sequential ramp) are identical between light and dark
-    renders; only chrome (background, ticks, borders) adapts to theme
-  - Deterministic fixed-seed LCG avoids relying on a browser RNG, and the synthetic
-    employee-collaboration dataset is realistic and neutral
-  - Custom axis label formatter shows department names centered under each block instead
-    of cluttering the square canvas with 30 individual node labels
+    fill, clearly distinct from the low end of the imprint_seq continuous scale, exactly
+    per spec
+  - Continuous visualMap correctly built from t.seq (imprint_seq, brand-green-to-blue)
+    rather than a default/named colormap, with data colors identical between light
+    and dark renders
+  - Deterministic fixed-seed LCG avoids relying on a browser RNG; realistic, neutral
+    employee-collaboration dataset; canvas gate passed at the required 2400x2400 square
+    target
   weaknesses:
-  - Spec explicitly asks for node-name tick labels, with the boundary-only fallback
-    reserved for 'large networks'; at n=30 this is a defensible readability tradeoff
-    but not a full literal match — consider a hover-friendly compromise or documenting
-    the rationale more visibly
-  - Distinctive-feature usage is fairly conservative for ECharts (heatmap + continuous
-    visualMap is close to the library skeleton); no use of more distinctive ECharts
-    capabilities (e.g. dataZoom for exploring large matrices, brush selection, or
-    a graph-layout companion view) that would showcase library mastery further
-  - Data storytelling stops at the block-diagonal pattern; no secondary emphasis (e.g.
-    highlighting the few notable cross-department bridges) to guide the viewer toward
-    the most interesting structural finding
+  - Spec asks for node-name tick labels on the axes; only department boundary labels
+    are static on the PNG — individual node names surface exclusively via axisPointer
+    hover in the HTML, so the static render still shows only 3 labels per axis
+  - The visualMap colorbar legend uses qualitative text ("Strong"/"Weak") instead
+    of the numeric weight scale, so a reader cannot read off actual edge-strength
+    values from the legend alone
+  - Composition is still fundamentally a standard sequential heatmap with a scatter
+    overlay; no further visual device (e.g. a subtle outline around each department
+    block) reinforces the block-diagonal grouping beyond color alone
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the Imprint light theme.
-      Chrome: Dark, bold title "Employee Collaboration Network · heatmap-adjacency · javascript · echarts · anyplot.ai" centered at top, clearly readable. "Engineering"/"Design"/"Marketing" department boundary labels on both axes in a medium-gray ink, legible. Vertical "Strong"/"Weak" colorbar legend on the right, dark-gray text, legible against the light background.
-      Data: 30x30 adjacency matrix (12 Engineering + 8 Design + 10 Marketing nodes). Cells range from deep blue (strong intra-department ties) through teal to bright green (weaker cross-department ties); absent edges render as a near-white fill that blends with the page background, and the diagonal is omitted (shows background). Three dense blue/teal blocks along the diagonal make the department clustering immediately visible, with a scatter of thin green cross-department links elsewhere.
-      Legibility verdict: PASS — all text (title, axis labels, colorbar labels) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 (not pure white).
+      Chrome: Title "Employee Collaboration Network · heatmap-adjacency · javascript · echarts · anyplot.ai" is centered, bold, dark ink, fully legible. "Engineering"/"Design"/"Marketing" boundary labels appear on both axes in medium-gray. Vertical "Strong"/"Weak" colorbar sits on the right with matching gray text.
+      Data: 30x30 matrix (12+8+10 nodes) shows dense blue/teal blocks along the diagonal blocks (intra-department collaboration) fading to green for sparser cross-department links; absent edges render as a near-background fill; the true diagonal (self-pairs) is omitted. Six dark-ringed circle markers highlight the 3 strongest cross-department bridges (each pair marked symmetrically).
+      Legibility verdict: PASS — all title, axis, and legend text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with the Imprint dark theme.
-      Chrome: Same title, now in light/white text, clearly readable against the dark background. Department axis labels render in a light gray, legible. Colorbar "Strong"/"Weak" labels are light-colored and legible against the dark canvas.
-      Data: Same 30x30 matrix with an identical blue-to-green color mapping (data colors unchanged from the light render, confirming the palette rule). Absent-edge cells render as a slightly lighter charcoal than the omitted diagonal (which reads as pure background black), so "no connection" remains visually distinct from "not applicable" and from weak-but-present edges (green).
-      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, and legend text is clearly legible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 (not pure black).
+      Chrome: Same title and axis boundary labels now render in light text (white/light-gray), clearly legible. Colorbar text also flips to light gray. No dark-on-dark failures observed.
+      Data: Identical blue-to-green sequential ramp and matrix values as the light render — only chrome (background, text, cell border color) has flipped. Absent-edge cells render as a slightly darker near-black fill, still distinct from the omitted diagonal and from the surrounding page background. The same six bridge-highlight ring markers are visible, now with a light ring color for contrast against the dark background.
+      Legibility verdict: PASS — all title, axis, and legend text is clearly readable against the dark background; brand green/blue data hues are unchanged from the light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -64,68 +65,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; sizes explicit (14-17px)
+        comment: Explicit font sizes throughout (14-17px equivalents); all text readable
+          in both themes at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, cells, or legend
+        comment: No collisions between title, axis labels, colorbar, and bridge markers
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Cells sized clearly for a 30x30 matrix; borders keep adjacent cells
-          distinguishable
+        comment: Cell borders and bridge-marker ring size (14px) are well adapted
+          to the 30x30 grid density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue-green sequential ramp is CVD-safe, no red-green sole signal
+        comment: Blue-to-green sequential ramp, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correctly used, nothing cut off, balanced
-          margins
+        comment: Canvas gate passed (2400x2400 square); balanced margins, legend near
+          plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; colorbar labeled Strong/Weak conveys the weight
-          scale
+        comment: Department boundary labels descriptive; title carries full mandated
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used for continuous weight, correct theme backgrounds,
-          identical data colors across themes
+        comment: visualMap uses t.seq (imprint_seq) correctly; data colors identical
+          across themes; theme-correct backgrounds
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful boundary-label formatter and distinct absent-edge styling,
-          but overall composition stays close to a standard heatmap
+        passed: true
+        comment: Thoughtful boundary-label formatter, distinct absent-edge fill, and
+          bridge-highlight overlay clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
+        passed: true
         comment: Axis lines/ticks hidden, subtle cell borders, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Block-diagonal department clustering is immediately visible; no further
-          emphasis on standout cross-department links
+        passed: true
+        comment: New bridge markers give a clear secondary focal point beyond the
+          block-diagonal pattern, directly answering attempt-1 feedback
     spec_compliance:
       score: 14
       max: 15
@@ -134,23 +139,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct adjacency-matrix heatmap
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        comment: Symmetric matrix, colorbar, and cluster ordering present; individual
-          node-name tick labels replaced by boundary labels only
+        passed: true
+        comment: Symmetric matrix, colorbar, cluster ordering present; individual
+          node-name tick labels still only reachable via hover, not static PNG
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Row/col correctly mapped, full matrix shown
+        passed: true
+        comment: Row/column indices map correctly to node pairs
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches required format with descriptive prefix; legend clear
+        passed: true
+        comment: Title format exact; legend labels match data
     data_quality:
       score: 14
       max: 15
@@ -159,18 +168,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Weighted, symmetric, clustered matrix with absent-edge distinction;
-          no optional dendrogram
+        passed: true
+        comment: Weighted, symmetric, clustered matrix with absent-edge distinction
+          and bridge highlights; optional dendrogram omitted (allowed)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible, neutral employee-collaboration scenario
+        passed: true
+        comment: Neutral employee-collaboration-network scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: 30 nodes within spec's 20-200 range; weight ranges sensible
+        passed: true
+        comment: 30 nodes within spec's 20-200 range; plausible weight distribution
     code_quality:
       score: 10
       max: 10
@@ -179,51 +191,60 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Flat script, only a tiny RNG closure
+        passed: true
+        comment: Flat script, only small deterministic helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No unused imports; uses globals as required
+        passed: true
+        comment: No imports; only mount-node globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI or unnecessary complexity
+        passed: true
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, animation disabled, no explicit size/DPR
+        passed: true
+        comment: echarts.init with no explicit size/DPR, animation:false, single container
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Idiomatic heatmap + continuous visualMap + category axes
+        passed: true
+        comment: heatmap + continuous visualMap + scatter overlay + dataZoom + axisPointer
+          combined idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        comment: Custom tooltip/tick formatter is a nice touch but stays close to
-          the library skeleton overall
+        passed: true
+        comment: dataZoom, custom axisPointer label formatting, and a scatter-over-heatmap
+          highlight overlay go well beyond generic usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - manual-ticks
+  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
