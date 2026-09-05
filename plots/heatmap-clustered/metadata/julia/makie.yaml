@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-clustered
 created: '2026-09-05T03:28:57Z'
-updated: '2026-09-05T03:50:49Z'
+updated: '2026-09-05T04:00:56Z'
 generated_by: claude-sonnet
 workflow_run: 33941230748
 issue: 2021
@@ -12,129 +12,136 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 76
+quality_score: 79
 review:
   strengths:
-  - Custom from-scratch Ward's-method hierarchical clustering (with correct Lance-Williams
-    distance updates) applied independently to rows and columns, correctly reordering
-    both dendrograms to reveal the genuine four-module block structure in the synthetic
-    data.
-  - Diverging Imprint colormap (imprint_div) correctly theme-adapts its midpoint stop
-    to the page background, and a thin theme-adaptive cell grid keeps near-zero cells
-    visually separated from each other and the canvas in both themes.
-  - Title, axis tick labels, and colorbar label are legible and correctly styled in
-    both light and dark themes with no dark-on-dark or light-on-light failures.
-  - 45-degree-rotated column tick labels avoid overlap despite 12 densely-packed sample
-    labels.
+  - Correct hand-rolled Ward's-method hierarchical clustering (Lance-Williams update)
+    reorders both rows and columns, matching the required clustermap style and revealing
+    the four latent gene modules as clean blocks.
+  - 'Diverging Imprint colormap (#AE3030 -> theme background midpoint -> #4467A3)
+    is centered on zero exactly as the spec requires, with the midpoint correctly
+    swapped per theme so near-zero cells stay legible in both light and dark.'
+  - Thin theme-adaptive gridlines between heatmap cells keep near-zero (background-colored)
+    cells visually separated without adding visual noise; all axis spines are hidden
+    for a clean clustermap look.
+  - Realistic, neutral gene-expression scenario (control + two treatments, four replicates)
+    with genuine module structure and per-cell noise, giving the clustering something
+    real to recover.
+  - Title format, colorbar placement/labeling, and theme chrome (background, ink,
+    tick colors) are all correct and consistent between the light and dark renders.
   weaknesses:
-  - 'The ''Group'' swatch legend (Legend(fig[2,3], ...), showing Ctrl/TreatA/TreatB
-    colors) is completely invisible in both renders. Verified by direct pixel inspection:
-    none of the three Imprint swatch colors (#009E73, #C475FD, #4467A3) appear anywhere
-    in either PNG. Likely root cause: Colorbar(fig[4,3], hm; width = 18, ...) sets
-    a fixed narrow pixel width on GridLayout column 3, and since Legend shares that
-    same column at a different row, the whole column collapses to that fixed width,
-    squeezing the legend down to nothing. Fix by moving the legend out of the shared
-    column - e.g. place it in its own row (fig[1, 1:3] alongside/under the title,
-    horizontal orientation) or give it a dedicated column with its own colsize!, rather
-    than sharing column 3 with the fixed-width Colorbar.'
-  - The column group-color annotation strip (col_group_ax at fig[3,2], meant to show
-    the Ctrl/TreatA/TreatB colors under the column dendrogram) is invisible in both
-    renders. rowsize!(fig.layout, 3, Relative(0.02)) squeezes it to near-zero pixel
-    height - confirmed by pixel scan showing pure background color across that entire
-    row band, no strip pixels at all. Increase row 3 to roughly Relative(0.05)-Relative(0.06)
-    and rebalance rows 2/4 accordingly (e.g. row2=0.13, row3=0.05, row4=0.70) so the
-    strip renders at a visible ~25-30 px height.
-  - Since the legend currently points to nothing visible on the canvas, either fix
-    both elements together (legend + strip, so the legend has something to explain)
-    or remove both if they can't be made to render reliably - a legend for content
-    that isn't there is more confusing than no legend at all.
+  - The 'Group' Legend (fig[2,3]) and the Ctrl/TreatA/TreatB color annotation strip
+    (fig[3,2], col_group_ax/image!) are built in code but render as nothing in BOTH
+    plot-light.png and plot-dark.png -- pixel-sampled the exact cell regions and found
+    only the page background color, no legend swatches and no annotation-strip colors
+    anywhere on the canvas. Investigate the GridLayout sizing (rowsize!/colsize! interaction
+    between row 2/3 and the Legend/image! axis) so these elements actually get drawn,
+    or remove the dead code if the layout can't be fixed -- right now it wastes canvas
+    space and the intended per-column group annotation never reaches the viewer.
+  - Because the group legend never renders, SC-04 (title & legend) and the optional
+    row/column color-bar feature from the spec are only partially delivered -- column
+    group membership is only recoverable from the 'Ctrl-N/TreatA-N/TreatB-N' tick
+    labels, not from the intended visual annotation.
+  - Colorbar label and tick text rely on Makie's default sizing (no explicit labelsize/ticklabelsize
+    passed to Colorbar), unlike the heatmap's own tick labels which are explicitly
+    sized -- set these explicitly for consistency.
+  - 'CQ-01 KISS Structure is heavily bent: four helper functions (pairwise_sqdist,
+    ward_linkage, collect_leaves!, dendrogram_segments) implement clustering/dendrogram
+    layout from scratch. Understandable given no clustering package is available in
+    this Julia runtime, but worth a comment noting why, since reviewers will flag
+    the function-heavy structure.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 target.
-      Chrome: Bold dark-ink title "heatmap-clustered · julia · makie · anyplot.ai" top-center. Column dendrogram (dark grey lines) across the top showing three major sample clusters. Row dendrogram (dark grey, reversed) to the left of the heatmap showing four gene clusters. Row labels (Gene 01-Gene 16, reordered) on the right; column labels (Ctrl-N/TreatA-N/TreatB-N, reordered) rotated 45 degrees along the bottom, none clipped. Colorbar labeled "Expression (row z-score)" at bottom-right. All text is dark ink on cream background, clearly legible.
-      Data: 16x12 heatmap using the diverging Imprint colormap (red negative / cream midpoint / blue positive) for row z-scores; thin theme-adaptive grid separates cells.
-      Legibility verdict: PASS for all rendered/visible elements.
-      DEFECT (verified by pixel inspection, not a legibility issue but a rendering bug): the "Group" swatch legend (Ctrl/TreatA/TreatB colors, coded at fig[2,3]) and the column group-color annotation strip (coded at fig[3,2], meant to sit between the column dendrogram and heatmap) are both completely invisible - scanning the full image for the three Imprint palette swatch colors (#009E73, #C475FD, #4467A3) found zero matching pixels, and the row band reserved for the strip is flat background color.
+      Background: Warm off-white (~#FAF8F1), correct for light theme.
+      Chrome: Bold dark title "heatmap-clustered · julia · makie · anyplot.ai" centered at top, fully visible, not clipped. Column tick labels (Ctrl-1..TreatB-4 style) rotated ~45 deg below the heatmap, fully readable, no overlap. Row tick labels ("Gene 01".."Gene 16") on the right edge of the heatmap, all legible. Colorbar on the far right labeled "Expression (row z-score)" with ticks -2..2, fully visible and not clipped. Column and row dendrograms render correctly above and to the left of the heatmap respectively, in soft dark-gray lines, showing three clear column clusters and multiple row clusters. HOWEVER: the intended "Group" legend (Ctrl/TreatA/TreatB color key) and the colored group-annotation strip beneath the column dendrogram are both entirely absent -- pixel-sampled that exact screen region and found only page-background color, no swatches, no strip. All other text is legibility PASS.
+      Data: Heatmap cells use a red (#AE3030) - near-background - blue (#4467A3) diverging scale, correctly centered at zero (white/near-background at 0). Three visible column super-clusters correspond to Ctrl / TreatB / TreatA groups (confirmed via tick labels since the color strip is missing). Colors are clearly distinguishable cell-to-cell thanks to the added thin grid separators.
+      Legibility verdict: PASS (all rendered text is legible; the missing legend is a completeness/functionality defect, not a legibility one).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 target.
-      Chrome: Title, dendrogram lines, tick labels, and colorbar label all correctly flipped to light-colored ink on the dark background; all clearly readable. No dark-on-dark failures found anywhere.
-      Data: Confirmed identical data colors/positions to the light render (same reordered red/white/blue cell pattern) - only chrome flipped, as required.
-      Legibility verdict: PASS for all rendered/visible elements.
-      Same DEFECT persists: the Group legend and column group-color strip are equally invisible here (layout bug, independent of theme).
+      Background: Warm near-black (~#1A1A17), correct for dark theme.
+      Chrome: Title renders in light/white bold text, fully legible against the dark background. Column and row tick labels render in a light gray (INK_SOFT), clearly legible, no dark-on-dark issues anywhere. Dendrogram lines render in light gray, clearly visible against the black background. Colorbar ticks and label are light-colored and legible. Same missing-legend / missing-annotation-strip defect as the light render: sampled the same screen coordinates and found only the page background color -- no group swatches, no colored strip.
+      Data: Data colors are pixel-identical to the light render (#AE3030 / midpoint / #4467A3 diverging scale) -- only the chrome (background, text, grid) flips, exactly as required. No hue shift between themes was found in the heatmap cells.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; same missing-legend defect carries over from the light render).
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All visible text legible in both themes
+        comment: All rendered text explicitly sized and readable in both themes; colorbar
+          label/ticks rely on Makie defaults instead of explicit sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between rendered elements
+        comment: No overlap between tick labels, dendrograms, or heatmap
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Group-color annotation strip and its legend are coded but render
-          fully invisible in both themes
+        passed: true
+        comment: 16x12 grid comfortably sized, cell gridlines separate near-zero cells
+          cleanly, dendrogram lines clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red/blue is CVD-safe
+        comment: Red-blue diverging scale, not red-green, good contrast against theme
+          backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
         passed: false
-        comment: GridLayout sizing bug creates dead zones where the legend and annotation
-          strip should be
+        comment: The Group legend cell (row2/col3) and the group-annotation-strip
+          row (row3) render as pure background -- conspicuous wasted/dead space where
+          content was intended
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title, colorbar carries units
+        comment: Colorbar labeled 'Expression (row z-score)', gene/sample tick labels
+          are descriptive, not generic x/y
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_div used correctly, theme-adaptive midpoint, correct backgrounds
-          both themes
+        comment: 'Diverging colormap correctly anchored at #AE3030/#4467A3 with theme-adaptive
+          midpoint; backgrounds are #FAF8F1/#1A1A17; chrome theme-correct in both
+          renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Custom dendrograms and theme-adaptive grid show polish, undercut
-          by the broken legend/strip
+        comment: Thoughtful theme-adaptive grid/cell separators and clean dendrogram
+          styling, above a plain default, but the missing legend gives an unfinished
+          feel
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Dead/blank space where the annotation strip and legend should be
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Dendrograms and reordering clearly reveal block structure
+        comment: Spines removed, subtle gridlines, generous proportional whitespace
+          via colsize!/rowsize!, but the broken legend area reads as an refinement
+          gap
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        comment: Dendrogram clustering itself creates visual hierarchy and reveals
+          block structure, but the intended group-color reinforcement never reaches
+          the viewer
     spec_compliance:
       score: 13
       max: 15
@@ -143,27 +150,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct clustered heatmap with dendrograms on both axes
+        comment: Correct clustered heatmap (clustermap) with both-axis dendrograms
+          and reordering
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: true
-        comment: Reordering, diverging colormap, colorbar all present; optional group
-          color-bar attempt is broken
+        comment: All required features (dual dendrograms, reordering, diverging colormap,
+          colorbar) present; the optional group color-bar annotation is coded but
+          never renders
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Rows/columns correctly reordered, all data shown
+        comment: Rows map to genes, columns to samples, all 16x12 cells shown, correctly
+          reordered post-clustering
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
-        passed: false
-        comment: Title format correct; Group legend never appears on canvas
+        comment: Title format exactly correct; the constructed Group legend is entirely
+          absent from both renders
     data_quality:
       score: 14
       max: 15
@@ -172,74 +179,72 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: true
-        comment: Covers dendrograms, reordering, colorbar; group annotation intended
-          but broken
+        comment: Four latent gene modules with distinct positive/negative/mixed patterns
+          across three conditions, giving the clustering real structure to recover
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible gene-expression-across-conditions scenario
+        comment: Neutral, comprehensible gene-expression control/treatment scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Row z-scores in sensible range
+        comment: Row z-score range (~-2.5..2.5) is realistic for normalized expression
+          data
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Custom clustering functions justified but add complexity
+        comment: Four custom helper functions implement clustering/dendrogram geometry
+          from scratch -- justified by the lack of a clustering package in this Julia
+          runtime, but a real departure from imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only used packages imported
+        comment: CairoMakie, Colors, ColorSchemes, Random all used per library conventions
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: GridLayout sizing bug is a real correctness defect
+        comment: The legend/annotation-strip code is dead code in the shipped output
+          -- it computes and draws objects that never appear, which is not clean even
+          though it isn't fake-UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-$(THEME).png via current CairoMakie API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches the required
+          convention
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: false
-        comment: Column-width interaction between fixed-width Colorbar and shared-column
-          Legend not handled correctly
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Hand-rolled Ward's-method clustering, custom dendrogram segments,
-          image! group strip
-  verdict: REJECTED
+        comment: Strong use of Makie's mosaic GridLayout (fig[row,col]), Axis/Legend/Colorbar
+          composition, hidedecorations!/hidespines! -- undercut slightly by the broken
+          Legend/image! placement
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Mosaic grid layout combining multiple Axis panels plus image! for
+          the (intended) annotation strip is fairly distinctive to Makie's layout
+          system
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -249,9 +254,10 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - hierarchical-clustering
   - normalization
   styling:
   - custom-colormap
-  - minimal-chrome
+  - grid-styling
