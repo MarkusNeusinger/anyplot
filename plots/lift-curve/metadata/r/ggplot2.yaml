@@ -1,0 +1,243 @@
+library: ggplot2
+language: r
+specification_id: lift-curve
+created: '2026-09-05T06:24:02Z'
+updated: '2026-09-05T06:47:56Z'
+generated_by: claude-sonnet
+workflow_run: 33949526812
+issue: 2379
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Correct plot semantics: cumulative lift computed from score-sorted transactions,
+    with a dashed random-baseline reference at y=1 as required by the spec'
+  - Decile markers placed at every 10% interval plus bold value callouts ("9.2x @
+    10%", "2.0x @ 50%") directly satisfy the spec's optional decile/callout guidance
+    and add real data storytelling
+  - 'Theme-adaptive chrome is correctly threaded through: backgrounds, ink tokens,
+    grid, and legend box all flip cleanly between light (#FAF8F1) and dark (#1A1A17)
+    while the green model line and legend styling stay identical'
+  - Canvas is exactly 3200x1800 with no clipped elements, and code is a clean, idiomatic,
+    single-pass ggplot2 script (theme_minimal + targeted theme() overrides, scales::label_percent,
+    inside-legend positioning)
+  weaknesses:
+  - Only 2 of the 10 decile markers (10%, 50%) carry a value callout; adding one more
+    toward the tail (e.g. 90%) would better show how quickly lift decays toward the
+    random baseline
+  - Library mastery is solid but fairly standard ggplot2 idiom (scale_color_manual
+    + annotate); little use of more distinctive ggplot2-specific capabilities beyond
+    the inside-legend positioning
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Fraud Detection Model · lift-curve · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible with no clipping. Axis titles "Population Targeted" (x) and "Cumulative Lift" (y) in dark ink, tick labels ("0%"..."100%", "5"/"10"/"15") in a softer gray — all clearly legible. Only horizontal major gridlines are shown (subtle light gray), no vertical gridlines, no axis ticks/spines — clean minimal chrome. Legend box top-right with a light elevated background and thin border, entries "Model" (green line) and "Random baseline" (dashed gray line) both readable.
+      Data: Green (#009E73) line with circular markers at each decile tracing a smooth decay from ~17x lift near 0% down to ~1x near 100%; a dashed gray horizontal reference line at y=1 for the random baseline. Bold dark-ink annotations "9.2x @ 10%" and "2.0x @ 50%" sit just above the curve at the corresponding deciles without overlapping the line, markers, or each other.
+      Legibility verdict: PASS — no light-on-light or illegible elements found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels flip to light ink/off-white and remain fully legible against the dark background. Gridlines flip to a subtle dark-gray tone, still visible but unobtrusive. Legend box flips to a dark elevated background with a light-gray border; both legend entries and their text remain clearly readable.
+      Data: Data colors are identical to the light render — same green (#009E73) model line with markers, same dashed baseline line (using the theme's ink-soft token, which is light gray in dark mode for contrast), and the same "9.2x @ 10%" / "2.0x @ 50%" annotations, now rendered in light ink and clearly readable against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements read cleanly.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at explicit font sizes; annotation
+          text slightly small relative to title but still legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Callout annotations, markers, legend, and axis text do not collide
+          anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width and decile marker size are appropriately prominent for
+          a smooth aggregated curve
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green line vs. gray dashed baseline gives strong contrast; no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800, nothing clipped, balanced proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with percent units on x-axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match Imprint theme tokens
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom callouts, decile markers, and a styled inside-legend box show
+          clear intentional polish beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/ticks removed, only horizontal grid kept, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Value callouts and decile markers create a clear focal narrative
+          of decaying lift
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lift-curve chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Random-baseline reference line, decile markers, and value callouts
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = population targeted %, Y = cumulative lift, full 0-100% range
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          are clear (Model, Random baseline)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full curve shape, baseline, deciles, and callouts
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fraud detection scenario with plausible 6% fraud rate is realistic
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lift values (1x-17x) and 4000-transaction sample size are sensible
+          for this domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png with current ggsave API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic layered grammar (geom_hline + geom_line + geom_point +
+          annotate), scales::label_percent
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ggplot2 3.5's inside-legend positioning (legend.position.inside);
+          otherwise fairly standard usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - minimal-chrome

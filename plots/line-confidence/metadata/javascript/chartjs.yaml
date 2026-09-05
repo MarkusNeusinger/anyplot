@@ -1,0 +1,235 @@
+library: chartjs
+language: javascript
+specification_id: line-confidence
+created: '2026-09-05T06:53:45Z'
+updated: '2026-09-05T07:05:12Z'
+generated_by: claude-sonnet
+workflow_run: 33950848090
+issue: 2007
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/chartjs/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Attempt-1 feedback fully addressed: 3.5px point markers now mark each of the
+    24 monthly observations on the central line, and the x-axis grid is restored alongside
+    the y-axis grid'
+  - 'Correct Chart.js idiom for confidence bands: transparent-border helper dataset
+    + fill: ''-1'' shades between two series, with the internal ''Lower Bound'' dataset
+    filtered out of the legend'
+  - Theme tokens fully threaded through background, ink, inkSoft, and grid; data colors
+    (palette[0] green, band alpha 0.25) are identical between light and dark renders
+  - Deterministic fixed-seed LCG data generation, no external dependencies, clean
+    canvas mount contract, animation disabled
+  - Confidence band realistically widens toward the forecast horizon (margin grows
+    with i), giving the chart a legitimate data-storytelling element
+  weaknesses:
+  - Design execution is still competent but generic — standard Chart.js line + band
+    with no additional visual flourish (e.g. no marker/annotation distinguishing history
+    from forecast)
+  - 'fill: ''-1'' band technique remains a standard, well-documented Chart.js pattern
+    rather than a distinctive library feature'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Bold dark title "line-confidence · javascript · chartjs · anyplot.ai" at top; legend below with two swatches ("95% Confidence Interval", "Predicted Revenue"); x-axis "Month" with month/year tick labels (Jan 2025 … Nov 2026); y-axis "Revenue ($K)" with numeric ticks 400-650; subtle grid on both axes. All chrome text is dark ink on the light surface.
+      Data: Central trend line is solid brand green (#009E73), ~3.5px, with small round markers at each of the 24 monthly points; the confidence band is the same hue at ~25% alpha and visibly widens from roughly ±15 near Jan 2025 to ±90 near Nov 2026.
+      Legibility verdict: PASS — all text clearly readable against the light background, no overlap or clipping observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title/legend/axis layout, now in light ink (title/axis titles) and soft light gray (tick labels); grid on both axes still subtle and visible against the dark surface.
+      Data: Line and band use the identical brand-green hue and alpha as the light render — only chrome flipped, as required. No dark-on-dark failures; line/markers/band remain clearly distinguishable from the near-black surface.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark or light-on-light issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Point markers now present on the sparse 24-point series, fixing attempt-1
+          feedback
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green series, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, no clipping, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Month / Revenue ($K) descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme backgrounds, identical data
+          colors across themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Standard Chart.js defaults, no distinctive flourish beyond the required
+          band
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis grid restored alongside y-axis grid, subtle opacity, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Widening band tells a story but nothing else reinforces it (e.g.
+          no history/forecast delineation)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line-with-confidence-band chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Solid central line, semi-transparent band (alpha 0.25), legend identifying
+          both
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=Month, y=Revenue, all 24 points shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Trend, seasonality, noise, and widening forecast uncertainty all
+          present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral revenue forecast scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue in $K, 400-650 range, sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only small necessary helpers (LCG, hex-to-rgba)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; uses provided globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic transparent-dataset + fill: ''-1'' band pattern, legend
+          filter'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'fill: ''-1'' band technique is a standard, well-documented pattern'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
