@@ -1,0 +1,231 @@
+library: makie
+language: julia
+specification_id: line-filled
+created: '2026-09-05T07:24:55Z'
+updated: '2026-09-05T08:04:13Z'
+generated_by: claude-sonnet
+workflow_run: 33952325980
+issue: 2643
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'The peak-callout and gradient-fill defects flagged in attempt 2 are both fixed:
+    the callout is confirmed visible in both renders and the fill code was simplified
+    to a plain single-alpha band! instead of the non-functional heatmap+mask approach'
+  - 'Idiomatic Makie usage throughout: band! + lines! for the filled-area effect,
+    scatter! + text! for the peak annotation, all standard high-level API'
+  - Theme-adaptive chrome correctly threaded through Figure/Axis - both renders fully
+    legible, no dark-on-dark/light-on-light issues, data colors identical between
+    themes
+  - Realistic, appropriately-scaled synthetic data (trend + seasonal + noise) producing
+    a plausible DAU growth curve with a clear peak
+  - Clean, minimal code - no leftover dead code from the earlier gradient/callout
+    attempts
+  weaknesses:
+  - 'Design Excellence still trails top-tier: the fill remains a single flat alpha
+    with no gradient or texture, and the peak callout - while functional - is a fairly
+    standard technique rather than a distinctive Makie flourish'
+  - linewidth=2.0 on 120 noisy points still produces a moderately jagged line; a touch
+    of smoothing or thinner linewidth could let the underlying trend read more cleanly
+    without losing the noise character
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title "line-filled · julia · makie · anyplot.ai" in bold dark ink; axis labels "Day Since Launch" / "Daily Active Users (thousands)" in dark ink; tick labels in softer grey; top/right spines removed; single subtle horizontal gridlines at y=50/100 - all readable
+      Data: Brand-green (#009E73) flat semi-transparent fill (alpha ~0.35) from y=0 baseline to the curve, solid brand-green line on top; data rises noisily from ~35k to a peak of ~115k around day ~100. A green scatter dot with a light halo marks the peak, with a "Peak: 115k DAU" text label placed above/left of it, fully within plot bounds, not overlapping curve or gridlines
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Same title/axis labels/ticks now in light ink - fully legible, no dark-on-dark failures
+      Data: Fill and line colors identical to light render (only chrome flipped); peak scatter dot and "Peak: 115k DAU" label present at the same coordinates, rendered in light ink, clearly visible against the dark fill and background
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak label sits clear of curve, gridlines, and axes
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak marker/label now clearly visible; line is a touch busy at 120
+          noisy points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single hue, high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); generous headroom for callout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme backgrounds'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Working peak callout adds polish over a flat fill, but still fairly
+          standard overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle gridline, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak callout gives a genuine focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled line/area chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill (alpha 0.35), line on top, matching color,
+          baseline y=0
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all aspects of a filled line plot
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral DAU growth narrative
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible thousands-of-users scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; heatmap-gradient machinery removed
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No dead code; scatter!/text! produce visible output
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-THEME.png; px_per_unit=2)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!+lines!+scatter!/text! is Makie's recommended toolkit
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Peak annotation is a nice but common technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

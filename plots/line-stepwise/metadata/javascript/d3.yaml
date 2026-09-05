@@ -1,0 +1,246 @@
+library: d3
+language: javascript
+specification_id: line-stepwise
+created: '2026-09-05T07:57:50Z'
+updated: '2026-09-05T08:12:11Z'
+generated_by: claude-sonnet
+workflow_run: 33953785370
+issue: 2600
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Faithful post-step curve (curveStepAfter) with markers precisely at true value-change
+    vertices, visually separating horizontal persistence from vertical instantaneous
+    change
+  - 'Peak annotation ("Peak: 12 agents") gives the chart a clear focal insight, directly
+    addressing the prior review''s data-storytelling gap'
+  - Y-domain now relies on .nice() alone, so the top gridline lands exactly at the
+    data's peak (12) instead of wasting a band above it
+  - Realistic, neutral 24h call-center staffing scenario with a good mix of increases
+    and decreases in value
+  - 'Fully theme-correct rendering: brand green #009E73 identical in both themes,
+    Imprint background/chrome tokens correctly applied, no dark-on-dark or light-on-light
+    failures'
+  - Clean, idiomatic D3 code -- data().join() binding, d3.line()/d3.area() generators
+    with explicit font sizes, no fake interactivity
+  - 'Thoughtful minimal-chrome touch: y-axis domain line and tick marks removed in
+    favor of horizontal gridlines'
+  weaknesses:
+  - curveStepAfter + layered area/line/marker overlay is a solid technique but not
+    fully unique to D3 -- a comparable step chart could be built in another JS charting
+    library with minor syntax changes
+  - X-axis still keeps its small tick marks (only the y-axis ticks/domain were removed)
+    -- removing them too would tighten the minimal-chrome look further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Bold dark-ink title "line-stepwise · javascript · d3 · anyplot.ai" at top, clearly visible. "Hour of Day" and "Active Support Agents" axis labels in dark ink, fully readable. X/Y tick labels in medium-gray (inkSoft), legible. Subtle horizontal-only gridlines; y-axis domain/ticks removed for a clean look; x-axis keeps a thin domain line with small tick marks. Peak annotation "Peak: 12 agents" in bold dark text sits just above its marker, fully visible, no clipping or overlap with the title.
+      Data: Brand-green (#009E73) step line using post-alignment (curveStepAfter), with a low-alpha (12%) green area fill beneath it. 7 circular markers (green fill, light-stroke halo matching page background) mark each true value-change vertex. Top gridline (12) now lines up exactly with the data peak -- no empty band above the data.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: All chrome (title, axis labels, tick labels, peak annotation) flips to light/off-white ink and remains clearly legible -- no dark-on-dark failures anywhere.
+      Data: Step line, area fill, and markers use the identical #009E73 green as the light render (only the area-fill tint reads as a muted dark-green appropriate for the dark surface) -- confirms data-color consistency across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (14/17/26px); title fits without clipping
+          or overflow; well-proportioned and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, peak annotation, axis labels, ticks, or
+          data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (r=8) and 3.5px line are prominent and well-suited to the
+          sparse 7-vertex dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green with light stroke halo for definition,
+          no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills ~89% width / ~80% height of the canvas with balanced
+          margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Hour of Day" and "Active Support Agents" are descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds are
+          theme-correct #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Area fill, rounded joins, minimal-chrome touches, and larger title
+          show clear intent above raw defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-domain padding issue fixed (gridline now tops out at the data peak);
+          y-axis domain/ticks removed; x-axis still keeps small tick marks
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak annotation newly added gives the chart a clear focal insight,
+          addressing the prior review's gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step-line plot using curveStepAfter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal persistence and vertical transitions clearly shown; change-point
+          markers included
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=hour, y=agents correctly mapped, full 0-24 domain shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; single series needs no legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both increases and decreases across multiple step levels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic 24h call-center staffing scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Agent counts (3-12) are plausible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; animation-free static
+          draw
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic d3.line()/d3.area() generators, modern .join() data-binding,
+          axis generator combinators
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: curveStepAfter + layered area/line/marker overlay is solid but replicable
+          in other JS charting libraries with minor changes
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
