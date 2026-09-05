@@ -65,6 +65,22 @@ cx, cy = mean(rd_spend), mean(revenue_growth)
 x_range = maximum(rd_spend) - minimum(rd_spend)
 y_range = maximum(revenue_growth) - minimum(revenue_growth)
 
+# Precompute each label's offset position (and alignment) once so the same
+# values drive both the axis-limit padding below and the draw loop later —
+# a label landing outside the axis's auto-computed data range would
+# otherwise get silently clipped by the axis viewport.
+label_dx    = [(rd_spend[i] >= cx ? 1 : -1) * 0.08 * x_range for i in labeled_idx]
+label_dy    = [(revenue_growth[i] >= cy ? 1 : -1) * 0.11 * y_range for i in labeled_idx]
+label_x     = [rd_spend[labeled_idx[k]] + label_dx[k] for k in eachindex(labeled_idx)]
+label_y     = [revenue_growth[labeled_idx[k]] + label_dy[k] for k in eachindex(labeled_idx)]
+
+# Pad well beyond the label anchors themselves (not just the data range) to
+# leave room for the rendered text glyphs and the connector lines.
+x_pad = 0.12 * x_range
+y_pad = 0.12 * y_range
+x_lo, x_hi = min(minimum(rd_spend), minimum(label_x)) - x_pad, max(maximum(rd_spend), maximum(label_x)) + x_pad
+y_lo, y_hi = min(minimum(revenue_growth), minimum(label_y)) - y_pad, max(maximum(revenue_growth), maximum(label_y)) + y_pad
+
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
     resolution      = (1600, 900),
@@ -100,21 +116,27 @@ ax = Axis(
 
 unlabeled_idx = setdiff(1:n, labeled_idx)
 scatter!(ax, rd_spend[unlabeled_idx], revenue_growth[unlabeled_idx];
-    color = BRAND, alpha = 0.7, markersize = 16, strokewidth = 1, strokecolor = PAGE_BG)
+    color = BRAND, alpha = 0.7, markersize = 15, strokewidth = 1, strokecolor = PAGE_BG)
 
-# Highlighted points get a larger, fully-opaque marker so the labeled
-# subset reads as a focal point even without the text/connector lines.
+# Highlighted points get a larger, fully-opaque marker with a dark ring so
+# the labeled subset reads as an unambiguous focal point — the ring makes
+# the distinction independent of alpha-blending, which is easy to lose in
+# a saved raster next to the merely-translucent unlabeled markers.
 scatter!(ax, rd_spend[labeled_idx], revenue_growth[labeled_idx];
-    color = BRAND, alpha = 1.0, markersize = 22, strokewidth = 1.5, strokecolor = PAGE_BG)
+    color = BRAND, alpha = 1.0, markersize = 24, strokewidth = 2, strokecolor = INK)
+
+# Explicit limits, padded to fit every label anchor computed above, so an
+# offset label can never fall outside the axis viewport and get clipped.
+xlims!(ax, x_lo, x_hi)
+ylims!(ax, y_lo, y_hi)
 
 # Push each label away from the data centroid so it lands in open space,
 # with a thin connector line back to its point.
-for i in labeled_idx
-    dx = (rd_spend[i] >= cx ? 1 : -1) * 0.08 * x_range
-    dy = (revenue_growth[i] >= cy ? 1 : -1) * 0.11 * y_range
-    lx, ly = rd_spend[i] + dx, revenue_growth[i] + dy
-    halign = dx >= 0 ? :left : :right
-    valign = dy >= 0 ? :bottom : :top
+for k in eachindex(labeled_idx)
+    i = labeled_idx[k]
+    lx, ly = label_x[k], label_y[k]
+    halign = label_dx[k] >= 0 ? :left : :right
+    valign = label_dy[k] >= 0 ? :bottom : :top
 
     lines!(ax, [rd_spend[i], lx], [revenue_growth[i], ly];
         color = INK_SOFT, linewidth = 1, alpha = 0.6)
