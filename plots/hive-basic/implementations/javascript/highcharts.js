@@ -46,7 +46,7 @@ function connect(fromAxis, toAxis, count) {
   for (let i = 0; i < count; i++) {
     const source = pick(fromNodes);
     const target = pick(toNodes);
-    edges.push({ source: source.id, target: target.id });
+    edges.push({ source: source.id, target: target.id, pairCount: count });
     source.degree += 1;
     target.degree += 1;
   }
@@ -54,6 +54,7 @@ function connect(fromAxis, toAxis, count) {
 connect(2, 1, 24); // Interface -> Utility
 connect(1, 0, 20); // Utility -> Core
 connect(2, 0, 9); // Interface -> Core (direct)
+const busiestPairCount = Math.max(...edges.map((e) => e.pairCount));
 
 const maxDegree = Math.max(...nodes.map((n) => n.degree), 1);
 
@@ -69,7 +70,7 @@ Highcharts.chart("container", {
         const chart = this;
         const renderer = chart.renderer;
         const cx = chart.plotLeft + chart.plotWidth / 2;
-        const cy = chart.plotTop + chart.plotHeight / 2;
+        const plotCy = chart.plotTop + chart.plotHeight / 2;
         const half = Math.min(chart.plotWidth, chart.plotHeight) / 2;
         const axisLen = half * 0.72; // leave room for axis-name labels
         const labelLen = half * 0.9;
@@ -78,8 +79,23 @@ Highcharts.chart("container", {
 
         // angleDeg=0 points straight up; the three axes are 120° apart —
         // the classic hive-plot fan (up / lower-right / lower-left).
+        function axisAngleRad(axisIdx) {
+          return ((axisIdx * 120 - 90) * Math.PI) / 180;
+        }
+
+        // The fan is not vertically symmetric: one axis reaches a full
+        // radius above center while the other two only reach half that
+        // radius below it (their angles are 30deg/150deg off horizontal).
+        // Centering on the plot's raw geometric center therefore leaves a
+        // large empty band under the shape. Instead, recenter cy so the
+        // vertical bounding box of the axis tips is centered in the plot
+        // area — this generalizes to any axis-count/angle choice.
+        const sines = AXES.map((_, axisIdx) => Math.sin(axisAngleRad(axisIdx)));
+        const verticalBalance = (Math.min(...sines) + Math.max(...sines)) / 2;
+        const cy = plotCy - labelLen * verticalBalance;
+
         function pointAt(axisIdx, radius) {
-          const rad = ((axisIdx * 120 - 90) * Math.PI) / 180;
+          const rad = axisAngleRad(axisIdx);
           return { x: cx + radius * Math.cos(rad), y: cy + radius * Math.sin(rad) };
         }
 
@@ -93,7 +109,7 @@ Highcharts.chart("container", {
             .add();
 
           const labelPos = pointAt(axisIdx, labelLen);
-          const dy = Math.sin(((axisIdx * 120 - 90) * Math.PI) / 180) < -0.3 ? -6 : 16;
+          const dy = Math.sin(axisAngleRad(axisIdx)) < -0.3 ? -6 : 16;
           renderer
             .text(name, labelPos.x, labelPos.y + dy)
             .attr({ align: "center", zIndex: 5 })
@@ -116,6 +132,8 @@ Highcharts.chart("container", {
 
         // Edges as gentle bezier curves bowed toward the center, which keeps
         // dense connections readable instead of a straight-line hairball.
+        // The busiest axis-pair (most edges) gets a thinner, more transparent
+        // stroke so its near-parallel curves don't fuse into a solid band.
         edges.forEach((e) => {
           const p1 = position[e.source];
           const p2 = position[e.target];
@@ -123,9 +141,15 @@ Highcharts.chart("container", {
           const midY = (p1.y + p2.y) / 2;
           const ctrlX = midX + (cx - midX) * 0.35;
           const ctrlY = midY + (cy - midY) * 0.35;
+          const isBusiest = e.pairCount === busiestPairCount;
           renderer
             .path(["M", p1.x, p1.y, "Q", ctrlX, ctrlY, p2.x, p2.y])
-            .attr({ stroke: t.inkSoft, "stroke-width": 1.2, fill: "none", opacity: 0.3 })
+            .attr({
+              stroke: t.inkSoft,
+              "stroke-width": isBusiest ? 0.9 : 1.2,
+              fill: "none",
+              opacity: isBusiest ? 0.2 : 0.3,
+            })
             .add();
         });
 
