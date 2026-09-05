@@ -116,13 +116,13 @@ scatter!(
 # for itself.
 text!(
     ax, lo_anchor_x, lo_anchor_y;
-    text = "σ ≈ $(round(lo_sigma, digits = 1))", color = INK_SOFT, fontsize = 12,
-    align = (:center, :bottom), offset = (0, 8),
+    text = "SD ≈ $(round(lo_sigma, digits = 1))", color = INK, fontsize = 13,
+    font = :bold, align = (:center, :bottom), offset = (0, 10),
 )
 text!(
     ax, hi_anchor_x, hi_anchor_y;
-    text = "σ ≈ $(round(hi_sigma, digits = 1))", color = INK_SOFT, fontsize = 12,
-    align = (:center, :bottom), offset = (0, 8),
+    text = "SD ≈ $(round(hi_sigma, digits = 1))", color = INK, fontsize = 13,
+    font = :bold, align = (:center, :bottom), offset = (0, 10),
 )
 
 # Label the two most extreme outliers to give the outlier cluster a
@@ -130,12 +130,14 @@ text!(
 text!(
     ax, fitted_revenue[idx_max], residuals[idx_max];
     text = "largest overshoot: +$(round(Int, residuals[idx_max]))",
-    color = IMPRINT_PALETTE[5], fontsize = 11, align = (:left, :bottom), offset = (10, 6),
+    color = IMPRINT_PALETTE[5], fontsize = 12, font = :bold,
+    align = (:left, :bottom), offset = (12, 8),
 )
 text!(
     ax, fitted_revenue[idx_min], residuals[idx_min];
     text = "largest undershoot: $(round(Int, residuals[idx_min]))",
-    color = IMPRINT_PALETTE[5], fontsize = 11, align = (:left, :top), offset = (10, -6),
+    color = IMPRINT_PALETTE[5], fontsize = 12, font = :bold,
+    align = (:left, :top), offset = (12, -8),
 )
 
 axislegend(
