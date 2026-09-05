@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: funnel-basic
 created: '2026-09-05T01:58:44Z'
-updated: '2026-09-05T02:03:13Z'
+updated: '2026-09-05T02:12:18Z'
 generated_by: claude-sonnet
 workflow_run: 33937391276
 issue: 789
@@ -12,165 +12,166 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Correct Imprint palette in canonical order, byte-identical data colors across
-    light/dark, theme-correct chrome in both renders
-  - Idiomatic "floating bar" technique to build a funnel shape from Chart.js's core
-    bar type without reaching for an unavailable plugin
-  - Custom afterDatasetsDraw plugin renders value+percentage labels with a shadow,
-    keeping them legible over every stage color in both themes
-  - Realistic e-commerce checkout funnel with varied (non-uniform) stage-to-stage
-    drop-off rates
+  - Custom Chart.js plugin (afterDatasetsDraw) renders true tapering trapezoids by
+    sharing the top/bottom edge between consecutive segments, correctly using scales.x.getPixelForValue()
+    and bar.getProps() — a technically sound way to build a funnel with a library
+    that has no native funnel type, fully within the plugin API (no community plugin,
+    no shelling out to another library).
+  - First categorical color is Imprint brand green (#009E73), subsequent stages follow
+    the canonical palette order; data colors are pixel-identical between light and
+    dark renders, only chrome flips.
+  - Value + percentage labels (bold white text with a subtle drop shadow) stay legible
+    over every fill color in both themes, including the lighter lavender and ochre
+    segments.
+  - 'Deterministic in-memory data, animation: false, single canvas appended to #container
+    — respects the JS mount-node contract exactly.'
+  - 'Restrained layout: hidden x-axis, no legend (redundant since each stage already
+    carries its own label), thin divider strokes between segments for separation without
+    clutter.'
   weaknesses:
-  - The funnel reads as 5 separated rectangular blocks rather than one continuous
-    tapering shape - reduce or remove categoryPercentage/barPercentage gaps (or draw
-    connecting diagonal fills between adjacent segment edges in the segmentLabels
-    plugin) so the silhouette actually tapers like a funnel
-  - The inter-segment gaps waste a meaningful share of the vertical canvas - tightening
-    them would also improve canvas utilization (VQ-05)
+  - Title text occupies only ~27% of canvas width, leaving the top of the canvas visually
+    light — a modest fontsize increase would strengthen the hierarchy without risking
+    overflow.
+  - Only cumulative percent-of-first-stage is labeled; an optional stage-to-stage
+    drop-off number would add analytical value, though the spec only requires a value
+    or percentage label, which is already met.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "funnel-basic · javascript · chartjs · anyplot.ai" in dark ink text at top, clearly readable. Category labels (Website Visitors, Product Page Views, Added to Cart, Checkout Started, Purchase Completed) in dark-gray text to the left of each bar, clearly readable.
-      Data: Five horizontal floating bars of decreasing width. First series is #009E73 (brand green), followed by lavender #C475FD, blue #4467A3, ochre #BD8233, matte red #AE3030 - matches Imprint canonical order. Each bar has a centered white bold value+percentage label with a subtle shadow for contrast.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "funnel-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top, clearly legible. Five stage labels ("Website Visitors", "Product Page Views", "Added to Cart", "Checkout Started", "Purchase Completed") in soft dark grey down the left margin, all readable. No axis lines, no grid, no legend — appropriate for a funnel.
+      Data: Five tapering trapezoidal segments stacked top-to-bottom, widest at top narrowing to a flat rectangle at the bottom. Colors in canonical Imprint order: brand green (#009E73, 12,000/100%), lavender (6,400/53%), blue (3,100/26%), ochre (1,450/12%), matte red (820/7%). Each segment carries a bold white value+percentage label with a subtle drop shadow, readable against every fill color. Thin light divider lines separate segments.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and category labels flip to light-gray/off-white text, clearly readable against the dark background. No dark-on-dark failures.
-      Data: Colors identical to light render (green/lavender/blue/ochre/red bars unchanged). Value labels remain white-on-color and stay legible in both themes.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and stage labels switch to light grey/off-white tones, fully legible against the dark surface. No dark-on-dark text anywhere.
+      Data: Identical five-color sequence and identical segment proportions/values as the light render (green/lavender/blue/ochre/red at the same percentages) — confirms only chrome flipped, not data colors. White bold value labels remain legible over every segment color; thin dark divider lines (drawn in the page-background color) separate segments without disappearing into them.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title, category ticks, and canvas-drawn value labels all explicitly
-          sized and readable in both themes
+        comment: Title, stage labels, and value labels all readable in both themes;
+          no dark-on-dark or light-on-light issues.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, bars, or title
+        comment: No text overlaps other text or data; value labels stay within their
+          own segment.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar widths clearly distinguishable across 5 stages
+        comment: Segment sizes clearly scale with value; only 5 stages so no overplotting
+          concerns.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, white+shadow labels readable on every bar color
+        comment: Imprint palette used; white text + shadow keeps contrast on every
+          fill; not relying on red/green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Inter-stage gaps consume roughly 30% of vertical canvas as dead space
+        passed: true
+        comment: Canvas gate passed (no drift file); good proportions, no overflow
+          or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive category names; inline value+percentage labels substitute
-          for a numeric axis
+        comment: Title matches mandated format exactly; funnel appropriately omits
+          axis titles.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, identical across
-          themes, theme-correct chrome'
+        comment: 'First series #009E73, canonical order for the rest, backgrounds
+          correct in both themes, data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: true
-        comment: Full Imprint palette used deliberately, custom drop-shadowed labels;
-          above default but not full publication-level
+        comment: Custom shape rendering with shadowed labels and clean color hierarchy
+          shows deliberate polish beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Grid/axis chrome removed and clean segment borders, but generous
-          gaps read as separated blocks
+        comment: No spines/grid/legend clutter; generous left margin for stage labels;
+          subtle divider strokes.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Decreasing widths plus inline labels make stage-to-stage drop-off
-          immediately legible
+        comment: The taper plus percentage-of-first-stage labels immediately communicate
+          drop-off; strong single focal narrative.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Proportional decreasing-width bars convey a funnel, but flat rectangles
-          with gaps lack the continuous tapering trapezoid silhouette
+        comment: Genuine tapering trapezoid funnel, not a substitute chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Ordered stages, distinct colors, value+percentage labels, proportional
-          widths all present
+        comment: Distinct colors per stage, value+percentage labels, largest-to-smallest
+          ordering, width proportional to first stage — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Category axis shows all 5 stages; magnitude correctly drives bar
-          width
+        comment: Stage names on Y, values drive segment width; all 5 stages shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches mandated format exactly; legend correctly omitted
+        comment: Title matches mandated format; legend correctly omitted since labels
+          are inline.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Varied stage-to-stage drop-off rates, not a flat/uniform decay
+        comment: Covers stage names, decreasing values, and cumulative percentage;
+          stage-to-stage drop-off not shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: E-commerce checkout funnel, neutral and comprehensible
+        comment: E-commerce checkout funnel is realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 12,000 visitors to 820 purchases is a realistic e-commerce conversion
-          rate
+        comment: 12,000 down to 820 is a plausible conversion-funnel magnitude.
     code_quality:
       score: 10
       max: 10
@@ -179,56 +180,55 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Linear data -> mount -> plugin -> chart, no unnecessary abstraction
+        comment: Flat script, no unnecessary classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Hard-coded deterministic arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No unused imports
+        comment: No imports beyond the provided global Chart.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI/interactivity, appropriately concise
+        comment: Plugin-based custom draw is appropriately complex for a shape Chart.js
+          lacks natively; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Correct mount-node contract, animation:false, current Chart.js v4
-          API
+        comment: Respects mount-node contract, animation:false, current Chart.js v4
+          API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: Documented floating-bar technique used to synthesize a shape with
-          no native chart type
+        comment: Uses the documented plugin API and scale pixel-mapping correctly;
+          relies on an invisible bar dataset as substrate, which is the accepted workaround
+          given no native funnel type.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Native plugin API (afterDatasetsDraw) used for custom shadowed labels
-  verdict: REJECTED
+        comment: afterDatasetsDraw + getPixelForValue + getProps combination is a
+          distinctive, non-trivial use of Chart.js internals.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - patches
   - annotations
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
+  - minimal-chrome
   - edge-highlighting
