@@ -32,21 +32,32 @@ function windObservations(prevailingDeg, spreadDeg, speedMean, speedSpread, n) {
   return points;
 }
 
+// Afternoon carries two modes (a squall shifting the prevailing direction
+// mid-period) so the dataset also demonstrates a bimodal angular spread,
+// not just three narrow jitter cones.
 const periods = [
-  { label: "Morning", prevailing: 45, spread: 35, speedMean: 6, speedSpread: 4, n: 44 },
-  { label: "Afternoon", prevailing: 225, spread: 40, speedMean: 11, speedSpread: 5, n: 43 },
-  { label: "Evening", prevailing: 285, spread: 45, speedMean: 7, speedSpread: 4, n: 43 },
+  {
+    label: "Morning",
+    modes: [{ prevailing: 45, spread: 30, speedMean: 6, speedSpread: 4, n: 44 }],
+  },
+  {
+    label: "Afternoon",
+    modes: [
+      { prevailing: 200, spread: 22, speedMean: 10, speedSpread: 4, n: 22 },
+      { prevailing: 258, spread: 22, speedMean: 13, speedSpread: 5, n: 21 },
+    ],
+  },
+  {
+    label: "Evening",
+    modes: [{ prevailing: 285, spread: 45, speedMean: 7, speedSpread: 4, n: 43 }],
+  },
 ];
 
 const datasetsRaw = periods.map((period, i) => ({
   label: period.label,
   color: t.palette[i],
-  observations: windObservations(
-    period.prevailing,
-    period.spread,
-    period.speedMean,
-    period.speedSpread,
-    period.n
+  observations: period.modes.flatMap((m) =>
+    windObservations(m.prevailing, m.spread, m.speedMean, m.speedSpread, m.n)
   ),
 }));
 
@@ -66,8 +77,9 @@ const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Chrome layout constants (CSS px, symmetric so the plot area stays square) ---
-const PAD = 120;
+const PAD = 130;
 const title = "polar-scatter · javascript · chartjs · anyplot.ai";
+const subtitle = "Prevailing wind direction rotates clockwise through the day";
 
 function hexToRgba(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -90,11 +102,13 @@ const polarChrome = {
 
     ctx.save();
 
-    // Radial rings
+    // Radial rings — line weight/opacity increases with distance so the outer
+    // (axis-defining) ring reads slightly stronger than the inner guides.
     ctx.strokeStyle = t.grid;
-    ctx.lineWidth = 1;
     ringFractions.forEach((frac) => {
       const r = ringMax * frac;
+      ctx.globalAlpha = 0.5 + 0.5 * frac;
+      ctx.lineWidth = 0.75 + 0.75 * frac;
       ctx.beginPath();
       for (let deg = 0; deg <= 360; deg += 5) {
         const p = toPixel(deg, r);
@@ -103,6 +117,8 @@ const polarChrome = {
       }
       ctx.stroke();
     });
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
 
     // Angular spokes every 45 degrees
     for (let deg = 0; deg < 360; deg += 45) {
@@ -114,15 +130,20 @@ const polarChrome = {
       ctx.stroke();
     }
 
-    // Radius tick labels along the SE spoke (clear of every prevailing-wind cluster)
+    // Radius tick labels along the SE spoke (clear of every prevailing-wind
+    // cluster) — a single axis caption carries the unit so the ticks
+    // themselves stay terse.
     ctx.fillStyle = t.inkSoft;
     ctx.font = "13px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ringFractions.forEach((frac) => {
       const p = toPixel(135, ringMax * frac);
-      ctx.fillText(`${Math.round(ringMax * frac)} m/s`, p.x + 6, p.y);
+      ctx.fillText(`${Math.round(ringMax * frac)}`, p.x + 6, p.y);
     });
+    ctx.font = "italic 12px -apple-system, BlinkMacSystemFont, sans-serif";
+    const captionP = toPixel(135, ringMax * 1.16);
+    ctx.fillText("Wind speed (m/s)", captionP.x + 6, captionP.y);
 
     ctx.restore();
   },
@@ -156,7 +177,13 @@ const polarChrome = {
     ctx.font = "600 22px -apple-system, BlinkMacSystemFont, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(title, width / 2, PAD / 2);
+    ctx.fillText(title, width / 2, PAD * 0.35);
+
+    // Subtitle: calls out the insight directly instead of leaving the reader
+    // to infer it from the color-coded clusters alone.
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = "14px -apple-system, BlinkMacSystemFont, sans-serif";
+    ctx.fillText(subtitle, width / 2, PAD * 0.65);
 
     // Legend (bottom padding band): swatch + label per category, centered row
     ctx.font = "14px -apple-system, BlinkMacSystemFont, sans-serif";
@@ -190,11 +217,11 @@ new Chart(canvas, {
     datasets: datasetsRaw.map((d) => ({
       label: d.label,
       data: d.observations.map((o) => toXY(o.theta, o.radius)),
-      backgroundColor: hexToRgba(d.color, 0.8),
+      backgroundColor: hexToRgba(d.color, 0.72),
       borderColor: t.pageBg,
       borderWidth: 1.5,
-      pointRadius: 7,
-      pointHoverRadius: 7,
+      pointRadius: 6,
+      pointHoverRadius: 6,
     })),
   },
   options: {
