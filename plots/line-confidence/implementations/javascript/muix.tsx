@@ -64,7 +64,7 @@ export default function Chart() {
               label: "95% confidence interval",
               stack: "confidence",
               area: true,
-              color: "rgba(0, 158, 115, 0.3)",
+              color: "rgba(0, 158, 115, 0.2)",
               showMark: false,
             },
             {
@@ -90,17 +90,28 @@ export default function Chart() {
             {
               label: "Daily active users",
               labelStyle: { fontSize: 16 },
+              tickFontSize: 30,
               tickLabelStyle: { fontSize: 14 },
+              min: 9500,
+              max: 19500,
               valueFormatter: (value: number) => `${Math.round(value / 1000)}k`,
             },
           ]}
+          margin={{ left: 88 }}
           grid={{ horizontal: true }}
           slotProps={{ legend: { labelStyle: { fontSize: 14 } } }}
           sx={{
-            "& .MuiLineElement-series-central": { strokeWidth: 3.5 },
+            "& .MuiLineElement-series-central": {
+              strokeWidth: 3.5,
+              filter: `drop-shadow(0 0 2.5px ${t.pageBg}) drop-shadow(0 0 2.5px ${t.pageBg})`,
+            },
             "& .MuiAreaElement-series-lower": { display: "none" },
             "& .MuiLineElement-series-lower": { display: "none" },
-            "& .MuiLineElement-series-band": { strokeWidth: 1 },
+            "& .MuiLineElement-series-band": { display: "none" },
+            // MUI X derives the area's *fill* from `d3Color(color).brighter(0.5).formatHex()`,
+            // which drops any alpha channel in the series `color` — override fill/fillOpacity
+            // directly so the band is genuinely semi-transparent (spec: alpha 0.2-0.4).
+            "& .MuiAreaElement-series-band": { fill: t.palette[0], fillOpacity: 0.22 },
           }}
         />
       </Box>
