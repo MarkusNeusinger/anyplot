@@ -50,6 +50,12 @@ const baseline = [
   { population: 100, captured: 100 },
 ];
 
+// Peak-lift point: population % where the model's advantage over random
+// selection (captured - population) is greatest.
+const peakLift = gainCurve.reduce((best, d) =>
+  d.captured - d.population > best.captured - best.population ? d : best
+);
+
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
@@ -69,9 +75,26 @@ g.append("g")
   .attr("y2", (d) => y(d))
   .attr("stroke", t.grid);
 
+// --- Gain area (shaded lift over random selection) ---------------------------
+// The baseline is the diagonal captured == population, so it can be reused
+// directly as the area's lower edge without resampling a second series.
+const areaGen = d3
+  .area()
+  .curve(d3.curveMonotoneX)
+  .x((d) => x(d.population))
+  .y0((d) => y(d.population))
+  .y1((d) => y(d.captured));
+
+g.append("path")
+  .datum(gainCurve)
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.12)
+  .attr("d", areaGen);
+
 // --- Baseline (random-selection reference) ----------------------------------
 const lineGen = d3
   .line()
+  .curve(d3.curveMonotoneX)
   .x((d) => x(d.population))
   .y((d) => y(d.captured));
 
@@ -91,6 +114,25 @@ g.append("path")
   .attr("stroke-width", 4)
   .attr("stroke-linejoin", "round")
   .attr("d", lineGen);
+
+// --- Peak-lift annotation -----------------------------------------------------
+g.append("circle")
+  .attr("cx", x(peakLift.population))
+  .attr("cy", y(peakLift.captured))
+  .attr("r", 6)
+  .attr("fill", t.palette[0])
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2);
+
+const callout = g
+  .append("g")
+  .attr("transform", `translate(${x(peakLift.population) + 16}, ${y(peakLift.captured) - 24})`);
+callout
+  .append("text")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`${peakLift.population.toFixed(0)}% targeted → ${peakLift.captured.toFixed(0)}% captured`);
 
 // --- Axes -------------------------------------------------------------------
 const xAxis = g
