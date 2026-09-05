@@ -38,8 +38,22 @@ papers.forEach((_, paperIdx) => {
 const authorDegree = authors.map((_, i) => edges.filter((e) => e.authorIdx === i).length);
 const paperDegree = papers.map((_, j) => edges.filter((e) => e.paperIdx === j).length);
 
-const authorY = (i) => 1 - (i + 0.5) / authors.length;
-const paperY = (j) => 1 - (j + 0.5) / papers.length;
+// Reorder each column by degree (descending) so hub nodes cluster near the
+// top on both sides — a simple crossing-minimization heuristic that turns
+// the raw insertion-order "hairball" into a readable hub/cluster layout.
+const authorOrder = authors.map((_, i) => i).sort((a, b) => authorDegree[b] - authorDegree[a] || a - b);
+const paperOrder = papers.map((_, j) => j).sort((a, b) => paperDegree[b] - paperDegree[a] || a - b);
+const authorPos = new Array(authors.length);
+authorOrder.forEach((origIdx, pos) => {
+  authorPos[origIdx] = pos;
+});
+const paperPos = new Array(papers.length);
+paperOrder.forEach((origIdx, pos) => {
+  paperPos[origIdx] = pos;
+});
+
+const authorY = (i) => 1 - (authorPos[i] + 0.5) / authors.length;
+const paperY = (j) => 1 - (paperPos[j] + 0.5) / papers.length;
 const radiusFor = (degree) => 9 + Math.min(degree, 8) * 2.3;
 
 function withAlpha(hex, alpha) {
@@ -73,7 +87,7 @@ const bipartiteLayout = {
   afterDatasetsDraw(chart) {
     const { ctx, scales } = chart;
     ctx.save();
-    ctx.font = "14px sans-serif";
+    ctx.font = "17px sans-serif";
     ctx.fillStyle = t.inkSoft;
     ctx.textBaseline = "middle";
     ctx.textAlign = "right";
