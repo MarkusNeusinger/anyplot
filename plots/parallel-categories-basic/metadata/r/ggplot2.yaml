@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: parallel-categories-basic
 created: '2026-09-05T10:07:15Z'
-updated: '2026-09-05T10:11:56Z'
+updated: '2026-09-05T10:22:16Z'
 generated_by: claude-sonnet
 workflow_run: 33959440091
 issue: 2501
@@ -15,124 +15,138 @@ preview_html_dark: null
 quality_score: 77
 review:
   strengths:
-  - Ribbons are colored consistently by the first dimension (acquisition channel)
-    across all three hops, so a customer's path keeps its origin hue end-to-end as
-    the spec suggests for clarity
-  - Ribbon width is correctly proportional to aggregated observation counts at every
-    hop, verified against the stacked node totals
-  - Smoothstep-interpolated bands produce smooth, polished curves between stages instead
-    of angular connectors
-  - Both renders correctly theme-adapt chrome (background, ink, node/legend borders)
-    while keeping the four data colors identical between light and dark
-  - Canvas dimensions, mandated title format, and Imprint palette compliance are all
-    correct
+  - Correctly implements a parallel-categories/alluvial-style plot using only native
+    ggplot2 geoms (geom_ribbon, geom_rect, geom_text) — no external package dependency
+    (ggalluvial), respecting the library's 'no workarounds' rule.
+  - Implements genuine barycenter-based crossing minimization (forward Sugiyama sweep)
+    to order each downstream stage, instead of a fixed definition order — a real algorithmic
+    technique, not a cosmetic shortcut.
+  - Ribbon width is correctly proportional to observation counts via stacked cumulative
+    sums at both the outgoing and incoming ends of each hop.
+  - Smoothstep interpolation (t^2*(3-2t)) produces genuinely smooth S-curve ribbons
+    rather than straight-line polygons, adding real visual polish.
+  - 'Imprint palette applied correctly: first series (Organic) is #009E73, canonical
+    order preserved for the remaining channels, data colors identical between light/dark
+    renders, and theme-adaptive chrome (background, ink, legend box) correctly branches
+    on ANYPLOT_THEME.'
+  - 'Clean minimal chrome: no grid, no axis ticks/y-text, only the four stage labels
+    at the bottom — consistent with the style guide''s minimalism principle.'
+  - Reproducible (set.seed(42)), clean imports, and saves via ragg::agg_png at the
+    exact landscape target (8x4.5in @ 400dpi = 3200x1800).
   weaknesses:
-  - Extreme ribbon crossing density (roughly 24 distinct flow combinations per hop)
-    makes individual paths very hard to trace; the spec explicitly calls out 'consider
-    ordering categories within each dimension to minimize ribbon crossings', but categories
-    are kept in fixed definition order with no crossing-minimization (e.g. barycenter/greedy
-    reordering)
-  - Overlapping semi-transparent ribbons of different origin colors blend into muddy
-    secondary hues (grey/brown blends) in high-density regions such as the Mobile/Desktop
-    and Home & Garden areas, reducing traceability and mildly hurting CVD accessibility
-  - The sheer number of thin overlapping bands creates visual noise that undercuts
-    a clear focal point/data story — consider reordering categories to minimize crossings,
-    reducing alpha further, widening hop spacing, or trimming to fewer categories
-    per dimension to make paths distinguishable
-  - geom_text node labels are legible but sit close to the visual limit set by the
-    rotated 90 degree orientation combined with the surrounding ribbon clutter
+  - Node/category labels (geom_text, size=2.6mm ~7.4pt, rotated 90deg) are the smallest
+    text in the plot and become illegible once the PNG is scaled down to ~400px mobile
+    width — increase to ~size=3.5-4 or otherwise ensure these labels survive the mobile
+    srcset downscale, since they carry essential content (category names), not decoration.
+  - The Device->Product and Product->Outcome hops are extremely dense with crossing,
+    alpha-blended ribbons — even with barycenter ordering, the middle of the chart
+    reads as a tangle and it's hard to visually trace any single path from Channel
+    to Outcome. Consider a larger GAP between nodes, a slightly lower ribbon alpha,
+    or emphasizing one path more strongly so the chart tells a clearer story.
+  - 'CQ-01 (KISS structure) is violated: the script defines three helper functions
+    (barycenter_order, node_totals_for, build_hop_bands) purely to avoid duplicating
+    per-hop logic. Given ggplot2 has no native alluvial geom this is understandable,
+    but consider whether the three hops can be computed via a single vectorized/grouped
+    pipeline instead of function definitions.'
+  - 'DQ-03: outcome probabilities show only 38-50% cart abandonment, which is on the
+    low end vs typical real-world e-commerce cart-abandonment rates (commonly cited
+    60-70%+) — nudging these values higher would better match established real-world
+    benchmarks.'
+  - The mandated title occupies only ~43% of the plot width at fontsize 12 — noticeably
+    smaller than the ~70-85% that's typical/expected for this exact title format;
+    a modest fontsize increase would use the canvas more assertively without risking
+    overflow.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "parallel-categories-basic · r · ggplot2 · anyplot.ai" is dark ink, clearly readable top-left. Legend ("Acquisition Channel": Organic/Paid Search/Social/Referral swatches) sits below the title in a bordered box with dark text on off-white. Four vertical stage node columns (Channel, Device, Product, Outcome) each show white/off-white rectangular nodes outlined in soft grey-brown, with rotated (90°) black category labels ("Referral", "Social", "Paid Search", "Organic"; "Mobile", "Desktop"; "Electronics", "Apparel", "Home & Garden" — confirmed fully contained within its node box via a zoomed crop, no clipping; "Purchased", "Abandoned"). Bottom axis labels "Channel / Device / Product / Outcome" are dark and legible.
-      Data: Ribbons are colored by first-dimension channel — green (#009E73, Organic), lavender (#C475FD, Paid Search), blue (#4467A3, Social), ochre (#BD8233, Referral) — at alpha 0.5, flowing left to right through all four stages, widths proportional to counts. Between hops the bands cross heavily and overlapping different-colored ribbons blend into secondary muddy tones (grey/brown/dusty-rose) in dense areas.
-      Legibility verdict: PASS (all chrome text is readable; the underlying data pattern is hard to trace due to density, but that is a design/complexity concern, not a legibility failure).
+      Background: Warm off-white (#FAF8F1) plot and legend area, matching the light-theme surface — not pure white.
+      Chrome: Title "parallel-categories-basic · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly readable. A boxed legend "Acquisition Channel" with 4 swatches (Organic/Paid Search/Social/Referral) sits below the title, text is dark-on-light and legible. Four bottom-axis labels (Channel, Device, Product, Outcome) in dark ink, clearly readable. Small rotated category labels (Referral, Social, Paid Search, Organic, Mobile, Desktop, Apparel, Home & Garden, Electronics, Abandoned, Purchased) sit inside light node boxes with dark ink outlines — readable at full resolution but quite small (~7pt equivalent).
+      Data: Four ribbon colors matching the Imprint palette: Organic=#009E73 (green, first series, correct), Paid Search=lavender (#C475FD), Social=blue (#4467A3), Referral=ochre (#BD8233). Ribbons flow left to right through Channel -> Device -> Product -> Outcome with width proportional to counts, using smooth S-curve bands. The Device->Product and Product->Outcome hops show heavy crossing/overlap of semi-transparent ribbons, creating visually dense, hard-to-trace mid-sections.
+      Legibility verdict: PASS (all chrome text readable at full resolution; node labels are legible at full res but a mobile-scale concern is flagged in weaknesses)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and axis labels render in light off-white ink, clearly readable against the dark background. Node boxes are dark fill with light grey borders and light rotated category text — no dark-on-dark failures observed anywhere (node text, axis text, legend text, and title all show clear light-on-dark contrast).
-      Data: Same four ribbon colors as the light render (verified identical green/lavender/blue/ochre hues at the same alpha), confirming data colors are unchanged between themes — only chrome (background, node fill, borders, text ink) flipped as required. Same heavy crossing/blending pattern as the light render.
-      Legibility verdict: PASS (no dark-on-dark or light-on-light issues; readability limitation is due to ribbon density, not theme contrast).
+      Background: Warm near-black (#1A1A17), matching the dark-theme surface — not pure black.
+      Chrome: Title, legend text, and axis labels all render in light ink (#F0EFE8/#B8B7B0) against the dark background — clearly readable, no dark-on-dark failures observed. Node boxes are dark-filled with light-ink text and a light-gray/soft border, legible.
+      Data: Same four ribbon colors as the light render (Organic green, Paid Search lavender, Social blue, Referral ochre) — confirmed identical data-color hues between themes; only the chrome (background, text, node-box fill, legend box) flips. Same crossing/density pattern in the ribbons as the light render.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light issues found in either render)
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: All chrome text readable in both themes at explicit font sizes; rotated
-          node labels are legible but close to the density limit
+        passed: false
+        comment: Title/axis/legend text explicitly sized and readable, but rotated
+          node category labels (~7.4pt) will not survive downscale to ~400px mobile
+          width
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; node labels stay within
-          their boxes
+        comment: No text overlaps other text or data; node labels sit inside their
+          own boxes
       - id: VQ-03
         name: Element Visibility
         score: 3
         max: 6
         passed: false
-        comment: Extreme ribbon crossing density (~24 overlapping flow combinations
-          per hop) makes individual paths very hard to distinguish
+        comment: Ribbons visible but the Device->Product and Product->Outcome hops
+          are a dense, hard-to-parse tangle despite barycenter ordering
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Overlapping semi-transparent ribbons blend into muddy secondary hues
-          in dense regions, reducing distinguishability
+        passed: true
+        comment: 4 hue families used, CVD-safe, alpha 0.35 keeps overlaps distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed, title compact, no overflow or clipping (verified
-          Home & Garden node label fully contained via zoomed crop)
+        comment: Good canvas utilization; minor unused whitespace on the right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stage labels (Channel/Device/Product/Outcome) are descriptive
+        comment: Descriptive stage labels (Channel/Device/Product/Outcome); no units
+          applicable for categorical stages
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, Imprint palette used, correct light/dark
-          chrome backgrounds'
+        comment: 'First series #009E73, canonical order, identical data colors across
+          themes, correct theme-adaptive chrome'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Custom palette and smoothstep-curved bands show polish, but overall
-          visual outcome is busy/cluttered
+        passed: true
+        comment: Custom smoothstep ribbon curves and barycenter crossing-minimization
+          show real design effort above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clean minimal theme with spines/grid removed, but ribbon density
-          undercuts refinement
+        passed: true
+        comment: Grid and ticks fully removed, generous margins, boxed legend well-integrated
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: No clear focal point; heavy crossing obscures the flow narrative;
-          spec's crossing-minimization suggestion was not applied
+        comment: Crossing-minimization helps the first hop but the chart overall stays
+          visually dense; no single path or insight stands out
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,63 +154,63 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parallel-categories construction from first principles (geom_ribbon
-          + geom_rect), justified since ggalluvial is unavailable
+        comment: Correct parallel-categories/alluvial ribbon plot across 4 dimensions
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Width-proportional ribbons and origin-based coloring implemented;
-          crossing-minimization ordering explicitly suggested by the spec was not
-          attempted
+        passed: true
+        comment: Ribbon width proportional to counts, colored by source dimension,
+          explicit crossing minimization
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All four dimensions and their full category sets are shown
+        comment: X-axis stages and category flows correctly mapped; all categories
+          represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches convention; legend labels match channel categories
+        comment: Title format exact match; legend labels match channel categories
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 categorical dimensions with 2-4 categories each, within spec's
-          3-6 dims / 2-8 categories range
+        comment: Conditional probabilities vary meaningfully across every stage, not
+          uniform
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer journey (channel to device to product to outcome) is plausible
-          and neutral
+        comment: Neutral, realistic e-commerce customer-journey scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 2000 synthetic customers with sensible conditional probabilities
+        comment: Mostly plausible, but abandonment rates (38-50%) run lower than typical
+          real-world cart-abandonment benchmarks
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
         passed: false
-        comment: Two helper functions (node_totals_for, build_hop_bands) are used
-          to avoid repeating logic across three hops
+        comment: Defines 3 helper functions (barycenter_order, node_totals_for, build_hop_bands),
+          violating the no-functions KISS rule, though arguably justified by lack
+          of a native geom
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,20 +222,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2, dplyr, ragg imported and used
+        comment: 'ggplot2, dplyr, ragg all used; tibble referenced via ::'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity for the from-scratch
-          construction
+        comment: Necessarily complex for a from-scratch alluvial construction, but
+          long and intricate relative to a typical ggplot2 script
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the exact target dimensions
     library_mastery:
       score: 6
       max: 10
@@ -231,27 +245,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Well-crafted native-geom workaround (geom_ribbon/geom_rect/geom_text)
-          given ggplot2 has no built-in alluvial geom
+        comment: Correct, idiomatic composition of geom_ribbon/geom_rect/geom_text
+          and theme layering; avoids unavailable ggalluvial
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Smoothstep interpolation is a nice touch but is a general algorithm
-          rather than a ggplot2-distinctive feature
-  verdict: APPROVED
+        comment: The from-scratch ribbon/node construction is generic geometry work
+          replicable in any grammar-of-graphics or plotting library, not something
+          unique to ggplot2
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - groupby-aggregation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
