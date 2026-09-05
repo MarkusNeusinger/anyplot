@@ -37,6 +37,24 @@ const dateLabels = dates.map((d) =>
   d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
 );
 
+// Highlight the year's peak close — a focal point for an otherwise flat line.
+const peakIndex = prices.indexOf(Math.max(...prices));
+
+// Brand-green fill fading to transparent, built from the chart's own canvas
+// context so it scales with the actual plot area (Chart.js scriptable option).
+function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+function areaGradient({ chart }) {
+  const { ctx, chartArea } = chart;
+  if (!chartArea) return hexToRgba(t.palette[0], 0);
+  const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  gradient.addColorStop(0, hexToRgba(t.palette[0], 0.32));
+  gradient.addColorStop(1, hexToRgba(t.palette[0], 0));
+  return gradient;
+}
+
 // Smart tick selection: one tick per calendar month, label carries the year
 // only at a year boundary (or the very first tick) — Chart.js has no bundled
 // date adapter, so the "smart formatting" happens here rather than via a
@@ -60,11 +78,14 @@ new Chart(canvas, {
         label: "Closing Price ($)",
         data: prices,
         borderColor: t.palette[0],
-        backgroundColor: t.palette[0],
+        backgroundColor: areaGradient,
         borderWidth: 3,
-        pointRadius: 0,
+        pointRadius: (ctx) => (ctx.dataIndex === peakIndex ? 6 : 0),
         pointHoverRadius: 4,
-        fill: false,
+        pointBackgroundColor: t.palette[0],
+        pointBorderColor: t.pageBg,
+        pointBorderWidth: 2,
+        fill: true,
         tension: 0,
       },
     ],
@@ -83,6 +104,15 @@ new Chart(canvas, {
         padding: { bottom: 20 },
       },
       legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: (items) => dateLabels[items[0].dataIndex],
+          label: (item) =>
+            item.dataIndex === peakIndex
+              ? `Closing Price: $${item.parsed.y.toFixed(2)} (year high)`
+              : `Closing Price: $${item.parsed.y.toFixed(2)}`,
+        },
+      },
     },
     scales: {
       x: {
