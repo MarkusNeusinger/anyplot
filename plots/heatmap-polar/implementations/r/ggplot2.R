@@ -21,14 +21,15 @@ INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 days  <- c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 hours <- 0:23
 
-weekday_curve <- function(hour) 40 + 90 * exp(-(hour - 8)^2 / 6) + 100 * exp(-(hour - 18)^2 / 8)
-weekend_curve <- function(hour) 20 + 70 * exp(-(hour - 14)^2 / 30)
-
 traffic <- expand.grid(day = days, hour = hours, stringsAsFactors = FALSE) %>%
   mutate(
     day_idx    = match(day, days),
     is_weekend = day %in% c("Sat", "Sun"),
-    baseline   = ifelse(is_weekend, weekend_curve(hour), weekday_curve(hour)),
+    baseline   = ifelse(
+      is_weekend,
+      20 + 70 * exp(-(hour - 14)^2 / 30),
+      40 + 90 * exp(-(hour - 8)^2 / 6) + 100 * exp(-(hour - 18)^2 / 8)
+    ),
     visits     = pmax(0, baseline + rnorm(n(), mean = 0, sd = 8))
   )
 
@@ -48,7 +49,10 @@ p <- ggplot(traffic, aes(x = hour + 0.5, y = day_idx, fill = visits)) +
     breaks = 1:7, labels = days
   ) +
   scale_fill_gradient(low = "#009E73", high = "#4467A3", name = "Visits/hr") +
-  labs(title = "Hourly Website Traffic · heatmap-polar · r · ggplot2 · anyplot.ai") +
+  labs(
+    title    = "Hourly Website Traffic · heatmap-polar · r · ggplot2 · anyplot.ai",
+    subtitle = "Hour of day (angular) · Day of week (radial)"
+  ) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
@@ -60,6 +64,7 @@ p <- ggplot(traffic, aes(x = hour + 0.5, y = day_idx, fill = visits)) +
     axis.text.x       = element_text(color = INK_SOFT, size = 8),
     axis.text.y       = element_text(color = INK, size = 8, face = "bold"),
     plot.title        = element_text(color = INK, size = 12, hjust = 0.5),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8, hjust = 0.5),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK, size = 10),
     legend.background = element_rect(fill = PAGE_BG, color = NA)
