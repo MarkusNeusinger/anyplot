@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -27,8 +28,18 @@ const IMPRINT_PALETTE = [
 # One-way commute times (minutes) for two travel modes — overlaid step
 # histograms let the shapes be compared without one distribution occluding
 # the other, which is exactly what stepwise outlines are for.
-cyclist_commutes = max.(28.0 .+ 6.0 .* randn(900), 3.0)
-driver_commutes  = max.(38.0 .+ 9.0 .* randn(900), 3.0)
+n = 900
+cyclist_commutes = max.(28.0 .+ 6.0 .* randn(n), 3.0)
+
+# Drivers show a right-skewed secondary mode: roughly a quarter of trips hit
+# heavy traffic and run noticeably longer, giving the distribution real shape
+# beyond a plain bell curve.
+driver_base       = 36.0 .+ 7.0 .* randn(n)
+congestion_hit    = rand(n) .< 0.28
+driver_commutes   = max.(driver_base .+ congestion_hit .* (16.0 .+ 8.0 .* rand(n)), 3.0)
+
+cyclist_median = median(cyclist_commutes)
+driver_median  = median(driver_commutes)
 
 # --- Plot -----------------------------------------------------------------
 title_str = "histogram-stepwise · julia · makie · anyplot.ai"
@@ -42,7 +53,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = title_str,
-    titlesize          = 20,
+    titlesize          = 23,
     titlecolor         = INK,
     xlabel             = "Commute Time (minutes)",
     ylabel             = "Number of Commuters",
@@ -65,9 +76,16 @@ ax = Axis(
 )
 
 stephist!(ax, cyclist_commutes; bins = 30, color = IMPRINT_PALETTE[1],
-          linewidth = 3.5, label = "Cyclists")
+          linewidth = 3.0, label = "Cyclists")
 stephist!(ax, driver_commutes; bins = 30, color = IMPRINT_PALETTE[2],
-          linewidth = 3.5, label = "Drivers")
+          linewidth = 4.0, label = "Drivers")
+
+# Dashed median markers give each distribution a focal point and make the
+# ~10-minute commute-time gap between modes visible at a glance.
+vlines!(ax, [cyclist_median]; color = (IMPRINT_PALETTE[1], 0.5), linewidth = 2,
+        linestyle = :dash)
+vlines!(ax, [driver_median]; color = (IMPRINT_PALETTE[2], 0.5), linewidth = 2,
+        linestyle = :dash)
 
 axislegend(ax; position = :rt, framevisible = false, labelcolor = INK_SOFT)
 
