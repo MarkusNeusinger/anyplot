@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-adjacency
 created: '2026-09-05T03:20:50Z'
-updated: '2026-09-05T03:24:53Z'
+updated: '2026-09-05T03:34:41Z'
 generated_by: claude-sonnet
 workflow_run: 33941128123
 issue: 5240
@@ -12,46 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - 'Creative, idiomatic workaround for the missing community heatmap component: ScatterChart
-    with a custom `slots.scatter` (AdjacencyCell) renders true filled-square matrix
-    cells instead of circles.'
-  - Correct Imprint sequential palette (seq[0] -> seq[1]) for the continuous weight
-    encoding; absent edges render as the page background per the spec's 'distinct
-    background for absent edges' requirement; data colors are identical between light
-    and dark renders.
-  - Full 20x20 adjacency matrix with both triangles filled for the undirected graph,
-    plus a continuous colorbar legend showing the min/max weight range (7-98).
-  - Deterministic fixed-seed LCG data generation with a realistic, neutral scenario
-    (cross-team collaboration network) that produces visible community structure.
-  - 'Clean chrome: axis lines/ticks disabled, subtle tick label styling, square 2400x2400
-    canvas correctly sized via the `anyplot-orientation: square` directive.'
+  - 'Both attempt-1 weaknesses are resolved: cluster-boundary dividers are now clearly
+    visible (ink-soft stroke at low opacity) and the colorbar bounds carry the "threads"
+    unit.'
+  - New top-edge highlight (black/ink stroke on the max-weight cell) adds a genuine
+    focal point that strengthens data storytelling without cluttering the matrix.
+  - Full 20x20 symmetric adjacency matrix, correct Imprint sequential palette, absent
+    edges rendered as page background, deterministic fixed-seed data generation.
+  - Clean square 2400x2400 canvas, no clipping, no overlap in either theme.
   weaknesses:
-  - The ClusterBoundaries divider lines between team blocks are drawn in `tokens.pageBg`,
-    the same color as blank/absent-edge cells, so they barely register as a distinct
-    visual cue for the block-diagonal grouping the spec calls out — consider a slightly
-    stronger boundary stroke (e.g. a thin ink/inkSoft line at low opacity) so the
-    team-cluster boundaries read at a glance even where cells are already blank.
-  - The colorbar/legend shows only the numeric bounds (7, 98) with no text label describing
-    what the scale represents (e.g. 'Shared threads / month') — add a short legend
-    title so the scale is self-explanatory without relying on the subtitle.
+  - 'Minor: the top-link highlight stroke has no legend/annotation explaining what
+    it means — a viewer has to infer "this cell is outlined because it''s the strongest
+    edge." A one-line caption or small annotation would make the affordance self-explanatory,
+    though it''s not a scoring blocker.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent across the full square canvas.
-      Chrome: Title "heatmap-adjacency · javascript · muix · anyplot.ai" in dark ink, centered at top, with a smaller dark-gray subtitle "Monthly shared threads between teammates, grouped by team" beneath it. 20 node-name tick labels (Ava, Noah, Mia, ... Wes) run along the top x-axis and left y-axis in a muted ink-soft tone. A vertical continuous colorbar sits at the right edge, labeled with bounds 98 (top) and 7 (bottom).
-      Data: A 20x20 grid of filled square cells. Cells with an edge are colored on a green-to-blue sequential scale (light teal/green for weaker cross-team links, deeper blue for stronger same-team links); cells with no edge (including the diagonal) show the plain page background, visually distinct from every colored cell. The four 5-node team blocks (Engineering, Design, Product, Marketing) are visible along the diagonal as denser clusters of color.
-      Legibility verdict: PASS — title, subtitle, all 20 tick labels, and colorbar bounds are clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white, matches #FAF8F1 across the full square canvas.
+      Chrome: Title "heatmap-adjacency · javascript · muix · anyplot.ai" in dark ink, subtitle in dark-gray ink-soft. 20 node-name tick labels along top x-axis and left y-axis in muted ink-soft tone, all legible. Thin gray divider lines mark the four 5-node team boundaries, clearly visible. Colorbar at right labeled "98 threads" (top) / "7 threads" (bottom).
+      Data: Filled square cells on green-to-blue Imprint sequential scale (seq[0] -> seq[1]); absent edges show plain page background, cleanly distinct from colored cells. Strongest edge (Nina<->Wes, 98 threads) outlined in black/ink as a focal highlight.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent across the full square canvas.
-      Chrome: Same title and subtitle, now in light ink/ink-soft tones, clearly legible. Same 20 tick labels along top and left axes in a light muted tone. Same colorbar position and bounds (98 / 7) on the right.
-      Data: Same 20x20 grid with identical cell colors to the light render (green-to-blue sequential scale) — confirms data colors are theme-invariant. Absent-edge cells now show the dark page background instead of light, still clearly distinct from colored cells.
-      Legibility verdict: PASS — all title, subtitle, tick-label, and colorbar text renders in light tones against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black, matches #1A1A17 across the full square canvas.
+      Chrome: Same title/subtitle now in light ink/ink-soft tones, fully legible. Same 20 tick labels in light muted tone. Team-boundary divider lines remain visible as light-gray strokes. Colorbar bounds "98 threads" / "7 threads" legible in light text. No dark-on-dark failures.
+      Data: Cell colors pixel-identical to the light render (theme-invariant weight scale); absent edges now show the dark page background. Top-link cell (Nina<->Wes) outlined in a light stroke, correctly adapted to the dark theme.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,75 +50,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, subtitle, and all 20 tick labels are explicitly sized and
-          readable in both themes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 20 tick labels on each axis are evenly spaced with no collisions
+        comment: No collisions between text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled square cells and continuous color scale clearly distinguish
-          edge weights from absent edges
+        comment: Cells clearly visible; focal highlight on max-weight cell
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue-family sequential scale, no red-green reliance
+        comment: Imprint sequential scale, adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas, no clipping or overflow, legend
-          fits within bounds
+        comment: Correct square 2400x2400 canvas, no clipping
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Node-name tick labels present, but the colorbar has no text label
-          describing the weight scale
+        passed: true
+        comment: Colorbar bounds now carry the threads unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_seq (seq[0]/seq[1]) for continuous weight data; correct
-          #FAF8F1/#1A1A17 backgrounds; data colors identical across themes'
+        comment: Imprint sequential palette, correct theme backgrounds
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom rect-based cell rendering is a distinctive, polished workaround
-          for the missing community heatmap component
+        comment: Custom rect-based cells plus highlighted top-edge outline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axis lines/ticks disabled, generous whitespace, but the team-boundary
-          dividers are too subtle to register as refinement
+        comment: Cluster dividers now clearly visible ink-soft strokes
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Color intensity highlights strong collaborations and team grouping
-          is present, but no strong single focal point or emphasized cluster callout
+        passed: true
+        comment: Strongest edge outlined, giving a clear focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,26 +118,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct adjacency-matrix heatmap
+        comment: Correct adjacency matrix heatmap
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Symmetric fill, distinct absent-edge background, colorbar all present;
-          cluster-boundary dividers exist in code but are barely visible
+        comment: Cluster-boundary dividers now genuinely visible
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source (columns) / target (rows) correctly mapped, full matrix shown
+        comment: Rows/columns correctly mapped to nodes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly, with a helpful added subtitle
+        comment: Correct mandated title format
     data_quality:
       score: 14
       max: 15
@@ -164,20 +146,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Weighted edges, symmetric matrix, absent-edge distinction, and legend
-          all present
+        comment: No optional dendrogram (acceptable, spec marks it optional)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cross-team collaboration network is plausible and neutral
+        comment: Neutral cross-team collaboration scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 nodes, weight range 5-100, sensible for the domain
+        comment: Sensible weight range 7-98 threads/month
     code_quality:
       score: 10
       max: 10
@@ -187,33 +168,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Functional components are required by the React/MUI X harness contract,
-          not over-engineering
+        comment: No unnecessary classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42) replaces non-reproducible Math.random
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom heatmap-via-scatter render, no
-          fake UI
+        comment: No fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, sized from window.ANYPLOT_SIZE
+        comment: Correct mount-node contract, skipAnimation set
     library_mastery:
       score: 9
       max: 10
@@ -223,26 +202,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ScatterChart band scales, zAxis colorMap, and ContinuousColorLegend
-          within the community surface
+        comment: Idiomatic ScatterChart-as-heatmap workaround
       - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Custom slots.scatter override plus useXScale/useYScale/useDrawingArea
-          hooks for a hand-built overlay component are advanced, library-specific
-          techniques
+        comment: Custom slots.scatter, scale hooks, conditional stroke highlighting
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
-  - minimal-chrome
+  - edge-highlighting
+  - alpha-blending
