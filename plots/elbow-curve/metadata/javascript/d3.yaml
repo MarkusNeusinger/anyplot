@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: elbow-curve
 created: '2026-09-05T00:39:50Z'
-updated: '2026-09-05T00:45:05Z'
+updated: '2026-09-05T00:52:56Z'
 generated_by: claude-sonnet
 workflow_run: 33933485435
 issue: 2333
@@ -12,51 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-cur
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Excellent data storytelling: the optimal k=4 is immediately clear via a larger
-    marker, distinct amber-vs-green color contrast, a dashed guide line to the x-axis,
-    and a text annotation — directly fulfilling the spec''s note to highlight the
-    optimal k value.'
-  - 'Fully theme-adaptive chrome: axis text, ticks, domain lines, and gridlines all
-    pull from window.ANYPLOT_TOKENS, and both renders stay legible with an identical
-    brand-green data line across themes.'
-  - 'Sparse-data-appropriate sizing: markers (r=7, r=11 for the elbow) and a 3.5px
-    connecting line are prominent and well-suited to the 10-point dataset, following
-    the data-density heuristic.'
-  - Realistic, neutral business scenario (customer segmentation inertia) with well-scaled,
-    monotonically appropriate values and a clean, KISS-structured script.
+  - 'Fixed the attempt-1 palette flaw cleanly: the elbow point is now highlighted
+    with a non-semantic ink halo ring plus a larger brand-green marker and bolder
+    pageBg stroke, instead of the amber warning anchor — VQ-07 now scores full marks.'
+  - 'Data storytelling is excellent: the halo, dashed guide line to the x-axis, and
+    a two-tier typographic annotation (small-caps label over a bold value) immediately
+    surface the elbow insight without relying on a semantic color misuse.'
+  - Uses d3.curveMonotoneX (d3-shape) for the connecting line — a deliberate, library-specific
+    choice called out in code comments, going beyond a generic polyline.
+  - Fully theme-adaptive chrome pulled from window.ANYPLOT_TOKENS; identical brand-green
+    data across both renders, sparse-data-appropriate marker/line sizing, realistic
+    customer-segmentation scenario, and clean KISS-structured code.
   weaknesses:
-  - 'The elbow-point marker and its annotation use the amber semantic anchor (t.amber
-    / #DDCC77), which the style guide reserves for warning/caution roles — but ''Optimal
-    k = 4'' is a positive/informational callout, not a warning. Prefer a non-semantic
-    highlight (e.g., a larger brand-green marker with a white/pageBg stroke, or the
-    neutral ink token already used for the dashed guide line) instead of repurposing
-    amber.'
-  - Design excellence is solid but relies mostly on token defaults for typography
-    and grid styling rather than a more deliberate custom hierarchy — push refinement
-    further (e.g., slightly thinner guide line, more considered annotation typography)
-    to reach publication-grade polish.
-  - Library Mastery is correct and idiomatic (scales, axis generators, data-join,
-    line generator) but doesn't yet showcase a feature that's genuinely hard to replicate
-    in another charting library — consider a d3-specific touch such as curve interpolation
-    (`d3.curveMonotoneX`) or a d3-only layout/behavior.
+  - Title is comfortably sized but sits well under the ~50-70% plot-width guidance
+    (~30-40%) — not a deduction on its own, but there's room to grow it slightly for
+    more visual presence without risking overflow.
+  - Design Excellence is solid but still reads as a well-executed standard line chart;
+    pushing further (e.g. a subtle background band for k>=elbow, or varying line weight
+    pre/post elbow) would move it from 'strong' to 'publication-grade'.
+  - Library Mastery is good (scales, axis generators, data-join, curveMonotoneX) but
+    doesn't yet use a truly d3-exclusive mechanism (e.g. d3-transition, a custom d3-shape
+    generator, or d3-array driven annotation placement) that would be hard to replicate
+    in another charting library.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
-      Chrome: Title "elbow-curve · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable; x-axis label "Number of Clusters (k)" and y-axis label "Inertia (Within-Cluster Sum of Squares)" in dark ink, both legible; tick labels (1-10 on x, 0-8,000 on y) in soft dark gray, clearly visible; subtle horizontal gridlines aligned to y-ticks; thin dark L-shaped axis lines.
-      Data: Brand-green (#009E73) line and circular markers for k=1..10, with the k=4 point enlarged and filled amber, connected to the x-axis by a dashed guide line, and labeled "Optimal k = 4" in bold dark text. First/only series correctly uses the brand green.
+      Chrome: Title "elbow-curve · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable and centered; x-axis label "Number of Clusters (k)" and y-axis label "Inertia (Within-Cluster Sum of Squares)" in dark ink, both legible and similarly sized; tick labels (1-10 on x, 0-8,000 on y) in soft dark gray, clearly visible; subtle horizontal gridlines aligned to y-ticks only; thin dark L-shaped axis domain lines.
+      Data: Brand-green (#009E73) line (curveMonotoneX) and circular markers for k=1..10, with the k=4 point enlarged, ringed by a subtle non-colored ink halo, connected to the x-axis by a thin dashed guide line, and labeled with a small-caps "OPTIMAL CLUSTER COUNT" over a bold "k = 4" — no amber or other semantic color is used for the highlight. First/only series correctly uses the brand green.
       Legibility verdict: PASS — all text is dark-on-light and fully readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matching #1A1A17 — not pure black, not light.
       Chrome: Title, axis labels, and tick labels all render in light (white/soft-light) text, clearly visible against the dark background; gridlines are subtle light hairlines; axis domain lines are light-toned.
-      Data: Same brand-green (#009E73) line and markers as the light render, with the same amber-highlighted k=4 point, dashed guide line, and "Optimal k = 4" annotation now in light text — data colors are identical between the two renders, confirming only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick text is clearly legible against the near-black surface, and the brand green and amber both remain visible.
+      Data: Same brand-green (#009E73) line and markers as the light render, with the same ink-halo-highlighted k=4 point, dashed guide line, and two-tier annotation now in light text — data colors are identical between the two renders, confirming only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick text is clearly legible against the near-black surface, and the brand green remains vivid on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -64,35 +59,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14px ticks, 16px axis labels, 22px
-          title); well-proportioned, no overflow, readable at full size in both themes.
+        comment: All font sizes explicitly set (12/14/16/20/22px); readable at full
+          size in both themes, no overflow, balanced axis label/tick sizing.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axis labels, ticks, or the elbow annotation.
+        comment: No collisions between title, axis labels, ticks, guide line, or the
+          elbow annotation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Sparse 10-point dataset gets prominent markers (r=7, r=11 elbow)
-          and a 3.5px line — well adapted to density.
+          and a 3.5px monotone line — well adapted to density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe; elbow point distinguished by both color
-          and size, not hue alone.
+        comment: Elbow point distinguished by size and a neutral ink halo, not hue
+          alone; good contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a good share of the canvas, nothing
-          cut off.
+        comment: Plot area is ~66% of canvas, balanced margins, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,37 +97,37 @@ review:
           Sum of Squares).
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73 and backgrounds theme-correct, but
-          the elbow highlight repurposes the amber warning/caution anchor for a positive
-          informational callout, an off-label semantic use.'
+        passed: true
+        comment: 'Fixed from attempt 1: first series is #009E73, elbow highlight now
+          uses a non-semantic ink halo instead of the amber warning anchor, backgrounds
+          theme-correct in both renders.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured token usage but typography and color choices largely
-          follow defaults rather than a custom aesthetic treatment.
+        passed: true
+        comment: Restrained ink-halo highlight and two-tier annotation typography
+          show intentional design thought, clearly above a plain default line chart.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Some refinement visible (y-only gridlines, domain removed on the
-          gridline group, generous margins) but not fully polished.
+        comment: Y-only gridlines, removed domain on gridline group, thin dashed guide
+          line — good refinement but not every detail is maximally polished.
       - id: DE-03
         name: Data Storytelling
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent: the amber marker, dashed guide, and annotation immediately
-          surface the elbow insight.'
+        comment: Halo, dashed guide, and annotation immediately surface the elbow
+          insight — clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -148,8 +143,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Markers at each k, connecting line, and optimal-k highlighting all
-          present as requested by the spec.
+        comment: Markers at each k, smooth connecting line, and optimal-k highlighting
+          all present per spec.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -172,8 +167,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear steep-decline-then-flatten elbow shape is fully shown across
-          all 10 k values.
+        comment: Clear steep-decline-then-flatten elbow shape fully shown across all
+          10 k values.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -221,26 +216,27 @@ review:
         max: 1
         passed: true
         comment: 'Builds the svg into #container per the mount-node contract, current
-          D3 v7 API (join, not deprecated enter/exit chains).'
+          D3 v7 API (join, not deprecated enter/exit).'
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, clean use of scales, axis generators, data-join, and a d3-shape
+          line generator with curve interpolation.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct use of scales, axis generators, and the data-join pattern,
-          but doesn't push into more advanced idiomatic D3 territory.
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic usage — the gridline-via-tickSize trick and manual guide
-          line could be replicated in most charting libraries without much extra effort.
-  verdict: REJECTED
+        comment: d3.curveMonotoneX (d3-shape curve factory) is a genuine library-specific
+          technique, though the overall chart could still largely be replicated in
+          other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -251,3 +247,4 @@ impl_tags:
   styling:
   - grid-styling
   - edge-highlighting
+  - alpha-blending
