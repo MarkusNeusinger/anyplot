@@ -1,0 +1,227 @@
+library: chartjs
+language: javascript
+specification_id: learning-curve-basic
+created: '2026-09-05T06:13:52Z'
+updated: '2026-09-05T06:17:37Z'
+generated_by: claude-sonnet
+workflow_run: 33949020467
+issue: 2275
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Confidence-band technique via paired hidden-fill datasets is clean and idiomatic
+    for Chart.js, with band entries correctly filtered out of the legend
+  - Data tells a clear, textbook bias-variance story (converging curves, shrinking
+    variance) using a plausible ML scenario
+  - Theme handling is correct in both renders - identical data colors, correctly flipped
+    chrome, no legibility failures
+  - Correct Imprint palette assignment (brand green first, canonical second color
+    for the second series)
+  weaknesses:
+  - Design Excellence is closer to a well-executed default than fully publication-ready
+    - a subtle annotation near the convergence region could push DE-01/DE-03 higher
+  - Title occupies less width than the mandated-title norm - not a defect, but there
+    is room to size it slightly larger without risking overflow
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 - not pure white, not dark.
+      Chrome: Title "learning-curve-basic · javascript · chartjs · anyplot.ai" in bold dark text, centered top; legend below with "Training score" (green) and "Validation score" (lavender) swatches; axis titles "Training Set Size (samples)" and "Cross-Validation Accuracy"; tick labels along both axes. All clearly readable against the light background.
+      Data: Green (#009E73) training line starting near 1.00 and gently declining; lavender (#C475FD-family) validation line starting near 0.87 and rising to converge with the training line. Each has a shaded ±1 SD confidence band in matching hue at low alpha, narrowing as sample size grows. First series correctly uses brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 - not pure black, not light.
+      Chrome: Same title, legend, and axis titles rendered in light gray/white text; tick labels light-colored and clearly legible. Grid lines subtle but visible. No dark-on-dark failures observed anywhere.
+      Data: Colors identical to the light render (green training line/band, lavender validation line/band) - only chrome flipped as expected.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes, no overlap
+          or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Prominent markers/lines well-adapted to sparse (10-point) data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender is CVD-safe and high-contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins, legend near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint palette order, theme-correct backgrounds in both
+          renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Confidence bands plus filtered legend go beyond a bare Chart.js default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and alpha-blended bands, still close to a well-configured
+          default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Converging lines with shrinking bands communicate the bias-variance
+          narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct learning-curve line chart with confidence bands
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bands, legend, sample-size x-axis, distinct colors, y-axis metric
+          label all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, full data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact required format, legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the archetypal learning-curve diagnostic shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Digit-classifier CV scenario is real, neutral, and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accuracy values and trends are realistic and internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure, trivial helper only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic relative-fill band pattern plus legend filter callback
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses some Chart.js-specific mechanics but replicable in other line-chart
+          libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
