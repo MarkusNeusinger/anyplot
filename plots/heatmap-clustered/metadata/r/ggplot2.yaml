@@ -1,0 +1,268 @@
+library: ggplot2
+language: r
+specification_id: heatmap-clustered
+created: '2026-09-05T03:18:24Z'
+updated: '2026-09-05T03:31:49Z'
+generated_by: claude-sonnet
+workflow_run: 33940997753
+issue: 2021
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 96
+review:
+  strengths:
+  - Row-side group annotation strip for the gene module (Up/Down/Stable) is now implemented
+    alongside the existing column strip (Control/Treatment), completing the spec's
+    clustermap-style requirement for row AND column color bars
+  - DIV_MID is now set to ELEVATED_BG (distinct from PAGE_BG) in both themes, so near-zero
+    z-score tiles stay visually part of the grid instead of fading into the canvas
+    — directly fixes the previous review's main VQ-03 weakness
+  - Manual dendrogram construction via geom_segment (row + column), with merge-height/leaf-position
+    math correctly derived from hclust() output, remains a genuinely distinctive ggplot2
+    technique the library has no native geom for
+  - Rows and columns are correctly reordered by Ward's-linkage clustering, visibly
+    recovering the latent Up/Down/Stable gene programs and Control/Treatment sample
+    groups as clean blocks in both renders
+  - Row and column annotation colors are drawn from non-overlapping Imprint palette
+    slots that also avoid the red/blue used by the diverging heatmap scale, preventing
+    cross-encoding color confusion in a plot with three simultaneous color channels
+  - 'Correct diverging color scale (#AE3030 -> theme-adaptive mid -> #4467A3) with
+    the midpoint tied to the actual zero of the z-scored data'
+  - Clean theme-token handling — title, subtitle, both annotation strips' labels,
+    dendrogram lines, axis text, and legend all flip correctly between light and dark
+    with no legibility failures
+  - Exact square 2400x2400 canvas via ggsave(width=6, height=6, dpi=400); no edge
+    clipping on title, tick labels, row/column labels, or legend in either theme
+  - 'Minimal, reproducible code: single seed, only ggplot2 + ragg imported, no functions/classes
+    despite the nontrivial dendrogram and dual-annotation geometry'
+  weaknesses:
+  - Rotated x-axis sample labels (size 8) and y-axis gene labels (size 7) remain slightly
+    imbalanced in scale — minor, both stay legible in both renders
+  - Row-group annotation palette skips Imprint positions 2/3/5 (uses 4, 6, 7) to avoid
+    reusing colors already spent on the column strip and the diverging heatmap scale
+    — a reasonable design call, but worth a code comment documenting the reasoning
+    for future maintainers
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, applied to both plot.background and panel.background.
+      Chrome: Bold dark title "heatmap-clustered · r · ggplot2 · anyplot.ai" top-left, grey subtitle below it. A column dendrogram sits above a green/lavender Control/Treatment annotation strip with text labels, which sits above the 20-gene x 14-sample tile grid. A row dendrogram runs down the left edge, followed by a cyan/ochre/rose Up/Down/Stable annotation strip with rotated text labels ("Down", "Up", "Stable"). Gene labels run down the right edge; rotated sample labels run along the bottom; a horizontal "Z-score" diverging legend (red -1 to blue +1) sits below the plot. All text is dark-on-light or grey-on-light and clearly readable; no light-on-light failures.
+      Data: Tiles are colored on a red (negative z-score) to near-white (zero) to blue (positive z-score) diverging scale, and near-zero tiles remain visually distinct from the page background (no fading, unlike the prior attempt). First categorical annotation color is Imprint green (#009E73) for Control, lavender (#C475FD) for Treatment; row-group strip uses ochre (#BD8233) for Up, cyan (#2ABCCD) for Down, rose (#954477) for Stable. Clear red/blue block structure recovers the synthetic Up/Down gene programs against Control/Treatment groups, and the new row strip visibly aligns with the row dendrogram's three leaf clusters.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, applied consistently to plot and panel background.
+      Chrome: Same title/subtitle rendered in light ink and soft light grey, clearly legible against the dark surface. Both dendrograms render in light grey, clearly visible against black. Both annotation strips' text labels ("Control"/"Treatment" and "Down"/"Up"/"Stable") are light grey and legible against the dark background. Legend text and title are light and readable against the dark legend background.
+      Data: Colors are identical to the light render — same green/lavender column-strip colors, same ochre/cyan/rose row-strip colors, same red-to-blue diverging tile scale with the same block pattern preserved. The diverging midpoint is now a distinct near-black tone (ELEVATED_BG) rather than pure PAGE_BG, so near-zero z-score tiles (e.g. Gene 19/20 rows) remain visible as part of the grid instead of vanishing into the canvas. No dark-on-dark text failures were found anywhere (title, axis labels, ticks, legend all pass).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes; rotated
+          x-axis (size 8) vs y-axis (size 7) tick labels remain slightly imbalanced
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between dendrograms, either annotation strip, tiles,
+          labels, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed from the prior review: DIV_MID is now ELEVATED_BG (distinct
+          from PAGE_BG), so near-zero z-score tiles stay visible as part of the grid
+          in both themes'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses the mandated red/blue diverging stops; no red-green as sole
+          signal; three simultaneous color channels (heatmap, column strip, row strip)
+          kept mutually distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 2400x2400 canvas, good proportions, nothing clipped in either
+          render
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Gene/sample tick labels are self-descriptive; title matches mandated
+          spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical color is #009E73 (Control); diverging scale uses
+          #AE3030/#4467A3; row-group strip uses valid Imprint members chosen to avoid
+          collision with already-used colors; both backgrounds theme-correct'
+    design_excellence:
+      score: 19
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Dual annotation strips, integrated dendrograms, and a deliberate
+          cross-channel color scheme show strong, near-publication-level design intent
+          beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid fully removed, spines removed via theme_minimal, generous whitespace
+          via plot.margin, tile borders subtly match background
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Dendrograms plus both color strips clearly narrate how clustering
+          recovers the true experimental groups and gene programs; viewer immediately
+          sees the block structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct clustered heatmap with dendrograms on both axes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dendrograms, reordering, diverging colormap, colorbar, and now BOTH
+          row and column group annotations are present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 20 genes x 14 samples, all data shown, within spec size range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend correctly labeled Z-score
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now covers all clustered-heatmap aspects, including the previously-missing
+          row group annotation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral gene-expression control/treatment scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Z-scored values with a clear, sensible effect size (~2.3 SD shift)
+          driving visible clustering
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; procedural loops are the minimum needed for
+          manual dendrogram geometry
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 + ragg, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the technique; no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png at the correct dimensions
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic grammar-of-graphics composition (geom_tile + geom_segment
+          + geom_text + scale_fill_gradient2)
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Manual hclust-driven dendrogram construction on both axes, combined
+          with dual color-strip annotations, is a genuinely distinctive workaround
+          for ggplot2's lack of a native clustermap geom
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - hierarchical-clustering
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome
