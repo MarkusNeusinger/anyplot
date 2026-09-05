@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: pyramid-basic
 created: '2026-09-05T12:19:24Z'
-updated: '2026-09-05T12:23:03Z'
+updated: '2026-09-05T12:33:14Z'
 generated_by: claude-sonnet
 workflow_run: 33965405425
 issue: 1000
@@ -12,49 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 96
 review:
   strengths:
-  - 'Correct pyramid/butterfly structure: two mirrored horizontal bar areas share
-    a central axis with identical symmetric 0–60 scales on both sides, exactly per
-    spec'
-  - 'First series uses brand green #009E73 (AuroraStream) and second uses Imprint
-    position 2 lavender #C475FD (NovaPlay), identical across both themes with only
-    chrome flipping'
-  - 'Data tells a genuine story: AuroraStream and NovaPlay subscriber shares cross
-    over across age brackets, visible directly from the mirrored bar lengths without
-    needing annotations'
-  - 'Clean KISS code structure: flat top-to-bottom script, hardcoded deterministic
-    data, no fake interactivity, idiomatic D3 v7 data-join pattern (`selectAll().data().join(''rect'')`)'
-  - All text explicitly sized (title 22px, axis title 16px, category/legend labels
-    15px, ticks 14px) and readable in both themes, including at the 400px mobile thumbnail
-  - 'Good canvas utilization: chart spans ~76% of canvas height and nearly full width
-    with balanced margins; legend sits close to the chart, not isolated'
+  - The crossover bracket (35–44, where AuroraStream first overtakes NovaPlay) is
+    explicitly emphasized with a shaded row background, a bolder center label, and
+    an italic 'crossover' caption — directly addressing the attempt-1 feedback to
+    surface the data's story
+  - 'Distinctive D3 usage: a d3.line() generator with a Catmull-Rom curve (curveCatmullRom.alpha(0.5))
+    threads a dashed trend line through each side''s bar tips, going beyond generic
+    scaleLinear/scaleBand/axisBottom composition'
+  - Value labels at every bar tip add a genuine design/readability improvement over
+    attempt 1 with no clutter or overlap with the bars themselves
+  - 'Data is no longer perfectly monotonic: NovaPlay ticks up slightly at 55–64 before
+    its final drop, and AuroraStream dips at 65+ — small, realistic irregularities
+    called out directly in code comments'
+  - 'Correct pyramid/butterfly structure with symmetric 0–60 scales on both sides,
+    brand green #009E73 (AuroraStream) and Imprint position 2 lavender #C475FD (NovaPlay),
+    identical across both themes with only chrome flipping'
+  - All text explicitly sized (11–22px) and legible in both themes, including the
+    italic caption and value labels at the bar tips
+  - 'Clean KISS code structure: flat script, hardcoded deterministic data, idiomatic
+    D3 v7 join pattern, no fake interactivity'
   weaknesses:
-  - 'Design Excellence is only above-default, not exceptional: no data labels on bar
-    ends, no subtle row banding/hover-independent emphasis, and no explicit callout
-    on the age-driven crossover — the story is visible but not emphasized'
-  - Both series trends are perfectly monotonic in opposite directions (AuroraStream
-    strictly increases with age, NovaPlay strictly decreases) — a small real-world
-    irregularity (e.g. one bracket breaking the trend) would read as more realistic
-  - 'Library Mastery is generic: only basic scaleLinear/scaleBand/axisBottom composition
-    is used — no D3-distinctive feature (e.g. transitions, custom shape generators,
-    force/hierarchy layouts) that would be harder to replicate in a simpler charting
-    library'
-  - Legend swatches/text are manually built with raw rect+text elements rather than
-    any reusable pattern — acceptable but purely functional, not a design highlight
+  - The dashed Catmull-Rom trend lines terminate almost exactly at the value-label
+    anchor points (e.g. the '18', '46', and '42' labels), so the dash pattern lightly
+    grazes the digit edges in a few spots — not an overlap that harms readability,
+    but tightening the line's endpoint offset by a few more px would clean it up
+  - Only one D3-shape feature (the curved line generator) is used to earn distinctiveness
+    — a second custom layout or interpolation touch would push Library Mastery further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "pyramid-basic · javascript · d3 · anyplot.ai" centered at top; a two-item legend (AuroraStream / NovaPlay) directly below the title; six center category labels (18–24 through 65+) between the two bar areas; mirrored bottom value axes labeled 0–60 on both sides; bottom axis title "Subscribers (thousands)". All chrome text renders in dark ink and is clearly legible against the light background. A thin vertical divider line marks the central axis.
-      Data: Left bars (AuroraStream) render in brand green #009E73, right bars (NovaPlay) render in lavender #C475FD — both fully visible, no overlap, bar lengths decreasing/increasing smoothly across age brackets forming a visible crossover pattern.
-      Legibility verdict: PASS — all text (title, legend, category labels, tick labels, axis title) is clearly readable against the light surface; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "pyramid-basic · javascript · d3 · anyplot.ai" centered at top; two-item legend (AuroraStream / NovaPlay swatches) below it; six center category labels (18–24 through 65+) between the mirrored bar areas, with "35–44" bolded and captioned "crossover" in italics on a shaded row background; mirrored bottom value axes labeled 0–60 on both sides; bottom axis title "Subscribers (thousands)". All chrome text renders in dark ink, clearly legible against the light surface.
+      Data: Left bars (AuroraStream) in brand green #009E73, right bars (NovaPlay) in Imprint lavender #C475FD. Dashed curved trend lines in the same two colors thread through each side's bar tips, converging visually around the crossover row. Numeric value labels sit at every bar tip in soft ink.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render, but title, legend text, category labels, tick labels, and axis title all render in light ink, fully legible against the dark background. The central divider line and axis domain lines are theme-adaptive and visible without dominating.
-      Data: Bar colors are identical to the light render — AuroraStream still #009E73, NovaPlay still #C475FD — confirming only chrome (not data colors) flipped between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element is clearly visible against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout as the light render; title, legend, category labels (including the bolded "35–44" / "crossover" caption), tick labels, and axis title all render in light ink and are clearly legible against the dark surface. No dark-on-dark failures — no black-on-black or unreadable elements found.
+      Data: Bar and trend-line colors are identical to the light render (#009E73 / #C475FD) — only chrome (background, text, grid divider, shaded crossover row) flipped to dark-theme tokens.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,77 +60,74 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis title 16px, labels
-          15px, ticks 14px); readable at full size and at 400px mobile thumbnail in
-          both themes
+        comment: All font sizes explicit (11-22px), fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: Dashed trend lines lightly graze a few value-label digits at their
+          endpoints; not a readability issue
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are prominent and appropriately sized for 6 categories per side
+        comment: Bars, trend lines, and value labels all clearly visible for this
+          sparse 6-category dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender combination has good contrast and is CVD-safe
+        comment: Green vs lavender, good contrast, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart spans ~76% of canvas height and nearly full width with balanced
-          margins; legend sits close to the chart
+        comment: Balanced margins, legend close to plot, good canvas utilization,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axis title includes units: ''Subscribers (thousands)'''
+        comment: '''Subscribers (thousands)'' includes units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73, second series Imprint position 2 #C475FD,
-          identical across themes; backgrounds and chrome are theme-correct in both
-          renders'
+          correct theme-adaptive chrome in both renders'
     design_excellence:
-      score: 13
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Clean and intentional two-color mirrored design, above a plain default,
-          but no additional polish like value labels or subtle emphasis
+        passed: true
+        comment: Thoughtful crossover highlight, curved trend lines, and value labels
+          lift this well above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: No grid clutter, minimal spines, generous whitespace — refined but
-          not maximally polished
+        passed: true
+        comment: Subtle divider and shaded row, minimal chrome, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: The age-driven crossover between the two series is visible through
-          the mirrored bar shape itself, creating real visual hierarchy, though not
-          explicitly called out
+        passed: true
+        comment: Crossover bracket explicitly emphasized with shading, bold label,
+          and italic caption — the insight is immediately visible
     spec_compliance:
       score: 15
       max: 15
@@ -142,53 +137,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pyramid/butterfly chart with two mirrored horizontal bar
-          areas sharing a central axis
+        comment: Correct pyramid/butterfly chart structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Symmetric axis scales, distinct colors per side, center category
-          labels, and legend all present
+        comment: Symmetric scales, distinct colors, central category labels, legend
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Left/right values correctly extend from center; axes show full data
-          range
+        comment: Left/right values correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels (AuroraStream,
-          NovaPlay) match the data series
+        comment: Title format correct, legend labels match series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows a clear crossover pattern across brackets, but both series
-          are perfectly monotonic with no realistic irregularity
+        comment: Shows asymmetry, an age-driven crossover, and non-monotonic irregularities
+          on both series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible streaming-service subscriber scenario by age bracket
+        comment: Neutral, plausible streaming-subscriber-by-age-bracket business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Subscriber counts (10–52k) and age brackets are realistic and proportionally
-          sensible
+        comment: Subscriber counts and age-based crossover pattern are plausible
     code_quality:
       score: 10
       max: 10
@@ -204,51 +195,51 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data array
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses the global d3 object, no unused imports
+        comment: Only the d3 global is used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts one <svg> to #container per the harness contract;
-          current D3 v7 API'
+        comment: Follows the mount-node contract correctly, current D3 v7 API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic selection/data/join pattern, scales, and axes
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of D3's data-join pattern, scaleLinear/scaleBand, and
-          axisBottom composition
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Manual mirrored-axis composition is D3-specific, but no advanced
-          feature (transitions, custom shapes, layouts) is used
-  verdict: REJECTED
+        comment: Uses d3.line() with curveCatmullRom.alpha(0.5), a D3-shape feature
+          not trivially replicated in a generic bar-chart API
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
