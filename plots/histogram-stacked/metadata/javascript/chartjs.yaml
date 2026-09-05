@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: histogram-stacked
 created: '2026-09-05T04:25:32Z'
-updated: '2026-09-05T04:30:03Z'
+updated: '2026-09-05T04:40:59Z'
 generated_by: claude-sonnet
 workflow_run: 33944312141
 issue: 2601
@@ -12,65 +12,71 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 93
 review:
   strengths:
+  - 'Bar segments now carry a thin ink-colored stroke (borderColor: t.ink, borderWidth:
+    1), sharpening boundaries between the lavender/blue segments that previously fell
+    below the WCAG 3:1 contrast threshold on the cream background'
+  - 'New insight-callout plugin (afterDatasetsDraw hook) draws leader-line annotations
+    directly naming the pattern ("Engineering: shortest commutes", "Support: longest
+    commutes"), anchored to each group''s own peak bin via getDatasetMeta — genuine
+    Chart.js-idiomatic data storytelling, not a static caption or fake tooltip'
   - 'Correct Imprint palette in canonical order (green #009E73, lavender #C475FD,
-    blue #4467A3), identical across both themes'
+    blue #4467A3), pixel-identical across both themes'
   - Theme-adaptive chrome fully threaded through title, legend, axis labels, ticks,
-    and grid — both renders fully legible
-  - Idiomatic histogram simulation via stacked bar chart with barPercentage/categoryPercentage
-    = 1.0 to remove inter-bin gaps
-  - Deterministic, seed-based data generation (LCG + Box-Muller) with no external
-    RNG dependency
-  - Correct mandated title format and legend labels matching the group names
-  - Realistic, neutral scenario (commute distance by department) with a clear, readable
-    distribution shift across groups
+    grid, and the new annotation ink color — both renders fully legible with no dark-on-dark/light-on-light
+    failures
+  - Idiomatic stacked-histogram simulation via stacked bar chart with barPercentage/categoryPercentage
+    = 1.0 removing inter-bin gaps
+  - Deterministic, seed-based data generation (LCG + Box-Muller), correct mandated
+    title format, and legend labels matching the group names
+  - Realistic, neutral scenario (commute distance by department) with three visibly
+    distinct distributions demonstrating full stacking behavior
   weaknesses:
-  - Design Excellence reads as a well-configured default rather than publication-ready
-    — add a stronger design touch (e.g. a thin ink-colored stroke on bar segments
-    for definition, or refined spacing/typography) to push past generic styling
-  - No visual hierarchy or emphasis calling out the insight (Engineering commutes
-    shortest, Support commutes furthest) — consider a subtle annotation, callout,
-    or color/weight emphasis that guides the reader to the pattern instead of leaving
-    them to find it
-  - 'Bars have no edge stroke (borderWidth: 0); the lavender and blue segments (Imprint
-    positions 2–3) fall below the WCAG 3:1 contrast threshold on the cream background
-    per the style guide — a thin ink-colored stroke would sharpen the boundaries between
-    stacked groups, especially in thinner bins'
-  - The categoryPercentage/barPercentage=1.0 gap-removal trick is a fine technique
-    but not distinctive to Chart.js specifically — consider leveraging a more Chart.js-specific
-    capability to raise library mastery
+  - Title occupies only ~33% of the plot width at the current 22px size — well under
+    the ~50-70% expected range; a touch larger would strengthen the typographic hierarchy
+    (not a hard violation, but leaves DE-01 short of publication-level polish)
+  - The afterDatasetsDraw annotation-drawing technique, while correctly Chart.js-idiomatic,
+    is a pattern other canvas-based libraries (ECharts, Highcharts) can approximate
+    with their own draw hooks — leaning into a feature more uniquely Chart.js (e.g.
+    a custom scale/controller) would raise Library Mastery further
+  - Aesthetic treatment still reads primarily as 'correct defaults plus one annotation
+    layer' rather than a fully bespoke design (e.g. no gradient/typographic accents
+    beyond the mandated tokens) — fine for approval at this stage but the ceiling
+    for Design Excellence remains open
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 (not pure white).
-      Chrome: Title "histogram-stacked · javascript · chartjs · anyplot.ai" is bold dark ink, centered top, fully visible. Legend below the title shows three swatches (green/lavender/blue) with dark labels "Engineering", "Sales", "Support" — all readable. X-axis title "Commute Distance (km)" and Y-axis title "Number of Employees" are dark and legible. Tick labels are a slightly softer dark gray, clearly readable. Y-axis gridlines are subtle, faint horizontal lines; X-axis has no gridlines (intentionally disabled).
-      Data: First series (Engineering) renders in brand green #009E73, second series (Sales) in lavender/purple, third series (Support) in blue — matching Imprint palette canonical order. Bars are stacked and touch each other continuously (no inter-bin gaps), forming a smooth stacked-histogram silhouette. Green dominates low commute distances (0–15 km), lavender dominates the middle range (12–24 km) with a visible peak, and blue dominates the longer distances (24–45 km), tapering to near-zero at the tail.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no overlap or clipping observed.
+      Chrome: Title "histogram-stacked · javascript · chartjs · anyplot.ai" is bold dark ink, centered top, fully visible. Legend below the title shows three swatches (green/lavender/blue) with dark labels "Engineering", "Sales", "Support" — all readable. Two new leader-line annotations ("Engineering: shortest commutes" near the 12-15 bin, "Support: longest commutes" near the 30-33 bin) are drawn in dark ink with a thin vertical line and dot anchored to each group's peak bin — text is crisp and does not collide with the legend, gridlines, or bar fills. X-axis title "Commute Distance (km)" and Y-axis title "Number of Employees" are dark and legible. Tick labels are a softer dark gray, clearly readable; only every other bin is labeled to avoid crowding. Y-axis gridlines are subtle, faint horizontal lines; X-axis has no gridlines (intentionally disabled).
+      Data: First series (Engineering) renders in brand green #009E73, second series (Sales) in lavender/purple #C475FD, third series (Support) in blue #4467A3 — matching Imprint palette canonical order. Each bar segment now has a thin 1px dark-ink stroke separating it from its neighbors, sharpening the boundary between the lower-contrast lavender/blue segments. Bars are stacked and touch each other continuously (no inter-bin gaps), forming a smooth stacked-histogram silhouette. Green dominates low commute distances (0-15 km), lavender dominates the middle range (12-24 km), and blue dominates the longer distances (24-45 km), tapering to near-zero at the tail.
+      Legibility verdict: PASS — all text, including the new annotations, is clearly readable against the light background, no overlap or clipping observed.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 (not pure black).
-      Chrome: Same title, now rendered in light/off-white text, fully visible and legible. Legend swatches are identical colors to the light render, with light-colored text labels. Axis titles are light ink, tick labels are a softer light gray — both clearly readable against the dark background. No dark-on-dark or light-on-light failures observed. Y-axis gridlines are subtle light lines at low opacity.
-      Data: Colors are pixel-identical to the light render — green #009E73, lavender, and blue in the same canonical order and the same bin-by-bin distribution shape. Only the chrome (background, text, grid) flipped between themes, as required.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures detected.
+      Chrome: Same title, legend, and axis text now rendered in light/off-white, fully visible and legible. The two callout annotations are drawn in light ink (white line, dot, and text) against the dark background — clearly visible, no dark-on-dark failure. Axis titles are light ink, tick labels are a softer light gray — both clearly readable. Y-axis gridlines are subtle light lines at low opacity; X-axis has none.
+      Data: Colors are pixel-identical to the light render — green #009E73, lavender #C475FD, and blue #4467A3 in the same canonical order and the same bin-by-bin distribution shape, each with the same 1px ink-colored (here light) stroke. Only the chrome (background, text, grid, annotation ink color) flipped between themes, as required.
+      Legibility verdict: PASS — all text, including the new annotations, is clearly readable against the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; minor deduction
-          for no edge stroke on lower-contrast bar segments
+        comment: All font sizes explicitly set, readable in both themes, new stroke
+          improves segment-boundary legibility; title comfortably fits but runs smaller
+          than the typical 50-70% width guidance
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render
+        comment: No overlapping text or elements in either render; annotation leader
+          lines cross bar fills only, not text
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -82,13 +88,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues, no red-green sole signal, CVD-safe Imprint palette
+        comment: New ink-colored bar-edge stroke resolves the prior WCAG contrast
+          concern on the lavender/blue segments
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well, balanced margins, no cut-off content
+        comment: Plot fills the canvas well, balanced margins, no cut-off content,
+          annotations fit within the plot area
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,30 +111,32 @@ review:
         comment: Canonical Imprint order, correct theme-adaptive backgrounds and chrome
           in both renders
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Looks like a well-configured library default; correct palette but
-          no exceptional design touch
+        passed: true
+        comment: Bar-edge stroke and annotation layer clearly move past a bare default,
+          though the underlying design still leans on prescribed tokens rather than
+          bespoke typography/color treatment
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: X-axis grid deliberately removed and y-axis grid kept subtle, but
-          no further polish (no bar edge stroke)
+        passed: true
+        comment: Edge stroke adds definition, x-grid removed, y-grid subtle, generous
+          whitespace — solid refinement short of flawless
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Data is displayed but the distribution shift insight is not called
-          out or emphasized
+        passed: true
+        comment: Leader-line annotations explicitly name the insight (shortest/longest
+          commute groups) anchored to each group's peak bin — the viewer immediately
+          sees the pattern
     spec_compliance:
       score: 15
       max: 15
@@ -189,7 +199,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small, necessary helper functions for RNG/binning, no over-engineering
+        comment: Small, necessary helper functions for RNG/binning/annotation lookup,
+          no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,7 +218,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or interactivity
+        comment: Appropriate complexity; annotation plugin is a legitimate, non-interactive
+          drawing hook, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -216,31 +228,34 @@ review:
         comment: Correct mount-node contract, animation disabled, current Chart.js
           API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct stacked-scale configuration and dataset mapping via high-level
-          Chart API
+        comment: Correct stacked-scale configuration, dataset mapping, and per-chart
+          plugin registration via the high-level Chart API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: barPercentage/categoryPercentage=1.0 gap removal is a reasonable
-          technique but not unique to Chart.js
-  verdict: REJECTED
+        passed: true
+        comment: Custom afterDatasetsDraw plugin reading getDatasetMeta bar geometry
+          to anchor annotations is genuinely Chart.js-idiomatic, though the general
+          draw-hook pattern is achievable in other canvas-based libraries too
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
   styling:
+  - edge-highlighting
   - grid-styling
