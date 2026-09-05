@@ -36,7 +36,12 @@ tick_labels = Dates.format.(month_starts, "u")
 # --- Plot ------------------------------------------------------------------------
 title_str = "Average Daily Temperature (2024) · line-timeseries · julia · makie · anyplot.ai"
 n_chars = length(title_str)
-title_fontsize = n_chars > 67 ? max(14, round(Int, 20 * 67 / n_chars)) : 20
+title_fontsize = n_chars > 67 ? max(14, round(Int, 26 * 67 / n_chars)) : 26
+
+peak_idx = argmax(temperature_c)
+peak_x = day_offset[peak_idx]
+peak_y = temperature_c[peak_idx]
+peak_label = "Peak: $(round(peak_y, digits=1))°C ($(Dates.format(dates[peak_idx], "u d")))"
 
 fig = Figure(
     size            = (1600, 900),
@@ -61,6 +66,8 @@ ax = Axis(
     yticklabelcolor   = INK_SOFT,
     xtickcolor        = INK_SOFT,
     ytickcolor        = INK_SOFT,
+    xticksvisible     = false,
+    yticksvisible     = false,
     xticks            = (tick_positions, tick_labels),
     backgroundcolor   = PAGE_BG,
     topspinevisible   = false,
@@ -74,6 +81,18 @@ ax = Axis(
 )
 
 lines!(ax, day_offset, temperature_c; color = BRAND, linewidth = 2.5)
+ylims!(ax, minimum(temperature_c) - 3, peak_y + 5)
+
+# Focal point: highlight the seasonal peak for a touch of data storytelling.
+scatter!(ax, [peak_x], [peak_y]; color = BRAND, markersize = 14, strokewidth = 2, strokecolor = PAGE_BG)
+text!(
+    ax, peak_x, peak_y;
+    text   = peak_label,
+    color  = INK,
+    fontsize = 13,
+    align  = (:center, :bottom),
+    offset = (0, 8),
+)
 
 # --- Save --------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
