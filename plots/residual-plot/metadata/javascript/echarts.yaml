@@ -1,0 +1,244 @@
+library: echarts
+language: javascript
+specification_id: residual-plot
+created: '2026-09-05T12:29:53Z'
+updated: '2026-09-05T12:41:59Z'
+generated_by: claude-sonnet
+workflow_run: 33965979122
+issue: 2332
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/echarts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Correct residual plot structure: fitted/predicted values on x-axis, residuals
+    on y-axis, with a clean horizontal zero-reference line (markLine) representing
+    perfect predictions'
+  - Realistic delivery-time regression context with genuine mild heteroscedasticity
+    baked into the data generation (noise scale grows with predicted minutes) — a
+    real diagnostic scenario, not a random blob
+  - Outliers use a z-score threshold and are differentiated by color, larger marker
+    size, and higher opacity — multi-channel encoding, not color alone, which helps
+    CVD accessibility
+  - Alpha transparency (opacity 0.6) on normal points sensibly reduces overplotting
+    with n=300 observations
+  - Theme-adaptive chrome correctly threads tokens through title/legend/axis/gridlines/reference
+    line in both renders; data colors (green normal, red outlier) are identical between
+    light and dark
+  - Clean, deterministic, dependency-free implementation using a small seeded LCG
+    + Box-Muller-style Gaussian generator
+  weaknesses:
+  - The shaded ±2σ band (markArea, bandLow/bandHigh = 2*std) and the outlier-coloring
+    threshold (2.5*std) don't match — several points sit visibly outside the gray
+    band yet remain colored 'Normal' (e.g. near predicted≈36min/residual≈-7.3, and
+    predicted≈57min/residual≈8.4 in both renders). Align both to the same multiple
+    of sigma so the shaded region and the colored outliers tell one consistent story.
+  - No LOWESS/smoothing trend line through the residuals — optional per spec, but
+    a simple moving-average or binned-mean line would strengthen the non-linearity-detection
+    storytelling and could raise Library Mastery / Data Storytelling further.
+  - Legend text (16px) is noticeably smaller than the title (22px); likely fine at
+    desktop but worth double-checking legibility at the ~400px mobile preview size.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-style), not pure white.
+      Chrome: Title "residual-plot · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend ("Normal" green dot, "Outlier (|z| > 2.5σ)" red dot) below title in dark ink, readable. X-axis "Predicted Delivery Time (min)" and y-axis "Residual (min)" labels in dark ink, readable. Tick labels in a softer dark gray, legible. Gridlines light gray and subtle. A solid black horizontal reference line marks y=0. A gray shaded band marks the ±2σ region.
+      Data: First series (Normal) uses the brand green #009E73 at opacity 0.6, second series (Outlier) uses a red/terracotta tone at opacity 0.9 with a larger marker. Residuals scatter around zero with visible mild heteroscedasticity (wider spread at higher predicted values) and 6 flagged outliers.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-style), not pure black.
+      Chrome: Title, legend, and both axis titles render in light/off-white text, clearly readable against the dark background. Tick labels in a lighter soft gray, legible — no dark-on-dark failures observed. Gridlines are subtle dark gray, still visible. The zero-reference line correctly flips to white/light color for dark-mode contrast. The ±2σ band renders as a slightly lighter gray-on-black region, still discernible from the background.
+      Data: Confirmed identical green (#009E73) and red marker colors and identical point positions to the light render — only chrome (background, text, line/band colors) adapted to the theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; legend/tick sizes slightly small
+          relative to title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha 0.6 on 300 points and larger/opaque outlier markers manage
+          density well
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Outliers distinguished by size+opacity in addition to color, mitigating
+          CVD risk
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; proportions balanced, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units (min)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match theme spec in both renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom palette and shaded-band technique beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle gridlines, reasonable whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Outlier highlighting and zero-line aid diagnosis, but band/threshold
+          mismatch undercuts the story
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct residual-vs-fitted scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Zero reference line, alpha for overlap, and outlier band/coloring
+          all present, but the ±2σ band and 2.5σ outlier threshold disagree
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=fitted/predicted, y=residual, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows random scatter, heteroscedasticity, and outliers; no non-linearity
+          pattern shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Delivery-time prediction is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15-60 min predicted range, residuals in single-digit-to-low-teens
+          minutes, sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, only small arrow-function helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses global echarts only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter series with markLine/markArea
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: markLine + markArea are distinctive ECharts features beyond a bare
+          scatter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - outlier-detection
+  styling:
+  - alpha-blending

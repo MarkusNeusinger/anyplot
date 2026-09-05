@@ -1,0 +1,250 @@
+library: makie
+language: julia
+specification_id: polar-scatter
+created: '2026-09-05T11:39:23Z'
+updated: '2026-09-05T12:18:05Z'
+generated_by: claude-sonnet
+workflow_run: 33963551268
+issue: 2023
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
+review:
+  strengths:
+  - Idiomatic, correctly-configured PolarAxis (N-up, clockwise, compass tick labels,
+    unit-formatted radial ticks) that reads immediately as a wind rose
+  - 'Theme-adaptive chrome is fully correct in both renders — identical data colors,
+    correct #FAF8F1/#1A1A17 backgrounds, all text legible on both surfaces (pixel-verified)'
+  - Realistic, well-scaled wind-observation dataset with a genuine directional cluster
+    and per-period variation in spread/speed
+  - Clean, reproducible, KISS-structured single-file script using the current (non-deprecated)
+    Makie API
+  weaknesses:
+  - 'Confirmed by pixel scan of both PNGs: the dashed ''prevailing direction'' spoke
+    (lines!) and its ''prevailing'' text! label never appear in plot-light.png or
+    plot-dark.png — searching both images for the INK color used by that code returns
+    zero pixels outside the title text. The 12-14 m/s outer ring exists only to host
+    this invisible annotation. Either fix the rendering (verify point order / consider
+    space=:data or space=:transformed on text!, confirm lines! isn''t being clipped
+    by an implicit PolarAxis limit) or remove the dead code and tighten rlimits back
+    to the data extent.'
+  - Marker size (9px) is on the small side for a 3200x1800 canvas with only ~120 points;
+    per the style guide's data-density heuristic, bumping to ~14px would improve visibility
+    without hurting the alpha-blended overlap look.
+  - Code comment claims rtickangle = pi/4 places radial labels 'near NE,' but they
+    render along the N (top) axis in both PNGs — harmless here (no overlap with the
+    SW cluster either way) but suggests the angle convention wasn't checked against
+    the actual output.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "polar-scatter · julia · makie · anyplot.ai" in dark ink at top; 8 compass tick labels (N, NE, E, SE, S, SW, W, NW) around the rim; radial gridlines/labels (0/5/10/15 m/s) stacked near the top of the circle; borderless legend box to the right listing Morning/Afternoon/Evening/Night. All chrome text is dark-on-cream and clearly readable.
+      Data: ~120 points colored by time-of-day (Morning = #009E73 brand green, Afternoon = lavender, Evening = blue, Night = ochre), clustered toward the SW/S sector with increasing spread through the day. A dashed "prevailing direction" spoke and "prevailing" text label are present in the source code but were confirmed (via a full pixel scan for the INK color) to be completely absent from the rendered PNG.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same layout as light render with all chrome flipped to light ink (title, compass labels, radial tick labels, legend text) against the dark background. No dark-on-dark failures found.
+      Data: Confirmed identical to light render — same 4 category colors (#009E73, lavender, blue, ochre) at the same positions; only chrome flipped. The prevailing-direction annotation is likewise confirmed absent from this render (pixel scan for the dark-theme INK color found no matches outside the title text).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Markers use the CairoMakie default size (9px) on a 3200x1800 canvas;
+          a little small for ~120 points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 well-separated Imprint hues, theme-adaptive marker stroke, no red-green-only
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas usage; outer 12-14 m/s ring is now empty padding since
+          its intended annotation doesn't render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial ticks carry units (m/s), angular ticks are compass points.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; canonical Imprint order for positions 2-4;
+          theme-correct chrome in both renders.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured PolarAxis, but the intended sophistication move (focal-point
+          annotation) fails to render.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, frameless legend, theme-adaptive tokens; spine ring
+          reads a touch bold.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Intended visual hierarchy (mean-direction spoke + label) never reaches
+          either PNG; default score applies.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine PolarAxis scatter, theta=direction, radius=speed.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines, angular ticks at 45 degrees, category coloring,
+          radius starts at 0, title+legend present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Bearing to theta, speed to radius, correctly and consistently.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match data categories.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows angular spread, radius variation, category coloring, directional
+          cluster with growing dispersion/speed.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral meteorological scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds and bearings are physically realistic.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single flat script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Ships dead code (non-rendering lines!/text! annotation) that adds
+          complexity without visual effect.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png; uses current Figure(size=...) API, not deprecated
+          resolution=.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct PolarAxis/Legend/colsize! usage, but broken lines!/text!
+          calls indicate coordinate handling on PolarAxis wasn't verified against
+          the render.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses Makie-specific PolarAxis machinery (function rtickformat, direction,
+          theta_0, colsize! layout split).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
