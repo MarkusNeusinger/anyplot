@@ -69,11 +69,22 @@ new Chart(canvas, {
         label: `Rolling Average (${WINDOW_DAYS}-day)`,
         data: rollingAvg,
         borderColor: t.palette[0],
-        backgroundColor: t.palette[0],
         borderWidth: 4,
-        pointRadius: 0,
+        pointRadius: rollingAvg.map((v, i) => (v !== null && i === rollingAvg.length - 1 ? 7 : 0)),
+        pointBackgroundColor: t.palette[0],
+        pointBorderColor: t.pageBg,
+        pointBorderWidth: 2,
         tension: 0.25,
         spanGaps: false,
+        fill: true,
+        backgroundColor: (context) => {
+          const { chartArea, ctx } = context.chart;
+          if (!chartArea) return hexToRgba(t.palette[0], 0.18);
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, hexToRgba(t.palette[0], 0.32));
+          gradient.addColorStop(1, hexToRgba(t.palette[0], 0));
+          return gradient;
+        },
       },
     ],
   },
@@ -86,13 +97,21 @@ new Chart(canvas, {
         display: true,
         text: "line-timeseries-rolling · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "500" },
+        font: { size: 29, weight: "600" },
         padding: { bottom: 24 },
       },
       legend: {
         position: "top",
         align: "end",
-        labels: { color: t.ink, font: { size: 16 }, boxWidth: 24, padding: 20 },
+        labels: {
+          color: t.ink,
+          font: { size: 16 },
+          usePointStyle: true,
+          pointStyle: "circle",
+          boxWidth: 10,
+          boxHeight: 10,
+          padding: 20,
+        },
       },
     },
     scales: {
@@ -104,7 +123,12 @@ new Chart(canvas, {
       y: {
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
-        title: { display: true, text: "Daily Active Users", color: t.ink, font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Daily Active Users (count)",
+          color: t.ink,
+          font: { size: 16 },
+        },
       },
     },
   },
