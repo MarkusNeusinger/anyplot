@@ -1,0 +1,258 @@
+library: d3
+language: javascript
+specification_id: line-styled
+created: '2026-09-05T08:13:31Z'
+updated: '2026-09-05T08:28:51Z'
+generated_by: claude-sonnet
+workflow_run: 33954489115
+issue: 2598
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - All four canonical line styles (solid, dashed, dotted, dash-dot) are distinctly
+    implemented with a consistent 3.5px stroke-width; the retuned dash arrays (dotted
+    "1,7", dash-dot "10,5,3,5") fix the prior round's dotted/dash-dot ambiguity and
+    stay visually separable even where the Europe and Asia-Pacific lines converge
+    near M35.
+  - 'Genuine data-driven storytelling: d3.greatest() computes the actual fastest-growing
+    series from the generated data (not hard-coded), highlighted with a soft halo,
+    an endpoint marker, and a callout annotation ("Fastest growth: Asia-Pacific +73%")
+    that is verifiably correct against the plotted values.'
+  - 'Distinctive, idiomatic D3 techniques beyond basic API usage: g.insert("path",
+    ".series-line") for z-order layering of the focal halo behind the data lines,
+    d3.greatest for the reduction, and curveMonotoneX smoothing.'
+  - 'Theme-adaptive chrome is clean in both renders: first series is Imprint #009E73,
+    backgrounds and text correctly flip between #FAF8F1/#1A1A17, data colors are pixel-identical
+    across themes.'
+  - 'Deterministic, dependency-free implementation: fixed-seed LCG appropriate for
+    the browser runtime, flat top-level script with no unnecessary abstractions, current
+    d3 v7 join-pattern API.'
+  weaknesses:
+  - The dotted callout line connecting the annotation text to the focal endpoint travels
+    diagonally across most of the plot width and visually crosses the North America
+    and Europe lines before reaching Asia-Pacific's endpoint — consider a shorter
+    leader line or an elbow/orthogonal path that avoids crossing unrelated series.
+  - 14px tick labels combined with the finer dash patterns (especially the "1,7" dotted
+    style) carry some legibility risk at the smallest 400px thumbnail scale — verify
+    readability at that size or nudge tick font weight slightly.
+  - Aesthetic sophistication (DE-01) is solid but not yet a fully distinctive design
+    statement beyond the focal-halo treatment; the base four-line composition itself
+    remains a fairly standard multi-series line chart.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), matches the light theme token.
+      Chrome: Title "line-styled · javascript · d3 · anyplot.ai" centered at top in bold dark text; y-axis label "Shipment Volume (thousand units)" rotated at left, x-axis label "Month" centered below; subtle horizontal gridlines only (y-axis, no vertical grid); axis ticks and domain lines in soft dark gray; legend at right lists all 4 series with matching line-style swatches (solid, dashed, dotted, dash-dot).
+      Data: Four series from M0-M35 trending upward — North America (green #009E73, solid, ~82→104, highest), Europe (violet, dashed, ~68→80), Asia-Pacific (blue, dotted, ~45→77, wrapped in a soft halo and ending in a filled circle marker), Latin America (amber, dash-dot, ~30→46). A dotted diagonal leader line connects a bold annotation "Fastest growth: Asia-Pacific +73%" to the highlighted endpoint.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation) is clearly readable against the light background; no text-on-text overlap. The annotation leader line crosses over unrelated data lines but does not obscure any text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), matches the dark theme token.
+      Chrome: Same title, axis labels, legend layout, and annotation as the light render but rendered in light/white text; gridlines and axis ticks/domain lines rendered in light gray, still subtle against the dark surface.
+      Data: Same four series with identical colors, dash patterns, halo, and annotation as the light render — confirms data colors and the focal treatment do not shift between themes, only chrome inverted.
+      Legibility verdict: PASS — no dark-on-dark issues; all title, axis, tick, legend, and annotation text is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (14/16/22/15px), fully readable in both themes;
+          slight risk at the smallest 400px thumbnail scale for 14px tick labels combined
+          with fine dash patterns.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions, but the annotation's
+          diagonal leader line visually crosses the North America and Europe data
+          lines en route to its endpoint.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 36-point series with curveMonotoneX smoothing and consistent 3.5px
+          stroke width are clearly visible; retuned dash arrays keep dotted vs. dash-dot
+          distinct.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct line styles (not just color) directly satisfy CVD-safety;
+          no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title comfortably proportioned; no
+          overflow or clipping in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis label includes units ("thousand units"); title matches required
+          format exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73; both backgrounds theme-correct;
+          data colors identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Improved from the prior round via the halo/endpoint/annotation treatment,
+          but the base composition remains a fairly standard multi-series line chart.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No plot border box, single subtle y-axis gridline set, generous legend
+          whitespace; slight clutter from the annotation leader line crossing data.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Data-driven focal point: d3.greatest() identifies the actual fastest-growing
+          series, verified correct against plotted values, with a clear visual and
+          textual callout.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct styled line plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four standard styles present, legend maps style to series, consistent
+          line width across styles.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=month, Y=shipment volume, full data range shown on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match series names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 canonical line styles exercised across 4 series.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral shipment-volume-by-region time series.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values ~30-105 thousand units over 36 months are sensible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no unnecessary functions/classes beyond the
+          required seeded RNG helper.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG for deterministic data in the browser runtime.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, current d3 v7 join API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scales/axes/join/line-generator usage with curveMonotoneX.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.greatest() for data-driven reduction and g.insert() for explicit
+          z-order layering of the halo are genuinely distinctive D3 techniques beyond
+          basic dasharray styling.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
+  - alpha-blending
