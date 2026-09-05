@@ -59,15 +59,19 @@ df <- tibble::tibble(
 chart_start <- min(df$date)
 chart_end   <- max(df$date)
 
+peak_pt   <- df[which.max(df$rsi), ]
+trough_pt <- df[which.min(df$rsi), ]
+
+peak_hjust <- ifelse(as.numeric(peak_pt$date - chart_start) < 15, 0,
+  ifelse(as.numeric(chart_end - peak_pt$date) < 15, 1, 0.5)
+)
+trough_hjust <- ifelse(as.numeric(trough_pt$date - chart_start) < 15, 0,
+  ifelse(as.numeric(chart_end - trough_pt$date) < 15, 1, 0.5)
+)
+
 p <- ggplot(df, aes(date, rsi)) +
-  annotate("rect",
-    xmin = chart_start, xmax = chart_end, ymin = 70, ymax = 100,
-    fill = ANYPLOT_AMBER, alpha = 0.15
-  ) +
-  annotate("rect",
-    xmin = chart_start, xmax = chart_end, ymin = 0, ymax = 30,
-    fill = ANYPLOT_MUTED, alpha = 0.15
-  ) +
+  geom_ribbon(aes(ymin = 70, ymax = 100), fill = ANYPLOT_AMBER, alpha = 0.15) +
+  geom_ribbon(aes(ymin = 0, ymax = 30), fill = ANYPLOT_MUTED, alpha = 0.15) +
   geom_hline(yintercept = 50, linetype = "dotted", linewidth = 0.4, color = INK_SOFT, alpha = 0.6) +
   geom_hline(yintercept = c(30, 70), linetype = "dashed", linewidth = 0.5, color = INK_SOFT) +
   geom_line(color = BRAND, linewidth = 1.1) +
@@ -78,6 +82,16 @@ p <- ggplot(df, aes(date, rsi)) +
   annotate("text",
     x = min(df$date), y = 8, label = "Oversold", hjust = 0,
     size = 3.2, color = INK_MUTED
+  ) +
+  annotate("point", x = peak_pt$date, y = peak_pt$rsi, color = BRAND, size = 2.2) +
+  annotate("text",
+    x = peak_pt$date, y = peak_pt$rsi + 5, label = sprintf("Peak %.0f", peak_pt$rsi),
+    hjust = peak_hjust, size = 3, color = INK, fontface = "bold"
+  ) +
+  annotate("point", x = trough_pt$date, y = trough_pt$rsi, color = BRAND, size = 2.2) +
+  annotate("text",
+    x = trough_pt$date, y = trough_pt$rsi - 5, label = sprintf("Trough %.0f", trough_pt$rsi),
+    hjust = trough_hjust, size = 3, color = INK, fontface = "bold"
   ) +
   scale_y_continuous(limits = c(0, 100), breaks = c(0, 30, 50, 70, 100), expand = c(0, 0)) +
   scale_x_date(date_labels = "%b %Y", date_breaks = "1 month", expand = c(0, 0)) +
@@ -93,7 +107,7 @@ p <- ggplot(df, aes(date, rsi)) +
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x = element_blank(),
     panel.grid.minor   = element_blank(),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major.y = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
