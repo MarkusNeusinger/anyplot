@@ -1,0 +1,234 @@
+library: chartjs
+language: javascript
+specification_id: roc-curve
+created: '2026-09-05T12:51:09Z'
+updated: '2026-09-05T13:04:05Z'
+generated_by: claude-sonnet
+workflow_run: 33967019081
+issue: 2273
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/chartjs/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Both Attempt-1 issues verifiably fixed: reference line now uses t.inkSoft (pixel-confirmed
+    (74,74,68) light / (184,183,176) dark, both with strong contrast against background),
+    and second series now uses canonical t.palette[1] (#C475FD) instead of skipping
+    to palette[2]'
+  - First series correctly uses brand green t.palette[0] (#009E73)
+  - Distinct line styles (solid vs. dashed) give redundant encoding beyond color
+  - AUC values embedded directly in the legend labels
+  - Explicit font sizing throughout (title 26px, axis titles 18px, ticks 15px, legend
+    18px), no overlap
+  - 'Square 2400x2400 canvas is an apt choice given the spec''s ''equal aspect ratio
+    preferred'' note, with aspectRatio: 1 enforced'
+  - Deterministic seeded LCG + Box-Muller data generation gives a reproducible, plausible
+    medical-screening scenario (AUC 0.92 vs 0.79)
+  weaknesses:
+  - 'Design Excellence remains fairly conventional: a correct, clean, but fairly standard
+    two-line ROC plot. A subtle visual-hierarchy touch (e.g., light fill under the
+    leading curve, or an annotated optimal-threshold point) would lift DE-01/DE-03.'
+  - 'Library Mastery is generic: nothing distinctively Chart.js (e.g., no custom tooltip
+    callback formatting FPR/TPR/threshold, no plugin-based annotation for the optimal
+    operating point). A small Chart.js-specific touch would raise LM-02.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-confirmed (250,248,241) ~ #FAF8F1, matches spec.
+      Chrome: Bold dark title "roc-curve · javascript · chartjs · anyplot.ai" at top, clearly readable. Axis titles "False Positive Rate" / "True Positive Rate" in medium-dark ink, tick labels (0.0-1.0, step 0.2) in softer gray, subtle gridlines on both axes. Legend below plot with three entries, all readable.
+      Data: Thick solid brand-green curve (Deep Ensemble, AUC=0.92, palette[0] #009E73) bows sharply toward top-left. Dashed lavender curve (Logistic Baseline, AUC=0.79, palette[1] #C475FD) bows more gradually. Diagonal "Random Classifier" reference line now renders in dark gray (inkSoft #4A4A44, pixel-confirmed (74,74,68)), clearly distinguishable from background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-confirmed (26,26,23) ~ #1A1A17, matches spec.
+      Chrome: Title, axis titles, tick labels, and legend text all correctly flip to light-colored ink. No dark-on-dark text failures.
+      Data: Green and lavender curves pixel-identical in hue to light render (data-color consistency confirmed). Reference line now renders in light gray (inkSoft #B8B7B0, pixel-confirmed (184,183,176)) against (26,26,23) background - strong, easily perceptible contrast. This fixes the Attempt-1 failure where the line used the undefined t.muted token and was effectively invisible (~(58,58,54) vs (26,26,23)).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, well-proportioned, readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Reference line now renders at t.inkSoft with strong contrast in both
+          themes (fixed from Attempt 1)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender + solid/dashed gives redundant encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-balanced square canvas, good margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series now correctly palette[1] (#C475FD);
+          chrome theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: AUC-in-legend + distinct linestyles show design thought, still fairly
+          conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid/whitespace; the previously-broken reference line now
+          renders correctly as an unobtrusive muted guide
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Solid/thick vs dashed/thin creates clear visual hierarchy toward
+          the better model
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ROC-curve line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal y=x reference line present and now reliably visible in both
+          themes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: FPR on x, TPR on y, full 0-1 range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels correct with AUC values
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Two classifiers with clearly different separability
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral medical-screening scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible score distributions and resulting AUC values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions (LCG, Box-Muller, ROC/AUC), reasonably
+          necessary for JS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriately complex
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Chart.js line-chart config with typed linear scales
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Mostly generic line-chart usage; no Chart.js-specific feature leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
