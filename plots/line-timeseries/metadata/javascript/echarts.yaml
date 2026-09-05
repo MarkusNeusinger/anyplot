@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: line-timeseries
 created: '2026-09-05T08:21:46Z'
-updated: '2026-09-05T08:25:44Z'
+updated: '2026-09-05T08:38:50Z'
 generated_by: claude-sonnet
 workflow_run: 33954866389
 issue: 2006
@@ -12,56 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-time
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/echarts/plot-dark.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - 'Uses ECharts'' native `xAxis: { type: "time" }` for smart date formatting that
-    auto-adapts tick granularity across the range (year label at the start, month
-    abbreviations thereafter) — directly satisfies the spec''s core ''intelligent
-    date formatting'' requirement without any manual locator logic.'
-  - 'Correct Imprint palette usage: single series rendered in brand green `#009E73`,
-    identical between light and dark renders — only chrome flips.'
-  - 'Both themes are correctly chrome-adapted: warm off-white `#FAF8F1` / near-black
-    `#1A1A17` backgrounds, readable ink-toned title/axis text, subtle theme-adaptive
-    grid lines, no dark-on-dark or light-on-light failures.'
-  - Grid lines present on both axes per the spec's explicit note ('Include grid lines
-    on both axes for improved readability').
-  - Single-series legend correctly omitted, keeping the chart uncluttered.
-  - Deterministic, seeded data generation (fixed-seed LCG) producing a realistic seasonal
-    outdoor-temperature curve with plausible daily noise.
-  - 'Clean, minimal code with no fake interactivity, correct mount-node contract (`animation:
-    false`, no explicit size/devicePixelRatio), canvas dimensions pass the 3200×1800
-    gate.'
+  - Peak, trough, and average markLine/markPoint annotations add genuine data storytelling
+    beyond a plain line — the trough label correctly uses an explicit position/offset
+    to avoid overlap
+  - Time axis with native ECharts date formatting cleanly adapts tick density across
+    the full year (2025, Mar, May, Jul, Sep, Nov) with no rotation needed
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
+    backgrounds, ink/inkSoft text tokens, subtle grid opacity, first series is Imprint
+    #009E73'
+  - Deterministic fixed-seed LCG generates a realistic seasonal temperature curve
+    (trend + noise) with a plausible 0-24°C annual range
+  - 'Clean idiomatic ECharts usage: single flat setOption call, dataZoom (inside),
+    animation disabled, no explicit width/height/devicePixelRatio on init'
   weaknesses:
-  - Data spans only ~300 days (Jan–Oct 2025); the seasonal arc never completes its
-    cycle back down through winter, so the chart implies but doesn't fully show a
-    year-over-year pattern — extending to a full 365 days would make the temporal
-    story more complete.
-  - No distinctive ECharts features beyond the basic time-axis line (e.g. `markLine`/`markPoint`
-    to call out the seasonal peak/trough, or a `dataZoom` control that would add real
-    value in the interactive HTML view) — the implementation is idiomatic but not
-    exploiting the library's differentiators.
-  - 'Visual refinement is minimal: default axisLine/tick styling is kept as-is rather
-    than deliberately refined (e.g. removing tick marks, tuning grid opacity) beyond
-    the baseline theme tokens — acceptable but generic.'
-  - No explicit x-axis title (e.g. 'Date'); relying solely on the time-axis tick labels
-    to convey the temporal dimension is acceptable here but a short axis name would
-    make SC-04/VQ-06 unambiguous at a glance.
+  - 'Peak annotation overlap: the markPoint circle for the peak (23.9°C) renders directly
+    on top of the label text (overlapping the decimal point), visible identically
+    in both light and dark renders — the trough markPoint already sets an explicit
+    label `position: "right", offset: [8, 0]` to avoid exactly this; apply the same
+    (or `position: "top"`) to the peak''s markPoint data entry so the dot no longer
+    sits inside the text.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold centered title "Outdoor Temperature · line-timeseries · javascript · echarts · anyplot.ai" in dark ink, clearly legible. "Temperature (°C)" y-axis name top-left in dark ink. Y-axis tick labels (0/5/10/15/20/25) and x-axis tick labels (2025, Feb, Mar, ... Oct) in medium-gray, all clearly readable against the light background. Subtle light-gray gridlines on both horizontal and vertical axes, visible but not competing with the data.
-      Data: Single continuous line in brand green (#009E73), tracing a seasonal arc rising from ~1°C in January to a peak of ~24°C around July, then declining to ~7°C by October, with realistic daily noise throughout. No markers (appropriate for ~300 daily points), consistent line weight, clearly distinguishable from the background.
-      Legibility verdict: PASS — no light-on-light or illegible text found.
+      Chrome: Title "Outdoor Temperature · line-timeseries · javascript · echarts · anyplot.ai" is centered, bold, dark ink, fully legible. "Temperature (°C)" y-axis name sits top-left (ECharts default end-location), "Date" x-axis name centered below — both dark ink, clearly readable. Tick labels (0-25 y-axis, month labels 2025/Mar/May/Jul/Sep/Nov on x-axis) are soft dark gray, legible, evenly spaced with no overlap. Grid lines are subtle, visible but not competing with data. Dashed "Avg 12°C" reference line and label sit comfortably inside the right margin (confirmed via pixel crop — not clipped).
+      Data: Single brand-green (#009E73) line, no symbols shown (appropriate for 365 dense points), 3px width. Peak marker (23.9°C, circle) and trough marker (0.1°C, circle) are visible; trough label is offset to the right of its dot with no overlap, but the peak label's dot sits directly on top of/inside the "23.9°C" text (confirmed via pixel crop), partially obscuring the decimal point — a real, if minor, overlap defect.
+      Legibility verdict: PASS (all chrome text readable; the peak-label/marker overlap is a localized annotation glitch, not a legibility failure of chrome or axes).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title text rendered in light/off-white ink, clearly legible against the dark background. "Temperature (°C)" y-axis name in light ink. Tick labels on both axes in light gray, all readable. Gridlines rendered as subtle light-gray/white lines at low opacity, visible without dominating.
-      Data: Identical brand-green (#009E73) line shape, position, and values as the light render — confirms data colors are unchanged between themes and only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark failures found; all title/axis/tick text is clearly visible against the near-black surface, and the brand green line reads well on the dark background.
+      Chrome: Title, axis names, and tick labels all render in light ink tones (confirmed via crop — "Avg 12°C" label is light gray, fully legible against the dark background). No dark-on-dark failures found anywhere. Grid lines subtle and visible.
+      Data: Line and marker colors are pixel-identical to the light render — brand green #009E73 unchanged, confirming only chrome flipped between themes. The same peak-label/marker overlap present in light also appears here identically.
+      Legibility verdict: PASS (no dark-on-dark issues; same isolated peak-annotation overlap as light render).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -69,73 +56,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis name, and tick labels all clearly readable in both themes;
-          no explicit x-axis title reduces slightly.
+        comment: All font sizes explicit, well-proportioned, readable in both themes;
+          peak label partially obscured by its own marker dot
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Peak markPoint circle overlaps the '23.9°C' label text in both renders
+          (trough label correctly avoids this via explicit position/offset)
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: showSymbol:false with a 3px line suits the ~300-point density; peak
-          region gets visually dense from noise but stays readable.
+        comment: Line width and marker sizes well-adapted to 365-point density; no
+          symbols on the line itself, prominent circles for peak/trough
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, no red-green reliance, good contrast on
-          both surfaces.
+        comment: Single-series green line with dashed neutral avg reference — high
+          contrast, no red-green dependency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; no clipping or overflow; generous margins.
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off (Avg 12°C label confirmed not clipped at right edge)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled with units ('Temperature (°C)'); x-axis conveys time
-          via smart tick formatting.
+        comment: '"Date" and "Temperature (°C)" — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; identical
-          data color across themes.'
+        comment: 'First series is Imprint #009E73, identical across themes; backgrounds
+          and chrome correctly theme-adaptive in both renders'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean and uncluttered, but relies on default ECharts styling beyond
-          theme tokens — no custom emphasis.
+        passed: true
+        comment: Thoughtful use of markLine/markPoint annotations beyond a plain line,
+          clean typography — clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid subtle, whitespace generous, implicit L-shaped frame — but axis
-          line/tick styling left at defaults rather than deliberately refined.
+        passed: true
+        comment: Subtle grid, axis ticks removed (axisTick show:false), generous whitespace
+          — good but not exhaustive polish
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: The seasonal arc is inherently visible in the data, but no added
-          design choices (annotation, highlight of peak/trough) build on it.
+        passed: true
+        comment: Peak/trough/average annotations create a clear visual hierarchy and
+          guide the viewer to key insights
     spec_compliance:
       score: 15
       max: 15
@@ -145,50 +133,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart over a time axis.
+        comment: Correct time series line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smart adaptive date formatting, gridlines on both axes, clear temporal
-          x-axis.
+        comment: Native time axis with adaptive date formatting, grid lines on both
+          axes, no overlapping ticks
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=temperature; axes bound to the full data range.
+        comment: Date on x, temperature on y, full year of data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend correctly
-          omitted for single series.
+        comment: Title format correct with descriptive prefix; no legend needed for
+          a single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows trend + noise well; covers ~10 of 12 months rather than a full
-          year cycle.
+        comment: Seasonal trend, noise, peak, trough, and average all represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral outdoor-temperature scenario.
+        comment: Outdoor temperature over a year — real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-24°C range is realistic for a temperate seasonal cycle.
+        comment: 0-24°C annual range with a sinusoidal seasonal shape is physically
+          plausible for a temperate climate
     code_quality:
       score: 10
       max: 10
@@ -198,56 +186,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes beyond the small RNG helper.
+        comment: Flat data -> init -> option script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic.
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the echarts global is used.
+        comment: No imports beyond the global echarts/tokens contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI/interactivity.
+        comment: Appropriate complexity, no fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract exactly; animation disabled; no explicit
-          size/devicePixelRatio.
+        comment: 'Follows the mount-node contract exactly: no explicit size, no devicePixelRatio,
+          animation:false'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Native `type: "time"` xAxis is the idiomatic ECharts way to get
-          adaptive date formatting — directly matches the spec''s ask.'
+        comment: Time axis, markPoint/markLine, dataZoom(inside) all used via the
+          high-level option API as ECharts recommends
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Doesn't use ECharts-distinctive features like markLine/markPoint
-          or dataZoom that would add value, especially in the interactive HTML view.
+        passed: true
+        comment: markPoint/markLine annotations and native time-axis formatting are
+          ECharts-distinctive, not trivially replicated elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - grid-styling
