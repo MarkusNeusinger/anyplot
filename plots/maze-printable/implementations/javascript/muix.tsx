@@ -1,7 +1,3 @@
-// anyplot.ai
-// maze-printable: Printable Maze Puzzle
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 // anyplot.ai
 // maze-printable: Printable Maze Puzzle
@@ -80,11 +76,53 @@ while (stack.length > 0) {
 const isPassage = (r1, c1, r2, c2) =>
   passages.has(edgeKey(cellId(r1, c1), cellId(r2, c2)));
 
-// Draws the whole puzzle as raw SVG paths sized off the chart's own drawing
-// area — MUI X owns layout/scaling, the maze geometry is ours. The ScatterChart
-// underneath contributes no visible marks; it only supplies the sized,
-// theme-independent canvas this custom slot draws into (same composition
-// pattern as the maze-circular muix implementation).
+// Shortest path length over the spanning tree, i.e. THE solution length (the
+// carved passages form a tree, so start->goal has exactly one route — no
+// search heuristics needed, a plain BFS finds it). Reported in the footnote
+// as a difficulty cue without ever drawing the path itself, so the puzzle
+// stays unspoiled.
+function solutionLength() {
+  const startId = cellId(0, 0);
+  const goalId = cellId(ROWS - 1, COLS - 1);
+  const cameFrom = new Map([[startId, null]]);
+  const queue = [startId];
+  for (let head = 0; head < queue.length; head++) {
+    const current = queue[head];
+    if (current === goalId) break;
+    const r = Math.floor(current / COLS);
+    const c = current % COLS;
+    for (const [nr, nc] of neighborsOf(r, c)) {
+      const next = cellId(nr, nc);
+      if (!cameFrom.has(next) && isPassage(r, c, nr, nc)) {
+        cameFrom.set(next, current);
+        queue.push(next);
+      }
+    }
+  }
+  let steps = 0;
+  for (let node = goalId; node !== startId; steps++) {
+    node = cameFrom.get(node);
+  }
+  return steps;
+}
+
+const SOLUTION_STEPS = solutionLength();
+
+// --- Why ScatterChart (not LineChart/BarChart) hosts this maze --------------
+// MUI X community has no grid-of-walls / graph-maze primitive, so some
+// canvas-hosting workaround is unavoidable here. ScatterChart is deliberately
+// the thinnest option: a single anonymous point satisfies its `series` prop
+// with nothing left over to suppress, its axes take an explicit numeric
+// domain (0..COLS / 0..ROWS) with no forced ticks or gridlines, and
+// `useDrawingArea()` returns the exact inset rectangle MUI already computed
+// for margins/aspect — so the maze inherits the chart's own responsive layout
+// math for free. LineChart/BarChart would force a categorical or continuous
+// axis with visible tick/gridline defaults that fight the print-artifact
+// look and need more overrides to hide.
+//
+// Draws the whole puzzle as raw SVG paths sized off that drawing area — MUI X
+// owns layout/scaling, the maze geometry is ours (same composition pattern as
+// the maze-circular muix implementation).
 function MazeMark() {
   const { left, top, width, height } = useDrawingArea();
   const cellSize = Math.min(width / COLS, height / ROWS);
@@ -113,6 +151,14 @@ function MazeMark() {
     }
   }
 
+  // Border noticeably heavier than the interior walls: a clear weight
+  // hierarchy (frame > corridor) instead of one uniform line thickness, and
+  // both are sized up from a flat pixel constant to scale with the cell so
+  // the puzzle still reads at small thumbnail sizes.
+  const wallStroke = Math.max(4, cellSize * 0.075);
+  const borderStroke = wallStroke * 1.75;
+  const borderRadius = cellSize * 0.12;
+
   return (
     <g>
       <rect
@@ -122,14 +168,16 @@ function MazeMark() {
         height={mazeHeight}
         fill={PAPER}
         stroke={INK}
-        strokeWidth={4}
+        strokeWidth={borderStroke}
+        rx={borderRadius}
+        ry={borderRadius}
       />
       {walls.map((d, i) => (
         <path
           key={i}
           d={d}
           stroke={INK}
-          strokeWidth={3}
+          strokeWidth={wallStroke}
           strokeLinecap="square"
           fill="none"
         />
@@ -162,15 +210,17 @@ function MazeMark() {
       >
         G
       </text>
+      {/* Outside the paper card, on the page background, so — unlike the
+          fixed ink/paper maze above it — this footnote must follow
+          ANYPLOT_THEME or it goes invisible on the dark page. */}
       <text
         x={originX}
         y={originY + mazeHeight + 30}
         fontSize={16}
-        fill={INK}
-        fillOpacity={0.65}
+        fill={t.inkSoft}
         textAnchor="start"
       >
-        {ROWS}×{COLS} grid · seed 42
+        {ROWS}×{COLS} grid · seed 42 · {SOLUTION_STEPS}-step solution
       </text>
     </g>
   );
