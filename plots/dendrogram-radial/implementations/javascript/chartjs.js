@@ -1,7 +1,7 @@
 // anyplot.ai
 // dendrogram-radial: Radial Dendrogram
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-04
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 93/100 | Updated: 2026-09-05
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
