@@ -41,8 +41,12 @@ pooled_estimate = exp(pooled_log_rr)
 pooled_lower = exp(pooled_log_rr - 1.96 * pooled_se)
 pooled_upper = exp(pooled_log_rr + 1.96 * pooled_se)
 
-trial_names = ["Trial " * string(letter) * " (" * string(year) * ")"
-               for (letter, year) in zip('A':'L', 2013:2024)]
+# Landmark statin-vs-placebo RCTs for major adverse cardiovascular events
+trial_names = [
+    "4S (1994)", "WOSCOPS (1995)", "CARE (1996)", "AFCAPS/TexCAPS (1998)",
+    "LIPID (1998)", "HPS (2002)", "PROSPER (2002)", "ASCOT-LLA (2003)",
+    "CARDS (2004)", "TNT (2005)", "SPARCL (2006)", "JUPITER (2008)",
+]
 
 order = sortperm(effect_size; rev = true)
 trial_names = trial_names[order]
@@ -67,7 +71,7 @@ ax = Axis(
     title              = "forest-basic · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
-    xlabel             = "Risk Ratio (95% CI)",
+    xlabel             = "Risk Ratio for Major Cardiovascular Events (95% CI)",
     xlabelsize         = 14,
     xlabelcolor        = INK,
     xticks             = 0.4:0.2:1.4,
@@ -87,7 +91,17 @@ ax = Axis(
 )
 
 xlims!(ax, 0.4, 1.35)
-ylims!(ax, 0.2, n_studies + 1.8)
+ylims!(ax, -0.5, n_studies + 1.8)
+
+# --- Row banding: subtle zebra striping + a highlighted pooled row ---------
+band_color = RGBAf(INK.r, INK.g, INK.b, THEME == "light" ? 0.035 : 0.05)
+for (i, y) in enumerate(study_ys)
+    if isodd(i)
+        hspan!(ax, y - 0.5, y + 0.5; color = band_color)
+    end
+end
+pooled_band_color = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.10)
+hspan!(ax, pooled_y - 0.5, pooled_y + 0.5; color = pooled_band_color)
 
 vlines!(ax, [1.0]; color = INK_SOFT, linestyle = :dash, linewidth = 2)
 
@@ -105,6 +119,11 @@ diamond = Point2f[
 ]
 poly!(ax, diamond; color = INK, strokewidth = 0)
 
+pooled_label = "Pooled RR = $(round(pooled_estimate, digits = 2)) " *
+               "(95% CI $(round(pooled_lower, digits = 2))–$(round(pooled_upper, digits = 2)))"
+text!(ax, pooled_estimate, pooled_y - 0.75;
+    text = pooled_label, align = (:center, :top), fontsize = 13, color = INK, font = :bold)
+
 legend_elements = [
     MarkerElement(marker = :circle, color = BRAND, markersize = 16),
     PolyElement(color = INK),
@@ -113,6 +132,9 @@ Legend(fig[1, 1], legend_elements, ["Individual study", "Pooled effect"];
     tellwidth = false, tellheight = false, halign = :right, valign = :top,
     margin = (10, 10, 10, 10), framevisible = false, labelcolor = INK_SOFT,
     labelsize = 12)
+
+Label(fig[2, 1], "← Favors treatment                                                        Favors control →";
+    fontsize = 12, color = INK_SOFT, font = :italic, tellwidth = false, halign = :center)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
