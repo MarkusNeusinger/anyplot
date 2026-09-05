@@ -58,6 +58,31 @@ const macdLine = emaFast.map((v, i) => v - emaSlow[i]);
 const signalLine = ema(macdLine, SIGNAL_PERIOD);
 const histogram = macdLine.map((v, i) => v - signalLine[i]);
 
+// Bullish/bearish crossover points (histogram sign flips) for markPoint annotations.
+const crossovers = [];
+for (let i = 1; i < histogram.length; i++) {
+  if (histogram[i - 1] < 0 && histogram[i] >= 0) {
+    crossovers.push({
+      name: "Bullish crossover",
+      coord: [dates[i], macdLine[i]],
+      symbol: "triangle",
+      symbolSize: 14,
+      itemStyle: { color: t.palette[0] },
+      label: { show: false },
+    });
+  } else if (histogram[i - 1] > 0 && histogram[i] <= 0) {
+    crossovers.push({
+      name: "Bearish crossover",
+      coord: [dates[i], macdLine[i]],
+      symbol: "triangle",
+      symbolRotate: 180,
+      symbolSize: 14,
+      itemStyle: { color: t.palette[4] },
+      label: { show: false },
+    });
+  }
+}
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -77,10 +102,18 @@ chart.setOption({
     data: [
       { name: "MACD", itemStyle: { color: t.palette[2] } },
       { name: "Signal", itemStyle: { color: t.palette[3] } },
-      { name: "Histogram", itemStyle: { color: t.ink } },
+      { name: "Histogram", itemStyle: { color: t.palette[0] } },
     ],
     top: 84,
     textStyle: { color: t.ink, fontSize: 16 },
+  },
+  tooltip: {
+    trigger: "axis",
+    axisPointer: { type: "cross", label: { color: t.ink, backgroundColor: t.inkSoft } },
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink },
+    valueFormatter: (v) => Number(v).toFixed(2),
   },
   grid: { left: 90, right: 60, top: 150, bottom: 110 },
   xAxis: {
@@ -123,6 +156,11 @@ chart.setOption({
       data: macdLine.map((v) => v.toFixed(4)),
       showSymbol: false,
       lineStyle: { width: 3, color: t.palette[2] },
+      emphasis: { focus: "series" },
+      markPoint: {
+        symbolSize: 14,
+        data: crossovers,
+      },
       z: 2,
     },
     {
@@ -131,6 +169,7 @@ chart.setOption({
       data: signalLine.map((v) => v.toFixed(4)),
       showSymbol: false,
       lineStyle: { width: 3, color: t.palette[3] },
+      emphasis: { focus: "series" },
       z: 2,
     },
   ],
