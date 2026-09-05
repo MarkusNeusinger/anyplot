@@ -71,6 +71,24 @@ y_range = maximum(revenue_growth) - minimum(revenue_growth)
 # otherwise get silently clipped by the axis viewport.
 label_dx    = [(rd_spend[i] >= cx ? 1 : -1) * 0.08 * x_range for i in labeled_idx]
 label_dy    = [(revenue_growth[i] >= cy ? 1 : -1) * 0.11 * y_range for i in labeled_idx]
+
+# Two highlighted points can sit close together in data space and fall on
+# the same side of the centroid on both axes, sending their label anchors
+# in the same direction by a near-identical amount -- close enough for one
+# anchor to land on top of the other (or on top of the marker cluster
+# itself) and read as a missing label. Detect any such close, same-
+# quadrant pair and push the later point's offset out farther so its
+# anchor clears the first instead of coinciding with it.
+for k in eachindex(labeled_idx), j in 1:(k - 1)
+    same_quadrant = sign(label_dx[j]) == sign(label_dx[k]) && sign(label_dy[j]) == sign(label_dy[k])
+    i_j, i_k = labeled_idx[j], labeled_idx[k]
+    nearby = hypot((rd_spend[i_j] - rd_spend[i_k]) / x_range, (revenue_growth[i_j] - revenue_growth[i_k]) / y_range) < 0.15
+    if same_quadrant && nearby
+        label_dx[k] *= 1.8
+        label_dy[k] *= 1.8
+    end
+end
+
 label_x     = [rd_spend[labeled_idx[k]] + label_dx[k] for k in eachindex(labeled_idx)]
 label_y     = [revenue_growth[labeled_idx[k]] + label_dy[k] for k in eachindex(labeled_idx)]
 
