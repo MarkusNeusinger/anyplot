@@ -1,0 +1,246 @@
+library: d3
+language: javascript
+specification_id: pdp-basic
+created: '2026-09-05T10:27:43Z'
+updated: '2026-09-05T10:42:10Z'
+generated_by: claude-sonnet
+workflow_run: 33960429141
+issue: 2922
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/d3/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Fully satisfies every optional Note in the spec: confidence band AND ICE lines
+    for uncertainty, a rug plot for the training distribution, and the curve centered
+    at zero'
+  - Zero-reference dashed line makes the centered partial dependence immediately interpretable
+    as 'effect vs. average'
+  - Rug plot is thinned per-bin with d3.bin() so dense clusters read as texture instead
+    of a solid smear -- a genuinely D3-idiomatic touch
+  - Direct label ('prediction interval') replaces a redundant single-series legend,
+    keeping the composition minimal
+  - Theme-adaptive chrome correctly implemented in both renders; the brand green data
+    color is pixel-identical between light and dark
+  - Deterministic mulberry32 PRNG with fixed seed and clear comments explaining the
+    saturating log-response, CI widening, and ICE offset/scale logic
+  weaknesses:
+  - ICE spaghetti lines are very faint (stroke-opacity 0.15) -- a slightly higher
+    opacity (~0.2-0.25) would give them a touch more presence without competing with
+    the main curve
+  - Data storytelling relies entirely on layout/hierarchy; a small annotation calling
+    out the diminishing-returns flattening past ~3000 sq ft would push it from 'good'
+    to 'excellent'
+  - The 'prediction interval' label sits close to the confidence band's upper edge
+    at the rightmost point -- a few more px of clearance would reduce the risk of
+    it feeling cramped against the curve
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "pdp-basic · javascript · d3 · anyplot.ai" centered at top; dark rotated y-axis title "Partial Dependence (Δ Predicted Price, $k)"; dark x-axis title "Living Area (sq ft)"; grey tick labels on both axes (signed values on y: -200 to +150, comma-formatted values on x: 1,000 to 4,000). A dashed grey zero-reference line crosses the plot horizontally. All chrome text is clearly legible against the light background.
+      Data: A single brand-green (#009E73) curve runs from about -170 (at 800 sq ft) up to about +100 (at 4000 sq ft), with a semi-transparent green confidence band around it and ~8 faint green ICE lines fanning around the main curve, especially visible near the tails. A small grey rug plot beneath the x-axis shows the density of the training feature values, thinned in the densest region (~1800-2500 sq ft). A small "prediction interval" text label sits near the top-right of the band.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, both axis titles, and tick labels all render in light/white tones, fully legible against the dark background. The dashed zero-reference line remains visible as a light-grey dash. No dark-on-dark text anywhere.
+      Data: Same brand-green (#009E73) curve, band, and ICE lines as the light render -- colors are pixel-identical, only the chrome (background, text, grid) flipped to the dark theme. The rug plot ticks remain visible in a muted grey against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14/17/22px); readable in both themes;
+          title proportional to its shorter actual length
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; rug plot sits clear of tick labels and the x-axis
+          title
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve (4px), CI band (0.16 alpha), ICE lines (0.15 alpha, 1px),
+          and thinned rug all sized appropriately for 70 grid points / 140 samples
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue green plus neutral greys; no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills roughly 68% of canvas with balanced margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units (sq ft, $k)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both themes; chrome fully theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful layered composition (band + ICE + rug + zero line) clearly
+          above default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Tick marks suppressed, no gridlines except the intentional dashed
+          zero-reference, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy (bold curve vs. faint ICE spaghetti, zero baseline)
+          guides the reader; no explicit annotation calling out the insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PDP line chart with all recommended subtypes present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: feature_values, partial_dependence, confidence_interval, plus optional
+          ICE and rug all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Feature on x, partial dependence on y, full range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; single series uses a direct
+          label instead of a legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows CI band, ICE spread, and rug distribution together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible real-estate/gradient-boosting scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Saturating log-shaped response with plausible diminishing returns
+          on living area
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script; the two math helpers are the sanctioned fixed-seed-LCG
+          pattern for browser reproducibility, not business logic
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: mulberry32 fixed seed 42
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a multi-layer PDP; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct #container mount contract, single svg appended'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scales, axes, line/area generators, and .join() data joins used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Repurposes d3.bin() for rug-plot downsampling and layers multiple
+          custom marks -- not trivially replicated in a high-level charting library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - publication-ready
