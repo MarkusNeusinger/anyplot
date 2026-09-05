@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-annotated-events
 created: '2026-09-05T06:32:34Z'
-updated: '2026-09-05T06:37:09Z'
+updated: '2026-09-05T06:45:25Z'
 generated_by: claude-sonnet
 workflow_run: 33949878099
 issue: 2997
@@ -12,44 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-anno
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Correct Imprint palette usage: brand green (#009E73) for the primary series,
-    lavender (palette[1]) for event markers — identical across both themes, only chrome
-    flips'
-  - Event labels use alternating row heights exactly as the spec suggests, avoiding
-    overlap across six spread-out events
+  - Event markers/lines/labels now built with D3's idiomatic selection.data(...).join(...)
+    pattern, resolving the prior LM-01 weakness
+  - Subtle area fill under the trend line adds a distinctive polish layer without
+    competing with the event annotations
+  - Softened weekly seasonal amplitude and noise make the event-driven step-ups read
+    clearly against the background oscillation
+  - Multi-scale date-tick formatting (month, or 'Mon YYYY' only when crossing a year
+    boundary) is a nice idiomatic d3-time touch
+  - 'Correct Imprint palette usage: brand green for the primary series, lavender (palette[1])
+    for event markers, identical across both themes'
   - 'Clear data storytelling: each dashed event line lands right where the trend visibly
-    steps up, making the growth-driver narrative easy to read'
-  - 'Theme-adaptive chrome fully correct in both renders: warm off-white/near-black
-    backgrounds, readable text, subtle y-axis-only grid, L-shaped spines'
-  - Deterministic in-memory data generation via fixed-seed LCG, KISS code structure
-    with no functions/classes
-  - Legend clearly distinguishes the data line from the event-marker style (solid
-    vs. dashed)
+    steps up, and alternating label row heights avoid overlap across six events'
+  - Theme-adaptive chrome fully correct in both renders; deterministic in-memory data
+    generation via fixed-seed LCG
   weaknesses:
-  - 'LM-01: Event markers/lines/labels are appended via a plain forEach loop instead
-    of D3''s idiomatic selection.data(...).join(...) pattern — refactor the six-event
-    loop into a proper data join for more idiomatic D3 usage'
-  - 'DE-01/DE-02: Solid but still reads close to a well-configured default — consider
-    one distinguishing refinement (e.g. a subtle area fill under the line, or refined
-    date-tick formatting) to push past ''good'' into ''publication-ready'''
-  - The weekly seasonality amplitude (1.4) relative to the trend creates a tightly-coiled,
-    busy line throughout — slightly reducing the seasonal amplitude or the LCG noise
-    term would make the event-driven step-ups read even more clearly
+  - Events remain evenly spread rather than clustered, so the alternating-row label
+    logic is never stress-tested against closely-packed events
+  - No explicit x-axis title, though the month-tick time axis is self-explanatory
+    and this is not a deduction on its own
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — clearly not pure white, not dark.
-      Chrome: Bold dark title "line-annotated-events · javascript · d3 · anyplot.ai" centered at top, clearly legible. Y-axis label "Daily Active Users (thousands)" in dark ink, rotated. Dark tick labels on both axes, subtle horizontal gridlines only. Six event labels ("v3.2 launch", "Mobile app release", "Referral program", "Pricing change", "API partnership", "Enterprise tier") alternate between two row heights above the plot area, all fully readable with no overlap. Legend at bottom-left with two entries (solid line / dashed line).
-      Data: Teal-green (#009E73) line with weekly seasonal oscillation trending from ~24k to ~50k daily active users over ~7 months. Six lavender (#C475FD, Imprint palette position 2) dashed vertical lines mark event dates, each with a lavender circle marker on the data line at the event's value.
-      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title centered at top ("line-annotated-events · javascript · d3 · anyplot.ai"), rotated dark Y-axis label "Daily Active Users (thousands)", dark tick labels on both axes over a subtle horizontal-only grid. All fully readable against the light background.
+      Data: Teal-green (#009E73) line with a subtle green area-fill wash beneath it, trending from ~24k to ~50k over ~7 months with gentle weekly oscillation. Six lavender (Imprint palette position 2, #C475FD) dashed vertical lines mark event dates, each with a lavender circle on the data line and a bold text label ("v3.2 launch", "Mobile app release", "Referral program", "Pricing change", "API partnership", "Enterprise tier") alternating between two row heights to avoid overlap. A bottom legend distinguishes the solid data line from the dashed event-line key.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — clearly not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (near-white/light-grey), clearly legible against the dark background. Gridlines are faint but visible. Event labels remain fully legible in light text.
-      Data: Line color and event-marker color are identical to the light render (#009E73 teal-green, #C475FD lavender) — only the chrome (background, text, grid) flipped as expected.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the dark background.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout — title, axis labels, tick labels, and event labels now render in light ink, all clearly legible. Gridlines are faint but visible. No dark-on-dark failures.
+      Data: Line, area fill, and event markers use the identical #009E73 / #C475FD hues as the light render — only chrome (background, text, grid) flipped, confirming palette consistency.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,73 +56,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit (14-22px), readable in both themes, title
-          fits comfortably without overflow
+        comment: All font sizes explicit (14px ticks, 16px axis label, 22px title),
+          readable in both themes, title fits comfortably without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating event-label heights fully avoid overlap
+        comment: Alternating event-label row heights fully avoid overlap between labels,
+          the line, and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width and event-marker circle size well adapted to 220-point
-          medium-density series
+        comment: 3px line + r=7 event markers well adapted to a 220-point daily series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender distinguishable without relying on hue alone (also
-          dashed vs. solid)
+        comment: Green vs. lavender distinguishable, redundant dashed-line encoding
+          for events
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy portion of the canvas, legend
-          sits near the plot, nothing cut off
+        comment: Balanced margins, nothing cut off, legend sits directly under the
+          plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units; x-axis month ticks are self-explanatory
-          for a time series
+        comment: Y-axis has units ('Daily Active Users (thousands)'); x-axis month
+          ticks are self-explanatory for a time series
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, event markers palette[1] (#C475FD), theme-correct
-          chrome in both renders'
+        comment: 'First series #009E73, events use palette[1] #C475FD, identical across
+          themes, backgrounds theme-correct'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful color coordination and typography above library defaults,
-          not yet publication-tier
+        comment: Area-fill wash, coordinated color pairing, and a multi-scale date
+          format lift it clearly above defaults; not yet fully publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Subtle single-axis grid, L-shaped spines, generous whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Visible step-ups in the trend line at each event marker create a
-          clear causal narrative
+        comment: Subtle single-axis grid, L-shaped spines, generous whitespace, area
+          fill adds an extra refinement layer
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Softened seasonal noise makes each event marker line up unmistakably
+          with a visible step-up in the trend — the causal story is immediate
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct annotated line plot with event markers
+        comment: Correct annotated line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Vertical dashed lines, distinct event color, alternating label placement,
-          legend all present
+        comment: Dashed vertical event lines, visually distinct event color, alternating
+          labels to avoid overlap, subtle legend — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, value on y, full range visible
+        comment: Date on x, value on y, full series range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match the two series
+        comment: Title format correct, legend labels ('Daily active users', 'Product
+          launch events') match the data
     data_quality:
       score: 14
       max: 15
@@ -165,21 +163,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows trend, weekly seasonality, and event-correlated boosts; events
-          are spread rather than clustered so the alternating-row logic isn't stress-tested
+        comment: Shows trend, seasonality, and event-correlated boosts; events remain
+          evenly spread rather than clustered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral SaaS product-growth scenario with plausible named events
+        comment: Neutral SaaS product-growth scenario with plausible named launch
+          events
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Growth from ~24k to ~50k DAU over 7 months with event-driven boosts
-          is plausible for a scaling product
+        comment: Growth from ~24k to ~50k DAU with event-driven boosts is realistic
+          for a growing product
     code_quality:
       score: 10
       max: 10
@@ -189,59 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Sequential, no functions/classes
+        comment: No functions/classes, linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG for deterministic browser-side data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3
+        comment: Only the global d3 is used, no extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering, no fake UI
+        comment: Clean, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract correctly, no manual file writes
+        comment: Follows the mount-node contract correctly, animation-free static
+          draw
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Scales/axes/line generator used correctly, but repeated event elements
-          are built with forEach instead of selection.data().join()
+        comment: Event markers now built with selection.data(...).join(...) instead
+          of a forEach loop — the prior gap is fully resolved
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses d3.curveMonotoneX and manual tick-based gridline construction,
-          distinctive to D3's low-level API
-  verdict: REJECTED
+        comment: curveMonotoneX, area generator, and a d3-time-driven multi-scale
+          tick format (year shown only at year boundaries) showcase library-specific
+          capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
