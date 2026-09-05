@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: roc-curve
 created: '2026-09-05T13:01:09Z'
-updated: '2026-09-05T13:04:44Z'
+updated: '2026-09-05T13:18:41Z'
 generated_by: claude-sonnet
 workflow_run: 33967490382
 issue: 2273
@@ -12,45 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Correct ROC math: tpr = fpr^(1/power) integrates analytically to power/(power+1),
-    so the AUC labels (0.90, 0.80) are exactly consistent with the plotted curve shapes
-    rather than hard-coded numbers'
+  - 'Correct ROC math: tpr = fpr^(1/power) integrates analytically, so the AUC labels
+    (0.90, 0.80) are computed via trapezoidal integration and stay exactly consistent
+    with the plotted curve shapes rather than being hard-coded'
+  - Area fill under the top-performing curve turns 'AUC' from an abstract legend number
+    into a literal visible shape, and the new FPR=0.10 plotLine + scatter/dataLabel
+    callout (TPR=0.77) gives the chart a concrete 'accept this many false positives,
+    get this much sensitivity' narrative -- directly resolves the prior attempt's
+    DE-03/LM-02 weaknesses (no threshold annotation, no plotLine)
   - 'Diagonal random-classifier reference line is present, styled distinctly (dashed,
     muted ink color, enableMouseTracking: false so it doesn''t produce a misleading
     hover), and correctly spans (0,0) to (1,1)'
-  - Two models compared with clearly distinct Imprint palette colors (green vs. purple)
-    and each curve's AUC surfaced directly in the legend text, satisfying the spec's
-    'display AUC score in legend or annotation' requirement without extra clutter
+  - Two models compared with clearly distinct Imprint palette colors in canonical
+    order (green then lavender), each curve's AUC surfaced directly in the legend
+    text
   - 'Square 2400x2400 canvas correctly honors the spec''s ''equal aspect ratio preferred''
     note via the //# anyplot-orientation: square directive'
   - Theme tokens (t.ink, t.inkSoft, t.grid, t.palette) are threaded through title,
-    axes, gridlines, and legend consistently; both renders are legible with identical
-    data colors and correctly flipped chrome
-  - Deterministic, in-memory data generation with no RNG — fully reproducible
+    axes, gridlines, legend, and the new annotation consistently; both renders are
+    legible with identical data colors and correctly flipped chrome
+  - Deterministic, in-memory data generation with no RNG -- fully reproducible
   weaknesses:
-  - Design excellence is competent but minimal — beyond the dashed/muted reference
-    line there's no additional visual hierarchy device (e.g. subtle fill under the
-    better-performing curve, an annotated operating point, or emphasis on the AUC
-    gap between the two tests) to give the chart a stronger focal point
-  - No Highcharts-distinctive features are used beyond the core line/legend/tooltip
-    API (e.g. a marker or annotation at a specific threshold point, or a plotLine/plotBand)
-    — the implementation is idiomatic but generic relative to what Highcharts offers
-  - Grid styling is default subtle Imprint tokens with no additional refinement (e.g.
-    dashed minor gridlines) that would lift it further above baseline polish
+  - 'Header block is missing the mandatory ''// License: Highcharts — commercial license,
+    free for non-commercial use (highcharts.com/license)'' line required by prompts/library/highcharts.md.
+    It was present in the original implementation commit (feat: implement roc-curve)
+    but was dropped by a later automated header-rewrite that updated the Quality score
+    -- looks like a pipeline header-rewrite bug rather than something this implementation
+    did wrong, but the license notice should be visible in the shipped file.'
+  - Helper functions (rocCurve, areaUnderCurve, toPoints) are small and pure but push
+    the file slightly past a flat Imports->Data->Plot structure; acceptable for deterministic
+    analytic data generation but worth noting for KISS scoring.
+  - Distinctive-feature usage is already good (plotLines with label, dataLabels callout,
+    area fill) but could go one step further, e.g. a plotBand highlighting the performance
+    gap between the two curves, for even stronger visual differentiation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "roc-curve · javascript · highcharts · anyplot.ai" at top center, clearly legible. Axis titles "False Positive Rate" (x) and "True Positive Rate" (y) in medium-gray ink, legible. Tick labels (0, 0.2, 0.4, ... 1) in gray, legible. Subtle light-gray horizontal and vertical gridlines, visible but not dominant. Legend at bottom with three entries (Antibody test, Enzyme test, Random classifier) in gray text, legible.
-      Data: First series (Antibody test, AUC = 0.90) is green (#009E73), bowing sharply toward the top-left. Second series (Enzyme test, AUC = 0.80) is purple, a shallower bow. Third series (Random classifier, AUC = 0.50) is a black dashed diagonal from (0,0) to (1,1). All three lines are clearly distinguishable from the background and from each other.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "roc-curve · javascript · highcharts · anyplot.ai" at top center, clearly legible. Axis titles "False Positive Rate" (x) and "True Positive Rate" (y) in medium-gray ink, legible. Tick labels (0, 0.2, 0.4 ... 1) in gray, legible. Subtle dotted gridlines (major + minor) visible but not dominant. A vertical dashed "FPR = 0.10" plotLine near the left, and a "TPR = 0.77" data-label above a small triangular marker on the top curve, both dark and legible against the light background. Legend at bottom with three entries (Antibody test, Enzyme test, Random classifier) in gray text, legible.
+      Data: First series (Antibody test, AUC = 0.90) is brand green (#009E73) with a light green area fill beneath it, bowing sharply toward the top-left. Second series (Enzyme test, AUC = 0.80) is lavender/purple, a shallower bow. Third series (Random classifier, AUC = 0.50) is a black dashed diagonal from (0,0) to (1,1). All series are clearly distinguishable from the background and from each other; the threshold marker and its label do not overlap any curve or gridline.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and axis titles now rendered in light/white ink, clearly legible against the dark background. Tick labels in light gray, legible. Gridlines are subtle light-gray-on-dark, visible but not dominant. Legend text is light-colored and legible.
-      Data: Antibody test curve is the same green (#009E73) as in the light render; Enzyme test curve is the same purple. The random-classifier diagonal flips from black dashed to white/light dashed, correctly following the chrome (ink) rather than staying a fixed data color. No dark-on-dark or light-on-light failures observed anywhere — every text element is clearly readable.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and axis titles render in light/white ink, clearly legible against the dark background. Tick labels in light gray, legible. Gridlines are subtle light-gray-on-dark, visible but not dominant. The "FPR = 0.10" plotLine label and "TPR = 0.77" data-label both render in light ink, clearly legible -- no dark-on-dark failure. Legend text is light-colored and legible.
+      Data: Antibody test curve is the identical green (#009E73) as in the light render, with a darker-toned area fill beneath it that still reads clearly against the near-black background; Enzyme test curve is the identical lavender/purple. The random-classifier diagonal flips from black dashed to white/light dashed, correctly following the chrome (ink) token rather than staying a fixed data color. No dark-on-dark or light-on-light failures observed anywhere; every text element, including the small threshold annotation, is clearly readable.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,30 +70,31 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis titles, tick labels, and legend are all readable in both
-          themes at set font sizes (title 22px, axis titles 16px, tick/legend 14px);
-          minor uncertainty on legibility at ~400px mobile scale keeps this just under
-          max.
+        comment: Title, axis titles, tick labels, legend, and the new plotLine/dataLabel
+          annotation are all readable in both themes at explicit font sizes (title
+          22px, axis titles 16px, tick/legend 14px, annotation 12px); the small 12px
+          vertical FPR label keeps this just under max.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, axes, or curves in either render.
+        comment: No collisions between legend, axes, curves, or the new threshold
+          annotation/marker in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 101-point smooth curves with lineWidth 3 (data) / 2 (reference) are
-          clearly visible; appropriate for a dense line series rather than discrete
-          markers.
+        comment: 101-point smooth curves with lineWidth 3/2 are clearly visible; the
+          single threshold marker uses a larger radius-6 marker appropriate for a
+          sparse single-point callout.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple Imprint palette pairing is CVD-safe; no red-green-only
+        comment: Green/lavender Imprint palette pairing is CVD-safe; no red-green-only
           encoding.
       - id: VQ-05
         name: Layout & Canvas
@@ -93,7 +102,7 @@ review:
         max: 4
         passed: true
         comment: Square 2400x2400 canvas matches the spec's equal-aspect-ratio note;
-          nothing clipped or overflowing.
+          nothing clipped or overflowing; canvas dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,35 +115,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (t.palette[0]); backgrounds are theme-correct
-          in both renders; data colors identical between themes.'
+        comment: 'First series is #009E73 (t.palette[0]), second is the canonical
+          lavender; backgrounds are theme-correct in both renders; data colors identical
+          between themes.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above generic defaults (Imprint palette, styled reference line with
-          disabled hover tracking) but no additional polish device beyond that.
+        passed: true
+        comment: Area fill under the AUC curve plus a styled plotLine/dataLabel callout
+          lift this above generic defaults; still fairly restrained overall.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle theme-token gridlines and generous square-canvas whitespace,
-          but no extra refinement (e.g. minor gridlines, custom spacing) beyond the
-          style-guide baseline.
+        passed: true
+        comment: Subtle dotted major/minor gridlines and generous square-canvas whitespace;
+          no further refinement beyond the style-guide baseline.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Dashed/muted baseline creates some hierarchy and the legend surfaces
-          AUC directly for quick comparison, but there's no stronger focal point (e.g.
-          highlighting the gap between the two tests).
+        passed: true
+        comment: The threshold callout ('if you accept FPR=0.10, you get TPR=0.77')
+          gives the chart a concrete focal point and narrative beyond raw curve comparison,
+          addressing the prior attempt's main weakness.
     spec_compliance:
       score: 15
       max: 15
@@ -151,7 +160,7 @@ review:
         max: 4
         passed: true
         comment: Diagonal reference line present, AUC shown in legend, two models
-          with distinct colors.
+          with distinct colors, explicit threshold example.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -174,15 +183,16 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple curves, reference line, and AUC scores all present; 101
-          threshold points per curve within the spec's suggested range.
+        comment: Multiple curves, reference line, AUC scores, and an explicit operating-threshold
+          example all present; 101 threshold points per curve within the spec's suggested
+          range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Two diagnostic tests (antibody vs. enzyme) for disease detection
-          — plausible, neutral, non-controversial domain.
+          -- plausible, neutral, non-controversial domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -191,16 +201,17 @@ review:
         comment: FPR/TPR correctly bounded to 0-1; AUC values (0.90, 0.80) are realistic
           diagnostic-test performance levels.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Only small pure helper functions for data generation/AUC calc; no
-          classes, no unnecessary abstraction.
+        comment: Small pure helper functions (rocCurve, areaUnderCurve, toPoints)
+          for deterministic data generation; no classes, but slightly more structure
+          than a flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,13 +232,16 @@ review:
         comment: Appropriately simple; no fake interactivity or UI.
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: 'Follows the mount-node contract exactly: Highcharts.chart(''container'',
-          ...), no explicit width/height, animation disabled on chart and series.'
+        passed: false
+        comment: 'Follows the mount-node contract correctly (Highcharts.chart(''container'',
+          ...), no explicit width/height, animation disabled), but the header block
+          is missing the mandatory ''// License: Highcharts ...'' line required by
+          prompts/library/highcharts.md -- present in the original commit, dropped
+          by a later automated header-rewrite.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -235,21 +249,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Standard core-bundle line chart with colors array, credits disabled,
-          and theme-token styling — textbook idiomatic Highcharts.
+        comment: Standard core-bundle chart mixing line/area/scatter series types,
+          colors array, credits disabled, theme-token styling -- textbook idiomatic
+          Highcharts.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: 'enableMouseTracking: false on the reference series is a nice touch,
-          but no other Highcharts-distinctive feature (plotLines, annotations, marker
-          states) is used.'
+        passed: true
+        comment: 'plotLines with a styled label, dataLabels callout, area fill, and
+          enableMouseTracking: false on non-interactive series are good distinctive-feature
+          usage; a plotBand highlighting the curve gap would be the next step.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
