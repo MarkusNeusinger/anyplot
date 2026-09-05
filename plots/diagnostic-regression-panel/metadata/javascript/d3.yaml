@@ -1,0 +1,235 @@
+library: d3
+language: javascript
+specification_id: diagnostic-regression-panel
+created: '2026-09-04T23:59:01Z'
+updated: '2026-09-05T00:14:14Z'
+generated_by: claude-sonnet
+workflow_run: 33930879040
+issue: 5242
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - All four required diagnostic subplots present with correct statistics (LOWESS,
+    45-degree QQ reference, Cook's D contours) and consistent point styling/sizing
+    across panels
+  - Top-3 influential observations (by Cook's distance) are consistently enlarged
+    and index-labeled in every panel, with a smart perpendicular-offset heuristic
+    in the Q-Q panel to avoid labels merging into the reference line
+  - Both themes are fully readable; data colors are identical between light/dark,
+    only chrome flips
+  - Canvas gate passed (2400x2400 square, correct for this spec)
+  weaknesses:
+  - Panel 4's "Cook's D = 0.5 / 1.0" annotation sits on top of the D=1.0 dashed contour
+    curve, so the dash strokes visually cut through the digits in both themes. Move
+    the label to a clearer spot away from the curve crossing.
+  - Axis titles ("Fitted values", "Residuals", "Leverage") omit units; a minor nit
+    since it matches common R plot(lm) convention.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title "diagnostic-regression-panel · javascript · d3 · anyplot.ai" dark and centered; all four panel titles, axis labels, and tick labels dark and clearly readable
+      Data: green (#009E73) markers consistent across panels; blue LOWESS smoother lines; amber dashed Cook's-D contours in panel 4; top-3 influential points (30, 56, 57) enlarged and labeled
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: title and all axis/tick labels flip to light-colored ink, clearly legible; no dark-on-dark failures
+      Data: identical colors to light render (green markers, blue LOWESS, amber contours) - only chrome flipped
+      Legibility verdict: PASS
+
+    Shared cosmetic issue in both themes: in panel 4, the "Cook's D = 0.5 / 1.0" label overlaps the D=1.0 dashed contour curve, causing dash strokes to visually cut through the digits. Text remains readable but is not clean.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full size
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Cook's D label overlaps its own contour curve in panel 4
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers and LOWESS lines clearly visible, appropriately sized for
+          n=60
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No red-green sole signal, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, good proportions, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels matching statistical convention
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, correct theme backgrounds, identical data
+          colors across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Consistent, professional multi-panel styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, L-shaped axis frame, generous margins; contour-label
+          overlap costs points
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: LOWESS smoothers and highlighted influential points create clear
+          visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 regression diagnostic panel
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four subplots with required statistical elements present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct X/Y mapping in all panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Heteroscedasticity, high-leverage point, and outliers all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Home price vs square footage regression, realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value ranges for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat, readable helper functions appropriate for a 4-panel D3 layout
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports, d3 global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no manual file output
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper d3-scale/d3-axis/d3-shape patterns, .join(), clipPath usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom LOWESS and Acklam probit implementations
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready
