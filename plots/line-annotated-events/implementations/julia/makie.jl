@@ -43,6 +43,8 @@ earnings_labels = [
 ]
 event_dates = trading_days[earnings_indices]
 event_values = stock_price[earnings_indices]
+event_is_negative = [occursin("Miss", lbl) || occursin("Downgrade", lbl) for lbl in earnings_labels]
+event_colors = [neg ? IMPRINT_PALETTE[5] : ANYPLOT_AMBER for neg in event_is_negative]
 
 date_to_x(d) = Float64(Dates.value(d - start_date))
 x_days = date_to_x.(trading_days)
@@ -67,7 +69,7 @@ ax = Axis(
     title             = title_text,
     titlesize         = 20,
     titlecolor        = INK,
-    xlabel            = "Trading Day (2024)",
+    xlabel            = "Date (2024)",
     ylabel            = "Share Price (USD)",
     xlabelsize        = 14,
     ylabelsize        = 14,
@@ -91,29 +93,45 @@ ax = Axis(
     xticks            = (month_ticks, month_labels),
 )
 
-ylims!(ax, minimum(stock_price) - 12, maximum(stock_price) + 22)
+price_range = maximum(stock_price) - minimum(stock_price)
+ylims!(ax, minimum(stock_price) - 0.1 * price_range, maximum(stock_price) + 0.28 * price_range)
 
-# Event markers: dashed vertical rules behind the data line
-for ex in event_x
-    vlines!(ax, [ex]; color = ANYPLOT_AMBER, linestyle = :dash, linewidth = 1.5)
+# Event markers: dashed vertical rules behind the data line, colored by sentiment
+# (matte red = negative surprise, amber = positive/neutral) so the narrative reads
+# without relying on the text labels alone.
+for (ex, col) in zip(event_x, event_colors)
+    vlines!(ax, [ex]; color = col, linestyle = :dash, linewidth = 1.5)
 end
 
 # Main price series drawn on top of the event rules
-lines!(ax, x_days, stock_price; color = IMPRINT_PALETTE[1], linewidth = 2.5,
-       label = "Share price")
+lines!(ax, x_days, stock_price; color = IMPRINT_PALETTE[1], linewidth = 2.5)
 
-# Event point markers and alternating-height labels to avoid overlap
-label_offsets = [16.0, 22.0, 16.0, 22.0, 16.0]
-for (i, (ex, ey, lbl, off)) in enumerate(zip(event_x, event_values, earnings_labels, label_offsets))
-    scatter!(ax, [ex], [ey]; color = ANYPLOT_AMBER, markersize = 14,
+# Event point markers and alternating, close-in label offsets so each label stays
+# visually tethered to its marker via the short run of dashed rule beneath it.
+label_offsets = [0.14, 0.24, 0.14, 0.24, 0.14] .* price_range
+for (ex, ey, lbl, off, col) in zip(event_x, event_values, earnings_labels, label_offsets, event_colors)
+    scatter!(ax, [ex], [ey]; color = col, markersize = 14,
              strokewidth = 1.5, strokecolor = PAGE_BG)
-    # offset label to the right of its rule line so the dashed line never cuts through the text
+    # short leader tick linking the marker to its label
+    lines!(ax, [ex, ex], [ey, ey + off - 2.5]; color = col, linewidth = 1.0)
     text!(ax, ex + 5.0, ey + off; text = lbl, color = INK, fontsize = 12,
           align = (:left, :bottom), rotation = 0.0)
 end
 
-axislegend(ax; position = :lt, framevisible = true, backgroundcolor = ELEVATED_BG,
-           labelcolor = INK, framecolor = INK_SOFT)
+# Composite inset legend (Makie GridLayout co-location, not axislegend) that
+# explains both the price line and the two event-marker sentiments at once.
+legend_elements = [
+    LineElement(color = IMPRINT_PALETTE[1], linewidth = 2.5),
+    MarkerElement(color = ANYPLOT_AMBER, marker = :circle, markersize = 14,
+                  strokecolor = PAGE_BG, strokewidth = 1.5),
+    MarkerElement(color = IMPRINT_PALETTE[5], marker = :circle, markersize = 14,
+                  strokecolor = PAGE_BG, strokewidth = 1.5),
+]
+legend_labels = ["Share price", "Positive event", "Negative event"]
+Legend(fig[1, 1], legend_elements, legend_labels;
+       tellwidth = false, tellheight = false, halign = :left, valign = :top,
+       margin = (10, 10, 10, 10), framevisible = true,
+       backgroundcolor = ELEVATED_BG, labelcolor = INK, framecolor = INK_SOFT)
 
 # --- Save ----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
