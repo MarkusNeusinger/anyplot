@@ -17,6 +17,7 @@ const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const _MIDPOINT = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const IMPRINT_DIV = cgrad([colorant"#AE3030", _MIDPOINT, colorant"#4467A3"])
+const IMPRINT_PALETTE = [colorant"#009E73", colorant"#C475FD", colorant"#4467A3"]
 
 # --- Hierarchical clustering (Ward's method, Lance-Williams update) --------
 
@@ -150,6 +151,12 @@ zscore_reordered = zscore[row_order, col_order]
 row_labels_reordered = row_labels[row_order]
 col_labels_reordered = column_labels[col_order]
 
+# Ctrl/TreatA/TreatB group-color annotation strip, reordered alongside columns.
+condition_colors = Dict(
+    "Ctrl" => IMPRINT_PALETTE[1], "TreatA" => IMPRINT_PALETTE[2], "TreatB" => IMPRINT_PALETTE[3],
+)
+col_group_img = reshape([condition_colors[conditions[i]] for i in col_order], n_samples, 1)
+
 row_pos, row_height = dendrogram_segments(row_merge_a, row_merge_b, row_merge_h, row_xpos, n_genes)
 col_pos, col_height = dendrogram_segments(col_merge_a, col_merge_b, col_merge_h, col_xpos, n_samples)
 row_max_height = maximum(row_merge_h)
@@ -176,8 +183,26 @@ lines!(col_dendro_ax, col_pos, col_height; color = INK_SOFT, linewidth = 1.6)
 hidedecorations!(col_dendro_ax)
 hidespines!(col_dendro_ax)
 
+Legend(
+    fig[2, 3],
+    [PolyElement(color = c) for c in IMPRINT_PALETTE],
+    ["Ctrl", "TreatA", "TreatB"],
+    "Group";
+    labelcolor = INK_SOFT, titlecolor = INK, framevisible = false,
+    labelsize = 12, titlesize = 12, patchsize = (12, 12),
+)
+
+col_group_ax = Axis(
+    fig[3, 2];
+    backgroundcolor = PAGE_BG,
+    limits          = (0.5, n_samples + 0.5, 0.0, 1.0),
+)
+image!(col_group_ax, 0.5 .. (n_samples + 0.5), 0.0 .. 1.0, col_group_img; interpolate = false)
+hidedecorations!(col_group_ax)
+hidespines!(col_group_ax)
+
 row_dendro_ax = Axis(
-    fig[3, 1];
+    fig[4, 1];
     backgroundcolor = PAGE_BG,
     limits          = (0.0, row_max_height * 1.05, 0.5, n_genes + 0.5),
     xreversed       = true,
@@ -188,7 +213,7 @@ hidedecorations!(row_dendro_ax)
 hidespines!(row_dendro_ax)
 
 heat_ax = Axis(
-    fig[3, 2];
+    fig[4, 2];
     backgroundcolor      = PAGE_BG,
     limits               = (0.5, n_samples + 0.5, 0.5, n_genes + 0.5),
     yreversed            = true,
@@ -212,16 +237,32 @@ hm = heatmap!(
     colormap = IMPRINT_DIV, colorrange = (-zmax, zmax),
 )
 
+# Thin theme-adaptive cell grid + outer frame so near-zero cells (which sit at
+# the midpoint color, equal to the page background) stay visually separated
+# from each other and from the canvas in both themes.
+grid_color = RGBAf(INK.r, INK.g, INK.b, 0.15)
+v_segs = Point2f[]
+for gx in 0.5:1.0:(n_samples + 0.5)
+    push!(v_segs, Point2f(gx, 0.5), Point2f(gx, n_genes + 0.5))
+end
+h_segs = Point2f[]
+for gy in 0.5:1.0:(n_genes + 0.5)
+    push!(h_segs, Point2f(0.5, gy), Point2f(n_samples + 0.5, gy))
+end
+linesegments!(heat_ax, v_segs; color = grid_color, linewidth = 0.75)
+linesegments!(heat_ax, h_segs; color = grid_color, linewidth = 0.75)
+
 Colorbar(
-    fig[3, 3], hm;
+    fig[4, 3], hm;
     label = "Expression (row z-score)", labelcolor = INK,
     ticklabelcolor = INK_SOFT, width = 18,
 )
 
 colsize!(fig.layout, 1, Relative(0.16))
 colsize!(fig.layout, 2, Relative(0.66))
-rowsize!(fig.layout, 2, Relative(0.18))
-rowsize!(fig.layout, 3, Relative(0.72))
+rowsize!(fig.layout, 2, Relative(0.15))
+rowsize!(fig.layout, 3, Relative(0.02))
+rowsize!(fig.layout, 4, Relative(0.71))
 
 # --- Save -----------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
