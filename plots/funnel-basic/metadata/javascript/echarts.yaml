@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: funnel-basic
 created: '2026-09-05T02:12:41Z'
-updated: '2026-09-05T02:17:23Z'
+updated: '2026-09-05T02:26:43Z'
 generated_by: claude-sonnet
 workflow_run: 33937633076
 issue: 789
@@ -12,65 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/echarts/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - Correct Imprint canonical palette order across all 5 stages (green, lavender,
-    blue, ochre, matte red), identical between light and dark renders
-  - 'Funnel widths are genuinely proportional to value (min: 0, max: counts[0]) rather
-    than an evenly-spaced fake funnel, matching the spec''s ''width proportional to
-    value relative to first stage'' requirement'
-  - Inline value labels with toLocaleString() thousands separators, theme-adaptive
-    plot background, and title format all match the style guide exactly
-  - Realistic, neutral recruiting-funnel data (Applications 2,400 -> Hired 150) with
-    a sensible descending scale
-  - 'Clean KISS structure: no functions/classes, deterministic hard-coded data, correct
-    mount-node contract (no explicit width/height/devicePixelRatio on echarts.init,
-    animation: false set)'
+  - 'Fixed the attempt-1 contrast defect: label colors are now hard-coded per segment
+    based on that segment''s own luminance (dark ink on green/lavender/ochre, white
+    on blue/matte-red) rather than tied to the page-background token, so contrast
+    stays ~5:1-6.4:1 on every segment in BOTH themes instead of collapsing on dark
+    mode'
+  - Tooltip re-enabled with a themed formatter (value + percent-of-first-stage), restoring
+    interactivity value in the generated HTML that attempt 1 had disabled outright
+  - Inline labels now show percent-of-first-stage per segment (100%, 60%, 26%, 10%,
+    6%), adding a real storytelling signal beyond raw counts
+  - Correct Imprint canonical palette order across all 5 stages, identical data colors
+    between light and dark renders; funnel widths are genuinely value-proportional
+    (min:0, max:counts[0]), not evenly spaced
+  - 'Clean KISS structure, deterministic hard-coded data, correct mount-node contract
+    (no explicit width/height/devicePixelRatio, animation: false)'
   weaknesses:
-  - Label color is hard-coded to t.pageBg, which flips the SAME segment colors between
-    near-white text (light theme) and near-black text (dark theme). Since the Imprint
-    data colors don't change between themes, this makes dark-mode labels low-contrast
-    on the matte-red 'Hired' segment (#AE3030, ~2.7:1 contrast, below WCAG's 3:1 large-text
-    floor) and marginal on the blue 'Interviewed' segment (#4467A3, ~3.1:1) -- fix
-    by using a fixed high-contrast label color (e.g. white, or t.pageBg only on the
-    lighter segments) rather than tying label color to the page background token.
-  - 'tooltip is fully disabled (show: false) with no fallback -- this drops all interactivity
-    value from the generated plot-{theme}.html with no benefit to the static PNG (labels
-    already show the values); enable a themed tooltip formatter instead of disabling
-    it outright.'
-  - No conversion-rate or delta-from-previous-stage indicator, which is the standard
-    funnel storytelling device (e.g. '-40% from Applications') -- would meaningfully
-    raise Data Storytelling without cluttering the static render.
-  - Design is functional but fairly close to library defaults (no gradient/shadow
-    refinement, no subtitle) -- acceptable but leaves Design Excellence on the table
-    for a mid-attempt score.
+  - Still no delta-from-previous-stage indicator (e.g. '-40% from Screened') -- the
+    percent-of-first-stage label is a good addition but doesn't show stage-to-stage
+    drop-off, which is the sharper funnel storytelling device
+  - Design remains close to a straightforward idiomatic funnel with no extra polish
+    (no gradient/shadow refinement, no subtitle) -- functional but leaves Design Excellence
+    on the table
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
       Chrome: Title "funnel-basic · javascript · echarts · anyplot.ai" is centered, dark ink text, clearly legible. No axes, no legend (appropriate for a single-dimension funnel with inline labels). No grid.
-      Data: Five trapezoidal funnel segments narrowing top to bottom: Applications (2,400, brand green #009E73), Screened (1,450, lavender #C475FD), Interviewed (620, blue #4467A3), Offer Extended (240, ochre #BD8233), Hired (150, matte red #AE3030) -- exact Imprint canonical order. Each segment carries a centered two-line label (stage name + comma-formatted value) in near-white text. Segment widths are visibly proportional to value relative to the first stage, with a thin light-colored border separating segments.
-      Legibility verdict: PASS -- all labels read with strong contrast against every segment color in this theme.
+      Data: Five trapezoidal funnel segments narrowing top to bottom: Applications (2,400, 100%, brand green #009E73), Screened (1,450, 60%, lavender #C475FD), Interviewed (620, 26%, blue #4467A3), Offer Extended (240, 10%, ochre #BD8233), Hired (150, 6%, matte red #AE3030) -- exact Imprint canonical order. Each segment carries a centered two-line label (stage name + value + percent-of-first-stage) in a per-segment fixed color: dark ink on green/lavender/ochre, white on blue/matte-red. Segment widths are visibly proportional to value relative to the first stage, with a thin light-colored border separating segments.
+      Legibility verdict: PASS -- all labels read with strong contrast (~5:1-6.4:1 estimated) against every segment color.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 -- not pure black.
       Chrome: Title renders in light ink text, clearly legible against the dark background. Same layout as light render, no axes/legend/grid.
-      Data: Same five segments in the identical Imprint colors as the light render (green, lavender, blue, ochre, matte red) -- confirms data colors are theme-invariant. However, the label color is now near-black (tied to t.pageBg for this theme) instead of white, and it is rendered on the SAME saturated segment colors as the light render. On the green, lavender, and ochre segments this still reads fine (moderate-to-good contrast), but on the matte-red "Hired" segment and, to a lesser extent, the blue "Interviewed" segment, the near-black text sits on a similarly dark-toned background, producing a noticeably lower-contrast, borderline "dark-on-dark" effect for those two labels specifically (measured contrast ~2.7:1 on red and ~3.1:1 on blue, both under or at the WCAG large-text 3:1 floor).
-      Legibility verdict: FAIL (partial) -- text remains technically decipherable but has materially reduced contrast on 2 of 5 segments (Hired, Interviewed) in this theme; this is the theme-adaptation issue flagged as the primary weakness.
+      Data: Same five segments in the identical Imprint colors as the light render (green, lavender, blue, ochre, matte red) -- confirms data colors are theme-invariant. Label colors are now ALSO identical to the light render per segment (dark ink on green/lavender/ochre, white on blue/matte-red), because label color is tied to each segment's own fixed luminance rather than the page-background token. This resolves the attempt-1 dark-on-dark failure on the matte-red "Hired" and blue "Interviewed" segments -- both now show white text at strong contrast in this theme, same as before.
+      Legibility verdict: PASS -- no dark-on-dark or light-on-light failures observed; contrast is consistent with the light render since it no longer depends on the page background.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Dark-theme labels on the matte-red and blue segments use near-black
-          text on similarly dark-toned segment colors (label color hard-coded to t.pageBg
-          while segment colors stay constant), producing borderline dark-on-dark contrast
-          (~2.7:1 on red, ~3.1:1 on blue)
+        passed: true
+        comment: 'Fixed: label color is now hard-coded per segment by its own luminance
+          instead of the page-background token, so all 5 labels read with strong contrast
+          in BOTH themes'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -85,11 +75,12 @@ review:
         comment: 5 segments sized appropriately for the data density, all distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Same contrast issue as VQ-01 reduces accessibility for 2 of 5 dark-theme
-          labels
+        passed: true
+        comment: Estimated contrast ~5:1-6.4:1 for every label/segment pair in both
+          themes; color is never the sole signal (shape narrowing + text labels also
+          carry the meaning)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -110,27 +101,30 @@ review:
         comment: Exact Imprint canonical order (green, lavender, blue, ochre, matte
           red); backgrounds correct in both themes; data colors identical across themes
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Clean, on-brand, but close to a straightforward idiomatic funnel
+        passed: false
+        comment: Clean and on-brand but close to a straightforward idiomatic funnel
           with no extra polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
+        passed: false
         comment: Generous whitespace, subtle segment borders, no legend clutter, but
           no further refinement touches
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        comment: Narrowing shape and color clearly conveys drop-off, but no percentage/delta-from-previous-stage
-          annotation to sharpen the story
+        passed: true
+        comment: New percent-of-first-stage labels sharpen the drop-off narrative
+          on top of the narrowing shape; still lacks a stage-to-stage delta callout
     spec_compliance:
       score: 15
       max: 15
@@ -139,43 +133,50 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct funnel chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Trapezoidal narrowing segments, distinct colors, value labels, proportional
-          widths -- all present
+        passed: true
+        comment: Trapezoidal narrowing segments, distinct colors, value+percent labels,
+          proportional widths -- all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: Stages and values correctly mapped and already ordered descending
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title format exact; legend correctly omitted since inline labels
           cover it
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: 5 stages shown with all core funnel features; could add percentage-of-total
-          for richer coverage
+        passed: true
+        comment: 5 stages with all core funnel features, now including percent-of-total
+          per stage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, plausible recruiting funnel
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: Sensible magnitudes and drop-off ratios
     code_quality:
       score: 10
@@ -185,46 +186,55 @@ review:
         name: KISS Structure
         score: 3
         max: 3
+        passed: true
         comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: No extraneous imports; echarts is the pinned global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: Correct mount-node contract, animation disabled, no explicit size/devicePixelRatio
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
+        passed: true
         comment: Proper use of funnel series options (sort, gap, min/max, minSize/maxSize)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        comment: Tooltip fully disabled, no distinctive ECharts-specific interactivity
-          leveraged for the HTML output
-  verdict: REJECTED
+        passed: false
+        comment: Tooltip re-enabled with a themed formatter, a real improvement over
+          attempt 1's fully-disabled tooltip, but still no other distinctive ECharts-specific
+          interactivity leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
