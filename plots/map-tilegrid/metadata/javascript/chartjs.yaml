@@ -1,0 +1,268 @@
+library: chartjs
+language: javascript
+specification_id: map-tilegrid
+created: '2026-09-05T08:58:35Z'
+updated: '2026-09-05T09:12:02Z'
+generated_by: claude-sonnet
+workflow_run: 33956472033
+issue: 5246
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/chartjs/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'AR-09 edge-clipping from attempt 1 is fixed: layout.padding.right increased from
+    140 to 200 and the rotated colorbar unit label (''Renewable Share of Electricity
+    (%)'') now sits fully inside the canvas in both themes, with comfortable margin
+    to the right edge.'
+  - Correctly emulates a native tile-grid map with a custom Chart.js afterDraw plugin
+    over a hidden scatter scale, matching the library's documented workaround for
+    chart types with no native Chart.js support.
+  - Tile positions approximate real European geography (Iceland top-left, Nordics
+    top-right, Benelux/DACH center, Iberia/Italy/Greece south), so the layout reads
+    instantly as a map without needing a basemap.
+  - Sequential Imprint palette (t.seq, brand green -> blue) correctly interpolated
+    per-tile by value, with a colorbar showing both the numeric domain (16%/98%) and
+    its unit label, and identical data colors between light and dark renders.
+  - Data is plausible, neutral (renewable electricity share across 20 real countries)
+    and spans a believable 16-98% range.
+  weaknesses:
+  - 'textColorFor()''s luminance threshold (140) is never actually reached by either
+    end of the imprint_seq domain (green #009E73 ≈ 106, blue #4467A3 ≈ 99), so every
+    tile renders white text regardless of value -- the branch is dead code today.
+    Not a visible bug (white reads fine on both), but the adaptive-text-color feature
+    claimed as a distinctive touch isn''t really adaptive; either drop the luminance
+    branch or acknowledge it''s a safety net rather than an active behavior.'
+  - Colorbar numeric labels ('98%'/'16%') are legible but relatively small (16px)
+    next to the bold 26px tile labels -- a couple more px would balance the secondary-text
+    hierarchy better against the primary tile labels.
+  - Only 20 of the ~44 countries commonly shown in this style of European tile grid
+    are included; still well within the spec's 10-60 region range and the selection
+    reads as a coherent, deliberate subset (mostly Western/Northern/Central Europe)
+    rather than a bug.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the Imprint light theme, not pure white.
+      Chrome: Bold dark title "Renewable Energy in Europe · map-tilegrid · javascript · chartjs · anyplot.ai" is fully readable at the top, comfortably inside the canvas (~66% width). No axis ticks/labels (scales hidden by design, appropriate for a tile map). A vertical colorbar sits at the far right with "98%" near the top and "16%" near the bottom in soft ink-gray, and the rotated unit label "Renewable Share of Electricity (%)" is now fully visible along the right edge with real margin to the canvas border (fixed vs. attempt 1, where this label was drawn off-canvas).
+      Data: 20 country tiles arranged in an approximate map of Europe (Iceland top-left, Nordics top-right, Benelux/DACH center, Iberia/Italy/Greece south), each filled with a green-to-blue sequential gradient (Imprint imprint_seq, #009E73 -> #4467A3) keyed to renewable-electricity share. Every tile has a bold white region-code label (IS, NO, SE, ...) that is clearly legible against every tile color.
+      Legibility verdict: PASS -- all chrome and data labels, including the previously-missing colorbar unit label, are fully visible and legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the Imprint dark theme, not pure black.
+      Chrome: Same title, now in light text, fully readable against the dark background. Same colorbar with "98%"/"16%" and the "Renewable Share of Electricity (%)" unit label all legible in light gray, comfortably inside the canvas edge.
+      Data: Identical tile fill colors and layout to the light render -- data hues do not shift between themes, only chrome (background, title/label color) flips, as required.
+      Legibility verdict: PASS -- no dark-on-dark issues; all text (title, tile labels, colorbar numbers and unit) reads clearly against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, tile labels, and colorbar min/max + unit label are all legible
+          in both themes now that the off-canvas label is fixed; colorbar numeric
+          labels are a touch small next to the bold tile labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions among tiles, labels, or the colorbar.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tile fills and region labels are clearly visible; 20 tiles is a sparse,
+          well-sized layout with clean grout gaps.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential scale, CVD-safe, no red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: layout.padding.right raised to 200; colorbar, its numeric labels,
+          and the rotated unit label all sit fully inside the 1200 CSS-px mount with
+          real margin. No clipping in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar's unit/quantity label ('Renewable Share of Electricity (%)')
+          now renders on both light and dark, completing the value-to-color mapping.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) used correctly for continuous data;
+          both theme backgrounds correct (#FAF8F1 / #1A1A17); data colors identical
+          across themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom tile-grid plugin with geographic approximation and a hand-drawn
+          colorbar shows real design effort beyond a default Chart.js chart type;
+          execution is solid but visually plain (flat fills, no additional polish).
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: No axes/gridlines clutter the map, gaps between tiles read as clean
+          grout lines, colorbar has a subtle stroke border; overall fairly minimal
+          rather than deeply refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Color gradient and geographic layout create a scannable hierarchy
+          (Nordics/Alps high, Eastern Europe low), but there's no additional emphasis
+          (e.g. callouts on extremes) beyond the base encoding.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine equal-area tile grid map via scatter+plugin, not a disguised
+          choropleth or heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region labels, equal tile sizing, and a colorbar with both numeric
+          range and unit label are all present and rendering correctly.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: row/col map to approximate real-world position; color maps to value;
+          all 20 countries shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format is correct ('{Descriptive Title} · map-tilegrid · javascript
+          · chartjs · anyplot.ai'); colorbar fully self-explanatory now that its unit
+          label renders.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 20 countries with varied values, clear min/max spread, and directional
+          geographic realism (Nordics/Alps high, Eastern Europe low).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Renewable electricity share is a neutral, plausible real-world metric
+          with values in a believable range.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16-98% is a sensible domain for this metric.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small set of color-math helper functions (hexToRgb, lerpColor, textColorFor)
+          is reasonable for a custom-drawn plugin; the luminance branch in textColorFor
+          never actually flips given this domain's colors.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data array.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on the harness-provided Chart global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity or UI; plugin logic is appropriately scoped
+          to the task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract: appends one canvas, animation:false,
+          no manual width/height.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scatter-as-coordinate-system plus afterDraw plugin is exactly the
+          library doc's recommended workaround for chart types with no native Chart.js
+          type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom plugin and gradient-filled colorbar are distinctive uses of
+          the Chart.js plugin/canvas API, though the adaptive-text-color logic doesn't
+          meaningfully activate on this data domain.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill

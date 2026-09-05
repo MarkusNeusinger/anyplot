@@ -1,0 +1,247 @@
+library: ggplot2
+language: r
+specification_id: manhattan-gwas
+created: '2026-09-05T09:01:09Z'
+updated: '2026-09-05T09:12:16Z'
+generated_by: claude-sonnet
+workflow_run: 33956638095
+issue: 2925
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Chromosome 19-22 tick label thinning (skip even numbers past 18) fully resolves
+    the prior tight-spacing overlap risk
+  - New lead-SNP peak annotations (chr3/chr8/chr14/chr19 labels above each significant
+    cluster) give the plot a clear, explicit focal point
+  - Dropping axis.line yields a cleaner, more minimal chrome consistent with the catalog's
+    design language
+  - Cumulative genomic position built correctly via cumsum offsets, with chromosome
+    tick labels centered on their region
+  - Both required threshold lines present at correct values (~7.3 genome-wide, 5 suggestive),
+    styled distinctly (dashed red vs. dotted amber)
+  - Density-aware marker sizing avoids overplotting on ~9,000 background SNPs while
+    making true positives pop
+  - Theme-adaptive chrome correctly threaded through; data colors identical across
+    light/dark
+  - Proper -log10(p) axis label typeset via expression()
+  weaknesses:
+  - panel.grid.major.y uses full-opacity INK color at linewidth=0.2 rather than the
+    style guide's recommended low-alpha rgba(...,0.15) rule line — visually thin but
+    technically off-spec on opacity
+  - LM-02 (Distinctive Features) could go further with a more ggplot2-specific technique
+    (e.g. ggrepel-style non-overlapping label placement) rather than a plain geom_text
+    annotation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "manhattan-gwas · r · ggplot2 · anyplot.ai" and axis titles ("Chromosome", "-log10(p-value)" with proper subscript/italic math typesetting) render in dark ink, clearly legible. Y-axis tick labels (5/10/15) are legible. X-axis chromosome numbers (1-22, with even numbers past 18 thinned) are legible with no overlap. New bold "chr3"/"chr8"/"chr14"/"chr19" peak annotations sit cleanly above each significant cluster with no collisions with other text or data.
+      Data: Background SNP cloud alternates green (#009E73, odd chromosomes) / blue (#4467A3, even chromosomes) by parity, with genome-wide significant hits highlighted in larger, opaque matte red (#AE3030) on chromosomes 3, 8, 14, 19. Dashed red genome-wide line (~7.3) and dotted amber suggestive line (5) are both present and distinguishable. First categorical series is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels flip to light ink (#F0EFE8 / #B8B7B0) and remain clearly legible — no dark-on-dark issues anywhere. The new peak annotation labels ("chr14" etc.) also flip to light ink and are clearly visible against the dark background. Gridlines flip to a light, subtle line.
+      Data: Green/blue background points, red highlighted hits, and red/amber threshold lines are pixel-identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; chr19-22 label thinning resolved the
+          prior tight spacing; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap anywhere, including the new peak annotation labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Density-aware sizing: small/transparent background points vs. large/opaque
+          significant hits'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red distinction reinforced by size+opacity, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no overflow/clipping, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive, proper -log10(p) math typesetting
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, theme-correct backgrounds both renders, data
+          colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Layered background/highlight rendering plus new peak annotations
+          create intentional visual hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: axis.line dropped, vertical gridlines removed; y-major grid uses
+          full-opacity INK rather than the recommended low-alpha rule line
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Lead-SNP peak labels now give the plot an explicit, clear focal point
+          beyond color/size alone
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Manhattan plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative position, alternating chromosome colors, both threshold
+          lines, density-aware sizing, peak labeling
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=cumulative bp position, y=-log10(p), full genome shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend correctly omitted (parity color
+          is self-evident from the x-axis)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Background null distribution plus 4 simulated peaks with realistic
+          LD-like decay away from the lead SNP
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral simulated GWAS data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Chromosome lengths approximate the real human genome; p-value range
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No top-level functions/classes; lapply/Map used inline for grouped
+          data generation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: scale_x_continuous breaks/labels for chromosome centering, expansion(),
+          scale_color_manual, layered geoms with inherit.aes=FALSE
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: expression() axis label, layered geom_point split, lead-SNP geom_text
+          annotation, guides(color="none")
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
