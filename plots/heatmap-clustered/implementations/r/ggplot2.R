@@ -11,9 +11,12 @@ set.seed(42)
 # --- Theme tokens ------------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-DIV_MID     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+# Distinct from PAGE_BG (not equal) so near-zero z-score tiles stay visible
+# as part of the grid instead of fading into the canvas.
+DIV_MID     <- ELEVATED_BG
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -60,10 +63,25 @@ tile_df$y      <- row_leaf_y[tile_df$gene_i]
 x_axis_labels <- sample_id[col_hc$order]
 y_axis_labels <- gene_id[rev(row_hc$order)]
 
+# --- Row group annotation strip (gene module) --------------------------------
+ROW_ANN_THICK <- 0.6
+ROW_ANN_X     <- -0.3
+row_color_map <- c(Up = IMPRINT_PALETTE[4], Down = IMPRINT_PALETTE[6], Stable = IMPRINT_PALETTE[7])
+row_ann_df <- data.frame(
+  y     = row_leaf_y,
+  group = gene_module,
+  color = row_color_map[gene_module]
+)
+row_ann_label_df <- data.frame(
+  y     = tapply(row_ann_df$y, row_ann_df$group, mean),
+  label = names(tapply(row_ann_df$y, row_ann_df$group, mean))
+)
+ROW_LABEL_X <- ROW_ANN_X - ROW_ANN_THICK / 2 - 0.5
+
 # --- Row dendrogram: rotated (height -> x, leaf position -> y) ---------------
-# Placed left of the heatmap; leaves touch near x = -0.2, root extends left.
-ROW_LEAF_X     <- -0.2
-row_dend_width <- 4.5
+# Placed left of the row annotation strip; leaves touch ROW_LEAF_X, root extends left.
+ROW_LEAF_X     <- ROW_LABEL_X - 0.6
+row_dend_width <- 3.5
 row_h_scale    <- row_dend_width / max(row_hc$height)
 
 n_row_merges <- n_genes - 1
@@ -172,6 +190,14 @@ p <- ggplot() +
     data = ann_label_df, aes(x = x, y = ANN_Y + ANN_THICK / 2 + 0.5, label = label),
     color = INK_SOFT, size = 3.0
   ) +
+  geom_tile(
+    data = row_ann_df, aes(x = ROW_ANN_X, y = y, fill = I(color)),
+    color = PAGE_BG, linewidth = 0.5, width = ROW_ANN_THICK
+  ) +
+  geom_text(
+    data = row_ann_label_df, aes(x = ROW_LABEL_X, y = y, label = label),
+    color = INK_SOFT, size = 3.0, angle = 90
+  ) +
   geom_segment(
     data = row_dend_df, aes(x = x, xend = xend, y = y, yend = yend),
     color = INK_SOFT, linewidth = 0.6
@@ -185,7 +211,7 @@ p <- ggplot() +
     midpoint = 0, limits = c(-max_abs, max_abs), name = "Z-score"
   ) +
   scale_x_continuous(breaks = seq_len(n_samples), labels = x_axis_labels,
-                     expand = expansion(mult = 0.02)) +
+                     expand = expansion(mult = 0.03)) +
   scale_y_continuous(breaks = seq_len(n_genes), labels = y_axis_labels,
                      position = "right", expand = expansion(mult = 0.02)) +
   labs(title = plot_title, subtitle = plot_subtitle, x = NULL, y = NULL) +
