@@ -125,7 +125,8 @@ text!(ax, pooled_estimate, pooled_y - 0.75;
     text = pooled_label, align = (:center, :top), fontsize = 13, color = INK, font = :bold)
 
 legend_elements = [
-    MarkerElement(marker = :circle, color = BRAND, markersize = 16),
+    MarkerElement(marker = :circle, color = BRAND, markersize = 16,
+        strokewidth = 1.5, strokecolor = PAGE_BG),
     PolyElement(color = INK),
 ]
 Legend(fig[1, 1], legend_elements, ["Individual study", "Pooled effect"];
