@@ -1,0 +1,230 @@
+library: d3
+language: javascript
+specification_id: histogram-density
+created: '2026-09-05T04:29:25Z'
+updated: '2026-09-05T04:41:21Z'
+generated_by: claude-sonnet
+workflow_run: 33944347919
+issue: 2442
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Correct probability-density normalization (count / (N * binWidth)), verified to
+    integrate to 1
+  - Thoughtful area-fill-under-PDF-curve technique that visually communicates goodness-of-fit,
+    not just a bare overlay line
+  - Manual equal-width binning deliberately chosen over d3.bin() to avoid its sliver-edge-bin
+    heuristic — a documented, library-aware judgment call
+  - Clean theme-adaptive chrome; both light and dark renders are fully legible with
+    identical data colors
+  weaknesses:
+  - Design Excellence could go further with a stronger visual hierarchy or a brief
+    callout (e.g., annotating mean/std) — not required by spec but would add polish
+  - Distinctive-feature usage is solid but not maximal; a further d3-idiomatic touch
+    could push Library Mastery higher
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1, not pure white
+      Chrome: title, axis labels ("Reaction Time (ms)", "Density"), tick labels, and legend text all render as dark ink and are clearly readable; horizontal gridlines only, subtle
+      Data: brand-green (#009E73) density histogram bars, lavender (#C475FD) theoretical normal-PDF line + subtle 12%-opacity area fill beneath it; first series is confirmed #009E73
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17, not pure black
+      Chrome: title and axis labels render in light/white text, tick labels and legend in a slightly softer light gray — all clearly readable; no dark-on-dark failures found
+      Data: identical colors to light render — green bars (#009E73) and lavender PDF line/area (#C475FD), confirming palette consistency across themes
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, well-proportioned title, readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, title, axes, bars all cleanly separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar widths and line weight well matched to data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong green/lavender hue+luminance separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend near plot, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Units included on X-axis, descriptive Y-axis label
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, PDF overlay uses Imprint position 2, theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Histogram + PDF overlay with area fill goes beyond a bare default,
+          not yet exceptional tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle grid, bar gutters, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Area fill under curve visualizes goodness-of-fit as a real analytical
+          focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct density histogram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Density Y-axis, area normalizes to 1, PDF overlay included
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=reaction time, Y=density, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels accurate
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean unimodal distribution well-suited to PDF-fit demo, no additional
+          distributional nuance
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Psychology-experiment reaction times, neutral real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mean/std/range realistic for human reaction-time tasks
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, small helper functions appropriate
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper data-join pattern, scales, axes, area/line with curveNatural
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hand-rolled binning avoiding d3.bin() sliver-edge issue, layered
+          area+line overlay
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - normalization
+  styling:
+  - alpha-blending
