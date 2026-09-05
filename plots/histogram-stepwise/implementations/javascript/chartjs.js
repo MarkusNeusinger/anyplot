@@ -37,10 +37,10 @@ const maxEdge = Math.ceil(Math.max(...allLatencies) / binWidth) * binWidth;
 const binCount = (maxEdge - minEdge) / binWidth;
 const edges = Array.from({ length: binCount + 1 }, (_, i) => minEdge + i * binWidth);
 
-// Each bin's count is doubled onto (leftEdge, rightEdge) so a plain straight
-// line connecting the points draws the horizontal-then-vertical step outline
-// — no fill, matching the spec's "outline only" requirement. Padding with a
-// zero at each end closes the outline down to the axis.
+// One point per bin's left edge (plus a trailing point at the final right
+// edge, zero-padded at both ends) — Chart.js's native `stepped: "after"` line
+// option draws the horizontal-then-vertical step outline between them, so no
+// point-doubling is needed to fake the shape.
 function stepOutline(latencies) {
   const counts = new Array(binCount).fill(0);
   latencies.forEach((value) => {
@@ -51,8 +51,8 @@ function stepOutline(latencies) {
   const points = [{ x: edges[0], y: 0 }];
   for (let i = 0; i < binCount; i++) {
     points.push({ x: edges[i], y: counts[i] });
-    points.push({ x: edges[i + 1], y: counts[i] });
   }
+  points.push({ x: edges[binCount], y: counts[binCount - 1] });
   points.push({ x: edges[binCount], y: 0 });
   return points;
 }
@@ -68,11 +68,13 @@ new Chart(canvas, {
     datasets: endpoints.map((endpoint, i) => ({
       label: endpoint.name,
       data: stepOutline(endpoint.latencies),
+      stepped: "after",
       borderColor: t.palette[i],
       backgroundColor: "transparent",
-      borderWidth: 3.5,
+      // Rewrite's tighter, faster distribution is the story — give it the
+      // heavier line weight so it reads as the visual focal point.
+      borderWidth: i === 1 ? 4.5 : 2.75,
       pointRadius: 0,
-      tension: 0,
       fill: false,
     })),
   },
@@ -88,7 +90,7 @@ new Chart(canvas, {
         display: true,
         text: "API Latency · histogram-stepwise · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 19, weight: "500" },
+        font: { size: 20, weight: "600" },
         padding: { bottom: 20 },
       },
       legend: {
