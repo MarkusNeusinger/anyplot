@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: phase-diagram
 created: '2026-09-05T10:39:15Z'
-updated: '2026-09-05T10:42:41Z'
+updated: '2026-09-05T10:53:47Z'
 generated_by: claude-sonnet
 workflow_run: 33960988779
 issue: 3004
@@ -12,53 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
   - 'First-series color is exactly #009E73 and the remaining two trajectories follow
     the canonical Imprint order (lavender, blue) with identical data colors between
     light and dark renders'
-  - Axes are symmetric around the origin and cross at (0,0), which is the idiomatic
-    layout for a phase-plane plot and makes the fixed point visually central
-  - 'Uses ECharts-specific features beyond a basic line series: markPoint circles
-    the initial condition of each trajectory, a markLine draws dashed nullclines (theta=0
-    / dtheta/dt=0), and a diamond scatter marker plus label calls out the equilibrium'
-  - 'Physically grounded synthetic data: RK4 integration of a damped-pendulum ODE
-    with three distinct initial conditions that all spiral into the same fixed point,
-    illustrating basin-of-attraction structure as suggested by the spec notes'
-  - Title format, axis titles (with units), and legend labels are all descriptive
-    and match the mandated pattern
+  - 'The Equilibrium callout no longer collides with the data: a leader line now connects
+    the true fixed point (dark diamond at origin) to a label placed in the quadrant
+    farthest from every trajectory point, computed programmatically rather than hard-coded'
+  - 'Physically grounded, internally consistent synthetic data: RK4 integration of
+    a generic linear damped oscillator (no longer mis-described as a small-angle pendulum
+    approximation) with three distinct initial conditions converging to a shared fixed
+    point, illustrating basin-of-attraction structure per the spec notes'
+  - 'Genuine ECharts-specific features: markPoint circles each trajectory''s initial
+    condition, a markLine draws dashed nullclines (theta=0 / dtheta/dt=0), and a separate
+    leader-line + scatter + label combination builds the equilibrium callout'
+  - Axes are symmetric around the origin and cross at (0,0), the idiomatic layout
+    for a phase-plane plot; title, axis titles (with units), and legend labels all
+    match the mandated format
   weaknesses:
-  - The 'Equilibrium' label and its diamond marker sit directly on top of the tightly-wound
-    spiral centers, overlapping the converging trajectory lines in both renders —
-    offset the label further from the origin (e.g. increase markPoint/label distance
-    or move it to a clear quadrant) so it doesn't collide with the data.
-  - theta0 = 2.5 rad (~143 degrees) and other initial conditions exceed the regime
-    where the code comment's 'small-angle approximation' (sin(theta) ~ theta) is physically
-    valid; either use smaller initial angles (<~0.5 rad) to match the stated approximation,
-    or drop the small-angle framing and describe it as a generic damped linear oscillator.
-  - The RK4 integrator is implemented via two helper functions (derivative, integrate)
-    rather than inline flat code — acceptable for numerical integration but a flatter
-    or more minimal approach would score higher on KISS structure.
-  - No direction/time-evolution cue (arrowheads or a color gradient along each trajectory)
-    is used, even though the spec explicitly suggests this to show which way trajectories
-    evolve over time — currently only the start point is marked, so the viewer must
-    infer direction from the spiral's tightening alone.
+  - The RK4 integrator uses two helper functions (derivative, integrate) rather than
+    fully flat/inline code -- acceptable for numerical integration but not maximally
+    KISS
+  - No direction/time-evolution cue (arrowheads or a color gradient along the trajectory)
+    is used, even though the spec explicitly suggests this as an optional enhancement
+    -- currently only the start point is marked
+  - The diamond fixed-point marker (symbolSize 18) sits very close to the tightly-wound
+    spiral centers -- still legible and non-overlapping at full resolution, but review
+    closely at small/mobile scale
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "phase-diagram · javascript · echarts · anyplot.ai" is centered, dark and crisp. Axis titles "Angular displacement θ (rad)" and "Angular velocity dθ/dt (rad/s)" are dark and legible. Tick labels are a softer gray, clearly readable against the light background. Legend at the bottom lists all three trajectories plus the equilibrium marker, all legible. Gridlines are subtle light gray, with darker axis lines crossing through the origin (x=0, y=0).
-      Data: Three spiral trajectories converge from distinct starting points (marked with filled circles) toward the origin. First series (θ₀=2.5) is brand green #009E73, second (θ₀=-1.5) is lavender/purple, third (θ₀=0.3) is blue — matching the canonical Imprint categorical order. A dark diamond marker plus an "Equilibrium" text label sits at the origin where all trajectories converge; the label and diamond visually overlap the tightly wound spiral lines right at the center, creating minor clutter at that one spot. A faint dashed nullcline crosses through the origin.
-      Legibility verdict: PASS — all text is readable against the light background; the only issue is spatial overlap of the "Equilibrium" label with data lines, not a contrast/legibility failure.
+      Background: warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "phase-diagram · javascript · echarts · anyplot.ai" is centered, bold, dark, and clearly legible. Axis titles ("Angular displacement θ (rad)", "Angular velocity dθ/dt (rad/s)") and tick labels are dark/gray and fully readable. Grid lines are subtle light gray, visible but not competing with data. Legend at the bottom lists all three trajectories plus "Equilibrium (fixed point)", all legible.
+      Data: Three spiral trajectories converge from marked circular starting points toward the origin -- series 1 (θ0=2.5) is brand green #009E73, series 2 (θ0=-1.5) is lavender #C475FD, series 3 (θ0=0.3) is blue #4467A3, matching canonical Imprint order. A small dark diamond marks the true fixed point at the origin; a dashed leader line runs from the origin out to an "Equilibrium (θ=0, dθ/dt=0)" label placed in the upper-right corner, well clear of the converging spirals -- no overlap between the label/leader line and any trajectory.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels have all flipped to light/white tones and remain clearly legible against the dark background. No dark-on-dark text was found anywhere (title, axis labels, tick labels, and legend text are all light-colored). Gridlines are a dim gray, visible but unobtrusive; axis lines through the origin are a lighter gray than the gridlines.
-      Data: Same three trajectory colors as the light render (green #009E73, lavender, blue) — confirmed identical hues, only the chrome (background, text, gridlines) flipped. The same "Equilibrium" label/diamond overlap with the spiral center observed in the light render is present here too.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; brand green remains clearly visible against the dark surface.
+      Background: warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, axis titles, and tick labels all flip to light tones (white/light gray) and remain clearly legible against the dark surface -- no dark-on-dark failures found anywhere. Grid lines flip to a subtle light overlay, still unobtrusive.
+      Data: Colors are confirmed identical to the light render (green/lavender/blue unchanged, brand green #009E73 clearly visible) -- only chrome (background, gridlines, text) flipped. The equilibrium diamond, leader line, and label are positioned identically to the light render and remain overlap-free.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -66,51 +63,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes; all text readable in both themes; minor deduction
-          only for the label sitting on top of spiral lines
+        comment: All text readable in both themes at full resolution; likely still
+          legible at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: '''Equilibrium'' label and diamond marker overlap the converged spiral
-          lines at the origin in both renders'
+        comment: Equilibrium label/leader line now placed in the farthest quadrant
+          from all trajectories -- prior overlap fully resolved
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 3px lines and appropriately sized markers for ~1440 total points
-          across 3 trajectories; no alpha needed given moderate density
+        comment: 480-point trajectories rendered as smooth unmarked lines of moderate
+          width, appropriate for dense data; start markers and fixed-point diamond
+          are clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue are distinct and CVD-safe; no red-green as sole
-          signal
+        comment: Canonical Imprint order, adequate contrast, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas gate passed; title well within width bounds;
-          no overflow
+        comment: Square canvas fits the symmetric quadrant layout; nothing cut off;
+          generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titles include units (rad, rad/s); mandated title format used
+        comment: Descriptive axis labels with units (rad, rad/s)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for series 2-3, correct
-          theme backgrounds'
+        comment: First series brand green, canonical order, correct theme backgrounds
+          in both renders
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -118,22 +115,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: markPoint start markers, dashed nullclines, and an equilibrium glyph
-          show intentional design beyond defaults
+        comment: markPoint start markers, dashed nullclines, and a computed-placement
+          equilibrium callout with leader line
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle grid, origin-crossing axis lines idiomatic for phase plots,
-          generous whitespace
+        comment: Subtle grid, origin-crossing axis lines, generous whitespace, no
+          boxed frame
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Convergence of three trajectories to one fixed point clearly tells
-          the basin-of-attraction story; dashed nullclines add analytical context
+        comment: Clear basin-of-attraction convergence story now told without a distracting
+          label collision
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct x vs dx/dt phase-plane trajectories
+        comment: Genuine x vs dx/dt phase-plane plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple trajectories, fixed point, spiral convergence all present
+        comment: Multiple trajectories, fixed point, nullclines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=theta, y=dtheta/dt correctly mapped with padded symmetric bounds
+        comment: theta on x, dtheta/dt on y, bounds computed from actual data extents
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated pattern exactly; legend entries are descriptive
-          per-trajectory labels
+        comment: Mandated title format; legend labels match initial conditions
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -172,21 +168,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows convergence/stability and basin-of-attraction structure; no
-          limit cycle or time-gradient shown (optional per spec notes)
+        comment: Trajectories, fixed point, and basin of attraction shown; no time-evolution
+          color gradient (optional per spec)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Physically plausible, neutral damped-pendulum parameters
+        comment: Physically plausible, neutral damped-oscillator scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Initial angles up to 2.5 rad exceed the regime where the code's own
-          'small-angle approximation' comment is valid
+        comment: Comment now correctly describes a generic linear damped oscillator
+          instead of a small-angle pendulum, removing the prior physics/framing inconsistency
     code_quality:
       score: 9
       max: 10
@@ -196,20 +192,20 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions (derivative, integrate) for RK4 integration
-          — reasonable for numerical integration but not maximally flat
+        comment: Two small helper functions (derivative, integrate) for RK4 -- reasonable
+          for numerical integration, not maximally flat
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no randomness
+        comment: Deterministic RK4 integration, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; only the echarts global is used
+        comment: No unused imports; echarts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -221,9 +217,9 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: 'Uses the mount-node contract correctly with animation: false'
+        comment: 'Correct mount-node contract, animation: false'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -231,22 +227,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic setOption structure with proper axis/grid/legend configuration
+        comment: Native line/scatter/markPoint/markLine series, no workarounds
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: markPoint, markLine, and a layered scatter series for the equilibrium
-          glyph are genuine ECharts-specific features, not generic line-chart usage
-  verdict: REJECTED
+        comment: markPoint, markLine nullclines, layered leader-line equilibrium callout
+          are genuinely ECharts-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - publication-ready
