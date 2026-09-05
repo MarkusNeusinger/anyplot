@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 120, right: 70, bottom: 90, left: 110 };
+const margin = { top: 132, right: 70, bottom: 90, left: 110 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -106,11 +106,27 @@ g.append("line")
 
 g.append("text")
   .attr("x", x(minValPoint.epoch))
-  .attr("y", -16)
+  .attr("y", -32)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
   .text(`min val loss · epoch ${minValPoint.epoch}`);
+
+// --- Generalization-gap fill: d3.area() between train/val after the overfit point
+const gapData = history.filter((d) => d.epoch >= overfitStart);
+const gapArea = d3
+  .area()
+  .x((d) => x(d.epoch))
+  .y0((d) => y(d.trainLoss))
+  .y1((d) => y(d.valLoss))
+  .curve(d3.curveMonotoneX);
+
+g.append("path")
+  .datum(gapData)
+  .attr("fill", t.palette[1])
+  .attr("fill-opacity", 0.12)
+  .attr("stroke", "none")
+  .attr("d", gapArea);
 
 // --- Loss curves ----------------------------------------------------------------
 const line = (accessor) =>
@@ -118,7 +134,7 @@ const line = (accessor) =>
     .line()
     .x((d) => x(d.epoch))
     .y((d) => y(accessor(d)))
-    .curve(d3.curveLinear);
+    .curve(d3.curveMonotoneX);
 
 g.append("path")
   .datum(history)
