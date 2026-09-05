@@ -76,6 +76,7 @@ ax = Axis(
     limits             = (0, 100, 0, nothing),
 )
 
+band!(ax, population_pct, fill(1.0, n_transactions), lift; color=(BRAND, 0.12))
 reference_line = hlines!(ax, [1.0]; color=INK_SOFT, linestyle=:dash, linewidth=2)
 model_line = lines!(ax, population_pct, lift; color=BRAND, linewidth=3)
 scatter!(ax, decile_pct, decile_lift; color=BRAND, markersize=16, strokewidth=1.5, strokecolor=PAGE_BG)
@@ -88,6 +89,24 @@ axislegend(
     labelcolor = INK,
     backgroundcolor = PAGE_BG,
     framevisible = false,
+)
+
+# --- Callout annotation ------------------------------------------------------
+callout_lift = round(decile_lift[1], digits=1)
+callout_pos = (decile_pct[1] + 8, decile_lift[1] + 2.2)
+arrows!(
+    ax,
+    [callout_pos[1] - 1], [callout_pos[2] - 0.6],
+    [decile_pct[1] - callout_pos[1] + 1], [decile_lift[1] - callout_pos[2] + 0.6];
+    color = INK_SOFT, linewidth = 1.5, arrowsize = 14,
+)
+text!(
+    ax, callout_pos[1], callout_pos[2];
+    text = "Top 10% → $(callout_lift)x lift",
+    color = INK,
+    fontsize = 15,
+    font = :bold,
+    align = (:left, :bottom),
 )
 
 # --- Save -----------------------------------------------------------------
