@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: dendrogram-radial
+created: '2026-09-05T00:09:51Z'
+updated: '2026-09-05T00:21:13Z'
+generated_by: claude-sonnet
+workflow_run: 33931214999
+issue: 5245
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/highcharts/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - 'Radial dendrogram built faithfully from scratch: root at the center, leaves at
+    equal angular spacing, radial distance proportional to merge distance'
+  - Arc + radial 'elbow' branch geometry avoids the visual crossing that straight
+    point-to-point connectors would cause on wide subtrees, documented inline
+  - Branch color encodes cluster purity (colored while a subtree stays within one
+    family, gray once families merge) — a genuine analytical signal, not just decoration
+  - Correct Imprint canonical palette order (green/lavender/blue/ochre for Raptors/Waterfowl/Songbirds/Shorebirds),
+    identical data colors across light and dark, chrome correctly flips per theme
+  - 24 rotated leaf labels flip alignment/rotation on the left half of the circle
+    so text never reads upside-down, with allowOverlap justified in a comment
+  - Root and leaf markers use theme-aware outline colors matching the page background,
+    creating a subtle cutout ring where branches cross
+  weaknesses:
+  - 'The file header is duplicated: lines 1-5 are one header block (short form, missing
+    the required License line) immediately followed by lines 6-10, a second full header
+    block (with the License line and ''Quality: pending'') — a leftover artifact from
+    the header-rewrite step that was never cleaned up. Only one canonical header should
+    remain, in the format from prompts/library/highcharts.md, with the ''//# anyplot-orientation:
+    square'' directive on its own line right after it.'
+  - Library Mastery remains capped because the radial layout is a scatter/line workaround
+    rather than a native Highcharts graph module — expected, since add-on modules
+    (networkgraph, sunburst) are forbidden for this catalog entry
+  - Eight custom helper functions implement UPGMA clustering and polar geometry from
+    scratch — necessary given no math/clustering library is available in the browser
+    sandbox, but keeps KISS structure below a flat script
+  - Subtitle and gray inter-family branch lines in the dark render still use the comparatively
+    soft inkSoft tone flagged in the previous review — legible but could be marginally
+    brighter for small-thumbnail accessibility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "dendrogram-radial · javascript · highcharts · anyplot.ai" in bold dark text, clearly readable. Subtitle "Bird species clustered by wingspan and beak length (UPGMA linkage)" in soft gray, readable. 24 rotated leaf labels in dark text radiate around the circumference, each flipped/aligned so none read upside-down; none overlap each other or the branch lines. Legend at the bottom with 4 family swatches (Raptors, Waterfowl, Songbirds, Shorebirds) in dark text, readable.
+      Data: Root marker in dark ink at the center; branches drawn as arc+radial "elbow" connectors colored by family (green/purple/blue/ochre) while a subtree stays within one family, turning gray at merges spanning multiple families (e.g. the deep Marbled Godwit / Long-billed Curlew split near the root). First categorical color is #009E73 (Raptors), matching the Imprint brand-green-first rule.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and leaf labels render in light text, clearly readable against the dark background. Subtitle and gray impure-merge branch lines are dimmer (inkSoft) but still visible — no dark-on-dark failures. Legend text is light and readable.
+      Data: Family branch colors (green, purple, blue, ochre) and leaf marker colors are pixel-identical to the light render — only chrome (background, ink, gray branches) flipped, confirming theme-adaptive tokens were threaded through correctly. Root marker flips to a light dot, still a clear focal point at the center.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, subtitle, 24 leaf labels, and legend readable in both themes;
+          dark-theme subtitle/gray branches are comparatively soft but not a failure
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 rotated leaf labels correctly avoid overlapping each other, branches,
+          and the legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers appropriately sized for 24 sparse leaves; cutout-ring outline
+          keeps markers visible where branches cross
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct hues (green/purple/blue/ochre), no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; title, subtitle, and legend fit comfortably with
+          no clipping or overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No cartesian axes needed for a radial dendrogram; title and subtitle
+          are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (green/lavender/blue/ochre), correct #FAF8F1/#1A1A17
+          backgrounds, identical data colors across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom elbow-arc branch geometry and cluster-purity coloring beyond
+          generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, generous whitespace, subtle background-matched marker
+          outlines; no distracting grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Gray-out-at-impure-merge is a real signal but subtle; root marker
+          gives a modest focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radial dendrogram layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Root at center, equal angular leaf spacing, distance-proportional
+          radius, cluster-colored branches all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Polar-to-cartesian mapping correct for all 24 leaves and 23 internal
+          nodes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match family
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full hierarchy, cluster colors, labels, and root — all core
+          radial-dendrogram aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real bird species with plausible wingspan/beak-length traits, neutral
+          subject
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wingspan 19-204cm and beak length 8-130mm are biologically sensible
+    code_quality:
+      score: 7
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Eight helper functions implement clustering/geometry from scratch
+          — necessary given no math library, but not a flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports at all; only window globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Duplicated leading header comment block (two overlapping header sections,
+          one missing the License line) is a sloppy leftover that needs cleanup
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart("container", …) with no explicit width/height; animation
+          disabled on chart and series
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct workaround using only core scatter/line series since add-on
+          graph modules are forbidden
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Relies on generic scatter/line series rather than a distinctive native
+          Highcharts feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  - normalization
+  styling:
+  - publication-ready
