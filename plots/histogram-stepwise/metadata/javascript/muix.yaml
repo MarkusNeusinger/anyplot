@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: histogram-stepwise
 created: '2026-09-05T05:06:23Z'
-updated: '2026-09-05T05:10:56Z'
+updated: '2026-09-05T05:20:15Z'
 generated_by: claude-sonnet
 workflow_run: 33946032257
 issue: 2645
@@ -12,43 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - 'Correct step-histogram math: the manual stepX/stepV construction rises at each
-    bin''s left edge, holds flat across the bin, transitions at boundaries, and returns
-    to zero at both ends — a textbook unfilled step outline.'
+  - Now uses MUI X LineChart's native curve="stepAfter" over bin-edge data directly,
+    fixing the attempt-1 weakness of hand-duplicating every x/y pair into a fake step
+    shape.
+  - Adds ChartsReferenceLine peak markers (dashed, series-colored) with labels calling
+    out the v1/v2 latency-shift story, directly answering the attempt-1 feedback for
+    a distinctive MUI X feature and a stronger before/after narrative.
+  - 'Correct step-histogram math: values are binned into 26 bins, stepped from zero
+    up through counts and back to zero, producing a clean unfilled outline for both
+    distributions.'
   - Realistic, neutral dual-distribution narrative (API v1 vs v2 latency before/after
-    an optimization pass) that doubles as a natural use case for overlaying two histograms.
+    an optimization pass) that doubles as a natural overlay-comparison use case for
+    a step histogram.
   - 'Correct Imprint palette and theme handling: brand green first series, lavender
-    second series, identical data colors across themes, warm off-white/near-black
-    backgrounds both readable.'
-  - Deterministic, seeded data generation via a small fixed-seed LCG (no external
-    RNG dependency).
-  - Dynamic title-fontsize scaling formula guards against overflow for longer titles,
-    and legend/axis labels use sensible explicit font sizes.
+    second series, identical data colors across themes, correct warm off-white/near-black
+    backgrounds, and reference-line/label colors matched to their series.'
+  - Deterministic, seeded data generation via a small fixed-seed LCG; dynamic title-fontsize
+    scaling guards against overflow.
   weaknesses:
-  - 'LM-01: Does not use MUI X LineChart''s native curve="step"/"stepBefore" support.
-    Instead the code manually duplicates every bin edge (54 points instead of ~28)
-    to fake the step shape. Using the built-in step curve type with bin edges/counts
-    directly would be simpler and more idiomatic.'
-  - 'LM-02/DE-01/DE-03: Fairly generic MUI X LineChart composition beyond the required
-    palette and step transform — no distinctive library feature (reference lines,
-    area threshold, custom tooltip formatting) and no additional visual-hierarchy
-    technique (annotation, highlighted region, emphasis marker) to strengthen the
-    before/after storytelling beyond color and data shape alone.'
+  - 'Visual Refinement (DE-02) is still baseline: no spine/frame customization or
+    extra whitespace tuning beyond the horizontal-only grid already present in attempt
+    1.'
+  - The reference-line annotations are a real improvement but a fairly common MUI
+    X pattern (single ChartsReferenceLine + label) rather than a deep showcase of
+    library-distinctive capability (e.g. custom tooltip formatting, zoom, or a highlighted
+    divergence band).
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white.
-      Chrome: title "histogram-stepwise · javascript · muix · anyplot.ai" in dark ink top-left; legend swatches "API v1 latency" (green) / "API v2 latency" (lavender) below title; x-axis "Response latency (ms)" with tick labels every 5ms from 35-195; y-axis "Count" with tick labels 0-120. All text renders in dark ink, clearly legible against the light background. Subtle horizontal gridlines only.
-      Data: two step-outline (unfilled) lines. First series (API v1 latency) is brand green #009E73, right-skewed peak around 110-130ms. Second series (API v2 latency) is lavender/purple, peak around 85-95ms, lower and shifted left of v1 (illustrating the "after optimization" story). No fill, only outline segments with clean horizontal/vertical step transitions.
-      Legibility verdict: PASS.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "histogram-stepwise · javascript · muix · anyplot.ai" in dark ink, top-left, fully legible. Legend below it with green "API v1 latency" and lavender "API v2 latency" swatches. X-axis "Response latency (ms)" with tick labels every 5ms from 35-195; Y-axis "Count" with ticks 0-120. Horizontal-only grid, subtle. Two dashed vertical reference lines labeled "v2 peak ~90ms" (lavender text) and "v1 peak ~114ms" (green text), positioned in clear whitespace above the gridline — no overlap with the step lines or each other (verified via pixel crop).
+      Data: Two unfilled step-outline lines built with curve="stepAfter" over bin-edge data — brand green #009E73 (API v1, right-skewed, peak ~110-130ms) and lavender #C475FD (API v2, left-shifted after the optimization, peak ~85-95ms). No fill, matching the "step histogram, outline only" spec requirement.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black.
-      Chrome: same title, legend, axis labels and tick labels, now rendered in light ink (off-white) against the dark background. Gridlines are subtle light-on-dark. No dark-on-dark or unreadable text anywhere.
-      Data: identical green (#009E73) and lavender step lines as the light render — confirms only chrome flipped, not data colors.
-      Legibility verdict: PASS.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis labels now in light ink, fully legible against the dark surface — no dark-on-dark failures. Reference-line labels remain in their series colors (lavender/green) and stay readable on the dark background.
+      Data: Step-outline colors are pixel-identical to the light render (brand green + lavender) — only chrome (background, text, gridlines) flipped, confirming Imprint palette consistency across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,68 +62,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, all text readable in both themes with generous
-          tick spacing
+        comment: All text readable in both themes; reference-line labels at 13px are
+          a touch small relative to the rest of the chrome
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, axes, or data
+        comment: 'Verified via pixel crop: peak labels sit in clear whitespace, no
+          overlap with step lines or each other'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: strokeWidth 3, two clearly distinguishable step outlines
+        comment: 3px line strokes and dashed reference lines are clearly distinguishable
+          at this density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Two-series comparison, color alone is sufficient per palette guidance
+        comment: Brand green vs. lavender is CVD-safe per Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, no cutoff, title sized per muix.md guidance
+        comment: Canvas dimension gate passed; good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units, correct mandated title format
+        comment: Descriptive axis labels with units (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, lavender second, correct theme backgrounds
-          both renders
+        comment: 'First series brand green #009E73, second lavender #C475FD, correct
+          theme backgrounds'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Baseline polish; palette/typography compliant but no extra flourish
+        comment: Reference-line annotations add polish beyond baseline, but overall
+          composition is still fairly plain
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Horizontal-only grid, no visible frame clutter, generous whitespace
+        comment: 'Unchanged from attempt 1: horizontal-only grid and generous whitespace,
+          no further spine/frame refinement'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Before/after comparison narrative is inherent to data choice, no
-          added emphasis technique
+        passed: true
+        comment: Peak reference lines now explicitly call out the before/after latency
+          shift, directly sharpening the narrative flagged as missing in attempt 1
     spec_compliance:
       score: 15
       max: 15
@@ -130,25 +137,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct unfilled step-histogram outline
+        comment: Correct step histogram (outline only, no fill)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: No fill, horizontal bin segments, vertical connectors, overlaid distributions
+        comment: Step segments, no fill, overlay of two distributions for comparison
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=latency, Y=count, full data range shown
+        comment: X = latency bins, Y = count, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format, descriptive legend labels
+        comment: Title matches mandated format; legend labels are descriptive
     data_quality:
       score: 15
       max: 15
@@ -158,19 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Step outline, bin structure, and multi-distribution overlay all demonstrated
+        comment: Shows binning, step outline, dual-distribution overlay, and peak
+          annotation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral API-latency-optimization scenario
+        comment: API latency before/after optimization is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic latency values (ms) and sample size (800/series)
+        comment: 800 points per series, sensible ms range and bin count
     code_quality:
       score: 10
       max: 10
@@ -180,25 +188,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small helper functions only for data gen/binning, no over-engineering
+        comment: Small, necessary helper functions only (LCG, normal sampler, binning,
+          peak lookup)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42)
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, Box, Typography imported and used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, appropriate complexity
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
@@ -206,25 +215,28 @@ review:
         passed: true
         comment: skipAnimation set, harness mount contract respected
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Manual point-doubling instead of native curve="step"/"stepBefore"
+        passed: true
+        comment: Now uses native curve="stepAfter" over bin-edge data instead of manual
+          point duplication
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No MUI X features beyond basic LineChart composition
+        passed: true
+        comment: ChartsReferenceLine peak markers are a genuine MUI X-specific feature,
+          addressing the attempt-1 gap
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
