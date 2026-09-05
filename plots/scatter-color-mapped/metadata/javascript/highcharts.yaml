@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-color-mapped
 created: '2026-09-05T14:05:11Z'
-updated: '2026-09-05T14:08:33Z'
+updated: '2026-09-05T14:15:28Z'
 generated_by: claude-sonnet
 workflow_run: 33970153006
 issue: 2004
@@ -12,44 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
+  - 'Directly addresses both attempt-1 weaknesses: added marker.fillOpacity 0.88 to
+    soften occlusion in dense clusters, and added a dashed-ring annotation + label
+    calling out the highest-yield point (''Peak yield 98%''), giving the chart a clear
+    focal point.'
   - Clever, well-documented workaround for the missing coloraxis module — hand-built
     colorbar via chart.renderer bands, ticks, and rotated label matches the intended
-    feature closely.
+    native feature closely.
   - Correct, consistent use of the imprint_seq sequential colormap for the continuous
     yield variable, with identical data colors between light and dark renders.
   - Realistic, appropriately-scaled chemistry dataset (temperature/duration/yield)
-    with a sensible non-linear yield surface.
-  - 'Clean theme-adaptive chrome: horizontal-only grid, transparent background, correct
-    ink/inkSoft/grid token usage in both themes.'
+    with a sensible non-linear yield surface and clean theme-adaptive chrome in both
+    renders.
   weaknesses:
-  - 'Design Excellence is generic: add a touch of visual hierarchy or storytelling
-    — e.g., a subtle annotation/marker emphasis calling out the highest-yield cluster,
-    or a light contour/reference band — so the chart guides the viewer rather than
-    presenting an undifferentiated point cloud.'
-  - A few markers in dense regions (e.g., ~205-210C / 60-66 min) sit exactly on top
-    of each other; a small fillOpacity (~0.85-0.9) on the scatter markers would slightly
-    reduce occlusion in the densest clusters without hurting color-legibility of the
-    colorbar mapping.
-  - Colorbar tick labels (14px) could be nudged to match visual weight with the axis
-    tick labels for tighter consistency (minor).
+  - 'Design Excellence is still moderate: beyond the new peak annotation, the composition
+    is a fairly standard scatter+colorbar with baseline visual refinement (horizontal-only
+    grid, thin marker borders) — no additional polish like a reference band or refined
+    typography hierarchy.'
+  - Colorbar tick labels (14px) are still slightly smaller in visual weight than the
+    axis tick labels — minor consistency nit, not a legibility problem.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct light-theme surface.
-      Chrome: Title, X-axis "Reaction Temperature (C)", Y-axis "Reaction Duration (min)", and the manually-drawn colorbar ("Reaction Yield (%)") are all rendered in dark ink / ink-soft tones — clearly legible against the light background. Horizontal grid lines only, subtle but visible.
-      Data: 150 scatter markers colored on the imprint_seq green (#009E73) -> blue (#4467A3) gradient by Reaction Yield; colorbar shows 41-98% range with 5 ticks.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "scatter-color-mapped · javascript · highcharts · anyplot.ai" in dark bold text at top, clearly legible. X-axis "Reaction Temperature (°C)" and Y-axis "Reaction Duration (min)" titles and tick labels rendered in muted ink-soft tone, fully readable. Horizontal-only grid lines, subtle but visible. Manually-drawn vertical colorbar on the right edge labeled "Reaction Yield (%)" with 5 ticks (41-98 range), fully legible.
+      Data: 150 circular markers on a green (#009E73) -> blue (#4467A3) imprint_seq gradient encoding Reaction Yield. A dashed ring + "Peak yield 98%" label highlights the single highest-yield point near (204°C, 62 min), giving the chart a clear focal point. Markers use fillOpacity ~0.88, slightly softening occlusion in the densest clusters (e.g. ~208-210°C, 65-66 min) versus attempt 1.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct dark-theme surface.
-      Chrome: Title, axis titles/ticks, and colorbar rendered in light ink / ink-soft tones, fully legible against the dark background — no dark-on-dark failures observed. Grid lines subtle but visible.
-      Data: Marker and colorbar gradient colors are pixel-identical to the light render (same per-point green-to-blue interpolation), confirming only chrome flipped between themes.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout as light — title, axis titles/ticks, colorbar ticks/label all rendered in light ink/ink-soft tones, fully legible against the dark surface. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, colorbar text, peak-annotation label are all light-colored and readable). Grid lines subtle but visible.
+      Data: Marker fill colors and colorbar gradient are pixel-identical to the light render (same #009E73 -> #4467A3 interpolation per point), confirming only chrome flipped between themes. The peak-annotation ring and label also render correctly in light ink color against the dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,48 +56,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; colorbar ticks slightly small but
-          legible
+        comment: All font sizes explicitly set; all text readable in both themes at
+          appropriate sizes; colorbar tick labels slightly smaller in visual weight
+          than axis ticks but fully legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions
+        comment: No text collisions; scatter overlap is data-inherent, not a rendering
+          defect.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker size good, but a few points in dense clusters fully overlap
-          with no alpha
+        comment: marker.fillOpacity 0.88 added this attempt softens occlusion in dense
+          clusters; markers well-adapted to the 150-point density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is CVD-safe
+        comment: imprint_seq (green->blue) is CVD-safe by construction; no red-green
+          reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, colorbar well-integrated, no clipping
+        comment: Canvas dimension gate passed; colorbar well-integrated in the right
+          margin, no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units
+        comment: Both axes descriptive with units (°C, min); colorbar labeled 'Reaction
+          Yield (%)'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used correctly, correct theme backgrounds, identical
-          data colors light/dark
+        comment: 'Correct imprint_seq mapping (#009E73 -> #4467A3); backgrounds correct
+          in both themes; data colors identical light/dark.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -106,19 +110,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Competent engineering but standard visual composition
+        comment: Competent engineering (hand-built colorbar, peak annotation) but
+          overall composition remains a fairly standard scatter+colorbar without much
+          additional polish beyond defaults.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Clean but baseline refinement only
+        comment: Horizontal-only grid, no legend clutter, thin marker borders — clean
+          but unchanged from attempt 1, still baseline refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy beyond the color mapping
+        passed: true
+        comment: New peak-yield annotation (dashed ring + label) creates a clear focal
+          point and visual hierarchy, directly addressing the attempt-1 weakness.
     spec_compliance:
       score: 15
       max: 15
@@ -128,25 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct color-mapped scatter
+        comment: Correct color-mapped scatter.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, labels, moderate marker size, point count in range
+        comment: Colorbar with clear labels, moderate marker size for color visibility,
+          150 points within the 50-500 recommended range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y/color mapped correctly, full data range shown
+        comment: x=temperature, y=duration, color=yield; axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format, legend correctly omitted
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          (single continuous series, redundant with colorbar).
     data_quality:
       score: 15
       max: 15
@@ -156,19 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: x, y, color, colorbar all present
+        comment: x, y, and color-mapped third variable all present with a working
+          colorbar.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral chemistry domain
+        comment: Chemistry reaction yield vs. temperature/duration is plausible and
+          domain-neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible ranges for temperature/duration/yield
+        comment: Temperature 150-250°C, duration 10-90 min, yield 5-98% are all sensible
+          ranges for the domain.
     code_quality:
       score: 9
       max: 10
@@ -177,32 +190,36 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Small helper functions justified by missing coloraxis module
+        passed: false
+        comment: Small helper functions (rand, hexToRgb, yieldColor) deviate from
+          strict Imports->Data->Plot->Save, but are a reasonable, well-commented consequence
+          of the coloraxis module being unavailable.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Deterministic fixed-seed LCG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed
+        comment: No imports needed; only the Highcharts global is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, well-commented
+        comment: No fake functionality; complexity proportionate to the constraint
+          being worked around, well-commented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: 'Correct mount-node contract, animation: false on chart and series,
+          current API.'
     library_mastery:
       score: 7
       max: 10
@@ -212,22 +229,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scatter series and renderer usage, correctly avoids forbidden
-          modules
+        comment: Idiomatic scatter series and SVG renderer usage; correctly avoids
+          importing a forbidden add-on module.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Distinctive but a workaround rather than a native feature showcase
-  verdict: REJECTED
+        comment: Manual renderer-based colorbar (banded gradient + ticks + rotated
+          label) plus annotation overlay is a genuinely distinctive, non-trivial use
+          of Highcharts' low-level SVG API, though it's a workaround rather than a
+          showcase of a native capability.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
+  - publication-ready
