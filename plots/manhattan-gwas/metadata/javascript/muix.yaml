@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: manhattan-gwas
 created: '2026-09-05T09:11:55Z'
-updated: '2026-09-05T09:17:06Z'
+updated: '2026-09-05T09:28:21Z'
 generated_by: claude-sonnet
 workflow_run: 33956981274
 issue: 2925
@@ -12,57 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Realistic, deterministic simulated GWAS data with chromosome lengths that closely
-    track real human chromosome proportions (chr1≈248Mb down to chr22≈50Mb)
-  - Three distinct association peaks (chr6, chr11, chr17) with proper distance-based
-    signal decay around each locus, plus a borderline point near the suggestive-only
-    threshold on chr11 — good coverage of null/suggestive/significant regimes
-  - Correct genome-wide significance (-log10(5e-8)≈7.3) and suggestive (-log10(1e-5)=5)
-    threshold reference lines, both clearly labeled with their p-value convention
-  - Theme-correct rendering in both light and dark renders — no dark-on-dark or light-on-light
-    failures, no clipping at any canvas edge (title, axis ticks, legend, and threshold
-    labels all comfortably inside bounds)
-  - 'Idiomatic MUI X usage: ChartsReferenceLine for thresholds, custom tickInterval
-    + valueFormatter mapping cumulative position to chromosome labels, disableVoronoi
-    and skipAnimation correctly set per the harness contract'
+  - 'Fixed all three attempt-1 weaknesses: ''Even chromosomes'' now uses the canonical
+    t.palette[1] (lavender) instead of skipping to palette[2]'
+  - Added 80% alpha (MARKER_ALPHA = "CC") to all series to combat overplotting in
+    the dense association-peak clusters
+  - New dedicated amber-highlighted 'Genome-wide significant' series (larger markerSize=5
+    vs 3) creates a clear, immediate focal point on the actual GWAS hits, directly
+    sharpening the data storytelling
+  - Realistic, deterministic simulated GWAS data with chromosome lengths tracking
+    real human chromosome proportions, three distinct association peaks with proper
+    distance-based signal decay, plus a borderline suggestive-only point
+  - Theme-correct in both renders — no dark-on-dark/light-on-light issues, no edge
+    clipping
+  - 'Idiomatic MUI X usage: ChartsReferenceLine for both threshold lines, custom tickInterval
+    + valueFormatter for chromosome-center labels, disableVoronoi + skipAnimation
+    per the harness contract'
   weaknesses:
-  - 'VQ-07: the ''Even chromosomes'' series uses t.palette[2] (blue #4467A3) instead
-    of the canonical t.palette[1] (lavender #C475FD) — skips a palette position out
-    of canonical order. Odd/even chromosome parity is an abstract binary category
-    (like anonymous groups A/B), not a real-world color cue (grass=green, blood=red),
-    so the semantic-exception carve-out doesn''t apply here. Fix: use t.palette[1]
-    for the second series, or use the canonical order.'
-  - 'VQ-03: with ~1000 total points (high-density regime per the style guide), the
-    dense association-peak clusters on chr6/chr11/chr17 have markers overlapping with
-    no transparency, making individual points hard to distinguish within the peaks.
-    Add alpha (e.g. ~0.7-0.8) via marker opacity to combat overplotting in the peaks
-    while keeping the sparse baseline scatter fully opaque, or use per-point opacity.'
-  - 'VQ-01/DE-01: the title measures only ~31% of canvas width at the current 22px
-    size, well under the ~50-70% guideline (or ~70-85% expected for this length of
-    mandated title string) — a modest fontsize increase would strengthen visual hierarchy
-    without risking overflow (there''s ample headroom before the 90% overflow limit).'
-  - 'DE-01/DE-02: overall polish is clean but close to MUI X''s configured defaults
-    — consider a stronger visual accent distinguishing genome-wide-significant points
-    (e.g. a third highlight color or larger marker for points above the genome-wide
-    threshold) to sharpen the data storytelling around the actual GWAS hits.'
+  - 'VQ-01: title still measures only ~37% of canvas width — improved from ~31% in
+    attempt 1 but still under the ~50-70% guideline; a further fontsize bump has headroom
+    before overflow'
+  - 'DE-02: grid and spine styling are minimal-but-default MUI X chrome; still room
+    for further visual refinement polish'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "manhattan-gwas · javascript · muix · anyplot.ai" centered at top; a top-center legend with "Odd chromosomes" (green swatch) and "Even chromosomes" (blue swatch); Y-axis "-log10(p-value)" from 0-16 with subtle horizontal gridlines; X-axis "Chromosome" with tick labels 1-22 centered under each chromosome's cumulative-position span. Two labeled horizontal dashed reference lines: an amber line at ~7.3 ("Genome-wide significance (p < 5×10⁻⁸)") and a dark dashed line at 5 ("Suggestive (p < 1×10⁻⁵)"). All text is dark ink on the light background and clearly legible; no clipping at any canvas edge (verified via pixel crop of title, bottom axis, left axis, and right-edge threshold labels).
-      Data: Alternating green (#009E73, odd chromosomes) and blue (#4467A3, even chromosomes) scatter points arranged by cumulative genomic position. A dense baseline cloud sits near y=0-2 across the whole genome; three clear association peaks rise well above the genome-wide threshold on chr6 (blue, tallest point ~16), chr11 (green, ~11.5), and chr17 (green, ~12.3), with one borderline chr11 point just below the significance line. Peak clusters show visible point overlap with no alpha applied.
-      Legibility verdict: PASS.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "manhattan-gwas · javascript · muix · anyplot.ai" centered at top (fontSize 26, explicit). Top-center legend with three swatches: green "Odd chromosomes", lavender "Even chromosomes", amber "Genome-wide significant". Y-axis "-log10(p-value)" 0-16 with subtle horizontal-only gridlines; X-axis "Chromosome" with tick labels 1-22 centered under each chromosome's cumulative-position span. Two labeled dashed reference lines: amber "Genome-wide significance (p < 5×10⁻⁸)" at ~7.3, muted-ink dashed "Suggestive (p < 1×10⁻⁵)" at 5.
+      Data: First series green (#009E73) = odd chromosomes, second series lavender (#C475FD, palette[1]) = even chromosomes, third series amber = genome-wide-significant hits (larger markers, alpha ~80%). Dense baseline cloud near y=0-2 across the full genome, plus three clear amber-highlighted association peaks on chr6 (~16), chr11 (~11.5), chr17 (~12.3), and one borderline point just under/over the significance line on chr11.
+      Legibility verdict: PASS — all text dark-on-light and clearly readable, no clipping at any canvas edge, no overlap between reference-line labels and data/legend.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, legend, and axis labels, now rendered in light/white text — clearly readable against the dark background, no dark-on-dark failures observed anywhere (title, legend, axis titles, tick labels, and both threshold-line labels all confirmed legible). Gridlines are subtle light lines at low opacity. The amber genome-wide-significance line keeps its amber color (reads well on dark); the suggestive line switches from dark-gray to a light dashed line so it stays visible against the dark background.
-      Data: Green (#009E73) and blue (#4467A3) data points are visually identical to the light render — same hues, same positions, same peak shapes on chr6/chr11/chr17. Only the chrome (background, text, gridlines, one threshold-line color) adapted to the theme, confirming the palette is theme-independent as required.
-      Legibility verdict: PASS.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, and axis labels now rendered in light ink — clearly legible, no dark-on-dark failures anywhere. Gridlines are subtle light lines at low opacity. The amber threshold line keeps its color; the suggestive line switches to a light dashed style to stay visible against the dark background.
+      Data: Green (#009E73), lavender (#C475FD), and amber significant-hit markers are pixel-identical in hue and position to the light render — only chrome (background, text, grid) adapted to the theme, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light issues; brand green and amber remain clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -70,73 +58,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit; readable in both themes, no overflow/clipping;
-          title conservatively sized at ~31% of canvas width vs the ~50-70% guideline
+        comment: All sizes explicit, readable in both themes, no overflow; title improved
+          to ~37% of canvas width (was ~31%) but still under the 50-70% guideline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 3px markers suit the ~1000-point density, but dense peak clusters
-          lack alpha, causing overlap within the peaks
+        comment: Alpha (~80%) now applied to all series, resolving the attempt-1 overplotting
+          deduction in the dense peak clusters
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue combination is CVD-safe with good contrast; threshold
-          lines use distinct dash styles as redundant encoding
+        comment: Good contrast, CVD-safe Imprint palette, amber highlight adds redundant
+          (color + size + position) encoding for significance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well, balanced margins, legend near plot, nothing
-          cut off
+        comment: Balanced margins, plot fills most of the canvas, legend near plot,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Chromosome" and "-log10(p-value)" are descriptive and standard
-          for the domain'
+        comment: Descriptive axis labels with implied units (-log10(p-value))
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73, but second series uses palette[2]
-          (blue) instead of canonical palette[1] (lavender) without a valid semantic
-          exception; theme chrome itself is fully correct in both renders'
+        passed: true
+        comment: 'Fixed: second series now uses canonical t.palette[1] (lavender)
+          instead of skipping to palette[2]; amber used correctly as semantic anchor
+          for the significance highlight; theme-correct backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Clean and thoughtful (labeled threshold lines, top legend) but still
-          close to a well-configured MUI X default
+        passed: true
+        comment: Thoughtful color use (Imprint palette + semantic amber anchor + alpha
+          blending), clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Horizontal-only subtle grid, generous whitespace; some refinement
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace; some refinement
           above default but not maximal polish
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Color-coded chromosome alternation plus labeled threshold lines create
-          a clear focal point on the three peaks, though no direct highlight of significant
-          hits themselves
+        passed: true
+        comment: New dedicated amber-highlighted significant-hit series creates an
+          immediate, clear focal point on the three GWAS peaks — directly addresses
+          the attempt-1 storytelling weakness
     spec_compliance:
       score: 15
       max: 15
@@ -145,25 +135,29 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct Manhattan/scatter plot type
+        passed: true
+        comment: 'Correct Manhattan plot: cumulative genomic position on x, -log10(p)
+          on y, alternating chromosome colors'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Alternating chromosome colors, cumulative genomic position x-axis
-          with centered chromosome labels, genome-wide + suggestive threshold lines
-          all present
+        passed: true
+        comment: Alternating colors, genome-wide significance line, suggestive threshold
+          line, chromosome-centered tick labels, density-aware marker sizing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X=cumulative position, Y=-log10(p-value), correctly mapped
+        passed: true
+        comment: X/Y correctly assigned, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exact; legend labels ("Odd chromosomes"/"Even chromosomes")
-          match the data grouping
+        passed: true
+        comment: Title format correct; legend labels match data (Odd/Even chromosomes,
+          Genome-wide significant)
     data_quality:
       score: 14
       max: 15
@@ -172,19 +166,23 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Null baseline, suggestive-only, and genome-wide-significant regimes
-          all represented across 3 peaks of varying height
+        passed: true
+        comment: Null baseline, suggestive-only point, and three genome-wide-significant
+          peaks with realistic decay; optional SNP-id labeling not included but is
+          explicitly optional in the spec
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, comprehensible GWAS scenario
+        passed: true
+        comment: Realistic, neutral scientific GWAS scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Chromosome lengths approximate real human chromosome proportions;
-          -log10(p) range is realistic for GWAS hits
+        passed: true
+        comment: Chromosome lengths track real proportions; thresholds correctly at
+          -log10(5e-8)≈7.3 and -log10(1e-5)=5
     code_quality:
       score: 10
       max: 10
@@ -193,28 +191,33 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Straightforward imports → deterministic data generation → single
-          component; helper function is idiomatic for the harness contract
+        passed: true
+        comment: Flat top-level structure, one small helper function for point classification
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG produces deterministic output
+        passed: true
+        comment: Deterministic fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: Only ScatterChart and ChartsReferenceLine imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI or over-engineering
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: export default component, skipAnimation set, sized from window.ANYPLOT_SIZE
+        passed: true
+        comment: Correct default-export component contract, skipAnimation set, no
+          deprecated API
     library_mastery:
       score: 8
       max: 10
@@ -223,15 +226,17 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct high-level ScatterChart/xAxis/yAxis config, doesn't push
-          into more advanced composition patterns
+        passed: true
+        comment: Correct high-level ScatterChart API usage with proper series/xAxis/yAxis
+          config
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: ChartsReferenceLine, custom tickInterval + valueFormatter, and disableVoronoi
-          are distinctive MUI X capabilities well applied
-  verdict: REJECTED
+        passed: true
+        comment: ChartsReferenceLine, custom tickInterval + valueFormatter for genomic
+          axis, disableVoronoi
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -243,4 +248,5 @@ impl_tags:
   dataprep:
   - cumulative-sum
   styling:
+  - alpha-blending
   - grid-styling

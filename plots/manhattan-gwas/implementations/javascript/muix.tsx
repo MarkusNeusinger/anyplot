@@ -1,7 +1,7 @@
 // anyplot.ai
 // manhattan-gwas: Manhattan Plot for GWAS
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
+// Quality: 91/100 | Created: 2026-09-05
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
