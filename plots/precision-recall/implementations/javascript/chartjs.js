@@ -59,9 +59,89 @@ for (let i = 1; i < recallPoints.length; i++) {
 const prCurve = recallPoints.map((r, i) => ({ x: r, y: precisionPoints[i] }));
 const baselinePrecision = nPositive / N_PATIENTS;
 
+// --- Knee point: the threshold with the highest F1 score, used for the callout
+let kneeIndex = 1;
+let bestF1 = -1;
+for (let i = 1; i < prCurve.length; i++) {
+  const { x: r, y: p } = prCurve[i];
+  const f1 = p + r > 0 ? (2 * p * r) / (p + r) : 0;
+  if (f1 > bestF1) {
+    bestF1 = f1;
+    kneeIndex = i;
+  }
+}
+const kneePoint = prCurve[kneeIndex];
+
+// --- Iso-F1 reference curves: precision as a function of recall for a fixed F1
+function isoF1Curve(f1, steps = 100) {
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const r = i / steps;
+    if (2 * r - f1 <= 1e-6) continue;
+    const p = (f1 * r) / (2 * r - f1);
+    if (p > 0 && p <= 1) points.push({ x: r, y: p });
+  }
+  return points;
+}
+const isoF1Levels = [0.3, 0.5, 0.7];
+const isoF1Datasets = isoF1Levels.map((f1) => ({
+  label: `F1 = ${f1.toFixed(1)}`,
+  data: isoF1Curve(f1),
+  isoF1: true,
+  borderColor: t.inkSoft,
+  borderWidth: 1,
+  borderDash: [2, 4],
+  pointRadius: 0,
+  fill: false,
+}));
+
+function hexToRgba(hex, alpha) {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // --- Mount -------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// --- Custom plugin: callout marking the best-F1 point on the curve ---------
+const apCalloutPlugin = {
+  id: "apCallout",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const x = scales.x.getPixelForValue(kneePoint.x);
+    const y = scales.y.getPixelForValue(kneePoint.y);
+    const onLeftHalf = kneePoint.x <= 0.5;
+    const labelX = onLeftHalf ? x + 50 : x - 50;
+    const labelY = Math.min(Math.max(y - 50, chartArea.top + 24), chartArea.bottom - 20);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = t.palette[0];
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = t.pageBg;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(labelX, labelY + 6);
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.font = "600 15px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textAlign = onLeftHalf ? "left" : "right";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`Best F1 = ${bestF1.toFixed(2)} (AP = ${averagePrecision.toFixed(2)})`, labelX, labelY);
+    ctx.restore();
+  },
+};
 
 // --- Chart -----------------------------------------------------------------
 new Chart(canvas, {
@@ -72,12 +152,13 @@ new Chart(canvas, {
         label: `Diagnostic test (AP = ${averagePrecision.toFixed(2)})`,
         data: prCurve,
         borderColor: t.palette[0],
-        backgroundColor: t.palette[0],
+        backgroundColor: hexToRgba(t.palette[0], 0.14),
         stepped: "after",
         borderWidth: 3.5,
         pointRadius: 0,
-        fill: false,
+        fill: "origin",
       },
+      ...isoF1Datasets,
       {
         label: `Baseline (prevalence = ${baselinePrecision.toFixed(2)})`,
         data: [
@@ -92,6 +173,7 @@ new Chart(canvas, {
       },
     ],
   },
+  plugins: [apCalloutPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -107,7 +189,13 @@ new Chart(canvas, {
       legend: {
         position: "top",
         align: "end",
-        labels: { color: t.ink, font: { size: 15 }, boxWidth: 24, boxHeight: 3 },
+        labels: {
+          color: t.ink,
+          font: { size: 15 },
+          boxWidth: 24,
+          boxHeight: 3,
+          filter: (item, data) => !data.datasets[item.datasetIndex].isoF1,
+        },
       },
     },
     scales: {
