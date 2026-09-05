@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: manhattan-gwas
 created: '2026-09-05T09:07:38Z'
-updated: '2026-09-05T09:11:57Z'
+updated: '2026-09-05T09:31:43Z'
 generated_by: claude-sonnet
 workflow_run: 33956742640
 issue: 2925
@@ -12,45 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Correct Manhattan-plot construction: cumulative genomic position on the x-axis,
-    alternating odd/even chromosome colors, and a tickPositions + formatter combo
-    that maps each chromosome''s midpoint back to its label'
-  - Both required threshold lines present — genome-wide significance (5x10^-8, dashed)
-    and the optional suggestive line (1x10^-5, dotted) — each with an inline label
-    color-matched to its line
-  - Significant SNPs are pulled into a separate series with a distinct color (palette[4])
-    and a larger marker radius, creating a clear visual hierarchy above the threshold
-  - 'turboThreshold: 0 correctly set to allow large point arrays per series, and Highcharts.color().setOpacity()
-    is used to alpha-blend overlapping background points'
-  - 'Theme tokens threaded correctly end-to-end: identical data colors in light/dark,
-    only chrome (background, ink, grid) flips, background is transparent over the
-    correct page color'
-  - Approximate real human autosome lengths (in Mb) used for chromosome region widths,
-    giving the x-axis realistic proportions
+  - Full chromosome vocabulary (1-22, X, Y, MT) with Mb-proportional region widths,
+    addressing the prior review's missing-X/Y/MT weakness
+  - Density-scaled SNP count (~15/Mb, ~46k points total) produces a realistic background
+    cloud, a large jump from the ~4,400 flat-per-chromosome points in the previous
+    attempt
+  - Subtle alternating plotBands per chromosome region reinforce boundaries beyond
+    point color alone, directly addressing the prior DE-01 feedback
+  - Both required threshold lines present (genome-wide 5x10-8 dashed, suggestive 1x10-5
+    dotted) with color-matched, right-anchored labels kept clear of peaks via 5% x-axis
+    headroom
+  - Genome-wide-significant SNPs pulled into a separate series with larger marker
+    radius and top z-index, giving a size + position cue redundant with color (mitigates
+    red/green colorblind ambiguity)
+  - Theme tokens threaded correctly end-to-end -- data colors identical between light/dark
+    renders, only chrome flips
+  - 'turboThreshold: 0 correctly set for large array-of-arrays series data; deterministic
+    LCG (seed 42) makes the browser-side data reproducible without a native RNG seed'
   weaknesses:
-  - Dataset covers only chromosomes 1-22 (no X/Y/MT) and totals ~4,400 points (200/chromosome),
-    far below the spec's stated 100k-1M variant scale for GWAS - the background noise
-    cloud reads noticeably sparser than a real Manhattan plot. Consider raising snpsPerChrom
-    (e.g. 2,000-5,000/chromosome) if render performance allows.
-  - Design Excellence leans mostly on the mandatory Imprint palette plus the significance
-    highlight; there's no additional refinement (e.g. subtle alternating background
-    shading per chromosome region, or a lighter treatment for the dense null-distribution
-    cloud vs. the peaks) to push the storytelling further
+  - Total point count (~46k, from 15 SNPs/Mb) is still below the spec's stated 100k-1M
+    'typical' GWAS scale; this is a reasonable, documented tradeoff for un-boosted
+    SVG scatter rendering given the library rule against add-on modules (Boost included),
+    not a simple parameter fix
+  - Design Excellence still leans mainly on the mandated Imprint tokens (green/blue/red/amber)
+    plus alpha-blending and the new plotBands as the main differentiators from a default
+    chart
+  - At small (400px) card-preview scale the 25 x-axis chromosome tick labels become
+    nearly illegible -- an inherent tradeoff of a Manhattan plot's category count
+    at that width rather than a specific font-sizing defect
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct chrome tone.
-      Chrome: Title "manhattan-gwas · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible. Axis titles ("Chromosome", "−log10(p-value)") and tick labels in soft dark gray, all readable. Horizontal gridlines subtle. Genome-wide significance line (red dashed) and suggestive line (gold dotted) each carry an inline label in matching color, both legible against the light background.
-      Data: Odd chromosomes in teal-green (#009E73, first categorical series), even chromosomes in blue-violet, both at ~0.75 alpha to soften overlap in the dense null cloud near y=0. Genome-wide-significant SNPs in a saturated red/crimson, clustered as peaks on chromosomes 2, 6, 11, 15, and 19.
-      Legibility verdict: PASS - all text and data reads clearly on the light surface.
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark-ink title "manhattan-gwas · javascript · highcharts · anyplot.ai" centered at top, ~55-60% of plot width. Axis titles "Chromosome" (x) and "-log10(p-value)" (y) in soft dark-gray, tick labels for all 25 chromosome groups (1-22, X, Y, MT) legible along the x-axis, numeric y-axis ticks 0-14 legible. Subtle horizontal-only gridlines; alternating light/darker vertical plotBands mark chromosome region boundaries. Legend at bottom lists "Odd chromosomes", "Even chromosomes", "Genome-wide significant" with matching color swatches, fully readable.
+      Data: Odd chromosomes render in Imprint brand green (palette[0], ~0.6 alpha), even chromosomes in a blue-violet (palette[2], ~0.6 alpha) forming a dense null-distribution cloud below the thresholds; five clear peaks (chromosomes ~2, 6, 11, 15, 19) rise above the red dashed genome-wide-significance line (~7.3) and are recolored solid red with a larger marker radius. A dotted gold "Suggestive" line sits at y=5. Threshold labels are right-anchored and never collide with a peak. First categorical series confirmed = brand green #009E73.
+      Legibility verdict: PASS -- all title, axis, tick, legend, and threshold-label text reads clearly against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct chrome tone.
-      Chrome: Title in white/light ink, clearly legible. Axis titles and tick labels in light gray, all readable against the dark background - no dark-on-dark issues found. Gridlines subtle but visible. Threshold-line labels (red and gold) remain legible on the dark surface.
-      Data: Same teal-green, blue-violet, and red hues as the light render - data colors are identical between the two themes, confirming only chrome flipped.
-      Legibility verdict: PASS - no dark-on-dark or contrast failures observed.
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same layout; title and axis/tick text flip to white/light-gray, fully legible. Alternating plotBands now show as subtle darker/lighter charcoal stripes marking the same chromosome boundaries. Legend text flips to light-gray and remains legible.
+      Data: Colors are pixel-identical to the light render (brand green odd, blue-violet even, red significant, gold suggestive line, red genome-wide line) -- confirms only chrome flipped, not data colors.
+      Legibility verdict: PASS -- no dark-on-dark failures found; every text element (title, axis titles, tick labels, threshold labels, legend) is clearly visible against the dark surface. Brand green remains clearly visible on the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,73 +65,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All titles/labels/ticks readable in both themes, sensible CSS-px
-          font sizes
+        comment: All text readable in both themes at full size; 25 x-axis chromosome
+          labels get cramped only at the small 400px thumbnail, an inherent limit
+          of this plot type
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Threshold-line labels sit clear of data; no text/data collisions
-          observed
+        comment: No collisions; threshold-line labels use 5% x-axis headroom past
+          MT to avoid peak collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Small marker radius + alpha blending for the dense background cloud,
-          larger solid markers for significant hits
+        comment: Background marker radius (1.8) reduced for the dense null cloud;
+          significant hits enlarged (3.6) for prominence
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues (teal-green/blue-violet/red) are distinguishable,
-          no red-green-only encoding since significance is also position-based
+        comment: Significant (red) points are also distinguished by larger size, top
+          z-index, and position above the threshold line -- not reliant on red/green
+          hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed (3200x1800); nothing clipped
+        comment: Canvas dimension gate passed; proportions balanced; nothing clipped
+          or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Chromosome, −log10(p-value))
+        comment: Descriptive axis titles with units (-log10(p-value)); mandated title
+          format followed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series is #009E73; backgrounds correct per theme;
-          both renders theme-correct'
+        comment: 'First categorical series = #009E73; backgrounds correct per theme;
+          data colors identical across themes'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Alpha-blended overlap handling and color-coordinated threshold labels
-          show intent, but relies mostly on the mandatory palette
+        comment: New alternating plotBands per chromosome region plus alpha-blended
+          overlap handling and color-matched threshold labels show real intent beyond
+          the mandated palette alone
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No axis box/spines, vertical gridlines disabled, subtle horizontal
-          grid only
+        comment: No chart border/spines, vertical gridlines disabled, subtle horizontal-only
+          grid, generous bottom-legend whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Significant-hit highlighting and threshold annotations create a clear
-          focal point at the peaks
+        comment: Color + size + position (above threshold line) triple-encodes significance,
+          giving a clear focal hierarchy toward the five peaks
     spec_compliance:
       score: 15
       max: 15
@@ -137,53 +146,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Manhattan/scatter construction
+        comment: Correct Manhattan/scatter construction over cumulative genomic position
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Alternating chromosome colors, genome-wide + suggestive threshold
-          lines, centered chromosome labels, significant-hit highlighting, reduced
-          marker size for density
+          lines, centered chromosome labels, reduced marker size for density -- all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = cumulative genomic position, Y = -log10(p-value), axes show full
-          range
+        comment: x = cumulative genomic position, y = -log10(p-value), correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels are clear
+        comment: Title matches 'manhattan-gwas · javascript · highcharts · anyplot.ai';
+          legend labels are accurate and descriptive
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers autosomes 1-22 with realistic peaks; missing X/Y/MT from the
-          spec's data schema
+        comment: Now covers the full spec chromosome vocabulary (1-22, X, Y, MT) with
+          Mb-proportional widths, fixing the prior attempt's gap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral genomics context; exponential null distribution plus Gaussian
-          LD-block peaks is a plausible GWAS signal shape
+        comment: Plausible, neutral simulated GWAS data with realistic exponential
+          null distribution and LD-block-scale Gaussian peaks
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: -log10(p) range and chromosome lengths are sensible, but total point
-          count (~4.4k) is far below the spec's stated 100k-1M variant scale
+        comment: Mb-density-scaled SNP count (~46k total) is a large, realistic improvement
+          over the prior flat ~4,400; remaining gap to the spec's 100k-1M upper range
+          is a documented, reasonable rendering-performance tradeoff given the no-Boost-module
+          constraint
     code_quality:
       score: 10
       max: 10
@@ -193,33 +204,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only a small deterministic-RNG helper; no unnecessary classes/functions
+        comment: No unnecessary functions/classes beyond the required deterministic
+          LCG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42)
+        comment: Fixed-seed LCG (seed 42) makes browser-side data generation deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses the Highcharts global only
+        comment: No imports; only the provided globals are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for peak simulation; no fake interactivity
+        comment: Appropriate complexity for realistic data generation; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart('container', ...) with animation disabled everywhere
+        comment: Uses Highcharts.chart('container', ...) with animation disabled at
+          chart and series level, per the mount-node contract
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -227,24 +240,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scatter series, plotLines, Highcharts.color().setOpacity()
+        comment: Idiomatic use of plotLines with inline labels, plotBands, and a tickPositions
+          + formatter combo for categorical chromosome labels on a continuous axis
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: turboThreshold:0 for large arrays plus a custom xAxis label formatter
-          mapping tick positions to chromosome names
+        comment: 'turboThreshold: 0 for large array-of-arrays series, Highcharts.color().setOpacity()
+          for alpha blending, marker hover state radiusPlus'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
