@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: network-directed
+created: '2026-09-05T09:53:12Z'
+updated: '2026-09-05T10:06:57Z'
+generated_by: claude-sonnet
+workflow_run: 33958899428
+issue: 2858
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - Surgically fixes the 3 previously-flagged crossing edges (users_svc→auth, users_svc→database,
+    payments_svc→database) with geom_curve while leaving the rest of the layout as
+    straight segments — a targeted repair rather than a full re-layout.
+  - Imprint palette used correctly in canonical order (Foundation=#009E73 green, Core
+    services=lavender, Domain logic=blue, Application=ochre, Entry point=red); data
+    colors are pixel-identical between light and dark renders, only chrome flips.
+  - Edge weight (calls_per_day) drives arrow thickness via scale_linewidth, adding
+    real information beyond plain connectivity; arrowheads are trimmed short of the
+    node radius so they stay visible instead of vanishing under the circle.
+  - 'Clean KISS R script: vectorized join-based edge-coordinate computation, no functions/classes,
+    set.seed(42), ggsave via ragg::agg_png at the correct 3200×1800 canvas.'
+  weaknesses:
+  - The 'api_client' node label has a diagonal edge line crossing directly across
+    its text in both themes (visible cutting through the '...cli...' characters) —
+    the opaque geom_label background patch doesn't fully occlude the edge passing
+    through that region; widen the label padding or nudge the label offset so the
+    crossing edge clears the box.
+  - The right-hand cluster (web_app/cli_tool → orders_svc/users_svc/payments_svc)
+    still has several edges crossing at shallow angles near the node cluster, making
+    individual paths a little harder to trace — consider curving 1-2 more of these
+    edges or increasing the vertical spread of the layer-3/4 nodes, similar to the
+    fix already applied to the validators/api_client column.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "network-directed · r · ggplot2 · anyplot.ai" centered in dark ink, clearly legible. 13 node labels in dark ink sit on an opaque off-white patch beneath each node. Bottom legend "Architecture layer" in a bordered off-white box with dark text, two rows of color swatches (Foundation, Core services, Domain logic / Application, Entry point).
+      Data: Nodes colored with the Imprint palette in canonical order (Foundation=#009E73 green, Core services=lavender, Domain logic=blue, Application=ochre, Entry point=red). Gray directed arrows (closed arrowheads) connect nodes, thickness scaled to calls_per_day, trimmed short of the target node. Three edges (users_svc→auth, users_svc→database, payments_svc→database) now bow via geom_curve to avoid cutting through the validators/api_client column. One remaining defect: a diagonal edge crosses directly over the "api_client" label text, partially overlapping the "cli" characters.
+      Legibility verdict: PASS (all text readable; the api_client label overlap is a clutter issue, not an illegibility one)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title, node labels, and legend text render in light ink, clearly legible against the dark background. No dark-on-dark failures observed. Legend border/background adapt to the elevated dark surface.
+      Data: Node fill colors are pixel-identical to the light render (green/lavender/blue/ochre/red). Arrows use the lighter INK_SOFT gray for this theme and remain clearly visible against the dark background. The same "api_client" label edge-crossing artifact is present here too, confirming it's a layout issue rather than a theme-specific rendering bug.
+      Legibility verdict: PASS (same caveat as light render)
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; labels sit on
+          an opaque theme-matched patch.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: true
+        comment: The 'api_client' label has a diagonal edge crossing directly over
+          its text in both renders; word stays legible but the crossing is a real
+          overlap defect, not just crowding.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes and arrows clearly visible; the new curved edges (users_svc/payments_svc)
+          disentangle the previously-worst crossing region.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast on both surfaces; category identity reinforced by layer
+          position and label, not color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: No clipping; legend well placed near the graph; minor deduction for
+          remaining edge crossings on the right-hand cluster.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a network graph; title descriptive and correctly
+          formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct theme-adaptive backgrounds
+          and chrome in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, weight-encoded edge thickness, and hand-built hierarchical
+          layout show design thought; the api_client label crossing undercuts the
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: theme_void, edge alpha, and the curved-edge fix for the worst crossings
+          are tidy; remaining crossings near the right-hand cluster and the label
+          overlap keep this from scoring higher.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Layer color, arrow direction, and weight-encoded thickness communicate
+          the dependency hierarchy clearly.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed graph with clear closed arrowheads.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Labeled nodes with group attribute, directed edges, and weight (calls_per_day)
+          affecting arrow thickness.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Arrows correctly point from source to target, trimmed to the node
+          radius.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format; legend labels match the semantic
+          layer names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 13 nodes / 22 edges within the spec's 10-50 range; edge weight is
+          actively used and varies.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Software package dependency graph is plausible and neutral, if conventional.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: calls_per_day range (5-40) is sensible for the metaphor.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, straight-line script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) before the only random draw.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, ragg all actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Vectorized join-based edge trimming and curvature routing; no fake
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ggsave/ragg::agg_png at the correct canvas
+          size.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_segment/geom_curve+arrow, scale_linewidth, scale_color_manual,
+          theme_void.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Join-based edge trimming plus selective geom_curve routing is a reasonably
+          clever manual-network workaround for the lack of ggraph.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
