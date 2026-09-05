@@ -26,7 +26,8 @@ const ANYPLOT_AMBER = colorant"#DDCC77"  # warning / caution — early-stopping 
 epochs = collect(1:80)
 n = length(epochs)
 
-train_loss = 2.0 .* exp.(-0.065 .* epochs) .+ 0.03 .+ 0.02 .* randn(n)
+train_loss_base = 2.0 .* exp.(-0.065 .* epochs) .+ 0.03
+train_loss = train_loss_base .* (1 .+ 0.04 .* randn(n))
 train_loss = clamp.(train_loss, 0.02, Inf)
 
 overfit_start = 45
@@ -81,11 +82,18 @@ ax = Axis(
 vlines!(ax, [best_epoch]; color = ANYPLOT_AMBER, linewidth = 1.5, linestyle = :dash)
 
 lines!(ax, epochs, train_loss; color = IMPRINT_PALETTE[1], linewidth = 3.0, label = "Training loss")
-lines!(ax, epochs, val_loss; color = IMPRINT_PALETTE[3], linewidth = 3.0, label = "Validation loss")
+lines!(ax, epochs, val_loss; color = IMPRINT_PALETTE[2], linewidth = 3.0, label = "Validation loss")
 
 scatter!(ax, [best_epoch], [best_val_loss];
     color = ANYPLOT_AMBER, markersize = 18, strokewidth = 1.5, strokecolor = PAGE_BG,
     label = "Early-stopping epoch")
+
+text!(ax, best_epoch + 3, best_val_loss * 1.9;
+    text     = "Best val loss @ epoch $(best_epoch)",
+    color    = INK_SOFT,
+    fontsize = 13,
+    align    = (:left, :baseline),
+)
 
 axislegend(ax;
     position      = :rt,
