@@ -36,7 +36,8 @@ overfit_penalty <- 0.0009 * pmax(0, epoch - 34)^1.6
 val_loss <- 2.5 * exp(-epoch * 0.058) + 0.09 + overfit_penalty + rnorm(n_epochs, 0, 0.035)
 val_loss <- pmax(val_loss, 0.05)
 
-history <- tibble::tibble(epoch, train_loss, val_loss) |>
+history_wide <- tibble::tibble(epoch, train_loss, val_loss)
+history <- history_wide |>
   pivot_longer(cols = c(train_loss, val_loss), names_to = "split", values_to = "loss") |>
   mutate(split = factor(split,
     levels = c("train_loss", "val_loss"),
@@ -46,10 +47,20 @@ history <- tibble::tibble(epoch, train_loss, val_loss) |>
 best_epoch <- epoch[which.min(val_loss)]
 best_val_loss <- min(val_loss)
 
+# Generalization-gap ribbon: shade the area between the curves once
+# validation loss has diverged past the optimal-stopping epoch.
+gap_region <- history_wide |> filter(epoch >= best_epoch)
+
 # --- Plot ----------------------------------------------------------------
-p <- ggplot(history, aes(x = epoch, y = loss, color = split)) +
+p <- ggplot(history, aes(x = epoch, y = loss, color = split, linewidth = split)) +
+  geom_ribbon(
+    data = gap_region,
+    aes(x = epoch, ymin = train_loss, ymax = val_loss),
+    inherit.aes = FALSE,
+    fill = IMPRINT_PALETTE[2], alpha = 0.10
+  ) +
   geom_vline(xintercept = best_epoch, linetype = "dashed", linewidth = 0.6, color = INK_SOFT) +
-  geom_line(linewidth = 1.1) +
+  geom_line() +
   annotate("point",
     x = best_epoch, y = best_val_loss,
     color = IMPRINT_PALETTE[2], size = 3.2, shape = 21, fill = PAGE_BG, stroke = 1.2
@@ -60,12 +71,14 @@ p <- ggplot(history, aes(x = epoch, y = loss, color = split)) +
     color = INK_SOFT, size = 3.2, hjust = -0.05, vjust = 1
   ) +
   scale_color_manual(values = IMPRINT_PALETTE) +
+  scale_linewidth_manual(values = c(Training = 0.95, Validation = 1.3)) +
   scale_x_continuous(expand = expansion(mult = c(0.01, 0.03))) +
   labs(
     title = "line-loss-training · r · ggplot2 · anyplot.ai",
     x = "Epoch",
     y = "Cross-Entropy Loss",
-    color = NULL
+    color = NULL,
+    linewidth = NULL
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -78,12 +91,13 @@ p <- ggplot(history, aes(x = epoch, y = loss, color = split)) +
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.line         = element_line(color = INK_SOFT),
     plot.title        = element_text(color = INK, size = 12),
-    legend.position          = "inside",
-    legend.position.inside   = c(0.86, 0.86),
-    legend.background = element_blank(),
-    legend.key        = element_blank(),
-    legend.text       = element_text(color = INK_SOFT, size = 8),
-    legend.title      = element_text(color = INK, size = 10)
+    legend.position    = "top",
+    legend.justification = "left",
+    legend.margin      = margin(t = 0, b = -4, l = 0, r = 0),
+    legend.background  = element_blank(),
+    legend.key         = element_blank(),
+    legend.text        = element_text(color = INK_SOFT, size = 8),
+    legend.title       = element_text(color = INK, size = 10)
   )
 
 # --- Save --------------------------------------------------------------------
