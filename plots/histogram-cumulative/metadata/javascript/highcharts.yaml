@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: histogram-cumulative
 created: '2026-09-05T04:19:33Z'
-updated: '2026-09-05T04:23:53Z'
+updated: '2026-09-05T04:33:06Z'
 generated_by: claude-sonnet
 workflow_run: 33944031988
 issue: 2549
@@ -12,41 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - Correct ogive/cumulative-histogram construction (step-area, monotonic, anchored
-    at 0, reaching total sample size)
-  - 'Imprint palette compliance: first series is #009E73 in both themes; theme-adaptive
-    chrome (background, text, grid) is correct in both light and dark'
-  - Deterministic seeded data generation via LCG, matching the library's browser-RNG
-    convention
-  - Custom tooltip formatter reporting both cumulative count and percentage - directly
-    serves the spec's 'what proportion falls below X' use case
-  - Clean, idiomatic Highcharts config (animation:false, credits:false, transparent
-    background, no explicit width/height)
+  - P90 threshold plotLine with a clear dashed amber label ties directly into the
+    spec's percentile/VaR use case and gives the chart a strong focal point.
+  - 'Correct step-area (step: "left") ogive shape: monotonically increasing, anchored
+    at zero on the first bin edge, reaching the full sample size (600) at the last
+    bin.'
+  - 'Theme-adaptive chrome is fully correct: identical #009E73 data color and fill
+    across light/dark, backgrounds are theme-appropriate, all text readable in both
+    renders.'
+  - Realistic, neutral delivery-time dataset (mean 38 min, std 11 min, floor at 5
+    min) with a plausible right-tapering normal-ish shape and correctly business-framed
+    axis labels.
   weaknesses:
-  - Design feels like a well-configured default rather than a distinctive/publication-ready
-    chart - no threshold or percentile annotation despite the spec explicitly calling
-    out percentile/VaR use cases
-  - Doesn't use a Highcharts-distinctive feature; a plotLines marker (e.g. median
-    or p90 delivery time) with a label, or a secondary axis showing cumulative percentage,
-    would strengthen both Library Mastery and Data Storytelling
-  - 'Minor: default xAxis right-side padding leaves the area fill flat past the last
-    data point, wasting canvas width - consider setting an explicit xAxis.max near
-    the last data point'
+  - Design Excellence leans on Highcharts defaults outside of the P90 marker — grid,
+    chrome, and area fill are stock styling; a more deliberate grid/whitespace treatment
+    would lift DE-02 beyond 'minimal customization'.
+  - The plotLine + label threshold marker is a pattern easily replicated in most other
+    libraries (axvline/markLine equivalents) — leaning on a more Highcharts-distinctive
+    capability would raise Library Mastery.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "histogram-cumulative · javascript · highcharts · anyplot.ai" bold dark text top-center; axis titles "Delivery Time (minutes)" (x) and "Cumulative Deliveries" (y) in dark-gray; tick labels dark-gray; subtle horizontal-only gridlines. All clearly readable.
-      Data: Single green (#009E73) step-area series, fillOpacity ~0.25, rising monotonically from 0 to 600 (the full sample size) in an S-curve shape typical of a normal-like distribution. No legend (correctly omitted, single series).
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-cumulative · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible. X-axis title "Delivery Time (minutes)" and Y-axis title "Cumulative Deliveries" both dark-gray/ink-soft and legible. Tick labels on both axes readable. Horizontal grid lines are subtle. Amber dashed vertical plotLine at ~51 min with rotated label "P90: 51.0 min" sits in the open background area above the curve's plateau — no overlap with other text or the fill.
+      Data: Green (#009E73) step line with light green area fill (~25% opacity) forming a correct monotonically increasing ogive shape, starting at 0 and reaching 600 (the full sample size) near the right edge.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title/axis titles/tick labels now rendered in light/off-white tone against the dark background - clearly legible, no dark-on-dark issues found.
-      Data: Same #009E73 green step-area series, identical shape and color positioning as the light render; only the chrome (background, text, grid) flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all render in light/white text, clearly legible against the dark background. Grid lines remain subtle but visible. The same amber dashed plotLine and rotated "P90: 51.0 min" label are present and legible.
+      Data: Same #009E73 green line and area fill as the light render — data colors are identical between themes, only the chrome (background, text, grid) has flipped.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -54,49 +52,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via tokens; readable in both themes
+        comment: All font sizes explicitly set, readable in both themes; the small
+          rotated P90 label is the only slightly less crisp element
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No overlap; P90 label sits in open space above the curve's plateau
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step-area line/fill clearly visible against both backgrounds
+        comment: Step line width and fill opacity well adapted to 18-bin cumulative
+          data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, no CVD concern
+        comment: Green vs. amber gives good CVD-safe contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good utilization but default xAxis padding leaves a flat plateau
-          past the last data point
+        comment: Plot fills the large majority of the canvas with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units where applicable
+        comment: Delivery Time (minutes) includes units; Cumulative Deliveries is
+          descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 in both themes, correct theme-adaptive chrome'
+        comment: 'First series is #009E73, amber used only for the semantic threshold
+          marker, theme-correct chrome in both renders'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -104,20 +106,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default, no distinctive customization
+        comment: Well-configured default beyond the P90 marker; not yet a custom,
+          publication-grade look
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Subtle grid and generous whitespace, effectively L-shaped axes
+        comment: Grid and chrome rely on standard Highcharts/library-default treatment
+          with minimal extra refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clear focal point via the curve itself, but no percentile/threshold
-          annotation
+        passed: true
+        comment: P90 threshold line creates a clear focal point and visual hierarchy
+          tied to the spec's quantile use case
     spec_compliance:
       score: 15
       max: 15
@@ -127,47 +131,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ogive/step-area cumulative histogram
+        comment: Correct cumulative histogram / ogive rendered as a step-area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Monotonic, reaches sample size, step display, tooltip shows percentage
+        comment: Monotonic step curve, running total, distribution shape all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bin edges on X, cumulative count on Y
+        comment: X = delivery time, Y = cumulative deliveries, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend correctly omitted
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          for a single series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Monotonic S-curve from 0 to total sample size
+        comment: Shows the full S-curve ogive shape of a normal-ish distribution reaching
+          total sample size
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Delivery-time logistics scenario, neutral
+        comment: Neutral, comprehensible delivery-time business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic delivery time distribution parameters
+        comment: Mean/std/floor values are realistic for delivery times
     code_quality:
       score: 10
       max: 10
@@ -177,32 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear script; LCG helper is the library-recommended seeded-RNG
-          pattern
+        comment: Linear data -> chart flow; the tiny LCG helpers are the documented
+          pattern for JS reproducibility, not over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed seed=42
+        comment: Fixed-seed LCG makes the sample deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports (browser globals only)
+        comment: No unused imports; browser globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no over-engineering, no fake UI
+        comment: Clean, no fake UI or fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, credits disabled
+        comment: animation:false set on chart and series; harness-owned output contract
+          respected
     library_mastery:
       score: 6
       max: 10
@@ -212,24 +219,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic area+step with custom tooltip formatter
+        comment: Idiomatic use of area/step chart, plotLines, and a custom tooltip
+          formatter
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Mostly generic step-area usage, no plotLines/dual-axis distinctive
-          feature
-  verdict: REJECTED
+        comment: plotLines + label is a nice touch but has near-equivalents (axvline,
+          markLine) in most other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - binning
   - cumulative-sum
   styling:
-  - publication-ready
   - alpha-blending
