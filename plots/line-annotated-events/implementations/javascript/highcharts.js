@@ -42,9 +42,14 @@ for (let day = 0; day < numDays; day++) {
   dailyActiveUsers.push([startDate + day * dayMs, value]);
 }
 
+// Positive milestones stay brand-lavender; the one negative event (the outage)
+// gets the Imprint semantic-red anchor so color reinforces the up/down story.
+const eventColor = (e) => (e.stepGain < 0 ? t.palette[4] : t.palette[1]);
+
 const eventPoints = events.map((e) => ({
   x: startDate + e.day * dayMs,
   y: dailyActiveUsers[e.day][1],
+  color: eventColor(e),
 }));
 
 // --- Chart -------------------------------------------------------------------
@@ -53,13 +58,15 @@ Highcharts.chart("container", {
     type: "spline",
     backgroundColor: "transparent",
     animation: false,
+    spacingTop: 4,
     style: { fontFamily: "inherit" },
   },
   credits: { enabled: false },
   colors: t.palette,
   title: {
     text: "line-annotated-events · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    margin: 10,
+    style: { color: t.ink, fontSize: "27px", fontWeight: "600" },
   },
   xAxis: {
     type: "datetime",
@@ -70,7 +77,7 @@ Highcharts.chart("container", {
     title: { text: "Date", style: { color: t.inkSoft, fontSize: "16px" } },
     plotLines: events.map((e, i) => ({
       value: startDate + e.day * dayMs,
-      color: t.ink,
+      color: eventColor(e),
       dashStyle: "Dash",
       width: 1.5,
       zIndex: 1,
@@ -91,6 +98,8 @@ Highcharts.chart("container", {
     },
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    maxPadding: 0.04,
+    endOnTick: false,
   },
   legend: {
     enabled: true,
@@ -115,6 +124,8 @@ Highcharts.chart("container", {
       color: t.palette[1],
       marker: { radius: 7, symbol: "circle", lineWidth: 1.5, lineColor: t.pageBg },
       zIndex: 10,
+      // legend swatch stays lavender for the series as a whole; the one
+      // negative event (Server Outage) overrides its own marker color above.
     },
   ],
 });
