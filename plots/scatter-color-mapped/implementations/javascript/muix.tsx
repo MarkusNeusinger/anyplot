@@ -1,8 +1,7 @@
 // anyplot.ai
 // scatter-color-mapped: Color-Mapped Scatter Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-05
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 82/100 | Created: 2026-09-05
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsText } from "@mui/x-charts/ChartsText";
