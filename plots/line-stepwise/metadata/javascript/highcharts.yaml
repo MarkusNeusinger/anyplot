@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-stepwise
 created: '2026-09-05T08:05:50Z'
-updated: '2026-09-05T08:10:19Z'
+updated: '2026-09-05T08:20:08Z'
 generated_by: claude-sonnet
 workflow_run: 33954115632
 issue: 2600
@@ -12,41 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-step
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correct, native use of Highcharts' line.step option ("right") for the step interpolation,
-    with the choice tied directly to the domain narrative (autoscaler resize takes
-    effect exactly at the hour)
+  - 'Directly resolved all three prior-review weaknesses: added markers at each discrete
+    step-change point (reinforcing the spec''s "discrete changes rather than interpolated
+    values" emphasis), added a low-opacity area fill under the step line for visual
+    hierarchy, and added a data label calling out the peak instance count'
+  - 'Correct, idiomatic use of Highcharts'' area.step: "right" option for the step
+    interpolation, with the alignment choice tied directly to the domain narrative
+    (autoscaler resize takes effect exactly at the hour)'
   - 'Both light and dark renders are theme-correct: warm off-white / near-black backgrounds,
-    all chrome legible, and the brand green (#009E73) is identical across themes'
+    all chrome (title, axis titles, ticks, peak data label) legible in both themes,
+    and the brand green (#009E73) is identical across themes'
   - Plausible, well-scaled synthetic data (autoscaling cluster instance count sampled
-    3x/hour across 24h, 72 points) that forms a clear, readable diurnal bell-curve
-    pattern
-  - Clean, deterministic, KISS code — hardcoded data array, no unused imports, correct
-    animation:false / credits:false / mount-node usage per the harness contract
+    3x/hour across 24h, 72 points) forming a clear, readable diurnal bell-curve with
+    genuine plateaus (discrete-change persistence) and a labeled peak
+  - Clean, deterministic, KISS code — hardcoded data array built with a simple loop,
+    no unused imports, correct animation:false / credits:false / mount-node usage
+    per the harness contract
   weaknesses:
-  - Spec notes emphasize "discrete changes rather than interpolated values" but nothing
-    beyond the step shape itself calls this out — subtle markers at the actual value-change
-    points would reinforce the discrete-change story without cluttering the line
-  - Design is functional but minimal — no additional visual-hierarchy device (e.g.
-    a subtle area fill under the curve, or a data label/annotation on the peak instance
-    count) to elevate it beyond a default step line
-  - No distinctive Highcharts-specific feature beyond the required step-line configuration
-    itself (e.g. no tooltip customization, no data labels) to demonstrate library
-    mastery beyond the baseline
+  - Design is solid but still reads as a well-configured default plus a few embellishments
+    rather than a fully custom composition — e.g. the grid remains plain horizontal-only
+    and there is no additional typographic or spine refinement beyond the theme baseline
+  - Only one data point (the peak) carries a data label; a light annotation calling
+    out the trough or the two flat overnight plateaus could reinforce the step-persistence
+    story further, though this is a minor polish opportunity, not a defect
+  - The per-point marker/dataLabel/step-area combination, while idiomatic, is not
+    a feature that is meaningfully unique to Highcharts — the same visual result is
+    achievable with comparable effort in most charting libraries
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "line-stepwise · javascript · highcharts · anyplot.ai" in bold dark ink, centered top. X-axis title "Hour of Day" and y-axis title "Active Server Instances" in muted dark-gray ink, both legible. Tick labels (0-24 on x, 0-15 on y) in the same muted tone, clearly readable. Subtle light-gray horizontal gridlines at each y-tick; no vertical gridlines (a deliberate minimal choice).
-      Data: Single step-line series in brand green (#009E73), lineWidth ~2.5, no markers. Line forms a clean bell-shaped step pattern rising from 2-3 instances overnight to a peak of 14 around midday, then stepping back down — clear right-aligned (post) step transitions with sharp horizontal-then-vertical corners.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "line-stepwise · javascript · highcharts · anyplot.ai" in bold dark ink, centered top. X-axis title "Hour of Day" and y-axis title "Active Server Instances" in muted dark-gray ink, both legible. Tick labels (0-24 on x, 0-18 on y) in the same muted tone, clearly readable. Subtle light-gray horizontal gridlines at each y-tick; no vertical gridlines (a deliberate minimal choice). A bold dark "Peak: 14 instances" data label sits above the peak marker with clear whitespace around it.
+      Data: Single step-area series in brand green (#009E73): a 2.5px step line (step="right") with a light ~12%-opacity green fill beneath it, plus small green-filled circular markers at each discrete step-change point. Line/fill forms a clean bell-shaped step pattern rising from 2-3 instances overnight to a peak of 14 around midday, then stepping back down — sharp horizontal-then-vertical corners with no smoothing.
+      Legibility verdict: PASS — all text (title, axis titles, ticks, peak label) is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title now in white/light ink, clearly visible. Axis titles and tick labels rendered in a light muted gray, fully legible against the dark background. Gridlines are a subtle lighter gray, visible but not dominant.
-      Data: Same green (#009E73) step line, identical shape and values to the light render — only the chrome (background, text, grid) flipped, confirming color consistency between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text is clearly visible against the near-black background.
+      Chrome: Same title now in white/light ink, clearly visible. Axis titles and tick labels rendered in a light muted gray, fully legible against the dark background. Gridlines are a subtle lighter gray, visible but not dominant. The "Peak: 14 instances" data label renders in light/white ink, clearly legible with no dark-on-dark issue.
+      Data: Same green (#009E73) step line, fill, and markers, identical shape and values to the light render — only the chrome (background, text, grid) flipped, confirming color consistency between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/label text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,21 +63,23 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate CSS-space font sizes
-          (title 22px, axis titles 16px, ticks 14px)
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
+          14px); readable in both themes, well-proportioned title, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, gridlines, or the data line
+        comment: No collisions between text, gridlines, data line, or the new peak
+          data label
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line weight (2.5) is clearly visible, but no markers at the discrete
-          step-change points to reinforce the spec's 'discrete changes' emphasis
+        comment: Step-change markers (radius 4) and 2.5px line are clearly visible
+          and density-appropriate for 72 points; not maximal since markers only appear
+          at change points rather than uniformly
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -91,8 +99,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with clear units ('Hour of Day', 'Active
-          Server Instances')
+        comment: Descriptive axis titles ('Hour of Day', 'Active Server Instances')
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -101,27 +108,32 @@ review:
         comment: 'First series is #009E73, backgrounds correct in both themes, data
           color identical across themes'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Competent, intentional line weight and muted chrome, but no custom
-          flourishes beyond the theme defaults
+        passed: false
+        comment: Area fill, markers, and peak label add polish beyond bare defaults,
+          but the composition is still fundamentally a single-color step-area chart
+          without deeper custom flourishes
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Grid subtle and horizontal-only, axis lines muted rather than black
-          — modest refinement over defaults
+        passed: false
+        comment: Low-opacity fill and step-change markers are a noticeable refinement
+          over the plain line, but grid/spine treatment is unchanged from the minimal
+          baseline
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        comment: Bell-curve shape reads clearly, but no explicit hierarchy device
-          (annotation, fill, callout) marks the peak or guides the eye further
+        passed: false
+        comment: 'Explicit ''Peak: 14 instances'' data label plus area fill under
+          the curve create a clear focal point and reinforce the bell-curve narrative'
     spec_compliance:
       score: 15
       max: 15
@@ -130,23 +142,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct native Highcharts step line (plotOptions.line.step)
+        passed: true
+        comment: 'Correct native Highcharts step area/line (step: ''right'')'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Clear horizontal-then-vertical step transitions with a documented,
-          deliberate alignment choice
+        passed: true
+        comment: Clear horizontal-then-vertical step transitions now explicitly reinforced
+          by markers at each discrete change point, resolving the prior-review weakness
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: x=hour (numeric), y=instance count; axes cover the full 0-24h data
           range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title matches the mandated format exactly; legend correctly disabled
           for a single series
     data_quality:
@@ -157,17 +173,20 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Shows a wide range of step sizes/directions across the full day,
-          though the single smooth bell shape is somewhat repetitive
+        passed: true
+        comment: Shows a wide range of step sizes/directions and genuine flat plateaus
+          across the full day, though the single smooth bell shape is somewhat repetitive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Autoscaling web-server cluster instance count is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: 2-14 instances is a sensible range for a small/medium autoscaling
           group
     code_quality:
@@ -178,49 +197,59 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: No functions/classes, flat script
+        passed: true
+        comment: No functions/classes, flat script with a simple data-building loop
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Deterministic hardcoded data array
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: No imports; only the provided globals are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: Appropriately simple, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: Correctly relies on the harness for output; animation:false set on
           both chart and series
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: Textbook idiomatic use of Highcharts' built-in step-line feature,
-          no workarounds
+        passed: true
+        comment: Idiomatic use of area type with step, per-point markers, and dataLabels
+          — no workarounds
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        comment: Beyond the required step option, no other Highcharts-distinctive
-          features (data labels, custom tooltip, annotations) are used
+        passed: false
+        comment: Per-point marker/dataLabel overrides combined with step-area type
+          are a real but modest use of Highcharts-specific config, not a feature unique
+          to this library
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
