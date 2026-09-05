@@ -1,0 +1,243 @@
+library: echarts
+language: javascript
+specification_id: roc-curve
+created: '2026-09-05T12:59:56Z'
+updated: '2026-09-05T13:13:18Z'
+generated_by: claude-sonnet
+workflow_run: 33967260062
+issue: 2273
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Axis chrome minimized (axisLine hidden, only subtle splitLine gridlines remain)
+    directly addresses the prior review's minimalism feedback
+  - Soft area-fill under the Gradient Boosting curve visually reinforces which model
+    dominates, and a markArea highlight in the top-left corner attempts to reinforce
+    the 'closer to top-left = better classifier' story requested in the prior review
+  - 'Correct ROC math retained: accurate step-function staircase curves with AUC via
+    trapezoidal rule, matching the visual curve shapes'
+  - Both renders remain fully theme-correct with no clipping or legibility failures;
+    Imprint palette held identical across light/dark (brand green first, lavender
+    second)
+  - Title, legend, and spec-mandated conventions remain perfect; deterministic fixed-seed
+    LCG data generation
+  weaknesses:
+  - The new markArea rectangle (top-left, opacity 0.07) is unlabeled and layered on
+    top of the existing area-fill (opacity 0.12), making it hard to perceive as an
+    intentional callout rather than visual noise — a text label (e.g. 'near-perfect
+    region') or a markPoint at each curve's Youden's J optimal threshold would land
+    the storytelling point more clearly
+  - DE-01 still reads as a well-executed but fundamentally default ECharts line chart;
+    further differentiation (refined legend swatches, a marked optimal-threshold point)
+    would push Aesthetic Sophistication further
+  - 'CQ-01 KISS structure: several standalone helper functions remain (makeLcg, sampleScores,
+    rocCurve, auc) — understandable given the ROC/AUC math but still a deviation from
+    a strict imports-to-plot structure'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "roc-curve · javascript · echarts · anyplot.ai" centered at top, fully visible. Legend below in a single row with three entries (dashed gray "Random classifier (AUC = 0.50)", green "Gradient Boosting (AUC = 0.96)", lavender "Logistic Regression (AUC = 0.75)"). Axis lines are now hidden (axisLine: show:false per prior feedback) — only subtle light-gray gridlines at 0.2 intervals remain, giving a cleaner, more minimal frame than attempt 1. Axis names ("False Positive Rate", "True Positive Rate") and tick labels are dark/soft-dark and clearly legible.
+      Data: First series (Gradient Boosting) is Imprint brand green #009E73 with a new soft area-fill (opacity 0.12) under its curve, plus a faint markArea highlight box in the top-left corner (approx. x:0-0.22, y:0.82-1) at opacity 0.07 — a subtle attempt to call out the "near-perfect classifier" region. Second series (Logistic Regression) is Imprint lavender #C475FD, no area fill. Dashed neutral-gray diagonal reference line runs corner to corner.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Identical layout to the light render. Title and axis-name text render in light off-white, tick labels in a slightly softer light gray. Hidden axisLine carries over correctly; gridlines remain subtle but visible against the dark background.
+      Data: Green (#009E73) and lavender (#C475FD) curves, area-fill, and markArea highlight are pixel-identical in hue/opacity to the light render — only the chrome (background, gridlines, text) flipped, confirming Imprint data-color consistency across themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text clearly legible, brand green and lavender both read well against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Step curves clearly visible; area-fill adds contrast without obscuring
+          lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced square layout, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names (rates are dimensionless, units N/A)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second Imprint lavender, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Area-fill and hidden axis lines add polish over attempt 1, but still
+          reads as a well-configured ECharts chart rather than a distinctly designed
+          one
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: axisLine hidden per prior feedback, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: markArea highlight attempts to reinforce the top-left = ideal-classifier
+          story, but is unlabeled and very low-opacity, easy to miss
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ROC curve with diagonal reference
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference, AUC in legend, multi-model comparison all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: FPR on x, TPR on y, full 0-1 range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels correct with
+          embedded AUC
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Two classifiers of differing strength shown against random baseline
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Disease-diagnosis binary classification scenario, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: AUC values (0.96, 0.75) and sample size (250/250) are realistic for
+          the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Several standalone helper functions remain (makeLcg, sampleScores,
+          rocCurve, auc) — reasonable given the math but not strict KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; no imports beyond echarts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current ECharts
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: step line, areaStyle, markArea, axisPointer cross — solid idiomatic
+          usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markArea added this attempt is ECharts-distinctive; still short of
+          a feature that couldn't easily be replicated elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

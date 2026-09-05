@@ -156,6 +156,27 @@ than restating values here. Method:
 Style questions are **findings to report**, not things to silently
 fix — palette and typography decisions are settled in the style guide.
 
+## 3b · Numeric rules: measure the result, not the plan
+
+**A numeric UI rule is verified against the MEASURED result in the
+browser, never against the planned one.** A floor, a minimum size, a
+cap, a hit target, the ~13 px legibility floor above — the
+verification names the rule and the number it measured, on every
+surface the rule reaches, at both viewports.
+
+The case for it is a sibling-repo PR that shipped a 14 px x-height
+floor for rendered lines whose planner sized them from the average
+advance per character. The plan met the floor and the widest real
+line did not, because the frame's own padding scales with the content
+and was never in the budget: the page came out at **13.9 px** — a
+rule broken by the code that enforces it, and only the measurement on
+the page could say so.
+
+So read the number off the element (`getBoundingClientRect()`,
+`getComputedStyle`), not off the code that computed it, and quote the
+measurement in the PR. When the fix is to re-plan from the measured
+value, say plainly which cases still fall outside the rule.
+
 ## 4 · Performance
 
 Only when the change can plausibly move performance (data loading,
