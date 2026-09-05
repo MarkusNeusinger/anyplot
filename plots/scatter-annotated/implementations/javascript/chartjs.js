@@ -24,18 +24,22 @@ const companies = [
 const revenue = [
   8, 42, 15, 95, 28, 6, 61, 33, 110, 19, 47, 12, 75, 24, 55, 88,
 ];
+// Two indices are hand-placed genuine outliers rather than trend + noise:
+// Origami Cloud (index 14) commands a valuation multiple far above its
+// revenue-implied trend, while Tundra Works (index 15) — despite leading
+// revenue among its peers — trades at a steep discount. Both stand out
+// visibly from the otherwise near-linear cloud, earning their labels.
+const OUTLIER_VALUATIONS = { 14: 340, 15: 125 };
 const valuation = revenue.map((r, i) => {
-  const noise = (lcg() - 0.5) * 30;
+  if (i in OUTLIER_VALUATIONS) return OUTLIER_VALUATIONS[i];
+  const noise = (lcg() - 0.5) * 50;
   return Math.max(5, r * 3.4 + noise);
 });
-// Two clear outliers deserve their labels most: the richest valuation
-// multiple (Origami Cloud) and the revenue leader trading at a discount
-// (Tundra Works). Every point still carries a label — the dataset is small
-// enough (16 points) to label all of them without clutter.
 const points = companies.map((name, i) => ({
   x: revenue[i],
   y: valuation[i],
   label: name,
+  outlier: i in OUTLIER_VALUATIONS,
 }));
 
 // --- Mount -------------------------------------------------------------------
@@ -54,7 +58,6 @@ const pointLabelsPlugin = {
     const { ctx } = chart;
     const meta = chart.getDatasetMeta(0);
     ctx.save();
-    ctx.font = "500 13px sans-serif";
     ctx.textBaseline = "middle";
 
     const centroidPx = meta.data.reduce(
@@ -62,16 +65,21 @@ const pointLabelsPlugin = {
       { x: 0, y: 0 },
     );
 
-    const LABEL_HEIGHT = 18;
+    const LABEL_HEIGHT = 19;
     const placements = meta.data.map((point, i) => {
       const dx = point.x - centroidPx.x;
       const dirX = dx >= 0 ? 1 : -1;
       const align = dirX >= 0 ? "left" : "right";
       const label = points[i].label;
+      const outlier = points[i].outlier;
+      const font = outlier ? "700 15px sans-serif" : "500 14px sans-serif";
+      ctx.font = font;
       return {
         point,
         label,
         align,
+        outlier,
+        font,
         width: ctx.measureText(label).width,
         x: point.x + dirX * LEADER_PX,
         y: point.y - LEADER_PX,
@@ -105,6 +113,7 @@ const pointLabelsPlugin = {
 
       ctx.globalAlpha = 1;
       ctx.fillStyle = t.ink;
+      ctx.font = p.font;
       ctx.textAlign = p.align;
       ctx.fillText(p.label, p.x + (p.align === "left" ? 6 : -6), p.y);
     });
@@ -120,11 +129,13 @@ new Chart(canvas, {
       {
         label: "Startups",
         data: points,
-        backgroundColor: `${t.palette[0]}B3`, // ~70% alpha — reveal overlap
+        // Outliers render at full opacity and a larger radius so they stand
+        // out from the ~70%-alpha trend cloud they deviate from.
+        backgroundColor: points.map((p) => (p.outlier ? t.palette[0] : `${t.palette[0]}B3`)),
         borderColor: t.pageBg,
         borderWidth: 1.5,
-        pointRadius: 9,
-        pointHoverRadius: 9,
+        pointRadius: points.map((p) => (p.outlier ? 13 : 9)),
+        pointHoverRadius: points.map((p) => (p.outlier ? 13 : 9)),
       },
     ],
   },
