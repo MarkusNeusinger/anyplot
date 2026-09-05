@@ -50,38 +50,41 @@ const NODES = RAW_NODES.map((n) => {
 const NODE_BY_ID = new Map(NODES.map((n) => [n.id, n]));
 
 // Edges read "source depends on / imports target" — the arrow points from the
-// importer to the imported module (build order flows right to left).
+// importer to the imported module (build order flows right to left). The
+// third tuple entry is the optional spec `weight` field (import call count),
+// which drives arrow/stroke thickness below.
 const RAW_EDGES = [
-  ["config", "utils"],
-  ["logger", "utils"],
-  ["auth", "utils"],
-  ["auth", "config"],
-  ["cache", "utils"],
-  ["orders", "auth"],
-  ["orders", "logger"],
-  ["orders", "cache"],
-  ["inventory", "cache"],
-  ["inventory", "logger"],
-  ["billing", "auth"],
-  ["billing", "orders"],
-  ["rest-api", "orders"],
-  ["rest-api", "inventory"],
-  ["rest-api", "billing"],
-  ["graphql-api", "orders"],
-  ["graphql-api", "billing"],
-  ["web-app", "rest-api"],
-  ["web-app", "graphql-api"],
-  ["mobile-app", "graphql-api"],
-  ["admin-panel", "rest-api"],
-  ["admin-panel", "inventory"],
+  ["config", "utils", 2],
+  ["logger", "utils", 3],
+  ["auth", "utils", 2],
+  ["auth", "config", 1],
+  ["cache", "utils", 2],
+  ["orders", "auth", 2],
+  ["orders", "logger", 3],
+  ["orders", "cache", 2],
+  ["inventory", "cache", 2],
+  ["inventory", "logger", 2],
+  ["billing", "auth", 2],
+  ["billing", "orders", 1],
+  ["rest-api", "orders", 3],
+  ["rest-api", "inventory", 2],
+  ["rest-api", "billing", 2],
+  ["graphql-api", "orders", 3],
+  ["graphql-api", "billing", 1],
+  ["web-app", "rest-api", 3],
+  ["web-app", "graphql-api", 2],
+  ["mobile-app", "graphql-api", 2],
+  ["admin-panel", "rest-api", 2],
+  ["admin-panel", "inventory", 1],
   // "config" is Foundation yet reaches up into Core — combined with the
   // existing auth -> config edge this closes a 2-cycle: a real circular
   // dependency, flagged in the semantic error red instead of the group color.
-  ["config", "auth"],
+  ["config", "auth", 1],
 ];
-const EDGES = RAW_EDGES.map(([source, target]) => ({
+const EDGES = RAW_EDGES.map(([source, target, weight]) => ({
   source,
   target,
+  weight,
   flagged: source === "config" && target === "auth",
 }));
 const EDGE_KEYS = new Set(EDGES.map((e) => `${e.source}>${e.target}`));
@@ -173,8 +176,8 @@ function GraphEdges() {
           d={edgePath(e, xScale, yScale)}
           fill="none"
           stroke={e.flagged ? FLAG_COLOR : t.inkSoft}
-          strokeWidth={e.flagged ? 3.5 : 2}
-          strokeOpacity={e.flagged ? 0.95 : 0.55}
+          strokeWidth={e.flagged ? 3.5 : 1.3 + e.weight * 0.5}
+          strokeOpacity={e.flagged ? 0.95 : 0.68}
           markerEnd={e.flagged ? "url(#np-arrow-flag)" : "url(#np-arrow)"}
         />
       ))}
