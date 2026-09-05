@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: errorbar-asymmetric
 created: '2026-09-05T01:15:04Z'
-updated: '2026-09-05T01:19:14Z'
+updated: '2026-09-05T01:34:28Z'
 generated_by: claude-sonnet
 workflow_run: 33935353228
 issue: 2781
@@ -12,129 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 70
 review:
   strengths:
-  - Correct asymmetric error bars with visible caps (whiskerwidth=18); a single clean
-    Imprint-green series that stays identical between light and dark renders with
-    fully theme-correct chrome
-  - Subtitle explicitly states "Bars mark the 10th-90th percentile range (log-normal
-    back-transform)", satisfying the spec's request to explain what the asymmetric
-    bounds represent
-  - Idiomatic Makie usage (errorbars! + scatter!) with full theme-token wiring (INK,
-    INK_SOFT, INK_MUTED) across title, subtitle, axis labels, ticks, spines, and grid
-  - Realistic, neutral PM2.5 air-quality dataset with sensible domain values (8.6-34.2
-    μg/m3) and genuinely varying asymmetry magnitude per station from the log-normal
-    transform
+  - 'Realistic, domain-appropriate data: the log-normal back-transform genuinely produces
+    error_upper > error_lower at every station, directly matching the spec''s suggested
+    ''log-transformed data'' use case for asymmetric bounds.'
+  - 'Clean minimal chrome: top/right spines removed, subtle 15%-alpha gridlines, generous
+    whitespace, and theme-adaptive tokens correctly threaded through both light and
+    dark renders with no dark-on-dark or light-on-light failures.'
+  - The subtitle ('Bars mark the 10th-90th percentile range...') clearly satisfies
+    the spec's requirement to explain what the asymmetric bounds represent.
+  - Correct canvas (3200x1800), correct mandated title format, correct brand-green
+    (#009E73) first-series color, visible error-bar caps via whiskerwidth.
   weaknesses:
-  - Design Excellence reads as a well-configured application of the library's default
-    theme skeleton rather than a distinctive aesthetic choice -- consider a subtle
-    accent (e.g. a slightly heavier marker or the amber anchor) on the highest-uncertainty
-    or highest-concentration station to lift DE-01/DE-02 beyond the baseline
-  - Scatter markers use strokewidth = 0 -- the style guide's Data Element Styling
-    section recommends a thin theme-adaptive stroke on markers for definition where
-    they sit on top of the error bar line; adding strokewidth ~1-1.5 would sharpen
-    the point markers
-  - 'LM-02 is generic: errorbars! + scatter! could be replicated near-identically
-    in matplotlib or any other library. Leaning on a more Makie-distinctive touch
-    (e.g. text! annotations at the extremes, rangebars!, or a recipe-level trick)
-    would demonstrate library mastery'
-  - Data storytelling relies only on the pre-sorted descending order -- no color/size/annotation
-    calls out the highest-uncertainty or highest-concentration station, so the viewer
-    has to find the extremes themselves
+  - 'Critical rendering bug: the ''widest spread'' callout computed in the code (amber
+    #DDCC77 marker color + larger markersize=26 for the station with the largest error_upper-error_lower
+    gap, plus a text!() annotation reading ''widest spread: +X / -Y ug/m3'') never
+    appears in either render. A full pixel scan of plot-light.png and plot-dark.png
+    found zero #DDCC77 pixels anywhere, and the region directly above the Lakeview
+    error-bar cap (the actual argmax(spread) station for seed 42, independently verified)
+    shows a plain default-size green marker with no text nearby. All 8 markers render
+    visually identical; the callout is fully absent, not merely faint, small, or edge-clipped.'
+  - This means a meaningful chunk of the script's logic (marker_colors, marker_sizes,
+    widest, halign, the text! call) is dead code that ships to the catalog claiming
+    a feature the rendered PNG does not deliver -- debug why the Colorant-vector color/markersize
+    override and text!() call are not taking effect in this Makie/CairoMakie version,
+    or remove that block entirely and rely on the subtitle alone (which already satisfies
+    the spec's annotation requirement).
+  - No visual hierarchy is actually visible in the shipped render since the intended
+    callout fails -- every station looks equal, so Data Storytelling stays at generic/default
+    level.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Bold dark title "errorbar-asymmetric · julia · makie · anyplot.ai" and muted-gray subtitle "Bars mark the 10th-90th percentile range (log-normal back-transform)" both clearly visible. Y-axis label "PM2.5 Concentration (μg/m³)" and X-axis label "Monitoring Station" in dark ink. Rotated station tick labels (Riverside, Lakeview, Hillcrest, Downtown, Parkside, Eastgate, Westbrook, Northfield) are legible and non-overlapping. Subtle horizontal gridlines only (no vertical grid). L-shaped spine (top/right removed).
-      Data: Single series in Imprint brand green (#009E73) -- 8 stations, each a filled circle marker with an asymmetric vertical error bar (visibly wider upper whisker than lower whisker at every station, consistent with the log-normal back-transform described in the subtitle). Values descend left to right from ~34 (Riverside) to ~9 (Northfield).
-      Legibility verdict: PASS -- all text reads clearly against the light background.
+      Background: Warm off-white (#FAF8F1), matches spec exactly.
+      Chrome: Title "errorbar-asymmetric . julia . makie . anyplot.ai" and subtitle "Bars mark the 10th-90th percentile range (log-normal back-transform)" both dark and clearly readable. Axis labels "Monitoring Station" / "PM2.5 Concentration (ug/m3)" dark and legible. X-tick station names (Riverside, Lakeview, Hillcrest, Downtown, Parkside, Eastgate, Westbrook, Northfield) rotated slightly, no overlap. Y-tick numbers legible, subtle horizontal gridlines only (no vertical grid), top/right spines removed.
+      Data: All 8 markers and error-bar whiskers render in a single uniform brand green (#009E73) with visible T-shaped caps. No amber/highlighted marker or callout text is visible anywhere in the image -- confirmed by direct pixel scan (zero #DDCC77 pixels found), even though the code computes an amber-highlighted "widest spread" station and an explanatory text annotation.
+      Legibility verdict: PASS (all text readable), but the intended widest-spread callout (marker highlight + annotation) is completely absent from the render -- a functional defect, not a legibility one.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Title, subtitle, axis labels, and tick labels all render in light ink (white/light-gray) against the dark background -- no dark-on-dark failures observed anywhere (title, subtitle, axis titles, tick labels, gridlines all correctly flipped).
-      Data: Same #009E73 green error bars and markers as the light render -- data colors are identical between themes; only the chrome (background, text, grid) flipped, as required.
-      Legibility verdict: PASS -- all text reads clearly against the dark background, no dark-on-dark issues found.
+      Background: Warm near-black (#1A1A17), matches spec exactly.
+      Chrome: Title and subtitle in light ink, clearly readable against the dark background -- no dark-on-dark failures. Axis labels and tick labels use lighter muted tones, fully legible. Spines/gridlines flip correctly to the dark-theme tokens.
+      Data: Data colors identical to the light render -- same uniform brand green markers and error bars, confirming color parity between themes. Same absence of the amber callout marker/text, confirmed via pixel scan (zero #DDCC77 pixels in the dark render either).
+      Legibility verdict: PASS (all text readable in dark theme), same callout-rendering defect as the light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, subtitlesize=13, xlabelsize/ylabelsize=14,
-          tick sizes=12); readable at full size in both themes, no overflow, rotated
-          station labels are legible.
+        comment: All text readable in both themes, explicit font sizes, no dark-on-dark/light-on-light
+          issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between rotated tick labels, axis labels, title, or data
-          elements.
+        comment: No collisions; rotated x-tick labels evenly spaced with no overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 sparse points with prominent markersize=20 and whiskerwidth=18
-          caps -- clearly visible and well adapted to low data density.
+        comment: Markers and error-bar caps prominent and clearly visible for sparse
+          (n=8) data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast brand-green series against both backgrounds;
-          no red-green reliance.
+        comment: Single brand-green series, high contrast against both backgrounds,
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing cut off.
+        comment: Canvas gate passed (3200x1800); title, axes, ticks proportionate;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes descriptive with units: "PM2.5 Concentration (μg/m³)"
-          and "Monitoring Station".'
+        comment: Descriptive axis labels with units (ug/m3)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is exactly #009E73; background is #FAF8F1/#1A1A17
-          in the two renders; all chrome is theme-correct in both.'
+        comment: 'First series is #009E73; correct theme backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Looks like a well-configured library default -- closely follows the
-          theme-token skeleton from the library prompt without a distinctive aesthetic
-          signature.
+        comment: Thoughtful subtitle and clean minimal styling, but intended amber-accent
+          sophistication never renders
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Good refinement (spines removed, subtle y-only grid, generous whitespace)
-          but matches the recommended baseline rather than exceeding it; markers lack
-          a defining stroke.
+        comment: Spines removed, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Descending sort order provides mild visual hierarchy, but no color/size/annotation
-          emphasis calls out the extremes.
+        comment: Intended focal-point callout on the widest-spread station fails to
+          render; no visual hierarchy actually visible
     spec_compliance:
       score: 15
       max: 15
@@ -144,29 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct asymmetric error bar plot with distinct upper/lower error
-          magnitudes per point.
+        comment: Correct asymmetric error-bar plot with visible caps
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Visible caps present; subtitle explains the 10th-90th percentile
-          bounds as the spec requests.
+          bounds per spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = station, Y = median concentration with correct asymmetric bounds;
-          all data visible.
+        comment: x=stations, y=median, asymmetric lower/upper correctly mapped; all
+          8 stations shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches "errorbar-asymmetric · julia · makie · anyplot.ai";
-          single series needs no legend.
+        comment: Title matches mandated format exactly; single series needs no legend
     data_quality:
       score: 15
       max: 15
@@ -176,24 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Every station shows genuinely asymmetric bounds of varying magnitude,
-          demonstrating the core feature across the full dataset.
+        comment: Median plus independently-derived asymmetric upper/lower bounds via
+          log-normal back-transform
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral scenario -- PM2.5 air-quality monitoring across named
-          stations.
+        comment: PM2.5 air-quality monitoring stations, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: PM2.5 values (8.6-34.2 μg/m3) and log-normal-derived asymmetric bounds
-          are realistic and internally consistent.
+        comment: Concentration range and axis limits sensible for the domain
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -201,32 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save, no functions or classes.
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before data generation.
+        comment: Random.seed!(42) used
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random -- all used.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Clean, appropriately concise, no fake functionality.
+        passed: false
+        comment: marker_colors/marker_sizes/text! callout block is dead code -- verified
+          via pixel scan to produce zero visible effect in either render
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via save(...; px_per_unit=2); no deprecated
-          calls.
+        comment: Saves plot-$(THEME).png with px_per_unit=2, correct canonical resolution
+          pair
     library_mastery:
       score: 5
       max: 10
@@ -236,22 +228,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level errorbars!/scatter! usage with full theme-token
-          Axis configuration.
+        comment: Proper Figure/Axis/errorbars!/scatter! usage, colorant macro, RGBAf
+          for grid alpha
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage -- errorbars! + scatter! could be replicated near-identically
-          in another library; no Makie-distinctive technique employed.
+        comment: Attempted per-point highlight feature does not actually render, so
+          no distinctive feature is visible in output
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting
