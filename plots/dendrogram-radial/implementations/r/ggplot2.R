@@ -25,7 +25,7 @@ IMPRINT_PALETTE <- c(
 )
 
 # --- Data: synthetic gene expression profiles across 4 latent groups --------
-n_genes   <- 48
+n_genes   <- 32
 n_samples <- 8
 n_groups  <- 4
 
@@ -134,18 +134,22 @@ p <- ggplot() +
   geom_text(
     data = leaf_labels,
     aes(x = x, y = r, label = label, angle = angle, hjust = hjust),
-    color = INK_SOFT, size = 2.3
+    color = INK_SOFT, size = 2.7
   ) +
   scale_color_manual(values = CLUSTER_COLORS, labels = CLUSTER_LABELS, name = NULL) +
   scale_x_continuous(limits = c(0.5, n + 0.5), expand = c(0, 0)) +
   scale_y_continuous(limits = c(0, max_height * 1.22), expand = c(0, 0)) +
   coord_polar(theta = "x", start = 0) +
-  labs(title = "dendrogram-radial · r · ggplot2 · anyplot.ai") +
+  labs(
+    title    = "dendrogram-radial · r · ggplot2 · anyplot.ai",
+    subtitle = "Concentric rings mark merge distance (height); root at center"
+  ) +
   theme_void(base_size = 8) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    plot.title       = element_text(color = INK, size = 12, hjust = 0.5, margin = margin(b = 12)),
+    plot.title       = element_text(color = INK, size = 12, hjust = 0.5, margin = margin(b = 4)),
+    plot.subtitle    = element_text(color = INK_MUTED, size = 8, hjust = 0.5, margin = margin(b = 10)),
     legend.position  = "bottom",
     legend.text      = element_text(color = INK_SOFT, size = 8),
     plot.margin      = margin(14, 14, 14, 14)
