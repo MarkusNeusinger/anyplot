@@ -51,6 +51,24 @@ const ciHalfWidth = spend.map((x) => 9 + 0.5 * Math.abs(x - 32));
 const ciLowerBound = partialDependence.map((v, i) => v - ciHalfWidth[i]);
 const ciBandWidth = ciHalfWidth.map((halfWidth) => 2 * halfWidth);
 
+// A handful of individual conditional expectation (ICE) curves — the
+// per-instance predictions the PDP curve is the average of. Each sample
+// varies the saturation midpoint/amplitude and carries its own model noise,
+// then is shifted by the same meanPrediction constant as the PDP so it reads
+// in the same "effect relative to average" units.
+const ICE_SAMPLE_COUNT = 8;
+const iceCurves = Array.from({ length: ICE_SAMPLE_COUNT }, () => {
+  const midpointShift = (rng() - 0.5) * 16;
+  const amplitudeScale = 0.82 + rng() * 0.36;
+  return spend.map((x) => {
+    const saturating =
+      (620 * amplitudeScale) /
+      (1 + Math.exp(-(x - (32 + midpointShift)) / 7));
+    const modelWiggle = (rng() - 0.5) * 12;
+    return saturating + modelWiggle - meanPrediction;
+  });
+});
+
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
@@ -111,6 +129,28 @@ export default function Chart() {
           height={H - CHART_TOP}
           skipAnimation
           series={[
+            ...iceCurves.map((curve, i) => ({
+              id: `ice-${i}`,
+              data: curve,
+              color: t.palette[0],
+              curve: "monotoneX" as const,
+              area: false,
+              showMark: false,
+              valueFormatter: () => null,
+            })),
+            {
+              id: "pdp",
+              data: partialDependence,
+              label: "Partial dependence",
+              color: t.palette[0],
+              curve: "monotoneX",
+              area: false,
+              showMark: ({ index }: { index: number }) => index % 6 === 0,
+              valueFormatter: (value: number | null) =>
+                value == null
+                  ? null
+                  : `${value >= 0 ? "+" : ""}${value.toFixed(0)} units/week`,
+            },
             {
               id: "ci-lower",
               data: ciLowerBound,
@@ -132,19 +172,6 @@ export default function Chart() {
               showMark: false,
               valueFormatter: (value: number | null) =>
                 value == null ? null : `±${(value / 2).toFixed(0)} units/week`,
-            },
-            {
-              id: "pdp",
-              data: partialDependence,
-              label: "Partial dependence",
-              color: t.palette[0],
-              curve: "monotoneX",
-              area: false,
-              showMark: false,
-              valueFormatter: (value: number | null) =>
-                value == null
-                  ? null
-                  : `${value >= 0 ? "+" : ""}${value.toFixed(0)} units/week`,
             },
           ]}
           xAxis={[
@@ -170,6 +197,12 @@ export default function Chart() {
             "& .MuiLineElement-series-ci-lower": { strokeWidth: 0 },
             "& .MuiAreaElement-series-ci-lower": { fill: "none" },
             "& .MuiAreaElement-series-ci-band": { fillOpacity: 0.22 },
+            ...Object.fromEntries(
+              iceCurves.map((_, i) => [
+                `& .MuiLineElement-series-ice-${i}`,
+                { strokeWidth: 1.1, strokeOpacity: 0.22 },
+              ]),
+            ),
           }}
         >
           <ChartsReferenceLine
