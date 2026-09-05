@@ -1,0 +1,248 @@
+library: chartjs
+language: javascript
+specification_id: polar-line
+created: '2026-09-05T11:10:57Z'
+updated: '2026-09-05T11:28:54Z'
+generated_by: claude-sonnet
+workflow_run: 33962410460
+issue: 2692
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Radial ticks now carry explicit units ("2 mph", "4 mph", ...) via a ticks.callback,
+    closing the VQ-06 gap flagged in attempt 1
+  - Distinct per-series point shapes (circle vs. triangle) add a CVD-safe redundant
+    encoding beyond hue and legend usePointStyle mirrors the shape in the swatch
+  - 'A subtitle ("Peak winds: morning 230°, afternoon 80°") now directly surfaces
+    the diurnal-shift insight instead of leaving the reader to find it'
+  - Afternoon amplitude toned down from a ~6x calm/dominant swing to ~3x, producing
+    a more factually believable average-wind-speed-by-direction profile, with the
+    reasoning documented in a code comment
+  - Deterministic fixed-seed LCG, correct mount-node contract, animation disabled,
+    and theme tokens threaded through plugins/scales.r are all still solid
+  weaknesses:
+  - Data Storytelling relies solely on the text subtitle - the peak points themselves
+    are not visually emphasized on the chart (e.g. a larger/highlighted marker at
+    the peak angle), so the insight is stated but not shown
+  - Design Excellence is still close to a well-configured default beyond the shape/subtitle
+    additions - no bespoke palette or refined grid/typography treatment beyond Imprint
+    tokens
+  - Library Mastery is generic for Chart.js - aside from the radar-as-polar-line adaptation
+    and the decluttering callbacks, no feature unique to Chart.js (e.g. custom point-label
+    rotation, per-point styling arrays) is used
+  - 36 points per series on a radar chart keeps markers fairly dense; pointRadius
+    4-5 is visible but not tuned specifically for this density
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "polar-line · javascript · chartjs · anyplot.ai" at top, italic dark-gray subtitle "Peak winds: morning 230°, afternoon 80°" beneath it, legend below with a green circle "Morning avg (mph)" swatch and a lavender triangle "Afternoon avg (mph)" swatch. 36 radial spokes labeled every 30° (0°-330°); concentric grid circles labeled "2 mph" through "12 mph". All chrome text is clearly readable against the light background.
+      Data: Green (#009E73) morning series (circle markers) peaks near 220-230° and dips near 30-50°; lavender (#C475FD) afternoon series (triangle markers) peaks near 70-90° and dips near 250-270°. Both series use a low-alpha fill down to the origin. First series is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title and legend render in light/white ink; subtitle, angle labels, and radial tick numbers in light gray - all clearly legible against the dark background. No dark-on-dark failures observed.
+      Data: Data colors (#009E73 green, #C475FD lavender) are pixel-identical to the light render; only chrome (background, text, grid) flips between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable in both themes; angle labels decluttered
+          via callback; radial ticks now carry units
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: pointRadius 4-5 / borderWidth 3 visible for 36 points per series,
+          not perfectly tuned for the density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender CVD-safe, well-contrasted on both backgrounds, plus
+          redundant circle/triangle shape encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas well-utilized, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial axis ticks now show explicit units ("X mph") via callback
+          - fixes attempt 1 gap
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series palette[1] (#C475FD), theme-correct
+          chrome both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Shape-differentiated markers and a narrative subtitle lift it above
+          a bare default, but no bespoke palette or typography treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Transparent tick backdrop, subtle grid, low-alpha area fill, distinct
+          point styles - moderate refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtitle explicitly names the peak direction per series, guiding
+          the reader to the diurnal-shift insight, though the peaks are not visually
+          highlighted on the chart itself
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Radar chart with 36 evenly-spaced angular categories is the closest
+          faithful Chart.js primitive; justified in a code comment rather than a workaround
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: theta, radius, theta-ordered connected lines, multi-series, concentric+radial
+          grid all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: angle=direction, radius=magnitude, all 36 points shown per series
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match datasets
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Two series with distinct phase/amplitude demonstrate cyclical comparison
+          well
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Average wind speed by compass direction, morning vs afternoon - real,
+          neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitude toned down to a ~3x calm/dominant ratio - now a believable
+          average-wind-speed profile, fixing attempt 1's overly aggressive ~6x swing
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports, only provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, concise, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Canvas mounted correctly, animation false, current Chart.js v4 API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct mount-node contract, theme tokens threaded through plugins/scales.r,
+          pointLabels.callback for decluttering
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Radar-as-polar-line trick and decluttering callback are Chart.js-specific,
+          but otherwise fairly generic radar configuration
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
