@@ -1,0 +1,110 @@
+// anyplot.ai
+// network-directed: Directed Network Graph
+// Library: echarts 6.1.0 | JavaScript 22
+// Quality: pending | Created: 2026-09-05
+
+//# anyplot-orientation: square
+const t = window.ANYPLOT_TOKENS;
+
+// --- Data: internal module dependency graph (arrow = "imports") ------------
+const CATEGORIES = ["Core", "Service layer", "UI layer", "Shared utilities"];
+
+const moduleDefs = [
+  ["App Shell", 0],
+  ["Router", 0],
+  ["Middleware", 0],
+  ["Scheduler", 0],
+  ["Auth Service", 1],
+  ["API Gateway", 1],
+  ["Database", 1],
+  ["Cache", 1],
+  ["UI Components", 2],
+  ["State Store", 2],
+  ["Logger", 3],
+  ["Config", 3],
+  ["Validator", 3],
+  ["Utils", 3],
+];
+
+// [source, target, weight] — weight = number of imported symbols
+const dependencies = [
+  ["App Shell", "Router", 5],
+  ["App Shell", "Config", 2],
+  ["Router", "Auth Service", 6],
+  ["Router", "API Gateway", 7],
+  ["Middleware", "Logger", 3],
+  ["Middleware", "Validator", 4],
+  ["Scheduler", "API Gateway", 3],
+  ["Scheduler", "Logger", 2],
+  ["Auth Service", "Database", 8],
+  ["Auth Service", "Logger", 3],
+  ["API Gateway", "Database", 9],
+  ["API Gateway", "Cache", 6],
+  ["API Gateway", "Validator", 4],
+  ["Database", "Logger", 2],
+  ["Cache", "Logger", 2],
+  ["UI Components", "State Store", 7],
+  ["State Store", "API Gateway", 8],
+  ["State Store", "Auth Service", 5],
+  ["Validator", "Utils", 3],
+  ["Config", "Logger", 2],
+];
+
+const degree = {};
+moduleDefs.forEach(([name]) => (degree[name] = 0));
+dependencies.forEach(([source, target]) => {
+  degree[source] += 1;
+  degree[target] += 1;
+});
+
+const nodes = moduleDefs.map(([name, category]) => ({
+  name,
+  category,
+  symbolSize: 26 + degree[name] * 5,
+  label: { color: t.ink },
+}));
+
+const edges = dependencies.map(([source, target, weight]) => ({
+  source,
+  target,
+  lineStyle: { width: 1 + weight / 2.2, opacity: 0.55 },
+}));
+
+// --- Init --------------------------------------------------------------------
+const chart = echarts.init(document.getElementById("container"));
+
+// --- Option -------------------------------------------------------------------
+chart.setOption({
+  animation: false,
+  color: t.palette,
+  backgroundColor: "transparent",
+  title: {
+    text: "network-directed · javascript · echarts · anyplot.ai",
+    left: "center",
+    textStyle: { color: t.ink, fontSize: 22 },
+  },
+  legend: {
+    data: CATEGORIES,
+    bottom: 14,
+    left: "center",
+    textStyle: { color: t.inkSoft, fontSize: 16 },
+  },
+  series: [
+    {
+      type: "graph",
+      layout: "circular",
+      circular: { rotateLabel: true },
+      center: ["50%", "50%"],
+      radius: 300,
+      categories: CATEGORIES.map((name) => ({ name })),
+      data: nodes,
+      edges,
+      roam: false,
+      edgeSymbol: ["none", "arrow"],
+      edgeSymbolSize: [0, 14],
+      label: { show: true, position: "right", fontSize: 15 },
+      lineStyle: { color: t.inkSoft, curveness: 0.2 },
+      emphasis: { disabled: true },
+    },
+  ],
+});
