@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 78/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 const TITLE = "histogram-cumulative · javascript · muix · anyplot.ai";
@@ -55,6 +56,10 @@ counts.forEach((count) => {
   cumulativePct.push((running / CALL_COUNT) * 100);
 });
 
+// Median wait time, used as a reference-line focal point for the curve.
+const sortedWaits = [...waitMinutes].sort((a, b) => a - b);
+const medianWait = sortedWaits[Math.floor(sortedWaits.length / 2)];
+
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -98,6 +103,9 @@ export default function Chart() {
             tickLabelStyle: { fontSize: 14 },
             min: 0,
             max: binEdges[binEdges.length - 1],
+            // Force whole-minute ticks (binEdges) instead of the auto-generated
+            // 0.5-minute increments, which crowd once scaled down for mobile.
+            tickInterval: binEdges,
           },
         ]}
         yAxis={[
@@ -117,7 +125,15 @@ export default function Chart() {
           "& .MuiLineElement-root": { strokeWidth: 3 },
           "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
         }}
-      />
+      >
+        <ChartsReferenceLine
+          x={medianWait}
+          label={`Median: ${medianWait.toFixed(1)} min`}
+          labelAlign="end"
+          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4" }}
+        />
+      </LineChart>
     </div>
   );
 }
