@@ -1,0 +1,231 @@
+library: highcharts
+language: javascript
+specification_id: line-styled
+created: '2026-09-05T08:21:21Z'
+updated: '2026-09-05T08:33:44Z'
+generated_by: claude-sonnet
+workflow_run: 33954834594
+issue: 2598
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'The repair directly and effectively addressed both prior weaknesses: the new
+    plotBands annotation ("CPU + Memory peak") gives the chart a clear focal point
+    (DE-03) while also showcasing a distinctive Highcharts feature beyond the required
+    dashStyle usage (LM-02)'
+  - All four standard dash styles (Solid, Dash, Dot, DashDot) are used exactly as
+    the spec requires, with a legend clearly mapping each style to its series name
+  - Data colors follow the Imprint palette in canonical order (CPU=#009E73, Memory=#C475FD,
+    Network I/O=#4467A3, Disk I/O=#BD8233), identical between light and dark renders
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
+    backgrounds, readable ink-toned text, subtle horizontal-only gridlines, and the
+    new plotBand shading reads cleanly in both themes'
+  - Series show genuinely distinct patterns (noisy CPU, smooth Memory, bursty Network
+    I/O, slow-drift Disk I/O) rather than four near-identical shapes
+  - Consistent line width (3px) across all styles per the spec's explicit requirement
+  weaknesses:
+  - Design Excellence still sits short of "exceptional" - typography and layout remain
+    close to the standard token pattern beyond the new plotBand touch
+  - No further Highcharts-distinctive capability (e.g. crosshair, shared tooltip on
+    hover) is showcased beyond the dashStyle + plotBand combination, though this is
+    a minor gap given tooltips are disabled by design for the static PNG
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Title "line-styled · javascript · highcharts · anyplot.ai" bold dark ink, top-center (~30% width, no overflow). Axis titles "Time of Day (hours)" / "Utilization (%)" medium-gray, similarly sized. Tick labels lighter gray, formatted as "0:00"-"24:00" on x-axis. Subtle horizontal-only gridlines. New shaded plotBand (~08:30-10:30) with "CPU + Memory peak" label at top, positioned clear of all data lines. Legend centered below plot with 4 entries.
+      Data: CPU solid brand green (#009E73), Memory dashed lavender (#C475FD), Network I/O dotted blue (#4467A3), Disk I/O dash-dot ochre (#BD8233); consistent 3px line width.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title, axis titles, tick labels, and plotBand label all render in light ink / soft light-gray tones - fully legible, no dark-on-dark failures. plotBand shading is a subtle darker-gray band, visible but unobtrusive. Gridlines remain subtle horizontal-only, now light-on-dark.
+      Data: Confirmed pixel-identical colors to light render - only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text, including new plotBand label, legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: plotBand label clear of data lines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px lines with distinct dash styles clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Dash-style differentiation plus palette contrast is CVD-safe by design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, balanced layout, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, identical across themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean token-driven styling plus new plotBand touch, not yet exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: plotBand annotation gives a genuine focal point on the CPU/Memory
+          peak
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart with multiple series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four standard dash styles present with legend mapping
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=hours, y=utilization%, all data plotted
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 4 distinct series/dash styles with genuinely different underlying
+          patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Server resource monitoring is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100% utilization range with sensible daily-cycle values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic closed-form data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports/dependencies
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, credits disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic dashStyle, xAxis formatter, token-driven chrome
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: plotBands with styled label is a genuinely Highcharts-distinctive
+          feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready

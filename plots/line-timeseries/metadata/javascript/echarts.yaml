@@ -1,0 +1,243 @@
+library: echarts
+language: javascript
+specification_id: line-timeseries
+created: '2026-09-05T08:21:46Z'
+updated: '2026-09-05T08:38:50Z'
+generated_by: claude-sonnet
+workflow_run: 33954866389
+issue: 2006
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Peak, trough, and average markLine/markPoint annotations add genuine data storytelling
+    beyond a plain line — the trough label correctly uses an explicit position/offset
+    to avoid overlap
+  - Time axis with native ECharts date formatting cleanly adapts tick density across
+    the full year (2025, Mar, May, Jul, Sep, Nov) with no rotation needed
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
+    backgrounds, ink/inkSoft text tokens, subtle grid opacity, first series is Imprint
+    #009E73'
+  - Deterministic fixed-seed LCG generates a realistic seasonal temperature curve
+    (trend + noise) with a plausible 0-24°C annual range
+  - 'Clean idiomatic ECharts usage: single flat setOption call, dataZoom (inside),
+    animation disabled, no explicit width/height/devicePixelRatio on init'
+  weaknesses:
+  - 'Peak annotation overlap: the markPoint circle for the peak (23.9°C) renders directly
+    on top of the label text (overlapping the decimal point), visible identically
+    in both light and dark renders — the trough markPoint already sets an explicit
+    label `position: "right", offset: [8, 0]` to avoid exactly this; apply the same
+    (or `position: "top"`) to the peak''s markPoint data entry so the dot no longer
+    sits inside the text.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Outdoor Temperature · line-timeseries · javascript · echarts · anyplot.ai" is centered, bold, dark ink, fully legible. "Temperature (°C)" y-axis name sits top-left (ECharts default end-location), "Date" x-axis name centered below — both dark ink, clearly readable. Tick labels (0-25 y-axis, month labels 2025/Mar/May/Jul/Sep/Nov on x-axis) are soft dark gray, legible, evenly spaced with no overlap. Grid lines are subtle, visible but not competing with data. Dashed "Avg 12°C" reference line and label sit comfortably inside the right margin (confirmed via pixel crop — not clipped).
+      Data: Single brand-green (#009E73) line, no symbols shown (appropriate for 365 dense points), 3px width. Peak marker (23.9°C, circle) and trough marker (0.1°C, circle) are visible; trough label is offset to the right of its dot with no overlap, but the peak label's dot sits directly on top of/inside the "23.9°C" text (confirmed via pixel crop), partially obscuring the decimal point — a real, if minor, overlap defect.
+      Legibility verdict: PASS (all chrome text readable; the peak-label/marker overlap is a localized annotation glitch, not a legibility failure of chrome or axes).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis names, and tick labels all render in light ink tones (confirmed via crop — "Avg 12°C" label is light gray, fully legible against the dark background). No dark-on-dark failures found anywhere. Grid lines subtle and visible.
+      Data: Line and marker colors are pixel-identical to the light render — brand green #009E73 unchanged, confirming only chrome flipped between themes. The same peak-label/marker overlap present in light also appears here identically.
+      Legibility verdict: PASS (no dark-on-dark issues; same isolated peak-annotation overlap as light render).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, well-proportioned, readable in both themes;
+          peak label partially obscured by its own marker dot
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Peak markPoint circle overlaps the '23.9°C' label text in both renders
+          (trough label correctly avoids this via explicit position/offset)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width and marker sizes well-adapted to 365-point density; no
+          symbols on the line itself, prominent circles for peak/trough
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green line with dashed neutral avg reference — high
+          contrast, no red-green dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off (Avg 12°C label confirmed not clipped at right edge)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Date" and "Temperature (°C)" — descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73, identical across themes; backgrounds
+          and chrome correctly theme-adaptive in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful use of markLine/markPoint annotations beyond a plain line,
+          clean typography — clearly above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, axis ticks removed (axisTick show:false), generous whitespace
+          — good but not exhaustive polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak/trough/average annotations create a clear visual hierarchy and
+          guide the viewer to key insights
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time series line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Native time axis with adaptive date formatting, grid lines on both
+          axes, no overlapping ticks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, temperature on y, full year of data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed for
+          a single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Seasonal trend, noise, peak, trough, and average all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Outdoor temperature over a year — real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-24°C annual range with a sinusoidal seasonal shape is physically
+          plausible for a temperate climate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> init -> option script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global echarts/tokens contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract exactly: no explicit size, no devicePixelRatio,
+          animation:false'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Time axis, markPoint/markLine, dataZoom(inside) all used via the
+          high-level option API as ECharts recommends
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: markPoint/markLine annotations and native time-axis formatting are
+          ECharts-distinctive, not trivially replicated elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
