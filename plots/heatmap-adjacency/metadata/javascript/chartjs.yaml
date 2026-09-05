@@ -1,0 +1,256 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-adjacency
+created: '2026-09-05T03:03:24Z'
+updated: '2026-09-05T03:15:55Z'
+generated_by: claude-sonnet
+workflow_run: 33940434354
+issue: 5240
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Idiomatic, rules-compliant workaround for Chart.js''s missing matrix chart type:
+    a scatter chart supplies the category scales, and a native afterDatasetsDraw plugin
+    draws the cells directly on canvas — no banned chartjs-chart-matrix or external
+    library, per the library''s ''no workarounds'' rule.'
+  - 'Attempt 1''s VQ-06 gap is closed: explicit ''Source node'' / ''Target node''
+    axis titles now state the row/column semantics instead of relying on tick labels
+    alone.'
+  - 'Attempt 1''s group-identity weakness is closed: a subtitle (''Groups: D = Design
+    · E = Engineering · M = Marketing'') spells out the abbreviations so viewers no
+    longer have to infer group names from single letters.'
+  - Correct imprint_seq colorbar (green to blue) with accurate min/max labels and
+    a clearly labeled 'Connection weight' axis title; community-boundary divider lines
+    correctly expose the block-diagonal structure the spec asks for.
+  - Symmetric adjacency matrix fills both triangles, self-loops are neutralized to
+    zero, absent edges render as the page background, and theme-adaptive chrome (ink/inkSoft
+    tokens) is threaded correctly through title, ticks, colorbar text, and boundary
+    lines in both renders.
+  weaknesses:
+  - At mobile width (~400px) the 22 rotated tick labels at 11px will still be tight
+    to read — for large networks the spec itself suggests showing only group-boundary
+    labels instead of every node name.
+  - The colorbar's bottom tick reads '0.00' but the minimum weight on any actually-drawn
+    edge is ~0.1 (true zero-weight cells are absent edges rendered as the page background,
+    a different visual channel) — a viewer could misread the scale's practical floor.
+  - Helper functions (lcg, hexToRgb, weightColor) add a bit of structure beyond a
+    flat script, though they are reasonably justified by the custom-plugin rendering
+    approach this plot type requires.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — matches the light theme surface.
+      Chrome: Title "heatmap-adjacency · javascript · chartjs · anyplot.ai" in bold dark ink at top, clearly readable. Subtitle "Groups: D = Design · E = Engineering · M = Marketing" in soft dark gray beneath it, legible. "Target node" axis title above the top tick labels (D1-D7, E1-E9, M1-M6, rotated 90°) and "Source node" axis title to the left of the row tick labels — both new since attempt 1 and both clearly readable. Thin gray group-boundary lines separate the Design/Engineering/Marketing blocks. Colorbar on the right labeled "Connection weight" with "0.97" at top and "0.00" at bottom, both readable, fully inside the canvas with generous right margin.
+      Data: Matrix cells colored on the imprint_seq scale (brand green #009E73 for low weights fading to steel blue #4467A3 for high weights); absent-edge cells render as the page background (invisible), diagonal self-loops are also blank. Same-group cells are visibly denser/darker, producing clear block-diagonal clusters for each of the three groups; the matrix is visually symmetric across the diagonal.
+      Legibility verdict: PASS — all title, subtitle, axis-title, tick-label, and colorbar text is clearly readable against the light background; no light-on-light issues; no clipped text found at any edge (checked top, bottom, left, right crops).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — matches the dark theme surface.
+      Chrome: Title, subtitle, "Target node" / "Source node" axis titles, and tick labels all render in light ink/soft-gray, fully legible against the dark background. Group-boundary lines remain visible as subtle light-gray dividers. Colorbar labels and "Connection weight" text render in light ink, readable, same position as the light render.
+      Data: Cell colors are identical to the light render (same green-to-blue gradient and the same weight pattern per cell) — only the chrome (background, text, dividers) flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all text remains clearly visible against the near-black surface; no clipped text found at any edge.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full size; 11px rotated node
+          tick labels across 22 nodes will be tight at 400px mobile width
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/data collisions; rotated top labels are close together but
+          not overlapping
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cell squares clearly sized and colored for a 22-node matrix at full
+          resolution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green-to-blue is CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas, good proportions, colorbar and its label fit fully
+          inside the frame, nothing cut off at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed since attempt 1: explicit ''Source node'' / ''Target node''
+          axis titles now state row/column semantics, plus the colorbar title'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used correctly for continuous weight; theme-correct backgrounds
+          in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom colorbar plugin, group-boundary dividers, and a group-name
+          subtitle — above-generic polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Enclosed frame appropriate for a matrix heatmap, subtle boundary
+          lines, generous colorbar whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Grouped node ordering, boundary dividers, and the new group-name
+          subtitle together create an immediately readable block-diagonal focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct adjacency matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric fill, weight-to-color mapping, distinct absent-edge background,
+          colorbar legend, cluster-ordered nodes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All nodes on both axes, weight correctly mapped to color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar plus new group-name subtitle act as
+          the legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Weighted symmetric graph, self-loops neutralized, community structure
+          — covers most adjacency-matrix aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral coworker collaboration network across three teams
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 22 nodes within the 20-200 spec range; weight values realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions (lcg, hexToRgb, weightColor), justified
+          by the custom-plugin approach
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, pure vanilla JS/canvas
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; genuine plugin-based rendering appropriate for the task
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; current Chart.js v4 API; animation
+          disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of category scales and the Chart.js plugin system for
+          a chart type Chart.js doesn't support natively
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Demonstrates deep Chart.js extensibility knowledge (afterDatasetsDraw,
+          afterDraw plugins) while respecting the 'no community plugin' rule
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - alpha-blending
