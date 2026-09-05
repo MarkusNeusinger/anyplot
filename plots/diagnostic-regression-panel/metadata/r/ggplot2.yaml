@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: diagnostic-regression-panel
 created: '2026-09-05T00:07:18Z'
-updated: '2026-09-05T00:12:06Z'
+updated: '2026-09-05T00:23:49Z'
 generated_by: claude-sonnet
 workflow_run: 33931171138
 issue: 5242
@@ -12,55 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnosti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Faithful, well-organized recreation of R's classic plot(lm) 2x2 diagnostic layout
-    — all four required subplots (Residuals vs Fitted, Normal Q-Q, Scale-Location,
-    Residuals vs Leverage) present with correct statistics (LOESS smoother, standardized
-    residuals, Cook's distance contours)
-  - 'Thoughtful semantic color use: brand green for routine observations, semantic
-    red (Imprint position 5) for the top-3 influential points, and the amber warning
-    anchor for Cook''s distance threshold lines — exactly matching the style guide''s
-    intended semantic roles'
-  - Deliberately misspecified linear fit (mild curvature + heteroscedastic noise)
-    produces realistic diagnostic signal (visible curvature in the LOESS smoother,
-    fanning residual spread) instead of a trivially clean textbook fit — strong feature
-    coverage
-  - Both themes correctly flip chrome tokens (background, ink, grid) while keeping
-    all data colors identical — no dark-on-dark or light-on-light failures in either
-    render
-  - Clean, explicit theme system (anyplot_theme) applied consistently across all four
-    ggplot objects, with subtle alpha-based gridlines and minimal spines
+  - Deliberately misspecified regression (quadratic true relationship + heteroscedastic
+    noise) produces textbook-realistic diagnostic patterns in all four panels rather
+    than a clean/uninteresting fit
+  - Cook's-distance contour math (D=0.5 and D=1.0 curves) is correctly derived and
+    both curves are guaranteed visible via the y-axis floor calculation
+  - Influential-point labels (137, 16, 128) are consistently identified and displayed
+    across all four subplots with collision-avoiding nudge + vjust staggering
+  - Theme-adaptive chrome correctly implemented — light/dark renders are pixel-identical
+    in data colors, only chrome flips
+  - Legible even at the 400px mobile-scaled thumbnail in both themes
   weaknesses:
-  - 'Panel 4 (Residuals vs Leverage): only the D=0.5 Cook''s distance contour is visible/labeled
-    — the D=1.0 threshold curve falls outside the plotted y-range given this dataset''s
-    leverage values, so the label filter silently drops it without explanation. Widen
-    y_limit slightly further or add a caption note confirming no observation approaches
-    D=1.0'
-  - Index labels for the top-3 Cook's-distance points ('16' and '128') sit very close
-    together in panels 1, 3, and 4 — nudge_fitted/nudge_leverage spread them by rank,
-    but the underlying fitted/leverage values for these two points are close enough
-    that the labels still visually cluster. Increase label_spread or use a perpendicular
-    (vjust) offset instead of purely horizontal nudging
-  - point_size=2.1 is slightly below the 2.5 starting value recommended in prompts/library/ggplot2.md
-    for this observation count — a small bump would give a touch more presence once
-    scaled down to a 400px mobile thumbnail
+  - Densest region of the residual scatter (around fitted ≈ 1500-2000) still shows
+    moderate marker overlap despite alpha=0.6 — could tighten alpha slightly or reduce
+    point size marginally in that regime
+  - Design Excellence is solid but not exceptional — the four-panel layout is functional
+    and clean but doesn't add extra visual hierarchy beyond the red/green/blue/amber
+    color coding
+  - LOESS smoother is a fairly standard technique available in most plotting libraries;
+    the ggplot2-distinctive element is really the grid-graphics composition (arrangeGrob/textGrob),
+    which could be leaned into further for a stronger Library Mastery showing
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "diagnostic-regression-panel · r · ggplot2 · anyplot.ai" in dark ink, fully visible and not clipped. Each of the four panel titles (Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage) is dark and legible. Axis titles and tick labels render in dark/soft-dark ink respectively, all clearly readable against the light surface. Grid lines are faint, subtle, non-competing. Bottom caption text (green/red/blue/amber color key) is soft-dark and readable.
-      Data: Routine observations are brand green (#009E73) with alpha blending for overlap; the three highest-Cook's-distance points (137, 16, 128) are highlighted in semantic red and labeled with their observation index in every panel; LOESS/45° reference lines render in blue (Imprint position 3); the Cook's distance contour in panel 4 is amber, dashed, labeled "D=0.5" in the upper-right corner.
-      Legibility verdict: PASS — no light-on-light text found; all titles, axis labels, tick labels, and annotations read clearly.
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title "diagnostic-regression-panel · r · ggplot2 · anyplot.ai" and all four subplot titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage"), axis titles, and tick labels render in dark ink — all clearly readable
+      Data: green (#009E73) observation points, matte-red (#AE3030) top-3 Cook's-distance outliers (labeled 137, 16, 128), blue (#4467A3) LOESS trend line, amber (#DDCC77) Cook's-distance contours labeled D=0.5/D=1.0 in panel 4
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title and four panel titles now render in light ink (#F0EFE8-equivalent), fully legible against the dark surface. Axis/tick labels use the lighter soft-ink tone. Grid lines are faint and subtle, visible but not dominant. Caption text at the bottom is legible in soft light ink.
-      Data: Identical data colors to the light render — brand green routine points, semantic red for the three flagged influential points (137, 16, 128) with matching index labels, blue LOESS/reference lines, amber dashed "D=0.5" Cook's distance contour. No hue shifted between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, label, and annotation is clearly readable against the dark background, and the brand green + semantic red + amber remain visible and distinguishable on the dark surface.
+      Background: warm near-black, matches #1A1A17
+      Chrome: title, subplot titles, axis titles, and tick labels flip to light ink (#F0EFE8/#B8B7B0); grid lines flip to faint light lines; caption text flips to light gray — no dark-on-dark failures found
+      Data: colors are identical to the light render (green, matte-red, blue, amber) — confirmed no shift
+      Legibility verdict: PASS
+
+    Both renders additionally checked at the 400px mobile-scaled thumbnail — title, subplot titles, axis labels, tick labels, and the D=0.5/D=1.0 contour labels all remain legible in both themes. No AR-09 edge clipping found in either render; no canvas-dimension gate file present (2400x2400 confirmed).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,50 +59,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via anyplot_theme; readable in both
-          themes; title fits without clipping
+        comment: All font sizes explicit; readable at full res and 400px mobile scale
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No true overlap, but '16'/'128' index labels cluster tightly in 3
-          of 4 panels
+        comment: Prior repair's vjust-staggering + x-nudge eliminated label clustering
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: point_size=2.1, alpha=0.6 for n=150 — visible but slightly below
-          the library's recommended 2.5 starting value
+        comment: Point size/alpha appropriate for n=150, some overplotting remains
+          in dense mid-range
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green distinguished further by size difference and index-number
-          labels, not hue alone
+        comment: Red/green outlier distinction reinforced by size and text labels,
+          not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2x2 grid fills the square canvas well with balanced margins and a
-          bottom caption
+        comment: Canvas gate passed (2400x2400); balanced composition, no cut-off
+          content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units where applicable (Fitted Values
-          ($/month))
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, semantic red for influential points, amber
-          anchor for Cook''s contour, theme-correct chrome in both renders'
+        comment: Correct Imprint palette usage, theme-correct chrome, identical data
+          colors across themes
     design_excellence:
       score: 15
       max: 20
@@ -121,23 +110,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color use, custom caption, faithful polished
-          recreation of a classic diagnostic display
+        comment: Deliberate color semantics, clean composition, above library-default
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle alpha-based grid, minimal axis lines, generous margins
+        comment: Spines/ticks removed, subtle grid, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color + size + index labels create a clear visual hierarchy pointing
-          to influential observations
+        comment: Color/size hierarchy guides reader to outliers, stops short of explicit
+          insight annotation
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,27 +133,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2x2 diagnostic panel, all four subplot types present
+        comment: Correct 2x2 diagnostic panel replicating R's plot(lm)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: D=1.0 Cook's distance contour is computed but not visibly reachable
-          within the plotted range — only D=0.5 shows
+        comment: All four subplots with required elements present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned in every subplot
+        comment: X/Y correctly assigned in every panel
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; caption footnote substitutes for a legend and
-          matches the data encoding
+        comment: Title format exact, caption legend matches color roles
     data_quality:
       score: 15
       max: 15
@@ -175,22 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows non-linearity, heteroscedasticity, non-normal tails, and influential
-          points via a deliberately misspecified fit
+        comment: Misspecified fit shows realistic non-linearity, heteroscedasticity,
+          and influential points
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Apartment rent regressed on floor area — realistic, neutral business
-          scenario
+        comment: Apartment rent vs floor area is real, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Floor area 35-160 m2 and rent values are plausible and internally
-          consistent
+        comment: Plausible real-world floor area and rent values
     code_quality:
       score: 10
       max: 10
@@ -200,7 +184,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear imports -> data -> plot -> save flow
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,21 +196,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, scales, ragg, gridExtra all used
+        comment: All imported packages used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the required statistics, no fake UI
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png to plot-{theme}.png
+        comment: ggsave with ragg::agg_png to plot-{THEME}.png
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -234,27 +218,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ggplot2 geoms/theme system; gridExtra::arrangeGrob for
-          combination is correct but not the most current pattern (patchwork)
+        comment: Correct high-level API usage including grid-graphics composition
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: geom_smooth(method='loess') plus grid::textGrob-based shared title/caption
-          combination is a distinctive R/ggplot2-ecosystem technique
-  verdict: REJECTED
+        passed: false
+        comment: Grid-graphics composition is distinctive; loess smoother itself is
+          generic
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - gridextra
   techniques:
   - subplots
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
-  - alpha-blending
   - publication-ready
-  - grid-styling
+  - alpha-blending
