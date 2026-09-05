@@ -58,9 +58,17 @@ adjacency_df <- as.data.frame(weight_mat) %>%
     target = factor(target, levels = nodes$node)
   )
 
+# --- Department-boundary markers ---------------------------------------
+# Positions along each discrete axis where one department's block ends and
+# the next begins, drawn as subtle divider lines to reinforce the
+# block-diagonal structure beyond what tick labels alone convey.
+boundaries <- head(cumsum(table(nodes$department)[departments]), -1) + 0.5
+
 # --- Plot ---------------------------------------------------------------
 p <- ggplot(adjacency_df, aes(x = target, y = source, fill = weight)) +
   geom_tile(color = PAGE_BG, linewidth = 0.15) +
+  geom_vline(xintercept = boundaries, color = INK_SOFT, linewidth = 0.3, alpha = 0.5) +
+  geom_hline(yintercept = boundaries, color = INK_SOFT, linewidth = 0.3, alpha = 0.5) +
   scale_fill_gradient(
     low      = "#009E73",
     high     = "#4467A3",
@@ -72,17 +80,20 @@ p <- ggplot(adjacency_df, aes(x = target, y = source, fill = weight)) +
   scale_y_discrete(expand = c(0, 0), limits = rev(nodes$node)) +
   coord_fixed(ratio = 1) +
   labs(
-    title = "heatmap-adjacency · r · ggplot2 · anyplot.ai",
-    x = NULL, y = NULL
+    title    = "heatmap-adjacency · r · ggplot2 · anyplot.ai",
+    subtitle = "Color intensity = meetings per month; near-background tiles indicate no regular contact",
+    x = "Employee", y = "Employee"
   ) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
     panel.grid         = element_blank(),
+    axis.title         = element_text(color = INK, size = 10),
     axis.text.x        = element_text(color = INK_SOFT, size = 8, angle = 90, hjust = 1, vjust = 0.5),
     axis.text.y        = element_text(color = INK_SOFT, size = 8),
     plot.title         = element_text(color = INK, size = 12),
+    plot.subtitle      = element_text(color = INK_SOFT, size = 8),
     legend.text        = element_text(color = INK_SOFT, size = 8),
     legend.title       = element_text(color = INK, size = 10),
     legend.background  = element_rect(fill = ELEVATED_BG, color = NA),
