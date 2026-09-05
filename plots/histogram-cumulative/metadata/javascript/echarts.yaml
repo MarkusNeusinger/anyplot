@@ -1,0 +1,234 @@
+library: echarts
+language: javascript
+specification_id: histogram-cumulative
+created: '2026-09-05T04:14:39Z'
+updated: '2026-09-05T04:29:21Z'
+generated_by: claude-sonnet
+workflow_run: 33943803350
+issue: 2549
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Directly addresses every weakness from Attempt 1: markLine at the 50th-percentile
+    with a dashed reference line, markPoint calling out the interpolated median processing
+    time ("Median ≈ 21 min"), and evenly spaced 10-minute tick labels replacing the
+    raw irregular bin edges'
+  - 'First (only) series remains exactly Imprint brand green #009E73, identical between
+    light and dark renders'
+  - Theme chrome fully threaded through tokens (t.ink, t.inkSoft, t.grid, t.pageBg)
+    — the markPoint border correctly swaps to t.pageBg per theme so the marker reads
+    cleanly on both surfaces
+  - Median time is computed via genuine linear interpolation within the crossing bin,
+    not just picked from the nearest bin edge
+  - Realistic, neutral warehouse-operations scenario (combined automated/manual picking-time
+    distributions) producing a genuinely shaped S-curve
+  - Deterministic LCG with fixed seed (42), no external dependencies
+  - Title matches the mandated format exactly; single-series legend correctly omitted
+  weaknesses:
+  - Aesthetic Sophistication (DE-01) is still capped by the flat, ungradiated bar
+    fill from Attempt 1 — the repair added a storytelling annotation but didn't touch
+    the base bar rendering
+  - 'Library Mastery (LM-02) could go further: consider a feature more unique to ECharts''
+    rendering model (e.g. visualMap piecewise coloring of bars past the median, or
+    a graphic custom element) instead of markLine/markPoint alone'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title, axis titles ("Processing Time (minutes)", "Cumulative Orders (%)"), and tick labels all in dark ink/soft-gray, clearly readable; new "50th percentile" dashed line label and "Median ≈ 21 min" marker label also legible
+      Data: 20 solid #009E73 bars forming a clean ogive/S-curve; dashed reference line at 50% with a dark circular marker at the median crossing
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: title, axis titles, and tick labels in light off-white ink, fully legible; dashed 50th-percentile line and median label render in light soft-gray/white — no dark-on-dark failures
+      Data: identical #009E73 bars and S-curve shape as light render; median marker is a white-filled circle with a page-background-colored border ring, confirming theme-adaptive chrome without changing data color
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap, including new median annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and marker well-sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (minutes, %)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Flat bar fill unchanged since Attempt 1, no gradient/depth
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed reference line + bordered marker are a tasteful addition
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Median crossing explicitly called out with line, marker, and label
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative histogram (ogive)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Monotonic cumulative % curve, step bars
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = processing time bins, Y = cumulative %
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Two-stream mixture produces realistic S-curve shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral warehouse order-processing scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible processing-time values and proportions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic markLine/markPoint with formatter callbacks
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: markLine/markPoint are ECharts-idiomatic but replicable via annotation
+          layers elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - cumulative-sum
+  - interpolation
+  styling: []
