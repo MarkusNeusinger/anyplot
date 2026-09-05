@@ -14,6 +14,11 @@ const { width, height } = window.ANYPLOT_SIZE;
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const hours = d3.range(24);
 
+const formatHour = (h) => {
+  const displayHour = h % 12 === 0 ? 12 : h % 12;
+  return `${displayHour}${h < 12 ? "am" : "pm"}`;
+};
+
 // Tiny fixed-seed LCG for reproducible jitter — Math.random() is not seedable.
 let seed = 42;
 function lcg() {
@@ -119,6 +124,56 @@ g.selectAll("text.day-label")
   .attr("fill", t.ink)
   .text((d) => d);
 
+// --- Peak-cell highlight & story annotation ------------------------------------
+// Calls out the single highest-traffic cell so the chart states its insight
+// (morning-commute/evening-peak pattern) instead of relying on color alone.
+const peak = data.reduce((best, d) => (d.visits > best.visits ? d : best), data[0]);
+const peakMidAngle = angle(peak.hour + 0.5);
+const peakOuterR = ringOuter(peak.dayIndex);
+const peakPoint = {
+  x: Math.sin(peakMidAngle) * peakOuterR,
+  y: -Math.cos(peakMidAngle) * peakOuterR,
+};
+const peakLabelX = -outerRadius - 40;
+const peakLabelY = -outerRadius * 0.65;
+
+g.append("path")
+  .attr("d", arc({ hour: peak.hour, dayIndex: peak.dayIndex }))
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 3);
+
+g.append("line")
+  .attr("x1", peakPoint.x)
+  .attr("y1", peakPoint.y)
+  .attr("x2", peakLabelX + 120)
+  .attr("y2", peakLabelY + 34)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.25);
+
+g.append("circle")
+  .attr("cx", peakPoint.x)
+  .attr("cy", peakPoint.y)
+  .attr("r", 4.5)
+  .attr("fill", t.ink);
+
+const peakLabel = g.append("text").attr("text-anchor", "start");
+peakLabel
+  .append("tspan")
+  .attr("x", peakLabelX)
+  .attr("y", peakLabelY)
+  .style("font-size", "16px")
+  .style("font-weight", "700")
+  .attr("fill", t.ink)
+  .text("Peak traffic");
+peakLabel
+  .append("tspan")
+  .attr("x", peakLabelX)
+  .attr("dy", "1.3em")
+  .style("font-size", "14px")
+  .attr("fill", t.inkSoft)
+  .text(`${days[peak.dayIndex]} ${formatHour(peak.hour)} · ${peak.visits} visits`);
+
 // --- Title ---------------------------------------------------------------------
 svg
   .append("text")
@@ -158,7 +213,22 @@ svg
   .attr("y", legendY)
   .attr("width", legendWidth)
   .attr("height", legendHeight)
+  .attr("rx", legendHeight / 2)
+  .attr("ry", legendHeight / 2)
   .attr("fill", "url(#imprint-seq-gradient)")
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1);
+
+// Intermediate tick marks give the colorbar a graduated feel beyond bare min/max
+svg
+  .selectAll("line.legend-tick")
+  .data([0.25, 0.5, 0.75])
+  .join("line")
+  .attr("class", "legend-tick")
+  .attr("x1", (frac) => legendX + frac * legendWidth)
+  .attr("x2", (frac) => legendX + frac * legendWidth)
+  .attr("y1", legendY + legendHeight)
+  .attr("y2", legendY + legendHeight + 6)
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", 1);
 
