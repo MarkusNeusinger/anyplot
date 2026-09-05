@@ -14,6 +14,8 @@ THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+MUTED    <- if (THEME == "light") "#6B6A63" else "#A8A79F" # semantic anchor — not statistically significant
+GRID_COL <- paste0(INK, "26") # ~15% opacity tint, per style-guide subtle-grid guidance
 BRAND    <- "#009E73" # Imprint palette position 1 — ALWAYS first series
 
 # --- Data -----------------------------------------------------------------
@@ -39,13 +41,21 @@ trial_results <- lapply(seq_along(sites), function(i) {
 
 df <- bind_rows(trial_results) %>%
   arrange(estimate) %>%
-  mutate(site = factor(site, levels = site))
+  mutate(
+    site = factor(site, levels = site),
+    significant = lower_bound > 0 | upper_bound < 0,
+    point_color = if_else(significant, BRAND, MUTED)
+  )
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x = estimate, y = site)) +
   geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5, color = INK_SOFT) +
-  geom_errorbarh(aes(xmin = lower_bound, xmax = upper_bound), height = 0.25, linewidth = 0.8, color = BRAND) +
-  geom_point(size = 3.5, color = BRAND) +
+  geom_errorbar(
+    aes(xmin = lower_bound, xmax = upper_bound, color = point_color),
+    orientation = "y", width = 0.25, linewidth = 0.8
+  ) +
+  geom_point(aes(color = point_color), size = 3.5) +
+  scale_color_identity() +
   labs(
     x = "Standardized Effect Size (95% CI)",
     y = NULL,
@@ -57,7 +67,7 @@ p <- ggplot(df, aes(x = estimate, y = site)) +
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.y = element_blank(),
     panel.grid.minor  = element_blank(),
-    panel.grid.major.x = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major.x = element_line(color = GRID_COL, linewidth = 0.2),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
