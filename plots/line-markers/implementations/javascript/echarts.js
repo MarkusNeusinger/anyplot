@@ -23,8 +23,10 @@ function michaelisMenten(vmax, km) {
   });
 }
 
-const wildType = michaelisMenten(98, 4.5);
-const mutant = michaelisMenten(65, 14);
+const wildTypeVmax = 98;
+const mutantVmax = 65;
+const wildType = michaelisMenten(wildTypeVmax, 4.5);
+const mutant = michaelisMenten(mutantVmax, 14);
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -59,7 +61,7 @@ chart.setOption({
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
-    splitLine: { lineStyle: { color: t.grid } },
+    splitLine: { show: false },
   },
   yAxis: {
     type: "value",
@@ -82,6 +84,13 @@ chart.setOption({
       symbolSize: 16,
       lineStyle: { width: 3.5, color: t.palette[0] },
       itemStyle: { color: t.palette[0], borderColor: t.pageBg, borderWidth: 2 },
+      markLine: {
+        symbol: "none",
+        silent: true,
+        label: { formatter: "Wild-type Vmax", color: t.palette[0], fontSize: 13, position: "insideEndTop" },
+        lineStyle: { type: "dashed", color: t.palette[0], opacity: 0.5, width: 1.5 },
+        data: [{ yAxis: wildTypeVmax }],
+      },
     },
     {
       name: "Mutant",
@@ -91,6 +100,13 @@ chart.setOption({
       symbolSize: 18,
       lineStyle: { width: 3.5, color: t.palette[1] },
       itemStyle: { color: t.palette[1], borderColor: t.pageBg, borderWidth: 2 },
+      markLine: {
+        symbol: "none",
+        silent: true,
+        label: { formatter: "Mutant Vmax", color: t.palette[1], fontSize: 13, position: "insideEndTop" },
+        lineStyle: { type: "dashed", color: t.palette[1], opacity: 0.5, width: 1.5 },
+        data: [{ yAxis: mutantVmax }],
+      },
     },
   ],
 });
