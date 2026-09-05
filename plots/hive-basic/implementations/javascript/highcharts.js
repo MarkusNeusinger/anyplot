@@ -1,3 +1,7 @@
+// anyplot.ai
+// hive-basic: Basic Hive Plot
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 // anyplot.ai
 // hive-basic: Basic Hive Plot
