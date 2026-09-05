@@ -1,0 +1,251 @@
+library: makie
+language: julia
+specification_id: icicle-basic
+created: '2026-09-05T05:31:38Z'
+updated: '2026-09-05T06:09:46Z'
+generated_by: claude-sonnet
+workflow_run: 33947101783
+issue: 2497
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Correct icicle-chart layout: leaves stretch down to the bottom row per the classic
+    convention, root at top spanning the full width'
+  - Perceptually-uniform LCHab lightness ramp encodes hierarchy depth within each
+    branch — a distinctive, well-executed touch
+  - Canonical Imprint categorical order for the four top-level branches (brand green
+    first), with neutral/muted semantic anchors correctly reserved for the root total
+    and the lone root-level file rather than spent as extra categorical slots
+  - Label-visibility threshold correctly hides text on narrow tiles, and per-tile
+    luminance-based ink color keeps every visible label legible regardless of the
+    tile's own lightness
+  - Clean, deterministic, single-file implementation — no randomness needed, no fake
+    interactivity
+  weaknesses:
+  - Title (titlesize=20) reads a little small relative to the 3200 px canvas for a
+    short (41-char) title; there is headroom to bump it to ~22-24 without crowding
+  - The root "project" band is a large, texture-free block spanning the full top quarter
+    — correct per the icicle convention, but reads as a lot of dead visual weight;
+    a slightly shorter root row could improve balance
+  image_description: |-
+    NOTE: The plot_images/ artifacts originally provided for this review were stale
+    (rendered from the pre-fix, attempt-1 version of makie.jl — root/config.json
+    colors matched the old theme-adaptive NEUTRAL/MUTED constants, not the
+    FIXED_NEUTRAL/FIXED_MUTED constants introduced by commit e59e3495). A scratch
+    Julia project (CairoMakie + Colors) was instantiated and the current makie.jl
+    was re-rendered directly for both themes; this description covers those fresh,
+    code-accurate renders. Pixel sampling confirmed FIXED_NEUTRAL (114,111,100) and
+    FIXED_MUTED (176,170,152) now render identically in both themes, as intended.
+
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Bold dark title top-center ("icicle-basic · julia · makie · anyplot.ai"),
+        fully readable; no axis ticks/labels (intentionally hidden, appropriate for
+        an icicle chart where per-tile text carries the labeling)
+      Data: Root band (taupe/grey, FIXED_NEUTRAL) spans the top quarter with white
+        "project · 341 KB total" label. Four branches below in canonical Imprint
+        order (src=#009E73 green, docs=#C475FD lavender, tests=#4467A3 blue,
+        assets=#BD8233 ochre), each with two more rows of children lightening
+        slightly with depth. A thin taupe/grey sliver at the far right (config.json,
+        FIXED_MUTED) is correctly too narrow for a label. First categorical series
+        (src) is confirmed brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Off-white title/labels on dark tiles, dark labels on light-tinted
+        deep tiles — ink color is chosen per-tile from that tile's own luminance,
+        so nothing is dark-on-dark or light-on-light
+      Data: Confirmed pixel-identical to light render for all data fills (branch
+        hues, root taupe, config.json taupe) — only background/chrome flipped, as
+        required
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; per-tile contrast-based ink color
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; narrow tiles correctly suppress labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Label-size threshold appropriately tuned to tile width
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; adjacent branches distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas correct at 3200x1800; root band is a large uniform block
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; no axis needed for this chart type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, canonical order, semantic anchors used
+          correctly, both themes correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: LCHab depth-lightening ramp beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/ticks fully hidden, clean tile borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Depth-lightness ramp guides the eye through hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct icicle layout, adjacent rectangles by row
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Top-down orientation, color-by-hierarchy, label suppression on small
+          nodes, root at top
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Width encodes value; rows encode depth; folder totals correctly summed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed since labels are inline
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 4 hierarchy levels, leaf row-span stretching demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral file-system tree
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5-140 KB range demonstrates both thin and wide tiles well
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions justified by recursive tree layout
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie + Colors, both used substantively
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png per convention
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/poly!/text!/hidedecorations! usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: LCHab lightness ramp via Colors.jl interop
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - publication-ready
