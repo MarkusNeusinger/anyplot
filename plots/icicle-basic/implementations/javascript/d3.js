@@ -10,32 +10,34 @@ const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
 // --- Data: a small project file tree (name/parent/value), in-memory --------
+// value = approximate file size in KB, so leaf magnitudes read as a plausible
+// real-world size distribution rather than abstract units.
 const data = [
   { name: "project", parent: null, value: null },
   { name: "src", parent: "project", value: null },
   { name: "components", parent: "src", value: null },
-  { name: "Button.js", parent: "components", value: 4 },
-  { name: "Header.js", parent: "components", value: 3 },
-  { name: "Footer.js", parent: "components", value: 2 },
+  { name: "Button.js", parent: "components", value: 23 },
+  { name: "Header.js", parent: "components", value: 17 },
+  { name: "Footer.js", parent: "components", value: 11 },
   { name: "utils", parent: "src", value: null },
-  { name: "format.js", parent: "utils", value: 2 },
-  { name: "validate.js", parent: "utils", value: 3 },
-  { name: "index.js", parent: "src", value: 1 },
+  { name: "format.js", parent: "utils", value: 12 },
+  { name: "validate.js", parent: "utils", value: 19 },
+  { name: "index.js", parent: "src", value: 6 },
   { name: "docs", parent: "project", value: null },
-  { name: "README.md", parent: "docs", value: 5 },
-  { name: "CHANGELOG.md", parent: "docs", value: 2 },
+  { name: "README.md", parent: "docs", value: 28 },
+  { name: "CHANGELOG.md", parent: "docs", value: 9 },
   { name: "tests", parent: "project", value: null },
   { name: "unit", parent: "tests", value: null },
-  { name: "button.test.js", parent: "unit", value: 3 },
-  { name: "utils.test.js", parent: "unit", value: 2 },
+  { name: "button.test.js", parent: "unit", value: 15 },
+  { name: "utils.test.js", parent: "unit", value: 10 },
   { name: "integration", parent: "tests", value: null },
-  { name: "api.test.js", parent: "integration", value: 4 },
+  { name: "api.test.js", parent: "integration", value: 21 },
   { name: "assets", parent: "project", value: null },
-  { name: "logo.svg", parent: "assets", value: 6 },
-  { name: "styles.css", parent: "assets", value: 3 },
+  { name: "logo.svg", parent: "assets", value: 34 },
+  { name: "styles.css", parent: "assets", value: 16 },
   { name: "fonts", parent: "assets", value: null },
-  { name: "Inter.woff2", parent: "fonts", value: 8 },
-  { name: "Mono.woff2", parent: "fonts", value: 5 },
+  { name: "Inter.woff2", parent: "fonts", value: 41 },
+  { name: "Mono.woff2", parent: "fonts", value: 26 },
 ];
 
 // --- Hierarchy + icicle layout ----------------------------------------------
@@ -64,7 +66,13 @@ const categoryOf = (node) => {
   return ancestor.data.name;
 };
 
-const fillOf = (node) => (node.depth === 0 ? t.ink : categoryScale(categoryOf(node)));
+// Root uses a muted neutral (not raw t.ink) so it doesn't flip between a
+// stark black block (light) and a stark white block (dark) like the rest
+// of the chrome — a softer, less dominant theme transition.
+const fillOf = (node) => (node.depth === 0 ? t.inkSoft : categoryScale(categoryOf(node)));
+
+// Largest top-level branch (root.children is pre-sorted descending by value).
+const largestCategory = root.children[0];
 
 // --- Label contrast: pick dark/light ink from the cell's own fill luminance
 const LABEL_DARK = "#1A1A17";
@@ -80,7 +88,7 @@ const relLuminance = (hex) => {
 const labelColorOf = (node) => (relLuminance(fillOf(node)) > 0.42 ? LABEL_DARK : LABEL_LIGHT);
 
 const truncate = (name, cellWidth) => {
-  const maxChars = Math.floor((cellWidth - 16) / 7.5);
+  const maxChars = Math.floor((cellWidth - 12) / 6.4);
   return name.length > maxChars ? `${name.slice(0, Math.max(0, maxChars - 1))}…` : name;
 };
 
@@ -99,6 +107,17 @@ g.selectAll("rect")
   .attr("fill", (d) => fillOf(d))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
+
+// --- Highlight ring: draw the eye to the single largest top-level branch ------
+g.append("rect")
+  .attr("x", largestCategory.x0 - 3)
+  .attr("y", largestCategory.y0 - 3)
+  .attr("width", largestCategory.x1 - largestCategory.x0 + 6)
+  .attr("height", ih - largestCategory.y0 + 6)
+  .attr("rx", 4)
+  .attr("fill", "none")
+  .attr("stroke", categoryScale(largestCategory.data.name))
+  .attr("stroke-width", 2.5);
 
 // --- Labels: only where a cell has room ---------------------------------------
 g.selectAll("text")
