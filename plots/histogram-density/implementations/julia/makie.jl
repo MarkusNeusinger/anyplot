@@ -84,7 +84,7 @@ hist!(
     label         = "Observed boxes",
 )
 
-band!(ax, x_fit, zeros(length(x_fit)), pdf_fit; color = (IMPRINT_PALETTE[2], 0.12))
+band!(ax, x_fit, zeros(length(x_fit)), pdf_fit; color = (IMPRINT_PALETTE[2], 0.18))
 lines!(ax, x_fit, pdf_fit; color = IMPRINT_PALETTE[2], linewidth = 3, label = "Normal fit")
 
 density!(
@@ -92,19 +92,20 @@ density!(
     npoints     = 200,
     color       = :transparent,
     strokecolor = IMPRINT_PALETTE[3],
-    strokewidth = 2.5,
+    strokewidth = 4,
+    linestyle   = :dash,
     label       = "Smoothed density (KDE)",
 )
 
-vlines!(ax, [nominal_fill]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5, label = "Nominal fill (500 g)")
+vlines!(ax, [nominal_fill]; color = INK, linestyle = :dash, linewidth = 2.5, label = "Nominal fill (500 g)")
 
 lines!(
     ax, [outlier_mid, outlier_mid], [outlier_density, outlier_label_y];
-    color = INK_SOFT, linewidth = 1, linestyle = :dot,
+    color = INK, linewidth = 1.5, linestyle = :dot,
 )
 text!(
     ax, outlier_mid, outlier_label_y;
-    text = "Out-of-spec box", align = (:center, :bottom), color = INK_SOFT, fontsize = 11,
+    text = "Out-of-spec box", align = (:center, :bottom), color = INK, fontsize = 13, font = :bold,
 )
 
 axislegend(
