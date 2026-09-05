@@ -46,7 +46,7 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleLinear().domain([0, 24]).range([0, iw]);
 const y = d3
   .scaleLinear()
-  .domain([0, d3.max(staffing, (d) => d.agents) + 2])
+  .domain([0, d3.max(staffing, (d) => d.agents)])
   .nice()
   .range([ih, 0]);
 
@@ -93,10 +93,21 @@ g.selectAll("circle")
   .join("circle")
   .attr("cx", (d) => x(d.hour))
   .attr("cy", (d) => y(d.agents))
-  .attr("r", 7)
+  .attr("r", 8)
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
+
+// --- Peak callout (highlights the single highest staffing vertex) ---------
+const peak = changePoints.reduce((a, b) => (b.agents > a.agents ? b : a));
+g.append("text")
+  .attr("x", x(peak.hour) + 14)
+  .attr("y", y(peak.agents) - 10)
+  .attr("text-anchor", "start")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Peak: ${peak.agents} agents`);
 
 // --- Axes -------------------------------------------------------------------
 const xAxis = g
@@ -143,6 +154,6 @@ svg
   .attr("y", 48)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
-  .style("font-weight", "600")
+  .style("font-size", "26px")
+  .style("font-weight", "700")
   .text("line-stepwise · javascript · d3 · anyplot.ai");
