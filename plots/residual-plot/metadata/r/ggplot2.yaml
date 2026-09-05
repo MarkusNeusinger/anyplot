@@ -1,0 +1,233 @@
+library: ggplot2
+language: r
+specification_id: residual-plot
+created: '2026-09-05T12:31:40Z'
+updated: '2026-09-05T12:43:28Z'
+generated_by: claude-sonnet
+workflow_run: 33966097006
+issue: 2332
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'All three weaknesses from attempt 1 were fixed precisely: gridlines now use a
+    low-alpha RULE token instead of full-opacity INK, the title is bold, and outliers
+    are now redundantly encoded with both color and shape (scale_shape_manual).'
+  - Implements every optional feature from the spec notes (LOESS smoothing, ±2σ outlier
+    bands, outlier highlighting, alpha transparency) on top of the mandatory zero-reference
+    line.
+  - Realistic, well-chosen synthetic data (quadratic + heteroscedastic noise) that
+    visibly demonstrates both non-linearity and heteroscedasticity through the LOESS
+    curve and residual spread.
+  weaknesses:
+  - Data storytelling composition is unchanged from attempt 1 — still relies solely
+    on the LOESS curve and banding for hierarchy; a stronger focal treatment could
+    push DE-03 further.
+  - Library Mastery remains a fairly standard geom_point + geom_smooth + geom_hline
+    composition; no ggplot2-distinctive technique was added to differentiate it further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Bold title "residual-plot · r · ggplot2 · anyplot.ai" (dark, top-left), horizontal legend ("Normal" green circle, "Outlier (>2σ)" red triangle), axis titles "Fitted Sale Price ($)" / "Residual ($)", dollar-formatted tick labels ($200k...$600k, $100k...-$100k) — all dark/soft-dark and clearly readable. Major gridlines now render as a faint low-opacity rule color — subtle, no longer competing with the data (fixed from attempt 1).
+      Data: Green (#009E73) "Normal" points, red (#AE3030) triangular "Outlier" points beyond the dashed ±2σ bands (concentrated at higher fitted values, showing heteroscedasticity), blue (#4467A3) LOESS curve showing a parabolic dip (non-linearity), bold black zero-reference line.
+      Legibility verdict: PASS (all text readable; no legibility failures)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Same title/legend/axis titles/tick labels, all flipped to light/soft-light text — fully readable, no dark-on-dark failures on title, axis labels, ticks, or legend. Gridlines equally subtle in this theme.
+      Data: Colors identical to light render — green normal points, red outlier triangles, blue LOESS line — confirmed unchanged across themes. Zero-reference line correctly flips to light color against the dark background.
+      Legibility verdict: PASS (no dark-on-dark issues found)
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title now bold, strengthening hierarchy
+          (fixed from attempt 1)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Point size 2.5 / alpha 0.75 and LOESS linewidth 1.0 well-matched
+          to ~220-point density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green outlier encoding is a sanctioned semantic exception, now
+          redundantly encoded with shape (circle vs triangle) as well as position
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 landscape); proportions correct, nothing
+          clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme-adaptive backgrounds, identical
+          data colors across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette and clear hierarchy; gridlines now subtle and title
+          bold, resolving attempt-1 polish issues
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, generous whitespace, gridlines now genuinely subtle
+          (low-alpha RULE token fix)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: LOESS curve + ±2σ bands + outlier coloring create a clear diagnostic
+          narrative; composition unchanged from attempt 1
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct residual-vs-fitted scatter with zero-reference line
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Covers every spec note including optional LOESS, bands, outlier coloring
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct axes, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All optional spec features implemented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral house-price regression scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible sqft/price ranges; outlier rate matches ±2σ theory
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct filenames
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic dplyr/ggplot pipeline, geom_smooth loess, scale_color_manual
+          + scale_shape_manual, scales::dollar_format
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Solid but fairly standard geom composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
