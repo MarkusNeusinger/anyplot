@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: dot-matrix-proportional
 created: '2026-09-05T00:22:34Z'
-updated: '2026-09-05T00:47:29Z'
+updated: '2026-09-05T00:55:44Z'
 generated_by: claude-sonnet
 workflow_run: 33932507427
 issue: 5241
@@ -12,150 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 65
+quality_score: 93
 review:
   strengths:
-  - Legend labels bake in both count and percentage per category ("Satisfied — 168
-    (56.0%)"), directly satisfying the spec's optional annotation suggestion without
-    cluttering the grid itself
-  - 'First categorical series is the mandated brand green #009E73; chrome (background,
-    title, subtitle, legend text) flips correctly between #FAF8F1/#1A1A17 light and
-    #1A1A17/#F0EFE8-ink dark'
-  - hidedecorations!/hidespines! plus a frameless Legend produce a clean, minimal
-    composition appropriate for a dot-matrix chart, with a descriptive subtitle standing
-    in for axis labels that would be meaningless on a grid-index plot
-  - 'Source-level fixes from the Review 1 feedback are present in the current makie.jl:
-    n_cols changed from 17 to 15 (a clean divisor of total=300, eliminating the ragged
-    last row), CATEGORY_COLOR now maps Satisfied/Neutral/Dissatisfied to green/muted-gray/matte-red
-    per the style guide''s sentiment-polarity semantic exception, and titlesize increased
-    from 26 to 30'
+  - Grid is a clean 15x20 rectangle (300 = 15x20 exactly) - every row fully populated,
+    no ragged final row
+  - 'Sentiment-polarity semantic color mapping correctly applied: #009E73 (Satisfied/good),
+    #AE3030 matte red (Dissatisfied/bad), theme-adaptive muted grey (Neutral) - matches
+    the style guide''s semantic-anchor exception, with category labels literally justifying
+    the departure from canonical order'
+  - Legend labels bake in both count and percentage per category ("Satisfied - 168
+    (56.0%)")
+  - 'Pixel-verified: this render finally matches the current source exactly, resolving
+    the Attempt 2 stale-render pipeline issue - green/red anchors are pixel-identical
+    across light/dark, muted-grey correctly flips per its adaptive definition'
+  - Title now occupies ~58% of canvas width (within the 50-70% guideline), up from
+    ~47% previously
   - 'Idiomatic Makie layout: Legend placed as a first-class fig[1,2] GridLayout element
-    with colsize! tuning, rather than an overlaid legend box'
+    with colsize! tuning'
   weaknesses:
-  - 'CRITICAL — the reviewed plot-light.png/plot-dark.png do not match the current
-    source and appear to be stale artifacts carried over from the pre-fix (Attempt
-    1) implementation. Verified by direct pixel inspection: the rendered grid has
-    exactly 17 dots per row (matches the OLD `n_cols = 17` from before commit caf7a1aec),
-    not the 15 columns the CURRENT file specifies. The ''Neutral'' dots render as
-    (196,117,253) = #C475FD and ''Dissatisfied'' dots render as (68,103,163) = #4467A3
-    — an exact pixel match to `IMPRINT_PALETTE[2]`/`IMPRINT_PALETTE[3]` (the OLD canonical-order
-    color assignment `color = IMPRINT_PALETTE[i]`), not the CURRENT file''s `CATEGORY_COLOR`
-    semantic map (`Neutral => #6B6A63` muted gray, `Dissatisfied => #AE3030` matte
-    red). This means the fix commit''s changes cannot be visually verified from the
-    supplied renders — the pipeline needs to regenerate plot-light.png/plot-dark.png
-    from the current makie.jl before this implementation can be fairly scored.'
-  - 'As a result of the above, the following are assessed against the STALE image
-    only, not the current source: grid still shows a ragged/incomplete last row (11
-    of 17 dots) — this specific issue appears to already be fixed in source via n_cols=15
-    (300/15=20 exactly) but is unconfirmed.'
-  - Similarly the non-semantic canonical-order coloring (lavender for Neutral, blue
-    for Dissatisfied instead of the sentiment-appropriate muted-gray/matte-red) is
-    visible only in the stale render — the current source's CATEGORY_COLOR dict already
-    encodes the semantic mapping but its visual effect is unverified.
-  - Title in the stale render spans only ~47% of the plot width at titlesize=26; current
-    source raised titlesize to 30 which should improve this, but the effect cannot
-    be confirmed without a fresh render.
+  - The dot-grid rendering is a fairly generic masked-scatter loop (for cat in categories;
+    mask = ...; scatter!(...)) - a more Makie-distinctive approach (e.g. a custom
+    recipe, or per-cell rectangle marks) would raise LM-02 further, though the current
+    approach is fully correct and readable
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Background: Warm off-white, pixel-verified (250,248,241), consistent with #FAF8F1, not pure white.
       Chrome: Bold dark title "dot-matrix-proportional · julia · makie · anyplot.ai" and a smaller grey subtitle "300 survey respondents, one dot per person" sit centered above the grid, both clearly readable against the light background. The "Response" legend to the right uses dark title text and dark label text on the same off-white background, fully legible.
-      Data: A 17-column dot grid of 300 uniform circular markers (verified by pixel scan: 17 non-background runs per row), filled top-to-bottom/left-to-right — first 168 dots brand green (RGB 0,158,115 = #009E73, "Satisfied"), next 72 lavender-purple (RGB 196,117,253 = #C475FD, "Neutral"), last 60 blue (RGB 68,103,163 = #4467A3, "Dissatisfied"). The last row is a partial row of 11 blue dots.
-      Legibility verdict: PASS — no light-on-light text, all title/subtitle/legend text has strong contrast against the cream background.
-      IMPORTANT DISCREPANCY: the current makie.jl specifies n_cols=15 (a clean divisor of total=300, so no ragged row) and CATEGORY_COLOR = {"Satisfied"=>#009E73, "Neutral"=>MUTED (#6B6A63 on light theme), "Dissatisfied"=>#AE3030}. The rendered PNG instead shows 17 columns and the OLD canonical `IMPRINT_PALETTE[2]`/`[3]` colors (lavender/blue) verbatim — an exact pixel match to the pre-fix implementation, not the semantic mapping in the current file. This PNG was not regenerated from the current source.
+      Data: 15-column x 20-row dot grid of 300 uniform circular markers (pixel-verified: every row has exactly 15 dots, no ragged row), filled top-to-bottom/left-to-right. First 168 dots brand green (RGB 0,158,115 = #009E73, "Satisfied"), next 72 medium grey (RGB 107,106,99 = #6B6A63, "Neutral"), last 60 matte red (RGB 174,48,48 = #AE3030, "Dissatisfied"). Legend confirms counts/percentages: Satisfied 168 (56.0%), Neutral 72 (24.0%), Dissatisfied 60 (20.0%).
+      Legibility verdict: PASS - no light-on-light text, all title/subtitle/legend text has strong contrast against the cream background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: The same title and subtitle render in light ink (white/off-white for title, light grey for subtitle) against the dark background — fully readable, no dark-on-dark issue. Legend title and labels are likewise light-colored and legible.
-      Data: Identical dot layout and colors to the light render — same 17-column green/lavender/blue sequence at the same counts, confirming data colors are held constant across themes; only the chrome (background, text) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all chrome text is clearly visible against the near-black surface, and the brand green remains vivid on both surfaces.
-      Same discrepancy as the light render applies here: this PNG does not reflect the current source's n_cols=15 / CATEGORY_COLOR semantic mapping.
+      Background: Warm near-black, pixel-verified (26,26,23), consistent with #1A1A17, not pure black.
+      Chrome: The same title and subtitle render in light ink against the dark background - fully readable, no dark-on-dark issue. Legend title and labels are likewise light-colored and legible.
+      Data: Identical grid layout (15x20, no ragged row) to the light render. Green stays exactly RGB(0,158,115)=#009E73 and red stays exactly RGB(174,48,48)=#AE3030 (fixed semantic anchors, identical across themes). "Neutral" grey correctly uses the theme-adaptive muted token: RGB(168,167,159)=#A8A79F on dark vs. #6B6A63 on light - this is the sanctioned adaptive behavior for the style guide's "muted" semantic anchor.
+      Legibility verdict: PASS - no dark-on-dark failures observed; all chrome text is clearly visible against the near-black surface, brand green and matte red remain vivid on both surfaces.
+
+    Pipeline note: this render matches the current source exactly (n_cols=15, CATEGORY_COLOR semantic mapping, titlesize=30), resolving the Attempt 2 stale-render issue where the reviewed PNGs pixel-matched the old pre-fix 17-column canonical-order implementation.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit; readable in both themes. In the (stale)
-          render, title occupies only ~47% of plot width — the current source raised
-          titlesize 26->30 which should help, unverified.
+        comment: All font sizes explicit; title now spans ~58% of canvas width (up
+          from ~47%), within 50-70% guideline; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, subtitle, grid, and legend.
+        comment: No overlap between title, subtitle, grid, and legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: markersize=30 for 300 dots on a 2400x2400 canvas is clearly visible,
-          well-spaced, no touching/overlap.
+        comment: markersize=30 for 300 dots on a 2400x2400 canvas, clearly visible
+          and well-spaced
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three well-separated hues, CVD-safe, no red-green sole signal.
+        comment: Three well-separated hues, category also encoded by grid position
+          + legend text, not color-alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid + legend + title occupy the large majority of the canvas with
-          balanced margins; legend sits directly beside the grid, not isolated.
+        comment: Clean rectangle, generous margins, nothing clipped (content bbox
+          45-2288y / 195-2322x on 2400x2400 canvas)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No literal x/y axis (grid-index chart, decorations correctly hidden);
-          descriptive title + subtitle substitute adequately.
+        comment: No literal axes on this grid-index chart; title+subtitle substitute
+          adequately
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; theme-correct chrome in both renders; data
-          colors identical across themes. NOTE: this scores the STALE render''s canonical-order
-          coloring, not the current source''s semantic CATEGORY_COLOR mapping, which
-          is unverified.'
+        comment: 'First series is #009E73; sentiment-polarity semantic exception correctly
+          applied with muted anchor theme-adaptive and fixed anchors identical across
+          themes'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful legend (count+percentage) and clean minimalist composition,
-          clearly above default. The current source's semantic sentiment-color mapping
-          (green/muted/red) would likely raise this further, but that change is not
-          reflected in the reviewed render.
+        passed: true
+        comment: Sentiment-aware color mapping plus count+percentage legend annotations
+          show real design intent beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: All decorations/spines removed, frameless legend, generous whitespace,
-          but the stale render's ragged last grid row keeps it from 'every detail
-          polished'. Current source's n_cols=15 fixes this on paper (300/15=20 exact),
-          unverified visually.
+        passed: true
+        comment: Decorations/spines removed, frameless legend, generous whitespace,
+          clean 15x20 rectangle with no ragged edge
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Majority-first ordering plus inline percentages create some hierarchy;
-          the current source's semantic red/muted mapping for Dissatisfied/Neutral
-          would sharpen this further once actually rendered.
+        passed: true
+        comment: Majority-first ordering, semantic red/green/grey coding, and inline
+          percentages create a clear, quickly-readable narrative
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -163,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dot-matrix/proportional-count grid chart.
+        comment: Correct dot-matrix/proportional-count grid chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: In the reviewed (stale) render, 17 columns is not a clean divisor
-          of total=300, leaving an incomplete final row (11/17). Current source uses
-          n_cols=15 (a clean divisor), which should resolve this once actually re-rendered.
+        passed: true
+        comment: Grid is now 15x20=300, a clean rectangle matching the total exactly,
+          with no incomplete row
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: All 300 dots placed, correctly grouped and colored left-to-right/top-to-bottom
-          by category.
+          by category
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; legend labels match category
-          names with counts and percentages.
+        comment: Title exactly matches mandated format; legend labels match category
+          names with counts and percentages
     data_quality:
       score: 15
       max: 15
@@ -196,20 +169,20 @@ review:
         max: 6
         passed: true
         comment: Shows a majority group, a mid-size group, and a smaller group with
-          percentages.
+          percentages
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic customer-satisfaction survey scenario.
+        comment: Neutral, realistic customer-satisfaction survey scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: Counts (168/72/60) sum exactly to 300 and percentages (56/24/20)
-          sum to 100%.
+          sum to 100%
     code_quality:
       score: 10
       max: 10
@@ -219,32 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> theme tokens -> data -> plot -> save, no functions/classes.
+        comment: Linear imports -> theme tokens -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set; data is otherwise fully deterministic.
+        comment: Random.seed!(42) set; data is otherwise fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or over-engineering.
+        comment: Appropriately simple, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches the required
-          naming/API.
+          naming/API
     library_mastery:
       score: 7
       max: 10
@@ -254,17 +227,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Figure/Axis/scatter!/Legend/GridLayout, hidedecorations!/hidespines!
-          are all idiomatic high-level Makie API.
+        comment: Figure/Axis/scatter!/Legend/GridLayout, hidedecorations!/hidespines!,
+          DataAspect() are all idiomatic high-level Makie API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Legend placed as a first-class fig[1,2] GridLayout cell with colsize!
-          tuning is a Makie-distinctive layout pattern; the dot-grid rendering itself
-          is a fairly generic masked scatter loop.
-  verdict: REJECTED
+        comment: Legend as a first-class fig[1,2] GridLayout cell with colsize! tuning
+          is Makie-distinctive; the dot-grid rendering itself is a fairly generic
+          masked-scatter loop
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
