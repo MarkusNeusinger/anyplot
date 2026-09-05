@@ -3,10 +3,6 @@
 // Library: echarts 6.1.0 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-// anyplot.ai
-// maze-printable: Printable Maze Puzzle
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
@@ -72,7 +68,7 @@ const cellTop = (r) => originY + r * cellSize;
 
 // --- Walls as individual line segments (N + W per cell, plus the two -------
 // --- outer edges so the boundary is never drawn twice) ----------------------
-const wallWidth = Math.max(3, cellSize * 0.09);
+const wallWidth = Math.max(3, cellSize * 0.12);
 const wallSegments = [];
 for (let r = 0; r < rows; r += 1) {
   for (let c = 0; c < cols; c += 1) {
@@ -95,11 +91,45 @@ const wallElements = wallSegments.map(([x1, y1, x2, y2]) => ({
   silent: true,
 }));
 
+// --- Heavier outer border frames the puzzle and separates it from the -------
+// --- page, reinforcing the print-ready boundary beyond the interior walls --
+const outerBorder = {
+  type: "rect",
+  shape: { x: originX, y: originY, width: gridWidth, height: gridHeight },
+  style: { stroke: t.ink, lineWidth: wallWidth * 2, fill: "transparent" },
+  silent: true,
+};
+
 // --- Start / goal markers (traffic-light convention: green = go, red = stop)
 const markerRadius = cellSize * 0.36;
 const markerFont = Math.max(14, cellSize * 0.55);
 const startCenter = { cx: cellLeft(0) + cellSize / 2, cy: cellTop(0) + cellSize / 2 };
 const goalCenter = { cx: cellLeft(cols - 1) + cellSize / 2, cy: cellTop(rows - 1) + cellSize / 2 };
+
+// Soft radial halos (echarts.graphic.RadialGradient) behind each marker —
+// an ECharts-distinctive touch that draws the eye from start to goal.
+const hexToRgba = (hex, alpha) => {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const makeHalo = (cx, cy, color) => ({
+  type: "circle",
+  shape: { cx, cy, r: markerRadius * 1.9 },
+  style: {
+    fill: new echarts.graphic.RadialGradient(0.5, 0.5, 0.5, [
+      { offset: 0, color: hexToRgba(color, 0.32) },
+      { offset: 1, color: hexToRgba(color, 0) },
+    ]),
+  },
+  silent: true,
+});
+
+const startHalo = makeHalo(startCenter.cx, startCenter.cy, t.palette[0]);
+const goalHalo = makeHalo(goalCenter.cx, goalCenter.cy, "#AE3030");
 
 const startMarker = {
   type: "circle",
@@ -136,7 +166,7 @@ const caption = {
   style: {
     text: `${cols} × ${rows} cells · one guaranteed solution path`,
     fill: t.inkSoft,
-    fontSize: 16,
+    fontSize: 18,
   },
 };
 
@@ -154,6 +184,6 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
   },
   graphic: {
-    elements: [caption, ...wallElements, startMarker, goalMarker],
+    elements: [caption, startHalo, goalHalo, ...wallElements, outerBorder, startMarker, goalMarker],
   },
 });
