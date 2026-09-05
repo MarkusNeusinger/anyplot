@@ -1,7 +1,7 @@
 // anyplot.ai
 // precision-recall: Precision-Recall Curve
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-05
+// Quality: 94/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 const muted = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";

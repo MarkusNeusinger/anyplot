@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: precision-recall
 created: '2026-09-05T12:19:48Z'
-updated: '2026-09-05T12:23:55Z'
+updated: '2026-09-05T12:31:00Z'
 generated_by: claude-sonnet
 workflow_run: 33965305750
 issue: 2274
@@ -12,129 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
+  - 'Fully resolves all three weaknesses from the prior review: Y-axis dead space,
+    undersized iso-F1 labels, and missing operating-point callout'
   - Correctly reimplements sklearn's threshold-sweep PR-curve algorithm (sorted scores,
-    cumulative TP/FP) rather than faking the shape
-  - Average Precision score computed and surfaced directly in the legend as required
-    by the spec
-  - Baseline reference line at the positive-class prevalence (0.12) is present as
-    a theme-adaptive dashed line
-  - 'Stepped area/line rendering (step: ''left'') accurately represents the threshold-based
-    nature of the curve'
-  - Iso-F1 reference curves (F1 = 0.3/0.5/0.7/0.9) implemented as a bonus per the
-    spec's 'consider' note, with clean end-of-line labeling instead of a cluttered
-    legend
-  - First categorical series is the mandated brand green (#009E73); baseline and iso-F1
-    lines use theme tokens (t.ink / muted) so chrome flips correctly between themes
-  - 'Realistic, neutral fraud-detection scenario: 6000 samples, 12% positive rate,
-    Gaussian-separated score distributions'
+    cumulative TP/FP) rather than approximating the shape
+  - Iso-F1 reference curves and a best-F1 callout point are genuine bonus features
+    beyond the spec's baseline ask
   - Deterministic LCG-based data generation, no external RNG or fetch calls
+  - Theme-adaptive chrome throughout with data colors held constant between light/dark
   weaknesses:
-  - 'Y-axis is left to auto-extend to a 1.2 gridline even though yAxis.max is set
-    to 1.02 and precision can never exceed 1.0 — Highcharts'' default endOnTick rounds
-    the axis up, leaving roughly the top sixth of the chart as dead space in both
-    renders. Fix: set yAxis.endOnTick: false (or explicitly pick a max/tickInterval
-    combination that lands exactly on 1.0, e.g. max: 1.0, tickInterval: 0.2 with endOnTick:
-    false) so the plotted area isn''t wasted.'
-  - Iso-F1 curve end labels are set at 11px, notably smaller than every other chrome
-    text element (14-16px) — bump to ~12-13px for visual consistency without adding
-    clutter.
-  - 'Design Excellence is solid but stops short of full marks: no explicit annotation/callout
-    calling out the AP value or a key operating point on the curve itself, which would
-    strengthen the data storytelling beyond what the legend text alone provides.'
+  - 'LM-02 remains generic: the per-point dataLabel/marker technique used for the
+    best-F1 callout could be replicated in most charting libraries with minor syntax
+    changes; a Highcharts-distinctive feature (e.g. xAxis.plotLines/plotBands for
+    the baseline) would push this higher'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), matches spec — not pure white, not dark.
-      Chrome: Dark bold title "precision-recall · javascript · highcharts · anyplot.ai" centered at top, clearly legible. Axis titles "Recall" (x) and "Precision" (y) in medium-gray ink, readable. Tick labels (0, 0.2, 0.4, ... 1.2 on y; 0, 0.2, ... 1 on x) in soft ink, all legible. Only horizontal gridlines are drawn (subtle, light gray), no vertical gridlines — clean. Legend at bottom: "Precision-Recall (AP = 0.53)" and "Baseline (prevalence = 0.12)", both readable in dark-gray text.
-      Data: Main precision-recall curve rendered as a stepped area in brand green (#009E73) with light green fill (~15% opacity), starting near (0, 1) with the characteristic early precision drop, tracing a jagged monotonic-ish decline to (1, ~0.12). A black dashed horizontal baseline sits at precision ≈ 0.12. Four dotted gray iso-F1 reference curves (labeled F1=0.3/0.5/0.7/0.9) arc across the upper-right region, each labeled once at its terminal point. First series correctly uses the brand green.
-      Legibility verdict: PASS. All text is dark-on-light and clearly readable; no overlap between the F1 labels, legend, or curve.
+      Chrome: Dark bold title "precision-recall · javascript · highcharts · anyplot.ai" centered at top, clearly legible. Axis titles "Recall" (x) and "Precision" (y) in medium-gray ink, readable. Y-axis tick labels now run cleanly 0 to 1 (the previous 1.2 dead-space gridline is gone — endOnTick:false + max:1.0 fixed it). Only horizontal gridlines, subtle and light. Legend at bottom: "Precision-Recall (AP = 0.53)" and "Baseline (prevalence = 0.12)", both readable in dark-gray text.
+      Data: Main precision-recall curve rendered as a stepped area in brand green (#009E73) with light green fill, tracing from (0,1) down to (1,~0.12). A black dashed baseline sits at precision ≈ 0.12. Four dotted gray iso-F1 curves (F1=0.3/0.5/0.7/0.9) are labeled at their terminal points at a legible 13px (up from 11px in the prior attempt). A new "Best F1 = 0.53" marker + label calls out the optimal operating point directly on the curve.
+      Legibility verdict: PASS. All text is dark-on-light and clearly readable; no overlap between the F1 labels, the best-F1 callout, legend, or curve.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), matches spec — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels are all rendered in light/near-white text against the dark background, clearly legible — no dark-on-dark failures observed. Gridlines are subtle light gray, visible without dominating. Legend text is light-gray, readable against the dark background.
-      Data: The green curve, green fill, and dashed baseline (now rendered in near-white for contrast) are unchanged in hue/position from the light render — confirms data colors are identical between themes, only chrome (background, text, baseline color, gridlines) flipped. Iso-F1 dotted lines use a lighter muted gray appropriate for the dark surface.
+      Chrome: Title, axis titles, tick labels, and legend are all rendered in light/near-white text against the dark background, clearly legible — no dark-on-dark failures observed. Gridlines and iso-F1 dotted lines use an appropriately muted light gray.
+      Data: The green curve, green fill, dashed baseline (now near-white for contrast), and the "Best F1" marker/label are unchanged in hue/position from the light render — confirms data colors are identical between themes, only chrome flipped.
       Legibility verdict: PASS. No dark-on-dark or light-on-light issues; all chrome elements are clearly legible, and data colors match the light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; iso-F1 labels
-          at 11px are slightly small relative to other chrome text
+        comment: All font sizes explicit; iso-F1 end labels bumped to 13px, now consistent
+          with the rest of the chrome; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, curve, or reference lines in
-          either render
+        comment: No collisions between curve, baseline, iso-F1 labels, legend, or
+          callout in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3px main curve with light area fill reads clearly against dense stepped
+        comment: 3px main curve with fill reads clearly against the dense stepped
           data; 1.5px dotted iso-F1 lines are appropriately de-emphasized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue for data, grayscale for reference lines — high contrast,
+        comment: High-contrast single hue for data, grayscale for reference lines,
           no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Y-axis auto-extends to a 1.2 gridline (endOnTick default) despite
-          precision capping at 1.0 — wastes roughly the top sixth of the chart in
-          both renders
+        passed: true
+        comment: 'Previous 1.2 dead-space gridline is fixed (yAxis.max: 1.0, endOnTick:
+          false); plot fills the canvas cleanly with balanced margins'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Recall / Precision axis titles are descriptive and correctly mapped
+        comment: Recall / Precision descriptive and correctly mapped
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73; backgrounds are theme-correct
-          FAF8F1/1A1A17; data colors identical across themes'
+        comment: 'First series is brand green #009E73; backgrounds theme-correct #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Iso-F1 reference curves are a genuine sophistication beyond the baseline
-          requirement, cleanly labeled without a cluttered legend
+        comment: Iso-F1 reference curves plus the new best-operating-point callout
+          show genuine sophistication beyond the baseline spec ask
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle horizontal-only gridlines and clean axis lines, but the wasted
-          headroom above precision=1.0 undercuts the refined feel
+        comment: Subtle horizontal-only grid, clean axis lines, and the previously
+          wasted headroom is now reclaimed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Green fill creates a clear focal point; baseline and iso-F1 curves
-          add interpretive context without overwhelming the main series
+        comment: Best F1 = 0.53 marker gives the chart a clear focal point in addition
+          to the AP-labeled curve and baseline context
     spec_compliance:
       score: 15
       max: 15
@@ -150,21 +133,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: AP score in legend, baseline reference line, stepped rendering, and
-          iso-F1 curves all present
+        comment: AP score in legend, baseline reference line, stepped rendering, iso-F1
+          curves all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Recall on x, Precision on y, both axes span full [0,1] data range
+        comment: Recall on x, Precision on y, both axes span the full [0,1] data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated 'precision-recall · javascript · highcharts
-          · anyplot.ai' format exactly; legend labels are descriptive
+        comment: Title matches the mandated format exactly; legend labels are descriptive
     data_quality:
       score: 15
       max: 15
@@ -181,15 +163,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible fraud-detection classifier scenario with Gaussian-separated
+        comment: Neutral, plausible fraud-detection scenario with Gaussian-separated
           score distributions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 6000 samples at 12% positive rate is a realistic imbalanced-classification
-          setup, well within the spec's 100-10000 sample range
+        comment: 6000 samples at 12% positive rate is realistic and within the spec's
+          100-10000 sample range
     code_quality:
       score: 10
       max: 10
@@ -199,8 +181,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; the only helper functions (LCG, gaussian) are the minimal
-          necessary substitute for a seeded RNG in the browser
+        comment: No classes; the LCG/gaussian helpers are the minimal necessary substitute
+          for a seeded RNG in the browser
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -218,14 +200,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Real computed PR curve and AP, no simulated/fake elements
+        comment: Real computed PR curve, AP, and best-F1 point; no simulated/fake
+          elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: Highcharts.chart(''container'', …), animation
-          disabled at both chart and series level'
+        comment: 'Correct harness contract: Highcharts.chart(''container'', ...),
+          animation disabled at chart and series level'
     library_mastery:
       score: 7
       max: 10
@@ -236,16 +219,15 @@ review:
         max: 5
         passed: true
         comment: Idiomatic combination of area+step, dashed and dotted line series,
-          and plotOptions for the theme/animation contract
+          plotOptions for the theme/animation contract
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Per-point dataLabels formatter to label only the terminal point of
-          each iso-F1 curve, plus enableMouseTracking:false to keep decorative series
-          out of tooltips/legend — goes beyond generic usage
-  verdict: REJECTED
+        passed: false
+        comment: Per-point dataLabels formatter and enableMouseTracking:false go beyond
+          generic usage but aren't a feature unique to Highcharts
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
