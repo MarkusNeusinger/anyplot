@@ -1,0 +1,255 @@
+library: chartjs
+language: javascript
+specification_id: gain-curve
+created: '2026-09-05T01:58:26Z'
+updated: '2026-09-05T02:11:16Z'
+generated_by: claude-sonnet
+workflow_run: 33937476458
+issue: 2440
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Cumulative-gains semantics are fully correct: the model curve, the perfect-model
+    reference (kinked at the true positive rate, ~13%), and the random-selection diagonal
+    are all present and mathematically consistent with the underlying data'
+  - 'Repair cleanly resolved all three attempt-1 weaknesses: the model curve is now
+    sampled at a finer stride (population/200 instead of /100), a low-alpha brand-green
+    fill under the model curve adds a distinctive ''gain area'' visual, and the two
+    reference datasets now use pointStyle ''line'' so their legend swatches read as
+    lines instead of plain outlined ovals'
+  - 'First categorical series uses brand green #009E73; area fill plus distinct dash
+    patterns (dotted vs. dashed) keep the chart colorblind-safe through color+shape
+    redundancy, not color alone'
+  - 'Both renders keep data colors identical and correctly flip chrome between the
+    #FAF8F1 light and #1A1A17 dark themes with no dark-on-dark or light-on-light legibility
+    failures; canvas is exactly 3200x1800 landscape with nothing clipped or overflowing'
+  - Deterministic fixed-seed LCG data generation, a realistic marketing-response scenario,
+    and a clean single-file KISS structure with no fake interactivity
+  weaknesses:
+  - Legend swatches for 'Perfect model' and 'Random selection' render as solid line
+    segments even though borderDash is set on those datasets — Chart.js's pointStyle:'line'
+    legend renderer does not apply borderDash, so the code comment claiming the swatch
+    'reads as a dashed line, matching the on-chart style' is inaccurate. Purely cosmetic;
+    either fix the comment or accept the library limitation.
+  - The model-curve fill uses fill:'origin' (shaded down to the y=0 baseline) rather
+    than a fill between the model curve and the random-selection diagonal, which would
+    more directly visualize the 'gain over random' story requested in attempt-1 feedback.
+    The current choice (area under the gains curve) is still a valid, tasteful design,
+    just less narratively pointed.
+  - 'Library Mastery remains modest: dash patterns, fill:''origin'', and pointStyle:''line''
+    are tasteful but fairly standard Chart.js config rather than more distinctive
+    per-library techniques (e.g. scriptable options, gradients, custom plugins).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "gain-curve · javascript · chartjs · anyplot.ai" and the italic subtitle "Marketing campaign response model — customers ranked by predicted probability" sit in dark ink at the top; a legend row below reads "Model" (green-outlined oval swatch with light-green fill), "Perfect model" (thin gray line swatch), "Random selection" (thin black line swatch). Axis titles "Population Targeted (%)" and "Positive Cases Captured (%)" and the 0/20/40/60/80/100% tick labels on both axes are dark ink / soft gray. All text is clearly readable against the light background; a single set of horizontal gridlines is subtle, not dominant.
+      Data: The model curve is a thick brand-green (#009E73) line rising steeply from 0% and flattening near 100%, with a light-green low-alpha fill shading the area beneath it down to the x-axis. A gray dotted "Perfect model" reference kinks sharply at ~13% population (the true positive rate) then runs flat to 100%. A black dashed diagonal represents the random-selection baseline. The green fill/line is the first categorical series and matches #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout with chrome flipped to light/white text and light-gray/white dashed reference lines; legend swatches for the two reference lines are now light-gray/white lines on the dark surface. Title, subtitle, legend text, axis titles, and tick labels are all clearly legible against the dark background — no dark-on-dark failures observed anywhere.
+      Data: The model curve and its low-alpha fill remain the identical brand green as in the light render — confirming data colors are unchanged and only chrome (background, text, reference-line ink) flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/subtitle/legend/axis/tick text readable in both themes;
+          explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Finer stride (population/200) removed the prior stair-stepped look;
+          curve reads as smooth and clearly visible against the fill
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color + dash-pattern redundancy for the three series; no red-green
+          as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (%)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match Imprint light/dark tokens
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Low-alpha area fill under the model curve plus dash-differentiated
+          reference lines add polish beyond a plain default line chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, generous whitespace, area fill adds refinement;
+          still fairly close to library defaults otherwise
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three-curve comparison with clear hierarchy via fill/weight/color,
+          though fill is to baseline zero rather than to the random-selection line
+          which would more directly show the 'gain over random' story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative gains chart (line chart, 0-100% both axes)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Model curve, perfect-model reference, and random-baseline diagonal
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = % population targeted (descending by score), Y = % positives
+          captured
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'gain-curve · javascript · chartjs · anyplot.ai'; legend
+          labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows model curve, perfect-model reference, and random baseline together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral marketing-response scenario with ~13% base rate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2000 customers gives a smooth curve; sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; only small deterministic helper functions (LCG rand,
+          hexToRgba)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the global Chart and ANYPLOT_TOKENS
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/tooltips
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract: canvas appended to #container, animation:false,
+          no fixed canvas size set'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-dataset line chart with title/subtitle/legend plugin config
+          follows Chart.js recommended patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: fill:'origin', dash patterns, and pointStyle:'line' custom legend
+          swatches are tasteful additions over attempt 1, but still fairly standard
+          config rather than deeply distinctive Chart.js techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
