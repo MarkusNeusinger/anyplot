@@ -1,0 +1,256 @@
+library: ggplot2
+language: r
+specification_id: heatmap-adjacency
+created: '2026-09-05T03:07:16Z'
+updated: '2026-09-05T03:19:30Z'
+generated_by: claude-sonnet
+workflow_run: 33940775438
+issue: 5240
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Axis titles ('Employee' on both axes) now present, closing the VQ-06 gap flagged
+    in attempt 1
+  - New subtitle ('Color intensity = meetings per month; near-background tiles indicate
+    no regular contact') gives readers an explicit key for interpreting the matrix
+  - Department-boundary divider lines (geom_vline/geom_hline at block edges) visibly
+    reinforce the block-diagonal clustering the spec calls out as the plot's core
+    insight
+  - Undirected graph correctly fills both triangles, diagonal and absent edges render
+    in a distinct near-background tone, and the imprint_seq (green-to-blue) gradient
+    is used correctly for single-polarity edge-weight data
+  - 'Theme-correct chrome in both renders: identical data colors, correctly flipped
+    ink/background tokens, no dark-on-dark or light-on-light failures'
+  - Reproducible (set.seed(42)), idiomatic KISS ggplot2 (geom_tile + coord_fixed +
+    scale_fill_gradient + guide_colorbar), correct title/legend format
+  weaknesses:
+  - With 30 nodes per axis, the rotated tick labels are tight even at full resolution
+    and compress into an unreadable smudge at the ~400px mobile width (verified in
+    plot-light_400.png / plot-dark_400.png) — consider the spec's own suggestion to
+    show only group-boundary labels for large networks, or thin the tick labels to
+    e.g. one per department block plus the boundary lines already present
+  - Library Mastery is solid but conventional for ggplot2 (geom_tile + scale_fill_gradient
+    + coord_fixed) — nothing distinctly showcases a ggplot2-only capability beyond
+    common heatmap idiom
+  - 'Data coverage is good but slightly narrow: within-department vs. cross-department
+    is the only structural contrast shown — an occasional high-degree hub or fully
+    isolated node would make the ''structural patterns'' angle from the spec description
+    even more visible'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "heatmap-adjacency · r · ggplot2 · anyplot.ai" in dark ink, clearly readable, with a legible gray subtitle explaining the color/absence encoding below it. Axis titles "Employee" (x and y) are present and readable. Y-axis node labels (ENG-01..10, MKT-01..10, SLS-01..10) render horizontally and are readable; X-axis node labels rotated 90° are readable at full resolution though tightly packed. Colorbar legend "Meetings per month" on the right has dark, legible title/tick text.
+      Data: 30x30 tile grid. Filled tiles use a green-to-blue sequential gradient (imprint_seq, brand green #009E73 at the low end, blue #4467A3 at the high end). Absent edges (including the diagonal) render as a near-background tone, distinct from the saturated data tiles. Thin gray divider lines at the department boundaries visibly separate the three 10x10 blocks. Three dense diagonal blocks (ENG, MKT, SLS) reveal clear within-department clustering, with sparser, paler cross-department connections elsewhere.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Title, subtitle, "Employee" axis titles, and tick labels all render in light/gray text, clearly legible against the dark surface. Colorbar title/ticks also light and readable. Department-boundary divider lines are visible as subtle light-gray lines. No dark-on-dark failures observed.
+      Data: Identical green-to-blue gradient and tile arrangement as the light render — data colors unchanged between themes, confirming only chrome flipped. Absent-edge tiles use a slightly elevated near-black tone, distinguishable from the pure background and clearly distinct from the saturated green/blue data tiles.
+      Legibility verdict: PASS — all text readable against the dark background; data colors confirmed identical to the light render.
+
+    Mobile check (plot-light_400.png / plot-dark_400.png): title, subtitle, axis titles, and colorbar remain legible at ~400px width, but the 30 rotated per-node tick labels on each axis compress into an unreadable colored smudge — a real (if pre-existing) mobile-legibility weakness, noted above.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Legible at full resolution in both themes; 30 rotated per-node tick
+          labels compress into an unreadable smudge at ~400px mobile width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tile size well matched to the 30x30 (900-cell) density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe sequential gradient, clear contrast between data tiles and
+          absent-edge background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Matrix + legend fill the square canvas well with balanced margins,
+          nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: ''Employee'' axis titles now present on both
+          axes'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq gradient (#009E73 low stop), theme-correct backgrounds
+          in both renders
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New subtitle and department-boundary divider lines add real polish
+          beyond a compliant default gradient heatmap
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid/spines removed, page-bg tile borders, subtle boundary dividers;
+          per-node tick density is the only thing holding back full marks
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Block-diagonal department clustering is immediately visible and explicitly
+          guided by the new subtitle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct adjacency matrix heatmap via geom_tile
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Clustered node order, symmetric fill, distinct absent-edge color,
+          colorbar legend, node-name ticks, and boundary markers all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=target, y=source, diagonal correctly excluded
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend title 'Meetings per month' matches the
+          weight variable
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows dense within-department ties, sparse cross-department ties,
+          and absent edges; lacks an explicit hub/isolated-node contrast
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible coworker-collaboration business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30 nodes within spec's 20-200 range; meeting frequency (1-10/month)
+          is realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for matrix construction and reshaping, no
+          fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png naming via ragg::agg_png, current ggplot2
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic geom_tile heatmap with scale_fill_gradient, guide_colorbar,
+          coord_fixed, discrete scale expand=0
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_fixed, reordered discrete limits, and layered vline/hline boundary
+          markers are decent ggplot2-specific touches, not deeply distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - wide-to-long
+  dataprep: []
+  styling:
+  - custom-colormap
