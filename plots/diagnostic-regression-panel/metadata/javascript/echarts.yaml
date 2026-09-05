@@ -1,0 +1,269 @@
+library: echarts
+language: javascript
+specification_id: diagnostic-regression-panel
+created: '2026-09-05T00:01:50Z'
+updated: '2026-09-05T00:15:17Z'
+generated_by: claude-sonnet
+workflow_run: 33931023848
+issue: 5242
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Repair loop directly addressed the prior VQ-03 finding: the Residuals vs Leverage
+    panel now uses symbolSize 11 / opacity 0.65 (down from 15 / 0.8), visibly reducing
+    marker fusion in the dense low-leverage cluster while the other three panels keep
+    prominent, clearly separated markers appropriate for ~80 points.'
+  - Complete, correct implementation of all four canonical regression diagnostic plots
+    (Residuals vs Fitted with LOWESS + zero line, Normal Q-Q with 45-degree reference,
+    Scale-Location with LOWESS, Residuals vs Leverage with Cook's distance D=0.5/1.0
+    contours).
+  - 'Deliberate, semantic use of the Imprint palette: brand green for all data points,
+    blue (palette[2]) for LOWESS smoothers, amber reserved specifically for the more
+    severe D=1.0 Cook''s-distance threshold vs. muted gray for D=0.5 — a genuine warning-severity
+    distinction rather than an arbitrary color pick.'
+  - 'Consistent labeling of the same 3 most-influential observations (#78, #29, #80)
+    by Cook''s distance across all four subplots, letting a reader track one influential
+    point across every diagnostic view.'
+  - Fully deterministic, seeded synthetic data (custom LCG + Box-Muller Gaussian)
+    with a crafted heteroscedastic, mildly curved regression plus one genuinely influential
+    high-leverage point and one high-leverage-but-not-influential point — a textbook-quality
+    diagnostic story.
+  - Both light and dark renders are fully legible with theme-correct chrome (title,
+    subplot titles, axis names, tick labels, gridlines) and identical data colors
+    between themes.
+  weaknesses:
+  - 'DE-01: Aesthetic polish is solid but still stops short of exceptional — there
+    is no brief caption/annotation on any panel clarifying what it diagnoses (e.g.
+    ''flat LOWESS = linearity OK''), which would help readers unfamiliar with regression
+    diagnostics extract more value from the composite view.'
+  - 'CQ-01: The statistical helper functions (LCG PRNG, Box-Muller Gaussian, Acklam''s
+    qnorm approximation, custom LOWESS, Cook''s-distance contour solver) remain the
+    most code-heavy part of this implementation. This is justified by the absence
+    of a stats library in the browser runtime and was not meaningfully reduced by
+    this repair pass (only reformatted) — acceptable, but still a complexity outlier
+    relative to sibling JS implementations.'
+  - 'Residuals vs Leverage panel: even after the marker-size/opacity fix, the tight
+    low-leverage cluster (leverage < 0.02) still has some marker overlap simply due
+    to data density — inherent to the data rather than a styling defect, but a reader
+    zooming into that region loses individual-point resolution.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Main title "diagnostic-regression-panel · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Four subplot titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage") in medium-weight dark text above each quadrant, fully legible. Axis names (Fitted values, Residuals, Theoretical Quantiles, Standardized Residuals, √|Standardized Residuals|, Leverage) and numeric tick labels render in a softer dark gray, all readable against the light background. Gridlines are thin and subtle.
+      Data: All four panels use the same green (#009E73) circular markers, with the Residuals vs Leverage panel now using a visibly smaller/more transparent marker (symbolSize 11, opacity 0.65) than the other three panels (symbolSize 15, opacity 0.8) — a deliberate fix for the previously-flagged marker-merging issue in that denser panel. Subplots 1 and 3 show a blue LOWESS smoother line with an inline "LOWESS" end-label. Subplot 1 has a dashed muted-gray zero-reference line. Subplot 2 has a dashed muted-gray 45-degree reference line tracking the point cloud closely (near-normal residuals with light tail deviation). Subplot 4 shows two pairs of dashed Cook's-distance contour lines — gray for D=0.5, amber for D=1.0 — bracketing the point cloud, with inline end-labels. The three most influential points are consistently labeled #78, #29, #80 in bold dark text across all four panels.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/axis-label/tick-label structure as the light render, now rendered in light off-white/light-gray tones. Title and subplot titles are clearly bright against the dark background; axis names and tick labels use a softer light-gray that remains legible. Gridlines are faint light lines, subtle but visible.
+      Data: Data colors are identical to the light render — same green markers (#009E73) with the same size/opacity differentiation in the Residuals vs Leverage panel, same blue LOWESS line, same gray/amber Cook's-distance contour dashes, and the same #78/#29/#80 influential-point labels now in light text (correctly flipped from dark ink to light ink for contrast on the dark background). Only the chrome (background, text, grid) flipped; the categorical/semantic data colors themselves are unchanged.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, tick, and annotation text is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All titles, axis names, and tick labels explicitly sized (13-22px)
+          and readable in both themes; title fits comfortably without clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions observed; influential-point
+          labels are cleanly offset from markers and contour end-labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed since attempt 1: Residuals vs Leverage panel now uses symbolSize
+          11 / opacity 0.65, resolving the previously-flagged marker merging; other
+          three panels keep prominent, well-separated markers for ~80 points.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue/amber/muted-gray combination is CVD-safe; no red-green
+          as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 canvas, nothing clipped, well-balanced 2x2 grid
+          with generous inter-panel whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All axes descriptively labeled per standard regression-diagnostic
+          terminology (dimensionless quantities, units not applicable).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; amber/muted anchors used correctly for D=1.0
+          vs D=0.5 severity; theme-correct backgrounds and chrome in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate semantic color choices (amber for the more severe threshold)
+          and inline endLabels instead of a legend show real design thought; no explanatory
+          caption per panel.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped axis lines by construction, subtle gridlines, generous whitespace
+          between quadrants.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Consistent influential-point labeling and labeled Cook's-distance
+          thresholds give the panel a clear analytical narrative across all four views.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 regression diagnostic panel.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero line, LOWESS x2, Q-Q reference line, Cook's D=0.5/1.0 contours,
+          influential-point labels all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All four axis pairs match the spec exactly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; inline endLabels substitute correctly
+          for a legend.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers heteroscedasticity, mild non-linearity, and crafted influential/high-leverage
+          points.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic regression data; generic (no domain
+          framing) but appropriate for a diagnostic-technique demo.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Residual/leverage/Cook's-distance magnitudes are all in sensible
+          ranges for a textbook regression example.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions remain necessary (no stats library in-browser);
+          this repair pass only reformatted them rather than reducing complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic via seeded LCG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only window globals per the mount-node contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity is proportionate to the statistical
+          task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init with no explicit size/devicePixelRatio, animation:false
+          — matches the harness contract; plot-{theme}.png and .html both produced.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multi-grid/multi-axis layout, markLine, endLabel — solid idiomatic
+          multi-panel ECharts usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Inline endLabel-based line labeling instead of a legend, and per-point
+          conditional label overrides, are distinctive ECharts-specific techniques.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
