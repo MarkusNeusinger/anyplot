@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: heatmap-polar
+created: '2026-09-05T03:27:59Z'
+updated: '2026-09-05T03:43:20Z'
+generated_by: claude-sonnet
+workflow_run: 33941630423
+issue: 5244
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Explicit peak-traffic annotation (bold outline on the highest-traffic cell, leader
+    line, and "Peak traffic / Tue 8pm · 890 visits" label) now gives the chart a clear
+    focal point and states its insight instead of relying on color alone
+  - Refined colorbar legend with rounded-cap gradient bar and intermediate tick marks
+    at 25/50/75% gives the legend a more graduated, polished feel
+  - 'Correct polar-heatmap geometry via d3.arc(): hour-of-day wraps continuously as
+    the angular axis, day-of-week forms concentric rings from Mon (innermost) to Sun
+    (outermost)'
+  - Sequential Imprint colormap (brand green → blue) is correctly single-polarity
+    for positive visit counts and identical across both themes
+  - Theme-adaptive chrome is fully correct in both renders — background, text, spokes,
+    and cell-separator strokes all pull from window.ANYPLOT_TOKENS
+  - Angular axis labeled at readable 6-hour intervals with spokes; day labels use
+    a stroke halo for legibility over any cell color
+  - Deterministic reproducibility via a tiny seeded LCG (Math.random() correctly avoided
+    since it isn't seedable in-browser)
+  - 'Clean idiomatic D3: canonical selection.data().join() pattern, no fake interactive
+    elements'
+  weaknesses:
+  - 'CQ-01: three small helper functions (formatHour, lcg, trafficShape) deviate slightly
+    from a strict flat KISS script, though justified by deterministic data generation
+    needs'
+  - 168 densely packed wedges are all individually distinguishable but the chart remains
+    visually busy at a glance — an optional coarser radial value tick could aid quick
+    value estimation beyond the legend
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Bold dark title "heatmap-polar · javascript · d3 · anyplot.ai" centered at top, fully visible. Angular tick labels (12am, 6am, 12pm, 6pm) in soft grey ink around the circle with thin spokes. Day labels (Mon-Sun) in dark ink with a light stroke halo along the upper-right spoke, legible over the varying wedge colors beneath. Bottom colorbar legend has a rounded-cap gradient bar, intermediate tick marks, "25 visits" / "890 visits" min/max labels, and a descriptive caption below — all readable.
+      Data: 168 wedge cells colored on the Imprint sequential scale (brand green #009E73 → blue) show a clear low-traffic majority (green) with two elevated bands (blue) at morning-commute and evening-peak hours. The single highest-traffic cell (Tue 8pm, 890 visits) is outlined in dark ink with a leader line and "Peak traffic" annotation, giving the chart an explicit focal point.
+      Legibility verdict: PASS - all text is readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Title, tick labels, and day labels all flip to light/white ink and remain fully legible. Cell-separator strokes and spokes flip to match the dark page background while remaining visible. Peak annotation leader line and outline flip to light ink, still clearly visible against the dark surface. Legend text and gradient bar remain clearly readable.
+      Data: Wedge colors are identical to the light render (brand green → blue), confirming only chrome (background, text, strokes) changed between themes. Peak cell is the same Tue 8pm wedge as in light mode.
+      Legibility verdict: PASS - no dark-on-dark failures found; all chrome elements are light-colored against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit; day labels use stroke halo for contrast
+          against varying cell colors; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data, including the new peak annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 168 wedges all individually visible via thin page-bg strokes, dense
+          but not crowded
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe sequential scale
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-centered circle, balanced margins, nothing clipped, legend and
+          annotation fully within canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive hour/day ticks plus legend caption
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq, identical data colors across themes, theme-correct
+          chrome and backgrounds
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Peak annotation and refined rounded-cap legend with intermediate
+          ticks lift this clearly above a bare default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend polish (rounded ends, tick marks), consistent stroke treatment
+          across wedges and peak outline
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Explicit peak-traffic callout with leader line and label states the
+          insight directly - viewer immediately sees the story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap, continuous angular wrap, radial rings
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Readable-interval angular labels, colorbar legend, cell borders,
+          cyclic continuity
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Hour to angle, day to radius, all 168 cells shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; legend accurate
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Morning commute, evening peak, and weekend lazy-midday shapes with
+          noise
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic by hour/day, real and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible visit counts and diurnal/weekly shape
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions (lcg, trafficShape, formatHour) reasonable
+          but deviate from a strict flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided d3 global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct #container mount contract, current D3 v7 join API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical d3.arc(), scaleSequential, selection.data().join()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.arc() radial wedge construction with custom angular/radial mapping
+          is genuinely D3-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - edge-highlighting
