@@ -1,0 +1,251 @@
+library: makie
+language: julia
+specification_id: phase-diagram
+created: '2026-09-05T10:47:42Z'
+updated: '2026-09-05T10:53:02Z'
+generated_by: claude-sonnet
+workflow_run: 33961323850
+issue: 3004
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Trajectory is colored by elapsed time with the Imprint sequential colormap (green
+    -> blue), which turns a static spiral into a clear visual story of time direction
+    without any fake interactivity
+  - Physically correct nonlinear damped-pendulum ODE (RK4 integration of theta'' +
+    damping*theta' + (g/L)sin(theta) = 0) with realistic gravity/length/damping constants,
+    not a linearized toy model
+  - Theme-adaptive chrome is threaded through every element (title, axis labels, ticks,
+    spines, grid, legend box, colorbar, and even the star marker color) and is correct
+    in both renders
+  - Correct axis mapping (theta vs dtheta/dt) with descriptive units in both axis
+    labels, matching the spec's phase-diagram definition
+  - 'Title format is exactly right: ''Damped Pendulum · phase-diagram · julia · makie
+    · anyplot.ai'''
+  - Clean L-shaped spines, subtle 15% opacity grid, generous whitespace, elevated-background
+    legend with no frame -- follows the style guide's minimalism rules
+  weaknesses:
+  - using ColorSchemes is imported but never directly referenced (cgrad is re-exported
+    by Makie itself) -- drop the unused import for CQ-03 cleanliness
+  - Only a single trajectory/initial condition is shown; the spec notes that multiple
+    trajectories from different initial conditions can reveal basin-of-attraction
+    structure -- optional, but would raise data/feature richness further
+  - Title occupies roughly a third of the plot width at titlesize=20 -- readable and
+    not clipped, but on the smaller side for a descriptive-prefixed mandated title;
+    a slightly larger titlesize would strengthen the visual hierarchy (DE-01/DE-03)
+  - No explicit annotation marking the trajectory start point (t=0) to anchor the
+    color-gradient story -- the colorbar communicates it but a small label would sharpen
+    the storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "Damped Pendulum · phase-diagram · julia · makie · anyplot.ai" centered at top, clearly readable. Axis labels "Angular Displacement θ (rad)" and "Angular Velocity dθ/dt (rad/s)" in dark ink, tick labels in a softer grey -- all legible. Grid lines are faint horizontal/vertical guides, not competing with data. Only left/bottom spines are drawn (top/right removed). Legend "Equilibrium (stable fixed point)" sits top-right in a light elevated box with no frame border, fully inside the axes and not overlapping the trajectory. Colorbar on the right labeled "Time (s)" with readable tick labels.
+      Data: A single spiral trajectory rendered as a continuous line, colored from green (t=0, brand green #009E73) at the outer loops to blue (~t=12s) at the inner loops, correctly depicting the damped pendulum decaying toward equilibrium. A black 5-point star at the origin marks the stable fixed point.
+      Legibility verdict: PASS -- all text reads clearly against the light background, no dark-on-light or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/off-white and soft light grey respectively -- fully legible against the dark surface. Grid lines are faint light lines. Legend box uses the dark elevated background (#242420-equivalent) with light text, still frameless. Colorbar labels are light-colored and readable.
+      Data: The same spiral trajectory with identical green-to-blue time colormap as the light render -- confirms data colors are held constant across themes. The fixed-point marker flips to white/off-white ink color, correctly theme-adaptive since it's a chrome/reference element, not a categorical data series.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all text and the star marker are clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 20, labels 14, ticks 12); readable
+          in both themes, no clipping or overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend sits clear of the trajectory and colorbar; no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: linewidth=3.5 trajectory and markersize=30 star are well-sized for
+          a single dense line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient has strong luminance/hue separation,
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills most of the canvas with balanced margins; colorbar
+          sits close to the axes, not isolated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels are descriptive and carry units (rad, rad/s)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73 -> #4467A3) used for single-polarity time data;
+          backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Time-gradient coloring on the trajectory is a thoughtful, above-default
+          design choice
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle grid, frameless elevated legend box, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color hierarchy plus the marked fixed point guides the reader toward
+          the convergence story, though no explicit start-point annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct x vs dx/dt phase-diagram / state-space plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Fixed point marked, spiral convergence shown, color gradient used
+          for time evolution as the spec suggests
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = theta (state), Y = dtheta/dt (derivative), full trajectory visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec, legend label matches the plotted
+          marker
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows spiral decay, periodic dx/dt=0 crossings, and the fixed point;
+          omits the optional multi-trajectory basin-of-attraction view
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped pendulum physics, neutral and real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: gravity=9.81, length=1.0m, damping=0.4, initial displacement 2.2
+          rad -- realistic nonlinear-pendulum values solved with RK4
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data (RK4 loop) -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; simulation itself is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: using ColorSchemes is imported but unused -- cgrad comes from Makie
+          directly
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity for an RK4 integrator
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/lines!/scatter!/Colorbar/axislegend usage with layout-slot
+          colorbar placement
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-vertex continuous color mapping on lines! is a clean Makie feature,
+          though replicable in other libraries too
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - custom-colormap

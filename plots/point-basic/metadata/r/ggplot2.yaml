@@ -1,0 +1,248 @@
+library: ggplot2
+language: r
+specification_id: point-basic
+created: '2026-09-05T10:49:23Z'
+updated: '2026-09-05T11:02:41Z'
+generated_by: claude-sonnet
+workflow_run: 33961531004
+issue: 2551
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Fixed the superseded geom_errorbarh() call from the prior review, now using the
+    current geom_errorbar(orientation = "y") API
+  - Added a semantic significance encoding (brand green for CIs excluding zero, muted
+    gray for CIs crossing zero via the anyplot muted anchor), directly addressing
+    the prior review's Design Excellence / Data Storytelling feedback
+  - Softened the x-axis grid to an alpha-tinted color (~15% opacity) per the prior
+    review's refinement note
+  - All three weaknesses from the Attempt 1 review were addressed cleanly with no
+    new issues introduced
+  - 'Correct point-estimate/forest-plot pattern: geom_point + geom_errorbar with visible
+    caps, horizontal orientation, sorted by estimate for natural visual hierarchy'
+  - Dashed zero reference line included per the spec's suggestion
+  - Imprint brand green identical across themes; all chrome (background, text, grid)
+    correctly theme-adaptive with no dark-on-dark/light-on-light failures
+  - Realistic multi-site clinical-trial data with varying sample sizes producing naturally
+    varying CI widths
+  - Explicit font sizing throughout; clean, reproducible, KISS-structured R code
+  weaknesses:
+  - The green/muted-gray color encoding for statistical significance is not explained
+    anywhere on the chart (no legend or caption) — a first-time viewer must infer
+    the meaning by comparing each interval's position to the zero reference line
+  - 'Library Mastery remains generic: scale_color_identity() and geom_errorbar are
+    useful but not deeply distinctive to ggplot2 — a facet, annotate() callout, or
+    other ggplot2-specific feature would raise LM-02 further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "point-basic · r · ggplot2 · anyplot.ai" in dark ink, top-left, clearly legible. Ten "Site NN" category labels run down the y-axis (no y-axis title, which is fine since labels are self-explanatory). X-axis labeled "Standardized Effect Size (95% CI)" with 0.0-0.8 tick labels. Subtle, alpha-tinted vertical grid lines. Dashed reference line at x=0 in soft ink tone.
+      Data: Ten point + capped-error-bar rows sorted by estimate (largest at top). Points/error-bars are colored either brand green (#009E73) when the 95% CI excludes zero, or muted gray when it crosses zero — a clear at-a-glance significance encoding. Error bar widths vary naturally with per-site sample size.
+      Legibility verdict: PASS — all text is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/axis/category text now rendered in light ink (#F0EFE8) / soft light-gray (#B8B7B0) tick text, all clearly legible. No dark-on-dark failures observed. Dashed reference line and grid flip to light, subtle tones matching the theme.
+      Data: The green (#009E73) and muted-gray point/error-bar colors are identical to the light render in hue and position — only the chrome (background, text, grid) flipped, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; legible in both themes and well-proportioned
+          for the short mandated title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions among labels, ticks, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Point size 3.5 and errorbar linewidth 0.8 well-suited to a sparse
+          10-category dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. muted-gray is high-contrast and colorblind-safe; no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills most of the canvas, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis descriptive with CI level noted; y-axis category labels are
+          self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 identical across themes; muted-gray anchor used correctly
+          for non-significant sites; chrome theme-correct in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic significance color encoding plus sorted data goes beyond
+          a flat single-color default
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Spines/ticks removed, y-grid dropped, x-grid softened to an alpha
+          tint per the prior review's feedback, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sorting + zero line + significance coloring creates clear visual
+          hierarchy; docked slightly since the color meaning isn't labeled with a
+          legend or caption
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct point-estimate/forest-plot type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 95% CI error bars with caps, horizontal orientation, zero reference
+          line — all spec notes satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: estimate on x, category on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; no legend needed for a
+          single encoded series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows both significant and non-significant intervals and varying
+          CI widths
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic multi-site clinical-trial scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standardized effect sizes and CI widths are plausible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses the current geom_errorbar(orientation = "y") API, fixing
+          the prior review's flagged geom_errorbarh() usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: scale_color_identity() for precomputed semantic colors is a mild
+          ggplot2-specific touch, but the overall pattern remains a generic forest
+          plot
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
