@@ -1,0 +1,250 @@
+library: highcharts
+language: javascript
+specification_id: phase-diagram
+created: '2026-09-05T10:43:19Z'
+updated: '2026-09-05T10:57:57Z'
+generated_by: claude-sonnet
+workflow_run: 33961214074
+issue: 3004
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Correct phase-diagram construction: x = angular displacement θ, y = dθ/dt, four
+    independent initial conditions integrated deterministically with RK4 (no RNG),
+    fully reproducible'
+  - 'New in this attempt: a time-evolution cue via per-segment alpha fade (faint at
+    t=0, solid near rest) directly addresses the spec''s suggestion to show time direction,
+    without resorting to fake interactivity'
+  - Fixed point at the origin explicitly marked with a distinct black/white diamond
+    marker plus dashed zero-crossing plotLines on both axes, giving the chart a clear
+    visual focal point
+  - 'Imprint palette correctly applied: first series uses #009E73, data colors are
+    pixel-identical between light and dark renders — only chrome flips'
+  - 'Clean theme-adaptive chrome: title/subtitle/axis titles/tick labels/legend all
+    use t.ink/t.inkSoft tokens and remain fully legible on both surfaces; credits
+    disabled, transparent chart background'
+  - animation:false set on both chart and plotOptions.series as required by the JS
+    harness contract; no explicit chart.width/height
+  weaknesses:
+  - All four trajectories decay to the same stable spiral fixed point — good convergence
+    story but doesn't show the fuller range of qualitative behaviors the spec calls
+    out (limit cycles/closed loops, an unstable/saddle region, or a second basin of
+    attraction)
+  - The time-gradient trail is implemented as 10 manually-alpha-blended line series
+    per trajectory rather than a Highcharts-native gradient (e.g. colorAxis/zones),
+    so Library Mastery remains generic
+  - 'Visual refinement is solid but not maximal: the plot frame/grid still reads close
+    to a well-configured default rather than a fully bespoke composition'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "phase-diagram · javascript · highcharts · anyplot.ai" centered at top; softer-gray subtitle below it; x-axis "Angular Displacement θ (rad)" and y-axis "Angular Velocity dθ/dt (rad/s)" both with units, dark tick labels, subtle grid. Legend at bottom lists all four trajectory labels plus "Equilibrium".
+      Data: Four spiral trajectories in distinct Imprint palette colors — teal/green (first series = #009E73), purple, blue, ochre — each starting from a labeled colored dot far from the origin and spiraling inward to a shared black diamond "Equilibrium" marker at (0,0), with a soft gray halo behind it. Each trail is visibly more saturated near the center than at its outer starting loop, a time-evolution cue (faint at t=0, solid near rest).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle now in light/white ink, clearly visible; axis titles and tick labels use a light soft-gray tone; grid lines faint but visible; legend text light-colored and legible at the bottom.
+      Data: Same four trajectory colors as the light render (teal/green first series, purple, blue, ochre) — confirmed pixel-identical data colors, only chrome (background, grid, text) flipped. The equilibrium diamond flips from black to light/white so it stays visible against the dark center of the spiral cluster.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every title, axis label, tick label, and legend entry is clearly legible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 22px, axis titles 16px, ticks/legend
+          14px); all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data/legend collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: lineWidth 2.5 and radius-6/8 markers read clearly; innermost spiral
+          coils are naturally dense (inherent to the dynamics, not a styling flaw)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint categorical palette, CVD-safe, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (rad, rad/s)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, chrome correctly flips FAF8F1/1A1A17, data
+          colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New fading-trail gradient adds real sophistication beyond a bare
+          line+scatter port; short of full publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped axis chrome, subtle grid, generous legend spacing; some
+          refinement visible but not maximal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Diamond equilibrium marker, halo, and new time-gradient trail together
+          create a clear, guided convergence story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct state-space plot: x vs dx/dt trajectories'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple trajectories, marked fixed point, and now a direction/time-gradient
+          cue as suggested by the spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = theta, y = dtheta/dt, correctly mapped and axes show full data
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels describe each
+          initial condition clearly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows spiral convergence and basin structure well, but not the full
+          range of qualitative behaviors (e.g. limit cycle) mentioned in the spec
+          notes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped pendulum with physically plausible omega/zeta, neutral subject
+          matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Radian displacement/velocity ranges are sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; helper functions are all justified by physics/visual
+          requirements
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic RK4 integration, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Straightforward, no fake interactivity or UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false on chart and series, no explicit width/height, correct
+          mount-node contract
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of line+scatter series, plotLines, legend/tooltip config
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Fading trail is a manual multi-series alpha workaround rather than
+          a Highcharts-distinctive mechanism (e.g. colorAxis/zones)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

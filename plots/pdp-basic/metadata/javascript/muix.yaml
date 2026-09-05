@@ -1,0 +1,254 @@
+library: muix
+language: javascript
+specification_id: pdp-basic
+created: '2026-09-05T10:44:13Z'
+updated: '2026-09-05T10:59:34Z'
+generated_by: claude-sonnet
+workflow_run: 33961000764
+issue: 2922
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/muix/plot-dark.html
+quality_score: 97
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses are fixed: 8 ICE (individual conditional expectation)
+    curves now render as faint background lines, the PDP series shows subtle circular
+    markers every 6th grid point, and the legend now leads with the green ''Partial
+    dependence'' swatch before the gray ''confidence interval'' swatch.'
+  - 'Builds the 95% confidence band via a stacked-area workaround (`ci-lower` + `ci-band`
+    with `stack: "ci"`) since MUI X community has no native area-between-two-lines
+    primitive — a genuinely idiomatic solution within the community surface''s constraints.'
+  - 'Correct Imprint semantics: brand green (`t.palette[0]`) for the Partial dependence
+    series and every ICE curve, theme-adaptive `muted` anchor for the confidence band
+    — exactly the anchor''s documented role.'
+  - 'The ICE curves are rendered with low opacity/width (`strokeOpacity: 0.22`, `strokeWidth:
+    1.1`) so they add genuine ''individual model behavior'' context without competing
+    visually with the bold PDP curve.'
+  - The `y=0` `ChartsReferenceLine` labeled 'average prediction' directly implements
+    the spec's centering suggestion, giving readers an explicit interpretive baseline.
+  - 'Both renders are clean at native resolution: no edge clipping on title, y-axis
+    label, or the rightmost x-tick; correct theme backgrounds; fully readable text
+    in both themes.'
+  - Deterministic, realistic synthetic data — a saturating marketing-spend response
+    with seeded LCG noise plausibly mimics sklearn's `PartialDependenceDisplay` output,
+    and every ICE curve is generated with its own midpoint/amplitude variation, avoiding
+    a flat repeated-curve look.
+  weaknesses:
+  - No rug plot along the x-axis showing the training-data value distribution — the
+    spec lists it as an optional addition and it's the one remaining suggestion not
+    implemented (ICE lines and the confidence band, the spec's other optional items,
+    are both now present).
+  - All ICE curves share the same hue as the PDP line (only opacity/width differ)
+    — a very subtle secondary tone could make the PDP-vs-ICE distinction even more
+    immediate, though the current opacity treatment already reads clearly.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "pdp-basic · javascript · muix · anyplot.ai" top-left in dark ink, fully visible and not overflowing. Rotated y-axis label "Partial dependence (Δ units sold/week)" runs along the far left in its own reserved strip, clear of tick numbers. X-axis label "Weekly marketing spend ($1,000s)" sits below tick labels formatted "$4k"..."$66k", none clipped at either edge. Legend now correctly orders "Partial dependence" (green swatch) before "95% confidence interval" (gray swatch). Horizontal gridlines subtle. Dashed muted reference line at y=0 labeled "average prediction".
+      Data: Bold green (#009E73) PDP curve with small circular markers every 6th grid point, gray stacked-area confidence band hugging the curve, and 8 faint low-opacity green ICE curves fanning out in the background showing individual model variability — all clearly distinguishable from the background and from each other.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, tick labels, legend order, and reference-line annotation as the light render, all rendered in light ink against the dark background — no dark-on-dark failures anywhere; every label remains crisp.
+      Data: PDP curve, markers, confidence band, and all 8 ICE curves are visually identical in hue/shape/opacity to the light render, confirming only chrome flips between themes while data colors stay constant.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check (5c) and show no edge clipping (AR-09 not triggered).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes, no size issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: PDP markers now shown every 6th point; ICE curves and CI band both
+          clearly visible without overwhelming the main curve
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/gray combination, no red-green reliance, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, title ~40% width, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, correct theme-adaptive backgrounds in both
+          renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: ICE curves + CI band + reference line create a layered, considered
+          composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace, no boxed frame,
+          low-opacity ICE lines don't clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Zero-reference baseline plus ICE curves plus CI band tell a complete
+          story: average effect, individual variability, and uncertainty together'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PDP line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Confidence band AND ICE lines both present, exceeding the spec's
+          either/or suggestion
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Feature values on x, partial dependence on y, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match and are now ordered by
+          visual importance
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: PDP curve, CI band, ICE curves, and zero-reference line all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible marketing-spend-to-sales saturating response, neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible spend range ($5k-$65k) and prediction deltas
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single Chart component plus a minimal RNG helper, no unnecessary
+          abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart, ChartsReferenceLine, Box, Typography — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for the feature set
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly mounts via default export, skipAnimation set, harness handles
+          output
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine, stacked areas, per-series sx targeting, function-based
+          showMark all idiomatic community-API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked-area CI band trick, multi-series ICE overlay, selective marker
+          function, and per-series style overrides together exploit the community
+          surface thoroughly
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready

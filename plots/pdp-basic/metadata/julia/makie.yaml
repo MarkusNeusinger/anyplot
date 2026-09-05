@@ -1,0 +1,257 @@
+library: makie
+language: julia
+specification_id: pdp-basic
+created: '2026-09-05T10:41:45Z'
+updated: '2026-09-05T10:46:03Z'
+generated_by: claude-sonnet
+workflow_run: 33961136907
+issue: 2922
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'All spec features implemented in one composition: the PDP curve, a shaded confidence-interval
+    band, a dashed zero-reference line for centered interpretation, and a rug plot
+    showing training-data density along the x-axis'
+  - Data is centered at zero per PDP convention and the CI band correctly narrows
+    near the densest training region (~1,800 sqft) and widens toward the sparse extremes,
+    matching how bootstrap variance actually behaves
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) are threaded consistently through title,
+    axis labels, ticks, spines, and grid; both renders are fully readable with identical
+    brand-green data color across themes
+  - 'Clean idiomatic CairoMakie usage: explicit font sizes throughout, top/right spines
+    removed, subtle single-axis grid, and a hand-built rug via linesegments! that
+    adds real analytical value without faking interactivity'
+  - Realistic, neutral housing-price scenario with plausible scale (500-4000 sqft,
+    log-shaped diminishing-returns effect) and full code reproducibility via Random.seed!(42)
+  weaknesses:
+  - Title occupies only ~25% of the plot width — well under the ~50-70% guideline
+    for a shorter custom title; still fully legible, but the title area reads a little
+    small relative to the 3200px canvas. Consider bumping titlesize from 23 toward
+    ~26-28.
+  - The rug plot's tick marks blend together into a dense smear in the 1500-2500 sqft
+    range where training data clusters most heavily, making individual density variation
+    harder to read at that specific range; a slightly lower alpha or thinner linewidth
+    could preserve more granularity there.
+  - 'LM-02 usage is solid but not maximal: band! and linesegments! are used well,
+    but no Makie-distinctive layout feature (e.g. rangebars!, a secondary linked Axis,
+    or Makie''s Legend/Colorbar composition) is showcased beyond what a determined
+    matplotlib port could approximate.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "pdp-basic · julia · makie · anyplot.ai" centered at top, clearly readable. Y-axis label "Partial Dependence on Price ($K)" and x-axis label "Square Footage" in dark ink. Tick labels in a softer gray, legible against the cream background. Subtle horizontal gridlines at 15-20% opacity. Top and right spines removed; left/bottom spines in soft gray.
+      Data: Brand-green (#009E73) line tracing a log-shaped, diminishing-returns curve from about -130 at 500 sqft up to +65 at 4000 sqft. A light-green shaded confidence band surrounds the line, narrowest near ~1800 sqft and widest at the extremes. A dashed gray horizontal reference line marks zero. A rug of thin gray vertical ticks below the plot shows the training data's square-footage distribution, denser in the 1200-2500 sqft range and sparse beyond ~2800 sqft.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or washed-out elements.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title now rendered in light/white text, clearly visible against the dark surface. Axis labels in light ink, tick labels in a lighter warm gray. Gridlines and spines flipped to light-on-dark equivalents at matching low opacity. Spines and grid treatment mirror the light render's structure.
+      Data: Identical brand-green (#009E73) line and light-green confidence band — data colors match the light render exactly, only the surrounding chrome inverted. Dashed zero-reference line now in light gray. Rug ticks remain visible as light-gray marks against the black background, same density pattern as the light render.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, and tick text is clearly legible against the near-black background, and the data curve/band remain fully distinguishable.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes; title
+          is legible but occupies only ~25% of plot width, smaller than the 50-70%
+          guideline for a short custom title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line, band, and rug are all clearly visible; rug density scaled reasonably
+          for ~160 points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green on cream/near-black has strong contrast in both
+          themes, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot area fills a healthy majority of the canvas,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis includes unit ($K); x-axis label 'Square Footage' inherently
+          denotes its unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders, background theme-correct
+          (#FAF8F1 / #1A1A17), all chrome flips correctly'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful layered composition (band + line + zero-reference + rug)
+          clearly above a bare default line plot
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace; rug
+          band slightly dense in the middle keeps this just short of perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Zero-reference line plus centered curve immediately shows where the
+          feature's effect flips from negative to positive; rug ties the curve's confidence
+          to data availability
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PDP line-plus-band
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Feature range, partial dependence, confidence band, rug plot, and
+          zero-centering — every spec note is covered
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=feature_values (sqft), y=partial_dependence, correctly mapped and
+          fully visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'pdp-basic · julia · makie · anyplot.ai' exactly; no
+          legend needed for a single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the curve, uncertainty band, and data-density rug together
+          — full feature coverage of the PDP concept
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible housing-price scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500-4000 sqft range and log-shaped diminishing-returns effect are
+          realistic for a home-price model
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper high-level Axis/band!/lines!/hlines! usage with theme-adaptive
+          keyword styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! for the CI ribbon and a hand-built linesegments! rug are Makie-appropriate
+          but not maximally distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - rug-plot
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready
