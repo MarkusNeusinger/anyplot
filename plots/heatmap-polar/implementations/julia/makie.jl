@@ -39,7 +39,7 @@ weekend_pattern = [
          35 * exp(-(min(abs(h - 20), 24 - abs(h - 20)))^2 / 18)
     for h in hours
 ]
-day_scale = [1.0, 1.02, 1.05, 1.08, 1.15, 0.55, 0.48]
+day_scale = [0.75, 0.90, 1.05, 1.20, 1.35, 0.55, 0.45]
 
 visits = Array{Float64}(undef, length(hours), length(days))
 for (d, scale) in enumerate(day_scale)
@@ -63,6 +63,7 @@ ax = PolarAxis(
     theta_0 = -pi / 2,
     thetaticks = (range(0, 2π, length = 5)[1:4], ["12am", "6am", "12pm", "6pm"]),
     rticks = (0.5:1:(length(days) - 0.5), days),
+    rtickangle = π / 8,
     thetaticklabelsize = 15,
     rticklabelsize = 15,
     thetaticklabelcolor = INK_SOFT,
@@ -79,6 +80,25 @@ hm = heatmap!(
     ax, theta_edges, r_edges, visits,
     colormap = [colorant"#009E73", colorant"#4467A3"],
 )
+
+# heatmap! has no strokewidth/strokecolor for this (irregular-grid) method, so cell
+# borders are drawn as thin overlay lines on top of the data instead: one spoke per
+# hour edge, one ring per day edge.
+spoke_pts = Point2f[]
+for theta in theta_edges[1:end-1]
+    push!(spoke_pts, Point2f(theta, 0), Point2f(theta, length(days)), Point2f(NaN, NaN))
+end
+lines!(ax, spoke_pts, color = (PAGE_BG, 0.4), linewidth = 1)
+
+ring_pts = Point2f[]
+arc_theta = range(0, 2π, length = 145)
+for r in r_edges
+    for theta in arc_theta
+        push!(ring_pts, Point2f(theta, r))
+    end
+    push!(ring_pts, Point2f(NaN, NaN))
+end
+lines!(ax, ring_pts, color = (PAGE_BG, 0.4), linewidth = 1)
 
 Colorbar(
     fig[1, 2], hm;
