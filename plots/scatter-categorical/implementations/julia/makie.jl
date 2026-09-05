@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -80,10 +81,23 @@ ax = Axis(
 
 for i in eachindex(land_uses)
     mask = group_idx .== i
+    fill_color = RGBAf(IMPRINT_PALETTE[i].r, IMPRINT_PALETTE[i].g, IMPRINT_PALETTE[i].b, 0.85)
     scatter!(ax, nitrogen[mask], phosphorus[mask];
-             color = IMPRINT_PALETTE[i], marker = markers[i],
+             color = fill_color, marker = markers[i],
              markersize = 16, strokewidth = 1, strokecolor = PAGE_BG,
              label = land_uses[i])
+end
+
+# Direct group labels above each cluster's core — offset from the centroid so
+# the label sits in the open space above the point cloud, with a soft
+# background-matched glow as a safety net against any stray overlapping point.
+for i in eachindex(land_uses)
+    mask = group_idx .== i
+    label_x = mean(nitrogen[mask])
+    label_y = mean(phosphorus[mask]) + 1.3 * std(phosphorus[mask])
+    text!(ax, label_x, label_y; text = land_uses[i], color = INK,
+          fontsize = 15, font = :bold, align = (:center, :center),
+          glowcolor = PAGE_BG, glowwidth = 4)
 end
 
 axislegend(ax, position = :rb, labelcolor = INK, framevisible = false, labelsize = 13)
