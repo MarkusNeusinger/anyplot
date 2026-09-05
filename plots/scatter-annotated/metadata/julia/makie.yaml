@@ -1,0 +1,246 @@
+library: makie
+language: julia
+specification_id: scatter-annotated
+created: '2026-09-05T13:11:06Z'
+updated: '2026-09-05T14:03:07Z'
+generated_by: claude-sonnet
+workflow_run: 33967931278
+issue: 2790
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Theme-adaptive chrome is correctly wired end-to-end: identical Imprint brand
+    green (#009E73) data color in both renders, only background/text/grid/spine tokens
+    flip between #FAF8F1 and #1A1A17.'
+  - 'Genuinely thoughtful data storytelling: the six highlighted companies are chosen
+    algorithmically as distinct extremes across growth, spend, and trend-residual,
+    giving the annotations real analytical purpose instead of arbitrary picks.'
+  - 'Robust label-collision handling: offset direction is computed from centroid quadrant,
+    axis limits are padded to fit every label anchor, and a same-quadrant/near-neighbor
+    pass pushes overlapping label pairs further apart.'
+  - 'Clear two-tier visual hierarchy: translucent small markers for unlabeled points
+    vs. opaque, larger, dark-ringed markers for the six highlighted/labeled companies.'
+  - Correct canvas (3200x1800), canonical title format, descriptive axis labels with
+    units ('R&D Spend ($M)', 'Revenue Growth (%)').
+  weaknesses:
+  - 'Library Mastery is thin: only baseline primitives (scatter!, lines!, text!) are
+    used — no showcase of a Makie-distinctive feature (e.g. a custom recipe, Legend/Colorbar
+    composition, or layout grid) that would differentiate it from a generic scatter-plus-annotate
+    implementation.'
+  - Visual refinement matches the style-guide baseline (spines removed, subtle grid,
+    generous padding) but doesn't go beyond it with additional polish.
+  - Only 6 of 24 points carry labels; acceptable per the spec's 'annotate a subset
+    for large datasets' guidance, but on the low side — 8-10 labeled points would
+    demonstrate feature coverage more fully without crowding the layout given the
+    padding headroom already reserved.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
+      Chrome: Title "scatter-annotated · julia · makie · anyplot.ai" in bold dark ink, top/right spines removed, left/bottom spines and tick labels in soft muted ink, subtle light-gray gridlines. All chrome text is clearly readable against the light background.
+      Data: 24 R&D-spend-vs-revenue-growth points in Imprint brand green (#009E73). 18 unlabeled points are smaller and semi-transparent (alpha 0.7); 6 highlighted points (VectorFlow, EdgeStack, BrightPath, RedShift, PrimeCode, NextWave) are larger, fully opaque, with a dark ring, each connected by a thin gray line to an offset text label. First (and only) series is correctly the brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
+      Chrome: Same title now in light ink, spines/ticks in light-gray-soft ink, gridlines subtle against the dark background. No dark-on-dark or light-on-light failures observed — all title, axis labels, tick labels, and annotation text are clearly legible.
+      Data: Same 24 points in the identical brand green as the light render; the two-tier translucent/opaque+ring marker treatment and label/connector-line layout are unchanged, confirming only chrome (not data color) flips between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; font sizes explicit and consistent
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Collision-avoidance logic keeps all labels, connector lines, and
+          markers clear of each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker sizing appropriate for sparse (24-point) data; two-tier size/opacity
+          distinguishes highlighted points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue brand green with ring/alpha distinction, not relying on
+          red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed, no overflow or clipping, balanced title/axis
+          proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units ($M, %)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme-adaptive backgrounds in both
+          renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional two-tier marker hierarchy and algorithmic highlight selection
+          show real design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous padding — matches style-guide
+          baseline without extra polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Highlighted companies chosen as multi-dimensional extremes (growth,
+          spend, trend residual), giving a clear analytical focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Text labels, connector lines for offset labels, moderate point transparency
+          (alpha 0.7) all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, axis limits cover all data plus label anchors
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Canonical title format; no legend needed for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers scatter + labels + connectors; only 6/24 points labeled (spec
+          allows subsetting for larger datasets)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: R&D spend vs. revenue growth for fictional tech companies is plausible
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Spend ($3-25M) and growth (-2% to 35%) values are realistic for the
+          domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for label-collision avoidance; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current CairoMakie API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level Axis/scatter!/lines!/text! usage with theme tokens
+          threaded through kwargs
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No Makie-distinctive feature beyond baseline primitives
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
