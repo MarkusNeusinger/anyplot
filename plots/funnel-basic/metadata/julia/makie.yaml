@@ -1,0 +1,251 @@
+library: makie
+language: julia
+specification_id: funnel-basic
+created: '2026-09-05T02:36:02Z'
+updated: '2026-09-05T02:53:10Z'
+generated_by: claude-sonnet
+workflow_run: 33939227877
+issue: 789
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Clean, correctly ordered trapezoidal funnel with the Imprint palette in canonical
+    order (brand green first)
+  - Value and percentage labels next to every stage satisfy the spec's labeling requirement
+    clearly and legibly
+  - 'Theme-adaptive chrome is correctly threaded through: both renders share identical
+    data colors and only chrome (background, text, stroke separators) flips'
+  - Custom poly!-based funnel construction (with hidedecorations!/hidespines!) is
+    idiomatic, minimal Makie code and demonstrates real library mastery beyond default
+    chart primitives
+  - Correct canvas size (2400x2400), correct save pattern, clean imports, no fake
+    interactivity
+  weaknesses:
+  - Segment width uses sqrt(value/value[1]) instead of a direct linear ratio, but
+    the spec explicitly requires 'the width of each segment should be proportional
+    to its value relative to the first stage'. This visually exaggerates lower-stage
+    widths — e.g. the final stage (4,750 / 48,000 = 9.9% of the first stage) renders
+    at ~32% of the max half-width — softening how dramatic the real drop-off looks.
+    Switch to a linear ratio (values ./ values[1]) for the half-widths, or apply a
+    much gentler compression than sqrt if some tail-visibility easing is still wanted.
+  - Large unused whitespace band across the bottom ~25-30% of the square canvas in
+    both renders — the funnel and its labels occupy roughly the top two-thirds of
+    the frame, leaving the canvas underused. Enlarge max_half_width / stage heights
+    or vertically re-center the layout so the funnel fills the square canvas more
+    fully.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "funnel-basic · julia · makie · anyplot.ai" bold and dark, clearly readable at top center. Six stage labels (bold dark headings: "Site Visitors", "Product Page Views", "Added to Cart", "Started Checkout", "Entered Payment", "Completed Purchase") sit to the right of each funnel segment, each followed by a softer gray "value · percentage" line (e.g. "48,000 · 100%", "4,750 · 10%"). No axes/gridlines — appropriately hidden for a funnel chart.
+      Data: Six trapezoidal segments narrowing top to bottom, separated by thin off-white stroke lines. Colors follow the Imprint palette in canonical order: green (#009E73, first/largest stage), lavender, blue, ochre, matte red, cyan — all distinct and easy to tell apart.
+      Legibility verdict: PASS — all title, stage-name, and value/percentage text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title and stage-label layout, now in light/white text against the dark background. Stroke separators between segments are now dark (matching PAGE_BG), giving thin near-black dividing lines instead of off-white ones — correct theme-adaptive behavior.
+      Data: Same six-color sequence and same segment shapes as the light render — data colors are identical between the two themes; only chrome (background, text, separator strokes) has flipped.
+      Legibility verdict: PASS — title and all stage/value text render in light ink against the dark background with clear contrast; no dark-on-dark failures observed.
+
+    Both renders otherwise match apart from chrome color reversal, confirming correct theme-adaptive implementation. One shared, non-theme issue in both: the funnel + labels occupy roughly the top two-thirds of the square canvas, leaving a noticeable empty band at the bottom in both images.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all text reads clearly in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, segments, or annotations
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segments and stroke separators clearly visible and well-sized for
+          6 stages
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct Imprint hues with good contrast, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Nothing cut off and canvas size correct, but funnel + labels leave
+          a large unused whitespace band across the bottom ~25-30% of the square canvas
+          in both renders
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format exactly; stage labels serve as descriptive
+          category labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Polished color-block funnel with clean right-aligned label column;
+          undercut slightly by the unused bottom whitespace
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/decorations removed, subtle stroke separators, generous label
+          whitespace; canvas usage below the funnel is not refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrowing focal shape with value+percentage pairs guiding the
+          viewer through the conversion story
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct funnel chart with trapezoidal stage segments
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: Ordering, distinct colors, and value/percentage labels present; the
+          'proportional width' requirement from the spec Notes is not met (see SC-03)
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: false
+        comment: Width uses sqrt(value/value[1]) rather than a linear ratio, distorting
+          the apparent magnitude of stage-to-stage drop-off versus the spec's explicit
+          proportionality requirement
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; inline stage labels function correctly as a legend
+          substitute for a funnel chart
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers ordering, taper, distinct colors, and value/percentage labels;
+          proportionality distortion slightly undercuts full feature fidelity
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral e-commerce checkout funnel
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic visitor counts and conversion rates for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no randomness involved
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex geometry math, well-commented rationale, no
+          fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with correct px_per_unit
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic poly!/text!/hidedecorations!/hidespines! usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom polygon-based funnel construction shows real flexibility beyond
+          built-in chart primitives
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - edge-highlighting
