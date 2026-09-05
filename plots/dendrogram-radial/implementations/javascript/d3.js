@@ -11,7 +11,8 @@ const { width, height } = window.ANYPLOT_SIZE;
 // Leaves are languages; internal nodes are lineages. `cluster` tags the five
 // top-level lineages and is inherited down to every descendant so branches
 // and leaf labels can be colored by cluster, mirroring a clustering
-// dendrogram's color-coded cluster assignment.
+// dendrogram's color-coded cluster assignment. ~85 leaves showcases the
+// radial layout's space-efficiency advantage over a linear dendrogram.
 const familyTree = {
   name: "root",
   children: [
@@ -21,12 +22,28 @@ const familyTree = {
       children: [
         {
           name: "C family",
-          children: [{ name: "C" }, { name: "C++" }, { name: "Objective-C" }, { name: "D" }],
+          children: [
+            { name: "C" },
+            { name: "C++" },
+            { name: "Objective-C" },
+            { name: "D" },
+            { name: "Cyclone" },
+          ],
         },
         { name: "Rust" },
         { name: "Ada" },
         { name: "Zig" },
         { name: "Swift" },
+        { name: "Go" },
+        { name: "Nim" },
+        { name: "Forth" },
+        { name: "Assembly" },
+        { name: "Pascal" },
+        { name: "Modula-2" },
+        { name: "Vala" },
+        { name: "Odin" },
+        { name: "Crystal" },
+        { name: "V" },
       ],
     },
     {
@@ -35,10 +52,24 @@ const familyTree = {
       children: [
         {
           name: "JVM family",
-          children: [{ name: "Java" }, { name: "Kotlin" }, { name: "Scala" }, { name: "Groovy" }],
+          children: [
+            { name: "Java" },
+            { name: "Kotlin" },
+            { name: "Scala" },
+            { name: "Groovy" },
+            { name: "Xtend" },
+            { name: "Ceylon" },
+          ],
         },
         { name: "C#" },
         { name: "VB.NET" },
+        { name: "Eiffel" },
+        { name: "Smalltalk" },
+        { name: "Dart" },
+        { name: "COBOL" },
+        { name: "Object Pascal" },
+        { name: "ABAP" },
+        { name: "PL/I" },
       ],
     },
     {
@@ -52,32 +83,52 @@ const familyTree = {
             { name: "Scheme" },
             { name: "Racket" },
             { name: "Clojure" },
+            { name: "Hy" },
           ],
         },
         {
           name: "ML family",
-          children: [{ name: "OCaml" }, { name: "F#" }, { name: "Haskell" }, { name: "Elm" }],
+          children: [
+            { name: "OCaml" },
+            { name: "F#" },
+            { name: "Haskell" },
+            { name: "Elm" },
+            { name: "Standard ML" },
+            { name: "ReasonML" },
+            { name: "PureScript" },
+            { name: "Idris" },
+          ],
         },
         {
           name: "BEAM family",
-          children: [{ name: "Erlang" }, { name: "Elixir" }],
+          children: [{ name: "Erlang" }, { name: "Elixir" }, { name: "Gleam" }],
         },
+        { name: "Agda" },
+        { name: "Lean" },
+        { name: "Miranda" },
       ],
     },
     {
       name: "Dynamic Scripting",
       cluster: 3,
       children: [
+        {
+          name: "Web family",
+          children: [{ name: "JavaScript" }, { name: "TypeScript" }, { name: "CoffeeScript" }],
+        },
         { name: "Python" },
         { name: "Ruby" },
         { name: "PHP" },
         { name: "Perl" },
-        {
-          name: "Web family",
-          children: [{ name: "JavaScript" }, { name: "TypeScript" }],
-        },
         { name: "Lua" },
         { name: "Bash" },
+        { name: "PowerShell" },
+        { name: "Tcl" },
+        { name: "Raku" },
+        { name: "AWK" },
+        { name: "Io" },
+        { name: "Zsh" },
+        { name: "Fish" },
       ],
     },
     {
@@ -92,6 +143,15 @@ const familyTree = {
         { name: "SAS" },
         { name: "APL" },
         { name: "Mathematica" },
+        { name: "Octave" },
+        { name: "Stata" },
+        { name: "J" },
+        { name: "K" },
+        { name: "SPSS" },
+        { name: "GAMS" },
+        { name: "AMPL" },
+        { name: "MiniZinc" },
+        { name: "Prolog" },
       ],
     },
   ],
@@ -130,7 +190,6 @@ propagateCluster(familyTree, null);
 // --- Layout ------------------------------------------------------------------
 const titleSpace = 90;
 const cx = width / 2;
-const cy = titleSpace + (height - titleSpace) / 2;
 const outerRadius = Math.min(width, height - titleSpace) / 2 - 150;
 
 const root = d3.hierarchy(familyTree);
@@ -140,7 +199,10 @@ root.each((d) => {
 });
 
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
+// The vertical translate is resolved after the content (including label
+// extents) is drawn, so the visual bounding box — not just the layout
+// radius — is centered in the space below the title.
+const g = svg.append("g");
 
 // --- Branches, colored by inherited cluster ----------------------------------
 g.append("g")
@@ -176,7 +238,7 @@ g.append("g")
   .data(root.leaves())
   .join("circle")
   .attr("transform", (d) => `rotate(${(d.x * 180) / Math.PI - 90}) translate(${d.r},0)`)
-  .attr("r", 4.5)
+  .attr("r", 4)
   .attr("fill", (d) => t.palette[d.data.cluster]);
 
 // --- Leaf labels -----------------------------------------------------------------
@@ -192,9 +254,17 @@ g.append("g")
   .attr("text-anchor", (d) => (d.x < Math.PI ? "start" : "end"))
   .attr("dy", "0.32em")
   .attr("fill", (d) => t.palette[d.data.cluster])
-  .style("font-size", "12px")
+  .style("font-size", "13px")
   .style("font-family", "sans-serif")
   .text((d) => d.data.name);
+
+// Balance the visual bounding box (branches + markers + label extents)
+// within the drawable band below the title, instead of only centering the
+// bare layout radius — leaf labels near the bottom of the circle otherwise
+// push further down than the top, leaving unequal whitespace.
+const bbox = g.node().getBBox();
+const cy = (height + titleSpace) / 2 - bbox.y - bbox.height / 2;
+g.attr("transform", `translate(${cx},${cy})`);
 
 // --- Legend --------------------------------------------------------------------
 const legendEntries = familyTree.children.map((node) => ({
@@ -206,7 +276,7 @@ legend
   .selectAll("g")
   .data(legendEntries)
   .join("g")
-  .attr("transform", (_, i) => `translate(0, ${i * 26})`)
+  .attr("transform", (_, i) => `translate(0, ${i * 28})`)
   .call((sel) => {
     sel
       .append("rect")
@@ -218,7 +288,7 @@ legend
       .append("text")
       .attr("x", 20)
       .attr("fill", t.inkSoft)
-      .style("font-size", "13px")
+      .style("font-size", "14px")
       .style("font-family", "sans-serif")
       .text((d) => d.name);
   });
