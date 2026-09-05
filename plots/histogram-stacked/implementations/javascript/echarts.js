@@ -78,6 +78,18 @@ chart.setOption({
     top: 76,
     textStyle: { color: t.inkSoft, fontSize: 16 },
   },
+  tooltip: {
+    trigger: "axis",
+    axisPointer: { type: "shadow" },
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink },
+    formatter: (params) => {
+      const total = params.reduce((sum, p) => sum + p.value, 0);
+      const lines = params.map((p) => `${p.marker} ${p.seriesName}: ${p.value}`);
+      return `${params[0].axisValue}<br/>${lines.join("<br/>")}<br/><strong>Total: ${total}</strong>`;
+    },
+  },
   grid: { left: 100, right: 60, top: 150, bottom: 100 },
   xAxis: {
     type: "category",
@@ -86,7 +98,7 @@ chart.setOption({
     nameLocation: "middle",
     nameGap: 54,
     nameTextStyle: { color: t.ink, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 13 },
+    axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false },
@@ -108,7 +120,8 @@ chart.setOption({
       type: "bar",
       stack: "total",
       data: frequenciesDowntown,
-      itemStyle: { color: t.palette[0] },
+      itemStyle: { color: t.palette[0], borderColor: t.pageBg, borderWidth: 1 },
+      emphasis: { focus: "series" },
       barCategoryGap: "0%",
     },
     {
@@ -116,14 +129,21 @@ chart.setOption({
       type: "bar",
       stack: "total",
       data: frequenciesUptown,
-      itemStyle: { color: t.palette[1] },
+      itemStyle: { color: t.palette[1], borderColor: t.pageBg, borderWidth: 1 },
+      emphasis: { focus: "series" },
     },
     {
       name: "Suburban",
       type: "bar",
       stack: "total",
       data: frequenciesSuburban,
-      itemStyle: { color: t.palette[2] },
+      itemStyle: {
+        color: t.palette[2],
+        borderColor: t.pageBg,
+        borderWidth: 1,
+        borderRadius: [6, 6, 0, 0],
+      },
+      emphasis: { focus: "series" },
     },
   ],
 });
