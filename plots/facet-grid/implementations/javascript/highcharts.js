@@ -96,7 +96,7 @@ cells.forEach((cell, idx) => {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     title: { text: null },
-    labels: { enabled: isBottomRow, style: { color: t.inkSoft, fontSize: "13px" } },
+    labels: { enabled: isBottomRow, style: { color: t.inkSoft, fontSize: "14px" } },
   });
   yAxes.push({
     ...rect,
@@ -109,8 +109,19 @@ cells.forEach((cell, idx) => {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     title: { text: null },
-    labels: { enabled: c === 0, style: { color: t.inkSoft, fontSize: "13px" } },
+    labels: { enabled: c === 0, style: { color: t.inkSoft, fontSize: "14px" } },
   });
+
+  // Least-squares trend line so the rainfall -> yield relationship reads as
+  // the focal insight rather than something the viewer infers from the raw scatter.
+  const n = cell.points.length;
+  const sumX = cell.points.reduce((acc, [x]) => acc + x, 0);
+  const sumY = cell.points.reduce((acc, [, y]) => acc + y, 0);
+  const sumXY = cell.points.reduce((acc, [x, y]) => acc + x * y, 0);
+  const sumXX = cell.points.reduce((acc, [x]) => acc + x * x, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+
   series.push({
     type: "scatter",
     name: `${cell.rowFacet} × ${cell.colFacet}`,
@@ -118,8 +129,24 @@ cells.forEach((cell, idx) => {
     yAxis: idx,
     color: t.palette[0],
     data: cell.points,
-    marker: { radius: 4.5, states: { hover: { enabled: true, radiusPlus: 1.5 } } },
+    marker: { radius: 4.5, symbol: "circle", states: { hover: { enabled: true, radiusPlus: 1.5 } } },
     showInLegend: false,
+  });
+  series.push({
+    type: "line",
+    xAxis: idx,
+    yAxis: idx,
+    color: t.inkSoft,
+    opacity: 0.55,
+    lineWidth: 1.5,
+    dashStyle: "ShortDash",
+    marker: { enabled: false },
+    enableMouseTracking: false,
+    showInLegend: false,
+    data: [
+      [X_MIN, intercept + slope * X_MIN],
+      [X_MAX, intercept + slope * X_MAX],
+    ],
   });
 });
 
