@@ -96,7 +96,6 @@ const edgeGeometry = edges.map(([a, b]) => ({
     AXES.find((ax) => ax.key === a.axis).angle,
     AXES.find((ax) => ax.key === b.axis).angle,
   ),
-  color: a.axisColor,
 }));
 
 // --- Mount -------------------------------------------------------------------
@@ -112,13 +111,19 @@ const hiveGeometryPlugin = {
     const py = (v) => scales.y.getPixelForValue(v);
 
     ctx.save();
-    edgeGeometry.forEach(({ a, b, control, color }) => {
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1.25;
+    edgeGeometry.forEach(({ a, b, control }) => {
+      // Gradient along the edge rather than a.axisColor alone, so a cross-axis
+      // edge is colored symmetrically by both endpoints instead of favoring
+      // whichever node happened to sort first.
+      const gradient = ctx.createLinearGradient(px(a.x), py(a.y), px(b.x), py(b.y));
+      gradient.addColorStop(0, a.axisColor);
+      gradient.addColorStop(1, b.axisColor);
       ctx.beginPath();
       ctx.moveTo(px(a.x), py(a.y));
       ctx.quadraticCurveTo(px(control.x), py(control.y), px(b.x), py(b.y));
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.3;
-      ctx.lineWidth = 1.25;
+      ctx.strokeStyle = gradient;
       ctx.stroke();
     });
     ctx.globalAlpha = 1;
@@ -166,7 +171,10 @@ new Chart(canvas, {
     layout: { padding: 24 },
     scales: {
       x: { type: "linear", min: -16, max: 16, display: false },
-      y: { type: "linear", min: -16, max: 16, display: false },
+      // Hive geometry spans y ≈ -6.9..13.8 (axis angles 90/210/330), not
+      // symmetric around 0 — an asymmetric domain centers the triangle
+      // instead of leaving a blank third of the canvas below it.
+      y: { type: "linear", min: -9, max: 15, display: false },
     },
     plugins: {
       title: {
