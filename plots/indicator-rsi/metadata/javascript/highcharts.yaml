@@ -1,0 +1,250 @@
+library: highcharts
+language: javascript
+specification_id: indicator-rsi
+created: '2026-09-05T06:06:20Z'
+updated: '2026-09-05T06:18:51Z'
+generated_by: claude-sonnet
+workflow_run: 33948681572
+issue: 3229
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - series.zones now recolors the RSI line itself (green/blue/red) exactly at the
+    30/70 thresholds, directly addressing the prior review's request for line-level
+    emphasis instead of shading alone
+  - Y-axis title updated to the more descriptive "RSI (0–100)" per prior feedback
+  - Correct brand-green baseline, threshold lines/labels, and 14-period lookback exactly
+    per spec
+  - Synthetic regime-switching data genuinely breaches both overbought and oversold
+    thresholds multiple times
+  - Fully theme-adaptive chrome, legible in both light and dark renders with identical
+    data colors
+  - Idiomatic, well-chosen use of plotBands + plotLines + zoneAxis for a classic RSI
+    panel look
+  weaknesses:
+  - Visual refinement is still fairly default (grid is present rather than minimal)
+    beyond the zone-shading/recoloring work
+  - No further storytelling beyond zone shading + line recoloring, e.g. no dataLabels
+    or callouts marking the specific crossover points
+  - Threshold-line inline labels at 12px are on the small side (still legible, not
+    a failure)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "indicator-rsi · javascript · highcharts · anyplot.ai" in dark ink, subtitle "14-period RSI" in soft gray. X-axis shows weekly date ticks (Mar 3 - Jun 30). Y-axis fixed 0-100 with title "RSI (0-100)". Three labeled threshold lines: "Overbought (70)" red dashed, "Centerline (50)" gray dotted, "Oversold (30)" blue dashed. All text is clearly readable against the light background.
+      Data: Single RSI series whose line color changes by value zone via Highcharts `zones` — brand green (#009E73) in the 30-70 band, matte red (#AE3030) above 70, blue (#4467A3) below 30 — directly reinforcing the pinkish-tan overbought shading (70-100) and gray-blue oversold shading (0-30). The line's baseline color (before entering a zone) is the mandated brand green, satisfying "first series = #009E73".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout as light render with chrome flipped — white title, light-gray tick/axis labels, dimmed gridlines, darkened/desaturated zone tints. Threshold line colors and inline labels remain legible against the dark background.
+      Data: RSI line zone colors (green/red/blue) are pixel-identical to the light render, confirming data colors are theme-invariant — only chrome (background, grid, text) flips.
+      Legibility verdict: PASS (no dark-on-dark issues found — all text and lines remain clearly distinguishable from the near-black background)
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; threshold-line inline labels at
+          12px are slightly small but not a legibility failure
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, lines, or bands
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 2.5px line weight appropriate for a ~120-point dense series; no markers
+          needed
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red/blue zone colors have strong contrast on both surfaces;
+          threshold lines also differentiated by dash style, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no clipping, clean proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis title improved to "RSI (0–100)" per prior feedback; datetime
+          x-axis needs no title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Baseline series color is #009E73; zone recoloring uses palette[4]
+          (#AE3030, the designated bad/danger semantic anchor) for overbought and
+          palette[2] (#4467A3 blue) for oversold — a correct semantic-exception application,
+          not a violation. Correct light/dark chrome backgrounds; data colors identical
+          across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Semantic zone shading, dash/dot differentiation, and now zone-based
+          line recoloring show real design thought, but overall polish stops there
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean chrome, no spines, but grid remains fairly present rather than
+          minimal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: The RSI line now visibly changes color exactly at the 30/70 crossings,
+          directly reinforcing the zone shading on the data itself — a clear improvement
+          over the previous attempt's shading-only approach
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct RSI line-indicator chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Fixed 0-100 y-axis, 30/70 thresholds, 50 centerline, shaded zones,
+          14-period lookback noted in subtitle
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = date, Y = RSI value, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; no legend needed for a
+          single-series indicator with inline threshold labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Regime-switching synthetic data drives RSI through multiple genuine
+          overbought AND oversold breaches
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic price series typical of technical-analysis
+          demos
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 trading days (~4 months), values sensibly bounded 0-100
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small helper functions are necessary for the RSI calculation itself,
+          not incidental complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the provided globals are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false at both chart and series
+          level
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good idiomatic use of plotBands/plotLines with inline labels for
+          a financial-indicator panel
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: 'Now exploits series.zones (zoneAxis: "y") to recolor the line itself
+          by RSI band, a distinctive Highcharts-specific feature added directly in
+          response to prior feedback'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending

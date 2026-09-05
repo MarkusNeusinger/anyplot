@@ -1,0 +1,238 @@
+library: makie
+language: julia
+specification_id: indicator-rsi
+created: '2026-09-05T06:09:42Z'
+updated: '2026-09-05T06:23:04Z'
+generated_by: claude-sonnet
+workflow_run: 33948793161
+issue: 3229
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - 'Semantic color use for the reference zones is exemplary: the overbought band
+    uses matte red (reversal risk) and the oversold band uses blue (opportunity),
+    each explicitly labeled ''Overbought''/''Oversold'' so the semantic-exception
+    mapping required by the style guide is unambiguous.'
+  - 'Data-aware annotation placement: the label positions are computed from the point
+    of greatest vertical clearance within the opening window (argmin/argmax over early_window)
+    rather than a fixed coordinate, so the labels never collide with the RSI line
+    regardless of the random seed''s path.'
+  - 'Full spec feature coverage in one pass: dashed 30/70 threshold lines, dotted
+    50 centerline, alpha-blended band! fill from the centerline to the RSI line (reinforcing
+    distance-from-neutral at a glance), and a three-regime synthetic price series
+    (rally / selloff / choppy recovery) that visibly drives RSI through both extremes.'
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white / near-black
+    backgrounds, all text legible in both themes, brand green (#009E73) identical
+    across light and dark, no dark-on-dark or light-on-light failures.'
+  - Idiomatic, high-level CairoMakie usage (Axis, hspan!, hlines!, band!, lines!,
+    text!) in a single file that branches cleanly on ANYPLOT_THEME.
+  weaknesses:
+  - Y-axis tick labels for the 30/70 thresholds read a bit less prominent than 0/50/100
+    since they sit right at the shaded-zone boundary; a touch more contrast (or nudging
+    them fully into INK rather than INK_SOFT) would reinforce the reference lines.
+  - The mandated title is short for this spec-id ('indicator-rsi · julia · makie ·
+    anyplot.ai' ≈ 43 chars) and currently occupies well under 50% of the plot width
+    at titlesize=20 — a modest bump (22-24) would balance it better against the wide
+    3200 px canvas without risking overflow.
+  - band!/hspan! are nice touches but conceptually mirror fill_between/axhspan available
+    in most plotting libraries; leaning on a more Makie-distinctive composition (e.g.
+    Colorbar/Legend layering) would push Library Mastery further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "indicator-rsi · julia · makie · anyplot.ai" is bold dark text, clearly visible; "Trading Date" (x) and "RSI (14-period)" (y) axis labels dark and readable; rotated date tick labels (Mar 22 ... Sep 6) and y tick labels (0, 30, 50, 70, 100) render in a soft gray that is legible against the cream background and against the pale zone tints. Only left/bottom spines are kept (top/right removed).
+      Data: RSI line is brand green (#009E73), linewidth 3, clearly visible across the full 0-100 range. Overbought zone (70-100) is tinted pale matte-red, oversold zone (0-30) is tinted pale blue, each labeled "Overbought"/"Oversold" in soft gray text placed away from the line. A dashed line marks 70/30, a dotted line marks the 50 centerline, and a subtle green band fills between the centerline and the RSI line.
+      Legibility verdict: PASS — no light-on-light issues, no overlap between text and data.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and axis labels render in light cream/off-white, clearly visible; tick labels and zone-annotation text render in a lighter soft gray, fully legible against both the dark background and the darker-tinted zones. Spines and grid flipped to light-on-dark equivalents (dashed/dotted lines white-ish, y-grid at ~15% opacity).
+      Data: RSI line is the identical brand green (#009E73) as the light render — confirmed unchanged. Overbought zone now reads as a dark maroon tint, oversold zone as a dark navy tint, both distinguishable from the near-black page background without clashing.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and both zone tints remain distinguishable from the #1A1A17 surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, label=14, tick=12);
+          readable and well-proportioned in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Data-aware label placement avoids collisions with the RSI line; no
+          tick/text overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: linewidth=3 for a single medium-density line (127 pts) is clearly
+          visible without clutter.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Subtle 12% zone tints don't compete with data; semantic colors are
+          redundantly labeled with text, not color-only.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well, balanced margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Trading Date'' and ''RSI (14-period)'' are descriptive with the
+          lookback period noted.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds and
+          chrome are theme-correct in both renders; semantic zone colors are explicitly
+          labeled.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Thoughtful semantic color mapping and layered composition, clearly
+          above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Spines removed, subtle y-grid only, dashed/dotted differentiation
+          between threshold and centerline, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Shaded zones + centerline band + labeled thresholds guide the reader
+          straight to the momentum story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct RSI momentum-oscillator line chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Fixed 0-100 y-axis, 30/70 threshold lines, 50 centerline, shaded
+          overbought/oversold zones, 14-period noted.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Date on x, RSI on y, full date range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches the mandated format exactly; no legend needed for a
+          single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Three drift regimes drive RSI through overbought, neutral, and oversold
+          territory.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Plausible, neutral stock-price scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Wilder's smoothing correctly implemented; realistic price/RSI ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: No functions/classes; linear imports->data->plot->save.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: CairoMakie, Colors, Dates, Random, Statistics all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, no fake functionality, thoughtful comments explaining intent.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: High-level Axis/hspan!/hlines!/band!/lines!/text! API used correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: band! fill-between and hspan! zone shading are used well, though
+          conceptually similar features exist in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending
+  - grid-styling
