@@ -32,9 +32,38 @@ const stopLoss = valLoss[minIdx];
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
+// --- Overfitting-region plugin ---------------------------------------------
+// Shades epoch > stopEpoch and labels it, so the divergence reads at a glance
+// instead of relying on the marker alone. Muted, theme-adaptive fill sits
+// behind the data (drawn before the datasets) and never competes with it.
+const regionFill = t.theme === "dark" ? "rgba(240,239,232,0.07)" : "rgba(26,26,23,0.05)";
+const overfitRegionPlugin = {
+  id: "overfitRegion",
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const xStart = scales.x.getPixelForValue(stopEpoch);
+    ctx.save();
+    ctx.fillStyle = regionFill;
+    ctx.fillRect(xStart, chartArea.top, chartArea.right - xStart, chartArea.bottom - chartArea.top);
+    ctx.restore();
+  },
+  afterDraw(chart) {
+    const { ctx, scales } = chart;
+    const x = scales.x.getPixelForValue(stopEpoch);
+    const y = scales.y.getPixelForValue(stopLoss);
+    ctx.save();
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = "italic 15px sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Overfitting region →", x + 16, y - 30);
+    ctx.restore();
+  },
+};
+
 // --- Chart ----------------------------------------------------------------
 new Chart(canvas, {
   type: "line",
+  plugins: [overfitRegionPlugin],
   data: {
     labels: epochs,
     datasets: [
@@ -51,8 +80,8 @@ new Chart(canvas, {
       {
         label: "Validation loss",
         data: valLoss,
-        borderColor: t.palette[2],
-        backgroundColor: t.palette[2],
+        borderColor: t.palette[1],
+        backgroundColor: t.palette[1],
         borderWidth: 3.5,
         pointRadius: 0,
         pointHoverRadius: 5,
@@ -105,7 +134,7 @@ new Chart(canvas, {
         title: { display: true, text: "Epoch", color: t.ink, font: { size: 20 }, padding: { top: 14 } },
         ticks: { color: t.inkSoft, font: { size: 16 }, stepSize: 10 },
         grid: { display: false },
-        border: { color: t.grid },
+        border: { display: false },
         min: 1,
         max: EPOCHS,
       },
