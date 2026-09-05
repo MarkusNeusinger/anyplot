@@ -11,6 +11,7 @@
 
 import { useState } from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -19,16 +20,18 @@ const TITLE = "network-bipartite · javascript · muix · anyplot.ai";
 // --- Data: student-course enrollment network (in-memory, deterministic) ----
 // Bipartite: every edge connects a student (set A) to a course (set B) —
 // never student-student or course-course. Weight = weekly contact hours.
+// "Talia Novak" and "Advanced Robotics" carry no edges on purpose, to show
+// the isolated-node pattern the spec calls out.
 const STUDENTS = [
   "Ava Chen", "Liam Brooks", "Noor Malik", "Ethan Diaz", "Priya Nair",
   "Marcus Lee", "Sofia Reyes", "Jamal Carter", "Elena Popov", "Diego Silva",
-  "Grace Kim", "Omar Haddad", "Isla Fraser", "Victor Alves",
+  "Grace Kim", "Omar Haddad", "Isla Fraser", "Victor Alves", "Talia Novak",
 ];
 
 const COURSES = [
   "Linear Algebra", "Data Structures", "Organic Chemistry", "Microeconomics",
   "Cell Biology", "Machine Learning", "Thermodynamics", "World History",
-  "Statistics", "Digital Design",
+  "Statistics", "Digital Design", "Advanced Robotics",
 ];
 
 const EDGES = [
@@ -83,10 +86,46 @@ EDGES.forEach((e) => {
   courseDegree[e.course] += 1;
 });
 
-// Order each column by descending degree, so hub students / hub courses
-// cluster near the top and the fan-out pattern reads clearly top to bottom.
-const studentOrder = STUDENTS.map((_, i) => i).sort((a, b) => studentDegree[b] - studentDegree[a]);
-const courseOrder = COURSES.map((_, i) => i).sort((a, b) => courseDegree[b] - courseDegree[a]);
+const studentNeighbors = STUDENTS.map(() => []);
+const courseNeighbors = COURSES.map(() => []);
+EDGES.forEach((e) => {
+  studentNeighbors[e.student].push(e.course);
+  courseNeighbors[e.course].push(e.student);
+});
+
+function ranksFromOrder(order) {
+  const ranks = order.map(() => 0);
+  order.forEach((idx, rank) => {
+    ranks[idx] = rank;
+  });
+  return ranks;
+}
+
+// Order each column primarily by descending degree, so hub students / hub
+// courses cluster near the top and the fan-out pattern reads clearly top to
+// bottom (isolated, zero-degree nodes naturally sink to the bottom). Ties
+// within the same degree are broken by the barycenter of each node's
+// neighbor ranks in the other column, a standard two-layer crossing-
+// minimization heuristic — this keeps edges from crossing more than needed
+// among otherwise-equivalent nodes.
+function orderByDegreeThenBarycenter(degree, neighbors, otherRanks) {
+  return degree
+    .map((d, i) => {
+      const neigh = neighbors[i];
+      const bary = neigh.length === 0 ? Infinity : neigh.reduce((sum, j) => sum + otherRanks[j], 0) / neigh.length;
+      return { i, d, bary };
+    })
+    .sort((a, b) => b.d - a.d || a.bary - b.bary || a.i - b.i)
+    .map((x) => x.i);
+}
+
+const initialStudentOrder = STUDENTS.map((_, i) => i).sort((a, b) => studentDegree[b] - studentDegree[a] || a - b);
+const initialCourseOrder = COURSES.map((_, i) => i).sort((a, b) => courseDegree[b] - courseDegree[a] || a - b);
+const initialStudentRanks = ranksFromOrder(initialStudentOrder);
+const initialCourseRanks = ranksFromOrder(initialCourseOrder);
+
+const courseOrder = orderByDegreeThenBarycenter(courseDegree, courseNeighbors, initialStudentRanks);
+const studentOrder = orderByDegreeThenBarycenter(studentDegree, studentNeighbors, initialCourseRanks);
 
 const studentRow = studentOrder.map(() => 0);
 studentOrder.forEach((idx, rank) => {
@@ -105,10 +144,12 @@ function rowY(rank, count) {
 
 const NODE_MIN_R = 12;
 const NODE_MAX_R = 28;
+const ISOLATED_R = 7;
 const MIN_DEGREE = 1;
 const MAX_DEGREE = Math.max(...studentDegree, ...courseDegree);
 
 function nodeRadius(degree) {
+  if (degree === 0) return ISOLATED_R;
   const ratio = (degree - MIN_DEGREE) / (MAX_DEGREE - MIN_DEGREE || 1);
   return NODE_MIN_R + ratio * (NODE_MAX_R - NODE_MIN_R);
 }
@@ -127,7 +168,17 @@ function edgeOpacity(hours) {
 }
 
 const { width: CANVAS_W, height: CANVAS_H } = window.ANYPLOT_SIZE;
-const MARGIN = { top: 90, right: 220, bottom: 190, left: 220 };
+const MARGIN = { top: 90, right: 220, bottom: 230, left: 220 };
+
+// Phantom series carrying no points: they exist purely so the native
+// ChartsLegend component (a real MUI X primitive, not hand-drawn SVG) has
+// series metadata to read the set-membership colors and labels from. The
+// nodes themselves are still hand-drawn (their radius encodes degree, which
+// the community ScatterChart series can't size per-point).
+const LEGEND_SERIES = [
+  { type: "scatter", id: "set-a", data: [], color: t.palette[0], label: "Students (set A) · size = enrolled courses" },
+  { type: "scatter", id: "set-b", data: [], color: t.palette[1], label: "Courses (set B) · size = enrolled students" },
+];
 
 // --- Overlay: title, drawn inside the reserved top margin -------------------
 function GraphTitle() {
@@ -211,8 +262,10 @@ function BipartiteOverlay({ onHoverChange }) {
               cy={cy}
               r={r}
               fill={t.palette[0]}
+              fillOpacity={studentDegree[i] === 0 ? 0.4 : 1}
               stroke={t.pageBg}
               strokeWidth={2.5}
+              strokeDasharray={studentDegree[i] === 0 ? "3 2" : undefined}
               style={{ cursor: "pointer" }}
               onMouseEnter={() => onHoverChange(tooltip)}
               onMouseLeave={() => onHoverChange(null)}
@@ -248,8 +301,10 @@ function BipartiteOverlay({ onHoverChange }) {
               cy={cy}
               r={r}
               fill={t.palette[1]}
+              fillOpacity={courseDegree[i] === 0 ? 0.4 : 1}
               stroke={t.pageBg}
               strokeWidth={2.5}
+              strokeDasharray={courseDegree[i] === 0 ? "3 2" : undefined}
               style={{ cursor: "pointer" }}
               onMouseEnter={() => onHoverChange(tooltip)}
               onMouseLeave={() => onHoverChange(null)}
@@ -293,25 +348,18 @@ function HoverTooltip({ hover }) {
   );
 }
 
-// --- Overlay: set-membership legend + edge-weight scale, in the bottom margin
-function Legend() {
+// --- Overlay: edge-weight scale + isolated-node note, below the native
+// ChartsLegend row (set-membership colors/labels are handled by that real
+// MUI X component instead of hand-drawn swatches).
+function WeightLegend() {
   const drawingArea = useDrawingArea();
-  const rowY1 = drawingArea.top + drawingArea.height + 60;
-  const rowY2 = rowY1 + 55;
-  const swatchR = 9;
+  const rowY2 = drawingArea.top + drawingArea.height + 115;
+  const rowY3 = rowY2 + 62;
 
   const hourSamples = [MIN_HOURS, Math.round((MIN_HOURS + MAX_HOURS) / 2), MAX_HOURS];
 
   return (
     <g>
-      <circle cx={drawingArea.left} cy={rowY1} r={swatchR} fill={t.palette[0]} />
-      <text x={drawingArea.left + swatchR + 10} y={rowY1 + 5} fontSize={16} fill={t.inkSoft}>
-        Students (set A) · size = enrolled courses
-      </text>
-      <circle cx={drawingArea.left + 470} cy={rowY1} r={swatchR} fill={t.palette[1]} />
-      <text x={drawingArea.left + 470 + swatchR + 10} y={rowY1 + 5} fontSize={16} fill={t.inkSoft}>
-        Courses (set B) · size = enrolled students
-      </text>
       <text x={drawingArea.left} y={rowY2 - 8} fontSize={14} fill={t.inkSoft}>
         Edge weight = weekly contact hours
       </text>
@@ -336,6 +384,9 @@ function Legend() {
           </g>
         );
       })}
+      <text x={drawingArea.left} y={rowY3} fontSize={14} fill={t.inkSoft}>
+        Dashed outline, faded fill = isolated node (no enrollments)
+      </text>
     </g>
   );
 }
@@ -348,7 +399,7 @@ export default function Chart() {
       width={CANVAS_W}
       height={CANVAS_H}
       margin={MARGIN}
-      series={[]}
+      series={LEGEND_SERIES}
       skipAnimation
       disableAxisListener
       xAxis={[{ scaleType: "linear", min: 0, max: 1 }]}
@@ -356,7 +407,17 @@ export default function Chart() {
     >
       <BipartiteOverlay onHoverChange={setHover} />
       <GraphTitle />
-      <Legend />
+      <ChartsLegend
+        position={{ horizontal: "middle", vertical: "bottom" }}
+        direction="row"
+        padding={{ top: 0, right: 0, bottom: 130, left: 0 }}
+        itemMarkWidth={18}
+        itemMarkHeight={18}
+        markGap={10}
+        itemGap={50}
+        labelStyle={{ fontSize: 16, fill: t.inkSoft }}
+      />
+      <WeightLegend />
       <HoverTooltip hover={hover} />
     </ChartContainer>
   );
