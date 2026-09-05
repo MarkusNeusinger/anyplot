@@ -57,12 +57,26 @@ const aggregate = (node) => {
 };
 aggregate(root);
 
+// --- Focal point: the single largest leaf and its ancestor chain ----------
+// (Inter.woff2 -> Fonts -> Assets -> Project) get a thin outline so the
+// dominant contributor to the hierarchy is visually called out.
+let largestLeaf = null;
+nodeMap.forEach((n) => {
+  if (n.children.length === 0 && (!largestLeaf || n.value > largestLeaf.value)) {
+    largestLeaf = n;
+  }
+});
+const highlightNames = new Set();
+for (let n = largestLeaf; n; n = n.parent ? nodeMap.get(n.parent) : null) {
+  highlightNames.add(n.name);
+}
+
 // --- Partition layout: x = cumulative value, y = depth (rows) -------------
 const rows = [];
 let maxDepth = 0;
 const layout = (node, depth, x0, x1) => {
   maxDepth = Math.max(maxDepth, depth);
-  rows.push([x0, x1, depth, node.value, node.name]);
+  rows.push([x0, x1, depth, node.value, node.name, highlightNames.has(node.name) ? 1 : 0]);
   let x = x0;
   node.children.forEach((child) => {
     const width = (child.value / node.value) * (x1 - x0);
@@ -89,6 +103,7 @@ const renderItem = (params, api) => {
   const x1 = api.value(1);
   const depth = api.value(2);
   const name = api.value(4);
+  const highlight = api.value(5) === 1;
 
   const corner = api.coord([x0, depth]);
   const size = api.size([x1 - x0, 1]);
@@ -102,6 +117,8 @@ const renderItem = (params, api) => {
     shape: { x: corner[0] + GAP / 2, y: corner[1] + GAP / 2, width, height },
     style: {
       fill,
+      stroke: highlight ? t.ink : undefined,
+      lineWidth: highlight ? 2 : 0,
       text: showLabel ? name : undefined,
       textFill: textColorFor(fill),
       textPosition: "insideLeft",
@@ -126,14 +143,16 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "icicle-basic · javascript · echarts · anyplot.ai",
+    subtext: "Rectangle width = file size in KB · color = hierarchy depth · outline = largest contributor",
     left: "center",
     textStyle: { color: t.ink, fontSize: 22 },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
   tooltip: {
     formatter: (params) =>
       `<strong>${params.value[4]}</strong><br/>${params.value[3].toFixed(1)} KB`,
   },
-  grid: { left: 30, right: 30, top: 110, bottom: 30 },
+  grid: { left: 30, right: 30, top: 130, bottom: 30 },
   xAxis: { type: "value", min: 0, max: root.value, show: false },
   yAxis: { type: "value", min: 0, max: maxDepth + 1, inverse: true, show: false },
   series: [
