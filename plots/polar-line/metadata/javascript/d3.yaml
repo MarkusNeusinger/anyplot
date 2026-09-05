@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: polar-line
 created: '2026-09-05T11:13:16Z'
-updated: '2026-09-05T11:18:00Z'
+updated: '2026-09-05T11:27:09Z'
 generated_by: claude-sonnet
 workflow_run: 33962522519
 issue: 2692
@@ -12,53 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Correct Imprint palette usage: first series is brand green #009E73, chrome (background,
-    text, grid, legend) is fully theme-correct and readable in both light and dark
-    renders'
-  - Clean, deterministic, KISS D3 code using idiomatic patterns (scaleLinear, lineRadial
-    + curveLinearClosed, data joins) with no fake interactivity
-  - 'Realistic, factually sound data: wind speed by compass direction across seasons,
-    correctly reflecting the real-world prevailing-westerlies pattern (stronger, more
-    W-skewed in winter)'
-  - Thoughtful radial tick-label placement on a spoke offset from the direction grid,
-    avoiding overlap with the plotted lines and markers
-  - Title, legend, and grid are clean and correctly sized; nothing clipped or overflowing
-    the canvas in either theme
+  - 'Correct polar-line construction: d3.lineRadial + d3.curveCardinalClosed closes
+    the loop so cyclical compass data reads as a continuous cycle, with concentric-circle
+    and radial-spoke grids exactly as the spec requests'
+  - Radial fill (d3.areaRadial) between the Summer and Winter curves spotlights the
+    seasonal gap at a glance — genuine data storytelling, not decoration
+  - 'Palette compliance with documented reasoning: Summer uses brand green (#009E73,
+    position 1) and Winter deliberately uses palette[2] (blue) as a warm/cold semantic
+    pairing rather than the ordinal palette[1] — consistent with the style guide''s
+    semantic-exception rule, and the code comment explains the choice'
+  - 'Realistic, physically plausible data: coastal wind-rose speeds (6-36 km/h) that
+    peak in the W/WSW quadrant in both seasons and are systematically higher in winter
+    — a textbook prevailing-westerlies pattern'
+  - 'Clean, idiomatic D3: explicit font sizing (15px/30px), theme tokens threaded
+    through every text/stroke element, markers with page-background strokes for definition,
+    and a compact custom legend anchored near the plot'
+  - Both renders are theme-correct — identical data colors, warm off-white / near-black
+    backgrounds, all chrome text legible in both themes with no clipping at any canvas
+    edge
   weaknesses:
-  - Design Excellence is competent but not distinctive yet — consider a low-alpha
-    radial fill under the Winter line (d3.areaRadial) to emphasize the seasonal magnitude
-    gap, which would also strengthen the data-storytelling focal point
-  - Legend swatches show only a stroke line; add a small circle marker matching the
-    on-chart marker style so the legend mirrors the line+marker encoding used in the
-    plot
-  - Library Mastery usage is fairly generic (scaleLinear + lineRadial) — leverage
-    a more distinctive D3 shape-generator feature, e.g. d3.curveCardinalClosed for
-    a smoother radial curve or d3.areaRadial for a filled layer, to showcase capabilities
-    harder to replicate in higher-level charting libraries
-  - Radial tick labels are set at 13px, slightly smaller than the 15px used for direction
-    labels and legend text — bump to ~14-15px for better size balance
-  - Second series color (t.palette[2], blue) skips t.palette[1] (lavender) in the
-    canonical order — acceptable as a winter/cold semantic exception, but consider
-    a brief code comment noting the intentional semantic choice so it reads as deliberate
-    rather than arbitrary
+  - The '10 km/h' radial tick label (placed at tickAngle = angle(0.5), between N and
+    NNE) sits directly on top of / touching the Summer series marker and line at that
+    angle in both themes — pick a tickAngle whose local radius on both series curves
+    stays clearly outside the largest tick circle it must label, or nudge the label
+    radially outward with a small background halo/pill.
+  - Direction labels and radial tick labels share the same 15px size — the radial
+    tick labels ('10 km/h' etc.) are secondary/reference information, so giving them
+    a slightly smaller size than the primary direction labels would sharpen the typographic
+    hierarchy.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "polar-line · javascript · d3 · anyplot.ai" centered at top; 16 compass-direction labels (N, NNE, NE, ... NNW) around the perimeter in soft dark gray; radial tick labels "10 km/h" through "40 km/h" placed along a spoke between N and NNE; subtle light-gray concentric-circle and radial-spoke grid lines; legend with "Summer" (green) and "Winter" (blue) centered below the plot. All chrome text is dark-on-light and clearly legible.
-      Data: Two closed radial line series with circular markers — Summer (inner loop, #009E73 brand green) and Winter (outer loop, blue). Markers have a light stroke for definition. The winter loop bulges noticeably toward W/WSW/WNW, correctly depicting prevailing westerlies stronger in winter.
-      Legibility verdict: PASS — all text (title, direction labels, radial ticks, legend) is clearly readable against the light background; no overlap with data or grid.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "polar-line · javascript · d3 · anyplot.ai" in bold dark ink, fully visible, not clipped. 16 compass-direction labels (N, NNE, NE, ...) ring the outside of the plot in soft dark gray. Radial tick labels ("10 km/h" through "40 km/h") sit along a spoke between N and NNE in the same soft gray. Concentric circular grid + 16 radial spokes in light gray. Legend ("Summer" green, "Winter" blue) centered below the plot. All text is dark-on-light and clearly readable, EXCEPT the "10 km/h" label, which visually collides with a Summer series marker/line directly beneath it.
+      Data: Two closed radial loops — Summer in brand green (#009E73) with circular markers, Winter in blue (palette position 3, deliberate warm/cold semantic pairing per code comment) with circular markers, each 3px stroke width. A light gray fill occupies the ring between the two curves, spotlighting the seasonal gap (widest around W/WSW, narrowest around E). Both curves are cyclical closed loops (curveCardinalClosed), consistent with the spec's "line connects points in theta order" requirement.
+      Legibility verdict: PASS (one minor overlap noted above, not a legibility failure — the text remains readable, just touching a marker).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, direction labels, radial tick labels, grid, and legend as the light render, now rendered in light gray / white tones. No dark-on-dark issues found — every text element is clearly visible against the dark surface.
-      Data: Same two series, same #009E73 green and same blue hue as the light render — data colors are identical between themes, confirming only chrome flipped. Marker strokes flip to a dark tone consistent with the theme.
-      Legibility verdict: PASS — all text is light-colored and legible against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, direction labels, and radial tick labels, now rendered in light gray/off-white, fully legible against the dark background. Grid lines are subtle and still visible. Legend text is light-colored and readable.
+      Data: Data colors are identical to the light render — Summer green (#009E73) and Winter blue are unchanged, confirming the palette holds constant across themes; only the chrome (background, grid, text, area-fill tint) adapts. The same "10 km/h" label/marker overlap is present here too, at the same location.
+      Legibility verdict: PASS (same minor overlap as light render; no dark-on-dark or light-on-light failures).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -66,72 +65,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit, readable in both themes; radial tick labels
-          at 13px are slightly small relative to the 15px used elsewhere
+        comment: All font sizes explicitly set (15px labels, 30px title); readable
+          in both themes and well-proportioned; minor deduction because the '10 km/h'
+          tick label collides with a data marker
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No overlap between text, grid, or data in either render
+        comment: The '10 km/h' radial tick label overlaps the Summer marker/line at
+          that angle in both renders; all other text is clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and lines well-sized for the sparse 16-point-per-series data
+        comment: 16-point sparse series use prominent 5px-radius markers and 3px lines,
+          clearly visible against the grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue series distinguishable, marker strokes aid separation
-          near close overlaps
+        comment: Green vs. blue series are easily distinguishable, no red-green reliance,
+          white/dark marker strokes add definition
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circular plot fills ~60-70% of the square canvas with balanced margins;
-          legend close to plot
+        comment: Square format is the right choice for a symmetric radial chart; nothing
+          clipped; legend anchored near the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial axis labeled with units (km/h)
+        comment: Radial ticks carry units ('km/h'), direction labels are descriptive
+          compass points
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 brand green; chrome theme-correct in both renders;
-          second series uses a defensible winter/cold-blue semantic exception'
+        comment: 'First series is #009E73; second series uses a documented semantic
+          exception (cold=blue) rather than an arbitrary skip; theme-correct backgrounds
+          and chrome in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a plain library default (thoughtful tick placement, clean legend)
-          but not yet publication-level distinctive
+        passed: true
+        comment: Thoughtful, documented color pairing and a radial fill highlight
+          — clearly above a configured default, short of full publication polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid, generous whitespace, attentive tick placement; legend
-          swatch could better mirror the marker style
+        passed: true
+        comment: Subtle grid, generous whitespace, styled markers; the tick-label
+          overlap costs some refinement points
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: The westerly bulge is visually apparent and tells a clear seasonal
-          story without needing annotations
+        passed: true
+        comment: The shaded gap between Summer and Winter curves gives an immediate
+          visual read on how much stronger winter winds are, especially in the W/WSW
+          sector
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct polar line chart with concentric-circle and radial-spoke
-          grid
+        comment: Correct polar line plot, closed cyclical loop
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Closed line-in-theta-order, multiple colored series, concentric+radial
-          grid all present
+        comment: Concentric circle + radial spoke grid, multi-series with distinct
+          colors, points connected in theta order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Theta = compass direction, radius = wind speed, correctly mapped
+        comment: Theta = compass direction, radius = wind speed, both fully shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          series
+        comment: Title format exact match; legend labels (Summer/Winter) match the
+          data
     data_quality:
       score: 15
       max: 15
@@ -172,22 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the full cyclical multi-series pattern including the seasonal
-          magnitude difference
+        comment: Two seasons with clearly different magnitudes and a consistent directional
+          shape
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world meteorological scenario (coastal wind speed by
-          direction and season)
+        comment: Neutral, comprehensible coastal weather-station scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speed values and the winter > summer, westerly-skewed pattern
-          are factually plausible
+        comment: Wind speeds and the westerlies-peak pattern are physically plausible
+          for a coastal station
     code_quality:
       score: 10
       max: 10
@@ -197,33 +200,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear top-to-bottom structure
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data arrays
+        comment: Hard-coded deterministic arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used
+        comment: Only the d3 global is used, no extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts into #container per the harness contract'
+        comment: Follows the mount-node contract correctly, animation-free
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,23 +234,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct, idiomatic use of scaleLinear, lineRadial, and D3 data joins
+        comment: Proper use of d3 scales, data joins, lineRadial/areaRadial generators
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses D3-specific radial shape generators but stops short of a feature
-          that would be hard to replicate elsewhere
-  verdict: REJECTED
+        passed: true
+        comment: d3.areaRadial band-fill between two series is a distinctive D3 feature
+          not trivially replicated elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - custom-legend
-  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
