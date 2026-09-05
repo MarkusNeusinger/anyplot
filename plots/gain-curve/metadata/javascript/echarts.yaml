@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: gain-curve
 created: '2026-09-05T02:03:45Z'
-updated: '2026-09-05T02:08:07Z'
+updated: '2026-09-05T02:20:03Z'
 generated_by: claude-sonnet
 workflow_run: 33937710127
 issue: 2440
@@ -12,50 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/echarts/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Correct cumulative-gains construction: model curve rises steeply then saturates
-    at 100%, plotted against a proper diagonal random-selection baseline'
-  - Baseline reference line uses the theme-adaptive `neutral` semantic anchor (t.ink)
-    instead of a fixed color — correct semantic use of an anchor outside the categorical
-    pool
-  - 'First series correctly branded #009E73; data colors identical across light/dark,
-    only chrome flips as required'
+  - Shaded 'gain band' between the model curve and the random-selection baseline (stacked
+    invisible-lower + translucent-diff line trick) directly visualizes the core insight
+    of a gain curve — the previous attempt's biggest gap is now fixed
+  - Elbow markPoint annotation labels exactly where the model first captures 100%
+    of positives ('100% captured at 54% targeted'), turning a passive line into an
+    active data story
+  - 'Correct cumulative-gains construction: model curve rises steeply then saturates,
+    plotted against a proper diagonal random-selection baseline drawn via markLine'
+  - 'First series correctly branded #009E73; data colors (green model line, gain-band
+    fill) are pixel-identical across light/dark, only chrome flips as required'
   - Deterministic fixed-seed LCG data generation with a plausible, neutral churn-modeling
     scenario (2000 customers, 18% churn rate)
-  - 'Line-only rendering (symbol: none) avoids overplotting 2000-point-derived curves;
-    line weights (3.5 model vs 2 dashed baseline) are sensible for a 2-series chart'
+  - 'Legend crowding from the prior review is fixed (itemGap: 24) — ''Model'' and
+    ''Random selection'' now read as clearly separated items'
   - Axis labels are descriptive with % units, title format matches the mandated pattern,
-    explicit font sizes set throughout
+    explicit font sizes set throughout, both renders pass the theme-readability check
   weaknesses:
-  - 'Legend items are crowded — the ''Random selection'' icon sits tight against its
-    label with almost no gap (default itemGap); add `legend: { itemGap: 24 }` or similar
-    so the two legend entries read as clearly separated'
-  - 'Design Excellence is at ''well-configured default'' level: no areaStyle shading
-    between the model curve and baseline to visually emphasize the ''gain'' (the core
-    insight of this chart type), no markPoint/markLine annotation calling out e.g.
-    the population % where the model first reaches 100% capture'
-  - Library Mastery is generic — the implementation uses only a bare line series +
-    legend + axes, none of ECharts' distinctive features (markArea/markLine for the
-    baseline or gain region, custom tooltip formatter, graphic component for callouts)
-    that would set it apart from a generic line-chart port
-  - No visual annotation of the classic gain-curve insight ('steeper initial slope
-    = better discrimination') — consider a markPoint or text annotation at the elbow
-    of the model curve, or shading the area between model and baseline with a low-alpha
-    fill in the brand color to make the story pop
+  - 'The ''Random selection'' legend icon renders a small stray dot immediately after
+    its circle marker, in both themes (visible on close zoom) — likely the dashed
+    lineStyle''s dash pattern bleeding into the auto-generated legend icon; set an
+    explicit legend icon (e.g. `icon: ''line''` for the series, or match the icon
+    to a solid style) to avoid the artifact'
+  - Design/aesthetic refinement is solid but still fairly conventional beyond the
+    new gain-band + elbow annotation — no additional touches (e.g. a subtle gradient
+    on the band fill, softened line joins) push it into top-tier polish territory
+  - The 'Random selection' entry uses an empty-data line series purely to get a legend
+    entry, with the actual diagonal drawn via a separate markLine — functionally correct
+    and explained in comments, but an indirect two-mechanism approach for one visual
+    element
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 target — not pure white.
-      Chrome: Title "gain-curve · javascript · echarts · anyplot.ai" in bold dark ink, centered top. Legend ("Model" / "Random selection") sits below the title, dark text. Axis names "Percentage of customers targeted" (x) and "Cumulative churners captured" (y) in dark ink; tick labels in a softer dark gray, all formatted with "%". Subtle light-gray gridlines at both major x and y ticks.
-      Data: Model curve in brand green (#009E73), thick (3.5px), rising steeply from 0 to ~64% captured by ~12% targeted, then a shallower climb to 100% captured by ~54% targeted, then flat at 100% to x=100%. Random-selection baseline is a black dashed diagonal from (0,0) to (100,100), using the theme's ink/neutral token.
-      Legibility verdict: PASS — all title, legend, axis, and tick text is clearly readable against the light background. Minor: legend icon for "Random selection" is crowded tightly against its label text (spacing issue, not a legibility failure).
+      Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
+      Chrome: Title "gain-curve · javascript · echarts · anyplot.ai" in bold dark ink, centered top. Legend ("Model" / "Random selection") sits below the title with clear spacing between items (itemGap fixed from the prior review). Axis names "Percentage of customers targeted" (x) and "Cumulative churners captured" (y) in dark ink; tick labels in a softer dark gray, all formatted with "%". Subtle light-gray gridlines at major x/y ticks. A bold annotation "100% captured at 54% targeted" sits above the point where the model curve first reaches 100%, with no overlap with the gridline or plot edge.
+      Data: Model curve in brand green (#009E73), thick (3.5px), rising steeply from 0 to ~64% captured by ~12% targeted, then a shallower climb to 100% captured by ~54% targeted, then flat at 100% to x=100%. A translucent green "gain band" (opacity 0.15) fills the area between the model curve and the diagonal random-selection baseline, visually emphasizing the model's advantage over random targeting. The random-selection baseline is a black dashed diagonal from (0,0) to (100,100), drawn via markLine using the theme's ink/neutral token.
+      Legibility verdict: PASS — all title, legend, axis, tick, and annotation text is clearly readable against the light background. Minor: on close zoom, the "Random selection" legend icon shows a tiny stray dot right after its circle marker (cosmetic artifact, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 target — not pure black.
-      Chrome: Same title/legend/axis layout, now rendered in light off-white ink against the dark background. Tick labels in a lighter soft-gray. Gridlines are subtle light-on-dark hairlines.
-      Data: Model curve is identical brand green (#009E73) — confirmed same hex as light render. The random-selection baseline is now a white/light dashed line (theme-adaptive neutral anchor correctly flipped from black to white) rather than staying black, which would have been a dark-on-dark failure — this was avoided.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found; all chrome elements (title, legend, axis names, ticks) are clearly visible against the dark surface. Same minor legend crowding issue as light render.
+      Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
+      Chrome: Same title/legend/axis/annotation layout, now rendered in light off-white ink against the dark background. Tick labels in a lighter soft-gray. Gridlines are subtle light-on-dark hairlines.
+      Data: Model curve and gain-band fill are the identical brand green (#009E73) — confirmed same hex and same opacity as the light render, only the chrome flipped. The random-selection baseline is now a white/light dashed line (theme-adaptive neutral anchor correctly flipped from black to white) rather than staying black, which would have been a dark-on-dark failure — this was correctly avoided.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found; all chrome elements (title, legend, axis names, ticks, annotation) are clearly visible against the dark surface. Same minor legend-icon dot artifact as the light render, correctly re-colored to white.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -73,15 +73,15 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text/data overlap, but legend icon for 'Random selection'
-          is crowded against its label (tight itemGap)
+        comment: No text-on-text/data overlap, elbow annotation clear of gridlines;
+          minor stray dot artifact next to 'Random selection' legend icon
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Line-only rendering (symbol: none) with appropriate 3.5px/2px weights
-          avoids overplotting a 2000-point-derived curve'
+        comment: Line-only rendering with appropriate 3.5px/2px weights; translucent
+          gain-band fill doesn't obscure the curves
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -94,7 +94,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, legend near plot, no cutoff, good canvas utilization
+        comment: Balanced margins, legend near plot, no cutoff, good canvas utilization,
+          no gate failure
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,30 +110,30 @@ review:
         comment: 'First series #009E73, baseline uses theme-adaptive neutral anchor,
           correct backgrounds both themes, data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; correct palette but no distinctive
-          custom styling
+        passed: true
+        comment: Gain-band shading and elbow callout add real sophistication beyond
+          a bare line chart
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle theme-token grid, clean margins, but no area-fill or emphasis
-          refinement beyond defaults
+        passed: false
+        comment: Subtle grid, clean margins; docked for the stray legend-icon dot
+          artifact and otherwise conventional treatment
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Thick colored model line vs. thin dashed neutral baseline creates
-          some visual hierarchy, but no annotation of the actual gain insight
+        comment: Shaded gain region plus elbow annotation clearly guides the viewer
+          to the model's core advantage over random targeting
     spec_compliance:
       score: 15
       max: 15
@@ -163,16 +164,16 @@ review:
         comment: Title format correct, legend labels 'Model'/'Random selection' match
           series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows steep initial rise, mid-slope, and saturation phase of a typical
-          gain curve
+        comment: Shows steep initial rise, mid-slope, saturation, and now the elbow
+          point where 100% capture is reached
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -184,8 +185,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 18% churn rate and monotonic curve ending at (100,100) are all physically/logically
-          consistent
+        comment: 18% churn rate, 2000 samples, and monotonic curve ending at (100,100)
+          are all physically/logically consistent
     code_quality:
       score: 10
       max: 10
@@ -214,7 +215,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI
+        comment: Clean, well-commented stacked-band technique, appropriate complexity,
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -222,28 +224,34 @@ review:
         passed: true
         comment: 'Correct mount-node contract, animation: false, no explicit size/devicePixelRatio'
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct standard usage but doesn't leverage ECharts' higher-level
-          series options (markLine/markArea) for the baseline/gain region
+        passed: true
+        comment: Good use of markLine/markPoint and stacked series for the gain-band
+          fill; the empty-data-series-for-legend trick is a known but slightly indirect
+          ECharts idiom
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic line+legend+axis chart, no ECharts-distinctive feature used
-  verdict: REJECTED
+        passed: true
+        comment: markLine (reference line), markPoint (elbow callout), and a stacked-area
+          gain-band fill are genuinely distinctive ECharts features, well beyond a
+          generic line chart
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - alpha-blending

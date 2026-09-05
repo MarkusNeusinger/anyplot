@@ -1,7 +1,7 @@
 // anyplot.ai
 // gain-curve: Cumulative Gains Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 83/100 | Created: 2026-09-05
+// Quality: 89/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
