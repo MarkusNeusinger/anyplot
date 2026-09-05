@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 83/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -51,19 +52,25 @@ function binCounts(values: number[]) {
   return counts;
 }
 
-// Turn per-bin counts into a step outline: rise at the left edge, flat across
-// the bin, drop/rise at the boundary, and back to zero at the last edge — the
-// classic unfilled step-histogram silhouette (no bars, only the outline).
-function stepCounts(counts: number[]) {
-  const ys = [0];
-  for (const count of counts) ys.push(count, count);
-  ys.push(0);
-  return ys;
+// One x-point per bin edge (not per corner) — MUI X's native `curve="stepAfter"`
+// draws the horizontal/vertical step segments itself. The leading edge is
+// duplicated once (0 -> count[0]) so the outline rises from zero, and a
+// trailing 0 closes it back to the axis at the final edge.
+const stepX = [binEdges[0], binEdges[0], ...binEdges.slice(1)];
+const countsV1 = binCounts(latencyV1);
+const countsV2 = binCounts(latencyV2);
+const stepV1 = [0, ...countsV1, 0];
+const stepV2 = [0, ...countsV2, 0];
+
+// Bin-center of each distribution's tallest bar — used to call out the
+// before/after latency shift with reference lines.
+function peakCenter(counts: number[]) {
+  const peakIndex = counts.indexOf(Math.max(...counts));
+  return (binEdges[peakIndex] + binEdges[peakIndex + 1]) / 2;
 }
 
-const stepX = binEdges.flatMap((edge) => [edge, edge]);
-const stepV1 = stepCounts(binCounts(latencyV1));
-const stepV2 = stepCounts(binCounts(latencyV2));
+const peakV1 = peakCenter(countsV1);
+const peakV2 = peakCenter(countsV2);
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
@@ -89,7 +96,7 @@ export default function Chart() {
               data: stepV1,
               label: "API v1 latency",
               color: t.palette[0],
-              curve: "linear",
+              curve: "stepAfter",
               area: false,
               showMark: false,
             },
@@ -97,7 +104,7 @@ export default function Chart() {
               data: stepV2,
               label: "API v2 latency",
               color: t.palette[1],
-              curve: "linear",
+              curve: "stepAfter",
               area: false,
               showMark: false,
             },
@@ -122,7 +129,20 @@ export default function Chart() {
           grid={{ horizontal: true }}
           slotProps={{ legend: { labelStyle: { fontSize: 14 } } }}
           sx={{ "& .MuiLineElement-root": { strokeWidth: 3 } }}
-        />
+        >
+          <ChartsReferenceLine
+            x={peakV1}
+            label={`v1 peak ~${peakV1.toFixed(0)}ms`}
+            labelStyle={{ fontSize: 13, fill: t.palette[0] }}
+            lineStyle={{ stroke: t.palette[0], strokeDasharray: "6 4" }}
+          />
+          <ChartsReferenceLine
+            x={peakV2}
+            label={`v2 peak ~${peakV2.toFixed(0)}ms`}
+            labelStyle={{ fontSize: 13, fill: t.palette[1] }}
+            lineStyle={{ stroke: t.palette[1], strokeDasharray: "6 4" }}
+          />
+        </LineChart>
       </Box>
     </Box>
   );
