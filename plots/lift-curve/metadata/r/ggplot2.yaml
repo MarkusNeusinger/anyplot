@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: lift-curve
 created: '2026-09-05T06:24:02Z'
-updated: '2026-09-05T06:27:45Z'
+updated: '2026-09-05T06:39:15Z'
 generated_by: claude-sonnet
 workflow_run: 33949526812
 issue: 2379
@@ -12,45 +12,68 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 79
 review:
   strengths:
   - Correct, well-shaped lift curve that decays from a strong early lift toward the
     y=1 baseline, matching the spec's described behavior exactly
-  - Decile markers overlaid on the curve aid interpretation at a glance
-  - Theme-adaptive chrome executed correctly — identical data colors, correctly flipped
-    ink/background across light and dark, canvas exactly matches the 3200×1800 target
-  - Reproducible, clean, idiomatic dplyr + ggplot2 pipeline with no unnecessary complexity
+  - Fraud-detection scenario is realistic, neutral, and uses a plausible 6% base rate
+    with well-separated score distributions
+  - 'Legend/gridline separation improved from the previous attempt: the legend now
+    has an elevated background fill and border instead of a fully transparent one'
+  - Reproducible, clean, idiomatic dplyr + ggplot2 pipeline (set.seed(42), no functions/classes),
+    correct 3200x1800 canvas, Imprint palette correct (#009E73 first series) and theme-adaptive
+    chrome correctly threaded through both renders
   weaknesses:
-  - The y=15 gridline visually brushes against the "Random baseline" legend row because
-    legend.background = element_blank() leaves it fully transparent — either nudge
-    the legend position down slightly or give it a subtle elevated background fill
-    to separate it from the gridline.
-  - Grid lines use the full INK/INK_SOFT token color rather than a faint/low-opacity
-    rule token, making them a bit more prominent than the style guide's 15-25% opacity
-    guidance — consider a lower-contrast tone for panel.grid.major.y.
-  - The spec's optional suggestion to show "actual values at key percentiles" isn't
-    realized as numeric data labels — only marker positions are shown; adding a label
-    like "9.1x @ 10%" at 1-2 key deciles would strengthen data storytelling (DE-03)
-    and feature coverage (DQ-01).
-  - Composition is solid but standard for the library; leaning into a more distinctive
-    ggplot2 feature (e.g. annotate() for a callout, or comparing two models via color/facet)
-    would raise Library Mastery.
+  - 'Grid-line opacity fix did not work: GRID_LINE <- scales::alpha(INK, 0.15) still
+    renders panel.grid.major.y at full 100% INK opacity in the saved PNG (measured
+    pixel RGB(26,26,23), identical to raw INK, not the ~15%-blended ~RGB(216,215,208)
+    expected) - confirmed via pixel sampling in both light and dark renders. This
+    is the exact issue flagged in the previous review; scales::alpha() does not survive
+    rendering through ragg::agg_png, matching the documented gotcha in prompts/library/ggplot2.md
+    (''ggplot2 does not expose alpha for grid lines, so use a faint INK color literal
+    instead''). Fix: compute one literal pre-blended hex per theme (e.g. mix INK at
+    15% into PAGE_BG to get a concrete hex like ''#D8D6CE'' for light and the dark
+    equivalent) and use that literal directly as panel.grid.major.y''s color instead
+    of scales::alpha().'
+  - 'The new geom_text() value-callout layer added to address the previous review''s
+    DE-03/DQ-01 feedback (''9.2x @ 10%'', ''2.0x @ 50%'') is completely invisible
+    in BOTH renders - verified by cropping tight pixel regions around both the 10%
+    and 50% decile points in plot-light.png and plot-dark.png; no text glyphs appear
+    anywhere near either marker. The callouts data frame should be non-empty (2 rows,
+    same rank formula as decile_marks), so this looks like a rendering failure rather
+    than a data bug. Debug directions: print/inspect callouts before plotting to confirm
+    rows and a valid label column exist; check whether nudge_y combined with hjust=0
+    pushes the text somewhere unexpected; verify fontface=''bold'' isn''t triggering
+    a silent font-lookup failure under ragg::agg_png; as a fallback, replace this
+    geom_text(nudge_y=...) call with annotate(''text'', x=.., y=.., label=..) at hard-coded
+    coordinates to isolate whether the aes-inheritance/data path is the problem.'
+  - The 'Random baseline' legend entry sits very close to / touches the y=15 gridline
+    directly beneath it (descenders of 'Random baseline' nearly meet the line) - the
+    new elevated legend background helps separate it from the plot but the vertical
+    gap is still tight; nudge the legend down slightly further or add more internal
+    legend padding.
+  - Because the callout layer currently renders nothing, the code carries a dead/non-functional
+    layer - either make it actually render (see above) or remove it rather than shipping
+    a feature whose visual effect doesn't match its intent.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 target.
-      Chrome: Title "Fraud Detection Model · lift-curve · r · ggplot2 · anyplot.ai" in dark ink top-left; axis titles "Population Targeted" (x) and "Cumulative Lift" (y) in dark ink; tick labels (0%/25%/50%/75%/100% and 5/10/15) in softer gray; borderless inline legend top-right ("Model", "Random baseline") — all clearly readable.
-      Data: Brand-green (#009E73) line decaying from ~16.7x to 1x with 10 teal decile markers; gray dashed "Random baseline" line at y=1. First series confirmed as Imprint #009E73.
-      Legibility verdict: PASS
+      Chrome: Title "Fraud Detection Model · lift-curve · r · ggplot2 · anyplot.ai" in dark ink, top-left. Axis titles "Population Targeted" (x) and "Cumulative Lift" (y) in dark ink. Tick labels (0%/25%/50%/75%/100% and 5/10/15) in softer gray. Inline legend top-right ("Model", "Random baseline") now sits on a very subtle elevated fill with a thin border. All chrome text is clearly readable.
+      Data: Brand-green (#009E73) line decaying from ~16.7x at 0% to 1x at 100%, with 10 teal decile markers along the curve; gray dashed "Random baseline" line at y=1. First series confirmed as Imprint #009E73. Pixel-level inspection around the 10% and 50% decile markers shows NO callout text ("9.2x @ 10%" / "2.0x @ 50%") despite the code adding a geom_text() layer for this — the annotations do not render.
+      Also confirmed via pixel sampling: the horizontal y=5/10/15 gridlines render at full INK opacity (measured RGB(26,26,23), i.e. 100% ink) rather than the intended faint ~15% tint, making them visually bolder/more prominent than the style guide's "subtle grid" guidance calls for.
+      Legibility verdict: PASS (all rendered text is legible; the missing callout text is a content/feature bug, not a legibility problem)
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 target.
       Chrome: Same title/axis titles now in light ink (#F0EFE8); tick labels and legend text in light-gray (#B8B7B0) — all clearly readable, no dark-on-dark issues.
-      Data: Line and decile marker colors are pixel-identical in hue to the light render (still #009E73); dashed baseline flips to the theme's lighter neutral tone as expected — only chrome changed, confirming data-color consistency across themes.
-      Legibility verdict: PASS
+      Data: Line and decile marker colors are pixel-identical in hue to the light render (still #009E73); dashed baseline flips to the theme's lighter neutral tone as expected — only chrome changed, confirming data-color consistency across themes. Same as light render: the value-callout text is completely absent near both decile points, and the horizontal gridlines render fully opaque (measured full-white/full-INK equivalent) instead of subtly faded.
+      Legibility verdict: PASS (all rendered text is legible; the missing callout text and non-subtle grid are functional/design defects, not legibility failures)
+
+    Both paragraphs confirm the two defects called out in Weaknesses are real and reproduce identically across both themes.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -58,33 +81,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; y=15 gridline visually brushes
-          the legend row
+        comment: All rendered text readable in both themes with explicit sizes; unaffected
+          by the missing callout text (a feature bug, not a legibility issue)
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Transparent legend background lets the y=15 gridline pass behind
-          the legend row
+        comment: Legend now has an elevated background, but the 'Random baseline'
+          row still sits very close to / touching the y=15 gridline beneath it
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Line weight and decile marker size well-matched to the smoothed curve
+        comment: Line and decile markers are well-sized, but the added value-callout
+          text layer is completely invisible in both renders (confirmed via pixel
+          crop inspection)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. neutral-gray dashed line, good contrast, no red-green reliance
+        comment: Green line vs. neutral dashed baseline, distinguished by both color
+          and linetype
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), generous margins, no overflow/clipping
+        comment: Canvas gate passed (3200x1800), generous margins, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -96,9 +122,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint #009E73; backgrounds match theme spec exactly'
+        comment: 'First series is Imprint #009E73; backgrounds match theme spec exactly
+          in both renders'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,24 +133,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean and professional; decile markers add polish but composition
-          is fairly standard
+        comment: Clean, custom Imprint palette and decile markers, but grid boldness
+          and an invisible callout layer undercut the intended polish
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines/ticks removed, boxless legend, generous whitespace; grid color
-          slightly more prominent than style-guide target
+        comment: Spines/ticks removed and whitespace is generous, but the panel grid
+          still renders fully opaque instead of the intended subtle 15% tint - the
+          same flaw the previous review flagged, unresolved despite the attempted
+          scales::alpha() fix
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Baseline + decile markers create a legible decay narrative, but no
-          direct value callouts
+        comment: Baseline + decile markers still tell a legible decay story, but the
+          value-callout annotations added specifically to strengthen storytelling
+          render nothing, so no improvement was actually delivered
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,50 +161,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift curve shape
+        comment: Correct lift-curve shape and structure
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Baseline at y=1, decile markers, 0-100% x-range all present
+        comment: Baseline at y=1 and decile markers present and correct; the attempted
+          'actual values at key percentiles' feature is coded but does not render
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = pct targeted, y = cumulative lift, full range shown
+        comment: x = pct targeted (0-100%), y = cumulative lift, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels are clear
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          are clear
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Curve, baseline, decile markers present; optional numeric value labels
-          not surfaced
+        comment: Curve, baseline, and decile markers present; the 'actual value' callouts
+          intended to close this gap from the previous review do not render
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fraud-detection scenario with plausible 6% base rate, neutral
+        comment: Fraud-detection scenario with plausible 6% base rate, neutral and
+          business-relevant
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=4000 within recommended range; realistic lift magnitudes
+        comment: n=4000 within recommended range; realistic lift magnitudes for a
+          well-separated model
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -194,13 +228,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2, dplyr, ragg loaded, all used
+        comment: 'Only ggplot2, dplyr, ragg loaded (plus scales:: via namespace),
+          all used'
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake interactivity
+        passed: false
+        comment: The geom_text() callout layer is dead code in practice - it computes
+          and adds a layer that produces no visible output
       - id: CQ-05
         name: Output & API
         score: 1
@@ -223,17 +259,19 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Reasonable layer composition but doesn't reach for more distinctive
-          ggplot2 capabilities
-  verdict: APPROVED
+        comment: Attempted a distinctive geom_text() callout, but since it doesn't
+          render, no additional credit is earned over generic layer composition
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - publication-ready
+  - grid-styling
