@@ -1,0 +1,248 @@
+library: chartjs
+language: javascript
+specification_id: facet-grid
+created: '2026-09-05T01:18:30Z'
+updated: '2026-09-05T01:31:32Z'
+generated_by: claude-sonnet
+workflow_run: 33935358312
+issue: 2696
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Per-facet linear regression trend line adds genuine data storytelling — viewer
+    can compare slope and scatter spread across facets at a glance
+  - Elevated pill-style row/column facet headers (rounded corners, background fill)
+    lift visual polish above a bare library-default look
+  - Marker size increased (3.2px to 4-5px) with added ~70% alpha transparency, better
+    tuned to the ~140-points-per-facet density
+  - Custom per-facet tooltip callbacks (title shows Class · Drivetrain, formatted
+    'X L to Y mpg' label) demonstrate genuine Chart.js mixed-dataset and tooltip-filter
+    usage, visible in the interactive HTML view
+  - Shared axis scales are computed once from the full dataset and applied identically
+    to every cell, matching the spec's 'same axes scales by default' requirement
+  - 'Both renders remain fully theme-correct: identical #009E73 data color and dashed
+    trend line color in both themes, correctly flipped chrome, no clipping at any
+    canvas edge'
+  weaknesses:
+  - Design Excellence still centers on a single accent color (green) plus a neutral
+    gray trend line; no secondary hue or highlighted facet to create a stronger focal
+    point
+  - At mobile-thumbnail scale (~400px wide), the 13px tick labels are still quite
+    small — bumping to ~14-15px would improve readability at reduced sizes
+  - No legend or small caption explains what the dashed line represents — a 'Trend'
+    legend entry or brief note would remove ambiguity for a first-time viewer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), each facet cell sits on a subtly lighter elevated tone with a thin light-gray border and rounded corners.
+      Chrome: Title "facet-grid · javascript · chartjs · anyplot.ai" is bold dark text, centered, fully legible with comfortable margin above and below. Column headers ("Drivetrain: FWD/AWD/RWD") render as dark bold text inside rounded elevated pills. Row labels ("Class: Sedan"/"Class: SUV") are rotated, bold, dark, and fully visible with generous margin from the right canvas edge. Axis titles "Engine Size (L)" and "Fuel Economy (mpg)" are dark and legible; tick labels (dark gray) appear only on the bottom row / leftmost column, avoiding redundant repetition.
+      Data: All six facets use brand-green (#009E73, ~70% alpha) scatter markers, plus a dashed neutral-gray linear-regression trend line per facet, showing a consistent negative correlation between engine size and fuel economy with visibly different spreads per facet.
+      Legibility verdict: PASS — all text is readable against the light background, no clipping at any edge (checked title top, axis-label bottom, row-label right, y-axis-label left).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), same elevated-cell structure as the light render, thin dark-gray borders.
+      Chrome: Title, column-header pills, row labels, axis titles, and tick labels all render in light/off-white color, clearly legible — no dark-on-dark text anywhere, confirmed at both the right-edge row labels and the bottom-edge axis label crop.
+      Data: Marker color is identical #009E73 green (same alpha) to the light render; the trend line renders in a light gray dash, still readable against the dark cell background — only chrome flipped.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark or clipping issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; thumbnail-scale
+          tick labels (13px) still on the small side
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap anywhere; verified edge crops at title, axis label, and
+          row-label regions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius increased to 4-5px with ~70% alpha, well tuned for
+          ~140 points per facet
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green markers vs. neutral-gray dashed trend line give good contrast
+          without relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid fills the canvas well, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Units present: ''Engine Size (L)'', ''Fuel Economy (mpg)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds match Imprint tokens, identical
+          data color across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Rounded pill headers and trend line lift it slightly, but still a
+          single-accent-color design with no broader palette or hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Rounded corners, elevated cell backgrounds, and pill headers show
+          real refinement above bare defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Per-facet regression trend line creates a genuine cross-facet visual
+          guide for the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct faceted scatter grid, 2x3 row/column split
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Row facet, column facet, shared axes, per-facet labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible within shared axis ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; no legend needed given self-explanatory
+          facet labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Visible variation across facets in slope and spread; not every edge
+          case (e.g. an outlier-heavy facet) is emphasized
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic automotive engine-size vs. fuel-economy scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Engine sizes, mpg values, and drivetrain penalties are all realistic
+          and directionally correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward data-gen -> scaffold -> per-cell chart flow, no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) deterministic data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity; tooltip logic is genuine, not fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set, mounts a single canvas per cell per the harness
+          contract
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic mixed-dataset (scatter + line) chart per cell, correct
+          use of dataset `order` and per-axis tick display toggling
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom tooltip filter + per-facet dynamic title/label callbacks are
+          a genuine Chart.js-specific touch beyond generic usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
