@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: facet-grid
 created: '2026-09-05T01:18:53Z'
-updated: '2026-09-05T01:23:09Z'
+updated: '2026-09-05T01:34:31Z'
 generated_by: claude-sonnet
 workflow_run: 33935487640
 issue: 2696
@@ -12,95 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-gri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
   - Shared x/y scales computed once from the full dataset and reused across every
-    cell, so all six panels are directly comparable — the core requirement of a facet
-    grid.
-  - Both row (water level) and column (fertilizer) faceting implemented simultaneously,
-    with theme-adaptive strip labels (t.elevatedBg / t.ink) identifying each facet.
-  - Tick labels are decluttered to only the outer edges (bottom row, left column)
-    while gridlines remain in every cell, keeping the grid clean without losing shared-scale
-    context.
+    cell, so all six panels are directly comparable across both facet dimensions.
+  - Both row (water level) and column (fertilizer) faceting implemented simultaneously
+    with theme-adaptive strip labels identifying each facet.
+  - Per-facet linear trend line (manual least-squares) added since attempt 1, reinforcing
+    the sunlight-vs-leaf-area story in every panel without cluttering the scatter.
+  - Tick label font-size bumped from 13px to 14px per attempt-1 feedback, and the
+    earlier 4-sided low-opacity panel borders were dropped in favor of clean interior
+    gridlines only.
+  - Edge-only tick labels (bottom row, left column) declutter the 6-panel grid while
+    gridlines remain in every cell, keeping the shared-scale context intact.
   - Deterministic in-memory data generation via a seeded LCG, with a plausible, neutral
-    real-world scenario (plant leaf area vs. sunlight, split by water/fertilizer).
-  - 'Correct Imprint token usage throughout (t.palette[0], t.ink, t.inkSoft, t.grid,
-    t.elevatedBg, t.pageBg) — first series is #009E73 and identical between light/dark,
-    only chrome flips.'
+    plant-growth scenario (sunlight, water, fertilizer -> leaf area).
+  - 'Correct Imprint token usage throughout: first series is exactly #009E73 and identical
+    between light/dark, only chrome (background, strips, text, gridlines) flips.'
   weaknesses:
-  - Tick label font-size is 13px, just under the D3 guide's recommended 14-22px floor
-    for a 3200px-wide canvas — bump to 14px to match the axis-title sizing more consistently.
-  - 'Design Excellence is at baseline: plain green markers with no additional visual-hierarchy
-    device (e.g. a shared trend line, per-facet mean marker, or highlighted panel)
-    to reinforce the sunlight-vs-leaf-area story beyond the grid layout itself.'
-  - Panel borders are drawn on all four sides for every cell at low opacity; consider
-    whether interior gridlines alone (removing the redundant per-cell box) would read
-    cleaner given the shared axes already imply the boundaries.
+  - Adjacent facet tick labels (e.g. the rightmost "12" of one panel and the leftmost
+    "4" of the next) sit only a few pixels apart at full size and visibly merge together
+    once downscaled to the ~400px mobile preview -- widening cellGap slightly or nudging
+    the outer tick labels inward would give them breathing room.
+  - 'Design excellence is still close to baseline: a single green marker plus a dashed
+    grey trend line per panel is a solid but modest visual-hierarchy device; no additional
+    touch (e.g. a highlighted focal facet, per-facet summary stat) further elevates
+    the storytelling.'
+  - No D3-specific techniques beyond manual facet-grid composition and a hand-rolled
+    least-squares trend line are demonstrated -- scales/extent/join usage is idiomatic
+    but functionally standard.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), consistent across the full canvas and each facet strip (slightly elevated tone) and panel interior.
-      Chrome: Title "facet-grid · javascript · d3 · anyplot.ai" is bold dark text, clearly legible. Column facet strips ("No fertilizer", "Organic", "Synthetic") and row facet strips ("Low water", "High water", rotated) use bold dark text on a light-elevated strip background — fully readable. Axis titles ("Sunlight (hours / day)", "Leaf Area (cm²)") and tick labels (only on outer edges) are dark/soft-ink text, clearly visible against the light background. Gridlines are subtle light-gray, visible but not dominant.
-      Data: All six panels use the same brand green (#009E73) circular markers at consistent size/opacity, with a clear positive trend of leaf area vs. sunlight hours visible in every cell.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), consistent across the full canvas, the three column facet strips ("No fertilizer", "Organic", "Synthetic"), and the two row facet strips ("Low water", "High water").
+      Chrome: Title "facet-grid · javascript · d3 · anyplot.ai" is bold dark text, clearly legible. Column and row facet-strip labels are bold dark text on a subtly elevated light strip background -- fully readable. Shared axis titles ("Sunlight (hours / day)", "Leaf Area (cm²)") and edge-only tick labels (bottom row, left column) are dark/soft-ink at 14-16px, clearly visible. Gridlines are subtle light-grey in every cell.
+      Data: All six panels show identical brand-green (#009E73) circular markers (r=4.5, alpha 0.75) with a dashed grey per-facet linear trend line reinforcing a clear positive sunlight-vs-leaf-area relationship. First (only) series is exactly #009E73.
+      Legibility verdict: PASS -- all text reads clearly against the light background; no light-on-light issues. Minor tightness: the rightmost tick of one panel and leftmost tick of the adjacent panel sit close together (verified via pixel crop -- readable, not overlapping, but tight).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), consistent across canvas, strips, and panels.
-      Chrome: Title is bold white/light text, clearly legible. Column and row facet strips use light text on a slightly-lighter-than-background elevated strip — no dark-on-dark issue. Axis titles and tick labels are light gray, clearly visible against the dark background. Gridlines are subtle dark-gray, visible but not dominant. No dark-on-dark or unreadable text detected anywhere.
-      Data: Marker color is identical brand green (#009E73) to the light render — only the chrome (background, strip fill, text, gridlines) flipped, confirming theme-adaptive tokens were used correctly rather than hard-coded colors.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), consistent across canvas, strips, and panel interiors.
+      Chrome: Title is bold light text, clearly legible. Facet strips use light text on a slightly-lighter elevated strip -- no dark-on-dark issue anywhere. Axis titles and tick labels are light grey, clearly visible against the dark background. Gridlines are subtle dark-grey, still perceptible.
+      Data: Marker color is identical brand green (#009E73) to the light render; only chrome (background, strip fill, text, gridlines) flips, confirming correct theme-token usage. Trend line uses the same ink token at low opacity, adapted per theme.
+      Legibility verdict: PASS -- all text reads clearly against the dark background; no dark-on-dark failures found.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Readable in both themes, but tick labels at 13px are slightly under
-          the recommended 14-22px floor for a 3200px canvas
+        comment: Tick labels now at the 14px floor (bumped from 13px per attempt-1
+          feedback), full hierarchy from 14px ticks to 22px title. Adjacent-facet
+          tick labels are tight at small preview sizes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Edge-only tick labels avoid any collisions across the 6-panel grid
+        comment: 'Pixel-crop verified: no text-on-text or text-on-data collisions
+          across the 6-panel grid.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (45 pts/facet) with prominent r=4.5 markers, alpha 0.75
-          — appropriate density handling
+        comment: Sparse data (45 pts/facet) with prominent r=4.5 markers, alpha 0.75.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green, no red-green reliance, good contrast
+        comment: Single-series brand green, good contrast on both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no overflow or clipping, balanced margins
+        comment: Canvas gate passed (3200x1800); no overflow or clipping detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (hours/day, cm²)
+        comment: Descriptive axis titles with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is exactly #009E73, identical light/dark, correct theme
-          backgrounds'
+        comment: 'First series exactly #009E73, identical light/dark, correct theme
+          backgrounds.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -108,21 +114,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Baseline styling — clean but no distinctive polish beyond theme tokens
+        comment: Clean but baseline polish -- single palette color, theme tokens,
+          no distinctive layout flourish.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Subtle low-opacity panel borders and generous cell gaps, slightly
-          above default
+        comment: 'Improved since attempt 1: the 4-sided low-opacity panel borders
+          were dropped in favor of interior gridlines only, plus generous cell gaps
+          and elevated strip backgrounds.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Facet grid structure itself enables comparison, but no added emphasis
-          (trend line, highlight) reinforces it
+        comment: New per-facet dashed trend line reinforces the sunlight-vs-leaf-area
+          relationship in every panel, on top of the grid structure itself.
     spec_compliance:
       score: 15
       max: 15
@@ -132,26 +140,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct facet grid of scatter panels
+        comment: Correct facet grid of scatter panels.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Row + column faceting, shared scales, facet labels all present
+        comment: Row + column faceting, shared scales, facet labels all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=sunlight, y=leaf area, correct and complete across all facets
+        comment: x=sunlight, y=leaf area, correct and complete across all facets.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; no legend needed since facet
-          strips identify categories
+        comment: Title matches mandated format; no legend needed since facet strips
+          identify categories.
     data_quality:
       score: 15
       max: 15
@@ -161,19 +169,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both row and column faceting demonstrated with shared axes and labels
+        comment: Both row and column faceting demonstrated with shared axes and labels.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral plant-growth scenario
+        comment: Plausible, neutral plant-growth scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible domain values for sunlight hours and leaf area
+        comment: Sensible domain values for sunlight hours and leaf area.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary classes, minimal helper functions
+        comment: No classes, small focused helper functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG PRNG
+        comment: Seeded LCG PRNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global d3
+        comment: No imports beyond the global d3.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear structure, no fake functionality
+        comment: Clear structure, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract, current D3 v7 selection.join API
+        comment: Follows mount-node contract, current D3 v7 selection.join API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -217,23 +225,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scales, extent, selection.join usage
+        comment: Idiomatic scales, extent, selection.join usage.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Manual facet-grid construction and edge-only tick decluttering, but
-          otherwise fairly standard D3 patterns
+        comment: Manual facet-grid construction plus a hand-rolled least-squares trend
+          line show craftsmanship, but no D3-specific API beyond standard scale/shape/selection
+          primitives.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
