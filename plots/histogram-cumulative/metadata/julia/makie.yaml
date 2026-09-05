@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: histogram-cumulative
 created: '2026-09-05T04:23:48Z'
-updated: '2026-09-05T04:26:49Z'
+updated: '2026-09-05T04:40:35Z'
 generated_by: claude-sonnet
 workflow_run: 33944145423
 issue: 2549
@@ -12,87 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Correctly hand-builds the ogive step polyline (flat-then-rise at each bin edge)
-    since Makie has no native cumulative-histogram primitive — follows the library's
-    no-workaround rule instead of faking it with hist!/stephist!
-  - Theme-adaptive chrome is fully threaded through (INK/INK_SOFT tokens, RGBAf alpha
-    grid, spine visibility) and both renders keep the same brand-green data color
-    with only chrome flipping
-  - Realistic, plausible e-commerce delivery-time dataset (right-skewed lognormal-ish,
-    1400 orders) that fits the domain naturally
-  - Correct canvas (3200×1800), correct title format, subtle area fill under the curve
-    adds polish without clutter
+  - Native Makie `stairs!` recipe (step = :pre) replaces the hand-rolled polyline,
+    directly addressing the prior LM-02 feedback with a library-idiomatic step-plot
+    primitive
+  - 'Median reference guide (dashed lines + inline "Median: 27.3h" label) gives the
+    viewer a concrete percentile read, directly tying to the spec''s percentile-reading
+    application and fixing the prior DE-03 gap'
+  - Theme-adaptive chrome fully threaded through (INK/INK_SOFT tokens, RGBAf alpha
+    grid, spine visibility); brand green identical between light/dark renders
+  - Realistic, plausible e-commerce delivery-time dataset (right-skewed, 1400 orders,
+    99th-percentile-clipped axis) with correct 3200x1800 canvas and mandated title
+    format
   weaknesses:
-  - No reference markers (e.g. median or 95th-percentile guide line) despite the spec
-    explicitly calling out percentile-reading as a primary application — would strengthen
-    data storytelling (DE-03)
-  - Library usage is solid but generic for Makie — band!+lines! is the same approach
-    any plotting library would use, no Makie-distinctive feature (LM-02) is showcased
+  - Composition is still essentially a single-color step curve plus one annotation;
+    beyond the new median guide there's limited additional visual hierarchy (e.g.
+    no secondary 90th/95th percentile marker) despite the spec's broader emphasis
+    on percentile positions
+  - stairs! plus dashed guide-lines are useful but not deeply distinctive versus other
+    libraries' step/fill-between equivalents - a more uniquely-Makie touch (annotated
+    markers, layered inset, axis interval highlight) would push Library Mastery further
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1.
-      Chrome: title "histogram-cumulative · julia · makie · anyplot.ai" in bold dark ink, centered, clearly readable; x-axis "Delivery Time (hours)" and y-axis "Cumulative Proportion of Orders" labels in dark ink; tick labels in soft grey-brown; horizontal gridlines at 0.25 intervals, subtle and unobtrusive; top/right spines removed.
-      Data: single brand-green (#009E73) step line (ogive) rising monotonically from 0 at ~5 hours to 1.0 at ~70 hours, with a light green alpha-filled area beneath it. Step shape correctly shows flat-within-bin, rise-at-edge behavior.
-      Legibility verdict: PASS.
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface, not pure white.
+      Chrome: Bold dark-ink title "histogram-cumulative · julia · makie · anyplot.ai" centered at top, clearly legible. Axis labels "Delivery Time (hours)" and "Cumulative Proportion of Orders" and tick labels are dark/soft-grey ink, all readable. Subtle horizontal gridlines at 0.25 intervals; top/right spines removed.
+      Data: Single brand-green (#009E73) stairs step curve (Makie stairs! recipe, step=:pre) rising monotonically from ~0 near 5h to 1.0 near 70h, with a light green (12% alpha) fill under the curve. A dashed median reference guide (horizontal to the curve at y=0.5, vertical down to the x-axis) with inline label "Median: 27.3h" sits cleanly beside the curve without overlapping it.
+      Legibility verdict: PASS - all text clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17.
-      Chrome: same title now in light/off-white ink, clearly legible; axis labels in light ink; tick labels in light grey; gridlines subtle white-on-dark at low alpha; spines matching the soft ink token.
-      Data: identical brand-green (#009E73) step line and fill — same shape, same color as the light render, confirming data colors are theme-invariant.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light issues; all text and data elements are clearly distinguishable from the background.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface, not pure black.
+      Chrome: Same title now rendered in light/off-white ink, clearly legible. Axis and tick labels flip to light tones; gridlines are subtle light-on-dark. Spines and grid behavior match the light render's structure.
+      Data: Identical brand-green (#009E73) stairs curve and fill - confirms only chrome flipped between themes, data colors unchanged. The dashed median guide and "Median: 27.3h" label render in light ink, fully legible, no dark-on-dark issue.
+      Legibility verdict: PASS - all text clearly readable against the dark background; no dark-on-dark or light-on-light failures found.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all text readable in both themes
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
+          tick=12, annotation=13); readable at full size in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, curve, or fill
+        comment: No overlap between title, axes, curve, or the new median annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick 3.5px step line plus area fill is clearly visible against both
-          backgrounds
+        comment: Stairs linewidth 3.5 with area fill is clearly visible and well-adapted
+          to a single-series ogive
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, no red-green reliance, good contrast
+        comment: Single high-contrast brand-green line against neutral background,
+          CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions, nothing clipped
+        comment: Plot area fills most of the canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (hours)
+        comment: Descriptive axis labels with units (hours, cumulative proportion)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; correct theme backgrounds in both renders'
+        comment: 'First/only series is #009E73, identical across themes; backgrounds
+          correct #FAF8F1 / #1A1A17; chrome theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -100,21 +107,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Alpha-filled area under the ogive and clean chrome tokens show above-baseline
-          polish, but overall composition remains a single simple step curve
+        comment: Alpha-filled area plus the new median guide add polish above a bare
+          default, but the composition remains a single-hue step curve with one annotation
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed, subtle single-axis gridlines, generous whitespace
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace, dashed
+          guide is a refined touch
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No reference markers (median/percentile) to guide the viewer despite
-          spec calling out percentile-reading as a use case
+        passed: true
+        comment: Median reference guide creates a clear focal point tied directly
+          to the spec's percentile-reading application - fixes the prior gap
     spec_compliance:
       score: 15
       max: 15
@@ -124,52 +132,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative histogram / ogive step function
+        comment: Correct cumulative/ogive step histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative proportion 0-1, monotonic non-decreasing, step (not smooth)
-          display
+        comment: Monotonic non-decreasing step function reaching 1.0, cumulative proportion
+          axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = delivery time, Y = cumulative proportion, axes cover full data
+        comment: X = delivery hours, Y = cumulative proportion, axes show full data
           range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for single
-          series
+        comment: Title matches mandated format exactly; single series needs no legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers monotonic step curve and full 0-1 range; lacks percentile
-          call-outs
+        comment: Right-skewed distribution, full 0-1 cumulative range, plus a labeled
+          median reference
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral logistics/delivery-time dataset
+        comment: Neutral, realistic e-commerce delivery-time scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Delivery times (hours, right-skewed up to ~70h) are sensible for
-          the domain
+        comment: Delivery times 5-70h with median ~27h are plausible for parcel logistics
     code_quality:
       score: 10
       max: 10
@@ -179,7 +185,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -191,13 +197,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all used
+        comment: CairoMakie, Colors, Random, Statistics all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Appropriate complexity, no fake functionality, well-commented rationale
       - id: CQ-05
         name: Output & API
         score: 1
@@ -205,27 +211,29 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png with px_per_unit=2, current CairoMakie API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct Figure/Axis idioms; manual step construction is the right
-          call given no native cumulative-histogram primitive
+        comment: Idiomatic Figure/Axis/stairs!/band! composition matching Makie's
+          recommended patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: band!+lines! combo is generic; no Makie-distinctive feature showcased
+        comment: stairs! with step=:pre is a genuine Makie recipe, but conceptually
+          mirrored by step/fill-between equivalents in other libraries - some but
+          not maximal distinctiveness
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
@@ -234,3 +242,4 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
