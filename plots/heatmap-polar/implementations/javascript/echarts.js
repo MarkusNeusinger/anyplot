@@ -27,12 +27,12 @@ let maxVisits = 0;
 days.forEach((day, dayIdx) => {
   const isWeekend = dayIdx >= 5;
   hours.forEach((hour, hourIdx) => {
-    const businessBump = !isWeekend && hour >= 9 && hour <= 17 ? 55 : 0;
-    const lunchBump = !isWeekend && (hour === 12 || hour === 13) ? 20 : 0;
-    const eveningBump = isWeekend && hour >= 18 && hour <= 23 ? 45 : 0;
-    const overnightDip = hour <= 5 ? -12 : 0;
-    const base = 18 + businessBump + lunchBump + eveningBump + overnightDip;
-    const visits = Math.max(2, Math.round(base + rand() * 14 - 7));
+    const businessBump = !isWeekend && hour >= 9 && hour <= 17 ? 400 : 0;
+    const lunchBump = !isWeekend && (hour === 12 || hour === 13) ? 150 : 0;
+    const eveningBump = isWeekend && hour >= 18 && hour <= 23 ? 350 : 0;
+    const overnightDip = hour <= 5 ? -90 : 0;
+    const base = 150 + businessBump + lunchBump + eveningBump + overnightDip;
+    const visits = Math.max(15, Math.round(base + rand() * 100 - 50));
     maxVisits = Math.max(maxVisits, visits);
     // [radiusIndex, angleIndex, value] — matches the polar coord order (radius, angle)
     // used by the polar custom-series API (see renderItem below).
@@ -46,6 +46,12 @@ function renderItem(params, api) {
   const angleIdx = api.value(1);
   const point = api.coord([radiusIdx, angleIdx]); // [x, y, radius, angleRad]
   const size = api.size([1, 1], [radiusIdx, angleIdx]); // [radiusBand, angleBandRad]
+  // zrender's `sector` shape sweeps its angle in the opposite rotational
+  // direction from the polar coordinate system's own angle convention (the
+  // one that places the angleAxis tick labels), so the raw coordinate-system
+  // angle must be negated here or every cell renders mirrored across the
+  // horizontal axis relative to its labeled hour.
+  const angle = -point[3];
   return {
     type: "sector",
     shape: {
@@ -53,8 +59,8 @@ function renderItem(params, api) {
       cy: params.coordSys.cy,
       r0: point[2] - size[0] / 2,
       r: point[2] + size[0] / 2,
-      startAngle: point[3] - size[1] / 2,
-      endAngle: point[3] + size[1] / 2,
+      startAngle: angle - size[1] / 2,
+      endAngle: angle + size[1] / 2,
     },
     style: api.style({
       fill: api.visual("color"),
@@ -129,7 +135,7 @@ chart.setOption({
     dimension: 2,
     min: 0,
     max: maxVisits,
-    right: 24,
+    right: 60,
     top: "middle",
     itemHeight: 320,
     orient: "vertical",
