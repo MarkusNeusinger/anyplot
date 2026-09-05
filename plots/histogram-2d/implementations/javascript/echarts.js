@@ -1,12 +1,8 @@
 // anyplot.ai
 // histogram-2d: 2D Histogram Heatmap
-// Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-09-05
-//# anyplot-orientation: square
-// anyplot.ai
-// histogram-2d: 2D Histogram Heatmap
 // Library: echarts 6.1.0 | JavaScript 22
 // Quality: pending | Created: 2026-09-05
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -26,7 +22,7 @@ function randNormal() {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-const SAMPLE_SIZE = 6000;
+const SAMPLE_SIZE = 16000;
 const CORRELATION = 0.55;
 const customerAges = [];
 const purchaseFrequencies = [];
@@ -42,8 +38,27 @@ for (let i = 0; i < SAMPLE_SIZE; i++) {
   }
 }
 
+// Pearson correlation of the retained sample, surfaced in the subtitle below.
+function pearson(xs, ys) {
+  const n = xs.length;
+  const meanX = xs.reduce((a, b) => a + b, 0) / n;
+  const meanY = ys.reduce((a, b) => a + b, 0) / n;
+  let cov = 0;
+  let varX = 0;
+  let varY = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = xs[i] - meanX;
+    const dy = ys[i] - meanY;
+    cov += dx * dy;
+    varX += dx * dx;
+    varY += dy * dy;
+  }
+  return cov / Math.sqrt(varX * varY);
+}
+const sampleCorrelation = pearson(customerAges, purchaseFrequencies);
+
 // --- Binning: build the 2D histogram grid -----------------------------------
-const BIN_COUNT = 28;
+const BIN_COUNT = 20;
 const xMin = Math.min(...customerAges);
 const xMax = Math.max(...customerAges);
 const yMin = Math.min(...purchaseFrequencies);
@@ -82,11 +97,23 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "histogram-2d · javascript · echarts · anyplot.ai",
+    subtext: `Older customers purchase more often — sample correlation r = ${sampleCorrelation.toFixed(2)}`,
     left: "center",
     top: 20,
     textStyle: { color: t.ink, fontSize: 22 },
+    subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
-  grid: { left: 120, right: 100, top: 110, bottom: 120 },
+  tooltip: {
+    trigger: "item",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink },
+    formatter: (params) => {
+      const [xi, yi, count] = params.value;
+      return `Age: ${xLabels[xi]} yrs<br/>Purchases: ${yLabels[yi]}/yr<br/>Count: ${count}`;
+    },
+  },
+  grid: { left: 120, right: 100, top: 130, bottom: 120 },
   xAxis: {
     type: "category",
     data: xLabels,
@@ -127,8 +154,8 @@ chart.setOption({
     {
       type: "heatmap",
       data: heatmapData,
-      itemStyle: { borderWidth: 0 },
-      emphasis: { itemStyle: { shadowBlur: 0 } },
+      itemStyle: { borderColor: t.pageBg, borderWidth: 1, borderRadius: 2 },
+      emphasis: { itemStyle: { borderColor: t.ink, borderWidth: 2, shadowBlur: 0 } },
     },
   ],
 });
