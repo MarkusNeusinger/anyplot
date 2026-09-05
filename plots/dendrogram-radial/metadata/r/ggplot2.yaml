@@ -1,0 +1,274 @@
+library: ggplot2
+language: r
+specification_id: dendrogram-radial
+created: '2026-09-05T00:01:34Z'
+updated: '2026-09-05T00:16:42Z'
+generated_by: claude-sonnet
+workflow_run: 33931070428
+issue: 5245
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Hand-built radial dendrogram (ggplot2 has no native geom for this) with concentric
+    distance rings labeled 5/10/15/20 giving a genuine quantitative read of merge
+    height, not just decoration
+  - Cluster branches colored in canonical Imprint order (green/lavender/blue/ochre)
+    with a distinct desaturated 'Mixed branch' treatment for ambiguous near-root merges
+    — clear visual hierarchy that a reader grasps at a glance
+  - Tangential leaf-label rotation correctly flips hjust/angle past the 180° mark
+    so labels on the left hemisphere read right-side-up instead of upside-down — an
+    easy-to-miss detail done right
+  - 'Theme-adaptive chrome is fully correct in both renders: identical data colors
+    between light/dark, backgrounds match #FAF8F1/#1A1A17, all text uses INK/INK_SOFT/INK_MUTED
+    tokens'
+  - Title format and legend exactly match spec requirements; legend labels ('Cluster
+    1'..'Cluster 4', 'Mixed branch') are self-explanatory
+  weaknesses:
+  - At ~400px mobile scale the 32 leaf labels (Gene_01..Gene_32) become quite small
+    and tightly packed — still legible but tight; consider bumping geom_text size
+    slightly or trimming to ~24-28 leaves for more mobile breathing room
+  - Spec's optional outer metadata ring (e.g. species family / department color band)
+    is not implemented — a nice-to-have that would add a second data dimension, not
+    a required feature
+  - Manual tree-walk helper functions (get_x/get_height/get_cluster) plus a for-loop
+    over merges add moderate structural complexity versus a flatter KISS script —
+    justified since ggplot2 has no native radial-dendrogram geom, but it's the reason
+    CQ-01 isn't a perfect score
+  - Data storytelling relies solely on color-coded hierarchy; a small annotation or
+    emphasis on the tightest/most distinct cluster would push DE-03 further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "dendrogram-radial · r · ggplot2 · anyplot.ai" in dark ink, clearly visible and centered; subtitle "Concentric rings mark merge distance (height); root at center" in muted gray below it, fully readable. Concentric ring labels (5, 10, 15, 20) in muted gray near the plot center are legible. Bottom legend ("Cluster 1"–"Cluster 4", "Mixed branch") in soft dark gray text, clearly readable.
+      Data: Root (gray "Mixed branch") sits at the exact center with two short gray branches splitting into two super-clusters, which further split into 4 colored quadrant clusters — green (Cluster 1, bottom-right), purple/lavender (Cluster 2, top-left), blue (Cluster 3, bottom-left), ochre (Cluster 4, top-right). First categorical series is #009E73 green as required. 32 "Gene_NN" leaf labels are arranged radially around the circumference, each tangentially rotated to follow the circle, with left-hemisphere labels correctly flipped right-side-up. All text is dark-on-light and clearly readable; no dark-on-light legibility failures observed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle now render in light ink/light-gray respectively, both clearly legible against the dark background. Ring labels and leaf labels render in light gray, fully readable. Legend text also switches to light gray and remains legible. The "Mixed branch" gray line is a lighter gray on this render than on the light render (it uses the theme-adaptive INK_MUTED token, which is appropriate for a neutral/chrome-like category rather than a data-identity color).
+      Data: All four cluster colors (green, lavender, blue, ochre) are pixel-identical to the light render — only chrome (background, text, the neutral "mixed" line) flips as expected. No dark-on-dark or light-on-light failures found anywhere — title, subtitle, ring numbers, leaf labels, and legend are all comfortably legible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, subtitle 8pt, leaf/ring
+          geom_text ~2.6-2.7mm); fully readable at full size in both themes. At ~400px
+          mobile the 32 leaf labels get tight but stay legible — minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Verified via pixel-level crops of the densest label clusters (top-left
+          and bottom-left) — no text-on-text or text-on-branch overlap anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Branch linewidth (0.7) and leaf-label size are well-matched to the
+          32-leaf density; nothing barely visible or overplotted.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 categorical hues + 1 muted neutral, well-spaced Imprint hue families
+          (green/purple/blue/ochre); no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial plot fills a large, balanced portion of the 2400x2400 square
+          canvas; legend sits directly beneath the plot; edge crops (top/bottom/left/right
+          strips) confirm no clipped title, labels, or legend.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No conventional x/y axes (theme_void is correct for this plot type);
+          the radial scale is explicitly labeled via ring numbers plus a subtitle
+          stating they represent merge distance/height.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; clusters 2-4 follow canonical Imprint order
+          (#C475FD, #4467A3, #BD8233); ''Mixed branch'' correctly uses the theme-adaptive
+          muted anchor rather than a 5th categorical color; backgrounds and all chrome
+          are theme-correct in both renders; data colors identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built radial layout (not a library default) with quantitative
+          distance rings and a deliberate mixed-branch color treatment — clearly above
+          a configured default, though not yet at full publication polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All spines removed (theme_void), rings kept at low alpha (0.18) so
+          they stay subtle, generous margins, careful label-angle flipping for readability.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded clusters plus the desaturated mixed-branch treatment
+          create clear visual hierarchy — a viewer immediately sees the 4 clusters
+          and where clustering confidence breaks down near the root.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct radial dendrogram: root at center, leaves at circumference,
+          coord_polar layout.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Linkage matrix (hclust), leaf labels, and cluster-colored branches
+          all present; optional outer metadata ring is explicitly optional in spec.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angular position = leaf order, radial position = max_height - merge
+          height (root near center, leaves at edge) — correct and consistent.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'dendrogram-radial · r · ggplot2 · anyplot.ai';
+          legend labels ('Cluster 1'-'Cluster 4', 'Mixed branch') correctly describe
+          the data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows 4 distinct clusters plus ambiguous/mixed branches near the
+          root — good structural variety; optional metadata ring omitted.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic gene-expression-across-latent-groups scenario is a real,
+          neutral, comprehensible use case for hierarchical clustering.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Merge-height range (0-~20) and 4-group/32-gene/8-sample structure
+          are plausible for a small gene-expression clustering example.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions and a for-loop walk the merge tree —
+          necessary since ggplot2 has no native radial-dendrogram geom, but it departs
+          from pure imports->data->plot->save.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, tibble, ragg all actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is proportionate to the task (manual radial dendrogram
+          construction); no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves via ggsave(..., device = ragg::agg_png) as plot-{THEME}.png;
+          no deprecated calls.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid grammar-of-graphics composition (geom_segment/geom_path/geom_text
+          layered via scale_color_manual + coord_polar); the manual tree-walk keeps
+          it from being fully 'expertly high-level'.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of coord_polar to build a radial dendrogram ggplot2
+          doesn't support natively — a genuinely library-specific technique, not generic
+          scatter/line usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - minimal-chrome
+  - alpha-blending
