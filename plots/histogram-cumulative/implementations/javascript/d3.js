@@ -4,10 +4,16 @@
 // Quality: 83/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
+const theme = window.ANYPLOT_THEME;
 const { width, height } = window.ANYPLOT_SIZE;
 const margin = { top: 100, right: 70, bottom: 100, left: 120 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
+
+// The "muted / other / rest" semantic anchor from the style guide isn't part
+// of window.ANYPLOT_TOKENS for JS, so it's reproduced here directly.
+const muted = theme === "dark" ? "#A8A79F" : "#6B6A63";
+const mutedOpacity = theme === "dark" ? 0.6 : 0.45;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Deterministic LCG so the sample is reproducible without a seeded Math.random.
@@ -22,9 +28,16 @@ const rand = lcg(42);
 const MEAN_WAIT = 32;
 const waitTimes = Array.from({ length: 650 }, () => -MEAN_WAIT * Math.log(1 - rand()));
 
-const maxWait = Math.ceil(d3.max(waitTimes) / 10) * 10;
+// Cap the visible domain at the 99th percentile rather than the raw sample
+// max: a single slow outlier call would otherwise stretch the x-axis with a
+// long, information-free flat tail. Values beyond the cap are clamped into
+// the final bin so the cumulative curve still reaches exactly 100%.
+const sortedWait = waitTimes.slice().sort(d3.ascending);
+const p99Wait = d3.quantile(sortedWait, 0.99);
+const maxWait = Math.ceil(p99Wait / 10) * 10;
+const clampedWaitTimes = waitTimes.map((w) => Math.min(w, maxWait));
 const binCount = 20;
-const bins = d3.bin().domain([0, maxWait]).thresholds(binCount)(waitTimes);
+const bins = d3.bin().domain([0, maxWait]).thresholds(binCount)(clampedWaitTimes);
 
 let running = 0;
 const total = waitTimes.length;
@@ -65,8 +78,8 @@ g.selectAll("rect.freq")
   .attr("width", (d) => Math.max(0, x(d.x1) - x(d.x0) - 2))
   .attr("y", (d) => ih - barHeight(d.length))
   .attr("height", (d) => barHeight(d.length))
-  .attr("fill", t.muted)
-  .attr("opacity", 0.45);
+  .attr("fill", muted)
+  .attr("opacity", mutedOpacity);
 
 // --- Cumulative step curve (primary series) -----------------------------------
 const areaGen = d3
@@ -125,12 +138,12 @@ g.append("text")
 // --- Legend ------------------------------------------------------------------
 const legend = svg.append("g").attr("transform", `translate(${width - margin.right - 260}, ${margin.top - 56})`);
 const legendItems = [
-  { label: "Cumulative %", color: t.palette[0] },
-  { label: "Calls per bin", color: t.muted },
+  { label: "Cumulative %", color: t.palette[0], opacity: 1 },
+  { label: "Calls per bin", color: muted, opacity: mutedOpacity },
 ];
 legendItems.forEach((item, i) => {
   const row = legend.append("g").attr("transform", `translate(${i * 150}, 0)`);
-  row.append("rect").attr("width", 16).attr("height", 16).attr("fill", item.color).attr("opacity", i === 0 ? 1 : 0.45);
+  row.append("rect").attr("width", 16).attr("height", 16).attr("fill", item.color).attr("opacity", item.opacity);
   row
     .append("text")
     .attr("x", 24)
