@@ -18,8 +18,10 @@ const trainStd = [0.8, 1.0, 0.9, 0.8, 0.7, 0.6, 0.6, 0.5, 0.5, 0.4];
 const validationMean = [71, 76, 81, 84.5, 86.5, 87.8, 89.5, 90.5, 91.2, 91.7];
 const validationStd = [5.5, 4.8, 3.8, 3.2, 2.8, 2.4, 2.0, 1.7, 1.5, 1.3];
 
-const bandLower = (mean, std) => mean.map((m, i) => m - std[i]);
-const bandRange = (std) => std.map((s) => 2 * s);
+const toPairs = (mean) => mean.map((m, i) => [trainSizes[i], m]);
+const bandLower = (mean, std) =>
+  mean.map((m, i) => [trainSizes[i], m - std[i]]);
+const bandRange = (std) => std.map((s, i) => [trainSizes[i], 2 * s]);
 
 const trainColor = t.palette[0];
 const validationColor = t.palette[1];
@@ -38,8 +40,13 @@ Highcharts.chart("container", {
     text: "learning-curve-basic · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
+  subtitle: {
+    text: "Validation accuracy converges toward training accuracy as the fold-to-fold variance narrows",
+    style: { color: t.inkSoft, fontSize: "14px" },
+  },
   xAxis: {
-    categories: trainSizes.map(String),
+    type: "linear",
+    tickPositions: trainSizes,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
@@ -123,16 +130,18 @@ Highcharts.chart("container", {
     {
       name: "Training score",
       type: "line",
-      data: trainMean,
+      data: toPairs(trainMean),
       color: trainColor,
       lineWidth: 3,
+      marker: { enabled: true, radius: 5 },
     },
     {
       name: "Validation score",
       type: "line",
-      data: validationMean,
+      data: toPairs(validationMean),
       color: validationColor,
       lineWidth: 3,
+      marker: { enabled: true, radius: 5 },
     },
   ],
 });
