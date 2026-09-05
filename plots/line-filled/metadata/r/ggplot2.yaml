@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-filled
 created: '2026-09-05T07:19:30Z'
-updated: '2026-09-05T07:34:10Z'
+updated: '2026-09-05T07:42:05Z'
 generated_by: claude-sonnet
 workflow_run: 33952088783
 issue: 2643
@@ -12,48 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 88
 review:
   strengths:
+  - The critical rendering bug from the previous attempts (annotations/average line
+    rendering as zero pixels) is now fixed — both geom_hline and all three annotate()
+    layers render correctly in both themes.
   - 'Correct, spec-compliant filled-line construction: semi-transparent fill (alpha
-    0.35) with a crisp opaque line on top, baseline pinned at y=0'
-  - Theme adaptation is flawless — data color (#009E73) is pixel-identical between
-    light/dark renders; only chrome (background, ink, grid) flips
-  - 'Clean, minimal chrome: spines removed, y-only major gridlines, generous margins,
-    canvas exactly 3200x1800'
+    0.35) with a crisp opaque line on top, baseline pinned at y=0.'
+  - Theme adaptation is flawless — the data color (#009E73) is pixel-identical between
+    light/dark renders; only chrome (background, ink, grid) flips.
   - Realistic, neutral synthetic data (daily page views with a plausible weekend dip)
-    and a reproducible (set.seed(42)) data-generation pipeline
+    with a reproducible (set.seed(42)) pipeline.
+  - Peak and monthly-average annotations now give the chart real visual hierarchy
+    and a data-storytelling focal point.
   weaknesses:
-  - 'Critical rendering bug: geom_hline(yintercept = avg_views, linetype = "dashed")
-    and all three annotate() calls (peak point, peak text label, monthly-average text
-    label) are present in the code but produce zero pixels in either plot-light.png
-    or plot-dark.png, confirmed via full-canvas pixel scan for the exact INK/INK_SOFT
-    theme colors. Likely cause: vjust = -1 on the peak label pushes it above the scale_y_continuous(limits
-    = c(0, NA)) upper bound where default coord clipping removes it, and/or the geom_hline
-    layer is silently dropped. Actually render and visually inspect the plot before
-    resubmitting.'
-  - Small point markers (geom_point(size = 1.3)) barely stand out from the 1.4pt line
-    at 30 data points
-  - Design Excellence and Library Mastery scores are low primarily because the intended
-    visual storytelling (peak callout + average reference) never surfaces in the render
-    — fixing the rendering bug should resolve most of this
+  - Line markers (geom_point(size = 1.8)) still only modestly stand out from the 1.4pt
+    line at 30 data points — a touch more size or a subtle background-colored edge
+    would improve element visibility.
+  - Annotation text (size = 2.6–3) is noticeably smaller than the axis chrome; consider
+    nudging it up slightly for better balance at thumbnail scale.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1.
-      Chrome: Title "line-filled · r · ggplot2 · anyplot.ai" in dark ink, axis titles "Day of Month"/"Page Views" and tick labels clearly visible in dark ink / soft gray. Three horizontal major gridlines (2,000/4,000/6,000) subtle but visible.
-      Data: Single series, area fill + line in #009E73 (confirmed via pixel sampling: RGB(0,158,115)), small point markers along the path.
-      Legibility verdict: PASS (all rendered text is clearly readable; no light-on-light issues).
-      Note: Full-canvas pixel scan for the exact INK_SOFT dashed-hline color and INK text color found NO trace of the average reference line or either annotate() text label anywhere outside the axis/title chrome — these coded elements are absent from the render.
+      Chrome: Title "line-filled · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible. Axis titles "Day of Month"/"Page Views" and tick labels (0-30, 0-6,000) in dark ink / soft gray, clearly legible. Three subtle horizontal gridlines at 2,000/4,000/6,000; no vertical gridlines.
+      Data: Single series in #009E73 — semi-transparent filled area (baseline y=0), opaque line, small point markers, larger highlighted marker at the peak (day 25). Dashed gray reference line + "Monthly avg: 4,941" label, and "Peak: 6,363 views (day 25)" text callout — both render correctly (this was broken in the prior attempt).
+      Legibility verdict: PASS (all text readable; no light-on-light issues).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17.
-      Chrome: Title and axis titles in near-white ink, tick labels/gridlines in light gray — all clearly legible.
-      Data: Confirmed identical RGB(0,158,115) data color to the light render; only chrome flipped, exactly as required.
-      Legibility verdict: PASS (no dark-on-dark failures found).
-      Note: Same pixel-scan methodology confirms the average hline and both annotate() text labels are equally absent from this render — the rendering bug is consistent across both themes.
+      Chrome: Title and axis titles in near-white ink; tick labels/gridlines in light gray — all clearly legible.
+      Data: Identical #009E73 green fill/line/markers as the light render (apparent fill tone differs only due to alpha-blending over a different background — the underlying RGBA is unchanged, as expected). Dashed average line and both annotation callouts render correctly in this theme too.
+      Legibility verdict: PASS (no dark-on-dark failures; the previous attempt's missing-annotation bug is confirmed fixed in this theme as well).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,39 +54,40 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis title/tick labels legible in both themes; annotate() text
-          labels never render so their intended content is lost
+        comment: Title, axis titles, tick labels, and both annotation callouts are
+          legible in both themes; annotation text is fairly small relative to the
+          rest of the chrome
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions among rendered elements
+        comment: No collisions between text, markers, or the fill
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: geom_point markers barely stand out from the line; dedicated peak
-          marker never renders
+        comment: Line markers (size 1.8) only modestly more visible than the 1.4pt
+          line; dedicated peak marker (size 3.5) stands out well
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green, adequate contrast on both backgrounds
+        comment: Single-series green has good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, well-proportioned, nothing clipped
+        comment: Canvas exactly 3200x1800 (gate passed); nothing clipped; well-proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles
+        comment: Descriptive 'Day of Month' / 'Page Views' labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -102,29 +96,29 @@ review:
         comment: 'First series exactly #009E73; backgrounds match spec; both renders
           theme-correct'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Decent area+line combo but intended sophistication (peak/average
-          callouts) never renders
+        passed: true
+        comment: Peak callout, average reference line, and highlighted peak marker
+          show real design intent beyond a bare area chart
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed, restrained grid, generous whitespace
+        passed: true
+        comment: Spines/ticks removed, only y-major gridlines kept, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 4
         max: 6
-        passed: false
-        comment: Peak callout and average reference line, the intended focal points,
-          do not render — delivered chart has no visual hierarchy
+        passed: true
+        comment: Peak/average annotations now render and give the chart a clear focal
+          point and narrative
     spec_compliance:
       score: 15
       max: 15
@@ -140,45 +134,44 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (0.35), visible line on top, baseline at y=0
-          — all spec requirements met
+        comment: Semi-transparent fill (0.35), opaque line on top, fill matches line
+          color, baseline at y=0
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: day vs page_views, full range shown
+        comment: day vs page_views, full range 1-30 shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed
+        comment: Title format correct; no legend needed for single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Solid single-series trend with weekend dip; loses a point since intended
-          average/peak context never surfaces
+        comment: Trend, weekend dip, peak, and monthly-average context all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral page-views scenario
+        comment: Plausible, neutral daily page-views scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value range for the domain
+        comment: Sensible value range (~3,700-6,400 views)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,11 +194,11 @@ review:
         comment: 'Only ggplot2/ragg loaded; tibble::/scales:: used inline'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Not fake UI, but four real layers (hline + 3 annotate calls) are
-          dead code that never renders — a genuine bug
+        passed: true
+        comment: Appropriate complexity, no fake UI; previous dead-code/rendering
+          bug is fixed
       - id: CQ-05
         name: Output & API
         score: 1
@@ -213,7 +206,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png correctly
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -221,16 +214,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_area/geom_line/geom_point/annotate/scale_* usage;
-          docked slightly for lack of visual verification before submission
+        comment: Idiomatic geom_area/geom_line/geom_point/annotate/scale_*/coord_cartesian(clip='off')
+          usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: The one distinctive touch attempted (peak callout + average reference)
-          does not render, so nothing distinctive to credit
-  verdict: REJECTED
+        comment: Peak/average annotation pattern is a nice touch but a fairly common
+          one for this chart type
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scales
