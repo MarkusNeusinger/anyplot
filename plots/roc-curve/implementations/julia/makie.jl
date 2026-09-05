@@ -1,0 +1,107 @@
+# anyplot.ai
+# roc-curve: ROC Curve with AUC
+# Library: Makie.jl 0.12 | Julia 1.11
+# Quality: pending | Created: 2026-09-05
+
+using CairoMakie
+using Colors
+using Random
+
+Random.seed!(42)
+
+# --- Theme tokens ------------------------------------------------------------
+THEME    = get(ENV, "ANYPLOT_THEME", "light")
+PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+IMPRINT_PALETTE = [
+    colorant"#009E73",  # 1 — brand green, always first series
+    colorant"#C475FD",  # 2 — lavender
+]
+
+# --- Data: two diagnostic biomarkers vs. disease status ----------------------
+n_healthy = 300
+n_disease = 300
+
+scores_healthy_a = randn(n_healthy) .* 1.0 .+ 0.0
+scores_disease_a = randn(n_disease) .* 1.0 .+ 2.2
+
+scores_healthy_b = randn(n_healthy) .* 1.2 .+ 0.0
+scores_disease_b = randn(n_disease) .* 1.2 .+ 1.2
+
+# ROC curve for biomarker A: sweep the combined score axis from high to low,
+# accumulating hits (disease) and misses (healthy) as the threshold falls.
+labels_a = vcat(ones(Int, n_disease), zeros(Int, n_healthy))
+scores_a = vcat(scores_disease_a, scores_healthy_a)
+order_a = sortperm(scores_a; rev = true)
+sorted_labels_a = labels_a[order_a]
+tpr_a = vcat(0.0, cumsum(sorted_labels_a) ./ n_disease)
+fpr_a = vcat(0.0, cumsum(1 .- sorted_labels_a) ./ n_healthy)
+auc_a = sum(diff(fpr_a) .* (tpr_a[2:end] .+ tpr_a[1:(end - 1)]) ./ 2)
+
+# ROC curve for biomarker B
+labels_b = vcat(ones(Int, n_disease), zeros(Int, n_healthy))
+scores_b = vcat(scores_disease_b, scores_healthy_b)
+order_b = sortperm(scores_b; rev = true)
+sorted_labels_b = labels_b[order_b]
+tpr_b = vcat(0.0, cumsum(sorted_labels_b) ./ n_disease)
+fpr_b = vcat(0.0, cumsum(1 .- sorted_labels_b) ./ n_healthy)
+auc_b = sum(diff(fpr_b) .* (tpr_b[2:end] .+ tpr_b[1:(end - 1)]) ./ 2)
+
+# --- Plot ----------------------------------------------------------------
+fig = Figure(
+    size = (1200, 1200),
+    fontsize = 14,
+    backgroundcolor = PAGE_BG,
+)
+
+ax = Axis(
+    fig[1, 1];
+    title = "roc-curve · julia · makie · anyplot.ai",
+    titlesize = 20,
+    titlecolor = INK,
+    xlabel = "False Positive Rate",
+    ylabel = "True Positive Rate",
+    xlabelsize = 14,
+    ylabelsize = 14,
+    xlabelcolor = INK,
+    ylabelcolor = INK,
+    xticklabelsize = 12,
+    yticklabelsize = 12,
+    xticklabelcolor = INK_SOFT,
+    yticklabelcolor = INK_SOFT,
+    xtickcolor = INK_SOFT,
+    ytickcolor = INK_SOFT,
+    backgroundcolor = PAGE_BG,
+    aspect = 1,
+    limits = (0, 1, 0, 1),
+    topspinevisible = false,
+    rightspinevisible = false,
+    leftspinecolor = INK_SOFT,
+    bottomspinecolor = INK_SOFT,
+    xgridcolor = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    ygridcolor = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    xminorgridvisible = false,
+    yminorgridvisible = false,
+)
+
+lines!(
+    ax, [0.0, 1.0], [0.0, 1.0];
+    color = INK_SOFT, linestyle = :dash, linewidth = 2.0,
+    label = "Random classifier (AUC = 0.50)",
+)
+lines!(
+    ax, fpr_a, tpr_a;
+    color = IMPRINT_PALETTE[1], linewidth = 3.5,
+    label = "Biomarker A (AUC = $(round(auc_a; digits = 2)))",
+)
+lines!(
+    ax, fpr_b, tpr_b;
+    color = IMPRINT_PALETTE[2], linewidth = 3.5,
+    label = "Biomarker B (AUC = $(round(auc_b; digits = 2)))",
+)
+
+axislegend(ax; position = :rb, labelsize = 12, labelcolor = INK_SOFT, framevisible = false)
+
+# --- Save ----------------------------------------------------------------
+save("plot-$(THEME).png", fig; px_per_unit = 2)
