@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: precision-recall
 created: '2026-09-05T12:05:17Z'
-updated: '2026-09-05T12:09:01Z'
+updated: '2026-09-05T12:21:38Z'
 generated_by: claude-sonnet
 workflow_run: 33964834826
 issue: 2274
@@ -12,42 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/chartjs/plot-dark.html
-quality_score: 80
+quality_score: 90
 review:
   strengths:
-  - 'Accurate stepped-line rendering (`stepped: "after"`) faithfully represents the
-    threshold-based nature of a precision-recall curve'
-  - Average Precision (AP) score cleanly surfaced in the legend label
-  - Baseline reference line (dashed, at the positive-class prevalence) gives the reader
-    a random-classifier comparison point
-  - Full theme-adaptive chrome — identical brand-green data color between light and
-    dark renders, only chrome flips
-  - Deterministic synthetic data via a small seeded LCG + Box-Muller gaussian, reproducible
-    across runs
+  - 'Area fill under the curve (fill: "origin") plus a custom Chart.js plugin (afterDatasetsDraw)
+    drawing a leader-line callout for the best-F1 point turns the previously plain
+    line chart into an intentional, polished composition with a clear focal point'
+  - Three iso-F1 reference curves (F1 = 0.3 / 0.5 / 0.7) were added, directly fulfilling
+    the spec's 'consider showing iso-F1 curves' note and adding real interpretability
+    beyond the baseline line
+  - 'The custom plugin registration (`plugins: [apCalloutPlugin]`) is idiomatic, distinctive
+    Chart.js usage that couldn''t be replicated with basic line-chart configuration
+    alone'
+  - 'Theme-adaptive chrome is fully correct and consistent with the prior attempt:
+    identical brand-green data color between light and dark renders, only chrome flips'
+  - Deterministic seeded LCG + Box-Muller data generation remains reproducible across
+    runs
   weaknesses:
-  - No iso-F1 reference curves — the spec notes suggest showing them as F1-score contour
-    lines; would add real interpretability value on top of the baseline line
-  - 'Visual treatment is fairly plain/default: no area fill under the curve, no annotation/callout
-    marking the AP value or the curve''s knee — Design Excellence reads as generic
-    rather than intentional'
-  - Only a single classifier is shown; fine for this spec's data, but no visual precedent
-    is set for how a second series would be distinguished (color-only vs. also varying
-    line style)
+  - The 3 iso-F1 dotted curves carry no visible label anywhere in the static render
+    (they're intentionally filtered out of the legend and have no inline text) — a
+    reader can't tell which curve is F1=0.3 vs 0.7 from the PNG alone, undercutting
+    their value as a 'reference'. Add small inline text labels near each curve's terminus
+    (e.g. 'F1=0.3') via the existing custom plugin, or surface them in the legend
+    instead of filtering them out
+  - Code has grown to five helper functions plus a custom plugin object (makeLcg,
+    gaussian, isoF1Curve, hexToRgba, apCalloutPlugin) — reasonable given the feature
+    set (no seeded RNG or canvas drawing helpers in the browser), but it's drifting
+    from a pure top-to-bottom KISS script
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "precision-recall · javascript · chartjs · anyplot.ai" in dark ink, centered top; "Recall"/"Precision" axis titles in dark ink; tick labels (0, 0.2, 0.4, ... 1.0 on both axes) in softer dark gray; legend top-right with two entries ("Diagnostic test (AP = 0.82)" and "Baseline (prevalence = 0.12)") in dark ink; subtle light-gray gridlines on both axes. All chrome clearly readable against the light background.
-      Data: Brand-green (#009E73) stepped line for the PR curve, starting at (0,1) and stepping down to (~1, ~0.12); dark dashed horizontal line at y≈0.12 for the baseline. Colors read clearly against the cream background.
+      Chrome: Title "precision-recall · javascript · chartjs · anyplot.ai" in dark ink, centered top, occupying only ~30% of canvas width (well within bounds, no overflow); "Recall"/"Precision" axis titles in dark ink; tick labels (0, 0.2, ... 1.0 on both axes) in softer dark gray; legend top-right with "Diagnostic test (AP = 0.82)" and "Baseline (prevalence = 0.12)" in dark ink; subtle light-gray gridlines. New in this attempt: a translucent brand-green fill under the PR curve, three dotted grey iso-F1 reference curves, and a bold dark-ink callout "Best F1 = 0.80 (AP = 0.82)" with a leader line pointing to a green-dot marker on the curve. All chrome and the callout text are clearly readable against the light background; no overlap between the callout and the legend, curve, or iso-F1 lines.
       Legibility verdict: PASS — no light-on-light issues, no clipped text, no overlapping elements.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light ink/off-white, clearly legible against the dark background; legend text also light-colored; gridlines are subtle light lines at low opacity.
-      Data: Same brand-green (#009E73) stepped line — confirmed identical to the light render (only chrome flipped); baseline dashed line rendered in a lighter gray so it still reads against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark text, no unreadable elements; brand green remains vivid on the dark surface.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink/off-white, clearly legible; legend text also light-colored; gridlines subtle and low-opacity. The area fill, iso-F1 dotted curves, and best-F1 callout are all present and rendered in light-toned equivalents (white/light-grey dotted lines, white callout text) — clearly visible against the dark surface.
+      Data: Brand-green (#009E73) stepped line and fill — confirmed identical hue to the light render (only chrome flipped); baseline dashed line and iso-F1 curves rendered in a lighter grey so they still read against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark text, no unreadable elements; brand green and the callout text remain vivid and legible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,77 +60,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All titles/axis labels/ticks readable in both light and dark themes;
-          sizes appropriate at full canvas scale.
+        comment: All font sizes explicit; title occupies only ~30% of canvas width
+          (no overflow); readable in both themes including the new callout text.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text/data; legend cleanly placed top-right, clear
-          of the curve.
+        comment: Best-F1 callout, leader line, legend, and curve are all cleanly separated
+          with generous whitespace.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Stepped line at borderWidth 3.5 is clearly visible in both themes;
-          pointRadius 0 is appropriate for a dense (500-point) stepped curve.
+        comment: Main curve (3.5px) stands out over the thinner iso-F1 (1px dotted)
+          and baseline (2px dashed) reference lines — density-appropriate hierarchy.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line vs. dashed gray baseline gives redundant color+pattern
-          encoding; good contrast on both surfaces.
+        comment: Redundant color+pattern encoding (solid green vs. dashed/dotted grey);
+          good contrast on both surfaces.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title/axis/legend proportions balanced, nothing
-          clipped or overflowing.
+        comment: Canvas gate passed; plot area fills the majority of the canvas with
+          balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Recall'' / ''Precision'' are correct, self-explanatory axis labels
-          for this plot type.'
+        comment: '''Recall'' / ''Precision'' are correct, self-explanatory axis labels.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series uses palette[0] (#009E73); baseline uses inkSoft, not
-          a categorical slot; both renders theme-correct.
+        comment: 'First series is #009E73; baseline/iso-F1 use inkSoft as a semantic
+          ''neutral/reference-line'' role rather than a categorical slot; both renders
+          theme-correct.'
     design_excellence:
-      score: 8
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Competent but largely default execution — no area fill, no AP annotation/callout,
-          no extra visual flourish beyond the line + dashed baseline.
+        passed: true
+        comment: 'Marked improvement: area fill, custom-plugin callout, and iso-F1
+          overlay together read as an intentional, above-default composition.'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Chart.js has no spines to remove; grid is subtle and theme-adaptive,
-          but no further refinement (e.g., fill-under-curve, highlight at max-F1 point).
+        passed: true
+        comment: Fill-under-curve and a highlighted max-F1 point were added, exactly
+          addressing the prior review's gap; grid remains subtle and theme-adaptive.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: AP value in legend provides some hierarchy but there is no strong
-          focal point drawing attention to the curve's knee or high-AP region.
+        passed: true
+        comment: The best-F1 callout creates a clear focal point and states the key
+          insight directly, though the unlabeled iso-F1 curves don't yet contribute
+          their own story.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,12 +142,12 @@ review:
         comment: Correct precision-recall curve, rendered as a stepped threshold curve.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: AP in legend, baseline reference line, and stepped line style are
-          all present — iso-F1 curves are only a 'consider' suggestion in the spec
-          notes, not a hard requirement.
+        comment: AP in legend, baseline, stepped line, and iso-F1 curves are all present,
+          but the iso-F1 curves lack labels so they don't fully deliver on 'F1 score
+          reference'.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -153,8 +159,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'precision-recall · javascript · chartjs ·
-          anyplot.ai'; legend labels are descriptive and accurate.
+        comment: Title exactly matches the mandated format; legend labels are descriptive
+          and accurate.
     data_quality:
       score: 14
       max: 15
@@ -164,8 +170,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows curve + AP + baseline; missing the optional iso-F1 reference
-          contours mentioned in the spec notes.
+        comment: Shows curve + AP + baseline + iso-F1 + best-F1 marker; the unlabeled
+          iso-F1 curves are a minor completeness gap.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -189,9 +195,9 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions (makeLcg, gaussian) are needed since the
-          browser has no seeded-RNG built-in; otherwise a flat top-to-bottom script
-          with no classes.
+        comment: Five helper functions/plugin object now present — justified by the
+          browser having no seeded RNG or canvas-drawing helpers, but past pure top-to-bottom
+          KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,8 +216,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the PR-curve computation; no fake/simulated
-          UI.
+        comment: Appropriate complexity for the added iso-F1/callout features; no
+          fake/simulated UI.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -220,31 +226,34 @@ review:
         comment: 'Canvas correctly appended to #container, animation:false set, current
           Chart.js v4 API used throughout.'
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic linear x-scale + stepped-line dataset, plus a correctly
+          registered custom plugin using the recommended afterDatasetsDraw hook.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of a linear x scale with a stepped line dataset for
-          a threshold-based curve.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: 'Uses Chart.js''s native `stepped: "after"` mode — a genuinely distinctive,
-          on-label feature — but doesn''t otherwise push beyond a basic line-chart
-          configuration.'
+        comment: The custom plugin-based callout is a genuinely distinctive Chart.js
+          feature (direct canvas access via the plugin API) that would require different
+          mechanisms in other libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - stepped-line
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,7 +1,7 @@
 // anyplot.ai
 // precision-recall: Precision-Recall Curve
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 80/100 | Created: 2026-09-05
+// Quality: 90/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
