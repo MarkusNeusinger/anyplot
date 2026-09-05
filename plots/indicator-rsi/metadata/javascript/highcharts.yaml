@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: indicator-rsi
 created: '2026-09-05T06:06:20Z'
-updated: '2026-09-05T06:10:17Z'
+updated: '2026-09-05T06:18:51Z'
 generated_by: claude-sonnet
 workflow_run: 33948681572
 issue: 3229
@@ -12,37 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Correct brand-green RSI line with threshold lines/zones and lookback period exactly
+  - series.zones now recolors the RSI line itself (green/blue/red) exactly at the
+    30/70 thresholds, directly addressing the prior review's request for line-level
+    emphasis instead of shading alone
+  - Y-axis title updated to the more descriptive "RSI (0–100)" per prior feedback
+  - Correct brand-green baseline, threshold lines/labels, and 14-period lookback exactly
     per spec
-  - Synthetic data genuinely breaches both overbought and oversold thresholds multiple
-    times, exercising the full feature set
-  - Clean, theme-adaptive chrome — fully legible in both light and dark renders with
-    identical data color
-  - Idiomatic use of Highcharts plotBands/plotLines for the classic RSI panel look
+  - Synthetic regime-switching data genuinely breaches both overbought and oversold
+    thresholds multiple times
+  - Fully theme-adaptive chrome, legible in both light and dark renders with identical
+    data colors
+  - Idiomatic, well-chosen use of plotBands + plotLines + zoneAxis for a classic RSI
+    panel look
   weaknesses:
-  - Design excellence is solid but stops at zone shading — no additional emphasis
-    (e.g. series.zones to recolor the RSI line itself while in overbought/oversold
-    territory, or callouts on the specific crossover points) to push visual storytelling
-    further
-  - Y-axis title "RSI" could optionally be more descriptive (e.g. "RSI (0–100)") though
-    this is a very minor nit
-  - Library mastery is generic beyond plotBands/plotLines — consider series.zones
-    or dataLabels at key crossover points to differentiate the implementation further
+  - Visual refinement is still fairly default (grid is present rather than minimal)
+    beyond the zone-shading/recoloring work
+  - No further storytelling beyond zone shading + line recoloring, e.g. no dataLabels
+    or callouts marking the specific crossover points
+  - Threshold-line inline labels at 12px are on the small side (still legible, not
+    a failure)
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "indicator-rsi · javascript · highcharts · anyplot.ai" in dark ink, subtitle "14-period RSI" in soft gray; x-axis weekly date ticks (Mar 3 – Jun 30); y-axis 0–100 with "RSI" title; three labeled threshold lines (Overbought 70 red dashed, Centerline 50 gray dotted, Oversold 30 blue dashed). All text clearly readable against the light background.
-      Data: Single RSI line in brand green (#009E73), confirmed as first/only categorical series. Pinkish-tan shaded band 70–100 (overbought), gray-blue shaded band 0–30 (oversold).
+      Chrome: Title "indicator-rsi · javascript · highcharts · anyplot.ai" in dark ink, subtitle "14-period RSI" in soft gray. X-axis shows weekly date ticks (Mar 3 - Jun 30). Y-axis fixed 0-100 with title "RSI (0-100)". Three labeled threshold lines: "Overbought (70)" red dashed, "Centerline (50)" gray dotted, "Oversold (30)" blue dashed. All text is clearly readable against the light background.
+      Data: Single RSI series whose line color changes by value zone via Highcharts `zones` — brand green (#009E73) in the 30-70 band, matte red (#AE3030) above 70, blue (#4467A3) below 30 — directly reinforcing the pinkish-tan overbought shading (70-100) and gray-blue oversold shading (0-30). The line's baseline color (before entering a zone) is the mandated brand green, satisfying "first series = #009E73".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout as light render with chrome flipped — white title, light-gray tick/axis labels, dimmed gridlines, darkened/desaturated zone tints. Threshold line colors and labels remain legible.
-      Data: RSI line color identical to light render (#009E73, same shape/values) — confirms data colors are theme-invariant.
-      Legibility verdict: PASS (no dark-on-dark issues found — all text and lines clearly distinguishable from the near-black background)
+      Chrome: Same layout as light render with chrome flipped — white title, light-gray tick/axis labels, dimmed gridlines, darkened/desaturated zone tints. Threshold line colors and inline labels remain legible against the dark background.
+      Data: RSI line zone colors (green/red/blue) are pixel-identical to the light render, confirming data colors are theme-invariant — only chrome (background, grid, text) flips.
+      Legibility verdict: PASS (no dark-on-dark issues found — all text and lines remain clearly distinguishable from the near-black background)
   criteria_checklist:
     visual_quality:
       score: 29
@@ -53,8 +56,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; threshold-line labels at 12px are
-          slightly small but not a legibility failure
+        comment: All text readable in both themes; threshold-line inline labels at
+          12px are slightly small but not a legibility failure
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -66,36 +69,40 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Line weight (2.5px) appropriate for ~120-point dense series, no markers
+        comment: 2.5px line weight appropriate for a ~120-point dense series; no markers
           needed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line has good contrast on both surfaces; threshold lines differentiated
-          by dash style, not just color
+        comment: Green/red/blue zone colors have strong contrast on both surfaces;
+          threshold lines also differentiated by dash style, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, no clipping, proportions clean
+        comment: Canvas gate passed, no clipping, clean proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis "RSI" is minimal but adequate; datetime x-axis needs no title
+        comment: Y-axis title improved to "RSI (0–100)" per prior feedback; datetime
+          x-axis needs no title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; correct light/dark chrome backgrounds;
-          data color identical across themes'
+        comment: 'Baseline series color is #009E73; zone recoloring uses palette[4]
+          (#AE3030, the designated bad/danger semantic anchor) for overbought and
+          palette[2] (#4467A3 blue) for oversold — a correct semantic-exception application,
+          not a violation. Correct light/dark chrome backgrounds; data colors identical
+          across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -103,21 +110,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Semantic zone shading and dash/dot differentiation show real design
-          thought, but overall polish stops there
+        comment: Semantic zone shading, dash/dot differentiation, and now zone-based
+          line recoloring show real design thought, but overall polish stops there
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Clean chrome, no spines, but grid is fairly present rather than minimal
+        comment: Clean chrome, no spines, but grid remains fairly present rather than
+          minimal
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: false
-        comment: Zone shading creates a clear focal point around threshold breaches;
-          no additional callouts on crossover events
+        comment: The RSI line now visibly changes color exactly at the 30/70 crossings,
+          directly reinforcing the zone shading on the data itself — a clear improvement
+          over the previous attempt's shading-only approach
     spec_compliance:
       score: 15
       max: 15
@@ -146,8 +155,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for single-series
-          indicator with inline threshold labels
+        comment: Title matches the mandated format exactly; no legend needed for a
+          single-series indicator with inline threshold labels
     data_quality:
       score: 15
       max: 15
@@ -209,7 +218,7 @@ review:
         comment: Correct mount-node contract, animation:false at both chart and series
           level
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -221,11 +230,12 @@ review:
           a financial-indicator panel
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Doesn't exploit more distinctive Highcharts capabilities like series.zones
-          to recolor the line itself
+        comment: 'Now exploits series.zones (zoneAxis: "y") to recolor the line itself
+          by RSI band, a distinctive Highcharts-specific feature added directly in
+          response to prior feedback'
   verdict: APPROVED
 impl_tags:
   dependencies: []
