@@ -8,26 +8,37 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Estimated effect of study interventions on exam score, points gained/lost
-// vs. a no-intervention baseline, with 95% confidence intervals.
-const categories = [
-  "Tutoring",
-  "Study Group",
-  "Practice Tests",
-  "Flashcards",
-  "Online Course",
-  "Peer Review",
-  "Sleep Coaching",
-];
-const estimate = [6.8, 4.1, 5.6, 2.3, 3.4, 1.2, -0.6];
-const marginOfError = [1.4, 1.9, 1.1, 1.6, 1.3, 1.8, 1.5];
-const lowerBound = estimate.map((v, i) => v - marginOfError[i]);
-const upperBound = estimate.map((v, i) => v + marginOfError[i]);
+// vs. a no-intervention baseline, with 95% confidence intervals. Sorted
+// descending by estimate so the chart reads top-to-bottom from strongest to
+// weakest effect.
+const rows = [
+  { category: "Tutoring", estimate: 6.8, marginOfError: 1.4 },
+  { category: "Study Group", estimate: 4.1, marginOfError: 1.9 },
+  { category: "Practice Tests", estimate: 5.6, marginOfError: 1.1 },
+  { category: "Flashcards", estimate: 2.3, marginOfError: 1.6 },
+  { category: "Online Course", estimate: 3.4, marginOfError: 1.3 },
+  { category: "Peer Review", estimate: 1.2, marginOfError: 1.8 },
+  { category: "Sleep Coaching", estimate: -0.6, marginOfError: 1.5 },
+].sort((a, b) => b.estimate - a.estimate);
+
+const categories = rows.map((r) => r.category);
+const estimate = rows.map((r) => r.estimate);
+const lowerBound = rows.map((r) => r.estimate - r.marginOfError);
+const upperBound = rows.map((r) => r.estimate + r.marginOfError);
+// An interval crossing zero is not statistically significant — render it in a
+// muted tone (same hue, lower opacity) so the eye separates the two groups
+// without leaning on the reference line alone.
+const isSignificant = rows.map((_, i) => lowerBound[i] > 0 || upperBound[i] < 0);
 
 // Highcharts core has no errorbar/columnrange series (those live in the
 // unloaded highcharts-more module) — draw the CI whiskers natively with the
 // SVGRenderer once the axes are laid out, keyed off the same pixel space the
 // scatter points use.
 const intervalColor = Highcharts.color(t.palette[0]).setOpacity(0.55).get();
+const intervalColorMuted = Highcharts.color(t.palette[0])
+  .setOpacity(0.3)
+  .get();
+const markerColorMuted = Highcharts.color(t.palette[0]).setOpacity(0.5).get();
 const capHalfPx = 9;
 
 // --- Chart -------------------------------------------------------------
@@ -47,9 +58,10 @@ Highcharts.chart("container", {
           const rowPixel = xAxis.toPixels(i);
           const lowPixel = yAxis.toPixels(lowerBound[i]);
           const highPixel = yAxis.toPixels(upperBound[i]);
+          const stroke = isSignificant[i] ? intervalColor : intervalColorMuted;
           chart.renderer
             .path(["M", lowPixel, rowPixel, "L", highPixel, rowPixel])
-            .attr({ "stroke-width": 3, stroke: intervalColor, zIndex: 4 })
+            .attr({ "stroke-width": 3, stroke, zIndex: 4 })
             .add();
           [lowPixel, highPixel].forEach((xPixel) => {
             chart.renderer
@@ -61,7 +73,7 @@ Highcharts.chart("container", {
                 xPixel,
                 rowPixel + capHalfPx,
               ])
-              .attr({ "stroke-width": 3, stroke: intervalColor, zIndex: 4 })
+              .attr({ "stroke-width": 3, stroke, zIndex: 4 })
               .add();
           });
         });
@@ -89,6 +101,8 @@ Highcharts.chart("container", {
     },
     minPadding: 0.06,
     maxPadding: 0.06,
+    lineColor: t.inkSoft,
+    tickColor: t.inkSoft,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     plotLines: [
@@ -121,7 +135,11 @@ Highcharts.chart("container", {
   series: [
     {
       name: "Estimate",
-      data: estimate.map((v, i) => [i, v]),
+      data: estimate.map((v, i) => ({
+        x: i,
+        y: v,
+        marker: isSignificant[i] ? undefined : { fillColor: markerColorMuted },
+      })),
       zIndex: 5,
     },
     {
