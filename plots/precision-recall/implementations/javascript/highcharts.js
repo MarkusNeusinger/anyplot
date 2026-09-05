@@ -58,6 +58,18 @@ for (let i = 1; i < prPoints.length; i += 1) {
     (prPoints[i].recall - prPoints[i - 1].recall) * prPoints[i].precision;
 }
 
+// --- Best-F1 operating point (callout on the curve itself) -------------------
+let bestF1Idx = 1;
+let bestF1 = 0;
+for (let i = 1; i < prPoints.length; i += 1) {
+  const { recall, precision } = prPoints[i];
+  const f1 = recall + precision > 0 ? (2 * recall * precision) / (recall + precision) : 0;
+  if (f1 > bestF1) {
+    bestF1 = f1;
+    bestF1Idx = i;
+  }
+}
+
 // --- Iso-F1 reference curves (spec note: contour lines for F1 reference) ---
 const isoF1Values = [0.3, 0.5, 0.7, 0.9];
 const isoF1Series = isoF1Values.map((f1) => {
@@ -85,7 +97,7 @@ const isoF1Series = isoF1Values.map((f1) => {
       align: "left",
       x: 6,
       y: -8,
-      style: { color: muted, fontSize: "11px", fontWeight: "normal", textOutline: "none" },
+      style: { color: muted, fontSize: "13px", fontWeight: "normal", textOutline: "none" },
       formatter() {
         return this.point.index === this.series.data.length - 1 ? `F1=${f1}` : null;
       },
@@ -120,8 +132,9 @@ Highcharts.chart("container", {
   yAxis: {
     title: { text: "Precision", style: { color: t.inkSoft, fontSize: "16px" } },
     min: 0,
-    max: 1.02,
+    max: 1.0,
     tickInterval: 0.2,
+    endOnTick: false,
     gridLineColor: t.grid,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
@@ -138,12 +151,29 @@ Highcharts.chart("container", {
     {
       type: "area",
       name: `Precision-Recall (AP = ${averagePrecision.toFixed(2)})`,
-      data: prPoints.map((p) => [p.recall, p.precision]),
+      data: prPoints.map((p, i) =>
+        i === bestF1Idx
+          ? {
+              x: p.recall,
+              y: p.precision,
+              marker: { enabled: true, radius: 5, fillColor: t.palette[0] },
+              dataLabels: {
+                enabled: true,
+                format: `Best F1 = ${bestF1.toFixed(2)}`,
+                align: "left",
+                x: 8,
+                y: -10,
+                style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+              },
+            }
+          : { x: p.recall, y: p.precision },
+      ),
       step: "left",
       color: t.palette[0],
       lineWidth: 3,
       fillOpacity: 0.15,
       marker: { enabled: false },
+      dataLabels: { enabled: false },
     },
     {
       type: "line",
