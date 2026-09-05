@@ -68,11 +68,22 @@ gwas <- bind_rows(snps, peaks) %>%
   )
 
 chr_axis <- chr_info %>%
-  mutate(center = offset + length_mb * 1e6 / 2)
+  mutate(
+    center = offset + length_mb * 1e6 / 2,
+    # Chromosomes 19-22 are short and sit close together; thin the labels
+    # past 18 to give the remaining ones breathing room.
+    label  = ifelse(chromosome > 18 & chromosome %% 2 == 0, "", chromosome)
+  )
 
 genome_wide_line <- -log10(5e-8)
 suggestive_line  <- -log10(1e-5)
 sig_hits         <- gwas %>% filter(p_value < 5e-8)
+
+# Lead SNP (highest -log10 p) per significant locus, for peak annotation
+lead_snps <- sig_hits %>%
+  group_by(chromosome) %>%
+  slice_max(neg_log_p, n = 1, with_ties = FALSE) %>%
+  ungroup()
 
 # --- Plot ----------------------------------------------------------------
 p <- ggplot(gwas, aes(x = bp_cum, y = neg_log_p, color = chr_parity)) +
@@ -83,10 +94,12 @@ p <- ggplot(gwas, aes(x = bp_cum, y = neg_log_p, color = chr_parity)) +
   geom_point(size = 0.6, alpha = 0.65) +
   geom_point(data = sig_hits, aes(x = bp_cum, y = neg_log_p),
              color = IMPRINT_PALETTE[5], size = 2.2, alpha = 0.9, inherit.aes = FALSE) +
+  geom_text(data = lead_snps, aes(x = bp_cum, y = neg_log_p, label = paste0("chr", chromosome)),
+            color = INK, size = 2.6, fontface = "bold", vjust = -0.9, inherit.aes = FALSE) +
   scale_color_manual(values = c(odd = IMPRINT_PALETTE[1], even = IMPRINT_PALETTE[3])) +
-  scale_x_continuous(breaks = chr_axis$center, labels = chr_axis$chromosome,
+  scale_x_continuous(breaks = chr_axis$center, labels = chr_axis$label,
                       expand = expansion(mult = 0.01)) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(
     title = "manhattan-gwas · r · ggplot2 · anyplot.ai",
     x     = "Chromosome",
@@ -104,7 +117,6 @@ p <- ggplot(gwas, aes(x = bp_cum, y = neg_log_p, color = chr_parity)) +
     axis.title        = element_text(color = INK, size = 10),
     axis.text.y       = element_text(color = INK_SOFT, size = 8),
     axis.text.x       = element_text(color = INK_SOFT, size = 6.5),
-    axis.line         = element_line(color = INK_SOFT),
     plot.title        = element_text(color = INK, size = 12)
   )
 
