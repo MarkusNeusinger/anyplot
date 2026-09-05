@@ -32,6 +32,8 @@ const tasks = [
 ].map((row) => ({ ...row, start: dayOffset(new Date(row.start)), end: dayOffset(new Date(row.end)) }));
 
 const totalDays = Math.max(...tasks.map((row) => row.end)) + 5;
+const todayOffset = dayOffset(REFERENCE_DATE);
+const isActive = (row) => row.start <= todayOffset && todayOffset <= row.end;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 function formatDayOffset(offset) {
@@ -44,6 +46,52 @@ const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Chart -------------------------------------------------------------------
+// Subtle alternating row bands (drawn behind the grid/bars) to make it easier
+// to trace a task row across the full timeline width.
+const rowBandPlugin = {
+  id: "rowBands",
+  beforeDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const rowHeight = chartArea.height / tasks.length;
+    ctx.save();
+    ctx.fillStyle = t.elevatedBg;
+    tasks.forEach((_, i) => {
+      if (i % 2 !== 0) return;
+      const center = scales.y.getPixelForValue(i);
+      ctx.fillRect(chartArea.left, center - rowHeight / 2, chartArea.width, rowHeight);
+    });
+    ctx.restore();
+  },
+};
+
+// Compact "Nd" duration labels next to each bar, with in-progress tasks
+// (those straddling REFERENCE_DATE) called out as the chart's focal point.
+const durationLabelPlugin = {
+  id: "durationLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea } = chart;
+    const meta = chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.textBaseline = "middle";
+    meta.data.forEach((bar, i) => {
+      const row = tasks[i];
+      const active = isActive(row);
+      const label = `${row.end - row.start}d${active ? " · in progress" : ""}`;
+      ctx.font = `${active ? "bold " : ""}11px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.fillStyle = active ? t.ink : t.inkSoft;
+      const labelWidth = ctx.measureText(label).width;
+      if (bar.x + 6 + labelWidth <= chartArea.right) {
+        ctx.textAlign = "left";
+        ctx.fillText(label, bar.x + 6, bar.y);
+      } else {
+        ctx.textAlign = "right";
+        ctx.fillText(label, bar.base - 6, bar.y);
+      }
+    });
+    ctx.restore();
+  },
+};
+
 // A dashed reference line marks REFERENCE_DATE using the theme's ink color
 // (the "neutral" semantic anchor — reference lines share the text/grid hue).
 const referenceLinePlugin = {
@@ -80,6 +128,8 @@ new Chart(canvas, {
         label: "Tasks",
         data: tasks.map((row) => [row.start, row.end]),
         backgroundColor: tasks.map((row) => t.palette[CATEGORIES.indexOf(row.category) % t.palette.length]),
+        borderColor: tasks.map(() => t.ink),
+        borderWidth: tasks.map((row) => (isActive(row) ? 3 : 0)),
         borderRadius: 4,
         borderSkipped: false,
         barPercentage: 0.6,
@@ -131,10 +181,10 @@ new Chart(canvas, {
         title: { display: true, text: "Timeline (2026)", color: t.ink, font: { size: 16 } },
       },
       y: {
-        ticks: { color: t.inkSoft, font: { size: 14 } },
+        ticks: { color: t.inkSoft, font: { size: 15 } },
         grid: { display: false },
       },
     },
   },
-  plugins: [referenceLinePlugin],
+  plugins: [rowBandPlugin, durationLabelPlugin, referenceLinePlugin],
 });
