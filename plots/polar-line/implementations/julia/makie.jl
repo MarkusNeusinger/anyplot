@@ -40,6 +40,10 @@ tropical_closed = vcat(tropical, tropical[1])
 temperate_closed = vcat(temperate, temperate[1])
 arid_closed = vcat(arid, arid[1])
 
+peak_idx = argmax(tropical)  # Tropical is the highest-variance series — the story to tell
+peak_theta = theta[peak_idx]
+peak_r = tropical[peak_idx]
+
 # --- Plot -------------------------------------------------------------------
 fig = Figure(size = (1200, 1200), backgroundcolor = PAGE_BG)
 
@@ -64,21 +68,44 @@ ax = PolarAxis(
     thetagridcolor = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
+# Subtle fill under the highest-variance series gives the chart a focal point
+band!(ax, theta_closed, zeros(length(theta_closed)), tropical_closed;
+    color = (IMPRINT_PALETTE[1], 0.12))
+
 lines!(ax, theta_closed, tropical_closed; color = IMPRINT_PALETTE[1], linewidth = 3.5)
 lines!(ax, theta_closed, temperate_closed; color = IMPRINT_PALETTE[2], linewidth = 3.5)
 lines!(ax, theta_closed, arid_closed; color = IMPRINT_PALETTE[3], linewidth = 3.5)
 
+# Markers at each of the 12 monthly measurements, not just the interpolated line
+scatter!(ax, theta, tropical; color = IMPRINT_PALETTE[1], markersize = 9, strokewidth = 0)
+scatter!(ax, theta, temperate; color = IMPRINT_PALETTE[2], markersize = 9, strokewidth = 0)
+scatter!(ax, theta, arid; color = IMPRINT_PALETTE[3], markersize = 9, strokewidth = 0)
+
+# Callout on Tropical's wet-season peak — the clearest story in the data
+text!(
+    ax, peak_theta, peak_r;
+    text = "peak wet season",
+    color = INK,
+    fontsize = 13,
+    align = (:center, :bottom),
+    offset = (0, 12),
+)
+
+# A slim row below the plot (not a side column) keeps the circle horizontally
+# centered in the square canvas
 Legend(
-    fig[1, 2],
+    fig[2, 1],
     [LineElement(color = IMPRINT_PALETTE[1], linewidth = 3.5),
      LineElement(color = IMPRINT_PALETTE[2], linewidth = 3.5),
      LineElement(color = IMPRINT_PALETTE[3], linewidth = 3.5)],
     ["Tropical", "Temperate", "Arid"];
+    orientation = :horizontal,
     labelsize = 16,
     labelcolor = INK,
     backgroundcolor = ELEVATED_BG,
     framevisible = false,
 )
+rowsize!(fig.layout, 2, Fixed(70))
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
