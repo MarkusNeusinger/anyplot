@@ -1,7 +1,7 @@
 // anyplot.ai
 // learning-curve-basic: Model Learning Curve
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 91/100 | Created: 2026-09-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
