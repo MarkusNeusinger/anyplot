@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: icicle-basic
 created: '2026-09-05T05:26:00Z'
-updated: '2026-09-05T05:32:19Z'
+updated: '2026-09-05T05:39:52Z'
 generated_by: claude-sonnet
 workflow_run: 33946880990
 issue: 2497
@@ -12,103 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Correct icicle semantics: root at top, children stacked below (horizontal/top-to-bottom
-    orientation per spec notes), widths proportional to bottom-up summed values'
+  - 'Repair correctly addressed both attempt-1 weaknesses: leaf-level geom_text size
+    bumped from 2.4mm to 2.8mm (3.4mm for the focal leaf) for mobile legibility, and
+    a new focal point (largest leaf ''hero.png'') gets an ink-outlined geom_rect plus
+    a bolder label, giving Design Excellence a clear storytelling anchor'
+  - 'Correct icicle semantics preserved: root at top, children stacked below, widths
+    proportional to bottom-up summed values, `show_label` overflow guard still hides
+    labels on cells too narrow to hold them without any AR-09 clipping'
   - Root 'project' node uses the theme-adaptive neutral/ink token instead of a categorical
-    hue, correctly flipping from near-black (light theme) to off-white (dark theme)
-    as a non-competing 'total' anchor
-  - show_label logic (cell width vs. required text width) cleanly hides labels on
-    cells too narrow to hold them instead of overflowing or overlapping, avoiding
-    AR-09/VQ-02 issues even on a very thin 'config' branch
-  - Categorical branch colors use Imprint positions 1-5 in canonical order, first
-    branch green, verified pixel-identical between light and dark renders
-  - 'Clean single-file R script: explicit theme tokens, no functions/classes, set.seed(42),
-    correct ragg::agg_png device and plot-{theme}.png naming'
+    hue, correctly flipping between near-black (light) and off-white (dark) while
+    the five branch colors stay pixel-identical across themes
+  - Categorical branch colors use Imprint positions 1-5 in canonical order with the
+    first branch green (#009E73), verified identical between light and dark renders
+  - 'Clean single-file R script: explicit theme tokens, no functions/classes, `set.seed(42)`,
+    correct `ragg::agg_png` device and `plot-{theme}.png` naming'
   weaknesses:
-  - Leaf-level text (geom_text(size = 2.4), ~6.8pt equivalent) is noticeably smaller
-    than the header text and may become hard to read once the 3200x1800 PNG is scaled
-    down to a ~400px mobile width - increase leaf font size slightly or tighten required_width
-    so fewer, larger labels are shown.
-  - The 'config' branch's aggregate value (10 KB) is tiny next to its siblings (89-133
-    KB), so it renders as a near-invisible hairline column with no room for any label
-    at any depth - a slightly larger config-file total would give the fifth branch
-    enough visual presence to read as a real category.
-  - Alpha-based depth fading composites the same branch hue differently against the
-    light vs. dark page background (e.g. the 'docs' sub-folder row looks pale lavender
-    in light mode but a more saturated plum in dark mode) - the base categorical hue
-    (row 2, full opacity) is identical across themes as required, this is an expected
-    side-effect of alpha-over-background compositing worth being aware of.
-  - Design Excellence is solid but stops short of a clear focal point - no visual
-    callout for the largest file/folder, so the 'insight' is left entirely to the
-    viewer to find via reading labels.
+  - Visual Refinement (DE-02) is still fairly close to theme_void defaults beyond
+    the white cell strokes and new highlight ring - there's no additional typographic
+    or spacing polish distinguishing this from a well-configured baseline.
+  - The 'config' branch's tiny aggregate value renders as a near-invisible hairline
+    column with no room for a label at any depth - technically correct per the show_label
+    guard, but it reads as a stray line rather than a fifth category; a slightly larger
+    config total would give it visual presence.
+  - Depth-based alpha fading composites the same branch hue differently against the
+    light vs. dark page background (e.g. 'docs' sub-rows look paler in light mode,
+    more saturated in dark mode) - the full-opacity row-2 hues are identical across
+    themes as required, but this is worth noting as an expected side effect rather
+    than a bug.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Title "icicle-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, fully readable. Row-2 branch labels (src, docs, tests, assets) bold white-on-color, fully readable. Row-3/4 sub-folder and file labels in dark ink on lighter alpha-blended tints, readable where shown; narrower cells correctly omit labels instead of overflowing.
-      Data: Root "project" bar renders in near-black neutral token (bold off-white text). Branch row uses Imprint palette positions 1-5 in canonical order: src=#009E73 (green, first series correct), docs=lavender, tests=blue, assets=ochre, config=matte red (thin sliver). Deeper rows fade via alpha to indicate depth.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "icicle-basic · r · ggplot2 · anyplot.ai" top-left in dark ink, fully readable. All row labels (headers, leaves) render in white-on-saturated-color or dark-ink-on-light-tint depending on cell darkness, per the label_color logic.
+      Data: Row 1 is a single near-black "project" root bar (bold, off-white text - theme-adaptive neutral token, not a categorical hue). Row 2 splits into 5 Imprint-colored branches: src (#009E73 green, first series correct), docs (lavender), tests (blue), assets (ochre), config (thin matte-red sliver). Rows 3-4 show sub-folders/files in alpha-faded tints of their branch color, with labels only where width permits (show_label guard). The largest leaf, "hero.png", is highlighted with a solid ink outline and a bolder label - a clear focal point added in this repair pass.
+      Legibility verdict: PASS - all header, leaf, and focal labels are readable; no dark-on-light or light-on-light failures; leaf font size (2.8mm, bumped up from the previous attempt's 2.4mm) reads comfortably even in narrow cells.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title and all row-3/4 labels flip to light ink (#F0EFE8), fully legible against both the near-black page and the darker alpha-blended branch tints. No dark-on-dark failures observed.
-      Data: Root "project" bar flips to an off-white neutral block with dark bold text - correct adaptive behavior. Branch colors (green/lavender/blue/ochre/red) confirmed pixel-identical hues to the light render at full opacity (row 2). Alpha-blended row-3/4 tints look darker/more saturated than in light mode because compositing blends toward the dark page background - an expected consequence of alpha-based depth encoding, not a theme bug.
-      Legibility verdict: PASS
-
-    Additional check: zoomed inspection of the thin "config" column at the right canvas edge in both themes confirmed no clipped pixels - the column sits with a clear margin from the canvas border (AR-09 not triggered).
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title and all labels flip to light ink (#F0EFE8), fully legible against the near-black page and the darker alpha-blended branch tints. No dark-on-dark failures.
+      Data: The five branch colors (green/lavender/blue/ochre/red) in row 2 are pixel-identical to the light render, confirming Imprint palette compliance across themes. The root "project" bar correctly flips to a warm off-white block with dark bold text - the neutral token behaving as chrome, not as a fixed categorical color. The "hero.png" focal highlight (ink-colored outline, which flips to light ink here) remains clearly visible and distinct.
+      Legibility verdict: PASS - no dark-on-dark or light-on-light failures found; alpha-faded sub-rows look more saturated here than in light mode because alpha compositing blends toward the dark page background, but the full-opacity branch hues (row 2) are unchanged.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Explicit sizes throughout, good proportions, but leaf-level labels
-          (~6.8pt equivalent) may be hard to read at mobile scale
+        comment: Leaf labels bumped to 2.8mm (3.4mm for the focal leaf) from the prior
+          attempt's 2.4mm, explicit sizes throughout, readable in both themes and
+          at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: show_label width guard prevents any text overflow or collision
+        comment: No overlapping text; show_label guard prevents overflow in narrow
+          cells
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rects clearly visible at all depths, no overplotting
+        comment: Rects clearly visible at all depths, thin white strokes separate
+          cells cleanly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, no red-green-only signal
+        comment: Good luminance contrast, no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas well with balanced margins, nothing cut off
+        comment: Plot fills the full canvas width and most of the height with balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for an icicle chart; descriptive mandated title present
+        comment: Title format correct and descriptive; icicle chart has no traditional
+          axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order, first series #009E73, backgrounds and chrome
-          theme-correct in both renders'
+        comment: 'First branch is #009E73, remaining branches follow canonical Imprint
+          order, identical across themes; backgrounds are theme-correct #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -116,22 +117,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom branch coloring plus depth-based alpha fade, clearly above
-          default, not fully publication-polished
+        comment: Custom Imprint branch coloring, depth-based alpha fade, and the new
+          ink-outlined focal highlight are clearly above defaults, though not fully
+          publication-polished
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_void, thin separators, generous margins; still fairly default
-          in spacing rhythm
+        comment: theme_void, thin white separators, generous margins, and the new
+          highlight ring show refinement, though typographic rhythm is still fairly
+          plain
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color-by-branch and opacity-by-depth create visual hierarchy but
-          no single emphasized focal point
+        comment: Color-by-branch + opacity-by-depth + the new ink-outlined 'biggest
+          thing' focal point on hero.png give the viewer a clear immediate anchor
+          for the insight
     spec_compliance:
       score: 15
       max: 15
@@ -141,26 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle layout, top-to-bottom orientation matches spec notes
+        comment: 'Correct icicle chart: adjacent stacked rectangles by hierarchy level,
+          not nested treemap'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hierarchy, color-by-category, and conditional labeling all present
+        comment: Horizontal top-to-bottom orientation, color by branch, labels hidden
+          on small nodes, root at top - all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Width proportional to bottom-up summed value, depth mapped to row
+        comment: Widths correctly proportional to bottom-up summed values, depth mapped
+          to vertical rows
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches mandated pattern; direct on-chart labels
-          substitute for a legend
+        comment: Title exactly matches 'icicle-basic · r · ggplot2 · anyplot.ai';
+          no separate legend needed since branch labels are inline
     data_quality:
       score: 14
       max: 15
@@ -170,20 +177,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows 4 hierarchy levels and varied node sizes; only one branch demonstrates
-          depth truncation
+        comment: 37-node file-system hierarchy across 4 depth levels with varied branch
+          sizes and leaf values shows most icicle features well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral file-system scenario directly from spec applications
+        comment: Plausible, neutral software-project file tree (src/docs/tests/assets/config)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible KB-scale file sizes and folder totals
+        comment: File sizes (KB) and folder aggregates are realistic and internally
+          consistent
     code_quality:
       score: 10
       max: 10
@@ -193,31 +201,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, procedural imports -> data -> plot -> save
+        comment: Imports -> data -> layout math -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42) present; data is otherwise fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg all used
+        comment: Only ggplot2, dplyr, ragg used, all utilized
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for manual icicle layout, no fake functionality
+        comment: Appropriate complexity for a manual hierarchy layout, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{theme}.png naming via ragg::agg_png
+        comment: Saves plot-{theme}.png via ragg::agg_png, current ggplot2 API
     library_mastery:
       score: 7
       max: 10
@@ -227,26 +235,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_rect/geom_text layering; manual layout is the expected
-          approach since ggplot2 lacks a native icicle geom
+        comment: Idiomatic geom_rect/geom_text layer composition with identity scales;
+          ggplot2 has no native icicle geom so manual layout is the expected approach
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_*_identity() is a genuinely ggplot2-specific pattern but not
-          a singular showstopper feature
-  verdict: REJECTED
+        comment: Uses scale_*_identity() to bypass ggplot2's scale/legend machinery,
+          a genuinely ggplot2-specific pattern, but not a singular showstopper feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
-  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
