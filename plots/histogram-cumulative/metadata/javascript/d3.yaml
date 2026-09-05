@@ -1,0 +1,252 @@
+library: d3
+language: javascript
+specification_id: histogram-cumulative
+created: '2026-09-05T04:12:45Z'
+updated: '2026-09-05T04:25:54Z'
+generated_by: claude-sonnet
+workflow_run: 33943691229
+issue: 2549
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Both weaknesses from the prior review are fully resolved: the x-domain now caps
+    at the 99th percentile (maxWait = ceil(p99/10)*10) so the informative 0-140s range
+    fills the whole plot width instead of a long empty tail, and the dark-theme muted-bar
+    opacity was raised from 0.45 to 0.6 so the secondary ''Calls per bin'' histogram
+    is clearly visible against #1A1A17.'
+  - Idiomatic d3.bin() + curveStepAfter dual encoding — a crisp, monotonic cumulative
+    step curve overlaid on a muted context histogram of the same data — is a genuinely
+    useful visualization choice for an ogive.
+  - 'Palette compliance and theme-adaptive chrome are correct and consistent: palette[0]
+    green (#009E73) is identical in both renders, backgrounds are exact #FAF8F1/#1A1A17,
+    and all text is legible in both themes.'
+  - Deterministic LCG-seeded exponential draws produce a realistic, neutral call-center
+    wait-time scenario with an appropriate right-skewed shape.
+  - Clean, KISS-structured code with no functions/classes beyond the seeded RNG helper,
+    no fake interactivity, and correct mount-node contract with no animation.
+  weaknesses:
+  - 'Data storytelling (DE-03) is good but not yet excellent: a callout annotation
+    marking a concrete threshold (e.g., ''50% of calls resolve within ~28s'') would
+    push the plot from ''clear visual hierarchy'' to a plot that states its own insight.'
+  - Clamping values above the p99 cap into the final bin (Math.min(w, maxWait)) causes
+    a small non-monotonic uptick in the 'Calls per bin' histogram at the rightmost
+    bin (~130-140s) versus its immediate neighbors — an honest and documented side
+    effect of the capping technique, cosmetic only since the cumulative curve itself
+    stays correctly monotonic, but worth a code comment noting the visual artifact
+    if a future attempt revisits binning.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 as required — not pure white.
+      Chrome: Title "Call Center Wait Times · histogram-cumulative · javascript · d3 · anyplot.ai" is dark, bold, centered near the top, clearly readable. X-axis label "Call Wait Time (seconds)" and y-axis label "Cumulative Share of Calls" are dark ink, legible, and similar in font size/weight. Tick labels ("0s"..."140s", "0%"..."100%") are dark gray and readable. Subtle horizontal gridlines at 0/20/40/60/80/100%. Legend top-right ("Cumulative %" swatch in green, "Calls per bin" swatch in gray) is legible and does not overlap the title.
+      Data: Primary series (cumulative step curve + 16%-opacity area fill beneath it) is the Imprint green #009E73. Secondary series (per-bin call counts, muted gray, opacity 0.45) sits behind it, tallest at the first bin (~40%) and decaying with a right-skewed exponential shape, with a small legitimate uptick in the last bin from clamped outliers. The step curve now spans the full x-domain (0-140s, capped at the 99th percentile) and reaches 100% right at the last bin — no wasted flat tail.
+      Legibility verdict: PASS — no light-on-light issues, all text and both data series clearly distinguishable from the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 as required — not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light/white text, clearly visible against the dark background — no dark-on-dark failures on any text element. Gridlines are subtle but visible. Legend text and swatches are legible.
+      Data: Cumulative step curve and area fill use the identical Imprint green #009E73 as the light render — confirmed unchanged data color between themes. The muted gray "Calls per bin" histogram bars now render at opacity 0.6 (up from 0.45 in the previous attempt) and are clearly distinguishable from the near-black #1A1A17 background, including the tall first bin — the previously flagged dark-mode visibility issue is resolved.
+      Legibility verdict: PASS for all text and both data series.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-18px + scaled title), readable
+          in both themes and at 400px mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axes, or data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cumulative line prominent throughout; muted histogram bars now clearly
+          visible in both themes after the dark-mode opacity fix.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue green + neutral gray, no red-green reliance, adequate
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no clipping; the x-domain fix removed the previous
+          wasted flat tail so the plot now uses the full canvas width effectively.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (seconds, %).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0] green for primary series, correct exact backgrounds, identical
+          data colors across themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dual-layer encoding (step CDF + muted context histogram) with a now-tight
+          domain reads as intentional, above-default design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-direction gridlines, generous whitespace, tight domain
+          removes prior wasted space; axis domain lines remain (not fully spineless).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point (green step curve) with supporting context now
+          fills the frame efficiently; a concrete threshold annotation would push
+          this further.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative histogram / ogive with step function.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Monotonically non-decreasing step curve, cumulative % (0-100), displayed
+          as steps not a smooth curve, per spec notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = wait time, Y = cumulative share; axes cover the full (capped)
+          data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the required format with descriptive prefix; legend
+          labels match the two series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the full binned distribution plus the cumulative overlay across
+          all 20 bins.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Call-center wait times via exponential draws is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (seconds, mean 32s) are sensible; the 99th-percentile domain
+          cap now keeps the scale tight and honest.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes beyond the seeded RNG helper, flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG seeded at 42.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, current d3 7.x API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct idiomatic use of d3.bin(), scaleLinear, axisBottom/Left,
+          and curveStepAfter for an ogive.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Combines area + line generators with curveStepAfter and a muted secondary
+          bar layer — reasonable but not deeply distinctive use of d3's shape generators.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - cumulative-sum
+  styling:
+  - alpha-blending
