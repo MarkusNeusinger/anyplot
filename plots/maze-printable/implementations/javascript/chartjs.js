@@ -30,7 +30,6 @@ function shuffle(arr) {
   return arr;
 }
 
-const cellIndex = (col, row) => row * COLS + col;
 const visited = new Array(COLS * ROWS).fill(false);
 const walls = Array.from({ length: COLS * ROWS }, () => ({
   N: true,
@@ -40,7 +39,7 @@ const walls = Array.from({ length: COLS * ROWS }, () => ({
 }));
 
 const stack = [[0, 0]];
-visited[cellIndex(0, 0)] = true;
+visited[0] = true;
 while (stack.length > 0) {
   const [col, row] = stack[stack.length - 1];
   const candidates = shuffle([
@@ -49,7 +48,7 @@ while (stack.length > 0) {
     [col - 1, row, "W", "E"],
     [col + 1, row, "E", "W"],
   ]).filter(
-    ([nc, nr]) => nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && !visited[cellIndex(nc, nr)],
+    ([nc, nr]) => nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && !visited[nr * COLS + nc],
   );
 
   if (candidates.length === 0) {
@@ -57,37 +56,56 @@ while (stack.length > 0) {
     continue;
   }
   const [nextCol, nextRow, dir, opposite] = candidates[0];
-  walls[cellIndex(col, row)][dir] = false;
-  walls[cellIndex(nextCol, nextRow)][opposite] = false;
-  visited[cellIndex(nextCol, nextRow)] = true;
+  walls[row * COLS + col][dir] = false;
+  walls[nextRow * COLS + nextCol][opposite] = false;
+  visited[nextRow * COLS + nextCol] = true;
   stack.push([nextCol, nextRow]);
 }
 
-// --- Wall segments: convert remaining walls into line-chart coordinates ----
+// --- Wall segments: remaining walls as (x1,y1)-(x2,y2) data-space lines ----
 // Cell (col, row) occupies x in [col, col+1], y in [ROWS-row-1, ROWS-row] so
 // row 0 (the start row) renders at the top of the chart.
-const wallSegments = [];
-function addWall(x1, y1, x2, y2) {
-  wallSegments.push({ x: x1, y: y1 }, { x: x2, y: y2 }, { x: null, y: null });
-}
-
+const wallLines = [];
 for (let row = 0; row < ROWS; row++) {
   for (let col = 0; col < COLS; col++) {
-    const cell = walls[cellIndex(col, row)];
-    if (cell.N) addWall(col, ROWS - row, col + 1, ROWS - row);
-    if (cell.W) addWall(col, ROWS - row - 1, col, ROWS - row);
+    const cell = walls[row * COLS + col];
+    if (cell.N) wallLines.push([col, ROWS - row, col + 1, ROWS - row]);
+    if (cell.W) wallLines.push([col, ROWS - row - 1, col, ROWS - row]);
   }
 }
 for (let col = 0; col < COLS; col++) {
-  if (walls[cellIndex(col, ROWS - 1)].S) addWall(col, 0, col + 1, 0);
+  if (walls[(ROWS - 1) * COLS + col].S) wallLines.push([col, 0, col + 1, 0]);
 }
 for (let row = 0; row < ROWS; row++) {
-  if (walls[cellIndex(COLS - 1, row)].E) addWall(COLS, ROWS - row - 1, COLS, ROWS - row);
+  if (walls[row * COLS + (COLS - 1)].E) wallLines.push([COLS, ROWS - row - 1, COLS, ROWS - row]);
 }
 
 // Start (top-left cell) and goal (bottom-right cell), at cell centers.
 const startPoint = [{ x: 0.5, y: ROWS - 0.5 }];
 const goalPoint = [{ x: COLS - 0.5, y: 0.5 }];
+
+// --- Wall plugin: draws the maze directly on the canvas 2D context, mapping
+// data-space coordinates through the chart's own linear scales. This is a
+// Chart.js-native technique (a plugin hooking chart lifecycle + scale API)
+// rather than a portable point/line-dataset trick.
+const mazeWallsPlugin = {
+  id: "mazeWalls",
+  beforeDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    ctx.save();
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 9;
+    ctx.lineCap = "square";
+    ctx.lineJoin = "miter";
+    ctx.beginPath();
+    for (const [x1, y1, x2, y2] of wallLines) {
+      ctx.moveTo(scales.x.getPixelForValue(x1), scales.y.getPixelForValue(y1));
+      ctx.lineTo(scales.x.getPixelForValue(x2), scales.y.getPixelForValue(y2));
+    }
+    ctx.stroke();
+    ctx.restore();
+  },
+};
 
 // --- Mount -------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -100,19 +118,6 @@ new Chart(canvas, {
   type: "line",
   data: {
     datasets: [
-      {
-        label: "Walls",
-        data: wallSegments,
-        borderColor: t.ink,
-        borderWidth: 9,
-        borderCapStyle: "square",
-        borderJoinStyle: "miter",
-        pointRadius: 0,
-        showLine: true,
-        spanGaps: false,
-        fill: false,
-        tension: 0,
-      },
       {
         label: "Start",
         data: startPoint,
@@ -133,6 +138,7 @@ new Chart(canvas, {
       },
     ],
   },
+  plugins: [mazeWallsPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -143,12 +149,7 @@ new Chart(canvas, {
       legend: {
         display: true,
         position: "bottom",
-        labels: {
-          color: t.ink,
-          font: { size: 16 },
-          usePointStyle: true,
-          filter: (item) => item.text !== "Walls",
-        },
+        labels: { color: t.ink, font: { size: 16 }, usePointStyle: true },
       },
     },
     scales: {
