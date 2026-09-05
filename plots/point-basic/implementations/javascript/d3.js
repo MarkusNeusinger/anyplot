@@ -21,7 +21,10 @@ const data = [
 ];
 
 // sort descending by estimate so the eye reads a clean ranking top to bottom
-data.sort((a, b) => b.estimate - a.estimate);
+data.sort((a, b) => d3.descending(a.estimate, b.estimate));
+const meanEstimate = d3.mean(data, (d) => d.estimate);
+const maxUpper = d3.max(data, (d) => d.upper);
+const fmt = d3.format(".1f");
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -52,14 +55,33 @@ g.append("g")
 const xAxis = g
   .append("g")
   .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(x).ticks(6).tickSize(0).tickPadding(14));
+  .call(d3.axisBottom(x).ticks(6).tickSize(0).tickPadding(14).tickFormat(d3.format(".0f")));
 const yAxis = g.append("g").call(d3.axisLeft(y).tickSize(0).tickPadding(16));
 
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
-  ax.select(".domain").attr("stroke", t.inkSoft);
 }
+xAxis.select(".domain").remove();
 yAxis.select(".domain").remove();
+
+// --- Reference line: overall mean, the focal point the ranking is read against ---
+g.append("line")
+  .attr("x1", x(meanEstimate))
+  .attr("x2", x(meanEstimate))
+  .attr("y1", 0)
+  .attr("y2", ih)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "6,4")
+  .attr("opacity", 0.5);
+
+g.append("text")
+  .attr("x", x(meanEstimate))
+  .attr("y", -18)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text(`Mean: ${fmt(meanEstimate)}`);
 
 // --- Axis labels -------------------------------------------------------------
 g.append("text")
@@ -80,6 +102,8 @@ const rows = g
 
 const capHalf = 9;
 
+// whiskers + caps rendered at reduced opacity so the saturated point marker
+// reads as the primary focal point of each row
 rows
   .append("line")
   .attr("x1", (d) => x(d.lower))
@@ -87,7 +111,8 @@ rows
   .attr("y1", 0)
   .attr("y2", 0)
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", 2.5)
+  .attr("opacity", 0.45);
 
 rows
   .append("line")
@@ -96,7 +121,8 @@ rows
   .attr("y1", -capHalf)
   .attr("y2", capHalf)
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", 2.5)
+  .attr("opacity", 0.7);
 
 rows
   .append("line")
@@ -105,7 +131,8 @@ rows
   .attr("y1", -capHalf)
   .attr("y2", capHalf)
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", 2.5)
+  .attr("opacity", 0.7);
 
 // --- Point estimates ---------------------------------------------------------
 rows
@@ -116,6 +143,16 @@ rows
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
+
+// value labels via d3.format, aligned in a single column past the widest
+// whisker so they never collide with a cap or the mean reference line
+rows
+  .append("text")
+  .attr("x", x(maxUpper) + 24)
+  .attr("y", 5)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text((d) => fmt(d.estimate));
 
 // --- Title -------------------------------------------------------------------
 svg
