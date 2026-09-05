@@ -50,7 +50,24 @@ const rawColLabels = SAMPLE_GROUPS.map((s) => {
   return `${s} ${sampleCounters[s]}`;
 });
 
+// Per-row z-score standardization (subtract row mean, divide by row std) —
+// the colorbar and tooltips report "z-score", so the values actually shown
+// must be standardized, not the raw synthetic pattern.
+function standardizeRows(m) {
+  return m.map((row) => {
+    const mean = row.reduce((s, v) => s + v, 0) / row.length;
+    const variance = row.reduce((s, v) => s + (v - mean) ** 2, 0) / row.length;
+    const std = Math.sqrt(variance) || 1;
+    return row.map((v) => (v - mean) / std);
+  });
+}
+const zMatrix = standardizeRows(rawMatrix);
+
 // --- Hierarchical clustering (average-linkage / UPGMA, Euclidean) ---------
+// UPGMA is used instead of Ward's method (the spec's suggested default): its
+// merge-height update is a simple weighted average, which keeps the from-scratch
+// clustering implementation compact and easy to verify, while still producing
+// well-separated, valid dendrograms for this matrix.
 function euclidean(a, b) {
   let sum = 0;
   for (let i = 0; i < a.length; i++) sum += (a[i] - b[i]) ** 2;
@@ -127,12 +144,12 @@ function dendrogramSegments(clusterResult, toPoint) {
   return points;
 }
 
-const rowClusters = hierarchicalClustering(rawMatrix);
-const colClusters = hierarchicalClustering(rawMatrix[0].map((_, j) => rawMatrix.map((row) => row[j])));
+const rowClusters = hierarchicalClustering(zMatrix);
+const colClusters = hierarchicalClustering(zMatrix[0].map((_, j) => zMatrix.map((row) => row[j])));
 
 const rowOrder = rowClusters.order;
 const colOrder = colClusters.order;
-const matrix = rowOrder.map((ri) => colOrder.map((ci) => rawMatrix[ri][ci]));
+const matrix = rowOrder.map((ri) => colOrder.map((ci) => zMatrix[ri][ci]));
 const rowLabels = rowOrder.map((ri) => rawRowLabels[ri]);
 const colLabels = colOrder.map((ci) => rawColLabels[ci]);
 const rowGeneGroup = rowOrder.map((ri) => GENE_GROUPS[ri]);
@@ -304,32 +321,60 @@ const clusteredHeatmapPlugin = {
     ctx.textBaseline = "bottom";
     ctx.fillText("z-score", Math.min(cbarX1, cbarX2), cbarYTop - 6);
 
-    // Group legend (top-left corner, outside both dendrograms)
-    const legendX = chartArea.left + 12;
-    let legendY = chartArea.top + 22;
+    // Group legend (top-left corner, outside both dendrograms) — an elevated
+    // panel with aligned swatch/label columns so it reads as one polished block.
+    const swatchSize = 13;
+    const swatchGap = 9;
+    const rowStep = 20;
+    const sectionGap = 12;
+    const panelPad = 12;
+    ctx.font = "13px sans-serif";
+    const legendSections = [
+      { header: "Gene cluster", rows: ["A", "B", "C"].map((g) => [g, geneGroupColor[g]]) },
+      {
+        header: "Sample group",
+        rows: [["Control", sampleGroupColor.Control], ["Treatment", sampleGroupColor.Treatment]],
+      },
+    ];
+    let maxTextWidth = 0;
+    legendSections.forEach((section) => {
+      maxTextWidth = Math.max(maxTextWidth, ctx.measureText(section.header).width);
+      section.rows.forEach(([label]) => {
+        maxTextWidth = Math.max(maxTextWidth, ctx.measureText(label).width);
+      });
+    });
+    const panelW = panelPad * 2 + swatchSize + swatchGap + maxTextWidth;
+    const panelH =
+      panelPad * 2 +
+      legendSections.reduce((sum, section) => sum + rowStep * (1 + section.rows.length), 0) +
+      sectionGap * (legendSections.length - 1);
+    const panelX = chartArea.left + 4;
+    const panelY = chartArea.top + 4;
+
+    ctx.fillStyle = t.elevatedBg;
+    ctx.strokeStyle = t.grid;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(panelX, panelY, panelW, panelH, 6);
+    ctx.fill();
+    ctx.stroke();
+
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = t.ink;
-    ctx.font = "13px sans-serif";
-    ctx.fillText("Gene cluster", legendX, legendY);
-    legendY += 22;
-    ["A", "B", "C"].forEach((group) => {
-      ctx.fillStyle = geneGroupColor[group];
-      ctx.fillRect(legendX, legendY - 7, 14, 14);
-      ctx.fillStyle = t.inkSoft;
-      ctx.fillText(group, legendX + 20, legendY);
-      legendY += 20;
-    });
-    legendY += 12;
-    ctx.fillStyle = t.ink;
-    ctx.fillText("Sample group", legendX, legendY);
-    legendY += 22;
-    [["Control", sampleGroupColor.Control], ["Treatment", sampleGroupColor.Treatment]].forEach(([label, color]) => {
-      ctx.fillStyle = color;
-      ctx.fillRect(legendX, legendY - 7, 14, 14);
-      ctx.fillStyle = t.inkSoft;
-      ctx.fillText(label, legendX + 20, legendY);
-      legendY += 20;
+    const legendX = panelX + panelPad;
+    let legendY = panelY + panelPad + rowStep * 0.7;
+    legendSections.forEach((section, idx) => {
+      ctx.fillStyle = t.ink;
+      ctx.fillText(section.header, legendX, legendY);
+      legendY += rowStep;
+      section.rows.forEach(([label, color]) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(legendX, legendY - swatchSize / 2, swatchSize, swatchSize);
+        ctx.fillStyle = t.inkSoft;
+        ctx.fillText(label, legendX + swatchSize + swatchGap, legendY);
+        legendY += rowStep;
+      });
+      if (idx < legendSections.length - 1) legendY += sectionGap;
     });
 
     ctx.restore();
