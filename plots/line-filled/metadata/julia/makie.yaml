@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-filled
 created: '2026-09-05T07:24:55Z'
-updated: '2026-09-05T07:28:22Z'
+updated: '2026-09-05T07:50:06Z'
 generated_by: claude-sonnet
 workflow_run: 33952325980
 issue: 2643
@@ -12,43 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 79
 review:
   strengths:
-  - Idiomatic use of Makie's band! + lines! combo for the filled-area effect, with
-    semi-transparent fill (alpha 0.35, within the spec's 0.3-0.5 range) and a solid
-    brand-green line drawn on top
-  - Theme-adaptive chrome correctly threaded through Figure/Axis (backgroundcolor,
-    spine colors, tick/label colors, grid alpha) — both renders are fully legible
-    with no dark-on-dark or light-on-light failures
-  - 'Realistic, appropriately-scaled synthetic data: trend + seasonal cycle + noise
-    produces a plausible Daily Active Users growth curve'
-  - Baseline correctly pinned to y=0 via ylims!(ax, 0, nothing), matching the spec's
-    'baseline is usually y=0' note
+  - 'Correct filled line plot: semi-transparent area (~alpha 0.4) matching the line
+    color, line drawn clearly on top, baseline anchored at y=0 exactly as the spec
+    requires.'
+  - 'Clean theme-adaptive chrome: top/right spines removed, single subtle horizontal
+    gridline, INK/INK_SOFT tokens correctly threaded through title, axis labels, ticks,
+    and spines in both themes.'
+  - Realistic, neutral data story (120-day daily-active-users ramp with seasonal wobble
+    and noise) at a sensible thousands-of-users scale.
+  - Generous headroom above the peak (y_top = max * 1.18) keeps the curve from crowding
+    the top of the canvas.
+  - Title follows the exact `line-filled · julia · makie · anyplot.ai` convention;
+    axis labels are descriptive and carry units.
   weaknesses:
-  - Visual design is fairly generic — a single flat-alpha fill with no additional
-    refinement (e.g., a subtle gradient toward the baseline, or a highlighted milestone)
-    to lift it beyond the spec minimum
-  - No data-storytelling element (no annotation or callout marking a peak/milestone)
-    — reads as a plain area chart without added narrative emphasis
-  - linewidth=2.5 on 120 noisy points produces a fairly jagged, busy line; a touch
-    more smoothing or a slightly thinner line could let the underlying trend read
-    more cleanly
+  - 'The peak callout is completely invisible in BOTH renders: I pixel-scanned both
+    PNGs at the curve''s actual maximum (light: x=2588,y=162; confirmed via topmost-green-pixel
+    scan) and found no scatter dot and no ''Peak: Xk DAU'' text anywhere in the image
+    — a full scan for INK-colored pixels outside the title/axis-label regions found
+    zero matches. The scatter!/text! calls (lines 87-95) execute without error (the
+    script completes and saves) but produce no visible mark. This kills the intended
+    storytelling focal point entirely; either fix the z-order/coordinate space so
+    the callout actually renders on top of the fill, or remove the dead code.'
+  - 'The heatmap-based vertical gradient fill does not produce a gradient in practice:
+    sampling a fill column top-to-bottom shows a perfectly FLAT color (163,216,197,
+    i.e. ~alpha-0.4 brand green over the page background) across roughly 90% of the
+    fill height, with only the last ~30px right against the line transitioning to
+    full opacity. The ''faint near baseline, richer near the line'' effect described
+    in the code comment is not what renders — visually it is indistinguishable from
+    a single flat band!(...; color=(BRAND, 0.4)) fill. Given it doesn''t deliver the
+    claimed effect, replace the ~15-line heatmap+mask construction (lines 65-81) with
+    a plain single-alpha band! for the same visual result with far less code.'
+  - Because the intended focal point (peak marker + label) never renders, the chart
+    reads as a plain rising trend line with no visual hierarchy beyond the line itself
+    — Data Storytelling credit stays at the unremarkable default.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "line-filled · julia · makie · anyplot.ai" in bold dark ink, clearly legible; x-axis label "Day Since Launch" and y-axis label "Daily Active Users (thousands)" in dark ink; tick labels (0/50/100 on x, 0/50/100 on y) in a softer dark gray. Top/right spines removed, left/bottom spines present in soft ink. Subtle horizontal gridlines at y=50 and y=100.
-      Data: Single series filled area chart. Fill is a semi-transparent brand green (#009E73 at ~alpha 0.35) from the baseline (y=0) up to the data line; the line itself is a solid, fully-opaque brand green drawn on top and clearly distinguishable from the fill beneath it. Data rises noisily from ~35 (day 0) to ~110 (day ~119) with a visible upward trend and seasonal wobble.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 as required.
+      Chrome: Title "line-filled · julia · makie · anyplot.ai" centered at top in dark ink, clearly legible. X-axis label "Day Since Launch" and y-axis label "Daily Active Users (thousands)" both in dark ink, clearly legible. Tick labels (0/50/100 on x, 0/50/100 on y) in a softer grey, legible. Top/right spines removed, left/bottom spines a soft grey. One subtle horizontal gridline near y=100.
+      Data: A single rising, noisy line in Imprint brand green (#009E73) from ~40k (day 0) to a peak near ~120k (around day ~100-105), settling around ~95-110k through day 119. The area under the line down to y=0 is filled with a semi-transparent mint-green tint. Pixel-sampling the fill column confirms it is a FLAT, uniform tint (not the vertical gradient the code comments describe) except for a thin band right at the line itself. I scanned the exact pixel coordinates of the curve's maximum (topmost green pixel in the image) and found no scatter marker and no "Peak: Xk DAU" text there or anywhere else in the plot area — the peak callout the code adds via scatter!/text! is not visible in this render.
+      Legibility verdict: PASS (all chrome text reads clearly against the light background; no light-on-light text).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis labels now rendered in light ink (off-white), clearly legible against the dark background; tick labels in a lighter soft gray. Spines and gridlines flipped to light-on-dark equivalents, same subtle treatment as the light render.
-      Data: Fill and line colors are identical to the light render — same brand green fill (~alpha 0.35) and same solid brand-green line on top. Only the chrome (background, text, grid, spines) changed between themes, as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text remains clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 as required.
+      Chrome: Same title/axis labels/tick labels, now in light ink/soft light-grey, clearly legible against the dark background. No dark-on-dark text found.
+      Data: Same brand-green line and data values as the light render — data colors are identical between themes, only chrome flipped, as required. Same flat semi-transparent fill (now reading as a deep forest green against the near-black background) rather than a visible gradient. Same peak location checked pixel-by-pixel: no scatter marker, no "Peak" text visible anywhere.
+      Legibility verdict: PASS (no dark-on-dark failures), but the intended peak annotation is absent, same as the light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -56,47 +70,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all text readable in both themes
+        comment: Title, axis labels, and ticks are legible with good contrast in both
+          themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No text/data collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Line clearly visible atop fill; 120 noisy points at linewidth=2.5
-          is a touch busy
+        comment: Line and fill are clearly visible, but the peak scatter marker is
+          completely invisible in both renders (pixel-verified) — a defined data element
+          that never appears.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green, good contrast in both themes
+        comment: Single-series brand green with strong contrast on both backgrounds;
+          no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); balanced proportions, no overflow
+        comment: Good proportions, no clipping, comfortable headroom above the peak.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (thousands)
+        comment: Descriptive labels with units (thousands).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct theme backgrounds, identical data
-          color across themes'
+        comment: 'First series is #009E73, backgrounds match FAF8F1/1A1A17, data color
+          identical across themes.'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -104,21 +121,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Correct but generic single flat-alpha fill; no extra polish beyond
-          spec minimum
+        comment: Attempted gradient fill and callout are ambitious but do not visually
+          manifest, so no bonus above the default is warranted.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed, grid subtle — baseline theme requirements done well
-          but nothing beyond that
+        passed: true
+        comment: Spines removed, subtle single gridline, generous headroom above the
+          curve.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: No annotation or emphasis to guide the viewer to a specific insight
+        comment: Intended focal point (peak callout) never renders, so the chart has
+          no visible hierarchy beyond the rising line itself.
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled line / area chart
+        comment: Correct filled line plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill, line on top, matching fill/line color, baseline
-          at y=0 — all present
+        comment: Semi-transparent fill matching line color, line visible on top, baseline
+          at y=0 — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=day, Y=DAU, full data range shown
+        comment: X = day, Y = DAU, full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; no legend needed for single
-          series
+        comment: Title matches the exact required format; no legend needed for a single
+          series.
     data_quality:
       score: 15
       max: 15
@@ -158,79 +176,83 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All plot-type aspects present
+        comment: Single filled series with baseline, matches plot type fully.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral DAU growth scenario
+        comment: Plausible, neutral DAU growth scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for a growing product's DAU
+        comment: Values in the tens-of-thousands range with sensible noise/seasonality.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, but the heatmap+mask gradient machinery adds
+          real complexity for an effect that doesn't render.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42) fixed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used
+        comment: Imports match the library's documented convention for cgrad usage.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: The scatter!/text! peak callout is dead code (produces no visible
+          output) and the heatmap gradient is a non-functional flat tint in practice.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API
+        comment: Saves plot-$(THEME).png with px_per_unit=2 per convention.
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: band! + lines! is exactly Makie's recommended pattern for a filled
-          line plot
+        comment: Standard Figure/Axis/lines!/band! usage; the heatmap-as-gradient
+          workaround is creative but doesn't pay off visually.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Correct but basic use of band!; no additional Makie-distinctive touches
-  verdict: APPROVED
+        comment: Attempted distinctive techniques (gradient fill, peak callout) don't
+          actually render, so no credit beyond default.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
+  - gradient-fill
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - alpha-blending
-  - grid-styling
   - publication-ready
