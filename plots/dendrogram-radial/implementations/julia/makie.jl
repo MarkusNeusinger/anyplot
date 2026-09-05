@@ -32,7 +32,7 @@ group_means = [
     [2.9, 2.8, 0.3, 0.4, 0.3, 0.5],
     [0.4, 0.3, 3.0, 3.1, 2.9, 2.8],
 ]
-n_per_group = 10
+n_per_group = 20
 n = n_per_group * length(group_names)
 
 features = Matrix{Float64}(undef, n, 6)
@@ -145,6 +145,18 @@ for (i, j, d, nid) in merges
     node_group[nid] = gi == gj ? gi : 0
 end
 
+# Data storytelling: the distance at which each module's own leaves last
+# coalesce into one pure branch tells us how internally tight that module is.
+group_top_d = Dict{Int,Float64}()
+for (i, j, d, nid) in merges
+    g = node_group[nid]
+    if g != 0
+        group_top_d[g] = max(get(group_top_d, g, -Inf), d)
+    end
+end
+tightest_group = argmin(group_top_d)
+tightest_name = group_names[tightest_group]
+
 # Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
 title_text = "dendrogram-radial · julia · makie · anyplot.ai"
 
@@ -175,16 +187,16 @@ for (i, j, d, nid) in merges
     color_i = node_group[i] == 0 ? INK_SOFT : IMPRINT_PALETTE[node_group[i]]
     xi1, yi1 = node_radius[i] * cos(ai), node_radius[i] * sin(ai)
     xi2, yi2 = rp * cos(ai), rp * sin(ai)
-    lines!(ax, [xi1, xi2], [yi1, yi2]; color = color_i, linewidth = 2.5)
+    lines!(ax, [xi1, xi2], [yi1, yi2]; color = color_i, linewidth = 2.0)
 
     color_j = node_group[j] == 0 ? INK_SOFT : IMPRINT_PALETTE[node_group[j]]
     xj1, yj1 = node_radius[j] * cos(aj), node_radius[j] * sin(aj)
     xj2, yj2 = rp * cos(aj), rp * sin(aj)
-    lines!(ax, [xj1, xj2], [yj1, yj2]; color = color_j, linewidth = 2.5)
+    lines!(ax, [xj1, xj2], [yj1, yj2]; color = color_j, linewidth = 2.0)
 
     color_nid = node_group[nid] == 0 ? INK_SOFT : IMPRINT_PALETTE[node_group[nid]]
     a_lo, a_hi = ai < aj ? (ai, aj) : (aj, ai)
-    arc!(ax, Point2f(0, 0), rp, a_lo, a_hi; color = color_nid, linewidth = 2.5)
+    arc!(ax, Point2f(0, 0), rp, a_lo, a_hi; color = color_nid, linewidth = 2.0)
 end
 
 # Color-coded outer ring: contiguous leaf runs sharing a module, one arc per run.
@@ -196,7 +208,7 @@ for p in 2:(n + 1)
         g = leaf_group[order[seg_start]]
         a0 = node_angle[order[seg_start]] - half_step
         a1 = node_angle[order[p - 1]] + half_step
-        arc!(ax, Point2f(0, 0), ring_r, a0, a1; color = IMPRINT_PALETTE[g], linewidth = 6)
+        arc!(ax, Point2f(0, 0), ring_r, a0, a1; color = IMPRINT_PALETTE[g], linewidth = 5)
         global seg_start = p
     end
 end
@@ -204,7 +216,7 @@ end
 leaf_x = [R_max * cos(node_angle[l]) for l in 1:n]
 leaf_y = [R_max * sin(node_angle[l]) for l in 1:n]
 leaf_colors = [IMPRINT_PALETTE[leaf_group[l]] for l in 1:n]
-scatter!(ax, leaf_x, leaf_y; color = leaf_colors, markersize = 11, strokewidth = 0)
+scatter!(ax, leaf_x, leaf_y; color = leaf_colors, markersize = 8, strokewidth = 0)
 
 label_r = R_max * 1.16
 for l in 1:n
@@ -215,16 +227,26 @@ for l in 1:n
     text!(
         ax, label_r * cos(a), label_r * sin(a);
         text = labels[l], rotation = rot, align = (halign, :center),
-        fontsize = 12, color = INK_SOFT,
+        fontsize = 10, color = INK_SOFT,
     )
 end
 
+# Data-storytelling callout: the root's empty center has no branches to
+# collide with, so it doubles as free space for the tightest-module insight.
+text!(
+    ax, 0, 0;
+    text = "Tightest cluster:\n$(tightest_name)", align = (:center, :center),
+    fontsize = 13, color = INK, justification = :center,
+)
+
 legend_elements = [LineElement(color = IMPRINT_PALETTE[g], linewidth = 4) for g in 1:4]
 Legend(
-    fig[1, 2], legend_elements, group_names, "Module";
-    framevisible = false, labelcolor = INK, titlecolor = INK,
+    fig[2, 1], legend_elements, group_names, "Module";
+    orientation = :horizontal, framevisible = false, labelcolor = INK, titlecolor = INK,
     labelsize = 14, titlesize = 16,
 )
+rowsize!(fig.layout, 1, Relative(0.92))
+rowsize!(fig.layout, 2, Relative(0.08))
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
