@@ -1,3 +1,7 @@
+// anyplot.ai
+// diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 89/100 | Updated: 2026-09-05
 //# anyplot-orientation: square
 // anyplot.ai
 // diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
