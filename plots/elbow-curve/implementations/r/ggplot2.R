@@ -4,7 +4,6 @@
 #' Quality: 86/100 | Created: 2026-09-05
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -35,14 +34,21 @@ elbow_idx <- which.max(chord_y - norm_inertia)
 elbow_k <- df$k[elbow_idx]
 elbow_inertia <- df$inertia[elbow_idx]
 
+# Post-elbow plateau, shaded to sharpen the "diminishing returns" story.
+df_plateau <- df[elbow_idx:nrow(df), ]
+
 # --- Plot ----------------------------------------------------------------
 p <- ggplot(df, aes(x = k, y = inertia)) +
+  geom_ribbon(
+    data = df_plateau, aes(ymin = 0, ymax = inertia),
+    fill = IMPRINT_PALETTE[1], alpha = 0.12, color = NA
+  ) +
   geom_vline(
     xintercept = elbow_k, linetype = "dashed",
     color = INK_SOFT, linewidth = 0.5, alpha = 0.6
   ) +
   geom_line(color = IMPRINT_PALETTE[1], linewidth = 1.1) +
-  geom_point(color = IMPRINT_PALETTE[1], size = 2.5) +
+  geom_point(color = IMPRINT_PALETTE[1], size = 3.8) +
   geom_point(
     data = df[elbow_idx, ], shape = 21, size = 5.5,
     fill = IMPRINT_PALETTE[1], color = INK, stroke = 0.8
@@ -53,6 +59,7 @@ p <- ggplot(df, aes(x = k, y = inertia)) +
     color = INK, size = 3.4, hjust = 0
   ) +
   scale_x_continuous(breaks = k_values) +
+  scale_y_continuous(limits = c(0, NA)) +
   labs(
     title = "elbow-curve · r · ggplot2 · anyplot.ai",
     x = "Number of Clusters (k)",
@@ -68,7 +75,7 @@ p <- ggplot(df, aes(x = k, y = inertia)) +
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK, size = 12)
+    plot.title        = element_text(color = INK, size = 14)
   )
 
 # --- Save ----------------------------------------------------------------
