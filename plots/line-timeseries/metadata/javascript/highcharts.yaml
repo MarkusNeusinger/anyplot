@@ -1,0 +1,231 @@
+library: highcharts
+language: javascript
+specification_id: line-timeseries
+created: '2026-09-05T08:26:53Z'
+updated: '2026-09-05T08:41:37Z'
+generated_by: claude-sonnet
+workflow_run: 33955092301
+issue: 2006
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Peak/trough callout points with dataLabels and a dashed plotLines average reference
+    line turn a plain time series into a small data story.
+  - Gradient area fill built correctly via Highcharts.color(...).setOpacity(...),
+    using the same brand-green token so light/dark data colors stay identical.
+  - Clean, idiomatic datetime axis with automatic month-level tick formatting - no
+    manual tick-locator hacks needed.
+  - Fully deterministic in-browser data generation via a fixed-seed LCG, as required
+    for this runtime.
+  weaknesses:
+  - Chart type is area (line + gradient fill) rather than a plain line series - matches
+    the spirit of the spec but is a stylistic deviation from 'time series line plot';
+    consider whether a thinner/lighter fill (or no fill) reads closer to the spec's
+    literal ask.
+  - '''Low: 0.1°C'' callout label sits close to its marker near the bottom-left of
+    the plot area - a touch more vertical offset would give it clearer breathing room.'
+  - Visual refinement beyond the gradient/plot-line is fairly close to library defaults;
+    a bit more custom polish (e.g., refined tick density, subtler grid) would lift
+    Design Excellence.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "line-timeseries · javascript · highcharts · anyplot.ai" in dark bold text, clearly legible. Axis titles "Date" and "Avg. Temperature (°C)" in dark gray, legible. Tick labels (Jan 2024, Feb 2024, ...) legible. Dashed "Annual avg: 12°C" reference line label and "Peak: 23.8°C" / "Low: 0.1°C" callout labels all legible in dark text.
+      Data: Single series in #009E73 teal-green line with a matching gradient area fill beneath it (opacity fading to 0 toward the baseline). Callout markers at peak and trough use the same green fill with a dark outline.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, tick labels, "Annual avg" plot-line label, and "Peak"/"Low" callout labels all render in light gray/white and are clearly legible against the dark background. No dark-on-dark issues observed.
+      Data: Line and gradient area fill use the identical #009E73 green as the light render - confirmed unchanged data color between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome and callout labels explicitly sized and readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Low callout sits close to its marker but does not collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line + gradient area appropriate for 366 daily points, markers reserved
+          for callouts
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green series with adequate contrast, no red/green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Gradient fill, average line, and callouts show design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean chrome and subtle grid, but mostly close to library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak/trough and average line give the viewer a clear narrative
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Rendered as area (line + fill) rather than a plain line series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Datetime axis, intelligent tick formatting, grid lines on both axes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = date, Y = temperature, full year shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly, legend correctly disabled
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Seasonal cycle, noise, peak/trough, and average all demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible daily-average-temperature data, neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-26C range sensible for domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes/functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate API usage
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No file I/O, animation disabled in both places
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic datetime axis, plotLines, per-point dataLabels/marker overrides
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Highcharts.color gradient construction and plotLines labeling, contained
+          feature set
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - gradient-fill

@@ -1,0 +1,259 @@
+library: makie
+language: julia
+specification_id: line-timeseries
+created: '2026-09-05T08:29:55Z'
+updated: '2026-09-05T08:47:01Z'
+generated_by: claude-sonnet
+workflow_run: 33955207671
+issue: 2006
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - 'Title fontsize scaling fixed: title now spans ~67% of canvas width (up from ~40%
+    in attempt 1), landing squarely in the target 50-70% proportional range'
+  - Tick marks hidden (xticksvisible/yticksvisible = false) while tick labels remain,
+    addressing attempt 1's DE-02 feedback for a cleaner minimalist look
+  - 'Correct Imprint palette: line color is pixel-exact #009E73 in both renders, with
+    theme-adaptive chrome (background #FAF8F1/#1A1A17, text, grid, spines) verified
+    pixel-accurate and identical data color across themes'
+  - 'Realistic, neutral dataset: a full year of daily average temperatures via a sinusoidal
+    seasonal cycle plus Gaussian noise, with a physically plausible amplitude (~-1.7C
+    to 30C)'
+  - 'Clean, idiomatic KISS script: seeded RNG, correct plot-$(THEME).png output via
+    px_per_unit=2, sensible day-offset + custom month-start xticks workaround for
+    CairoMakie''s lack of a native datetime axis'
+  weaknesses:
+  - 'The peak-highlighting annotation added in this repair (scatter! marker + text!
+    label reading ''Peak: X°C (date)'') does not render in either theme. Verified
+    by pixel inspection at the visual peak of the line (~x=1619,y=153 in the 3200x1800
+    PNG, exact BRAND green #009E73): no marker and no text are visible, only the bare
+    line spike. The code comment claims this is a ''focal point... for a touch of
+    data storytelling'' but it is dead/non-functional. Debug the scatter!/text! calls
+    (check Point2f/keyword-argument compatibility with the installed Makie version,
+    and whether the Axis autolimits reset after the manual ylims!() call is discarding
+    or clipping the newly added plot objects) or remove the non-functional code.'
+  - Because ylims!(ax, minimum(temperature_c) - 3, peak_y + 5) reserves headroom up
+    to peak_y+5 for the (non-rendering) annotation, roughly 12-15% of the vertical
+    plot area near the top is now empty/wasted space with no visible purpose.
+  - 'DE-03 (data storytelling) remains at the default tier: the intended visual hierarchy/focal
+    point still isn''t achieved after this repair attempt, since the annotation is
+    invisible in both renders.'
+  - 'Carried over from attempt 1: seasonal noise amplitude (randn(n_days) .* 2.2)
+    is uniform year-round rather than varying by season, and the spec''s ''adapts
+    to time range'' requirement is only demonstrated at one scale (daily-over-year
+    to monthly ticks).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: Bold dark title ("Average Daily Temperature (2024) - line-timeseries - julia - makie - anyplot.ai") centered at top, spanning ~67% of canvas width (measured: x=119 to x=2252 of 3200px) with a clean ~39px top margin (no clipping). "Month" (x) and "Temperature (C)" (y, rotated) axis labels are dark and legible. Tick labels (Jan-Dec on x; 0/10/20/30 on y) are medium-gray, legible, no overlap. Grid lines on both axes are faint but visible (~15% opacity). Only left/bottom spines drawn (L-shaped frame); tick marks themselves are hidden, only tick labels remain.
+      Data: A single continuous line in Imprint brand green, pixel-sampled at exact #009E73, traces a clear seasonal arc from ~2C in January up to a ~30C peak around late June/early July and back down to near 0C by December. The code attempts to highlight this peak with a scatter marker + text annotation ("Peak: X.XC (Month Day)"), but pixel inspection at 4x zoom around the visual peak shows NEITHER a marker NOR any text is actually rendered -- this is dead/non-functional code.
+      Legibility verdict: PASS (all chrome text readable; the only issue is the invisible peak annotation, which is a missing-feature/dead-code defect, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: Same title and axis labels now render in light/off-white text, fully legible against the dark surface. Tick labels and grid lines flip to light-gray equivalents. Same L-shaped spine treatment, tick marks hidden.
+      Data: Data line is the identical #009E73 green, same shape and values as the light render -- confirms only chrome (not data color) changed between themes. Same peak-annotation absence confirmed at the same pixel coordinates: no marker, no text visible near the seasonal peak.
+      Legibility verdict: PASS (no dark-on-dark failures; all real chrome elements read well; the peak annotation is equally absent in this theme, consistent non-rendering rather than a theme-specific bug).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title fontsize scaling fixed (now ~67% of canvas width, within target
+          range); all sizes explicit; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Linewidth well chosen for 365 daily points, slightly dense at the
+          noisy peaks
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, single series, no CVD concerns
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good use of canvas overall, but ylims! reserves ~12-15% of vertical
+          space at top for the non-rendering peak annotation, leaving it as wasted
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (C) has units, Month is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Line is pixel-exact #009E73 in both renders; backgrounds pixel-exact
+          #FAF8F1/#1A1A17; chrome fully theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean theme-consistent chrome, fixed title weight, hidden tick marks
+          -- clearly above defaults, but a single-color line with a broken focal point
+          falls short of publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous margins, and tick marks now
+          hidden (fixes attempt-1 feedback)
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Attempted peak-highlight focal point does not render in either theme
+          -- no visible storytelling beyond the raw seasonal shape
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time series line plot
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Grid on both axes and month-start tick locator present; 'adapts to
+          time range' only demonstrated at one scale (daily-over-year)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date/day-offset on x, temperature on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed for
+          single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full seasonal cycle plus daily noise; noise amplitude uniform year-round
+          rather than seasonally varying
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Neutral, realistic scenario: daily average temperature over a year'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically plausible temperate-climate range and amplitude
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Dates, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Contains dead/non-functional code: the scatter!+text! peak annotation
+          and its explanatory comment do not produce any visible output'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via px_per_unit=2, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level Axis/lines! usage, theme tokens applied consistently
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom (positions, labels) xticks tuple is a genuine Makie-specific
+          date-axis-emulation technique; the attempted scatter!/text! layering would
+          have been a further distinctive showcase but does not render
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
+  - publication-ready
