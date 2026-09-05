@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: residual-plot
 created: '2026-09-05T12:43:37Z'
-updated: '2026-09-05T12:49:15Z'
+updated: '2026-09-05T13:01:44Z'
 generated_by: claude-sonnet
 workflow_run: 33966345291
 issue: 2332
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 70
 review:
   strengths:
   - 'Correct plot type and data mapping: fitted revenue on x, residuals on y, matching
@@ -32,34 +32,44 @@ review:
   - Legend placed in the genuinely empty bottom-left region of the plot — no overlap
     with data despite dense scatter
   weaknesses:
-  - 'Design Excellence is good but not yet publication-level: the composition (scatter
-    + shaded band + threshold lines) is a solid, correct treatment but reads as a
-    well-executed standard pattern rather than a distinctive visual signature — consider
-    stronger typographic hierarchy or a more deliberate focal treatment for the outlier
-    cluster'
-  - 'Library Mastery is generic: hspan!/hlines! for the reference band and threshold
-    lines are concepts common to nearly every plotting library (axhspan/axhline in
-    matplotlib, geom_hline in ggplot) — consider leveraging a feature harder to replicate
-    outside Makie (e.g. text! annotations anchored to data coordinates for the most
-    extreme outliers, or Makie''s Legend/layout composability) to raise distinctiveness'
-  - Data Storytelling reaches 'good' via color contrast on outliers but stops short
-    of 'excellent' — nothing explicitly calls out the heteroscedasticity insight itself
-    (the funnel-widening variance), so the viewer has to notice the pattern unaided
-    rather than being guided to it
+  - 'CRITICAL — the repair commit''s entire fix is non-functional: `Axis(...; subtitle
+    = "Residual spread widens...", subtitlesize = 13, subtitlecolor = INK_SOFT)` and
+    all four `text!()` calls (two ''σ ≈ X.X'' spread callouts, two ''largest overshoot''/''largest
+    undershoot'' outlier labels) produce ZERO visible output in both plot-light.png
+    and plot-dark.png. Verified by pixel-cropping the exact anchor regions (top header
+    strip below the title, the local-max points of the low/high fitted-revenue quartiles,
+    and the two most extreme outlier points top-right and bottom-right) — no subtitle
+    text and no annotation text is present anywhere. The header region also shows
+    no reserved vertical whitespace for a subtitle, suggesting the `subtitle` Axis
+    keyword is not taking effect at all in this Makie 0.21.9 setup (silently ignored
+    rather than erroring) and the `text!()` calls are likewise not attaching to the
+    axis/scene. This is exactly the DE-03/LM-02 improvement the previous review asked
+    for, and the code computes all the supporting math (lo/hi quartile masks, lo_sigma/hi_sigma,
+    argmax/argmin) for it — but none of it reaches the image, so it is dead code that
+    adds complexity and computation for zero visual payoff.'
+  - Because the annotation fix is entirely inert, Design Excellence and Library Mastery
+    remain exactly where they were before the repair (data storytelling relies only
+    on existing color contrast/size, no distinctive Makie-specific feature is actually
+    demonstrated) — the repair loop should not spend another cycle on styling and
+    must instead debug/fix (or cleanly remove) the non-rendering subtitle and text!
+    calls.
+  - 'Design Excellence is still not yet publication-level: the composition (scatter
+    + shaded band + threshold lines) reads as a solid, correct treatment rather than
+    a distinctive visual signature.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "residual-plot · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center. X-axis label "Fitted Revenue ($1000s)" and Y-axis label "Residual ($1000s)" in dark ink, both readable. Tick labels (250/500/750 on x; -100/-50/0/50 on y) in softer gray-ink, readable. Subtle grid lines on both axes at low opacity, not competing with data. Dashed dark line at y=0 and dotted muted lines at the ±2σ thresholds, with a soft shaded muted band between them.
-      Data: First series (green, #009E73) shows ~280 in-band residual points with 0.65 alpha, clearly showing a funnel widening from near-zero spread at low fitted revenue to wide spread (~±50) at high fitted revenue — visible heteroscedasticity. ~19 outlier points beyond ±2σ render in matte red (#AE3030), larger and fully opaque with a light stroke for separation from overlapping green points.
-      Legend: Bottom-left, frameless, transparent background, two entries ("Residual", "Outlier (|residual| > 2σ)") sitting in an empty region of the plot with no data overlap.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light issues.
+      Chrome: Title "residual-plot · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center. NO subtitle text appears below the title despite the source code setting `subtitle = "Residual spread widens with fitted revenue — a classic heteroscedasticity signature"` — confirmed by cropping the 0-300px header strip: only the title is present, no reserved whitespace or second line of text. X-axis label "Fitted Revenue ($1000s)" and Y-axis label "Residual ($1000s)" in dark ink, both readable. Tick labels (250/500/750 on x; -100/-50/0/50 on y) in softer gray-ink, readable. Subtle grid lines on both axes at low opacity. Dashed dark line at y=0 and dotted muted lines at the ±2σ thresholds, with a soft shaded muted band between them.
+      Data: First series (green, #009E73) shows ~280 in-band residual points at 0.65 alpha, clearly showing a funnel widening from near-zero spread at low fitted revenue to wide spread (~±50) at high fitted revenue. ~19 outlier points beyond ±2σ render in matte red (#AE3030), larger and fully opaque with a light stroke. NONE of the four `text!()` annotation calls (two "σ ≈ X.X" spread callouts near the local maxima of the low/high fitted-revenue quartiles, two "largest overshoot"/"largest undershoot" labels at the most extreme outliers) are visible anywhere — verified by cropping the exact data-coordinate anchor regions; only bare scatter points appear there, no text.
+      Legend: Bottom-left, frameless, transparent background, two entries ("Residual", "Outlier (|residual| > 2σ)") in an empty region, no overlap.
+      Legibility verdict: PASS for all text that IS present — but four annotation calls and the subtitle are silently absent from the render (a functional defect, not a legibility defect).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (#F0EFE8 primary, #B8B7B0 secondary) — clearly legible against the dark surface. Grid lines flip to a low-opacity light tint. Dashed zero-line and dotted threshold lines render in light ink-soft tone, band shading uses the same muted tone at low alpha, still visible but subtle against dark background.
-      Data: Data colors are pixel-identical to the light render — green #009E73 for in-band residuals, matte red #AE3030 for outliers — confirming only chrome flipped between themes, not data colors.
+      Chrome: Same title, axis labels, tick labels rendered in light ink (#F0EFE8 primary, #B8B7B0 secondary) — clearly legible. Grid lines flip to a low-opacity light tint. Dashed zero-line and dotted threshold lines render in light ink-soft tone. Same as the light render, no subtitle text appears at all.
+      Data: Data colors are pixel-identical to the light render — green #009E73 for in-band residuals, matte red #AE3030 for outliers — chrome-only theme flip confirmed. Same as the light render, none of the four text!() annotations render — the anchor regions (quartile local maxima, most extreme outlier points top-right and bottom-right) show only bare markers, no text.
       Legend: Same bottom-left placement, transparent background, both entries readable in light-colored text against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/label/tick text is clearly legible against the near-black background, and the brand green + matte red both read well on the dark surface.
+      Legibility verdict: PASS for all text that IS present — same annotation/subtitle absence as the light render, confirming this is a rendering/API defect rather than a theme-color problem.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -70,10 +80,11 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, label=14, tick=12),
-          balanced X/Y label and tick sizes, no overflow or clipping in either theme;
-          sizes match the library's documented starting values rather than being pushed
-          larger for extra headroom at mobile scale.
+        comment: 'All font sizes explicitly set (titlesize=20, label=14, tick=12),
+          balanced X/Y label and tick sizes, no overflow or clipping in either theme.
+          Note: the intended sigma/outlier text!() annotations never render (see weaknesses)
+          but that is a presence defect scored under Design Excellence / Code Quality,
+          not a legibility defect for the text that IS shown.'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -127,7 +138,8 @@ review:
         max: 8
         passed: false
         comment: Above a bare default (shaded band, dual threshold lines, outlier
-          distinction) but not yet a distinctive publication-level composition.
+          distinction) but not yet a distinctive publication-level composition; unchanged
+          from the prior attempt since the subtitle/annotation additions never render.
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -141,7 +153,10 @@ review:
         max: 6
         passed: false
         comment: Color contrast on outliers and the visible funnel pattern guide the
-          reader, but nothing explicitly calls out the heteroscedasticity insight.
+          reader (sufficient for a 4 without annotations per the rubric), but the
+          code's attempt to explicitly call out the heteroscedasticity insight via
+          subtitle + sigma/outlier text!() labels is completely non-functional in
+          the rendered PNGs, so it cannot earn credit toward 'excellent'.
     spec_compliance:
       score: 15
       max: 15
@@ -158,7 +173,8 @@ review:
         max: 4
         passed: true
         comment: Zero reference line, alpha for overlap, ±2σ bands, and threshold-based
-          outlier coloring all present.
+          outlier coloring all present and working; the non-rendering annotations
+          were not spec-required.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -198,7 +214,7 @@ review:
         comment: Spend ($10k-$200k) and revenue (~$95k-$950k at a plausible ~4.5x
           multiplier) are internally consistent and realistic.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -221,10 +237,17 @@ review:
         comment: CairoMakie, Colors, Random, Statistics all used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake functionality.
+        passed: false
+        comment: The repair commit added quartile-mask math, argmax/argmin lookups,
+          an Axis `subtitle`, and four `text!()` annotation calls that never appear
+          in either rendered PNG (verified by pixel-cropping the exact anchor coordinates).
+          This is functionally inert code presented as working data-storytelling functionality
+          — it computes and 'sets' visual elements that do not exist in the shipped
+          output, which meets the spirit of CQ-04's 0-tier ('contains fake-functionality
+          code') even though it is a rendering bug rather than intentional fakery.
+          Must be fixed to actually render, or removed.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -232,27 +255,32 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png with px_per_unit=2, current Figure/Axis API.
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Idiomatic Axis kwarg-based styling, hspan!/hlines!/scatter!/axislegend
-          usage matches Makie's recommended patterns.
+        comment: Axis kwarg-based styling, hspan!/hlines!/scatter!/axislegend usage
+          matches Makie's recommended patterns and works correctly, but the subtitle=
+          keyword and text!() annotation calls do not take effect at all, so overall
+          API usage falls short of 'expert'.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
         comment: hspan!/hlines! are generic concepts present in nearly every plotting
-          library; nothing distinctively Makie-specific is leveraged.
+          library; the one attempt at a Makie-distinctive feature (text!() annotations
+          anchored to data coordinates) does not render, so nothing distinctive is
+          actually demonstrated in the output.
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
