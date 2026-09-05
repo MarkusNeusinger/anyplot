@@ -166,17 +166,58 @@ jobs:
           EXT: ${{ steps.extract.outputs.ext }}
           BRANCH: ${{ steps.check.outputs.branch }}
           PR_NUM: ${{ steps.check.outputs.pr_number }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          # Fetch the PR branch to check its contents
-          git fetch origin "$BRANCH"
-
           IMPL_FILE="plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}"
           META_FILE="plots/${SPEC_ID}/metadata/${LANGUAGE}/${LIBRARY}.yaml"
 
-          # Check if implementation file exists on the PR branch
-          if ! git show "origin/${BRANCH}:${IMPL_FILE}" &>/dev/null; then
-            echo "::error::Implementation file missing on branch: ${IMPL_FILE}"
+          # A re-dispatch for a PR that is already merged has no branch to
+          # fetch: `gh pr merge --delete-branch` removed it. That is exactly
+          # the run this dispatch exists for — the first one merged and then
+          # crashed before the post-merge bookkeeping (PR #11295: the GCP auth
+          # step failed 5 s after the squash, so the images stayed in staging
+          # while the metadata on main already pointed at production). Read
+          # the files from main in that case, which is where the squash
+          # commit put them, so the run reaches promotion, labels and sync.
+          # Retried like the other state probes in this workflow: a blip here
+          # read as "not merged" would fall through to the branch fetch and
+          # reproduce the very failure this branch of the logic exists for.
+          # Unknown after three tries is a hard stop — re-dispatching later is
+          # cheap, guessing the ref is not.
+          STATE=""
+          for probe in 1 2 3; do
+            if STATE=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" --json state -q .state 2> /tmp/state.err); then
+              break
+            fi
+            SERR=$(head -c 500 /tmp/state.err | tr '\n' ' ')
+            echo "::warning::gh pr view (state) failed (probe ${probe}/3): ${SERR}"
+            STATE=""
+            if [ "$probe" -lt 3 ]; then
+              sleep $((probe * 5))
+            fi
+          done
+          if [ -z "$STATE" ]; then
+            echo "::error::Could not determine the state of PR #${PR_NUM} after 3 attempts — not guessing which ref to validate; re-dispatch when the API is back"
+            exit 1
+          fi
+          if [ "$STATE" = "MERGED" ]; then
+            echo "::notice::PR #${PR_NUM} is already merged — validating against origin/main"
+            git fetch origin main
+            REF="origin/main"
+          else
+            # Fetch the PR branch to check its contents
+            git fetch origin "$BRANCH"
+            REF="origin/${BRANCH}"
+          fi
+
+          # Check if implementation file exists on the PR branch (or on main)
+          if ! git show "${REF}:${IMPL_FILE}" &>/dev/null; then
+            echo "::error::Implementation file missing on ${REF}: ${IMPL_FILE}"
             echo "::error::This indicates an incomplete generation - metadata exists but implementation is missing"
+            if [ "$STATE" = "MERGED" ]; then
+              echo "::error::PR is already merged — nothing to close; the implementation needs a regeneration"
+              exit 1
+            fi
             echo "::error::Closing PR to prevent partial merge"
 
             gh pr close "$PR_NUM" --comment "**Merge blocked:** Implementation file \`${IMPL_FILE}\` is missing from this PR branch. Only metadata was found. This indicates an incomplete code generation. Please regenerate using \`generate:${LIBRARY}\` label."
@@ -185,8 +226,8 @@ jobs:
           fi
 
           # Check if metadata file exists
-          if ! git show "origin/${BRANCH}:${META_FILE}" &>/dev/null; then
-            echo "::warning::Metadata file missing on branch: ${META_FILE}"
+          if ! git show "${REF}:${META_FILE}" &>/dev/null; then
+            echo "::warning::Metadata file missing on ${REF}: ${META_FILE}"
             echo "::warning::This is unusual but not blocking - metadata will be created on next review"
           fi
 
