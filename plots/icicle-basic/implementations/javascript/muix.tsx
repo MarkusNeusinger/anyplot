@@ -220,8 +220,15 @@ function relLuminanceRgb([r, g, b]) {
   const srgb = [r, g, b].map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
   return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
 }
+// Fixed, theme-independent ink/paper pair -- the data fills themselves don't
+// change between themes, so the contrast decision must depend only on the
+// fill's own luminance, never on `t.ink`/`t.pageBg` (which flip meaning
+// between light and dark theme and previously produced near-invisible text
+// on the leaf-level tints in dark mode).
+const FIXED_DARK_TEXT = "#1A1A17";
+const FIXED_LIGHT_TEXT = "#FFFDF6";
 function textColorForRgb(rgb) {
-  return relLuminanceRgb(rgb) > 0.45 ? t.ink : t.pageBg;
+  return relLuminanceRgb(rgb) > 0.45 ? FIXED_DARK_TEXT : FIXED_LIGHT_TEXT;
 }
 
 // --- Sizing + label fitting -------------------------------------------------
