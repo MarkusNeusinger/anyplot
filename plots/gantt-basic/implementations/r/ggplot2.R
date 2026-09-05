@@ -6,6 +6,7 @@
 library(ggplot2)
 library(dplyr)
 library(ragg)
+library(scales)
 
 set.seed(42)
 
@@ -46,8 +47,20 @@ today <- as.Date("2026-04-10")
 # --- Plot -----------------------------------------------------------------
 n_tasks <- length(levels(tasks$task))
 
+# Progress-to-date shading: the full task duration renders faded, while the
+# portion already elapsed (start -> min(end, today)) is overlaid at full
+# opacity, so in-flight and completed work read as darker than upcoming work.
+started <- tasks %>%
+  filter(start <= today) %>%
+  mutate(progress_end = pmin(end, today))
+
 p <- ggplot(tasks, aes(y = task, x = start, xend = end, color = workstream)) +
-  geom_segment(aes(xend = end, yend = task), linewidth = 7, lineend = "round") +
+  geom_segment(aes(xend = end, yend = task), linewidth = 7,
+               lineend = "round", alpha = 0.35) +
+  geom_segment(data = started,
+               aes(xend = progress_end, yend = task),
+               linewidth = 7, lineend = "round", alpha = 1,
+               show.legend = FALSE) +
   geom_vline(xintercept = today, color = INK_SOFT,
              linewidth = 0.6, linetype = "dashed") +
   annotate("text", x = today, y = n_tasks + 0.9,
@@ -56,7 +69,7 @@ p <- ggplot(tasks, aes(y = task, x = start, xend = end, color = workstream)) +
   scale_x_date(date_labels = "%b %Y", date_breaks = "1 month",
                expand = expansion(mult = c(0.02, 0.08))) +
   scale_y_discrete(expand = expansion(add = c(0.6, 1.3))) +
-  guides(color = guide_legend(override.aes = list(linewidth = 5))) +
+  guides(color = guide_legend(override.aes = list(linewidth = 5, alpha = 1))) +
   labs(
     title = "Product Launch Plan · gantt-basic · r · ggplot2 · anyplot.ai",
     x = "Timeline", y = NULL, color = "Workstream"
@@ -65,7 +78,7 @@ p <- ggplot(tasks, aes(y = task, x = start, xend = end, color = workstream)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.x = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.x = element_line(color = alpha(INK, 0.18), linewidth = 0.25),
     panel.grid.major.y = element_blank(),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
@@ -75,7 +88,7 @@ p <- ggplot(tasks, aes(y = task, x = start, xend = end, color = workstream)) +
     plot.title        = element_text(color = INK, size = 12, face = "plain"),
     legend.position     = "top",
     legend.background   = element_rect(fill = PAGE_BG, color = NA),
-    legend.text         = element_text(color = INK_SOFT, size = 8, margin = margin(r = 14)),
+    legend.text         = element_text(color = INK_SOFT, size = 8, margin = margin(l = 4, r = 14)),
     legend.title        = element_text(color = INK, size = 10, margin = margin(r = 10)),
     legend.key          = element_rect(fill = PAGE_BG, color = NA),
     legend.key.spacing.x = unit(0.4, "cm"),
