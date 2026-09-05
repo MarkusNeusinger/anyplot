@@ -14,7 +14,7 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-IMPRINT_PALETTE <- c("#009E73", "#4467A3")
+IMPRINT_PALETTE <- c("#009E73", "#C475FD")
 
 # --- Data ---------------------------------------------------------------
 # Reaction times (ms) for two lighting conditions in a visual response task.
@@ -29,25 +29,43 @@ breaks <- seq(
   by = bin_width
 )
 
-make_steps <- function(values, condition) {
-  counts <- hist(values, breaks = breaks, plot = FALSE)$counts
-  tibble::tibble(
-    bin_start = breaks[-length(breaks)],
-    count     = counts,
-    condition = condition
-  )
-}
+bright_counts <- hist(bright_light, breaks = breaks, plot = FALSE)$counts
+dim_counts    <- hist(dim_light, breaks = breaks, plot = FALSE)$counts
 
 steps_df <- bind_rows(
-  make_steps(bright_light, "Bright light"),
-  make_steps(dim_light, "Dim light")
+  tibble::tibble(
+    bin_start = breaks[-length(breaks)],
+    count     = bright_counts,
+    condition = "Bright light"
+  ),
+  tibble::tibble(
+    bin_start = breaks[-length(breaks)],
+    count     = dim_counts,
+    condition = "Dim light"
+  )
 ) |>
   mutate(condition = factor(condition, levels = c("Bright light", "Dim light")))
 
+mean_bright <- mean(bright_light)
+mean_dim    <- mean(dim_light)
+gap_label   <- sprintf("+%.0f ms slower under dim light", mean_dim - mean_bright)
+
 # --- Plot ---------------------------------------------------------------
 p <- ggplot(steps_df, aes(x = bin_start, y = count, color = condition)) +
+  geom_vline(xintercept = mean_bright, color = IMPRINT_PALETTE[1], linetype = "dashed", linewidth = 0.5, alpha = 0.6) +
+  geom_vline(xintercept = mean_dim, color = IMPRINT_PALETTE[2], linetype = "dashed", linewidth = 0.5, alpha = 0.6) +
   geom_step(linewidth = 1.1, direction = "hv") +
+  annotate(
+    "text",
+    x     = (mean_bright + mean_dim) / 2,
+    y     = max(steps_df$count) * 1.12,
+    label = gap_label,
+    color = INK_SOFT,
+    size  = 3,
+    hjust = 0.5
+  ) +
   scale_color_manual(values = IMPRINT_PALETTE) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
   labs(
     title  = "histogram-stepwise · r · ggplot2 · anyplot.ai",
     x      = "Reaction Time (ms)",
