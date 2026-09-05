@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-rsi: RSI Technical Indicator Chart
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 77/100 | Created: 2026-09-05
+// Quality: 88/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;

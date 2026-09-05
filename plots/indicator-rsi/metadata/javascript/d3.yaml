@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: indicator-rsi
 created: '2026-09-05T05:57:34Z'
-updated: '2026-09-05T06:03:09Z'
+updated: '2026-09-05T06:10:45Z'
 generated_by: claude-sonnet
 workflow_run: 33948371041
 issue: 3229
@@ -12,9 +12,14 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/d3/plot-dark.html
-quality_score: 77
+quality_score: 88
 review:
   strengths:
+  - 'Both attempt-1 weaknesses are fully resolved: the ''Centerline (50)'' label now
+    uses t.inkSoft (clearly readable, ~sufficient contrast in both themes) instead
+    of the near-invisible grid rgba token, and all three threshold labels were moved
+    to the left edge (x=4) where the series has headroom, eliminating the prior right-edge
+    collision between the RSI line and the ''Oversold (30)'' label.'
   - Correct 14-period Wilder RSI calculation from a synthetic 120-day price series,
     fully deterministic via a fixed-seed LCG (no library RNG needed in the browser).
   - Overbought (70-100) and oversold (0-30) zones are shaded with distinct Imprint
@@ -27,52 +32,45 @@ review:
   - 'Clean, idiomatic d3 usage: scaleTime/scaleLinear, a line generator with curveMonotoneX,
     tick-line removal, and the correct mount-node contract with no animation.'
   weaknesses:
-  - 'The ''Centerline (50)'' label uses `t.grid` (the low-opacity rgba token meant
-    for subtle gridlines, ~15% alpha) as its text fill. Measured contrast against
-    the plot background is ~1.3:1 in both light and dark renders -- far below readable
-    levels, effectively invisible at a glance. Fix: use `t.inkSoft` or `t.inkMuted`
-    (a proper secondary-text token) for the centerline label''s fill instead of reusing
-    the grid stroke color.'
-  - 'Near the right edge of the chart, the RSI line''s terminal upswing crosses directly
-    through the ''Oversold (30)'' label text (through the letters in ''Sold'') in
-    both light and dark renders, because the label is fixed at x=iw-4 without checking
-    whether the series'' final segment passes near y=30 there. Fix: either place threshold
-    labels near the left edge (x~4) where the series has more headroom, or check the
-    data''s proximity to each threshold near the label''s x position and nudge the
-    label vertically (or horizontally) to avoid the collision.'
+  - The overall visual approach (shaded rects for zones, dashed/dotted lines for thresholds)
+    is competent but generic -- easily replicated in any charting library, so library-distinctive
+    d3 features (e.g. a gradient-filled area under the line, a clip-path reveal, or
+    data-driven zone boundaries) are not on display.
+  - The sine-driven drift term (Math.sin(i/9)*0.9) makes the RSI's overbought/oversold
+    cycles visually regular/periodic rather than organically irregular -- a minor
+    realism nit, not a functional issue.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 (sampled ~250,248,241).
-      Chrome: Title "indicator-rsi · javascript · d3 · anyplot.ai" in bold dark ink, clearly visible. Subtitle "14-period RSI on a synthetic 120-day daily close series" in soft gray, readable. X-axis "Trading Date" and Y-axis "RSI" labels dark ink, readable; tick labels (0/30/50/70/100, Jul 01/Aug 01/Sep 01) soft gray, readable. "Overbought (70)" (red) and "Oversold (30)" (blue) threshold labels are high-contrast and readable. EXCEPTION: the "Centerline (50)" label is rendered in the same low-opacity rgba token used for gridlines -- measured contrast ratio against the background is ~1.3:1, so it is essentially invisible against the cream surface.
-      Data: Single RSI line in brand green #009E73, 3px stroke, clearly distinguishable from the shaded overbought (light red-pink tint) and oversold (light blue-gray tint) zone backgrounds. Near the right edge, the line's terminal upswing crosses directly through the "Oversold (30)" label text.
-      Legibility verdict: FAIL -- Centerline (50) label unreadable due to near-zero contrast; RSI line overlaps the Oversold (30) label near the right edge.
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "indicator-rsi · javascript · d3 · anyplot.ai" in bold dark ink, clearly visible. Subtitle "14-period RSI on a synthetic 120-day daily close series" in soft gray, readable. X-axis "Trading Date" and Y-axis "RSI" labels dark ink, readable; tick labels (0/30/50/70/100, Jul 01/Aug 01/Sep 01) soft gray, readable. "Overbought (70)" (red) and "Oversold (30)" (blue) threshold labels are high-contrast and readable. FIXED from attempt 1: "Centerline (50)" label now renders in a proper dark soft-ink tone, clearly legible against the cream background (previously used the near-invisible grid rgba token).
+      Data: Single RSI line in brand green #009E73, 3px stroke, clearly distinguishable from the shaded overbought (light red-pink tint) and oversold (light blue-gray tint) zone backgrounds. FIXED from attempt 1: all three threshold labels were relocated to the left edge (x=4), where the series' opening values have headroom from each threshold, so the line no longer crosses through any label text (checked closely via crops at both the "Overbought" label near the series' start and the "Oversold"/"Centerline" labels lower on the axis -- no overlap in either case).
+      Legibility verdict: PASS -- all text is readable, no dark-on-dark or light-on-light failures, no text/line collisions.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 (visually confirmed, no pure black).
-      Chrome: Title, subtitle, axis labels, and tick labels all correctly flipped to light ink tones and remain fully readable -- no dark-on-dark failures on the primary chrome. "Overbought (70)" and "Oversold (30)" threshold labels remain high-contrast (red/blue against dark bg). Same "Centerline (50)" issue persists: still rendered with the grid rgba token, still effectively invisible against the near-black surface.
-      Data: RSI line color is identical #009E73 green, confirming data-color parity between themes. The same overlap with "Oversold (30)" recurs since it's the same geometry independent of theme.
-      Legibility verdict: FAIL -- same two issues as the light render (Centerline label contrast, Oversold label/line overlap); otherwise all primary chrome is theme-correct.
+      Background: Warm near-black, matches #1A1A17, no pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all correctly flipped to light ink tones and remain fully readable. "Overbought (70)" and "Oversold (30)" threshold labels remain high-contrast (red/blue against dark bg). "Centerline (50)" label now uses a properly visible light-gray ink tone, matching the light render's fix -- no longer invisible.
+      Data: RSI line color is identical #009E73 green, confirming data-color parity between themes. Same left-edge label placement avoids any line/label overlap, consistent with the light render.
+      Legibility verdict: PASS -- both previously-flagged issues (centerline contrast, line/label overlap) are resolved; all chrome and data elements are theme-correct and collision-free.
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Centerline (50) label uses the grid rgba token as text fill -- ~1.3:1
-          contrast, unreadable in both themes. All other text (title, subtitle, axis
-          labels, ticks, Overbought/Oversold labels) is readable and explicitly sized.
+        passed: true
+        comment: Centerline (50) label fixed to use t.inkSoft -- now clearly readable
+          in both themes. All other text (title, subtitle, axis labels, ticks, Overbought/Oversold
+          labels) is readable and explicitly sized.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: RSI line's terminal upswing crosses directly through the 'Oversold
-          (30)' label text in both renders; label remains partially legible but is
-          visually cut by the data line.
+        passed: true
+        comment: Threshold labels moved to the left edge (x=4); verified via close
+          crops that the RSI line no longer crosses any label text in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -85,30 +83,31 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Good contrast throughout aside from the noted Centerline label; no
-          red-green-only signal (zones use position/label + color).
+        comment: Good contrast throughout; no red-green-only signal (zones use position/label
+          + color).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Plot fills a large, balanced portion of the canvas; margins even;
-          no clipping or overflow.
+          no clipping or overflow; canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Trading Date" and "RSI" are descriptive; RSI is a unitless 0-100
-          index so no unit suffix is expected.'
+        comment: '''Trading Date'' and ''RSI'' are descriptive; RSI is a unitless
+          0-100 index so no unit suffix is expected.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series is #009E73 (identical across themes); zone tints use
-          Imprint palette members (matte red for overbought, blue for oversold); background/chrome
-          theme-correct in both renders.'
+          Imprint palette members (matte red for overbought, blue for oversold --
+          a sensible semantic-exception use for accent zones, not competing categorical
+          series); background/chrome theme-correct in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -126,8 +125,8 @@ review:
         max: 6
         passed: true
         comment: Tick marks removed, generous whitespace, subtle dashed/dotted threshold
-          styling with varied opacity; undercut slightly by the illegible centerline
-          label.
+          styling with varied opacity; now fully consistent since the centerline label
+          is legible.
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -177,8 +176,7 @@ review:
         max: 6
         passed: true
         comment: Series visits overbought and oversold extremes multiple times plus
-          mid-range chop; a somewhat regular sine-driven drift makes the cycles slightly
-          repetitive.
+          mid-range chop; a sine-driven drift makes the cycles slightly repetitive.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -247,7 +245,7 @@ review:
         comment: curveMonotoneX and manual tickValues are nice touches but the overall
           approach (rects for zones, lines for thresholds) is generic and easily replicated
           in other libraries.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
