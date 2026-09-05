@@ -1,0 +1,248 @@
+library: ggplot2
+language: r
+specification_id: heatmap-polar
+created: '2026-09-05T03:30:48Z'
+updated: '2026-09-05T03:42:22Z'
+generated_by: claude-sonnet
+workflow_run: 33941863161
+issue: 5244
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correctly implements coord_polar with a hollow center (y limits -1.5 to 7.5) to
+    avoid inner-ring point-overlap distortion at the pole — a thoughtful, non-obvious
+    design decision
+  - 'Sequential Imprint colormap (#009E73 to #4467A3) correctly matches the single-polarity
+    ''Visits/hr'' data and is pixel-identical across both themes'
+  - Data realistically models weekday commute peaks (~8am, ~6pm) versus a flatter
+    weekend curve, directly visible as blue wedges at the correct angular positions
+  - Subtitle 'Hour of day (angular) · Day of week (radial)' now explicitly names both
+    encoded dimensions, resolving the prior review's axis-labeling ambiguity
+  - The two data-generation helper functions were inlined directly into the mutate()
+    call, restoring a pure Imports -> Data -> Plot -> Save structure
+  - Theme-adaptive chrome correctly implemented in both renders; no dark-on-dark or
+    light-on-light failures
+  weaknesses:
+  - Innermost ring cells (near the hollow center) are quite narrow, making their individual
+    color harder to distinguish at a glance — inherent to polar heatmaps but worth
+    noting
+  - Design Excellence is good but not yet top-tier — the day-ring boundaries could
+    be delineated slightly more deliberately (e.g. a subtly heavier line at ring transitions)
+    to push visual sophistication further
+  - Only a single metric (visits) is shown; an additional distinguishing feature (e.g.
+    an annotated peak cell) could push Feature Coverage and Data Storytelling further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Hourly Website Traffic · heatmap-polar · r · ggplot2 · anyplot.ai" in dark ink at the top, centered, fully visible with balanced margins. Subtitle "Hour of day (angular) · Day of week (radial)" in soft dark gray directly below, clearly explaining both encoded axes. Angular tick labels (12am, 6am, 12pm, 6pm) in soft dark gray around the outer circle. Radial tick labels (Mon-Sun) stacked in bold dark text at the left. Legend "Visits/hr" with tick labels 50/100 at the right, dark ink text. All chrome text is clearly legible against the light background.
+      Data: 7x24 polar grid of tiles colored on a green-to-blue sequential gradient (low stop #009E73, high stop #4467A3), identical to the Imprint imprint_seq definition. A hollow circular gap sits at the center so inner-ring cells don't collapse to a point. Visible blue (high-value) wedges cluster near the 6pm angular position (evening commute) and just past 6am (morning commute) across weekday rings, with the weekend rings (Sat/Sun, outer) staying more uniformly green/teal (lower, flatter traffic). Thin background-colored borders separate individual cells.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and subtitle, now rendered in light ink (#F0EFE8-ish / #B8B7B0-ish), fully visible with the same balanced margins. Angular tick labels in light gray, radial day labels in bold light text at the left. Legend text and title in light colors at the right. All chrome elements read clearly against the dark background — no dark-on-dark failures observed.
+      Data: Identical green-to-blue gradient and cell layout as the light render — same blue wedges at the same angular/radial positions for weekday commute hours, same greener/teal weekend rings. Data colors are unchanged between themes as required; only the surrounding chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set via theme(); all text readable in both
+          themes; title fits without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Tiles clearly visible; innermost-ring cells are narrow (inherent
+          to polar heatmaps)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient is CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Circle fills most of the square canvas, balanced margins, legend
+          near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: New subtitle explicitly names both angular (hour of day) and radial
+          (day of week) dimensions
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient correctly used for single-polarity data; theme-correct
+          chrome in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hollow-center technique and background-colored cell borders show
+          intentional design beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, no spines/panel border, generous whitespace around the
+          circle
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Weekday commute peaks vs. flatter weekend pattern are visible at
+          a glance via color contrast
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap with angular=hour, radial=day
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Continuous angular wrap, radial ordering from center, colorbar legend,
+          cell borders, readable interval labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: hour->angular, day->radial, value->fill all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches {Descriptive Title} · {spec-id} · {lang} · {lib}
+          · anyplot.ai; legend title/units clear
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows weekday rush-hour peaks and weekend flattening; single metric,
+          no additional variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic by hour/day is a real, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Visit counts and rush-hour proportions are realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions inlined; now a pure Imports -> Data -> Plot -> Save
+          structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with sprintf plot-%s.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, high-level use of coord_polar, scale_*_continuous, geom_tile,
+          scale_fill_gradient
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_polar transforming a cartesian tile grid into a polar heatmap
+          is a distinctive ggplot2 technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
+  - publication-ready
