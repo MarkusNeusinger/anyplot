@@ -53,16 +53,22 @@ influential_ids <- diagnostics$obs_id[order(diagnostics$cooks_d, decreasing = TR
 diagnostics$is_influential <- diagnostics$obs_id %in% influential_ids
 influential_points <- diagnostics[diagnostics$is_influential, ]
 
-# Spread the 3 index labels apart along each panel's x-axis so nearby points
-# (e.g. two influential observations with similar fitted values) don't merge
-# into unreadable overlapping text.
-label_spread <- 0.07
+# Spread the 3 index labels apart along each panel's x-axis, AND stack them at
+# different heights (vjust) by rank — horizontal nudging alone isn't enough
+# when two influential points have close fitted/leverage values (their x-nudges
+# land near each other), so the perpendicular vjust offset guarantees the
+# labels never visually cluster.
+label_spread <- 0.09
 influential_points$nudge_fitted <-
   (rank(influential_points$fitted) - (n_labeled + 1) / 2) *
   label_spread * diff(range(diagnostics$fitted))
 influential_points$nudge_leverage <-
   (rank(influential_points$leverage) - (n_labeled + 1) / 2) *
   label_spread * diff(range(diagnostics$leverage))
+influential_points$vjust_fitted <-
+  -0.9 - (rank(influential_points$fitted) - 1) * 0.35
+influential_points$vjust_leverage <-
+  -0.9 - (rank(influential_points$leverage) - 1) * 0.35
 
 # --- Title -------------------------------------------------------------
 title_text <- "diagnostic-regression-panel · r · ggplot2 · anyplot.ai"
@@ -85,7 +91,7 @@ anyplot_theme <- theme_minimal(base_size = 7) +
     legend.position   = "none"
   )
 
-point_size  <- 2.1
+point_size  <- 2.5
 point_alpha <- 0.6
 
 # --- Panel 1: Residuals vs Fitted --------------------------------------
@@ -95,9 +101,10 @@ p_resid_fitted <- ggplot(diagnostics, aes(x = fitted, y = residuals)) +
   geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
               color = SMOOTH_COLOR, linewidth = 0.9) +
   geom_point(data = influential_points, color = INFLUENTIAL_COLOR, size = point_size + 0.6) +
-  geom_text(data = influential_points, aes(x = fitted + nudge_fitted, label = obs_id),
-            color = INK, size = 2.8, vjust = -0.8, fontface = "plain") +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.16))) +
+  geom_text(data = influential_points,
+            aes(x = fitted + nudge_fitted, label = obs_id, vjust = vjust_fitted),
+            color = INK, size = 2.8, fontface = "plain") +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(title = "Residuals vs Fitted", x = "Fitted Values ($/month)", y = "Residuals") +
   anyplot_theme
 
@@ -112,6 +119,8 @@ qq_influential <- qq_data[qq_data$obs_id %in% influential_ids, ]
 qq_influential$nudge_theoretical <-
   (rank(qq_influential$theoretical) - (n_labeled + 1) / 2) *
   label_spread * diff(range(qq_data$theoretical))
+qq_influential$vjust_theoretical <-
+  -0.9 - (rank(qq_influential$theoretical) - 1) * 0.35
 
 qq_probs      <- c(0.25, 0.75)
 qq_slope      <- diff(quantile(diagnostics$std_residuals, qq_probs)) / diff(qnorm(qq_probs))
@@ -122,9 +131,10 @@ p_qq <- ggplot(qq_data, aes(x = theoretical, y = sample)) +
               linetype = "dashed", color = INK_SOFT, linewidth = 0.4) +
   geom_point(color = POINT_COLOR, size = point_size, alpha = point_alpha) +
   geom_point(data = qq_influential, color = INFLUENTIAL_COLOR, size = point_size + 0.6) +
-  geom_text(data = qq_influential, aes(x = theoretical + nudge_theoretical, label = obs_id),
-            color = INK, size = 2.8, vjust = -0.8, fontface = "plain") +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.16))) +
+  geom_text(data = qq_influential,
+            aes(x = theoretical + nudge_theoretical, label = obs_id, vjust = vjust_theoretical),
+            color = INK, size = 2.8, fontface = "plain") +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(title = "Normal Q-Q", x = "Theoretical Quantiles", y = "Standardized Residuals") +
   anyplot_theme
 
@@ -137,9 +147,10 @@ p_scale_location <- ggplot(diagnostics, aes(x = fitted, y = sqrt_abs_std_resid))
   geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
               color = SMOOTH_COLOR, linewidth = 0.9) +
   geom_point(data = influential_points, color = INFLUENTIAL_COLOR, size = point_size + 0.6) +
-  geom_text(data = influential_points, aes(x = fitted + nudge_fitted, label = obs_id),
-            color = INK, size = 2.8, vjust = -0.8, fontface = "plain") +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.16))) +
+  geom_text(data = influential_points,
+            aes(x = fitted + nudge_fitted, label = obs_id, vjust = vjust_fitted),
+            color = INK, size = 2.8, fontface = "plain") +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.20))) +
   labs(title = "Scale-Location", x = "Fitted Values ($/month)",
        y = expression(sqrt("|Standardized Residuals|"))) +
   anyplot_theme
@@ -149,14 +160,13 @@ p_params <- length(coef(model))  # intercept + slope = 2
 max_leverage <- max(diagnostics$leverage)
 leverage_grid <- seq(max_leverage * 0.02, max_leverage * 1.15, length.out = 200)
 
-# The D=0.5 contour is a decreasing function of leverage, so its lowest value
-# over the plotted range is reached at max leverage — the y-axis must extend
-# at least that far or the contour is invisible. D=1.0 is a stricter threshold
-# that this dataset's leverage never approaches closely enough to show without
-# crushing the primary point cloud into a sliver, so it's drawn but only
-# labeled if it happens to fall within this data-driven range.
-cook_05_floor <- sqrt(0.5 * p_params * (1 - max_leverage) / max_leverage)
-y_limit <- max(4, max(abs(diagnostics$std_residuals)) * 1.3, cook_05_floor * 1.15)
+# Both contours are decreasing functions of leverage, so their lowest values
+# over the plotted range are reached at max leverage — the y-axis must extend
+# at least that far or the contour is invisible. Size the axis off the
+# stricter D=1.0 threshold so it's always visibly reachable (not just D=0.5),
+# even though this widens the axis and shrinks the primary point cloud a bit.
+cook_1_floor <- sqrt(1.0 * p_params * (1 - max_leverage) / max_leverage)
+y_limit <- max(4, max(abs(diagnostics$std_residuals)) * 1.3, cook_1_floor * 1.15)
 
 cook_contours <- tibble::tibble(
   leverage      = rep(leverage_grid, 4),
@@ -172,9 +182,10 @@ cook_contours <- tibble::tibble(
   branch = rep(c("0.5-upper", "0.5-lower", "1.0-upper", "1.0-lower"), each = length(leverage_grid))
 )
 
-# Stagger the two label x-positions so "D=0.5" and "D=1.0" don't collide when
-# both contours are visible in the same corner of the panel.
-cook_label_leverage <- max_leverage * c(0.98, 0.82)
+# Place both labels close to max leverage (where each curve is lowest) so
+# their required height stays near the axis's data-driven floor; staggering
+# the leverage position also keeps "D=0.5" and "D=1.0" from colliding in x.
+cook_label_leverage <- max_leverage * c(0.82, 1.00)
 cook_labels <- tibble::tibble(
   leverage      = cook_label_leverage,
   std_residuals = c(
@@ -195,8 +206,9 @@ p_resid_leverage <- ggplot(diagnostics, aes(x = leverage, y = std_residuals)) +
   geom_smooth(method = "loess", formula = y ~ x, se = FALSE,
               color = SMOOTH_COLOR, linewidth = 0.9) +
   geom_point(data = influential_points, color = INFLUENTIAL_COLOR, size = point_size + 0.6) +
-  geom_text(data = influential_points, aes(x = leverage + nudge_leverage, label = obs_id),
-            color = INK, size = 2.8, vjust = -0.8, fontface = "plain") +
+  geom_text(data = influential_points,
+            aes(x = leverage + nudge_leverage, label = obs_id, vjust = vjust_leverage),
+            color = INK, size = 2.8, fontface = "plain") +
   coord_cartesian(xlim = range(diagnostics$leverage) * c(0.9, 1.1),
                    ylim = c(-y_limit, y_limit)) +
   labs(title = "Residuals vs Leverage", x = "Leverage", y = "Standardized Residuals") +
@@ -208,7 +220,7 @@ combined <- arrangeGrob(
   ncol = 2, nrow = 2,
   top = grid::textGrob(title_text, gp = grid::gpar(col = INK, fontsize = title_fontsize)),
   bottom = grid::textGrob(
-    "Green = observation  ·  Red = top 3 by Cook's distance  ·  Blue = LOESS trend\nAmber (panel 4) = Cook's distance contour, labeled where it crosses the plotted range",
+    "Green = observation  ·  Red = top 3 by Cook's distance  ·  Blue = LOESS trend\nAmber (panel 4) = Cook's distance contours at D=0.5 and D=1.0",
     gp = grid::gpar(col = INK_SOFT, fontsize = 8, lineheight = 1.3)
   )
 )
