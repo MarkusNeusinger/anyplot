@@ -1,8 +1,7 @@
 // anyplot.ai
 // diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-09-05
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
