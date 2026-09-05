@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: maze-printable
 created: '2026-09-05T09:30:03Z'
-updated: '2026-09-05T09:36:28Z'
+updated: '2026-09-05T09:48:14Z'
 generated_by: claude-sonnet
 workflow_run: 33957890960
 issue: 3232
@@ -12,51 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Spanning-tree DFS maze generation correctly guarantees exactly one solution path
-    between start and goal, matching the spec's core requirement.
-  - 'Start (green #009E73) and Goal (matte red #AE3030) markers use a deliberate,
-    documented semantic exception to the canonical Imprint order (traffic-light go/stop
-    convention) while still carrying S/G letter labels, so the encoding is not color-alone.'
-  - 'Theme adaptation is correct: black walls on warm off-white in light mode invert
-    to light walls on warm near-black in dark mode, with the S/G marker colors staying
-    pixel-identical across both renders.'
-  - Canvas lands exactly on the 2400x2400 square target with generous, balanced margins
-    around the maze grid.
-  - 'Code is clean and KISS: Random.seed!(42) for reproducibility, no unused imports,
-    modern Figure(size=...) API (not the deprecated resolution=...), single-file script
-    with no functions/classes.'
+  - 'Attempt-1 feedback fully addressed: added a softly rounded poly!-built print-frame
+    border and faint accent tints on the S/G cells, directly answering the ''add a
+    distinctive Makie touch'' and ''reinforce the start-to-goal narrative'' asks.'
+  - Wall linewidth bumped from 5 to 6, addressing the mobile-thumbnail legibility
+    concern.
+  - Spanning-tree DFS maze generation still correctly guarantees exactly one solution
+    path between start and goal.
+  - 'Theme adaptation remains correct: data colors (S/G, walls via INK token) are
+    pixel-identical across themes; only chrome flips.'
+  - Canvas lands exactly on the 2400x2400 square target with generous, balanced margins;
+    no clipping in either render.
+  - Code stays clean and KISS despite the added frame-geometry logic - no unused imports,
+    seeded RNG, single-file script.
   weaknesses:
-  - 'Design Excellence is functional but generic: a plain grid of walls with no embellishment
-    beyond the S/G markers (e.g. a subtle rounded outer border, a faint accent frame,
-    or a small caption panel noting grid size) would elevate the print-product feel.'
-  - Data storytelling / visual hierarchy is minimal beyond the mandated S/G markers
-    - consider a subtle visual cue that reinforces the start-to-goal narrative (e.g.
-    a slightly bolder border cell at S and G, or a faint corner label).
-  - Library Mastery is idiomatic but generic - linesegments!() + scatter!() + text!()
-    would look the same in almost any plotting library; consider a Makie-distinctive
-    touch such as poly!() for a softly rounded maze frame, or Makie.Legend styled
-    as a small puzzle-info panel.
-  - Wall linewidth=5 may read a bit thin once the 2400x2400 PNG is scaled down to
-    a ~400px mobile thumbnail for a 25x25 grid - verify legibility at that scale and
-    consider a small bump if it looks faint.
+  - Design Excellence is improved but still fairly restrained - the rounded frame
+    and accent tints help, but a caption/legend panel noting grid size or a slightly
+    bolder visual treatment could push this further.
+  - Data storytelling remains minimal - the accent tint on S/G cells (alpha=0.12)
+    may be too faint to register at small preview sizes.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: title "maze-printable · julia · makie · anyplot.ai" is dark, bold, centered, comfortably narrow relative to canvas width; no axis ticks/labels/spines are shown (correctly hidden, as a maze needs no coordinate axes).
-      Data: a 25x25 perfect maze rendered as thick black wall segments on the off-white passage background; a green circular "S" marker sits in the top-left start cell and a matte-red circular "G" marker sits in the bottom-right goal cell, both with a light-colored letter cut into the circle for contrast.
-      Legibility verdict: PASS - title and S/G markers are all clearly readable against the light background, no text is light-on-light.
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title "maze-printable · julia · makie · anyplot.ai" centered at top in dark bold text, fully clear of the top edge. New softly rounded poly!-built print-frame border encloses the grid. All chrome readable.
+      Data: 25x25 perfect maze, thick black wall segments (linewidth=6). Start cell (top-left) has a green #009E73 circular "S" marker on a faint green background tint; goal cell (bottom-right) has a matte-red #AE3030 circular "G" marker on a faint red tint.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: title text is rendered light/off-white and stays clearly legible; still no axis ticks/labels/spines (consistent with the light render).
-      Data: the maze walls invert to light-colored lines on the near-black passage background (a correct theme-chrome flip); the S (green) and G (matte red) markers are pixel-identical in hue and position to the light render, confirming data colors did not change between themes.
-      Legibility verdict: PASS - title is fully legible, no dark-on-dark failures; wall/passage contrast is strong in both renders.
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Same title rendered in light/off-white text, fully legible. Same rounded print-frame border, now stroked in the dark-theme INK_SOFT tone.
+      Data: Walls correctly invert to light-colored lines on near-black passages. S/G marker colors and their faint background tints are pixel-identical to the light render - confirming only chrome flipped, not data color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,67 +57,72 @@ review:
         max: 8
         passed: true
         comment: Title and S/G labels explicitly sized and readable in both themes;
-          walls could read slightly thin at a ~400px thumbnail for a 25x25 grid
+          small residual risk at extreme mobile-thumbnail scale for the densest wall
+          segments
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, markers, or walls
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wall linewidth=5 is visible and print-friendly; a touch bolder would
-          help at small preview sizes
+        comment: Wall linewidth bumped 5 to 6 per attempt-1 feedback, now clearly
+          visible and print-friendly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red S and G markers are also letter-labeled, so color is not
-          the sole distinguishing signal
+        comment: S/G are letter-labeled in addition to color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Maze fills the canvas well with balanced margins; nothing cut off
+        comment: Maze plus new rounded frame fits the 2400x2400 canvas with balanced
+          margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a maze grid; title fulfills the labeling role
-          and follows the mandated format
+        comment: No axes needed for a maze; title follows mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Start), goal uses documented semantic-exception
-          red; theme-correct backgrounds and chrome in both renders'
+        comment: 'First series #009E73 (Start); Goal uses documented semantic-exception
+          red; theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful semantic color choice for S/G, but overall a plain wall
-          grid without further embellishment
+        passed: false
+        comment: Rounded print-frame border and faint S/G accent tints add real polish
+          over the plain wall grid from attempt 1
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: Spines and decorations fully removed, clean whitespace and margins
+        passed: true
+        comment: Spines/decorations removed, clean whitespace, new frame adds a finished,
+          print-ready edge
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        comment: No visual hierarchy beyond the mandated S/G markers
+        passed: false
+        comment: Accent tints on S/G cells give a subtle reinforcement of the start-to-goal
+          narrative, but hierarchy is still minimal beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -134,22 +131,26 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct maze puzzle, DFS spanning-tree guarantees a single solution
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Single-solution guarantee, S/G markers, print-friendly consistent
-          wall thickness, adequate margins, black-on-white contrast all present
+        passed: true
+        comment: Single-solution guarantee, S/G markers, print-friendly wall thickness,
+          adequate margins, high-contrast walls
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Start top-left, goal bottom-right as spec's example describes
+        passed: true
+        comment: Start top-left, goal bottom-right per spec's example
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title format exact match; no legend needed since markers are self-labeled
     data_quality:
       score: 14
@@ -159,17 +160,20 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Demonstrates a full 25x25 solvable maze with dead ends and long corridors
+        passed: true
+        comment: Full 25x25 solvable maze with dead ends and long corridors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Legitimate, neutral, real-world use case (printable puzzle/activity
+        passed: true
+        comment: Legitimate, neutral real-world use case (printable puzzle/activity
           sheet)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: 25x25 grid sits well within the spec's recommended 15-40 range
     code_quality:
       score: 10
@@ -179,52 +183,63 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports -> data/maze-gen -> plot -> save, no functions/classes
+        passed: true
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Random.seed!(42) explicit
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: CairoMakie, Colors, Random all used
+        passed: true
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for maze generation, no fake functionality
+        passed: true
+        comment: Frame-arc construction is a bit more code but stays readable and
+          well-commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-$(THEME).png with px_per_unit=2, modern Figure(size=...)
-          API
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Good use of Axis, DataAspect(), hidedecorations!/hidespines!, linesegments!
-          for batch wall rendering
+        passed: true
+        comment: Axis, DataAspect(), hidedecorations!/hidespines!, linesegments! for
+          batch wall rendering, poly! for frame and accent tiles
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        comment: linesegments!/scatter!/text! usage is correct but not distinctly
-          Makie-specific
-  verdict: REJECTED
+        passed: false
+        comment: poly!-built rounded-corner frame (traced arc-by-arc) is a genuine
+          Makie-specific touch; still room for a more standout distinctive feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
+  - publication-ready
