@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-filled
 created: '2026-09-05T07:19:30Z'
-updated: '2026-09-05T07:23:21Z'
+updated: '2026-09-05T07:34:10Z'
 generated_by: claude-sonnet
 workflow_run: 33952088783
 issue: 2643
@@ -12,94 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 79
 review:
   strengths:
-  - 'Faithful to the spec: geom_area(alpha = 0.35) + geom_line on top, fill matches
-    line color, baseline pinned to y=0 via limits = c(0, NA)'
-  - 'Theme-adaptive chrome is correct in both renders: #FAF8F1/#1A1A17 backgrounds,
-    INK/INK_SOFT text tokens, first (only) series is Imprint #009E73 identically in
-    both themes'
-  - Realistic, neutral dataset (daily landing-page views over a month with a gradual
-    ramp and a weekly weekend dip) at a plausible scale
-  - 'Clean KISS structure: imports -> data -> plot -> save, single set.seed(42), no
-    functions/classes'
+  - 'Correct, spec-compliant filled-line construction: semi-transparent fill (alpha
+    0.35) with a crisp opaque line on top, baseline pinned at y=0'
+  - Theme adaptation is flawless — data color (#009E73) is pixel-identical between
+    light/dark renders; only chrome (background, ink, grid) flips
+  - 'Clean, minimal chrome: spines removed, y-only major gridlines, generous margins,
+    canvas exactly 3200x1800'
+  - Realistic, neutral synthetic data (daily page views with a plausible weekend dip)
+    and a reproducible (set.seed(42)) data-generation pipeline
   weaknesses:
-  - library(dplyr) is imported but never used — only tibble::tibble() is called (that's
-    the tibble package, not dplyr); drop the unused import
-  - Design stays at the generic idiomatic pattern for this spec (geom_area + geom_line
-    with theme_minimal tweaks) with no distinctive flourish — consider a subtle peak
-    annotation, a light vertical gradient fill, or a smoothed trend overlay to lift
-    Aesthetic Sophistication and Distinctive Features
-  - With only 30 data points (sparse per the data-density heuristic), the line could
-    be slightly thicker (e.g. linewidth 1.3-1.5) or carry subtle point markers at
-    each day for extra prominence
+  - 'Critical rendering bug: geom_hline(yintercept = avg_views, linetype = "dashed")
+    and all three annotate() calls (peak point, peak text label, monthly-average text
+    label) are present in the code but produce zero pixels in either plot-light.png
+    or plot-dark.png, confirmed via full-canvas pixel scan for the exact INK/INK_SOFT
+    theme colors. Likely cause: vjust = -1 on the peak label pushes it above the scale_y_continuous(limits
+    = c(0, NA)) upper bound where default coord clipping removes it, and/or the geom_hline
+    layer is silently dropped. Actually render and visually inspect the plot before
+    resubmitting.'
+  - Small point markers (geom_point(size = 1.3)) barely stand out from the 1.4pt line
+    at 30 data points
+  - Design Excellence and Library Mastery scores are low primarily because the intended
+    visual storytelling (peak callout + average reference) never surfaces in the render
+    — fixing the rendering bug should resolve most of this
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white.
-      Chrome: title "line-filled · r · ggplot2 · anyplot.ai" top-left in dark ink, axis titles "Day of Month" / "Page Views" in dark ink, tick labels in softer grey — all clearly legible against the light background. Subtle horizontal gridlines only (y-axis), no vertical gridlines, no tick marks, minimal spines.
-      Data: single series filled area chart in Imprint brand green (#009E73) at ~0.35 alpha, with a solid brand-green line traced on top of the fill boundary. Line and fill are clearly distinguishable from the light background.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "line-filled · r · ggplot2 · anyplot.ai" in dark ink, axis titles "Day of Month"/"Page Views" and tick labels clearly visible in dark ink / soft gray. Three horizontal major gridlines (2,000/4,000/6,000) subtle but visible.
+      Data: Single series, area fill + line in #009E73 (confirmed via pixel sampling: RGB(0,158,115)), small point markers along the path.
+      Legibility verdict: PASS (all rendered text is clearly readable; no light-on-light issues).
+      Note: Full-canvas pixel scan for the exact INK_SOFT dashed-hline color and INK text color found NO trace of the average reference line or either annotate() text label anywhere outside the axis/title chrome — these coded elements are absent from the render.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black.
-      Chrome: title and axis titles render in light/white ink, tick labels in a softer light grey — all clearly legible against the dark background. Gridlines flip to light, still subtle. No dark-on-dark text found anywhere (title, axis titles, tick labels all checked).
-      Data: same brand-green (#009E73) line, identical to the light render; the semi-transparent fill reads as a darker desaturated teal against the near-black background (expected effect of alpha blending on a dark surface) but remains clearly distinguishable from the background, and the line on top stays vivid.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title and axis titles in near-white ink, tick labels/gridlines in light gray — all clearly legible.
+      Data: Confirmed identical RGB(0,158,115) data color to the light render; only chrome flipped, exactly as required.
+      Legibility verdict: PASS (no dark-on-dark failures found).
+      Note: Same pixel-scan methodology confirms the average hline and both annotate() text labels are equally absent from this render — the rendering bug is consistent across both themes.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Explicit sizes set (axis.title=10, axis.text=8, plot.title=12); readable
-          in both themes; short title well-proportioned, no overflow
+        comment: Title/axis title/tick labels legible in both themes; annotate() text
+          labels never render so their intended content is lost
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data collisions in either render
+        comment: No collisions among rendered elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Line (linewidth 1.1) and fill clearly visible; with only 30 points
-          a slightly thicker line or subtle markers would be more prominent per the
-          sparse-data heuristic
+        comment: geom_point markers barely stand out from the line; dedicated peak
+          marker never renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, no red-green reliance, strong contrast against both
-          backgrounds
+        comment: Single-series green, adequate contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses a large, balanced share of the canvas; nothing clipped
+        comment: Canvas exactly 3200x1800, well-proportioned, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Day of Month" and "Page Views" are descriptive'
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73 identically in both renders; backgrounds
-          are #FAF8F1/#1A1A17; chrome is theme-correct in both'
+        comment: 'First series exactly #009E73; backgrounds match spec; both renders
+          theme-correct'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
@@ -107,23 +110,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Well-configured library default: brand-green fill + line, no distinctive
-          custom flourish beyond that'
+        comment: Decent area+line combo but intended sophistication (peak/average
+          callouts) never renders
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Grid restricted to y-axis only and subtly colored, ticks removed,
-          generous margins — real but modest refinement over theme_minimal defaults
+        comment: Spines removed, restrained grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 1
         max: 6
         passed: false
-        comment: The fill itself emphasizes magnitude (the point of a filled line
-          chart) and the upward trend + weekend dips are visible, but there is no
-          explicit callout or annotation
+        comment: Peak callout and average reference line, the intended focal points,
+          do not render — delivered chart has no visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled line/area chart with line traced on top
+        comment: Correct filled-line/area chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (alpha 0.35, within 0.3-0.5), visible line
-          on top, fill matches line color, baseline at y=0
+        comment: Semi-transparent fill (0.35), visible line on top, baseline at y=0
+          — all spec requirements met
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = day, Y = page_views, all 30 days shown
+        comment: day vs page_views, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches "line-filled · r · ggplot2 · anyplot.ai"; legend correctly
-          omitted for single series
+        comment: Title format correct; no legend needed
     data_quality:
       score: 14
       max: 15
@@ -163,22 +163,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows a gradual ramp, day-to-day noise, and a recurring weekend dip
-          — good variation for a single-series area chart
+        comment: Solid single-series trend with weekend dip; loses a point since intended
+          average/peak context never surfaces
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral, plausible business scenario: daily landing-page views over
-          a month'
+        comment: Plausible, neutral page-views scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Page-view counts (~3,700-6,500/day) with a plausible monthly growth
-          trend
+        comment: Sensible value range for the domain
     code_quality:
       score: 9
       max: 10
@@ -188,7 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,23 +195,23 @@ review:
         comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
-        max: 2
-        passed: false
-        comment: library(dplyr) is imported but never used — only tibble::tibble()
-          is called
-      - id: CQ-04
-        name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no over-engineering, no fake functionality
+        comment: 'Only ggplot2/ragg loaded; tibble::/scales:: used inline'
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Not fake UI, but four real layers (hline + 3 annotate calls) are
+          dead code that never renders — a genuine bug
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct canvas dims
+        comment: Saves plot-{THEME}.png via ragg::agg_png correctly
     library_mastery:
       score: 5
       max: 10
@@ -223,19 +221,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard, correct ggplot2 layering (geom_area + geom_line, scale_*_continuous,
-          theme_minimal overrides)
+        comment: Idiomatic geom_area/geom_line/geom_point/annotate/scale_* usage;
+          docked slightly for lack of visual verification before submission
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: geom_area + geom_line is the generic pattern any library could replicate
-          (e.g. matplotlib fill_between + plot); nothing ggplot2-specific leveraged
+        comment: The one distinctive touch attempted (peak callout + average reference)
+          does not render, so nothing distinctive to credit
   verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scales
+  - tibble
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
@@ -243,3 +244,4 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
+  - publication-ready
