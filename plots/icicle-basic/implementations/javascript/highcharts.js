@@ -96,6 +96,16 @@ function fitFontSize(text, maxWidth, nominal, min) {
   return null;
 }
 
+function ancestorsOf(node) {
+  const chain = [node];
+  let cur = node;
+  while (cur.parent && nodesByName.has(cur.parent)) {
+    cur = nodesByName.get(cur.parent);
+    chain.push(cur);
+  }
+  return chain;
+}
+
 // --- Title (fontsize scaled off the 67-char baseline) -----------------------
 const TITLE_TEXT = "Repository File Sizes · icicle-basic · javascript · highcharts · anyplot.ai";
 const TITLE_FS = Math.max(Math.round(22 * Math.min(1, 67 / TITLE_TEXT.length)), 14);
@@ -143,12 +153,18 @@ const DEPTH_COUNT = (() => {
   })(ROOT, 0);
   return max + 1;
 })();
-const ROW_H = PLOT_H / DEPTH_COUNT;
+// The root row only ever shows a single label, so giving it a full 1/DEPTH_COUNT
+// share leaves a near-empty band at the top. Shrink it to ~55% of a normal row
+// and redistribute the freed height across the deeper, information-dense rows.
+const ROW_WEIGHTS = Array.from({ length: DEPTH_COUNT }, (_, d) => (d === 0 ? 0.55 : 1));
+const ROW_UNIT = PLOT_H / ROW_WEIGHTS.reduce((a, b) => a + b, 0);
+const ROW_Y = [0];
+ROW_WEIGHTS.forEach((w) => ROW_Y.push(ROW_Y[ROW_Y.length - 1] + w * ROW_UNIT));
 
 const TILES = [];
 (function partition(node, x0, x1, depth, branchColor) {
-  const y0 = depth * ROW_H;
-  const y1 = node.children.length ? y0 + ROW_H : PLOT_H;
+  const y0 = ROW_Y[depth];
+  const y1 = node.children.length ? ROW_Y[depth + 1] : PLOT_H;
   TILES.push({ node, x0, x1, y0, y1, depth, color: branchColor });
   if (node.children.length) {
     let cx = x0;
@@ -166,6 +182,9 @@ const TILES = [];
 
 // --- Draw ---------------------------------------------------------------
 const g = chart.renderer.g("icicle").add();
+// name -> { rect, fill, stroke, strokeWidth } — lets hover highlight the
+// hovered tile and brighten its full ancestry chain back to the root.
+const nodeElements = new Map();
 
 function addTooltip(el, text) {
   const titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -182,24 +201,53 @@ TILES.forEach(({ node, x0, x1, y0, y1, depth, color }) => {
 
   const isRoot = depth === 0;
   const fill = isRoot ? t.elevatedBg : mix(color, t.pageBg, Math.min(0.12 * (depth - 1), 0.45));
+  const stroke = isRoot ? t.inkSoft : t.pageBg;
+  // Depth-graded stroke weight (root heaviest, leaves lightest) instead of a
+  // uniform 2px everywhere, plus a subtle corner radius for polish.
+  const strokeWidth = Math.max(2.5 - depth * 0.4, 1.2);
   const pct = ((node.value / ROOT.value) * 100).toFixed(1);
   const path = (function ancestry(n) {
     return n.parent ? `${ancestry(nodesByName.get(n.parent))} → ${n.name}` : n.name;
   })(node);
 
   const rect = chart.renderer
-    .rect(bx, by, bw, bh)
+    .rect(bx, by, bw, bh, 3)
     .attr({
       fill,
-      stroke: isRoot ? t.inkSoft : t.pageBg,
-      "stroke-width": 2,
+      stroke,
+      "stroke-width": strokeWidth,
       zIndex: 2 + depth,
     })
     .add(g);
   addTooltip(rect, `${path}\n${kb(node.value)} (${pct}% of repo)`);
+  nodeElements.set(node.name, { rect, fill, stroke, strokeWidth });
+
+  // Highcharts-specific interactivity: hovering a tile brightens it and
+  // thickens+recolors the stroke of every ancestor up to the root, tracing
+  // the lineage chain — a native mouseover/mouseout touch on top of the
+  // hand-drawn rects, most useful in the interactive HTML view.
+  const chain = ancestorsOf(node);
+  rect.element.addEventListener("mouseenter", () => {
+    chain.forEach((n, i) => {
+      const entry = nodeElements.get(n.name);
+      if (!entry) return;
+      entry.rect.attr({
+        fill: i === 0 ? mix(entry.fill, "#FFFFFF", 0.15) : entry.fill,
+        stroke: t.amber,
+        "stroke-width": entry.strokeWidth + (i === 0 ? 1.5 : 1),
+      });
+    });
+  });
+  rect.element.addEventListener("mouseleave", () => {
+    chain.forEach((n) => {
+      const entry = nodeElements.get(n.name);
+      if (!entry) return;
+      entry.rect.attr({ fill: entry.fill, stroke: entry.stroke, "stroke-width": entry.strokeWidth });
+    });
+  });
 
   const label = node.name;
-  const nameSize = fitFontSize(label, bw - 14, 16, 10);
+  const nameSize = fitFontSize(label, bw - 10, 16, 11);
   if (nameSize && bh >= 24) {
     const showValue = bh >= 46 && bw >= 56;
     const textColor = labelColorFor(fill);
