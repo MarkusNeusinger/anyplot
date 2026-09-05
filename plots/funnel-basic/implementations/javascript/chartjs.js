@@ -26,14 +26,51 @@ const colors = stages.map((_, i) => t.palette[i % t.palette.length]);
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// --- Segment label plugin (native Chart.js plugin API) ----------------------
-// Draws the value + share-of-top-stage label centered inside each segment.
-const segmentLabels = {
-  id: "segmentLabels",
+// --- Funnel shape + label plugin (native Chart.js plugin API) ---------------
+// The underlying "bar" dataset only supplies layout (category bands, x scale
+// pixel mapping) and is drawn fully transparent. This plugin paints the real
+// funnel silhouette: each stage is a trapezoid whose top width is its own
+// value and whose bottom width is the *next* stage's value, so consecutive
+// segments share an identical edge and the whole shape tapers continuously
+// instead of stacking as separated rectangles.
+const funnelShape = {
+  id: "funnelShape",
   afterDatasetsDraw(chart) {
-    const { ctx } = chart;
+    const { ctx, scales } = chart;
     const meta = chart.getDatasetMeta(0);
+    const centerX = scales.x.getPixelForValue(0);
+    const halfWidthPx = values.map(
+      (v) => scales.x.getPixelForValue(v / 2) - centerX,
+    );
+
     ctx.save();
+    meta.data.forEach((bar, i) => {
+      const { y, height } = bar.getProps(["y", "height"], true);
+      const top = y - height / 2;
+      const bottom = y + height / 2;
+      const topHalf = halfWidthPx[i];
+      const bottomHalf =
+        i < values.length - 1 ? halfWidthPx[i + 1] : halfWidthPx[i];
+
+      ctx.beginPath();
+      ctx.moveTo(centerX - topHalf, top);
+      ctx.lineTo(centerX + topHalf, top);
+      ctx.lineTo(centerX + bottomHalf, bottom);
+      ctx.lineTo(centerX - bottomHalf, bottom);
+      ctx.closePath();
+      ctx.fillStyle = colors[i];
+      ctx.fill();
+
+      if (i > 0) {
+        ctx.strokeStyle = t.pageBg;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX - topHalf, top);
+        ctx.lineTo(centerX + topHalf, top);
+        ctx.stroke();
+      }
+    });
+
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = "700 20px sans-serif";
@@ -59,10 +96,8 @@ new Chart(canvas, {
     datasets: [
       {
         data: segments,
-        backgroundColor: colors,
-        borderColor: t.pageBg,
-        borderWidth: 4,
-        borderSkipped: false,
+        backgroundColor: "transparent",
+        borderWidth: 0,
       },
     ],
   },
@@ -71,8 +106,8 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    barPercentage: 0.94,
-    categoryPercentage: 0.86,
+    barPercentage: 1,
+    categoryPercentage: 1,
     plugins: {
       title: {
         display: true,
@@ -98,5 +133,5 @@ new Chart(canvas, {
       },
     },
   },
-  plugins: [segmentLabels],
+  plugins: [funnelShape],
 });
