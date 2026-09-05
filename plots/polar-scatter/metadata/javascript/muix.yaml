@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: polar-scatter
 created: '2026-09-05T11:40:06Z'
-updated: '2026-09-05T11:45:45Z'
+updated: '2026-09-05T11:55:17Z'
 generated_by: claude-sonnet
 workflow_run: 33963668090
 issue: 2023
@@ -12,56 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-sca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 85
 review:
   strengths:
-  - 'Community @mui/x-charts has no native polar chart, and the author solved this
-    cleanly: a custom SVG polar-grid overlay (rings + spokes + degree/speed labels)
-    built with useXScale/useYScale so it stays perfectly aligned with the underlying
-    linear scatter at any canvas size — a genuinely MUI X-specific technique, not
-    a generic workaround.'
-  - Imprint palette applied correctly in canonical order (green/lavender/blue/ochre
-    for Morning/Afternoon/Evening/Night), identical data colors between light and
-    dark renders, theme-adaptive chrome (grid, ink, ink-soft) via window.ANYPLOT_TOKENS.
-  - Title format, legend, radial gridlines with units (m/s), and angular tick marks
-    (0/45/.../315°) all match the specification's explicit requirements.
-  - Deterministic, reproducible data via a seeded LCG (no network fetch, self-contained
-    per the harness contract).
-  - skipAnimation set on ChartContainer, correct default-export component contract,
-    clean imports (all four imports used).
+  - Builds a genuine polar scatter on top of the community-only @mui/x-charts by drawing
+    a custom SVG grid (rings + spokes + labels) via useXScale/useYScale, so the overlay
+    stays perfectly aligned with the underlying linear scatter scale at any canvas
+    size — a clean way to work within the community-surface constraint instead of
+    reaching for Pro/Premium or another library.
+  - 'Deterministic, realistic wind-observation dataset (LCG-seeded) with a clear diurnal
+    wind-rotation narrative: Morning/Afternoon/Evening/Night bearings are spaced ~90°
+    apart, so the four categories visibly occupy distinct compass sectors.'
+  - 'Palette compliance is correct: first category (Morning) uses brand green, data
+    colors are identical between light and dark renders, and only chrome (background,
+    grid, text) flips per theme.'
+  - Marker size and alpha (0.7) are tuned per group to keep overlapping points distinguishable;
+    ChartsTooltip is wired for per-item detail in the interactive HTML output.
+  - 'Clean, idiomatic code: skipAnimation set, sizes from window.ANYPLOT_SIZE, no
+    unused imports, no fake interactivity.'
   weaknesses:
-  - The 'Night' group (bearing 190±22.5°, speed 4±2 m/s) renders as a single solid
-    blob near the center in both themes — 30 markers stacked with no alpha/opacity
-    reduction make individual points indistinguishable. markerSize=8 with full opacity
-    is too dense for a cluster this tight; add fillOpacity around 0.6-0.7 (or shrink
-    markerSize for the low-radius groups) so overlapping points stay distinguishable
-    per the data-density heuristic.
-  - All four groups (bearings 190/200/230/255° with spreads 45-70°) sit inside a single
-    ~150° arc (roughly WSW through SSE), so over half the polar grid (0°-180° arc,
-    i.e. N through E to S) has zero data points in either render. A polar-scatter's
-    core value is demonstrating full angular coverage; widen at least one group's
-    bearing/spread so the compass rose reads as a rose rather than a wedge, or add
-    a few scattered outlier readings across the empty arc to reflect that real wind
-    observations are rarely 100% confined to one direction.
-  - Because all data sits in one quadrant, the polar grid apparatus (rings/spokes)
-    fills the canvas well but the actual data occupies a visibly lopsided fraction
-    of it, leaving the opposite half of the circle as pure whitespace — reinforces
-    the angular-coverage weakness above rather than reading as an intentional design
-    choice.
+  - The '5 m/s' ring label sits directly against/behind a Morning-category marker
+    in both renders (visible at the inner ring along the 0° spoke) — move ring labels
+    to an unoccupied angular gap (e.g. between two spoke lines away from the densest
+    cluster) or give them a small background pill for contrast.
+  - The Night (amber) cluster near the center is dense enough that several markers
+    fully overlap even at alpha=0.7 — consider a slightly smaller markerSize for that
+    group or a touch more jitter/spread so individual observations stay distinguishable.
+  - Design excellence is solid but stops at functional refinement — no radial fade,
+    no emphasis/callout on one category, no secondary visual hierarchy beyond color
+    and position, which caps this a notch below top-tier polish.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "polar-scatter · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. Angular tick labels (0°, 45°, 90°, ... 315°) placed around the circle perimeter in soft gray, all legible. Radial ring labels (5/10/15/20 m/s) stacked along the upper vertical spoke, small but legible. Legend at bottom with four circular color swatches + labels (Morning, Afternoon, Evening, Night), all readable. Grid rings and spokes are thin, subtle, light-gray lines that don't compete with the data.
-      Data: Four color-coded clusters (green=Morning, lavender=Afternoon, blue=Evening, ochre/brown=Night) all located in the lower-left quadrant of the polar grid (roughly bearings 170°-290°), radii ranging from near-center out to ~18 m/s. The Night (ochre) cluster is a dense, mostly solid blob near mid-radius with heavy marker overlap; the other three groups are looser and their individual points stay distinguishable. Legibility verdict: PASS — all text is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "polar-scatter · javascript · muix · anyplot.ai" is dark ink, centered, fully legible. Radial ring labels (5/10/15/20 m/s) and angular spoke labels (0°, 45°, 90° ... 315°) are dark-gray and legible against the light background. Grid rings and spokes are thin, subtle gray lines — visible but not dominant. Bottom legend (Morning/Afternoon/Evening/Night) is clear with matching color swatches.
+      Data: Four color groups — Morning (brand green #009E73), Afternoon (light purple), Evening (indigo/blue), Night (amber) — each occupying a distinct ~90°-wide compass sector, consistent with a diurnal wind-rotation story. First categorical series correctly uses the brand green.
+      Legibility verdict: PASS, with one minor caveat — the "5 m/s" ring label sits directly against/behind a nearby Morning marker, a small text/marker overlap (not a legibility failure, all letters remain visible).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, angular/radial labels, and legend as the light render, now rendered in light ink/gray tones against the dark background — all clearly legible, no dark-on-dark text anywhere.
-      Data: Same four clusters in the same screen positions with identical colors (green/lavender/blue/ochre) as the light render — confirmed only chrome (background, text, grid) flipped between themes, data colors are unchanged. The Night cluster shows the same dense-overlap blob issue as in the light render.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark or light-on-light failures observed.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, ring labels, and spoke labels flip to light gray/white text, fully legible against the dark background — no dark-on-dark text anywhere. Grid lines remain subtle but visible. Legend text is light and readable.
+      Data: Same four colors as the light render, confirming data colors are identical between themes and only chrome flips.
+      Legibility verdict: PASS, same minor "5 m/s" label/marker overlap as in the light render — no dark-on-dark or light-on-light issues.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -69,74 +63,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, spoke labels 14, ring labels
-          12, legend 14), readable in both themes; radial ring labels are a bit small/cramped
-          near the vertical spoke
+        comment: All text readable in both themes at appropriate sizes; minor crowding
+          near the '5 m/s' label from a nearby marker
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions in either render
+        comment: '''5 m/s'' ring label overlaps a Morning marker in both renders;
+          some Night-cluster markers fully overlap each other'
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Night cluster's ~30 markers overlap into a solid blob with no alpha
-          reduction; individual points indistinguishable there
+        passed: true
+        comment: Marker size/alpha tuned per group for ~30-point clusters; dense Night
+          cluster still has some fully-hidden overlaps
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues are CVD-safe and distinguishable without relying on
-          hue alone
+        comment: Imprint palette hues are distinguishable by hue, not relying on red-green
+          alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Grid apparatus fills the canvas well and margins are balanced, but
-          data confined to one quadrant leaves the opposite half of the circle visually
-          empty
+        comment: Square canvas gate passed, well-centered, generous padding, nothing
+          cropped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial rings labeled with units (m/s), angular spokes labeled in
-          degrees
+        comment: Radial labels carry units (m/s), angular labels in degrees at 45°
+          intervals
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue/ochre), identical across
-          themes, theme-correct backgrounds and chrome in both renders
+        comment: First series is brand green, data colors identical across themes,
+          correct backgrounds in both themes
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Custom-built polar grid overlay with coherent theming goes well beyond
-          a default chart, though marker-overlap and narrow angular spread hold it
-          back from top-tier polish
+        passed: true
+        comment: Custom polar overlay perfectly aligned to chart scale is a genuinely
+          sophisticated engineering solution; visual polish is functional rather than
+          showcase-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Subtle grid lines, no cartesian spines, generous margins; overlapping
-          markers and tightly-packed ring labels keep it from being fully polished
+        passed: true
+        comment: Subtle grid, generous whitespace, integrated custom title/legend
+          bars
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        comment: Color-coded time-of-day groups create visible hierarchy and a directional
-          narrative, though confined to a narrow arc limits the story
+        passed: true
+        comment: Diurnal wind-rotation pattern (4 sectors ~90° apart) is visible at
+          a glance, though no additional emphasis/callout beyond color and position
     spec_compliance:
       score: 15
       max: 15
@@ -145,50 +141,52 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Genuine polar-coordinate scatter (angle + radius) via custom grid
-          over linear scatter
+        passed: true
+        comment: True polar scatter behavior (theta/radius mapping) despite no native
+          MUI X polar primitive
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Radians used internally with degree display, radial gridlines, angular
-          ticks at meaningful intervals, categorical color encoding, radius axis from
-          0, title + legend
+        passed: true
+        comment: Radial gridlines, angular ticks at 45° intervals, category color
+          encoding, radius axis starts at 0 — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: theta/radius correctly transformed to x/y; axes cover the full data
-          range
+        passed: true
+        comment: theta/radius correctly converted to x/y via polarToXY; full data
+          range shown within domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches '{spec-id} · javascript · muix · anyplot.ai'; legend
-          labels match the four categories
+        passed: true
+        comment: Title matches required format; legend labels match category names
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        comment: Radius range (near-0 to ~18 m/s) is well covered, but all four groups
-          sit inside one ~150° arc, so most of the compass is never demonstrated
+        passed: true
+        comment: Angle, radius, and categorical color encoding all present, 120 points
+          across 4 groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Wind observations by time of day is a real, neutral, comprehensible
-          scenario
+        passed: true
+        comment: Plausible diurnal wind-direction/speed pattern, neutral subject matter
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        comment: Speeds and directions are individually plausible, but zero readings
-          outside the narrow prevailing window is an idealization real wind data rarely
-          shows
+        passed: true
+        comment: Wind speeds 0-20 m/s and bearings 0-360° are realistic ranges
     code_quality:
       score: 10
       max: 10
@@ -197,57 +195,62 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Flat structure; the PolarGrid component and polarToXY helper are
-          necessary given the required default-export contract, not over-abstraction
+        passed: true
+        comment: No unnecessary classes; plain functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic seeded LCG (seed=42)
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: All four imports (ChartContainer, ScatterPlot, ChartsTooltip, hooks)
-          are used
+        passed: true
+        comment: All imports (ChartContainer, ScatterPlot, ChartsTooltip, useXScale,
+          useYScale) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI/interactivity; complexity is proportionate to working
-          around the community library's lack of a native polar chart
+        passed: true
+        comment: Appropriate complexity for the custom polar overlay; no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Default-exported component, skipAnimation set, current @mui/x-charts
-          API
+        passed: true
+        comment: 'Follows harness contract: default export, window.ANYPLOT_SIZE, skipAnimation'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct low-level composition (ChartContainer + ScatterPlot + ChartsTooltip)
-          is the documented MUI X pattern for custom chart layers
+        passed: true
+        comment: Composes ChartContainer + ScatterPlot correctly and stays within
+          the community API surface
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        comment: useXScale/useYScale hooks to build a scale-synced custom SVG overlay
-          is a MUI X-specific technique not easily replicated in another library
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale hooks used to align a custom SVG overlay with
+          the chart's internal scale — a distinctive, non-obvious technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - manual-ticks
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
