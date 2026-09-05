@@ -62,7 +62,7 @@ const significant = []; // genome-wide significant SNPs — matte red
 const tickPositions = [];
 
 CHROMOSOMES.forEach(([, lengthMb], idx) => {
-  const nPoints = Math.round(lengthMb * 2.3);
+  const nPoints = Math.round(lengthMb * 30);
   const peak = PEAKS.find((p) => p.chrIdx === idx);
   for (let i = 0; i < nPoints; i += 1) {
     const posMb = rand() * lengthMb;
@@ -170,7 +170,7 @@ chart.setOption({
       type: "scatter",
       data: secondaryChr,
       symbolSize: 6,
-      itemStyle: { color: t.palette[2], opacity: 0.75 },
+      itemStyle: { color: t.palette[1], opacity: 0.75 },
     },
     {
       name: "Genome-wide significant",
