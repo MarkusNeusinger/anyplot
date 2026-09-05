@@ -1,0 +1,230 @@
+library: muix
+language: javascript
+specification_id: line-timeseries
+created: '2026-09-05T08:33:04Z'
+updated: '2026-09-05T08:46:55Z'
+generated_by: claude-sonnet
+workflow_run: 33955321959
+issue: 2006
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Two-tier date axis (fine "%H:%M" ticks every 12 hours nested under a coarser weekday/date
+    row drawn via useXScale/useDrawingArea) elegantly solves the spec's "intelligent
+    date formatting that adapts to the time range" requirement, since MUI X community
+    has no built-in multi-scale date formatter
+  - Deterministic LCG-seeded data models a realistic diurnal cycle plus a gentle week-long
+    warm-up, giving the line genuine temporal structure instead of pure noise
+  - 'Correct Imprint palette usage (first series = #009E73, identical across themes),
+    theme-adaptive chrome via window.ANYPLOT_TOKENS, subtle area fill, and clean community-only
+    @mui/x-charts API usage with skipAnimation set'
+  weaknesses:
+  - X-axis has no explicit axis title (e.g. a subtle "Date" label) — the temporal
+    axis is only communicated through tick/day-row formatting; adding a small axis
+    label would fully satisfy VQ-06
+  - Title auto-shrinks to ~19px (occupying only ~42% of canvas width) once the descriptive
+    "Rooftop Sensor Temperature" prefix is added to the mandated suffix — there is
+    room to size it slightly larger while staying within the 50-70% guideline
+  - 'The custom dashed day-boundary lines and the built-in vertical grid lines serve
+    overlapping purposes; consider dropping the built-in vertical grid (grid={{ vertical:
+    true }}) since the day-boundary overlay already marks the meaningful x-axis divisions'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Rooftop Sensor Temperature · line-timeseries · javascript · muix · anyplot.ai" centered at top in dark bold text, clearly readable. Y-axis label "Temperature (°F)" rotated on the left, dark ink. Y tick labels (50°-76° in steps of 2°) and X tick labels (00:00/12:00 every 12 hours) in a slightly softer dark gray, all legible. Below the axis, a second row of bold weekday/date labels (Mon 6/3 ... Sun 6/9) with dashed vertical guide lines marking day boundaries. Horizontal grid lines are subtle light gray, visible but not dominant.
+      Data: Single line series in Imprint green (#009E73) with a light green area fill beneath it (alpha ~0.12), tracing seven clear diurnal humps that rise slightly night over night (week-long warm-up). Line and area are clearly distinguishable from the cream background.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, day labels) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, now in light/white bold text, clearly readable. Y-axis label and tick labels rendered in light gray/white, fully legible against the dark surface. Day-boundary dashed lines and weekday/date labels below the axis are equally legible in light text. Horizontal grid lines are a subtle darker-than-surface tone, still visible.
+      Data: The same Imprint green (#009E73) line and area fill — colors are identical to the light render; only the chrome (background, text, grid) has flipped to the dark theme.
+      Legibility verdict: PASS — no dark-on-dark failures observed; title, axis labels, tick labels, and day labels are all clearly visible against the near-black background, and the green line/fill remain highly visible on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, and ticks are all readable in both themes; title
+          auto-shrinks slightly to accommodate the descriptive prefix
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axis labels, ticks, or day-boundary
+          labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Hiding markers (showMark: false) for 168 hourly points with a smooth
+          filled line is appropriate for this density'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green line/fill against cream/near-black surfaces,
+          high contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, no overflow or clipping, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Y-axis has a descriptive label with units; x-axis relies only on
+          tick/day-row formatting with no explicit axis title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds match Imprint light/dark surface
+          tokens, colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Custom two-tier date axis and subtle area fill go beyond default
+          styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle grid and axis lines, generous whitespace, dashed day-boundary
+          guides
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Diurnal cycle and week-long warm-up are clearly visible; day-boundary
+          lines aid reading trends across the week
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct line/area time-series chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Adaptive date formatting, grid on both axes, no overlapping labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X = timestamps, Y = temperature values, full week of data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches required format with descriptive prefix; legend correctly
+          hidden for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Hourly readings over a full week show diurnal and weekly patterns
+          clearly
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Rooftop sensor temperature readings are plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Fahrenheit range (~53-74°F) with sensibly padded axis bounds
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Flat structure with one small, justified helper component for the
+          day-boundary overlay
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fixed-seed LCG PRNG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only LineChart, hooks, Box, Typography imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: No fake interactivity or UI, appropriate complexity for the two-tier
+          axis
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Follows the harness mount-node contract, skipAnimation set, no manual
+          save calls
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Correct community-only @mui/x-charts LineChart API with area, valueFormatter,
+          tickInterval
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: useXScale/useDrawingArea composition for a custom SVG overlay is
+          a genuinely distinctive, documented MUI X pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
