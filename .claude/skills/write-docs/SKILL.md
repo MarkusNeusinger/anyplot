@@ -88,6 +88,35 @@ the house guide, repository docs follow Google style. Existing docs
 migrate **on touch** (the "fix formatting" rule below), no bulk
 rewrites required.
 
+## Shortening a text that carries claims
+
+Applies wherever the text lives — a `docs/` reference, `README.md`,
+the site's legal and about copy (`app/src/pages/LegalPage.tsx`,
+`app/src/pages/AboutPage.tsx`) — whenever the edit makes an existing
+text SHORTER: a legal section, a licensing paragraph, a factsheet,
+any prose a reader may rely on.
+
+**Diff claim by claim against the previous version, not paragraph by
+paragraph.** Shortening drops qualifiers before it drops sentences,
+and a qualifier is what makes a claim true: "only", "unless", "up
+to", a condition on a right, the last item of a list. In the sibling
+repository on 2026-09-03 a privacy section lost exactly three that
+way — an overstated retention period for the rate-limit counters, the
+condition on the right to object, and part of a list of rights —
+inside an edit that was otherwise a genuine improvement. The check
+that catches it is mechanical: list the claims of the old text, then
+tick each one off against the new text as kept, deliberately dropped,
+or narrowed.
+
+Two rules on top:
+
+- **The owner's own sentences stay verbatim.** Where he supplied the
+  wording, it is quoted, not paraphrased and not tightened. Say in
+  the PR body that it is his sentence.
+- **A claim you cannot support is removed, never softened** into a
+  vaguer version of itself: an unproven statement made fuzzy is still
+  an unproven statement.
+
 ## Formatting
 
 - Actually FIX formatting issues while editing (headings, lists, code
