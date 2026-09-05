@@ -1,0 +1,259 @@
+library: chartjs
+language: javascript
+specification_id: line-timeseries-rolling
+created: '2026-09-05T08:35:55Z'
+updated: '2026-09-05T08:49:43Z'
+generated_by: claude-sonnet
+workflow_run: 33955497197
+issue: 2786
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Directly addresses every attempt-1 weakness: title font size raised 22→29 with
+    600 weight (now reads as the dominant hierarchy element), a canvas-gradient area
+    fill was added under the rolling-average line, the last valid point is emphasized
+    with a bordered marker, legend swatches use usePointStyle circles with generous
+    padding, and the Y-axis title now carries an explicit unit (''Daily Active Users
+    (count)'').'
+  - 'Rolling average remains technically honest: first 6 points are null (window not
+    yet full) rather than faked, spanGaps: false renders the shorter smoothed line
+    exactly as the spec''s notes require.'
+  - 'Scriptable Chart.js options used well beyond a generic line-chart config: backgroundColor
+    as a context-aware linear gradient callback and a per-point pointRadius array
+    that only activates the final point — genuine library-specific technique, not
+    a syntax-swap from another charting library.'
+  - Theme-adaptive chrome (t.ink, t.inkSoft, t.grid, t.pageBg) is threaded correctly
+    through title, axis titles, ticks, legend, and the marker border in both renders;
+    data colors (#009E73 rolling average, muted ink raw layer) are identical between
+    light and dark.
+  - Deterministic seeded LCG (seed=42) data generates a believable upward DAU trend
+    with weekday/weekend seasonality — realistic, neutral business context at an appropriate
+    scale.
+  - 'Title format, legend labels (''Raw Data'' / ''Rolling Average (7-day)''), and
+    axis mapping all match the specification exactly; clean single new Chart() call
+    with animation: false per the harness contract.'
+  weaknesses:
+  - Title still sits on the lower end of the comfortable 50-70% width band (~47% of
+    canvas width) despite the fontsize increase — there is room to push it a couple
+    points larger before it would start to feel squeezed; not a deduction under the
+    strict overflow/squeezed test, but worth another small bump if revisited.
+  - The gradient-fill and single-highlighted-endpoint technique, while a genuine step
+    up from attempt 1, is still a fairly common Chart.js embellishment — a truly distinctive
+    touch (e.g. per-segment coloring above/below a threshold, or a custom point style
+    on the raw series) would push Library Mastery further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold, larger dark-ink title "line-timeseries-rolling · javascript · chartjs · anyplot.ai" centered at top (fontsize 29, weight 600 - a clear step up from attempt 1's undersized title); top-right legend with a gray circular "Raw Data" swatch and a green circular "Rolling Average (7-day)" swatch; dark axis titles "Date" and "Daily Active Users (count)"; dark tick labels on both axes; subtle light-gray gridlines on both axes. All chrome text is clearly readable against the light background.
+      Data: Raw daily-active-users series drawn as a thin (borderWidth 1.5), semi-transparent (alpha 0.28) gray zigzag line across ~120 days (2026-01-01 to late April); overlaid by a bold (borderWidth 4) brand-green (#009E73) line tracing the 7-day rolling average with a soft vertical gradient area fill beneath it (fading from ~32% alpha at the line down to transparent at the baseline), correctly starting 6 days after the raw series begins (null-padded incomplete window, spanGaps:false), and ending with an emphasized bordered marker at the final valid point. Upward trend from ~4,000 to ~5,200 with visible weekday/weekend noise in the raw series.
+      Legibility verdict: PASS - no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, legend, and axis titles rendered in light ink; tick labels in light-gray ink; gridlines faint but visible. All chrome flipped correctly for the dark surface.
+      Data: Raw-data line and rolling-average line (including the gradient fill and endpoint marker) use identical colors to the light render - confirmed no color drift between themes.
+      Legibility verdict: PASS - no dark-on-dark text found; brand green remains clearly visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; title fontsize
+          raised from 22 to 29 (weight 600), resolving attempt-1's undersized title
+          with no overflow or squeeze
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin muted raw line vs. bold prominent gradient-filled rolling-average
+          line is well adapted to the 120-point density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the canvas with balanced margins, legend near plot, nothing
+          cut off at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles, Y-axis now includes explicit unit '(count)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Highlighted series uses brand green #009E73, raw layer uses a muted
+          ink tone appropriate for a de-emphasized background series; theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Gradient area fill, heavier title weight, and a bordered endpoint
+          marker lift this clearly above the attempt-1 configured-default baseline
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Circular legend swatches with generous padding, soft gradient fade
+          under the trend line, restrained gridlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold gradient-filled trend line over muted noise, ending in a highlighted
+          final point, creates a clear focal point and signal-vs-noise narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-layer time-series with rolling average overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Raw data, rolling average, legend distinguishing both, window size
+          shown, grid on both axes - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=daily active users, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match data (Raw
+          Data / Rolling Average (7-day))
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows raw noise, weekday/weekend seasonality, upward trend, and the
+          smoothed rolling average together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral daily-active-users business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and growth trend are sensible for a DAU metric
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports/tokens -> data generation -> mount -> chart; two small necessary
+          utility functions (LCG RNG, hex-to-rgba)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only ANYPLOT_TOKENS and Chart global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current Chart.js API, animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct high-level new Chart() config with two datasets, tension
+          smoothing, theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Scriptable gradient backgroundColor callback and a conditional per-point
+          pointRadius array to spotlight the final point are genuine Chart.js-specific
+          techniques, a clear step up from attempt 1's generic two-dataset config
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - gradient-fill
