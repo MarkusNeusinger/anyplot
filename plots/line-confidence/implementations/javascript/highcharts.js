@@ -50,7 +50,7 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "line-confidence · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "26px", fontWeight: "700" },
   },
   subtitle: {
     text: "Crop yield vs. fertilizer application rate · regression fit with 95% confidence interval",
@@ -61,11 +61,30 @@ Highcharts.chart("container", {
       text: "Fertilizer Application Rate (kg/ha)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickWidth: 0,
     gridLineColor: t.grid,
     tickInterval: 25,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    // Diminishing-returns marker: the fit's slope flattens sharply past this
+    // rate, so a light guide line + label reinforces the story the band and
+    // curve already tell.
+    plotLines: [
+      {
+        value: 150,
+        color: t.inkSoft,
+        dashStyle: "Dash",
+        width: 1,
+        zIndex: 4,
+        label: {
+          text: "Diminishing returns",
+          align: "left",
+          x: 6,
+          y: 14,
+          style: { color: t.inkSoft, fontSize: "12px" },
+        },
+      },
+    ],
   },
   yAxis: {
     title: {
@@ -77,10 +96,14 @@ Highcharts.chart("container", {
     // below the ~2-9 t/ha data range. Cropping the visible min is safe: the
     // spacer stays fully transparent, so the stacking math is unaffected.
     min: 1.5,
+    lineWidth: 0,
+    tickWidth: 0,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   legend: {
+    symbolRadius: 2,
+    itemDistance: 24,
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
@@ -120,6 +143,13 @@ Highcharts.chart("container", {
       data: rates.map((rate, i) => [rate, centerLine[i]]),
       color: t.palette[0],
       lineWidth: 3.5,
+      marker: {
+        enabled: true,
+        radius: 3.5,
+        fillColor: t.palette[0],
+        lineWidth: 1,
+        lineColor: t.pageBg,
+      },
       showInLegend: true,
     },
   ],
