@@ -14,11 +14,11 @@ THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-GRID     <- if (THEME == "light") "#D8D7D0" else "#3A3A36"  # INK blended ~15% into PAGE_BG
+GRID     <- if (THEME == "light") "#CBC9BE" else "#454540"  # INK blended ~25% into PAGE_BG
 
 IMPRINT_PALETTE <- c(
   "#009E73", # 1 - brand green, always first series (raw data)
-  "#4467A3"  # 3 - blue (rolling average)
+  "#C475FD"  # 2 - lavender (rolling average)
 )
 
 # --- Data ----------------------------------------------------------------
@@ -34,6 +34,8 @@ engagement_score <- 62 + trend + seasonal + noise
 df <- tibble::tibble(date = dates, value = engagement_score) %>%
   mutate(rolling_avg = as.numeric(stats::filter(value, rep(1 / window_size, window_size), sides = 1)))
 
+peak_row <- df %>% filter(!is.na(rolling_avg)) %>% slice_max(rolling_avg, n = 1)
+
 # --- Plot ------------------------------------------------------------------
 title_text <- sprintf(
   "%d-Day Rolling Average · line-timeseries-rolling · r · ggplot2 · anyplot.ai",
@@ -47,6 +49,13 @@ p <- ggplot(df, aes(x = date)) +
     data = df %>% filter(!is.na(rolling_avg)),
     aes(y = rolling_avg, color = sprintf("Rolling Average (%d-day)", window_size)),
     linewidth = 1.4
+  ) +
+  geom_point(data = peak_row, aes(y = rolling_avg), color = IMPRINT_PALETTE[2], size = 2.2) +
+  annotate(
+    "text",
+    x = peak_row$date, y = peak_row$rolling_avg,
+    label = sprintf("Peak: %.1f", peak_row$rolling_avg),
+    color = INK, size = 3, vjust = -1.2, fontface = "bold"
   ) +
   scale_color_manual(
     values = setNames(
@@ -65,12 +74,13 @@ p <- ggplot(df, aes(x = date)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = GRID, linewidth = 0.3),
-    panel.grid.minor  = element_line(color = GRID, linewidth = 0.15),
+    panel.grid.major  = element_line(color = GRID, linewidth = 0.4),
+    panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.text.x       = element_text(angle = 30, hjust = 1),
-    axis.line         = element_line(color = INK_SOFT),
+    axis.line         = element_blank(),
+    axis.ticks        = element_line(color = INK_SOFT),
     plot.title        = element_text(color = INK, size = title_fontsize),
     legend.position   = "top",
     legend.text       = element_text(color = INK_SOFT, size = 8),
