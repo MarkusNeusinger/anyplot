@@ -9,19 +9,38 @@
 // 12-week clinical trial follow-up outcomes for 400 enrolled patients.
 const t = window.ANYPLOT_TOKENS;
 const categories = [
-  { label: "Improved", count: 220, color: t.palette[0] },
-  { label: "No change", count: 110, color: t.palette[1] },
-  { label: "Worsened", count: 45, color: t.palette[4] },
-  { label: "Discontinued", count: 25, color: t.palette[2] },
+  { label: "Improved", count: 220 },
+  { label: "No change", count: 110 },
+  { label: "Worsened", count: 45 },
+  { label: "Discontinued", count: 25 },
 ];
-const total = categories.reduce((sum, c) => sum + c.count, 0);
+const total = d3.sum(categories, (c) => c.count);
 
-// Flatten into one entry per dot, filled left-to-right, top-to-bottom in
-// category order.
-const dots = categories.flatMap((c) => Array.from({ length: c.count }, () => c));
+// Non-semantic categories fill the canonical palette in order; "Worsened"
+// is the deferred semantic exception, reassigned to the matte-red anchor
+// (palette[4]) to reinforce negative outcome polarity.
+const color = d3
+  .scaleOrdinal([t.palette[0], t.palette[1], t.palette[4], t.palette[3]])
+  .domain(categories.map((c) => c.label));
 
+// Flatten into one dot per patient, grouped by category and filled
+// left-to-right/top-to-bottom within each group; a half-cell vertical gap
+// separates each category block from the next to reinforce grouping.
 const nCols = 20;
-const nRows = Math.ceil(total / nCols);
+let rowCursor = 0;
+const dots = [];
+categories.forEach((c, ci) => {
+  d3.range(c.count).forEach((i) => {
+    dots.push({
+      col: i % nCols,
+      row: rowCursor + Math.floor(i / nCols),
+      color: color(c.label),
+    });
+  });
+  rowCursor += Math.ceil(c.count / nCols);
+  if (ci < categories.length - 1) rowCursor += 0.5;
+});
+const totalRowUnits = rowCursor;
 
 // --- SVG mount ---------------------------------------------------------------
 const { width, height } = window.ANYPLOT_SIZE;
@@ -31,9 +50,9 @@ const margin = { top: 170, right: 90, bottom: 210, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-const cell = Math.min(iw / nCols, ih / nRows);
+const cell = Math.min(iw / nCols, ih / totalRowUnits);
 const gridW = nCols * cell;
-const gridH = nRows * cell;
+const gridH = totalRowUnits * cell;
 const offsetX = (iw - gridW) / 2;
 const offsetY = (ih - gridH) / 2;
 
@@ -46,8 +65,8 @@ const dotRadius = cell * 0.36;
 g.selectAll("circle")
   .data(dots)
   .join("circle")
-  .attr("cx", (d, i) => (i % nCols) * cell + cell / 2)
-  .attr("cy", (d, i) => Math.floor(i / nCols) * cell + cell / 2)
+  .attr("cx", (d) => d.col * cell + cell / 2)
+  .attr("cy", (d) => d.row * cell + cell / 2)
   .attr("r", dotRadius)
   .attr("fill", (d) => d.color);
 
@@ -76,6 +95,7 @@ svg
 // --- Legend ----------------------------------------------------------------
 const legendY = margin.top + offsetY + gridH + 60;
 const slotWidth = width / categories.length;
+const pct = d3.format(".0%");
 
 const legend = svg
   .selectAll("g.legend-item")
@@ -88,7 +108,7 @@ legend
   .append("circle")
   .attr("r", 11)
   .attr("cy", -34)
-  .attr("fill", (d) => d.color);
+  .attr("fill", (d) => color(d.label));
 
 legend
   .append("text")
@@ -104,5 +124,5 @@ legend
   .attr("text-anchor", "middle")
   .attr("y", 18)
   .attr("fill", t.inkSoft)
-  .style("font-size", "15px")
-  .text((d) => `${d.count} (${Math.round((d.count / total) * 100)}%)`);
+  .style("font-size", "18px")
+  .text((d) => `${d.count} (${pct(d.count / total)})`);
