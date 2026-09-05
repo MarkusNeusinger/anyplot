@@ -19,6 +19,13 @@ function gaussian() {
   const u2 = lcg();
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
+function hexToRgba(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 const n = 220;
 const fitted = [];
@@ -48,6 +55,20 @@ for (let i = 0; i < n; i++) {
 
 const xMin = Math.min(...fitted);
 const xMax = Math.max(...fitted);
+
+// Rolling-mean smoothing trend (sorted by fitted value) to surface any
+// residual non-linearity — optional per spec, adds diagnostic value.
+const sortedIdx = fitted.map((_, i) => i).sort((a, b) => fitted[a] - fitted[b]);
+const sortedX = sortedIdx.map((i) => fitted[i]);
+const sortedY = sortedIdx.map((i) => residuals[i]);
+const windowSize = Math.max(15, Math.round(n * 0.12));
+const trendPoints = sortedX.map((x, i) => {
+  const lo = Math.max(0, i - Math.floor(windowSize / 2));
+  const hi = Math.min(n, i + Math.ceil(windowSize / 2));
+  const slice = sortedY.slice(lo, hi);
+  const avg = slice.reduce((a, b) => a + b, 0) / slice.length;
+  return { x, y: avg };
+});
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -99,11 +120,22 @@ new Chart(canvas, {
       {
         label: "Residuals",
         data: normalPoints,
-        backgroundColor: t.palette[0],
+        backgroundColor: hexToRgba(t.palette[0], 0.7),
         borderColor: t.pageBg,
         borderWidth: 1,
         pointRadius: 6,
         pointHoverRadius: 7,
+      },
+      {
+        label: "Smoothed trend",
+        data: trendPoints,
+        showLine: true,
+        borderColor: t.palette[1],
+        borderWidth: 2,
+        borderDash: [3, 3],
+        pointRadius: 0,
+        fill: false,
+        tension: 0.3,
       },
       {
         label: "Outliers (>2σ)",
