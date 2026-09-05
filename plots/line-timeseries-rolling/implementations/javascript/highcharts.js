@@ -61,6 +61,7 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
+    gridLineWidth: 1,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Date", style: { color: t.inkSoft, fontSize: "16px" } },
   },
@@ -92,7 +93,7 @@ Highcharts.chart("container", {
     {
       name: "Rolling Average (24-Hour)",
       data: rollingSeries,
-      color: t.palette[2],
+      color: t.palette[1],
       lineWidth: 3.5,
       zIndex: 2,
     },
