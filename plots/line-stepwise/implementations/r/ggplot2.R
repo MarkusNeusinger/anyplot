@@ -54,7 +54,7 @@ title_text <- "Elevator Floor Position · line-stepwise · r · ggplot2 · anypl
 
 p <- ggplot(df, aes(x = elapsed_min, y = floor_num)) +
   geom_step(color = BRAND, linewidth = 1.1, direction = "hv") +
-  geom_point(color = BRAND, size = 1.6, alpha = 0.85) +
+  geom_point(color = BRAND, size = 2.2, alpha = 0.9) +
   geom_vline(xintercept = jump_x, color = INK_SOFT, linetype = "dashed", linewidth = 0.4) +
   geom_point(
     data = data.frame(x = jump_x, y = jump_y),
