@@ -99,24 +99,59 @@ const startPoint = { x: 0.5, y: HEIGHT - 0.5 };
 const goalPoint = { x: WIDTH - 0.5, y: 0.5 };
 
 // --- Chart ---------------------------------------------------------------
+// Decorative outset frame drawn once the axes are laid out: a thin rounded
+// border around the maze's bounding box, offset outward for breathing room.
+// Purely chrome (never overlaps a wall segment), so it cannot hint at the
+// solution path.
+const FRAME_PAD = 14;
+const FRAME_RADIUS = 10;
+
+// Soft drop-shadow applied to the S/G marker graphics after they render,
+// giving the two focal points a subtle lift off the flat maze plane — a
+// second distinctive use of the SVG renderer beyond the wall vector art.
+const MARKER_SHADOW = { color: t.ink, opacity: 0.28, width: 6 };
+
 Highcharts.chart("container", {
   chart: {
     type: "line",
     backgroundColor: "transparent",
     animation: false,
-    spacing: [10, 10, 10, 10],
+    spacing: [18, 18, 18, 18],
     style: { fontFamily: "inherit" },
     events: {
       load: function drawWalls() {
         const chart = this;
         const xAxis = chart.xAxis[0];
         const yAxis = chart.yAxis[0];
+
+        const xPix0 = xAxis.toPixels(0);
+        const xPix1 = xAxis.toPixels(WIDTH);
+        const yPixTop = yAxis.toPixels(HEIGHT);
+        const yPixBottom = yAxis.toPixels(0);
+        chart.renderer
+          .rect(
+            xPix0 - FRAME_PAD,
+            yPixTop - FRAME_PAD,
+            xPix1 - xPix0 + 2 * FRAME_PAD,
+            yPixBottom - yPixTop + 2 * FRAME_PAD,
+            FRAME_RADIUS
+          )
+          .attr({ "stroke-width": 2, stroke: t.inkSoft, fill: "none", zIndex: 1 })
+          .add();
+
         wallData.forEach(([x0, y0, x1, y1]) => {
           chart.renderer
             .path(["M", xAxis.toPixels(x0), yAxis.toPixels(y0), "L", xAxis.toPixels(x1), yAxis.toPixels(y1)])
             .attr({ "stroke-width": 5, stroke: t.ink, "stroke-linecap": "square", zIndex: 5 })
             .add();
         });
+
+        chart.series.forEach((series) => {
+          series.points.forEach((point) => {
+            if (point.graphic) point.graphic.shadow(MARKER_SHADOW);
+          });
+        });
+
         window.__anyplotReady = true;
       },
     },
@@ -125,7 +160,7 @@ Highcharts.chart("container", {
   tooltip: { enabled: false },
   title: {
     text: "maze-printable · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "22px", fontWeight: "700", letterSpacing: "0.2px" },
   },
   subtitle: {
     text: `${WIDTH}×${HEIGHT} grid · seed ${SEED} · start (S) to goal (G)`,
