@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: line-filled
+created: '2026-09-05T07:15:40Z'
+updated: '2026-09-05T07:29:19Z'
+generated_by: claude-sonnet
+workflow_run: 33951856137
+issue: 2643
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Attempt-1 feedback fully addressed: vertical linearGradient on the area fill
+    (opacity 0.45 near the line fading to 0.04 at the baseline), d3.curveMonotoneX
+    applied to both area and line generators for a smoother curve, an end-point focal
+    marker + ''+71% vs. day 1'' annotation for storytelling, and the y-axis label
+    now carries an explicit unit (''Daily Visitors (count)'')'
+  - 'Clean theme-adaptive chrome: title/axis labels/ticks/annotation all use ANYPLOT_TOKENS
+    and remain fully legible in both light (#FAF8F1) and dark (#1A1A17) renders with
+    no dark-on-dark or light-on-light failures'
+  - 'Correct Imprint palette usage: first (only) series is #009E73, identical across
+    both themes, with only chrome flipping'
+  - 'Realistic, neutral dataset: 60 days of daily website visitors with an upward
+    trend, weekly seasonality, and deterministic LCG(42) noise — data genuinely showcases
+    the filled-line pattern'
+  - 'Spec-correct fill: semi-transparent area (baseline y=0) with a solid 3.5px line
+    on top, matching the alpha ~0.3-0.5 requirement near the line'
+  - Clean, idiomatic KISS-structured D3 code — deterministic, no fake interactivity,
+    correct mount-node/output contract
+  weaknesses:
+  - Data storytelling is a single numeric annotation at the end point; there is no
+    complementary visual emphasis (e.g., a shaded/highlighted sub-range for the strongest
+    growth phase) so the overall composition still reads as a single flat hierarchy
+    beyond that one callout
+  - The gradient fill and curveMonotoneX smoothing are tasteful but modest touches
+    rather than a distinctive, hard-to-replicate D3 technique — LM-02 stays short
+    of a 5/5 'couldn't be replicated elsewhere' bar
+  - '''+71% vs. day 1'' phrasing is slightly informal relative to the date-based x-axis
+    (''Jun 07'', ''Jun 14'', ...) — referencing the actual start date would read more
+    precisely'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold, dark, centered title "line-filled · javascript · d3 · anyplot.ai"; "Date" (x-axis) and "Daily Visitors (count)" (rotated y-axis) labels in dark ink; dark tick labels on both axes; subtle horizontal y-only gridlines. All chrome text is clearly readable against the light background.
+      Data: Single series in brand green (#009E73) — a smoothed (curveMonotoneX) line over 60 days of daily website visitors, trending upward with weekly cyclicality and noise, drawn over a vertical linearGradient fill (opaque mint-green near the line, fading to near-transparent at the y=0 baseline). An end-point focal marker (small green dot with light stroke) plus a bold dark annotation "+71% vs. day 1" sits just above the final peak, clearly separated from the curve with no overlap.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/axis-label/tick-label layout, now rendered in light/off-white ink; gridlines are faint and light-colored. All chrome text is clearly readable against the dark background — no dark-on-dark failures.
+      Data: Line, gradient fill, end-point marker, and annotation text colors match the light render exactly (#009E73 line/marker, dark-render annotation text flips to light ink per chrome tokens) — only the surface and chrome flipped, confirming palette identity across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          ticks, 15px annotation); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: End-point annotation sits clearly above the curve's local peak with
+          no collision with the line, marker, or axes
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3.5px line, 6px end-point marker, and gradient fill are all well-sized
+          for 60 data points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast series, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a large, well-proportioned share of
+          the canvas, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis label now reads 'Daily Visitors (count)' with explicit unit;
+          fixed from attempt 1
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both themes; backgrounds correctly #FAF8F1
+          / #1A1A17; chrome theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Vertical gradient fill and smoothed curveMonotoneX line clearly lift
+          this above a generic filled-area default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, L-shaped implicit spines, generous whitespace,
+          gradient fill adds polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: End-point marker + '+71% vs. day 1' annotation gives a clear focal
+          point and states the insight directly, though it's a single isolated callout
+          rather than a broader compositional emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled-line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill (baseline y=0), visible line on top, fill color
+          matches line color
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=visitors, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; single-series legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Upward trend, weekly cyclicality, and noise all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible daily-website-visitors scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and +71% growth over ~2 months are plausible for a growing
+          site
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: New gradient/curve/marker additions are tasteful, no over-engineering
+          or fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, current d3 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic d3 scales/axes/area/line/gradient defs
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: SVG linearGradient defs + curveMonotoneX interpolation are genuine
+          D3-level techniques, up from generic linear area/line in attempt 1
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - gradient-fill

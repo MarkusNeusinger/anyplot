@@ -1,0 +1,259 @@
+library: echarts
+language: javascript
+specification_id: line-filled
+created: '2026-09-05T07:17:49Z'
+updated: '2026-09-05T07:29:33Z'
+generated_by: claude-sonnet
+workflow_run: 33951970542
+issue: 2643
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Filled-line spec correctly implemented with an idiomatic ECharts gradient area
+    fill (echarts.graphic.LinearGradient fading brand green from ~0.4 opacity at the
+    line to near-transparent at the baseline), a clearly visible line on top of the
+    fill, and the baseline sitting at y=0 in both renders.
+  - The new markPoint on the July peak (70.7) gives the chart a genuine focal point,
+    directly addressing the spec's 'emphasizing magnitude of values' intent and adding
+    real visual hierarchy that was missing in the previous attempt.
+  - 'Both renders remain fully theme-correct: warm off-white (#FAF8F1) and warm near-black
+    (#1A1A17) backgrounds, all chrome uses theme-adaptive tokens, and the brand green
+    (#009E73) data color is identical across themes.'
+  - 'Clean, idiomatic ECharts usage: boundaryGap:false, showSymbol:false with a moderate
+    smooth factor, animation:false, and no explicit width/height/devicePixelRatio
+    on echarts.init per the mount-node contract.'
+  - Realistic, neutral synthetic dataset (two years of monthly website sessions with
+    a seasonal/trend pattern) generated deterministically via a seeded LCG.
+  weaknesses:
+  - Title still occupies only roughly 40% of the plot width even after raising fontSize
+    from 20 to 24 (up from ~33%) — still short of the ~50-70% guideline for a title
+    carrying a descriptive prefix; consider raising to ~28-30px or trimming the 'Website
+    Traffic ·' prefix.
+  - 'Visual refinement is still mostly default: grid limited to horizontal splitLines
+    with the y-axis line hidden, but no further whitespace or typographic differentiation
+    between title/axis/tick hierarchy was added.'
+  - Only a single focal point (max markPoint) is used — the chart could further differentiate
+    the two seasonal peaks or note the winter trough for a fuller data story, though
+    the current markPoint is already a meaningful improvement.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Website Traffic · line-filled · javascript · echarts · anyplot.ai" centered near the top in dark ink at a larger fontSize (24px) than the previous attempt; x-axis shows 24 monthly tick labels (Jan-Dec x2) in muted gray-brown; y-axis shows numeric ticks 0-80 in the same muted tone plus a rotated "Sessions (thousands)" axis label in darker ink; subtle horizontal gridlines only.
+      Data: Single brand-green (#009E73) line with a gradient area fill (LinearGradient fading from ~0.4 opacity near the line to ~0.02 near the baseline), clearly visible on top of the fill. A green markPoint pin labeled "70.7" highlights the July peak in the second year, creating a clear focal point. Seasonal double-hump pattern visible (peaks around month 7 and month 19, troughs around month 12-13).
+      Legibility verdict: PASS — all text (title, axis labels, tick labels, markPoint label) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, now in light/off-white ink at the same larger fontSize; tick labels and axis label rendered in a lighter muted tone; gridlines still subtle but visible against the dark surface.
+      Data: Same brand-green (#009E73) line and gradient area fill — confirmed identical hue/opacity stops to the light render, only the chrome (text, grid, background) flipped to the dark theme. The markPoint pin and its "70.7" label remain clearly visible.
+      Legibility verdict: PASS — title, axis labels, tick labels, and markPoint label are all clearly legible in light-on-dark ink; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, and tick labels are readable in both themes;
+          font sizes explicit throughout, including the enlarged 24px title.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the new markPoint
+          label.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3.5px line, gradient fill, and markPoint are clearly visible over
+          24 monthly points; appropriate for the density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green line/fill/markPoint contrasts well against both surfaces;
+          single-series so no red-green conflict.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Margins and no-overflow are fine, but the title still fills only
+          ~40% of the plot width, below the ~50-70% guideline for a descriptive-prefixed
+          title.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Sessions (thousands)' with units; title includes
+          descriptive prefix plus mandated spec-id/language/library/brand suffix.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (Imprint position 1); backgrounds match
+          #FAF8F1/#1A1A17; data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: The new gradient area fill (LinearGradient fading brand green to
+          transparent) is a meaningfully more sophisticated look than the previous
+          flat fill.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Y-axis line/ticks hidden and grid limited to horizontal splitLines,
+          but no additional whitespace or typographic refinement was added this round.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The new markPoint on the July peak creates a clear visual hierarchy
+          and focal point the viewer immediately notices, directly serving the spec's
+          magnitude-emphasis goal.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implemented as a filled line/area chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Gradient semi-transparent fill, line visible on top, fill color matches
+          line color, baseline at y=0 — all spec notes satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = months (time-like), Y = single numeric session count; all 24
+          points shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the required format with a descriptive prefix; legend
+          correctly omitted for a single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Single series with area emphasis over 24 time points, now with a
+          highlighted peak, covers all aspects of the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic with a plausible seasonal/trend pattern; neutral
+          subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (25-71 thousand sessions) are sensible for the stated domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; flat, readable script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed 42) for the noise term.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the provided echarts/ANYPLOT_TOKENS globals; no unused
+          imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple; no fake interactivity or UI, gradient/markPoint
+          additions stay concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract exactly: no explicit size/devicePixelRatio
+          on echarts.init, animation:false set.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: boundaryGap:false, showSymbol:false, smooth factor, LinearGradient
+          areaStyle, and markPoint are all idiomatic ECharts patterns for area charts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The gradient areaStyle via echarts.graphic.LinearGradient and the
+          markPoint peak annotation are genuinely ECharts-distinctive capabilities
+          not trivially replicated in another library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - gradient-fill

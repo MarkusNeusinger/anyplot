@@ -1,0 +1,249 @@
+library: chartjs
+language: javascript
+specification_id: line-filled
+created: '2026-09-05T07:12:41Z'
+updated: '2026-09-05T07:24:36Z'
+generated_by: claude-sonnet
+workflow_run: 33951740841
+issue: 2643
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Repair addressed every attempt-1 weakness directly: flat alpha fill replaced
+    with a vertical CanvasGradient (brand green at the line fading to transparent
+    at baseline), a highlighted endpoint marker with a page-background halo gives
+    the chart a clear focal point, and a day-20 dip adds realistic volatility to the
+    DAU trend'
+  - Gradient fill is a genuinely Chart.js-idiomatic technique (scriptable `backgroundColor`
+    context callback via `chart.ctx.createLinearGradient`), not just a generic flat-alpha
+    fill any library could replicate
+  - 'First (and only) series uses brand green #009E73, byte-identical between light
+    and dark renders; both backgrounds are theme-correct (#FAF8F1 light / #1A1A17
+    dark) with all chrome legible in both themes'
+  - 'Fill baseline anchored at y=0 via `fill: ''origin''` + `beginAtZero: true`; line
+    (3.5px, round cap/join) stays crisp on top of the fill exactly per spec'
+  - Single-series legend correctly omitted; deterministic data via fixed-seed LCG;
+    clean, explicit font sizes throughout (title 22px, axis labels 16px, ticks 14px)
+  weaknesses:
+  - 'Design Excellence is solid-plus but not top-tier: the composition is still a
+    single gradient-filled area line with one accent marker — genuinely polished,
+    but not an exceptionally bespoke layout'
+  - '`peakIndex` is computed as simply the last data index (assumes the series always
+    ends at its maximum) rather than an actual max() over the data — happens to coincide
+    with the true peak here, but the variable name overstates what the code guarantees'
+  - The day-20 dip is a nice touch for realism but is subtle in the render; a small
+    direct label or annotation at the dip could reinforce the 'weekend lull' narrative
+    mentioned in the code comment, though this is optional polish, not a defect
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-filled · javascript · chartjs · anyplot.ai" centered at top in dark ink (#1A1A17); axis titles "Day since launch" (x) and "Daily active users" (y) and all tick labels (1-30 on x, 0-10,000 on y) are dark/soft-gray and clearly legible. Subtle horizontal-only gridlines at y ticks; x-axis gridlines hidden.
+      Data: Single brand-green (#009E73) line, 3.5px, round cap/join, rising from ~2,560 on day 1 to ~9,030 on day 30 with a visible dip around day 20-21 before recovering. Area beneath the line is filled with a vertical gradient — solid green near the line fading to fully transparent at the y=0 baseline. A single highlighted marker (green fill, page-background-colored halo ring) sits on the final data point (day 30, peak value), giving the chart a clear focal point.
+      Legibility verdict: PASS — no light-on-light text, all chrome and data clearly distinguishable from the background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, both axis titles, and all tick labels have flipped to light tones (ink → light, tick labels → soft light gray) and remain fully legible against the dark surface. Gridlines are subtle, same horizontal-only placement as the light render.
+      Data: Line and gradient fill use the identical #009E73 green as the light render — confirmed unchanged data color, only chrome flipped. Same highlighted endpoint marker with halo ring, still clearly visible against the dark fill.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements read clearly.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 22px, axis labels 16px, ticks 14px), all
+          readable in both themes, no overlap
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, marker halo, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line clearly visible on top of the fill; single accent marker appropriately
+          sized for a 30-point series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green reads with sufficient contrast on both surfaces;
+          no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; nothing clipped; endpoint marker padding (right:28)
+          keeps it fully on-canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles ('Day since launch', 'Daily active users'),
+          title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; identical data color across themes; both backgrounds
+          theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Vertical CanvasGradient fill and haloed endpoint marker are genuine
+          polish over a flat default, though the overall composition remains a single-series
+          area chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Round line cap/join, x-grid removed, y-grid subtle, sensible padding;
+          solid but not exceptional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Highlighted endpoint gives a clear focal point; the day-20 dip adds
+          narrative realism though it reads subtly in the static render
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled line/area chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill (gradient 50%→0%), line visible atop fill,
+          fill color matches line, baseline at y=0
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = day since launch, Y = daily active users, axes show full data
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; single-series legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all aspects of a filled single-series line chart
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Daily active users over a product launch window — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2,400-9,000 DAU range is sensible for an early-stage product launch
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions (lcg, fillGradient) are present; both
+          are necessary for the LCG data generator and the scriptable gradient callback
+          rather than unwarranted abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current Chart.js API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: fill:'origin', tension, scriptable pointRadius/backgroundColor are
+          the idiomatic Chart.js area-chart pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Canvas gradient fill via scriptable backgroundColor context callback
+          is a genuinely Chart.js-distinctive technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - publication-ready
