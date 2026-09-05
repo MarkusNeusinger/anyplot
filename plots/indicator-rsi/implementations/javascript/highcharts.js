@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-rsi: RSI Technical Indicator Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -79,14 +79,14 @@ Highcharts.chart("container", {
     type: "datetime",
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineColor: t.grid,
+    gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   yAxis: {
     min: 0,
     max: 100,
     tickInterval: 10,
-    title: { text: "RSI", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: { text: "RSI (0–100)", style: { color: t.inkSoft, fontSize: "16px" } },
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     plotBands: [
@@ -107,5 +107,19 @@ Highcharts.chart("container", {
     series: { animation: false },
     line: { lineWidth: 2.5, marker: { enabled: false } },
   },
-  series: [{ name: "RSI (14)", data: rsiSeries, color: t.palette[0] }],
+  series: [
+    {
+      name: "RSI (14)",
+      data: rsiSeries,
+      color: t.palette[0],
+      // Recolor the line itself while it's inside the oversold/overbought
+      // zones, reinforcing the plotBands shading directly on the data.
+      zoneAxis: "y",
+      zones: [
+        { value: 30, color: t.palette[2] },
+        { value: 70, color: t.palette[0] },
+        { color: t.palette[4] },
+      ],
+    },
+  ],
 });
