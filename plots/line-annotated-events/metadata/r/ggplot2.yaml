@@ -1,0 +1,239 @@
+library: ggplot2
+language: r
+specification_id: line-annotated-events
+created: '2026-09-05T06:37:02Z'
+updated: '2026-09-05T06:50:24Z'
+generated_by: claude-sonnet
+workflow_run: 33950111487
+issue: 2997
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Alternating annotation heights (label_step 1/2) keep all five event labels legible
+    with zero overlap against the price line or each other
+  - Correct anyplot title format, dollar-formatted y-axis ticks, and clean theme adaptation
+    between light/dark renders — data colors (brand green line, matte-red event markers)
+    stay identical, only chrome (INK/INK_SOFT/PAGE_BG) flips
+  - 'Idiomatic layered ggplot2 grammar: geom_vline + geom_line + geom_segment + geom_point
+    + geom_label composed cleanly, KISS script structure with set.seed(42) for reproducibility'
+  - Canvas is exactly 3200x1800 via a single dual-theme .R file driven by ANYPLOT_THEME,
+    saved with ragg::agg_png as required
+  weaknesses:
+  - panel.grid.major.y uses raw color = INK at full opacity, rendering as bold solid
+    black (light theme) / white (dark theme) horizontal rules — much stronger than
+    the style guide's 15-25% subtle target. The ggplot2 library prompt explicitly
+    says to 'use a faint INK color' since ggplot2 doesn't expose grid alpha; blend
+    INK toward PAGE_BG (e.g. a fixed light/dark gray-ink hex) instead of using the
+    full-strength INK token.
+  - Event markers, leader lines, and dots all use IMPRINT_PALETTE[5] (#AE3030, the
+    semantic 'bad/loss/error' anchor) for every event — including the three positive
+    'Earnings Beat' events and the neutral 'New Product Launch'. Spending the semantic-red
+    anchor on good-news events breaks the red=bad convention; switch generic event
+    markers to a neutral/ink tone or the next ordinal categorical color (lavender,
+    position 2) since sentiment isn't being encoded.
+  - Annotation label text (geom_label size=3.0) sits right at the same visual weight
+    as the axis tick labels — legible at full resolution but leaves little margin
+    once scaled to a ~400px mobile width; a slightly larger size would add safety
+    margin.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "line-annotated-events · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly legible. Y-axis "Closing Price" with dollar-formatted ticks ($140-$180), X-axis "Trading Date (2024)" with month ticks (Feb-Dec). Horizontal major gridlines at each $10 tick render as solid dark lines — readable but bolder/higher-contrast than the style guide's subtle 15-25%-opacity target. Five gray dashed vertical lines mark exact event dates; five bordered cream-colored label boxes ("Q4'23 Earnings Beat", "Q1 Earnings Miss", "Q2 Earnings Beat", "New Product Launch", "Q3 Earnings Beat") sit at alternating heights above the line, connected to red dots on the price line via short solid red leader segments.
+      Data: Brand-green (#009E73) daily closing-price line, matte-red (IMPRINT_PALETTE[5]) event dots/leader lines/vlines. All text renders in dark ink and is fully readable against the light background — no light-on-light issues.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now render in light ink (white/light-gray), remaining fully legible against the dark background. Gridlines flip to light-colored solid horizontal lines, dashed event-date verticals flip to light gray — same bold-relative-to-target weight as light render but readable and not dark-on-dark.
+      Data: Line color and event-marker red are pixel-identical to the light render — only chrome (background, text, grid, label-box fill/border) flipped, confirming correct theme-adaptive token usage.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (base_size=8, axis.title=10, axis.text=8,
+          plot.title=12); readable in both themes; title fits within expected width
+          for the mandated string
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alternating label_step heights keep all 5 event annotations clear
+          of the line and of each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 1.0 and event dot size 2.8 well-matched to ~230-point
+          daily series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green line vs. red markers plus shape/position redundancy, not hue-only
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well, tight balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Closing Price'' with $-formatted ticks, ''Trading Date (2024)''
+          — descriptive with implied units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly #009E73 and backgrounds/chrome are theme-correct,
+          but the semantic-red anchor (#AE3030) is used for ALL events including positive
+          earnings beats, misapplying the red=bad convention'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Thoughtful annotation layout and color use, clearly above defaults,
+          short of publication-grade polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        comment: Spines/minor-grid removed and whitespace is fine, but major gridlines
+          use full-opacity INK rather than a faint tone as the ggplot2 prompt recommends,
+          giving a bolder-than-intended grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Annotations directly correlate real events with price inflection
+          points, exactly what the spec asks for
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct annotated line plot with event markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Vertical event lines, distinct-colored/dashed markers, alternating-height
+          labels to avoid overlap — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: date/value on line, event_date/event_label correctly mapped via interpolated
+          dot_y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches mandated format exactly; no legend needed for single
+          series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Shows both earnings beats and a miss with realistic volatility, could
+          include one more extreme swing
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, realistic stock-price-with-earnings-events scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Plausible daily return distribution (mean 0.0006, sd 0.016) and price
+          range for a mid-cap stock
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Linear imports/data/plot/save, no functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: ggsave via ragg::agg_png with plot-{THEME}.png naming
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Expert layered grammar-of-graphics composition (vline+line+segment+point+label)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: geom_label auto-boxes and layered geom composition are ggplot2-flavored,
+          though the concept could be approximated in other libraries with more manual
+          effort
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - interpolation
+  styling:
+  - alpha-blending
+  - grid-styling

@@ -1,0 +1,274 @@
+library: d3
+language: javascript
+specification_id: learning-curve-basic
+created: '2026-09-05T06:16:19Z'
+updated: '2026-09-05T06:30:28Z'
+generated_by: claude-sonnet
+workflow_run: 33949130747
+issue: 2275
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Title font-size bumped from 22px to 27px per prior feedback, strengthening the
+    visual hierarchy without overflowing or clipping in either theme
+  - Data markers enlarged from r=6 to r=8.5 exactly per the sparse-data sizing heuristic
+    (8 points/series), now reading clearly alongside the lines
+  - New annotation with dashed leader line ('Gap narrows as training data grows')
+    explicitly calls out the converging train/validation gap, directly addressing
+    the prior Data Storytelling weakness — the insight is now immediately visible
+  - 'Correct Imprint palette order preserved — training curve #009E73 (brand green),
+    validation curve #C475FD (lavender) — identical hex in both light and dark renders'
+  - Confidence bands (±1 std across 6 folds) rendered as smooth d3.area shapes with
+    curveMonotoneX, clearly showing the classic converging-gap learning-curve pattern
+  - 'Idiomatic D3 v7 usage: proper data joins (.data().join("circle"/"line")), d3.scaleLinear,
+    d3.axisBottom/Left with d3.format for comma/percent ticks'
+  - Theme-adaptive chrome throughout (axis text, ticks, domain lines, gridlines, title,
+    legend box all sourced from window.ANYPLOT_TOKENS) — both renders are legible
+    and correctly themed
+  - Legend placed in genuine free space (top-right, above the converging curves) without
+    overlapping data, annotation, or text
+  - Realistic, neutral ML scenario (digit-classification-style sklearn learning_curve
+    output) with plausible accuracy progression and shrinking variance at larger sample
+    sizes
+  weaknesses:
+  - Title still occupies only ~44% of the inner plot width even after the font-size
+    bump — noticeably narrower than a typical mandated-format title (this spec-id
+    is short at 52 chars vs. the ~67-char reference); not a defect on its own (no
+    overflow/clipping), but there is still headroom to grow the title a bit further
+    before it looks generous relative to its length
+  - 'Design Excellence is strong but still short of full publication-tier: the legend
+    box, while theme-adaptive and unobtrusive, has no subtle depth cue (e.g. faint
+    drop-shadow) to visually separate it from the plot; a small refinement here would
+    push DE-01 further'
+  - Data-generation helper functions (makeLcg, gaussian, trendMean, foldScores, summarize)
+    still add more structural indirection than a strict KISS one-shot script — acceptable
+    given the lack of a browser RNG, but could be flattened/inlined slightly for a
+    more linear top-to-bottom read
+  - Only one diagnostic scenario (variance/gap-narrowing) is demonstrated; a companion
+    high-bias (underfitting) example is not shown, though the spec does not explicitly
+    require multiple scenarios
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "learning-curve-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered at top, now at 27px (up from 22px in the prior attempt). X-axis label "Training Set Size (samples)" and y-axis label "Accuracy" (rotated) in dark ink. Tick labels (comma-formatted sample counts on x, percent-formatted on y) in a softer gray-brown. Subtle horizontal gridlines only. A new dashed leader line runs from lower-middle whitespace up to the converging tail of the two curves, next to italic text "Gap narrows as training data grows" — placed cleanly in empty space, no overlap with legend, axes, or data. All text is clearly legible against the light background.
+      Data: Two lines with shaded ±1 std confidence bands — training score in brand green (#009E73, top line, high and flat near 94-99%) and validation score in lavender/purple (#C475FD, bottom line, rising from ~70% to ~92% and converging toward the training line). Circular markers (r=8.5, up from r=6) at each of the 8 training-size points, with a light-background stroke for a clean cutout look — noticeably easier to read against the lines than the prior attempt. Legend in the top-right free space, in a rounded theme-adaptive box, labels "Training score" and "Validation score" without overlapping any data, annotation, or gridlines.
+      Legibility verdict: PASS — no text is light-on-light, no clipping, no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, tick labels, and annotation text now rendered in light ink/soft-light gray, fully readable against the dark background. Gridlines are faint but visible. No dark-on-dark text anywhere — title, axis labels, tick labels, legend, and annotation are all light-colored.
+      Data: Identical hex colors to the light render — brand green (#009E73) for training and lavender (#C475FD) for validation — confirming only chrome (background, text, grid, legend box) flips between themes while data colors stay fixed. Confidence-band fills read a bit richer against the dark backdrop but remain subtle and non-competing with the lines. Enlarged markers (r=8.5) are clearly visible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures, all text and data fully legible.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; title bumped
+          to 27px per prior feedback, ~44% of inner plot width for this shorter (52-char)
+          spec-id — no overflow or clipping in either render
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data collisions in either render, including
+          the new annotation and its leader line
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers enlarged to r=8.5 for 8 sparse points/series, exactly matching
+          the sparse-data sizing heuristic; lines and bands clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing is CVD-safe, not a red-green pair, good contrast
+          against both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a healthy majority of the canvas with balanced margins;
+          legend and annotation sit near the data, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Training Set Size (samples)'' has an explicit unit; ''Accuracy''
+          is a standard metric name and the y ticks carry the % unit'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series #C475FD (canonical Imprint order);
+          backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Above a bare default — thoughtful confidence-band shading, cutout-stroke
+          markers, curveMonotoneX smoothing, theme-adaptive legend box — but not yet
+          publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, no boxed spines beyond the default L-frame,
+          generous whitespace, markers have a clean stroke cutout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New annotation with dashed leader line explicitly calls out the narrowing
+          train/validation gap and points at the converged tail — the insight is now
+          immediately visible, directly resolving the prior weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct learning-curve line chart with confidence bands
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: ±1 std shaded bands, legend distinguishing train/validation, actual
+          sample-size x-axis, metric-labeled y-axis, distinct colors — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = training set size, Y = accuracy, all 8 points visible on both
+          curves
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels 'Training
+          score'/'Validation score' match the data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the classic converging-variance pattern well; only one diagnostic
+          scenario (variance) is demonstrated, not also an underfitting/bias example
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible digit-classification ML scenario resembling
+          sklearn's learning_curve output
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accuracy values, variance shrinkage, and convergence trend are all
+          plausible for a real classifier
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions for data generation (LCG, gaussian,
+          trend, summarize) add structure beyond a strict linear script, though reasonable
+          given no browser RNG
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) makes the fold noise fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3 bundle
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering; appropriate complexity for a browser-side
+          synthetic dataset
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract exactly (ANYPLOT_SIZE, #container,
+          single svg); current D3 v7 join API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of d3 scales, axes, join-based data binding, and d3.format
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layered area+line+marker composition with curveMonotoneX interpolation,
+          a hand-built legend, and an annotated leader-line callout leverage D3's
+          low-level flexibility
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
