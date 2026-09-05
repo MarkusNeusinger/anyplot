@@ -67,6 +67,36 @@ for (const node of nodes) {
 
 const rowLabels = ["Project", "Folder", "File"];
 
+// --- Label contrast: pick ink-dark or ink-light text per rectangle fill -----
+// (root uses the theme-adaptive ink/pageBg swap directly; branch/file rows use
+// this since their fill colors are fixed across themes, so the readable text
+// color must be picked per-color rather than swapped by theme.)
+function relativeLuminance(r, g, b) {
+  const lin = (c) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+function contrastRatio(l1, l2) {
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+function labelColorFor(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const luminance = relativeLuminance((n >> 16) & 255, (n >> 8) & 255, n & 255);
+  const darkContrast = contrastRatio(luminance, relativeLuminance(0x1a, 0x1a, 0x17));
+  const lightContrast = contrastRatio(luminance, relativeLuminance(0xf0, 0xef, 0xe8));
+  return darkContrast >= lightContrast ? "#1A1A17" : "#F0EFE8";
+}
+const labelColorByName = new Map(
+  nodes.map((node) => [
+    node.name,
+    node.level === 0 ? t.pageBg : labelColorFor(colorByName.get(node.name)),
+  ]),
+);
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -77,10 +107,9 @@ const rectLabelPlugin = {
   afterDatasetsDraw(chart) {
     const { ctx } = chart;
     ctx.save();
-    ctx.font = "600 15px 'Segoe UI', sans-serif";
+    ctx.font = `600 15px ${Chart.defaults.font.family}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillStyle = t.pageBg;
     nodes.forEach((node, i) => {
       const meta = chart.getDatasetMeta(i);
       const el = meta.data[node.level];
@@ -89,6 +118,7 @@ const rectLabelPlugin = {
       const rectWidth = Math.abs(x - base);
       const textWidth = ctx.measureText(node.name).width;
       if (rectWidth < textWidth + 16) return;
+      ctx.fillStyle = labelColorByName.get(node.name);
       ctx.fillText(node.name, (x + base) / 2, y);
     });
     ctx.restore();
