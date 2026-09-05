@@ -59,10 +59,10 @@ edge_coords <- edges %>%
 
 # --- Plot ----------------------------------------------------------------
 p <- ggplot() +
-  geom_segment(
+  geom_curve(
     data = edge_coords,
     aes(x = x_start, y = y_start, xend = x_end, yend = y_end, alpha = weight),
-    color = INK_MUTED, linewidth = 0.4
+    color = INK_MUTED, linewidth = 0.35, curvature = 0.25, ncp = 8
   ) +
   geom_point(data = nodes, aes(x = x, y = y, size = degree, color = set)) +
   geom_text(
@@ -73,10 +73,10 @@ p <- ggplot() +
     data = courses_pos, aes(x = x, y = y, label = node),
     hjust = 0, nudge_x = 0.04, size = 3.1, color = INK
   ) +
-  scale_color_manual(values = c("Students" = IMPRINT_PALETTE[1], "Courses" = IMPRINT_PALETTE[3]),
+  scale_color_manual(values = c("Students" = IMPRINT_PALETTE[1], "Courses" = IMPRINT_PALETTE[2]),
                       name = NULL) +
   scale_size_continuous(range = c(3, 9), guide = "none") +
-  scale_alpha_continuous(range = c(0.25, 0.9), guide = "none") +
+  scale_alpha_continuous(range = c(0.12, 0.75), guide = "none") +
   coord_cartesian(xlim = c(-0.55, 1.55), ylim = c(-0.05, 1.05), clip = "off") +
   labs(
     title = "network-bipartite · r · ggplot2 · anyplot.ai",
@@ -87,7 +87,7 @@ p <- ggplot() +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    plot.title       = element_text(color = INK, size = 12, hjust = 0.5, margin = margin(b = 6)),
+    plot.title       = element_text(color = INK, size = 15, face = "bold", hjust = 0.5, margin = margin(b = 8)),
     plot.caption     = element_text(color = INK_MUTED, size = 8, hjust = 0.5, margin = margin(t = 10)),
     legend.position  = "top",
     legend.text      = element_text(color = INK_SOFT, size = 8),
