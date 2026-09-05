@@ -1,7 +1,3 @@
-// anyplot.ai
-// polar-scatter: Polar Scatter Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 82/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 // anyplot.ai
 // polar-scatter: Polar Scatter Plot
@@ -22,28 +18,41 @@ function rand() {
   return seed / 4294967296;
 }
 
-// Wind observations grouped by time of day. Each group has its own prevailing
-// bearing and typical speed, so the plot reads as four overlapping "petals".
+// Wind observations grouped by time of day. Coastal sites see a diurnal wind
+// rotation (land breeze overnight/morning, sea breeze in the afternoon, with
+// evening/night transitional flow), so each group's prevailing bearing is
+// spaced ~90° apart around the full compass rather than clustered on one side.
 const GROUPS = [
-  { category: "Morning", bearing: 200, speed: 6, spread: 55 },
-  { category: "Afternoon", bearing: 255, speed: 12, spread: 70 },
-  { category: "Evening", bearing: 230, speed: 9, spread: 60 },
-  { category: "Night", bearing: 190, speed: 4, spread: 45 },
+  { category: "Morning", bearing: 15, speed: 7, spread: 85, markerSize: 8 },
+  { category: "Afternoon", bearing: 105, speed: 13, spread: 90, markerSize: 8 },
+  { category: "Evening", bearing: 195, speed: 10, spread: 80, markerSize: 8 },
+  { category: "Night", bearing: 285, speed: 4, spread: 75, markerSize: 6 },
 ];
 const POINTS_PER_GROUP = 30;
 const MAX_RADIUS = 20; // m/s
+const FILL_OPACITY = 0.7; // keeps overlapping points distinguishable
 
 function polarToXY(bearingDeg, radius) {
   const rad = (bearingDeg * Math.PI) / 180;
   return { x: radius * Math.sin(rad), y: radius * Math.cos(rad) };
 }
 
+// `ScatterSeriesType` has no `fillOpacity` prop — the renderer paints markers
+// with `fill: series.color` directly, so translucency is baked into the color.
+function withAlpha(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 const series = GROUPS.map((group, i) => ({
   type: "scatter",
   id: group.category,
   label: group.category,
-  color: t.palette[i],
-  markerSize: 8,
+  color: withAlpha(t.palette[i], FILL_OPACITY),
+  markerSize: group.markerSize,
   data: Array.from({ length: POINTS_PER_GROUP }, (_, idx) => {
     const bearing = (((group.bearing + (rand() - 0.5) * group.spread) % 360) + 360) % 360;
     const radius = Math.min(MAX_RADIUS, Math.max(0.5, group.speed + (rand() - 0.5) * group.speed));
