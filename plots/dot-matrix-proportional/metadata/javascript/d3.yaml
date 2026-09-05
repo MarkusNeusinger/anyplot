@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: dot-matrix-proportional
 created: '2026-09-05T00:13:04Z'
-updated: '2026-09-05T00:18:35Z'
+updated: '2026-09-05T00:26:59Z'
 generated_by: claude-sonnet
 workflow_run: 33931940955
 issue: 5241
@@ -12,60 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Smart semantic-exception color use: ''Worsened'' is reassigned to the matte-red
-    anchor (#AE3030) while ''Improved'' keeps brand green — the palette itself reinforces
-    outcome polarity.'
-  - 20x20 grid cleanly matches the 400-patient total, filling the square canvas efficiently
-    with balanced margins and no wasted space.
-  - Legend goes beyond the spec minimum by showing both count and percentage per category,
-    and a subtitle ('400 patients, one dot per patient') clarifies the encoding.
-  - Fully deterministic, realistic clinical-trial data (55/28/11/6%, summing to 100%)
-    with no controversial content.
+  - 'Fixed palette ordering from attempt 1: non-semantic categories now fill the canonical
+    Imprint order (green, lavender, ochre) while ''Worsened'' keeps the deferred semantic-red
+    anchor — no more skipped slot.'
+  - Half-cell vertical gap now visually separates each category block within the dot
+    grid, reinforcing grouping beyond color alone (addresses prior DE-02 weakness).
+  - Legend value text bumped from 15px to 18px, improving legibility at the ~400px
+    mobile thumbnail scale (addresses prior VQ-01 weakness).
+  - Clean, deterministic, realistic clinical-trial scenario (55/28/11/6%, summing
+    to 100%) with a clarifying subtitle.
   - 'Theme-adaptive chrome is correct in both renders — identical data colors, correct
     #FAF8F1/#1A1A17 backgrounds, no clipping or overlap.'
   weaknesses:
-  - Legend count/percentage text (15px) is noticeably small once the PNG is scaled
-    to the ~400px mobile thumbnail — bump legend value text a few px (e.g. 15px to
-    ~17-18px) for better mobile legibility.
-  - No visual gap/separation between category blocks within the dot grid — the categories
-    read as distinct only through color; a half-cell vertical gap between groups would
-    reinforce the grouping and add polish.
-  - '''Discontinued'' uses palette[2] (blue), skipping palette[3] (ochre), without
-    a clear semantic reason — once ''Worsened'' is reassigned to the semantic red
-    anchor, fill the remaining non-semantic categories in strict canonical order instead
-    of skipping a slot.'
-  - Library usage is fairly generic for D3 — manual index math plus a basic data join,
-    with no distinctive D3-only capability (transitions, layouts, generators) demonstrated.
+  - Library usage is still fairly generic D3 — manual index math plus a basic circle
+    data-join, with no distinctive D3-only capability (transitions, hierarchy/pack
+    layouts, shape generators) demonstrated.
+  - Legend swatch circles (r=11) are modest relative to the 2400px canvas; slightly
+    larger swatches would add visual weight and polish.
+  - Data storytelling relies only on the semantic-red 'Worsened' color and the block
+    gap; no additional emphasis (e.g., a subtle total-count callout) pushes it toward
+    a stronger focal point.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "Clinical Trial Outcomes at 12 Weeks · dot-matrix-proportional · javascript · d3 · anyplot.ai" centered at top, comfortably within canvas bounds (~60% width), not clipped. Gray subtitle "400 patients, one dot per patient" below it. Legend below the grid shows four swatches with bold category labels and secondary-gray count/percentage text.
-      Data: A 20x20 grid of 400 uniformly-sized circles, filled left-to-right/top-to-bottom in category order: green "Improved" (220, 55%), lavender "No change" (110, 28%), matte-red "Worsened" (45, 11%), blue "Discontinued" (25, 6%). First series is #009E73 as required.
+      Chrome: Bold dark title "Clinical Trial Outcomes at 12 Weeks · dot-matrix-proportional · javascript · d3 · anyplot.ai" centered at top, comfortably within canvas bounds, not clipped. Gray subtitle "400 patients, one dot per patient" below it. Legend below the grid shows four swatches with bold category labels and secondary-gray count/percentage text (now 18px, up from 15px in attempt 1).
+      Data: A 20-column grid of 400 uniformly-sized circles, filled left-to-right/top-to-bottom in category order, with a visible half-row gap separating each category block: green "Improved" (220, 55%), lavender "No change" (110, 28%), matte-red "Worsened" (45, 11%), ochre "Discontinued" (25, 6%). First series is #009E73 as required; non-semantic categories now follow strict canonical palette order (green, lavender, ochre) around the deferred semantic-red anchor for "Worsened".
       Legibility verdict: PASS — all text (title, subtitle, legend labels, counts) is clearly readable against the light background; no dark-on-light or light-on-light failures.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
       Chrome: Same title and subtitle, now rendered in light ink (title) and soft light gray (subtitle) — both clearly legible against the dark background. Legend labels are light/bold, count text is soft light gray.
-      Data: Identical grid and identical dot colors to the light render (green/lavender/matte-red/blue) — only the chrome (background, text) flipped, confirming data-color consistency across themes.
+      Data: Identical grid, identical group gaps, and identical dot colors to the light render (green/lavender/matte-red/ochre) — only the chrome (background, text) flipped, confirming data-color consistency across themes.
       Legibility verdict: PASS — no dark-on-dark failures found; title, subtitle, legend labels, and counts all read clearly against the near-black surface.
 
-    Both renders were inspected at full resolution and cropped at top/bottom edges specifically to confirm no title or legend clipping (AR-09 check) — none found. The 400px mobile thumbnail was also inspected: the title and category-label legend row remain legible, but the smaller count/percentage line under each legend swatch is borderline small at that scale (noted in weaknesses).
+    Both renders were inspected at full resolution with particular attention to top/bottom edges (AR-09 check) — no clipping found. The half-cell gap between category blocks (green→lavender→red→ochre) is subtle but clearly visible in both themes, resolving the attempt-1 weakness about grouping relying on color alone.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
         comment: Explicit font sizes throughout, title scales with length; legend
-          count/percentage text (15px) is borderline small at ~400px mobile thumbnail
-          scale.
+          value text bumped to 18px, improving mobile-thumbnail legibility over attempt
+          1.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -84,15 +80,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Four distinct hues (green/lavender/red/blue) span the CVD-safe palette;
+        comment: Four distinct hues (green/lavender/red/ochre) span the CVD-safe palette;
           not reliant on red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills ~70% of canvas area, margins balanced, legend sits directly
-          below the plot, nothing cut off.
+        comment: Grid fills a large share of canvas area, margins balanced, legend
+          sits directly below the plot, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,10 +102,11 @@ review:
         max: 2
         passed: true
         comment: 'First series is #009E73; ''Worsened'' correctly reassigned to the
-          matte-red semantic anchor; data colors identical across themes; backgrounds
-          correct in both renders.'
+          matte-red semantic anchor; remaining categories now fill canonical order
+          (green, lavender, ochre) without skipping a slot; data colors identical
+          across themes; backgrounds correct in both renders.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -117,22 +114,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color choice and subtitle annotation clearly
-          above a generic default dot-matrix chart.
+        comment: Thoughtful semantic color choice, subtitle annotation, and percentage
+          labels clearly above a generic default dot-matrix chart.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean spacing overall, but no visual gap/separation between category
-          blocks within the grid.
+        comment: Half-cell gap between category blocks now separates groups visually,
+          resolving attempt-1's lack of grouping; clean overall spacing.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Semantic red for 'Worsened' plus count/percentage annotations create
-          mild visual hierarchy beyond a raw data dump.
+        comment: Semantic red for 'Worsened' plus count/percentage annotations and
+          block grouping create visual hierarchy beyond a raw data dump.
     spec_compliance:
       score: 15
       max: 15
@@ -232,16 +229,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct d3 selection.data().join() pattern; scales are appropriately
+        comment: Correct d3 selection.data().join() pattern; scales appropriately
           omitted for a grid layout.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic grid rendering via index math — no D3-distinctive capability
-          (transitions, layouts, generators) demonstrated.
-  verdict: REJECTED
+        comment: Still generic grid rendering via manual index math — no D3-distinctive
+          capability (transitions, layouts, generators) demonstrated; unchanged from
+          attempt 1.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:

@@ -1,7 +1,7 @@
 // anyplot.ai
 // dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
+// Quality: 88/100 | Created: 2026-09-05
 
 //# anyplot-orientation: square
 
