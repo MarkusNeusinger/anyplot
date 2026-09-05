@@ -35,7 +35,7 @@ wind_direction <- sample(directions,
 )
 wind_speed <- sample(speed_bins,
   size = 3000, replace = TRUE,
-  prob = c(0.35, 0.30, 0.20, 0.10, 0.05)
+  prob = c(0.30, 0.27, 0.20, 0.14, 0.09)
 )
 
 wind_counts <- tibble(
@@ -54,29 +54,36 @@ wind_df <- expand_grid(
     frequency = n / sum(n) * 100
   )
 
-# Plot — bars radiate from center, angle = direction, stacked by speed bin
+# Plot — bars radiate from center, angle = direction, stacked by speed bin.
+# position_stack(reverse = TRUE) puts the largest bin (0-5 kt) innermost and
+# the thin high-speed bins outermost, where the bigger radius gives them more
+# circumference to render against — otherwise they collapse to invisible
+# slivers near the center.
 p <- ggplot(wind_df, aes(x = direction, y = frequency, fill = speed)) +
-  geom_col(width = 1, color = PAGE_BG, linewidth = 0.3) +
+  geom_col(width = 1, color = PAGE_BG, linewidth = 0.3, position = position_stack(reverse = TRUE)) +
   coord_polar(theta = "x", start = -pi / 16, clip = "off") +
   scale_fill_manual(values = IMPRINT_PALETTE, name = "Wind speed") +
-  scale_y_continuous(labels = label_percent(scale = 1), expand = expansion(mult = c(0, 0.05))) +
+  scale_y_continuous(labels = label_percent(scale = 1), expand = expansion(mult = c(0, 0.03))) +
   labs(title = "polar-bar · r · ggplot2 · anyplot.ai", x = NULL, y = NULL) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_blank(),
+    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.2),
     panel.grid.minor  = element_blank(),
     panel.border      = element_blank(),
     axis.line         = element_blank(),
     axis.ticks        = element_blank(),
-    axis.text.x       = element_text(color = INK_SOFT, size = 9, margin = margin(t = 8, r = 8, b = 8, l = 8)),
+    axis.text.x       = element_text(color = INK_SOFT, size = 9, margin = margin(t = 3)),
     axis.text.y       = element_text(color = INK_SOFT, size = 7),
     plot.title        = element_text(color = INK, size = 12, hjust = 0.5),
-    plot.margin       = margin(t = 15, r = 15, b = 15, l = 15),
+    plot.margin       = margin(t = 10, r = 10, b = 6, l = 10),
     legend.background = element_rect(fill = PAGE_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK, size = 10),
+    legend.key.size   = unit(0.4, "cm"),
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.spacing = unit(2, "pt"),
     legend.position   = "bottom"
   )
 
