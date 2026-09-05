@@ -3,6 +3,8 @@
 // Library: echarts 6.1.0 | JavaScript 22.23.2
 // Quality: 76/100 | Created: 2026-09-05
 
+//# anyplot-orientation: square
+
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
@@ -32,13 +34,50 @@ TIME_OF_DAY.forEach((period, i) => {
   }
 });
 
-const seriesByPeriod = TIME_OF_DAY.map((period, i) => ({
+// Circular mean bearing + mean speed per period, drawn as a dashed radial
+// spoke from the center — a distinctive touch beyond a stock polar scatter,
+// calling out the prevailing wind direction per time of day at a glance.
+const meanByPeriod = TIME_OF_DAY.map((period) => {
+  const pts = observations.filter((o) => o.name === period).map((o) => o.value);
+  let sumX = 0;
+  let sumY = 0;
+  let sumR = 0;
+  pts.forEach(([r, deg]) => {
+    const rad = (deg * Math.PI) / 180;
+    sumX += Math.cos(rad);
+    sumY += Math.sin(rad);
+    sumR += r;
+  });
+  return {
+    period,
+    meanAngle: ((Math.atan2(sumY, sumX) * 180) / Math.PI + 360) % 360,
+    meanRadius: sumR / pts.length,
+  };
+});
+
+const scatterSeries = TIME_OF_DAY.map((period, i) => ({
   name: period,
   type: "scatter",
   coordinateSystem: "polar",
   symbolSize: 20,
   itemStyle: { color: t.palette[i], opacity: 0.75 },
   data: observations.filter((o) => o.name === period).map((o) => o.value),
+}));
+
+const meanSpokes = meanByPeriod.map(({ period, meanAngle, meanRadius }, i) => ({
+  name: `${period}-mean`,
+  type: "line",
+  coordinateSystem: "polar",
+  symbol: (_value, params) => (params.dataIndex === 1 ? "diamond" : "none"),
+  symbolSize: (_value, params) => (params.dataIndex === 1 ? 16 : 0),
+  lineStyle: { color: t.palette[i], width: 2, type: "dashed", opacity: 0.9 },
+  itemStyle: { color: t.palette[i] },
+  data: [
+    [0, meanAngle],
+    [meanRadius, meanAngle],
+  ],
+  silent: true,
+  z: 3,
 }));
 
 // --- Init --------------------------------------------------------------------
@@ -51,9 +90,12 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "Wind Observations · polar-scatter · javascript · echarts · anyplot.ai",
+    subtext:
+      "Radius = wind speed (m/s) · Angle = wind direction (°) · dashed spoke = mean bearing",
     left: "center",
-    top: 30,
+    top: 26,
     textStyle: { color: t.ink, fontSize: 20, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
   legend: {
     data: TIME_OF_DAY,
@@ -63,8 +105,8 @@ chart.setOption({
     itemHeight: 16,
   },
   polar: {
-    center: ["50%", "54%"],
-    radius: "62%",
+    center: ["50%", "55%"],
+    radius: "70%",
   },
   angleAxis: {
     type: "value",
@@ -76,6 +118,7 @@ chart.setOption({
     axisLabel: {
       color: t.inkSoft,
       fontSize: 14,
+      margin: 12,
       formatter: "{value}°",
     },
     axisLine: { lineStyle: { color: t.inkSoft } },
@@ -85,11 +128,15 @@ chart.setOption({
     type: "value",
     min: 0,
     name: "Wind speed (m/s)",
-    nameGap: 18,
+    nameGap: 42,
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     axisLabel: { color: t.inkSoft, fontSize: 13 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
+    splitArea: {
+      show: true,
+      areaStyle: { color: [t.grid, "transparent"] },
+    },
   },
-  series: seriesByPeriod,
+  series: [...scatterSeries, ...meanSpokes],
 });
