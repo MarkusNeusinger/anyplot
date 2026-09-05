@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: line-confidence
 created: '2026-09-05T07:00:44Z'
-updated: '2026-09-05T07:05:05Z'
+updated: '2026-09-05T07:14:01Z'
 generated_by: claude-sonnet
 workflow_run: 33951078438
 issue: 2007
@@ -12,49 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-conf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Uses the idiomatic ECharts stacked-area trick (transparent 'Lower Bound' + 'Prediction
-    Interval' band) to render a real, correctly-bounded confidence band rather than
-    an approximation
-  - Confidence band genuinely widens across the forecast horizon (days 30-59), matching
-    the 'prediction intervals grow with lead time' behavior described in the code's
-    own comment
-  - Clean legend with rounded swatches that correctly excludes the invisible lower-bound
-    helper series; tooltip formatter also filters it out
-  - Both themes fully readable — warm off-white/near-black backgrounds correctly rendered,
-    all text and data legible, data colors identical between renders
-  - Deterministic seeded LCG data generation; title format matches the mandated '{Descriptive
-    Title} · spec-id · language · library · anyplot.ai' convention
+  - Y-axis now zoomed to the data range (3,800–6,000) instead of starting at 0, making
+    the trend and the widening confidence band far more visually prominent — directly
+    resolves the prior review's VQ-05/DE-02 wasted-space weakness
+  - New dashed 'Forecast begins' markLine at day 30 visualizes the previously-invisible
+    observed/forecast split, giving Data Storytelling (DE-03) a clear focal point
+    that was computed in code but never rendered before
+  - Idiomatic stacked-area confidence-band trick (transparent 'Lower Bound' + 'Prediction
+    Interval' series) remains correctly bounded; legend and tooltip formatter still
+    correctly exclude the invisible helper series
+  - 'Both themes remain fully theme-correct: identical brand-green (#009E73) data
+    color, correct #FAF8F1/#1A1A17 backgrounds, all chrome legible in both renders
+    with no dark-on-dark or light-on-light failures'
+  - Deterministic seeded LCG data generation retained; flat KISS script structure
+    with no functions beyond the tiny RNG helper
   weaknesses:
-  - Y-axis starts at 0 while data sits in a narrow ~3,900-6,000 band, wasting roughly
-    two-thirds of the vertical plot area — zooming the y-axis closer to the data range
-    (e.g. min ~3500) would make the trend and the widening confidence band much more
-    visually prominent
-  - The code computes a distinct 'observed' (days 0-29) vs 'forecast' (days 30-59)
-    horizon via horizonFactor, but this distinction is invisible in the render — no
-    vertical marker or dashed-line style change separates history from forecast, so
-    viewers can't tell where the forecast actually begins
-  - Trend line and band both use the same brand green at different opacities; a slightly
-    more distinct but still Imprint-compliant hue for the band would better match
-    the spec's 'contrasting but related colors' suggestion, though opacity variation
-    is an accepted idiom
+  - Confidence band still uses the same brand-green hue as the trend line, distinguished
+    only by opacity (0.25) rather than a distinct-but-related Imprint hue (e.g. a
+    blue-toned band) — the spec explicitly suggests 'contrasting but related colors';
+    opacity-only differentiation is an accepted idiom but a second Imprint hue would
+    read more clearly at a glance, especially in dark mode where the band blends toward
+    near-black
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-like), not pure white, not dark.
-      Chrome: Title "Daily Active Users Forecast · line-confidence · javascript · echarts · anyplot.ai" centered at top in dark ink, fully visible, not clipped. Legend below title with two rounded swatches ("Predicted Active Users" solid green, "Prediction Interval" pale green). Y-axis name "Daily Active Users" top-left in soft ink. X-axis shows date labels (Jan 1, Jan 6, ... Feb 25) at readable size with no overlap. Horizontal grid lines only, subtle gray, no vertical gridlines.
-      Data: Bold brand-green (#009E73) trend line with a pale semi-transparent green band around it, band visibly widens toward the right (forecast horizon), consistent with the "prediction intervals grow with lead time" design intent.
-      Legibility verdict: PASS — all text (title, legend, axis labels, tick labels) is clearly readable against the light background. One layout concern: the y-axis starts at 0 while data only spans ~3,900-6,000, leaving roughly the bottom two-thirds of the plot area empty.
+      Chrome: Title "Daily Active Users Forecast · line-confidence · javascript · echarts · anyplot.ai" centered at top in dark ink, fully visible, correctly proportioned for the long title (no overflow, no clipping). Legend below title with two rounded swatches ("Predicted Active Users" solid green, "Prediction Interval" pale green). Y-axis name "Daily Active Users" top-left in soft ink; y-axis now ranges 3,800–6,000, tightly framing the data instead of starting at 0. X-axis shows date labels (Jan 1, Jan 6, ... Feb 25) at readable size with no overlap. A vertical dashed line labeled "Forecast begins" marks day 30 (Jan 31), clearly separating the observed window from the forecast horizon. Horizontal grid lines only, subtle gray, no vertical gridlines.
+      Data: Bold brand-green (#009E73) trend line with a pale semi-transparent green band around it; band visibly widens after the "Forecast begins" marker, consistent with prediction intervals growing with lead time.
+      Legibility verdict: PASS — all text (title, legend, axis labels, tick labels, markLine label) is clearly readable against the light background. The prior zero-baseline whitespace issue is resolved; the plot area now fills the majority of the canvas.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-like), not pure black, not light.
-      Chrome: Same title, legend, axis labels and tick labels, now in light ink/soft-gray tones, fully legible against the dark background. No dark-on-dark text anywhere — all chrome elements read clearly. Grid lines subtle and visible.
-      Data: Identical brand-green (#009E73) trend line color to the light render; band renders as a darker teal fill due to blending with the dark background at the same alpha — this is expected theme-adaptive behavior, not a data-color change.
-      Legibility verdict: PASS — no dark-on-dark or illegible elements found. Same y-axis zero-baseline whitespace concern applies equally to this render.
+      Chrome: Same title, legend, axis labels, tick labels, and "Forecast begins" markLine, now in light ink/soft-gray tones, fully legible against the dark background. No dark-on-dark text anywhere.
+      Data: Identical brand-green (#009E73) trend line color to the light render; band renders as a darker teal fill due to alpha-blending with the dark background — expected theme-adaptive behavior, not a data-color change.
+      Legibility verdict: PASS — no dark-on-dark or illegible elements found. Same well-utilized layout as the light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,13 +58,16 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text legible in both themes; consistent 14-18px sizing throughout.
+        comment: All font sizes explicitly set; long descriptive title fontsize (18px)
+          correctly scaled down for the longer prefixed title, no overflow or clipping
+          in either theme.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, axis labels, ticks, or data.
+        comment: No collisions between legend, axis labels, ticks, forecast markLine
+          label, or data.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -85,19 +84,19 @@ review:
           on both surfaces.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Y-axis starts at 0 while data sits in a ~3,900-6,000 band, wasting
-          roughly two-thirds of the vertical plot area and diluting the widening-band
-          story. Nothing is clipped or cut off.
+        passed: true
+        comment: Y-axis now zoomed to 3,800–6,000, plot area fills the majority of
+          the canvas with balanced margins; prior wasted-space issue resolved. Nothing
+          clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Daily Active Users' axis title with implicit units;
-          dates self-explanatory on x-axis.
+        comment: Descriptive 'Daily Active Users' axis title; dates self-explanatory
+          on x-axis.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -106,31 +105,32 @@ review:
         comment: 'First series is #009E73; backgrounds correctly #FAF8F1 (light) /
           #1A1A17 (dark); data colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Generic beyond the stacked-band trick; zero-baseline choice undercuts
-          polish.
+        passed: true
+        comment: Zero-baseline issue that previously undercut polish is fixed; still
+          relies on a single-hue band/line pairing rather than a fully custom palette
+          treatment.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Y-axis line and top/right spines removed, horizontal-only grid, but
-          excess whitespace reduces perceived refinement.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear bold-line/pale-band hierarchy and genuine interval widening
-          on the forecast horizon, but wasted vertical space dilutes the focal point;
-          observed/forecast split is computed but never visualized.
+        comment: Y-axis line and top/right spines removed, horizontal-only subtle
+          grid, whitespace now well-balanced after the y-axis rezoom.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The new 'Forecast begins' markLine gives the chart a clear focal
+          point separating observed data from the widening forecast band, directly
+          resolving the prior review's missing visualization gap.
     spec_compliance:
       score: 15
       max: 15
@@ -146,8 +146,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Prominent central line, semi-transparent band, legend identifying
-          both.
+        comment: Prominent central line, semi-transparent band (alpha 0.25, within
+          spec's 0.2-0.4), legend identifying both.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -171,8 +171,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Central trend, lower/upper bounds, and interval widening over the
-          forecast horizon are all shown.
+        comment: Central trend, lower/upper bounds, interval widening, and now the
+          observed/forecast horizon split are all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -207,7 +207,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports; only globals per the mount-node contract.
+        comment: No imports; only the mount-node-contract globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -222,30 +222,31 @@ review:
         comment: Follows the harness mount-node contract; animation disabled; no explicit
           size/devicePixelRatio passed to echarts.init.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic stacked-area confidence-band pattern and correct token/theme
-          mapping throughout.
+        comment: Idiomatic stacked-area confidence-band pattern, markLine annotation,
+          and correct token/theme mapping throughout.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Filtered tooltip formatter and z-ordering are nice touches, but the
-          code's own observed/forecast horizon split is never visualized (no markLine
-          or style change at day 30).
+        comment: markLine annotation and filtered tooltip formatter are nice ECharts-specific
+          touches, but remain patterns replicable in other libraries with moderate
+          effort.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-tooltip
+  - annotations
   patterns:
   - data-generation
   dataprep:
