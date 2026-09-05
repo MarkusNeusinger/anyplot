@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 85/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
@@ -42,86 +43,82 @@ function formatHour(h) {
 }
 
 const TITLE = "line-stepwise · javascript · muix · anyplot.ai";
+const TITLE_H = 56;
+const AREA_GRADIENT_ID = "stepAreaFillGradient";
+
+// The evening-comfort plateau is the schedule's warmest setpoint — call it
+// out with a reference line so the chart has a clear focal point beyond the
+// step shape itself.
+const PEAK_SETPOINT = Math.max(...SCHEDULE.map((b) => b.setpoint));
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  const size = window.ANYPLOT_SIZE;
-  const padding = { top: 28, right: 56, bottom: 24, left: 40 };
-  const titleBlockHeight = 56;
-  const yLabelWidth = 34;
-  const chartWidth = size.width - padding.left - padding.right - yLabelWidth;
-  const chartHeight = size.height - padding.top - padding.bottom - titleBlockHeight;
+  const { width, height } = window.ANYPLOT_SIZE;
 
   return (
-    <Box
-      sx={{
-        width: size.width,
-        height: size.height,
-        boxSizing: "border-box",
-        padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography sx={{ fontSize: 22, fontWeight: 600, color: "text.primary", mb: "20px", lineHeight: 1 }}>
+    <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
+      <Typography sx={{ fontSize: 22, fontWeight: 600, color: "text.primary", px: "40px", pt: "10px", lineHeight: 1 }}>
         {TITLE}
       </Typography>
-      <Box sx={{ display: "flex", flexDirection: "row", height: chartHeight }}>
-        <Box sx={{ width: yLabelWidth, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Typography
-            sx={{
-              fontSize: 16,
-              color: "text.secondary",
-              whiteSpace: "nowrap",
-              transform: "rotate(-90deg)",
-            }}
-          >
-            Setpoint (°F)
-          </Typography>
-        </Box>
-        <LineChart
-          width={chartWidth}
-          height={chartHeight}
-          skipAnimation
-          series={[
-            {
-              data: setpoints,
-              color: t.palette[0],
-              curve: "step",
-              area: true,
-              showMark: false,
-              valueFormatter: (v) => `${v}°F`,
-            },
-          ]}
-          xAxis={[
-            {
-              data: hoursOfDay,
-              scaleType: "linear",
-              label: "Time of Day",
-              min: 0,
-              max: 24,
-              tickNumber: 8,
-              valueFormatter: (h) => formatHour(h),
-              tickLabelStyle: { fontSize: 14 },
-              labelStyle: { fontSize: 16 },
-            },
-          ]}
-          yAxis={[
-            {
-              min: 55,
-              max: 78,
-              tickLabelStyle: { fontSize: 14 },
-            },
-          ]}
-          grid={{ horizontal: true }}
-          slotProps={{ legend: { hidden: true } }}
-          sx={{
-            "& .MuiLineElement-root": { strokeWidth: 3 },
-            "& .MuiAreaElement-root": { fill: t.palette[0], fillOpacity: 0.12 },
-            "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
-          }}
+      <LineChart
+        width={width}
+        height={height - TITLE_H}
+        skipAnimation
+        series={[
+          {
+            data: setpoints,
+            color: t.palette[0],
+            curve: "step",
+            area: true,
+            showMark: false,
+            valueFormatter: (v) => `${v}°F`,
+          },
+        ]}
+        xAxis={[
+          {
+            data: hoursOfDay,
+            scaleType: "linear",
+            label: "Time of Day",
+            min: 0,
+            max: 24,
+            tickNumber: 8,
+            valueFormatter: (h) => formatHour(h),
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
+          },
+        ]}
+        yAxis={[
+          {
+            min: 55,
+            max: 78,
+            label: "Setpoint (°F)",
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
+          },
+        ]}
+        margin={{ top: 20, right: 56, bottom: 60, left: 70 }}
+        grid={{ horizontal: true }}
+        slotProps={{ legend: { hidden: true } }}
+        sx={{
+          "& .MuiLineElement-root": { strokeWidth: 3 },
+          "& .MuiAreaElement-root": { fill: `url(#${AREA_GRADIENT_ID})` },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+        }}
+      >
+        <defs>
+          <linearGradient id={AREA_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={t.palette[0]} stopOpacity={0.35} />
+            <stop offset="100%" stopColor={t.palette[0]} stopOpacity={0.03} />
+          </linearGradient>
+        </defs>
+        <ChartsReferenceLine
+          y={PEAK_SETPOINT}
+          label={`Peak ${PEAK_SETPOINT}°F · evening comfort`}
+          labelAlign="start"
+          lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeOpacity: 0.5 }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
         />
-      </Box>
+      </LineChart>
     </Box>
   );
 }
