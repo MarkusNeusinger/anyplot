@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: dendrogram-radial
 created: '2026-09-05T00:12:05Z'
-updated: '2026-09-05T01:13:19Z'
+updated: '2026-09-05T01:27:10Z'
 generated_by: claude-sonnet
 workflow_run: 33931351126
 issue: 5245
@@ -12,177 +12,171 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 57
+quality_score: 88
 review:
   strengths:
+  - Renders now match current HEAD (n_per_group=20, 80 leaves, canonical Imprint order
+    with lavender, and the 'Tightest cluster' center callout) — the prior attempt's
+    stale-render pipeline issue is resolved.
   - From-scratch UPGMA agglomerative clustering (Lance-Williams update) with no external
-    clustering package, respecting the makie.jl runtime constraint of no Clustering.jl
-  - 'Correct radial-dendrogram geometry: root at the center, leaf angles equally spaced
+    clustering package, respecting the makie.jl runtime constraint of no Clustering.jl.
+  - 'Correct radial-dendrogram geometry: root at the center, leaves equally spaced
     with a small gap, radius proportional to 1 - distance/max_height so branch length
-    stays quantitatively meaningful'
+    stays quantitatively meaningful.'
   - Pure-cluster color propagation (a node keeps its module color only while every
     leaf beneath it shares that module, else falls back to neutral ink) mirrors the
-    standard dendrogram color_threshold convention
-  - Theme-adaptive chrome tokens (PAGE_BG/INK/INK_SOFT) are threaded consistently
-    through title, labels, legend, and the neutral branch segments
-  - 'Current source uses the Imprint palette in canonical order (green, lavender,
-    blue, ochre) for the four modules, first series is #009E73'
-  - Square 2400x2400 canvas is the right orientation choice for a symmetric radial
-    layout
+    standard dendrogram color_threshold convention.
+  - Outer color-coded ring and colored leaf-tip markers give a redundant, non-color-only
+    encoding of module membership layered on top of branch coloring.
+  - '''Tightest cluster: Neural'' center callout is legible and does not collide with
+    the converging root branch stubs in either render — verified at pixel level.'
+  - Theme-adaptive chrome (PAGE_BG/INK/INK_SOFT) threaded consistently through title,
+    labels, legend, and neutral branch segments; both renders pass the light/dark
+    legibility check.
+  - Canonical square 2400x2400 canvas — correct orientation choice for a symmetric
+    radial layout, passes the canvas dimension gate.
   - Clean KISS script structure (imports -> data -> clustering -> plot -> save), reproducible
-    via Random.seed!(42)
-  - Outer color-coded ring and colored leaf markers give a redundant, non-color-only
-    encoding of module membership on top of the branch coloring
+    via Random.seed!(42), no unused imports.
   weaknesses:
-  - 'CRITICAL / PIPELINE: plot_images/plot-light.png and plot-dark.png supplied to
-    this review do NOT match the current HEAD implementation (commit c3fb1d1be, the
-    ''fix(makie): address review feedback'' commit for this attempt). Pixel-level
-    inspection shows only 10 leaves per module (labels stop at e.g. IMM-10) and a
-    non-canonical categorical color order (green, blue #4467A3, ochre #BD8233, rose
-    #954477) with no lavender anywhere in the image. That exactly matches the very
-    first implementation commit (22ea907f0: n_per_group=10, IMPRINT_PALETTE=[green,#4467A3,#BD8233,#954477]).
-    Current HEAD instead sets n_per_group=20 (80 leaves total, labels should run IMM-01..IMM-20
-    etc.), uses the canonical Imprint order [green,#C475FD lavender,#4467A3 blue,#BD8233
-    ochre], and adds a center ''Tightest cluster: {name}'' data-storytelling callout
-    — none of these are visible in the reviewed renders. The renders must be regenerated
-    from HEAD (and re-uploaded to the GCS staging path) before a visual quality verdict
-    can be trusted, since impl-merge.yml promotes whatever is currently in staging
-    straight to production without re-rendering.'
-  - Because the images are stale, VQ-01/02/03/05/07 and DE-01/02/03 in this review
-    are not verified against the actual current output and are scored conservatively/unreliably
-    as a placeholder — re-review after a fresh render is required.
-  - 'Once re-rendered, specifically re-check: (a) the new ''Tightest cluster'' center
-    callout text is legible and doesn''t collide with the converging root branch stubs
-    in the now-crowded center; (b) with leaf count doubled to 20/module (80 total),
-    the radially-rotated leaf labels still have enough angular spacing to avoid overlap;
-    (c) the lavender (#C475FD) Metabolic branches read clearly against both the light
-    and dark backgrounds.'
+  - With 80 leaves at fontsize=10, leaf labels become illegible once the plot is scaled
+    down to the ~400px gallery thumbnail (title stays readable, but per-leaf labels
+    are not) — an inherent tradeoff of a dense radial dendrogram, not a quick fix,
+    but worth noting as a soft VQ-01 deduction.
+  - Design excellence is solid (custom clustering, ring encoding, storytelling callout)
+    but stops short of top marks — e.g. no secondary visual emphasis (like a highlighted
+    focal branch) beyond the center-text insight, and grid/legend styling is functional
+    rather than distinctive.
+  - Manual arc!/lines! radial layout is the correct approach given no NetworkLayout.jl/dendrogram
+    recipe in this runtime, but idiomatic-usage credit is capped slightly since it's
+    a hand-rolled geometry rather than a library-native dendrogram primitive.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 (sampled pixel ~#FAF8F1). Not pure white.
-      Chrome: bold dark title "dendrogram-radial · julia · makie · anyplot.ai" centered at top, comfortably sized; radially rotated leaf labels (e.g. IMM-01..IMM-10, MET-01..MET-10, NEU-01..NEU-10, CAR-01..CAR-10) in muted gray around the circumference, all legible with no overlap; horizontal "Module" legend below the plot with 4 line swatches (Immune/Metabolic/Neural/Cardiac), legible. All confirmed readable against the light background.
-      Data: root at center with short neutral (dark gray) stub branches fanning into four color-coded quadrants — green (#009E73, Immune), blue (#4467A3, Metabolic), ochre (#BD8233, Neural), rose (#954477, Cardiac) — plus a matching color-coded outer ring and colored leaf-tip markers. First series is the brand green #009E73. NOTE: this exact 4-hue set (green/blue/ochre/rose, no lavender) and leaf count (10 per module) matches the ORIGINAL first-attempt commit, not the current HEAD fix commit (see weaknesses — the images appear stale).
-      Legibility verdict: PASS (for what is actually shown), but see weaknesses: this render does not represent the current source.
+      Background: warm off-white, consistent with #FAF8F1. Not pure white, not dark.
+      Chrome: bold dark title "dendrogram-radial · julia · makie · anyplot.ai" centered at top (~55-60% of canvas width, no clipping). Radially rotated leaf labels (IMM-01..IMM-20, MET-01..MET-20, NEU-01..NEU-20, CAR-01..CAR-20 — 80 total) in muted dark-gray ink around the circumference; corner crops confirm no overlap and comfortable margin to the canvas edge (no AR-09 clipping). Horizontal "Module" legend below the plot with 4 line swatches (Immune/Metabolic/Neural/Cardiac), fully legible. Center callout "Tightest cluster: Neural" sits cleanly inside the converging root arc with no collision with the branch stubs. All text confirmed readable against the light background.
+      Data: root at center with short neutral (dark-gray) stub branches fanning into four color-coded quadrants — green #009E73 (Immune, first series = brand green as required), lavender #C475FD (Metabolic), blue #4467A3 (Neural), ochre #BD8233 (Cardiac) — plus a matching color-coded outer ring and colored leaf-tip markers. Canonical Imprint palette order confirmed.
+      Legibility verdict: PASS. No dark-on-dark or light-on-light issues; leaf labels are small (fontsize 10) but legible at full resolution — they do fade out at the ~400px thumbnail size, an inherent density tradeoff for an 80-leaf radial layout rather than a theme/legibility bug.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17. Not pure black.
-      Chrome: title, leaf labels, and legend text all switch to light/cream tone and remain fully legible on the dark surface; the neutral root stub branches switch from dark gray to light gray as expected for theme-adaptive ink. No dark-on-dark issues observed.
-      Data: identical four hues to the light render (green/blue/ochre/rose unchanged) — data-color consistency across themes holds for what is shown.
-      Legibility verdict: PASS (for what is actually shown), same staleness caveat as above.
+      Background: warm near-black, consistent with #1A1A17. Not pure black, not light.
+      Chrome: title, leaf labels, and legend text all switch to light/cream ink (INK/INK_SOFT) and remain fully legible on the dark surface. The neutral root stub branches and the connecting arc around the center callout switch from dark-gray to light-gray as expected for theme-adaptive ink — no dark-on-dark failures anywhere, including the center callout text.
+      Data: identical four hues to the light render (green #009E73 / lavender #C475FD / blue #4467A3 / ochre #BD8233) confirming data-color consistency across themes — only chrome (background, ink, neutral branch color) flips.
+      Legibility verdict: PASS. Matches the light render's legibility profile; brand green reads clearly against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 12
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 6
         max: 8
-        passed: false
-        comment: Text in the reviewed PNGs is legible, but the PNGs are stale (pre-date
-          the current fix commit) so explicit sizing on the current source cannot
-          be visually confirmed
+        passed: true
+        comment: Explicit font sizes, readable in both themes at full resolution;
+          leaf labels (fontsize 10, 80 of them) fade at ~400px thumbnail scale — soft
+          deduction for mobile readability
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: No overlap in the stale render; unverified for the current 80-leaf
-          version, which has denser angular spacing
+        passed: true
+        comment: Pixel-level corner and center crops confirm no text/text or text/data
+          collisions, including the center callout vs. converging branch stubs
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Markers visible in the stale render at n=40; unverified at current
-          n=80
+        passed: true
+        comment: markersize=8 leaf-tip markers and linewidth=2.0 branches are clearly
+          visible at n=80 leaves
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Stale render's 4 hues are CVD-distinct; unverified with current lavender
-          substitution
+        passed: true
+        comment: Four Imprint hues are CVD-distinct; redundant ring + marker encoding
+          avoids color-only signaling
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Cannot confirm the new center callout text fits the layout without
-          collision
+        passed: true
+        comment: Canvas gate passed (2400x2400); title ~55-60% width, no overflow,
+          no clipping at any edge
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title format correct in source; module legend is descriptive
+        passed: true
+        comment: Title matches the required '{spec-id} · {language} · {library} ·
+          anyplot.ai' format; no traditional x/y axis needed for this geometry, leaf
+          labels serve as category labels
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Current source uses canonical Imprint order (verified by reading
-          code), but the rendered PNG shows a non-canonical order (green, blue, ochre,
-          rose) from an earlier commit
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order (green/lavender/blue/ochre);
+          backgrounds correct #FAF8F1 / #1A1A17 in both renders'
     design_excellence:
-      score: 8
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured radial layout with ring + legend; not verifiable
-          at full current fidelity
+        passed: true
+        comment: From-scratch UPGMA clustering, custom radial geometry, ring encoding,
+          and a data-driven center callout show real design intent beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Spines/decorations hidden, generous whitespace in the stale render;
-          default given render mismatch
+        passed: true
+        comment: Spines and axis decorations fully hidden, generous radial whitespace,
+          subtle neutral-ink branches for cross-cluster merges
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Source adds a 'Tightest cluster' center callout for storytelling,
-          but its visual effect is unverified since it is absent from the reviewed
-          render
+        passed: true
+        comment: Center 'Tightest cluster' insight and color-coded ring create a clear
+          narrative hook, though no additional focal emphasis (e.g. highlighting the
+          tightest cluster's arc) is layered on top
     spec_compliance:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Correct radial dendrogram structure (root center, leaves on circumference,
-          radius proportional to merge distance)
+        passed: true
+        comment: 'Correct radial dendrogram: root at center, leaves at equal angular
+          spacing on the circumference'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Cluster-color branches and the optional color-coded outer ring are
-          both implemented in source; cannot confirm final rendered appearance
+        passed: true
+        comment: Linkage-derived hierarchy, leaf labels, cluster-color branches, and
+          the optional outer metadata ring are all present
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Angle/radius mapping is correct in source
+        passed: true
+        comment: Radius maps to merge distance (root at center, leaves at R_max),
+          angle maps to leaf position; all 80 leaves shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format and legend labels correct in source; unverified in the
-          actual current render
+        passed: true
+        comment: Title format correct; legend labels (Immune/Metabolic/Neural/Cardiac)
+          match the module names used for coloring
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -190,23 +184,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Four distinct modules with clear within/between-cluster distance
-          separation
+        comment: Demonstrates hierarchy, branch-length proportionality, cluster coloring,
+          and the optional metadata ring across 80 leaves
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible synthetic gene-expression-module scenario
+        comment: Synthetic gene-expression profiles for four functional modules (Immune/Metabolic/Neural/Cardiac)
+          are plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Synthetic distances are internally consistent and plausible for the
-          domain
+        comment: 80 leaves sits comfortably in the spec's 20-500 recommended range
+          and showcases the radial layout's space efficiency
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -214,7 +209,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> clustering -> plot -> save, no classes
+        comment: No functions/classes; linear imports -> data -> clustering -> plot
+          -> save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -226,43 +222,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie, Colors, Random used
+        comment: CairoMakie, Colors, Random all used; no dead imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manual O(n^2) linkage loop is somewhat verbose but appropriate given
-          no clustering package is available
+        passed: true
+        comment: No fake UI/interactivity; from-scratch clustering is appropriately
+          complex given the no-Clustering.jl constraint
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current CairoMakie save API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches the canonical
+          pattern
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct use of Figure/Axis/arc!/lines!/scatter!/text!/Legend, but
-          hand-rolled polar geometry instead of a dedicated recipe
+        passed: true
+        comment: Correct use of Axis/DataAspect/hidedecorations!/hidespines!/Legend;
+          the manual arc!/lines! radial geometry is the appropriate workaround given
+          no dendrogram recipe or NetworkLayout.jl in this runtime
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: arc! for radial branch/ring segments is a Makie-distinctive primitive
-          not trivially replicated in matplotlib-style APIs
-  verdict: REJECTED
+        passed: true
+        comment: Uses arc! (Makie-specific primitive) for the radial branch/ring geometry
+          and rowsize!(fig.layout, ...) for legend proportioning
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - annotations
   - custom-legend
   patterns:

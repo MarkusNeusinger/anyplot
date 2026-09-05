@@ -1,7 +1,7 @@
 # anyplot.ai
 # dendrogram-radial: Radial Dendrogram
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 57/100 | Created: 2026-09-05
+# Quality: 88/100 | Created: 2026-09-05
 
 using CairoMakie
 using Colors
