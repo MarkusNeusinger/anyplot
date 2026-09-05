@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: elbow-curve
 created: '2026-09-05T00:38:24Z'
-updated: '2026-09-05T00:42:50Z'
+updated: '2026-09-05T00:50:02Z'
 generated_by: claude-sonnet
 workflow_run: 33933347746
 issue: 2333
@@ -12,44 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-cur
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Correct plot type: line chart with prominent markers at each discrete k value,
-    matching elbow-curve convention.'
-  - Explicitly highlights the optimal k=4 point via a second overlay dataset with
-    a larger, distinctly colored ring marker and its own legend entry — directly satisfies
-    the spec's suggestion to annotate/highlight the elbow.
-  - 'Realistic, well-shaped data: customer-segmentation K-means inertia values decrease
-    steeply through k=1..4 then flatten sharply, producing a genuine, legible elbow.'
-  - 'Correct Imprint palette usage (brand green #009E73 first series, lavender highlight
-    series), theme-adaptive chrome, deterministic in-memory data, and full compliance
-    with the Chart.js mount-node contract (animation: false, no fixed canvas size).'
-  - Descriptive axis titles with units ("Inertia (Within-Cluster Sum of Squares)",
-    "Number of Clusters (k)").
+  - 'Both previous-attempt weaknesses were fixed precisely: x-axis gridlines removed
+    (now y-axis-only, matching the style guide) and segment styling added to dash/mute
+    the post-elbow line, directly showcasing a distinctive Chart.js capability.'
+  - 'Correct plot type and full spec coverage: line chart with prominent markers at
+    each discrete k, monotone-interpolated curve, and an explicit optimal-k=4 highlight
+    via a second overlay dataset.'
+  - 'Correct Imprint palette (brand green #009E73 first series, lavender #C475FD highlight),
+    theme-adaptive chrome, and data colors identical between light and dark renders.'
+  - Realistic, well-shaped customer-segmentation K-means data with a genuine, legible
+    elbow at k=4.
   weaknesses:
-  - Grid lines are drawn on both x and y axes for a line chart; the style guide's
-    Grid Guidelines say line/bar charts should use y-axis-only grid — consider dropping
-    the vertical gridlines for a cleaner look.
-  - Styling stays close to Chart.js + token defaults beyond the highlight trick —
-    no deeper Design Excellence touches (e.g. a subtle area fill under the curve,
-    or segment-based dash/opacity change after the elbow to visually reinforce 'diminishing
-    returns').
-  - Library Mastery is underused beyond the overlay-dataset trick — e.g. Chart.js
-    `segment` styling (color/dash the line differently before vs. after k=4) would
-    showcase a more distinctive Chart.js capability.
+  - Styling is still close to Chart.js + token defaults outside the segment/highlight
+    tricks - an area fill under the curve or subtler marker refinement could push
+    Design Excellence further.
+  - Legend swatch for "Optimal k = 4" is a plain circle; since the plotted marker
+    is a ring (colored border with page-background fill), a matching ring-style legend
+    point would visually tie the two together more precisely.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "elbow-curve · javascript · chartjs · anyplot.ai" in dark ink, centered top. Legend below title with two entries ("Inertia" green dot, "Optimal k = 4" purple dot). X-axis title "Number of Clusters (k)" and Y-axis title "Inertia (Within-Cluster Sum of Squares)" both in dark ink. Tick labels (1-10 on x; 0-1,000 on y) in a slightly softer gray. Subtle light-gray gridlines on both axes.
-      Data: Single decreasing curve in brand green (#009E73) with filled green circle markers at each k=1..10, monotone-interpolated. At k=4 an additional larger ring marker in lavender/purple overlays the green point, clearly calling out the optimal k.
-      Legibility verdict: PASS — all text (title, axis titles, tick labels, legend) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "elbow-curve · javascript · chartjs · anyplot.ai" in dark ink, centered top. Legend below with two entries ("Inertia" green dot, "Optimal k = 4" lavender dot). Axis titles "Number of Clusters (k)" and "Inertia (Within-Cluster Sum of Squares)" in dark ink; tick labels in softer gray. Only y-axis (horizontal) gridlines are drawn, subtle and non-dominant - x-axis gridlines correctly removed this attempt.
+      Data: Brand-green (#009E73) decreasing curve with filled circle markers at k=1..10. From k=4 onward the segment styling switches the line to dashed + muted opacity, visually reinforcing "diminishing returns". A larger lavender ring marker overlays the k=4 point to highlight the elbow.
+      Legibility verdict: PASS - all text (title, axis titles, tick labels, legend) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as light — title, legend, axis titles and tick labels all rendered in light ink/off-white and soft light-gray, clearly visible against the dark background. Gridlines are faint and light-toned, subtle but visible.
-      Data: Identical brand-green curve and markers, identical lavender highlight ring at k=4 — data colors match the light render exactly; only chrome (background/text/grid) flips.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (including tick labels) is clearly legible against the dark background.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same layout as light - title, legend, axis titles and tick labels rendered in light ink/off-white, clearly visible against the dark background. Y-axis-only gridlines are faint but visible.
+      Data: Identical brand-green curve and markers, identical post-elbow dashed/muted segment, identical lavender highlight ring at k=4 - data colors match the light render exactly; only chrome (background/text/grid) flips.
+      Legibility verdict: PASS - no dark-on-dark failures; every text element (including tick labels) is clearly legible against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -74,7 +68,7 @@ review:
         max: 6
         passed: true
         comment: Sparse 10-point data given prominent radius-7 markers, radius-12
-          highlight ring — appropriate for low density.
+          highlight ring - appropriate for low density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -99,32 +93,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds match theme tokens in both renders.'
+        comment: 'First series #009E73, second #C475FD lavender per canonical order;
+          backgrounds match theme tokens in both renders.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Highlight-overlay technique adds polish, but overall look stays close
-          to Chart.js + token defaults.
+        passed: true
+        comment: Segment-based dash/opacity change post-elbow adds real design intent
+          beyond the previous attempt.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Generous whitespace, but grid on both axes deviates from the line-chart
-          y-axis-only guideline.
+        passed: true
+        comment: X-axis gridlines removed; now correctly y-axis-only per the style
+          guide's grid guidelines.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Highlighted optimal-k marker creates a clear focal point that guides
-          the viewer straight to the elbow.
+        comment: Highlighted optimal-k marker plus the de-emphasized post-elbow segment
+          together create a strong, guided focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -134,13 +129,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart with markers — correct for an elbow curve.
+        comment: Line chart with markers - correct for an elbow curve.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers at each k, smooth connecting line, optimal-k highlight —
+        comment: Markers at each k, smooth connecting line, optimal-k highlight -
           all spec notes covered.
       - id: SC-03
         name: Data Mapping
@@ -163,7 +158,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Decreasing inertia curve, discrete markers, elbow highlight — covers
+        comment: Decreasing inertia curve, discrete markers, elbow highlight - covers
           all core elbow-curve aspects.
       - id: DQ-02
         name: Realistic Context
@@ -176,7 +171,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Inertia values (980→147) show a realistic diminishing-returns decay
+        comment: Inertia values (980-147) show a realistic diminishing-returns decay
           with a clear elbow at k=4.
     code_quality:
       score: 10
@@ -213,7 +208,7 @@ review:
         passed: true
         comment: 'Mount-node contract respected, animation: false set.'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -221,15 +216,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic core-only Chart.js pattern (no unavailable plugins), cubicInterpolationMode
-          monotone.
+        comment: Idiomatic core-only Chart.js pattern, cubicInterpolationMode monotone.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Overlay-dataset highlight is a nice trick but underuses Chart.js-distinctive
-          capabilities (e.g. segment styling).
+        passed: true
+        comment: segment callback styling (conditional borderDash/borderColor per
+          data index) is a genuinely Chart.js-distinctive capability, well applied
+          to reinforce the elbow story.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -240,3 +235,4 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
+  - alpha-blending

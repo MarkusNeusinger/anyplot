@@ -1,7 +1,7 @@
 // anyplot.ai
 // elbow-curve: Elbow Curve for K-Means Clustering
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-05
+// Quality: 93/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
