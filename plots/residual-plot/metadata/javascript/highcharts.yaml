@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: residual-plot
 created: '2026-09-05T12:33:52Z'
-updated: '2026-09-05T12:37:18Z'
+updated: '2026-09-05T12:47:32Z'
 generated_by: claude-sonnet
 workflow_run: 33966218658
 issue: 2332
@@ -12,47 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Correct residual-plot construction: fitted values on x, residuals (y_true - y_pred
-    proxy) on y, with a clear heteroscedastic funnel pattern that gives the diagnostic
-    real value'
-  - Zero reference line, ±2 SD shaded band, and outliers beyond the threshold are
-    all present per the spec's optional recommendations
-  - 'Outliers are CVD-safe: distinguished from inliers by color, size (radius 6 vs
-    5), opacity (opaque vs 0.65 alpha), and a dark border ring — not color alone'
-  - 'Both themes read cleanly with identical data colors (green #009E73 inliers, palette[4]
-    outliers) and correctly flipped chrome (background, grid, zero line, band tint)'
-  - Deterministic seeded LCG data generation, clean idiomatic Highcharts scatter setup
-    (plotLines, plotBands, colors from tokens), title/axis labels correctly formatted
-    with units
+  - 'Correct residual-plot semantics: fitted values on x-axis, residuals on y-axis,
+    a y=0 reference plotLine, a shaded ±2 SD plotBand, and outliers beyond the threshold
+    styled and labeled distinctly.'
+  - 'Theme-adaptive chrome is done right: identical data colors (green inliers, red
+    outliers, violet trend) in both renders, only chrome (background, ink, grid) flips
+    between light and dark.'
+  - 'Clean, deterministic code: seeded LCG + Box-Muller gaussian for reproducible
+    data, no unused imports, correct mount-node/API usage (Highcharts.chart into #container,
+    chart and series animation both disabled).'
+  - 'Idiomatic Highcharts feature use: plotLines/plotBands for the reference line
+    and outlier band, Highcharts.color().setOpacity() for alpha-blended marker fills,
+    and a dataLabels formatter for outlier value callouts.'
+  - Realistic, neutral house-price regression scenario with a genuinely heteroscedastic
+    (funnel-shaped) spread that demonstrates the diagnostic value of the plot.
   weaknesses:
-  - No LOWESS/smoothing trend line through the residuals — optional per spec but would
-    add real diagnostic value for spotting non-linear patterns and would strengthen
-    the data-storytelling score
-  - 'Marker overplotting in dense regions of the fitted-value axis (e.g. 250-400 range):
-    radius 5 at alpha 0.65 with 220 points still produces visible cluster overlap
-    — consider radius ~4 or alpha ~0.5 for the inlier series'
-  - Design is functionally correct but visually conservative — generic grid/spine
-    treatment beyond the shaded band and zero line; no additional refinement (e.g.
-    subtler y-axis-only grid, more distinctive marker treatment) to lift it past a
-    solid-default look
-  - 'Library mastery is basic: uses only plotLines/plotBands/marker styling — no more
-    distinctive Highcharts-specific capability (e.g. a formatter-driven tooltip context,
-    or per-point dataLabels for the top outliers) is demonstrated'
+  - The binned-mean trend line wobbles noticeably (roughly ±20) across bins even though
+    the data-generating process has zero conditional mean everywhere (only the variance
+    grows) — this can visually suggest a spurious non-linear pattern that isn't actually
+    present. Increasing the bin count (reducing per-bin noise) or using a true LOWESS/kernel
+    smoother would keep the trend closer to flat-at-zero, matching the diagnostic
+    intent.
+  - In the densest fitted-value range (~275-450 $k), points overlap substantially
+    even with marker fillColor alpha=0.5 — a slightly smaller marker radius (e.g.
+    3.5) or lower opacity (e.g. 0.4) would improve separability of adjacent overlapping
+    residuals.
+  - Distinctive-feature usage (plotBands/plotLines/dataLabels) is solid but fairly
+    standard Highcharts fare; nothing that showcases a rarer library capability for
+    extra Library Mastery credit.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), no white or dark background — matches the required light chrome.
-      Chrome: Title "residual-plot · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible. Axis titles "Fitted Value ($k)" and "Residual ($k)" and tick labels rendered in soft dark gray, all legible against the light surface. Grid lines are subtle light gray, visible but not dominant. A black zero-reference line cuts horizontally through the plot. A light gray ±2 SD band shades the central region. Legend at the bottom in soft dark gray text, both entries readable.
-      Data: First series (inliers) is the Imprint brand green (#009E73) at ~0.65 opacity, clearly visible against the light background; ~220 points show a funnel-shaped heteroscedastic spread widening as fitted value increases. Outlier series (8 points beyond ±2 SD) rendered in a dark red/maroon (palette[4]) with a dark border ring and larger radius, clearly distinguishable from inliers by color, size, and opacity — not by color alone.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "residual-plot · javascript · highcharts · anyplot.ai" centered at top, clearly legible. Axis titles "Fitted Value ($k)" (x) and "Residual ($k)" (y) in medium-gray ink, tick labels in the same tone, all clearly readable against the light background. Grid lines are subtle light gray, visible but not dominant. A solid black horizontal reference line sits at Residual=0. A light gray shaded plotBand spans roughly ±75 (the ±2 SD range).
+      Data: Green (#009E73) semi-transparent circular markers for inlier residuals scattered around zero with visible funnel-shaped (heteroscedastic) spread widening toward higher fitted values. Nine dark-red/maroon circular markers (outlined in black) mark outliers beyond ±2 SD, each labeled with its dollar value (e.g. "$111.2k", "-$89.6k") in black text — all labels sit clear of other elements. A dashed violet "Trend (binned mean)" spline oscillates mildly around zero. Legend at the bottom lists all three series with matching swatches.
+      Legibility verdict: PASS — no text is light-on-light; all chrome and data-label text is dark and crisp against the cream background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), no pure black or light background — matches the required dark chrome.
-      Chrome: Title rendered in white/light ink, clearly visible. Axis titles and tick labels rendered in light gray, all legible against the dark surface — no dark-on-dark failures observed. Grid lines are subtle dark gray, visible but not dominant. A white zero-reference line cuts horizontally through the plot. The ±2 SD band is shaded a slightly lighter dark gray tint, still discernible. Legend at the bottom in light gray text, both entries readable.
-      Data: Confirmed identical to light render — inlier green (#009E73) and outlier maroon (palette[4]) markers are pixel-identical in hue/opacity/size between the two renders; only the chrome (background, text, grid, band tint, zero line) flips.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title now rendered in white, axis titles and tick labels in light gray — all clearly legible against the dark background. Grid lines are subtle dark gray, still visible. The y=0 reference line is now a light/white horizontal line (correctly flipped from black), and the ±2 SD plotBand is a slightly lighter charcoal panel, still distinguishable from the pure background.
+      Data: Data colors are identical to the light render — same green inliers, same dark-red outliers, same violet dashed trend line — only the chrome (background, ink, grid, reference line, band) has flipped as required. Outlier data-label text is white, clearly readable against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick label, and data-label callout is clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,74 +62,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (22/16/14px), all readable in both themes
+        comment: All title/axis/tick/data-label text is explicitly sized and clearly
+          readable in both themes; no dark-on-dark or light-on-light failures.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions with other text or data
+        comment: Outlier value labels are placed clear of markers and each other;
+          no text/legend collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Some marker overplotting in dense clusters (radius 5, alpha 0.65)
-          with 220 points; could be tuned smaller/lighter
+        comment: Alpha-blended inlier markers help with overplotting, but the densest
+          fitted-value band (~275-450) still shows heavy overlap; a smaller radius
+          or lower alpha would help further.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Outliers redundantly coded via color+size+opacity+border, not color
-          alone
+        comment: Outliers are distinguished from inliers by size, black outline, and
+          text labels, not color alone; violet trend line is distinguishable from
+          the green/red data.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, good proportions, nothing clipped
+        comment: Canvas gate passed (3200x1800). Title, axes, and legend are well-proportioned
+          with no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ($k)
+        comment: Both axis titles include units ($k).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct light/dark chrome backgrounds, identical
-          data colors across themes'
+        comment: 'First series uses #009E73 (Imprint palette[0]); outliers and trend
+          use later palette slots; backgrounds match the light/dark tokens; data colors
+          identical across themes.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Above generic defaults (shaded band, outlier styling, alpha blending)
-          but not exceptional polish
+        passed: true
+        comment: Thoughtful touches (alpha-blended fills, sized/outlined outliers,
+          dashed trend, shaded ±2 SD band) lift it above generic defaults, short of
+          top-tier polish.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid, generous whitespace, but no further refinement beyond
-          defaults
+        passed: true
+        comment: Subtle grid, no chart borders/spines, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Outlier highlighting and band create a focal point, but no trend
-          line to guide interpretation of the heteroscedasticity pattern
+        passed: true
+        comment: Outlier callouts and the shaded band create a clear focal point,
+          but the wobbly binned-mean trend line slightly undercuts the intended zero-mean
+          diagnostic message.
     spec_compliance:
       score: 15
       max: 15
@@ -137,25 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct residual scatter plot
+        comment: Correct residual scatter plot with y=0 reference line.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero line, ±2 SD band, colored outliers all present
+        comment: Reference line, fitted-value x-axis, alpha transparency, smoothing
+          trend line, ±2 SD bands, and differently-colored outliers are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Fitted value on x, residual on y, correct
+        comment: x = fitted value, y = residual (y_true - y_pred), correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels descriptive
+        comment: Title matches the mandated format exactly; legend labels describe
+          each series accurately.
     data_quality:
       score: 15
       max: 15
@@ -165,20 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows fitted-vs-residual scatter, zero line, threshold band, outlier
-          flagging
+        comment: Demonstrates heteroscedasticity (funnel spread), outliers, and a
+          trend overlay — all major residual-plot diagnostic aspects.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible house-price regression residuals, neutral
+        comment: House-price regression is plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible $k values, clear heteroscedastic spread
+        comment: Fitted values ($150k-650k) and residuals (up to ~$110k) are sensible
+          for the domain.
     code_quality:
       score: 10
       max: 10
@@ -188,56 +200,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small LCG/gaussian helpers are the standard JS reproducibility pattern,
-          no unnecessary abstraction
+        comment: Only small, necessary helper functions (lcg, gaussian) for data generation.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG(42), fully deterministic
+        comment: Seeded LCG (seed=42) makes the data fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports, uses provided globals only
+        comment: No imports beyond the Highcharts global, as required for this library.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriately complex, no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract respected, animation disabled
+        comment: Highcharts.chart('container', ...) with animation disabled on both
+          chart and series.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic use of plotLines, plotBands, marker styling via tokens
+        comment: Correct combination of scatter + spline series, plotLines/plotBands,
+          and a tooltip formatter.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: No more distinctive Highcharts-specific capability beyond basic reference
-          lines/bands
+        passed: true
+        comment: Uses Highcharts.color().setOpacity() and dataLabels formatter well,
+          but these are fairly standard patterns rather than rarer library capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - binning
   styling:
   - alpha-blending
-  - edge-highlighting
