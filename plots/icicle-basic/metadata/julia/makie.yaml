@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: icicle-basic
 created: '2026-09-05T05:31:38Z'
-updated: '2026-09-05T05:37:18Z'
+updated: '2026-09-05T06:09:46Z'
 generated_by: claude-sonnet
 workflow_run: 33947101783
 issue: 2497
@@ -12,55 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Correctly implements icicle-specific stacking conventions: leaves stretch down
-    to fill the remaining depth rows (config.json spans all 3 rows below root as a
-    lone root-level file; inter.woff2 spans to the bottom under fonts), matching the
-    spec''s row-stacking behavior rather than a treemap-style nesting.'
-  - Branch hue plus a per-depth LCHab lightness ramp gives an intuitive dual encoding
-    — hue identifies the top-level branch, lightness identifies depth — and stays
-    perceptually consistent while rendering byte-identical data colors in both themes.
-  - Per-tile contrast_ink() picks label color from each fill's relative luminance,
-    keeping every label legible regardless of tile shade or theme, with no dark-on-dark
-    or light-on-light failures observed.
-  - Clean, minimal chrome (hidden axis decorations/spines, background-colored gutters
-    between tiles) appropriate for a chart type that is driven entirely by geometry
-    and inline labels rather than axes.
+  - 'Correct icicle-chart layout: leaves stretch down to the bottom row per the classic
+    convention, root at top spanning the full width'
+  - Perceptually-uniform LCHab lightness ramp encodes hierarchy depth within each
+    branch — a distinctive, well-executed touch
+  - Canonical Imprint categorical order for the four top-level branches (brand green
+    first), with neutral/muted semantic anchors correctly reserved for the root total
+    and the lone root-level file rather than spent as extra categorical slots
+  - Label-visibility threshold correctly hides text on narrow tiles, and per-tile
+    luminance-based ink color keeps every visible label legible regardless of the
+    tile's own lightness
+  - Clean, deterministic, single-file implementation — no randomness needed, no fake
+    interactivity
   weaknesses:
-  - Root tile (NEUTRAL) and the config.json 'other' leaf strip (MUTED) use theme-adaptive
-    INK-derived colors that change hue/value between light and dark renders. Per the
-    Imprint palette rule, data-bearing fills should stay identical across themes and
-    only chrome should flip. Give the root band and the muted leaf a single fixed
-    neutral hex that doesn't depend on THEME, and keep contrast_ink() to handle per-tile
-    text contrast.
-  - The label-visibility threshold hides labels on several tiles that are borderline
-    wide enough to read (e.g. 'hooks' and 'styles' under src, 'unit' and 'integration'
-    under tests) — the required width scales with label character count including
-    the ' KB' suffix, which pushes many mid-size folders below the cutoff. Loosen
-    the threshold formula or drop the numeric suffix on narrower tiles so more of
-    the hierarchy reads without needing the interactive detail view.
-  - Six free-standing recursive helper functions (subtree_value, leaf_levels!, layout_icicle!,
-    branch_of, contrast_ink, tint_lightness) make this one of the more code-heavy
-    anyplot scripts; the recursion is genuinely required for a tree layout, but the
-    simplest single-expression helpers (contrast_ink, branch_of) could be inlined
-    to reduce structure where it isn't strictly necessary.
+  - Title (titlesize=20) reads a little small relative to the 3200 px canvas for a
+    short (41-char) title; there is headroom to bump it to ~22-24 without crowding
+  - The root "project" band is a large, texture-free block spanning the full top quarter
+    — correct per the icicle convention, but reads as a lot of dead visual weight;
+    a slightly shorter root row could improve balance
   image_description: |-
+    NOTE: The plot_images/ artifacts originally provided for this review were stale
+    (rendered from the pre-fix, attempt-1 version of makie.jl — root/config.json
+    colors matched the old theme-adaptive NEUTRAL/MUTED constants, not the
+    FIXED_NEUTRAL/FIXED_MUTED constants introduced by commit e59e3495). A scratch
+    Julia project (CairoMakie + Colors) was instantiated and the current makie.jl
+    was re-rendered directly for both themes; this description covers those fresh,
+    code-accurate renders. Pixel sampling confirmed FIXED_NEUTRAL (114,111,100) and
+    FIXED_MUTED (176,170,152) now render identically in both themes, as intended.
+
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Title "icicle-basic · julia · makie · anyplot.ai" is bold, dark, and clearly legible at top-center. No axis ticks/labels/spines (correctly hidden — an icicle chart needs none). No grid.
-      Data: Root band ("project · 341 KB total") is a large near-black neutral rectangle with light text. Below it, four top-level branches use the Imprint palette in canonical order — src=#009E73 (green), docs=#C475FD (lavender), tests=#4467A3 (blue), assets=#BD8233 (ochre) — plus a thin muted-gray strip on the far right for the lone root-level file config.json. Each branch lightens with depth (LCHab lightness ramp), and labels ("components 55 KB", "guides 35 KB", "images 105 KB", "logo.png 45 KB", etc.) sit centered in tiles wide enough to hold them; narrower leaf tiles are correctly left unlabeled per the spec's "hide labels on small nodes" rule. Text contrast is picked per-tile and reads cleanly against every fill.
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Bold dark title top-center ("icicle-basic · julia · makie · anyplot.ai"),
+        fully readable; no axis ticks/labels (intentionally hidden, appropriate for
+        an icicle chart where per-tile text carries the labeling)
+      Data: Root band (taupe/grey, FIXED_NEUTRAL) spans the top quarter with white
+        "project · 341 KB total" label. Four branches below in canonical Imprint
+        order (src=#009E73 green, docs=#C475FD lavender, tests=#4467A3 blue,
+        assets=#BD8233 ochre), each with two more rows of children lightening
+        slightly with depth. A thin taupe/grey sliver at the far right (config.json,
+        FIXED_MUTED) is correctly too narrow for a label. First categorical series
+        (src) is confirmed brand green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Same title, now in light ink, equally legible against the dark background. Same absence of axes/grid/spines.
-      Data: All four branch hues and their depth-lightness ramps are pixel-identical to the light render (green/lavender/blue/ochre unchanged) — only the root band and the muted config.json strip flip in value, since both are built from the theme-adaptive INK/MUTED tokens rather than a fixed Imprint color (flagged as a weakness). Root band is now a near-white rectangle with dark text; the far-right leaf strip is now light gray instead of dark gray. No dark-on-dark or light-on-light failures anywhere — every label stays legible because label color is chosen per-tile from the underlying fill's luminance.
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Off-white title/labels on dark tiles, dark labels on light-tinted
+        deep tiles — ink color is chosen per-tile from that tile's own luminance,
+        so nothing is dark-on-dark or light-on-light
+      Data: Confirmed pixel-identical to light render for all data fills (branch
+        hues, root taupe, config.json taupe) — only background/chrome flipped, as
+        required
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -68,55 +76,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All rendered labels are readable in both themes via per-tile contrast_ink();
-          several mid-size tiles (hooks, styles, unit, integration) fall just under
-          the visibility threshold and stay unlabeled though they could plausibly
-          fit.
+        comment: All text readable in both themes; per-tile contrast-based ink color
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data collisions in either render.
+        comment: No collisions; narrow tiles correctly suppress labels
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All tiles clearly distinguishable by hue/lightness; stroke gutters
-          separate adjacent tiles cleanly.
+        comment: Label-size threshold appropriately tuned to tile width
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are CVD-safe and no red-green pairing is used
-          as sole signal.
+        comment: Imprint palette is CVD-safe; adjacent branches distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas dimension gate passed (3200x1800); proportions balanced, nothing
-          cut off or overflowing.
+        comment: Canvas correct at 3200x1800; root band is a large uniform block
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for an icicle chart (correctly hidden); title format
-          matches spec exactly.
+        comment: Title format correct; no axis needed for this chart type
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First categorical series is #009E73 and branch order matches canonical
-          Imprint order, but the root tile and the muted ''other'' leaf use theme-adaptive
-          INK/MUTED fills that change value between light and dark, violating the
-          rule that data colors stay identical across themes.'
+        passed: true
+        comment: First series brand green, canonical order, semantic anchors used
+          correctly, both themes correct
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -124,24 +123,19 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom branch-hue + LCHab-lightness depth ramp is a deliberate, above-default
-          design; deducted for the theme-flipping root/muted fills that undercut the
-          same system.
+        comment: LCHab depth-lightening ramp beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines and decorations removed, background-colored gutters give a
-          refined, uncluttered grid of tiles.
+        comment: Spines/ticks fully hidden, clean tile borders
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size + hue + depth clearly surface which branch dominates (assets/images),
-          but there's no additional emphasis (e.g. annotation or highlight) beyond
-          the base encoding.
+        comment: Depth-lightness ramp guides the eye through hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -151,53 +145,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle layout — adjacent stacked rows, not nested treemap
-          rectangles.
+        comment: Correct icicle layout, adjacent rectangles by row
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal top-to-bottom orientation, color by hierarchy/branch,
-          labels hidden on small nodes, root at top — all present.
+        comment: Top-down orientation, color-by-hierarchy, label suppression on small
+          nodes, root at top
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Tile widths correctly proportional to value; all 31 nodes rendered,
-          including unlabeled small leaves.
+        comment: Width encodes value; rows encode depth; folder totals correctly summed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly '{spec-id} · julia · makie · anyplot.ai'; inline labels
-          serve as the legend, appropriate for this chart type.
+        comment: Title format correct; no legend needed since labels are inline
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Demonstrates varying depth, a leaf attached directly at a shallow
-          level (config.json) that stretches down, and both wide and narrow tiles.
+        comment: 4 hierarchy levels, leaf row-span stretching demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral file-system size example (small web app repo).
+        comment: Plausible, neutral file-system tree
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: KB-scale values and proportions are sensible for source files, docs,
-          tests and binary assets.
+        comment: 5-140 KB range demonstrates both thin and wide tiles well
     code_quality:
       score: 9
       max: 10
@@ -207,34 +196,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Six recursive/helper functions are more structure than a typical
-          flat anyplot script, though the recursion is genuinely required for tree
-          layout.
+        comment: Helper functions justified by recursive tree layout
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded tree, no randomness to seed.
+        comment: Fully deterministic, no randomness needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors, both used throughout.
+        comment: Only CairoMakie + Colors, both used substantively
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; complexity is proportional to the layout
-          problem being solved.
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png per convention.
+        comment: Saves plot-{THEME}.png per convention
     library_mastery:
       score: 7
       max: 10
@@ -244,15 +230,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of Figure/Axis, poly!/Rect2f, text!, hidedecorations!/hidespines!.
+        comment: Idiomatic Axis/poly!/text!/hidedecorations! usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom recursive layout and LCHab tinting are clever, but they're
-          Julia/Colors.jl techniques layered on fairly basic Makie primitives (poly!,
-          text!) rather than distinctive Makie-specific features.
+        comment: LCHab lightness ramp via Colors.jl interop
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -260,8 +244,8 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - gradient-fill
+  - minimal-chrome
   - publication-ready
