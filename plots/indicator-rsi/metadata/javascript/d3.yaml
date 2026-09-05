@@ -1,0 +1,260 @@
+library: d3
+language: javascript
+specification_id: indicator-rsi
+created: '2026-09-05T05:57:34Z'
+updated: '2026-09-05T06:10:45Z'
+generated_by: claude-sonnet
+workflow_run: 33948371041
+issue: 3229
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses are fully resolved: the ''Centerline (50)'' label now
+    uses t.inkSoft (clearly readable, ~sufficient contrast in both themes) instead
+    of the near-invisible grid rgba token, and all three threshold labels were moved
+    to the left edge (x=4) where the series has headroom, eliminating the prior right-edge
+    collision between the RSI line and the ''Oversold (30)'' label.'
+  - Correct 14-period Wilder RSI calculation from a synthetic 120-day price series,
+    fully deterministic via a fixed-seed LCG (no library RNG needed in the browser).
+  - Overbought (70-100) and oversold (0-30) zones are shaded with distinct Imprint
+    palette tints in addition to labeled dashed threshold lines at 30/70 and a dotted
+    centerline at 50 -- covers every 'Notes' requirement from the spec (fixed 0-100
+    y-axis, thresholds, optional centerline, lookback period noted in the subtitle).
+  - 'First (and only) data series correctly renders in brand green #009E73, identical
+    between light and dark renders; background, axis text, and tick chrome are correctly
+    theme-adapted.'
+  - 'Clean, idiomatic d3 usage: scaleTime/scaleLinear, a line generator with curveMonotoneX,
+    tick-line removal, and the correct mount-node contract with no animation.'
+  weaknesses:
+  - The overall visual approach (shaded rects for zones, dashed/dotted lines for thresholds)
+    is competent but generic -- easily replicated in any charting library, so library-distinctive
+    d3 features (e.g. a gradient-filled area under the line, a clip-path reveal, or
+    data-driven zone boundaries) are not on display.
+  - The sine-driven drift term (Math.sin(i/9)*0.9) makes the RSI's overbought/oversold
+    cycles visually regular/periodic rather than organically irregular -- a minor
+    realism nit, not a functional issue.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "indicator-rsi · javascript · d3 · anyplot.ai" in bold dark ink, clearly visible. Subtitle "14-period RSI on a synthetic 120-day daily close series" in soft gray, readable. X-axis "Trading Date" and Y-axis "RSI" labels dark ink, readable; tick labels (0/30/50/70/100, Jul 01/Aug 01/Sep 01) soft gray, readable. "Overbought (70)" (red) and "Oversold (30)" (blue) threshold labels are high-contrast and readable. FIXED from attempt 1: "Centerline (50)" label now renders in a proper dark soft-ink tone, clearly legible against the cream background (previously used the near-invisible grid rgba token).
+      Data: Single RSI line in brand green #009E73, 3px stroke, clearly distinguishable from the shaded overbought (light red-pink tint) and oversold (light blue-gray tint) zone backgrounds. FIXED from attempt 1: all three threshold labels were relocated to the left edge (x=4), where the series' opening values have headroom from each threshold, so the line no longer crosses through any label text (checked closely via crops at both the "Overbought" label near the series' start and the "Oversold"/"Centerline" labels lower on the axis -- no overlap in either case).
+      Legibility verdict: PASS -- all text is readable, no dark-on-dark or light-on-light failures, no text/line collisions.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, no pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all correctly flipped to light ink tones and remain fully readable. "Overbought (70)" and "Oversold (30)" threshold labels remain high-contrast (red/blue against dark bg). "Centerline (50)" label now uses a properly visible light-gray ink tone, matching the light render's fix -- no longer invisible.
+      Data: RSI line color is identical #009E73 green, confirming data-color parity between themes. Same left-edge label placement avoids any line/label overlap, consistent with the light render.
+      Legibility verdict: PASS -- both previously-flagged issues (centerline contrast, line/label overlap) are resolved; all chrome and data elements are theme-correct and collision-free.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Centerline (50) label fixed to use t.inkSoft -- now clearly readable
+          in both themes. All other text (title, subtitle, axis labels, ticks, Overbought/Oversold
+          labels) is readable and explicitly sized.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Threshold labels moved to the left edge (x=4); verified via close
+          crops that the RSI line no longer crosses any label text in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px line stroke is well-sized for a single ~106-point series; clearly
+          visible against both zone tints.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast throughout; no red-green-only signal (zones use position/label
+          + color).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, balanced portion of the canvas; margins even;
+          no clipping or overflow; canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Trading Date'' and ''RSI'' are descriptive; RSI is a unitless
+          0-100 index so no unit suffix is expected.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (identical across themes); zone tints use
+          Imprint palette members (matte red for overbought, blue for oversold --
+          a sensible semantic-exception use for accent zones, not competing categorical
+          series); background/chrome theme-correct in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful zone shading and color-coded, labeled threshold lines
+          go beyond a bare line chart; not yet publication-tier.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed, generous whitespace, subtle dashed/dotted threshold
+          styling with varied opacity; now fully consistent since the centerline label
+          is legible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shaded overbought/oversold zones plus labeled thresholds create a
+          clear visual hierarchy -- the viewer immediately sees where the series crosses
+          into extreme territory.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct RSI momentum-oscillator line chart with threshold zones.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Fixed 0-100 y-axis, 30/70 threshold lines, optional 50 centerline,
+          shaded overbought/oversold zones, lookback period noted in subtitle -- all
+          present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=trading date, Y=RSI value; full 120-day series visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; inline threshold labels
+          substitute for a legend appropriately for a single-series chart.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Series visits overbought and oversold extremes multiple times plus
+          mid-range chop; a sine-driven drift makes the cycles slightly repetitive.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible finance/technical-analysis scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: RSI values correctly bounded 0-100 via standard Wilder smoothing;
+          price walk magnitude is plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot structure; the two small helper functions
+          (lcg, computeRsi) are necessary math, not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG(42) makes the browser-generated series fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for an RSI indicator; no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract (#container, ANYPLOT_SIZE, no animation,
+          no fetch/import).
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct scaleTime/scaleLinear, line generator, axisBottom/axisLeft
+          with tickValues -- idiomatic d3.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: curveMonotoneX and manual tickValues are nice touches but the overall
+          approach (rects for zones, lines for thresholds) is generic and easily replicated
+          in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending
