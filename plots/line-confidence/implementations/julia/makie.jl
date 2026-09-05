@@ -22,8 +22,9 @@ const BRAND       = colorant"#009E73"  # Imprint palette position 1 — ALWAYS f
 # curve (point estimate) with a prediction interval that widens further out
 # on the forecast horizon, as is typical for time-series forecasts.
 days_since_launch = collect(1:60)
+noise = randn(length(days_since_launch)) .* 15
 predicted_dau = @. 5000 + 4200 * (1 - exp(-days_since_launch / 18)) +
-                   40 * sin(days_since_launch / 6)
+                   40 * sin(days_since_launch / 6) + noise
 interval_margin = @. 60 + 5.5 * days_since_launch
 lower_bound = predicted_dau .- interval_margin
 upper_bound = predicted_dau .+ interval_margin
@@ -57,26 +58,26 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
 )
 
-band!(
+band_plot = band!(
     ax, days_since_launch, lower_bound, upper_bound;
     color = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.25),
-    label = "95% prediction interval",
 )
-lines!(
+line_plot = lines!(
     ax, days_since_launch, predicted_dau;
     color     = BRAND,
     linewidth = 3,
-    label     = "Predicted DAU",
 )
 
 axislegend(
-    ax;
+    ax,
+    [line_plot, band_plot],
+    ["Predicted DAU", "95% prediction interval"];
     position        = :lt,
     backgroundcolor = ELEVATED_BG,
     framecolor      = INK_SOFT,
