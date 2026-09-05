@@ -7,9 +7,33 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Weekly hardness readings (Rockwell HRC) from two heat-treatment furnace runs.
+// Furnace B week 7 dips below the minimum spec after a refractory lining check.
 const weeks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const MIN_SPEC_HRC = 56;
 const furnaceA = [58.2, 59.1, 57.8, 60.3, 59.6, 61.2, 60.8, 62.1, 61.5, 63.0];
-const furnaceB = [55.4, 56.0, 57.3, 56.8, 58.1, 57.6, 59.0, 58.4, 59.8, 60.2];
+const furnaceB = [
+  55.4,
+  56.0,
+  57.3,
+  56.8,
+  58.1,
+  57.6,
+  {
+    y: 52.5,
+    marker: { radius: 9, fillColor: t.amber, lineColor: t.ink, lineWidth: 2 },
+    dataLabels: {
+      enabled: true,
+      format: "Refractory dip",
+      align: "right",
+      x: -12,
+      y: 18,
+      style: { color: t.ink, fontSize: "12px", fontWeight: "600", textOutline: "none" },
+    },
+  },
+  58.4,
+  59.8,
+  60.2,
+];
 
 const title = "line-markers · javascript · highcharts · anyplot.ai";
 
@@ -45,6 +69,22 @@ Highcharts.chart("container", {
     },
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      {
+        value: MIN_SPEC_HRC,
+        color: t.amber,
+        width: 1.5,
+        dashStyle: "Dash",
+        zIndex: 5,
+        label: {
+          text: `Min spec: ${MIN_SPEC_HRC} HRC`,
+          align: "left",
+          x: 4,
+          y: -6,
+          style: { color: t.inkSoft, fontSize: "12px", fontWeight: "600" },
+        },
+      },
+    ],
   },
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
@@ -61,7 +101,19 @@ Highcharts.chart("container", {
   series: [
     {
       name: "Furnace A",
-      data: furnaceA,
+      data: [
+        ...furnaceA.slice(0, -1),
+        {
+          y: furnaceA[furnaceA.length - 1],
+          dataLabels: {
+            enabled: true,
+            format: "+2.8 HRC vs B",
+            align: "center",
+            y: -18,
+            style: { color: t.ink, fontSize: "12px", fontWeight: "600", textOutline: "none" },
+          },
+        },
+      ],
       marker: { symbol: "circle" },
     },
     {
