@@ -162,14 +162,19 @@ function baseOptions(panelTitle, xTitle, yTitle) {
     credits: { enabled: false },
     title: { text: panelTitle, style: { color: t.ink, fontSize: "16px", fontWeight: "600" }, margin: 12 },
     xAxis: { title: { text: xTitle, style: { color: t.inkSoft, fontSize: "13px" } },
-             lineColor: t.inkSoft, tickColor: t.inkSoft, gridLineColor: t.grid,
+             lineColor: t.inkSoft, tickColor: t.inkSoft, gridLineColor: t.grid, gridLineWidth: 1,
              labels: { style: { color: t.inkSoft, fontSize: "12px" } } },
     yAxis: { title: { text: yTitle, style: { color: t.inkSoft, fontSize: "13px" } },
              gridLineColor: t.grid, lineColor: t.inkSoft, tickColor: t.inkSoft, tickWidth: 1,
              labels: { style: { color: t.inkSoft, fontSize: "12px" } } },
     legend: { enabled: false },
-    plotOptions: { series: { animation: false, enableMouseTracking: false } },
-    tooltip: { enabled: false },
+    plotOptions: { series: { animation: false } },
+    tooltip: {
+      enabled: true,
+      formatter: function () {
+        return `${xTitle}: ${this.x.toFixed(2)}<br/>${yTitle}: ${this.y.toFixed(2)}`;
+      },
+    },
   };
 }
 
@@ -178,7 +183,7 @@ const panel1 = baseOptions("Residuals vs Fitted", "Fitted values", "Residuals");
 panel1.yAxis.plotLines = [{ value: 0, color: t.inkSoft, dashStyle: "Dash", width: 1.5, zIndex: 2 }];
 panel1.series = [
   { name: "LOWESS", type: "spline", data: smoothCurve(fitted, residuals),
-    color: t.palette[2], lineWidth: 2.5, marker: { enabled: false } },
+    color: t.palette[2], lineWidth: 2.5, marker: { enabled: false }, enableMouseTracking: false },
   { name: "Residuals", data: scatterPoints(fitted, residuals), marker: BASE_MARKER },
 ];
 
@@ -188,7 +193,7 @@ const qMin = Math.min(...theoreticalQ, ...stdResiduals);
 const qMax = Math.max(...theoreticalQ, ...stdResiduals);
 panel2.series = [
   { name: "45° reference", type: "line", data: [[qMin, qMin], [qMax, qMax]],
-    color: t.inkSoft, dashStyle: "Dash", lineWidth: 1.5, marker: { enabled: false } },
+    color: t.inkSoft, dashStyle: "Dash", lineWidth: 1.5, marker: { enabled: false }, enableMouseTracking: false },
   { name: "Std. Residuals", data: scatterPoints(theoreticalQ, stdResiduals), marker: BASE_MARKER },
 ];
 
@@ -196,7 +201,7 @@ panel2.series = [
 const panel3 = baseOptions("Scale-Location", "Fitted values", "√|Standardized Residuals|");
 panel3.series = [
   { name: "LOWESS", type: "spline", data: smoothCurve(fitted, sqrtAbsStdResiduals),
-    color: t.palette[2], lineWidth: 2.5, marker: { enabled: false } },
+    color: t.palette[2], lineWidth: 2.5, marker: { enabled: false }, enableMouseTracking: false },
   { name: "√|Std. Resid.|", data: scatterPoints(fitted, sqrtAbsStdResiduals), marker: BASE_MARKER },
 ];
 
@@ -224,13 +229,13 @@ function labelLast(curve, text, yOffset) {
 panel4.yAxis.plotLines = [{ value: 0, color: t.inkSoft, dashStyle: "Dash", width: 1.5, zIndex: 2 }];
 panel4.series = [
   { name: "Cook's D = 0.5", type: "line", data: labelLast(cook05.pos, "0.5", 14),
-    color: t.inkSoft, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false } },
+    color: t.inkSoft, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false }, enableMouseTracking: false },
   { name: "Cook's D = 0.5 (neg)", type: "line", data: cook05.neg,
-    color: t.inkSoft, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false } },
+    color: t.inkSoft, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false }, enableMouseTracking: false },
   { name: "Cook's D = 1.0", type: "line", data: labelLast(cook10.pos, "1.0", -12),
-    color: t.amber, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false } },
+    color: t.amber, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false }, enableMouseTracking: false },
   { name: "Cook's D = 1.0 (neg)", type: "line", data: cook10.neg,
-    color: t.amber, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false } },
+    color: t.amber, dashStyle: "ShortDash", lineWidth: 1.5, marker: { enabled: false }, enableMouseTracking: false },
   { name: "Residuals", data: scatterPoints(leverage, stdResiduals), marker: BASE_MARKER },
 ];
 
