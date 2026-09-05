@@ -152,6 +152,19 @@ const compass = [
 const radii = [28, 42, 58, 76, 96];
 const pad = 5;
 
+// The chosen box must stay within the canvas (g is translated by margin.left/
+// margin.top, so the usable local-coordinate range extends margin.right/bottom
+// past iw/ih but not past the page edge) — otherwise a label near a domain
+// extreme can be pushed off the saved PNG (AR-09 edge clipping).
+const edgePad = 4;
+const boundsMinX = -margin.left + edgePad;
+const boundsMaxX = iw + margin.right - edgePad;
+const boundsMinY = -margin.top + edgePad;
+const boundsMaxY = ih + margin.bottom - edgePad;
+function inCanvasBounds(box) {
+  return box.x0 >= boundsMinX && box.x1 <= boundsMaxX && box.y0 >= boundsMinY && box.y1 <= boundsMaxY;
+}
+
 function labelBox(px, py, dir, r, w, h) {
   const anchorX = px + dir.dx * r;
   const anchorY = py + dir.dy * r;
@@ -177,6 +190,7 @@ const placed = labeledPoints.map((d) => {
   outer: for (const r of radii) {
     for (const dir of compass) {
       const box = labelBox(d.px, d.py, dir, r, w, labelHeight);
+      if (!inCanvasBounds(box)) continue;
       const hitsMarker = markerBoxes.some((m) => m.label !== d.label && overlaps(box, m));
       const hitsLabel = placedBoxes.some((p) => overlaps(box, p));
       if (!hitsMarker && !hitsLabel) {
@@ -185,7 +199,36 @@ const placed = labeledPoints.map((d) => {
       }
     }
   }
-  if (!chosen) chosen = { box: labelBox(d.px, d.py, compass[0], radii[radii.length - 1], w, labelHeight), dir: compass[0], r: radii[radii.length - 1] };
+  // Relaxed pass: allow overlap but never allow the label to run off-canvas —
+  // a collision is a legibility nit, an edge clip is an auto-reject.
+  if (!chosen) {
+    outerRelaxed: for (const r of radii) {
+      for (const dir of compass) {
+        const box = labelBox(d.px, d.py, dir, r, w, labelHeight);
+        if (inCanvasBounds(box)) {
+          chosen = { box, dir, r };
+          break outerRelaxed;
+        }
+      }
+    }
+  }
+  if (!chosen) {
+    const dir = compass[0];
+    const r = radii[radii.length - 1];
+    let box = labelBox(d.px, d.py, dir, r, w, labelHeight);
+    let shiftX = 0;
+    if (box.x1 > boundsMaxX) shiftX = boundsMaxX - box.x1;
+    else if (box.x0 < boundsMinX) shiftX = boundsMinX - box.x0;
+    let shiftY = 0;
+    if (box.y1 > boundsMaxY) shiftY = boundsMaxY - box.y1;
+    else if (box.y0 < boundsMinY) shiftY = boundsMinY - box.y0;
+    box = {
+      x0: box.x0 + shiftX, x1: box.x1 + shiftX,
+      y0: box.y0 + shiftY, y1: box.y1 + shiftY,
+      anchorX: box.anchorX + shiftX, anchorY: box.anchorY + shiftY,
+    };
+    chosen = { box, dir, r };
+  }
   placedBoxes.push(chosen.box);
   return {
     ...d,
@@ -231,7 +274,7 @@ svg.append("text")
   .attr("y", 56)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
+  .style("font-size", "26px")
   .style("font-weight", "600")
   .style("font-family", "sans-serif")
   .text("scatter-annotated · javascript · d3 · anyplot.ai");
