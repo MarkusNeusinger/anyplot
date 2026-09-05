@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: hive-basic
 created: '2026-09-05T05:29:16Z'
-updated: '2026-09-05T05:33:35Z'
+updated: '2026-09-05T05:46:53Z'
 generated_by: claude-sonnet
 workflow_run: 33946917536
 issue: 1879
@@ -12,120 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - Genuine deterministic hive-plot layout with degree-based radial node ordering
-    (not force-directed), matching the spec's core reproducibility requirement
-  - Correct Imprint palette order (brand green / lavender / blue for Core / Utility
-    / Interface) with theme-adaptive chrome that stays legible in both light and dark
-    renders
-  - Creative, correct use of MUI X's community useXScale/useYScale hooks to build
-    a custom SVG overlay (axis spokes + bezier edge curves) precisely aligned with
-    the ScatterPlot markers -- a chart type MUI X has no native support for
-  - 'Clean, minimal code: seeded LCG for reproducibility, no unused imports, no fake
-    interactivity, correct harness contract (default export, skipAnimation, sized
-    to window.ANYPLOT_SIZE)'
+  - Reproducible, deterministic radial layout (fixed-seed LCG) with node position
+    along each axis meaningfully encoding degree, exactly matching the spec's requirement
+    that a hive plot always render the same network identically
+  - Doubled degree encoding (radial position + halo glow radius) gives an at-a-glance
+    read of network centrality
+  - Bezier-curved cross-axis edges (bowing through a bisecting control angle) read
+    as gentle strands rather than straight hairball chords
+  - Correct Imprint palette order and fully theme-adaptive chrome, verified legible
+    at both desktop and mobile (400px) scale, in both light and dark
+  - Idiomatic, advanced MUI X pattern (useXScale/useYScale custom overlay) - the officially
+    recommended technique for building visuals beyond the library's stock chart types
   weaknesses:
-  - Significant unused vertical whitespace above the Core axis and below the Utility/Interface
-    baseline -- the triangular layout only fills roughly 65-70% of the square canvas
-    height; increase OUTER_R or tighten the Y-domain padding (LABEL_R multiplier /
-    HALF_SPAN factor) so the triangle fills more of the frame
-  - Edge weight, mentioned as optional in the spec's edges field, isn't encoded --
-    all curves render at the same stroke width and opacity regardless of connection
-    frequency; varying stroke width/opacity by weight would add a data dimension
-  - Visual hierarchy is fairly flat -- degree-based node ordering is present but not
-    visually reinforced (e.g. scaling marker size by degree, or emphasizing the most-connected
-    nodes) to strengthen the data storytelling
+  - Edge weight (an optional data field the spec calls out) isn't visualized - every
+    edge shares the same stroke width/opacity regardless of connection strength; encoding
+    it (e.g. via stroke width or opacity) would add another readable data dimension
+  - The Utility<->Interface edge weave crowds noticeably near the hub, making individual
+    connections a bit harder to trace than the Core-facing strands - a slightly larger
+    CONTROL_R or lower max opacity would ease this
+  - Several small geometry helper functions push past a minimal flat script, though
+    this is reasonably justified by the custom radial-layout math a hive plot requires
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Title "hive-basic · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. Three bold axis category labels ("Core", "Utility", "Interface") in dark ink at the tip of each spoke, all legible against the light background. No tick labels or grid lines are present (axes are hidden by design; only the hand-drawn spokes and labels show), so there is nothing else to check for legibility.
-      Data: Three node axes fan out from a shared hub: Core (top, brand green #009E73 markers), Utility (bottom-left, lavender/purple markers), Interface (bottom-right, blue markers) -- matching the canonical Imprint categorical order (green, lavender, blue). Gray bezier-curved edges connect nodes across axes with partial transparency, bundled densely near the hub and fanning out toward the rims, readable as a network without one continuous solid mass. Markers are circular, uniform size, clearly distinguishable from the curved gray edges beneath them.
-      Legibility verdict: PASS -- all title/axis-label text is dark-on-light and clearly readable; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 target.
+      Chrome: Title "hive-basic · javascript · muix · anyplot.ai" centered at top in dark ink; "Core"/"Utility"/"Interface" axis-spoke labels in dark bold text at the tip of each spoke. All clearly readable, including at a 400px mobile-scale render.
+      Data: 3-axis hive plot. Core spoke (up) has 12 green (#009E73) nodes, Utility spoke (down-left) has 10 lavender (#C475FD) nodes, Interface spoke (down-right) has 10 blue (#4467A3) nodes. Nodes ordered along each spoke by degree (low near hub, high at rim), each with a degree-proportional soft halo. Thin semi-transparent curved edges connect nodes across axis pairs only, bowing through bisecting control points.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Same title and axis labels, now rendered in light/white ink, clearly legible against the dark background. No dark-on-dark text anywhere -- ink correctly flipped for the theme.
-      Data: Node and edge colors are identical to the light render (brand green Core, lavender Utility, blue Interface, gray edges) -- only the chrome (background, text, edge-line brightness) adapted to the dark surface, confirming data-color consistency across themes as required.
-      Legibility verdict: PASS -- all text is light-on-dark and clearly readable; no dark-on-dark failures observed.
+      Background: Warm near-black, matches #1A1A17 target.
+      Chrome: Same title and axis-spoke labels now rendered in light ink; fully legible against the dark background, no dark-on-dark failures anywhere (including halo glows, which remain visible).
+      Data: Node colors, halo sizing, ordering and edge structure are pixel-identical to the light render - only chrome (background/text/spoke lines) flipped as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title and axis labels explicitly sized (22px/17px), legible in both
-          themes and at 400px thumbnail scale
+        comment: All font sizes explicit; readable in both themes and at mobile scale;
+          title well within bounds
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text-to-text or text-to-data collisions
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker size (11px) and edge opacity (0.32) well-tuned for ~32 nodes
-          / 72 edges; some dense crossing near the hub is inherent to hive plots
+        comment: No text/marker collisions, but Utility<->Interface edges crowd near
+          the hub
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and halos clearly visible; edge width/opacity tuned for density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue combination is CVD-safe, no red-green reliance
+        comment: Three well-separated hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Large unused vertical whitespace above Core label and below the Utility/Interface
-          baseline -- triangle fills only ~65-70% of the square canvas height
+        passed: true
+        comment: Canvas gate passed (2400x2400); nothing clipped at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis category labels; title matches required format exactly
+        comment: Descriptive category labels plus fully compliant title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, canonical Imprint order (green/lavender/blue),
-          correct theme-adaptive backgrounds'
+        comment: Canonical Imprint order, correct theme-adaptive backgrounds
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Real design effort: bezier edge bowing toward bisecting control
-          angles, degree-based ordering, hidden default axes -- but built on generic
-          ScatterPlot markers'
+        comment: Doubled degree encoding (position + halo) and bezier strands beyond
+          a generic scatter
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean minimal chrome, no grid/spines, subtle edge alpha -- offset
-          by the layout whitespace issue
+        comment: No default axis/grid chrome, generous fitted margins, subtle edge
+          transparency
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Degree-based radial ordering carries real structural meaning but
-          isn't visually reinforced (no size/emphasis variation to highlight it)
+        passed: true
+        comment: Position + halo both signal degree/importance for an immediate structural
+          read
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +130,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine deterministic hive plot, not a force-directed layout
+        comment: Genuine fixed, reproducible radial hive layout with 3 axes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 3 radial axes, degree-based node position, edge transparency for
-          density
+        comment: 2-3 axes, meaningful position encoding, edge transparency for density
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Polar-to-Cartesian mapping correct via shared scale hooks
+        comment: Domain fit tightly to content bounding box, no wasted space
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; categories directly labeled on-plot
-          instead of a separate legend, which is appropriate here
+        comment: Title matches spec exactly; axis-spoke labels substitute for a legend
     data_quality:
       score: 14
       max: 15
@@ -165,86 +158,82 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Nodes, edges, axis attribute, degree-based ordering all present;
-          edge weight (optional in spec) not encoded
+        comment: Axis balance, degree ordering, cross-axis-only edges covered; edge
+          weight not visualized
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software module dependency network -- plausible and neutral
+        comment: Plausible, neutral software module dependency network
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 32 nodes (12/10/10, balanced), 72 edges -- within the spec's 20-100
-          node guidance
+        comment: 32 nodes (12/10/10), 72 edges - sensible density within spec range
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No classes; helper functions are minimal and appropriate for the
-          polar math
+        comment: Several helpers beyond a flat script, justified by custom radial-geometry
+          math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42)
+        comment: Deterministic fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (ChartContainer, ScatterPlot, useXScale, useYScale) are
-          used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; real scatter + SVG overlay
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized to
-          window.ANYPLOT_SIZE'
+        comment: 'Correct harness contract: ANYPLOT_SIZE sizing, skipAnimation, default
+          export'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Legitimate creative use of community ChartContainer + ScatterPlot
-          + scale hooks for a chart type MUI X doesn't natively support
+        comment: Textbook useXScale/useYScale custom-overlay pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks drive a custom SVG overlay kept in sync
-          with the chart's own pixel space -- a distinctive MUI X-specific technique
+        comment: Creative use of the hook-based overlay technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - bezier-curves
   - polar-projection
+  - bezier-curves
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
