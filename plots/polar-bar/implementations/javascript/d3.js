@@ -75,8 +75,8 @@ const tickValues = d3.range(1, 5).map((k) => Math.round((domainMax * k) / 4));
 const gapAngle = angle.step() - angle.bandwidth();
 const tickAngle = angle("N") - gapAngle / 2;
 
-const grid = svg.append("g");
-grid
+const gridCircles = svg.append("g");
+gridCircles
   .selectAll("circle")
   .data(tickValues)
   .join("circle")
@@ -86,18 +86,6 @@ grid
   .attr("fill", "none")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
-
-grid
-  .selectAll("text")
-  .data(tickValues)
-  .join("text")
-  .attr("x", (d) => toPoint(tickAngle, radius(d))[0])
-  .attr("y", (d) => toPoint(tickAngle, radius(d))[1])
-  .attr("text-anchor", "middle")
-  .attr("dy", "0.35em")
-  .style("font-size", "13px")
-  .attr("fill", t.inkSoft)
-  .text((d) => `${d} obs`);
 
 // --- Stacked radial bars --------------------------------------------------------
 const stacked = d3.stack().keys(SPEED_BINS)(windData);
@@ -122,6 +110,26 @@ svg
   .attr("d", arcGen)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
+
+// Grid tick labels are drawn after the bars (and with a page-background halo)
+// so they stay legible even where the angular gap at small radii is narrower
+// than the label text.
+const gridLabels = svg.append("g");
+gridLabels
+  .selectAll("text")
+  .data(tickValues)
+  .join("text")
+  .attr("x", (d) => toPoint(tickAngle, radius(d))[0])
+  .attr("y", (d) => toPoint(tickAngle, radius(d))[1])
+  .attr("text-anchor", "middle")
+  .attr("dy", "0.35em")
+  .style("font-size", "13px")
+  .style("paint-order", "stroke")
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 3)
+  .attr("stroke-linejoin", "round")
+  .attr("fill", t.inkSoft)
+  .text((d) => `${d} obs`);
 
 // --- Compass direction labels -----------------------------------------------
 const compass = svg.append("g");
