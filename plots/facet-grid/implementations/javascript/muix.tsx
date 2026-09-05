@@ -18,6 +18,17 @@ const t = window.ANYPLOT_TOKENS;
 const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
 const TITLE = "facet-grid · javascript · muix · anyplot.ai";
 
+// Moderate per-facet density (~45 pts) → alpha ~0.8 + a thin edge stroke keeps
+// overlapping points in the denser clusters (Adelie, Gentoo-male) distinguishable.
+function hexToRgba(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+const MARKER_COLOR = hexToRgba(t.palette[0], 0.8);
+
 // --- Deterministic PRNG (LCG) + Box-Muller normal --------------------------
 // The browser has no seeded Math.random(), so every facet's sample is drawn
 // from one shared, deterministic generator.
@@ -80,7 +91,7 @@ const X_LABEL_H = 32;
 const COL_STRIP_H = 40;
 const ROW_STRIP_W = 88;
 const GAP = 10;
-const TICK_LABEL_STYLE = { fontSize: 12 };
+const TICK_LABEL_STYLE = { fontSize: 14 };
 const PANEL_MARGIN = { left: 46, right: 10, top: 8, bottom: 30 };
 
 function StripLabel({ children, rotate }) {
@@ -163,11 +174,12 @@ export default function Chart() {
                         {
                           id: `${species}-${sex}`,
                           type: "scatter",
-                          color: t.palette[0],
+                          color: MARKER_COLOR,
                           markerSize: 6,
                           data: facet.points,
                         },
                       ]}
+                      sx={{ "& .MuiScatter-mark": { stroke: t.pageBg, strokeWidth: 1 } }}
                     >
                       <ChartsGrid horizontal vertical sx={{ "& .MuiChartsGrid-line": { stroke: t.grid } }} />
                       <ScatterPlot />
