@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: errorbar-asymmetric
 created: '2026-09-05T01:07:20Z'
-updated: '2026-09-05T01:12:25Z'
+updated: '2026-09-05T01:24:22Z'
 generated_by: claude-sonnet
 workflow_run: 33934944472
 issue: 2781
@@ -12,47 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
   - Correct, idiomatic use of ECharts' custom series `renderItem` API to build genuine
     asymmetric error bars (vertical line + two end caps) via `api.coord`/`api.size`
     — the right approach since ECharts has no native error-bar series type
+  - New variable stroke-weight encoding (2-4.5px, scaled by total interval width per
+    quarter) is a real, visually-perceptible redundant encoding — measured ~4px on
+    Q1 vs ~9px on Q6 in the rendered PNG — that lets the widening-uncertainty trend
+    read at a glance, directly answering the prior review's DE-03 storytelling weakness
+  - Bold title + new subtitle ('Bars mark the 10th-90th percentile forecast range
+    per quarter') adds typographic hierarchy and reinforces the spec's requirement
+    to explain what the asymmetric bounds represent, beyond the legend alone
+  - Data narrative comment now accurately matches the generated data (Q3 supply-chain
+    risk spike causing a temporary widening before easing) — previously the comment
+    claimed a monotonic downside-risk trend that contradicted the actual non-monotonic
+    errorLower array
   - 'Clean theme-adaptive chrome: hidden y-axis line, subtle horizontal-only gridlines,
     correctly mapped ANYPLOT_TOKENS for both light and dark renders, with identical
     brand-green data color across themes'
-  - Marker and line sizing well-matched to the sparse 6-point dataset (20px markers,
-    3px lines with caps) — clearly visible without overplotting
-  - Legend explicitly explains what the bounds represent ('10th-90th percentile range'),
-    directly satisfying the spec's note to clarify asymmetric bound meaning
-  - Realistic, neutral business-forecast scenario with genuinely varying (non-uniform)
-    asymmetric error magnitudes per quarter, including one bound crossing zero — good
-    feature coverage
+  - Realistic, neutral business-forecast scenario with genuinely varying asymmetric
+    error magnitudes per quarter, including one bound (Q3) dipping below 0%
   weaknesses:
-  - The chart relies on a single flat green across bars, caps, markers, and legend
-    swatch — correct per palette rules but visually plain; consider emphasizing the
-    widening-uncertainty trend (e.g. subtle callout on the highest-uncertainty quarter)
-    to add data storytelling (DE-03)
-  - Visual refinement is clean but generic beyond the hidden axis line and horizontal
-    gridlines — a touch more polish (e.g. a subtitle stating the percentile convention,
-    or slightly refined legend swatch) would lift DE-02
-  - Title occupies only ~35% of canvas width at fontsize 22 — comfortably readable
-    but well under the style guide's 50-70% target for a title this format; a modestly
-    larger fontsize (~26-28) would improve visual balance without risking overflow
-  - Code comment claims 'downside risk shrinks while upside potential grows' but errorLower
-    is non-monotonic (1.5, 2.0, 3.2, 1.8, 2.5, 3.0 across Q1-Q6) — the narrative doesn't
-    fully match the generated data; tighten the comment or the data trend for consistency
+  - The chart still relies on a single flat green across bars, caps, markers, and
+    legend swatch — correct per palette rules but visually plain; DE-01 aesthetic
+    sophistication remains at 'well-configured default' level despite the added subtitle
+    and bold title
+  - Title now occupies ~43% of canvas width at fontSize 27 — up from ~35% at fontSize
+    22, but still noticeably under the 50-70% guideline range for a title this length;
+    not a hard deduction since there is no overflow or clipping, but a further fontSize
+    bump (~30-32) would improve visual balance
+  - Legend swatches are both the identical brand green, so the legend distinguishes
+    entries only by icon shape/label text rather than color — acceptable per palette
+    rules (single series family) but slightly reduces the intuitive scan-ability of
+    the two-entry legend
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold dark title "errorbar-asymmetric · javascript · echarts · anyplot.ai" centered at top; legend below it with two entries ("10th-90th percentile range" swatch, "Point forecast" dot); y-axis title "Revenue growth (%)" rotated on the left; x-axis title "Forecast quarter" centered below; tick labels in soft dark gray on both axes; a slightly bolder horizontal line marks the 0% baseline. All text is clearly readable against the light background — no light-on-light issues found; margins are generous with no clipping at any canvas edge (verified via crops of top/left/bottom regions).
-      Data: All error bars, caps, and point-forecast markers render in brand green (#009E73), the required first-series color; markers have a subtle pageBg-colored border for definition. Six quarters (Q1-Q6) each show a distinct upper/lower error magnitude — clearly asymmetric (e.g. Q3's bar extends much further below its point than above, and dips below 0%).
+      Background: Warm off-white, matches #FAF8F1, not pure white, not dark.
+      Chrome: Bold dark title "errorbar-asymmetric · javascript · echarts · anyplot.ai" centered at top (measured ~43% of canvas width, no clipping), with a new smaller subtitle below it explaining the percentile convention. Legend sits below the subtitle with two entries ("10th-90th percentile range" swatch, "Point forecast" dot), no overlap with the title/subtitle above or the plot area below. Y-axis title "Revenue growth (%)" rotated on the left; x-axis title "Forecast quarter" centered below; tick labels in soft dark gray on both axes; a slightly bolder horizontal line marks the 0% baseline. All text is clearly readable against the light background — no light-on-light issues found; margins are generous with no clipping at any canvas edge.
+      Data: All error bars, caps, and point-forecast markers render in brand green (#009E73), the required first-series color; markers have a subtle pageBg-colored border for definition. Six quarters (Q1-Q6) each show a distinct upper/lower error magnitude — clearly asymmetric (e.g. Q3's bar extends much further below its point than above, and dips below 0%). New in this attempt: the error-bar stroke weight now visibly thickens from Q1 (thin, ~4px) to Q6 (thick, ~9px), tracking the growing total interval width — a real, measurable, redundant visual encoding of the widening-uncertainty trend.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title, legend, and axis labels now rendered in light text (white/light gray) against the dark background; gridlines are faint and still visible; the 0% baseline line is light-colored. No dark-on-dark failures — every text element remains legible.
-      Data: Error bars, caps, and markers are the identical brand green (#009E73) as in the light render — only the chrome (background, text, grid) flipped, per the theme-adaptive rule. Layout, spacing, and data positions are pixel-identical to the light render.
+      Background: Warm near-black, matches #1A1A17, not pure black, not light.
+      Chrome: Same title, subtitle, legend, and axis labels now rendered in light text (white/light gray) against the dark background; gridlines are faint and still visible; the 0% baseline line is light-colored. No dark-on-dark failures — every text element remains legible.
+      Data: Error bars, caps, and markers are the identical brand green (#009E73) as in the light render — only the chrome (background, text, grid) flipped, per the theme-adaptive rule. Layout, spacing, data positions, and the variable stroke-weight encoding are pixel-identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -64,22 +69,26 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; title comfortably
-          fits but sits smaller (~35% of canvas width) than the 50-70% target for
-          this title format
+        comment: Explicit font sizes throughout (title 27 bold + 15 subtitle, axis
+          names 16, ticks 14), readable in both themes with no overlap or clipping;
+          title now ~43% of canvas width (up from ~35%), still on the smaller side
+          of the 50-70% guideline but not disqualifying since there is no overflow
+          or squeeze
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: Title, subtitle, legend, axes, and data are all cleanly separated
+          in both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 20px markers and 3px capped error bars are well-sized for the sparse
-          6-point dataset
+        comment: 20px markers and variable-weight (2-4.5px) capped error bars are
+          well-sized for the sparse 6-point dataset; measured rendered thickness ~4px
+          (Q1) to ~9px (Q6)
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -92,8 +101,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses ~90%+ of the canvas, balanced margins, nothing cut
-          off
+        comment: Plot area occupies roughly 60-65% of the canvas with balanced margins;
+          nothing cut off even after the grid top was pushed down to 190 for the subtitle/legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,7 +117,7 @@ review:
         comment: 'First series is #009E73 in both renders; backgrounds and chrome
           are theme-correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -116,22 +125,26 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured but monotone single-color look; no additional design
-          flourish beyond correct palette use
+        comment: Well-configured but still monochrome single-color look; bold title
+          and subtitle add polish but no additional palette or typographic sophistication
+          beyond that
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Axis line hidden, subtle horizontal-only grid, generous whitespace
-          — good but not exceptional refinement
+        comment: Hidden y-axis line, subtle horizontal-only grid, new subtitle, refined
+          roundRect legend icon, generous whitespace — good refinement though not
+          exceptional
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data is displayed accurately but with no emphasis or annotation calling
-          out the widening-uncertainty trend
+        passed: true
+        comment: New variable-stroke-weight encoding (measured ~4px to ~9px across
+          quarters) creates a real, visible size-based hierarchy that guides the reader
+          toward the widening-uncertainty trend — directly addresses the prior review's
+          flagged weakness
     spec_compliance:
       score: 15
       max: 15
@@ -147,8 +160,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Visible caps, legend explains the percentile-range meaning, genuinely
-          asymmetric bounds
+        comment: Visible caps, legend and subtitle explain the percentile-range meaning,
+          genuinely asymmetric bounds
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -163,17 +176,17 @@ review:
         comment: Title format exactly matches the mandated pattern; legend labels
           match the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Distinct asymmetric magnitudes per quarter including a bound crossing
-          zero; minor mismatch between code comment narrative and actual errorLower
-          trend
+          zero; code comment narrative now correctly matches the non-monotonic errorLower
+          trend (Q3 supply-chain spike)
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -195,8 +208,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/init/option flow; the one helper function is
-          the required custom renderItem
+        comment: Linear imports/data/init/option flow; the two helper functions (renderErrorBar,
+          lineWidthFor) are appropriate to the custom-series approach
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -239,7 +252,7 @@ review:
         passed: true
         comment: Leverages ECharts' custom renderItem/api.coord coordinate-transform
           API, fairly distinctive to this library
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
