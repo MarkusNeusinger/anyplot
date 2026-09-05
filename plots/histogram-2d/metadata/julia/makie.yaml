@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: histogram-2d
+created: '2026-09-05T03:59:20Z'
+updated: '2026-09-05T04:12:09Z'
+generated_by: claude-sonnet
+workflow_run: 33943000609
+issue: 2012
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Log color scale (colorscale = log10) is now applied to the heatmap, resolving
+    the prior weakness where the linear mapping compressed the sparse outer lobes
+    into a single flat green — the tails now show a visible gradient from green through
+    teal toward blue.
+  - Bin count reduced from 42 to 32, aggregating more points per bin and visibly reducing
+    the patchy/checkerboard look flagged in the previous review.
+  - Colorbar tick label size (14pt) now explicitly matches the main-axis tick label
+    size (14pt), fixing the previous 'colorbar ticks smaller than axis ticks' finding.
+  - Marginal histograms (top/right), linked to the main axes via linkxaxes!/linkyaxes!,
+    add valuable univariate context per the spec's optional suggestion, with decorations/spines
+    fully hidden for a clean look.
+  - Correlated equity/bond-returns dataset (20,000 points, correlation 0.65) is realistic,
+    neutral, and appropriately scaled for a financial 2D histogram use case.
+  - Theme tokens are threaded consistently through the main axis, both marginal axes,
+    and the colorbar; both renders are fully legible with no dark-on-dark or light-on-light
+    failures.
+  - Data colors (Imprint green-to-blue sequential heatmap, brand-green marginals)
+    are pixel-identical between light and dark renders; only chrome flips as required.
+  weaknesses:
+  - Some scattered background-colored (zero-count) gaps remain inside the density
+    lobes even at 32x32 resolution — e.g. the upper lobe around x=0-1, y=1.8-2.3 still
+    shows isolated background-colored cells. Coarsening slightly further (e.g. ~24-28
+    bins) or accepting this as a faithful sparse-count artifact are both reasonable;
+    if kept, it's a minor, not a blocking, visual quirk.
+  - '`using ColorSchemes` is imported but never referenced directly in the script
+    (only `cgrad` from Makie is used, and `IMPRINT_SEQ`/colors come from `Colors`/`colorant"..."`)
+    — verify whether it''s actually required for `cgrad` to resolve; if not, remove
+    the unused import.'
+  - 'Data Storytelling could go further: the plot shows the joint density and marginals
+    clearly but doesn''t call out the ~0.65 correlation numerically or visually (e.g.,
+    no diagonal reference line or correlation annotation) beyond the shape of the
+    cloud itself.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec target — not pure white.
+      Chrome: Title "histogram-2d · julia · makie · anyplot.ai" in bold dark ink, centered top and clearly visible. X-axis label "Equity Daily Return (%)" and y-axis label "Bond Daily Return (%)" in dark ink; tick labels in softer gray-brown ink, all fully readable. Colorbar labeled "Count" on the right with a log-scaled (10^0.0 to 10^2.0-ish) tick ladder, now the same 14pt size as the main-axis tick labels — no longer undersized relative to the axes.
+      Data: Main panel is a 32x32-bin 2D histogram heatmap of correlated bivariate-normal data (equity vs. bond daily returns), rendered with the Imprint sequential colormap (brand green #009E73 at low counts fading to blue #4467A3 at the density peak near the origin) on a log10 color scale, which now reveals visible gradation in the sparse outer lobes instead of a flat green. Empty (zero-count) bins render as page background rather than the colormap's low end, producing an organic "petal"-shaped cloud; a handful of scattered background-colored gaps remain inside the lobes (e.g. near x=0-1, y=1.8-2.3) but are less prominent than before due to the coarser 32-bin grid. Marginal histograms above (x) and to the right (y), both filled in brand green, share scales with the main panel via linked axes; their own spines/ticks are fully hidden.
+      Legibility verdict: PASS — no text is unreadable, no dark-on-light or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec target — not pure black.
+      Chrome: Same title, axis labels, tick labels, and colorbar label/ticks, now rendered in light ink (title/labels) and soft light-gray (tick labels), all clearly legible against the dark background — no dark-on-dark failures anywhere.
+      Data: Identical green-to-blue heatmap coloring, identical log10 color scale, and identical brand-green marginal histograms as the light render — only the chrome (background, text, spines) flipped, confirming the data colors are theme-invariant. The same scattered zero-count gaps in the sparse outer lobes are visible here too, at the same data locations.
+      Legibility verdict: PASS — all text and data elements read clearly on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; colorbar tick labels now match main-axis
+          tick label size (14pt), fixing the prior undersized-colorbar-ticks finding
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or panels
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Log color scale reveals structure in the sparse outer lobes; density
+          shape reads clearly, though a few scattered zero-count gaps remain within
+          the lobes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue mapping, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 canvas gate passed; main/marginal panel proportions balanced,
+          no cut-off content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (%), clear canonical title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, sequential heatmap uses Imprint green-to-blue
+          cgrad, correct theme-adaptive backgrounds/chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Log-scale colorbar, marginal histograms, and NaN-as-background trick
+          show clearly above-baseline polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Spines/grid removed appropriately on main axis; decorations fully
+          hidden on marginal axes
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Density focal point plus marginal context guides the viewer, but
+          the ~0.65 correlation isn't called out explicitly (e.g. no reference annotation)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D histogram heatmap with rectangular bins
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar, bins parameter, log color scale for wide density range,
+          and optional marginal histograms all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches canonical format exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Joint density, marginal context, log-scaled colorbar, and outlier
+          tails all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Correlated equity/bond daily returns, neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Daily return percentages and correlation are in a sensible range
+          for the asset classes
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: '`using ColorSchemes` appears unused — cgrad comes from Makie and
+          colors from Colors.jl'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via px_per_unit=2
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Excellent use of Makie's grid layout, linked axes, hidedecorations!/hidespines!,
+          and Colorbar API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: NaN-as-nan_color trick, linked marginal axes, and log10 colorscale
+          are distinctive Makie usage, though not maximal
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - marginal-histograms
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap

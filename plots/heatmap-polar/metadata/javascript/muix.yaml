@@ -1,0 +1,276 @@
+library: muix
+language: javascript
+specification_id: heatmap-polar
+created: '2026-09-05T03:42:44Z'
+updated: '2026-09-05T04:00:06Z'
+generated_by: claude-sonnet
+workflow_run: 33942221499
+issue: 5244
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Angular gap from attempt 1 is gone -- wedges now tile the full 0-360 degrees with
+    no seam, restoring the cyclic-continuity guarantee (hour 23 and hour 0 sit visibly
+    adjacent) that is the spec's core reason to prefer a polar heatmap over a rectangular
+    one
+  - Day-of-week labels were relocated to a thin radial spoke line at the bottom (180
+    deg) instead of an angular gap -- they no longer interrupt the wedge geometry,
+    and a paint-order stroke halo keeps them legible over whichever wedge color they
+    land on
+  - Radial (day-of-week) contrast was deliberately sharpened by giving each day a
+    distinct baseline-traffic floor (14/18/22/26/31/27/19) instead of a flat constant
+    -- pixel sampling across the rendered PNG confirms real ring-to-ring differentiation
+    (e.g. a distinct Saturday ~1pm hotspot, and a visible Fri/Sat midnight nightlife
+    bump vs other days)
+  - Legend bottom margin increased (130 -> 185) so the ContinuousColorLegend now has
+    comfortable breathing room instead of sitting tight against the canvas edge
+  - Fully custom SVG polar-wedge composition built directly on ChartContainer/useDrawingArea
+    since community MUI X has no polar coordinate system or Heatmap component -- genuinely
+    solves the 'MUI X can't express this' problem instead of faking it
+  - Real, data-bound ContinuousColorLegend wired to MUI X's zAxis colorMap (not a
+    drawn stand-in), with meaningful min/max value labels
+  - Correct Imprint sequential palette (imprint_seq stops) with identical data colors
+    between light and dark renders; only chrome flips
+  - Deterministic, realistic hourly-traffic data generator (gaussian-based weekday/weekend/nightlife
+    structure), fully reproducible with no RNG
+  - Correct mandated title format, skipAnimation set, default export, sized from window.ANYPLOT_SIZE
+    per the harness contract
+  weaknesses:
+  - Day-of-week labels (14px, on the radial spoke) become blurry and hard to make
+    out at the ~400px mobile-width render -- the halo stroke helps at full resolution
+    but the glyphs are too small once downscaled; consider bumping to ~16-18px or
+    adding a bit more radial spacing
+  - Radial (day-of-week) value contrast, while now mathematically real (confirmed
+    via pixel sampling -- e.g. a distinct Saturday ~1pm hotspot and a Fri/Sat midnight
+    nightlife band), is still subtle to a quick glance because the dominant visual
+    signal is the angular (hour-of-day) gradient; a slightly wider day-to-day baseline
+    spread or thicker ring-separator strokes would make the second data dimension
+    read faster
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Title "Website Traffic by Hour & Day · heatmap-polar · javascript · muix · anyplot.ai" in dark ink at top, clearly readable, spanning a moderate proportion of the width (fontsize scaled down for the descriptive-prefix + spec-id length, as expected). Hour tick labels (12am top, 6am right, 12pm bottom, 6pm left) in soft dark gray at their clock positions, readable. Day-of-week labels (Mon innermost to Sun outermost) run along a thin radial spoke line at the bottom (12pm direction), bold dark ink with a light halo stroke, legible against whichever wedge color sits behind them. A horizontal gradient colorbar legend below the chart shows "14 visits/hr" / "134 visits/hr" end labels in dark ink, readable, with comfortable margin to the bottom edge.
+      Data: A full, unbroken 360-degree wheel of 7 concentric rings (Mon innermost -> Sun outermost) x 24 angular wedges (hours) -- no gap at the 12am seam. Colors run on a green-to-teal-to-blue sequential scale (imprint_seq): a bright-green band near the morning hours, a distinct blue patch confirmed via pixel sampling at Saturday ~1pm (the highest-value cell), and a slightly-elevated blue tint near Fri/Sat midnight (nightlife bump). Thin off-white strokes separate every wedge cell cleanly.
+      Legibility verdict: PASS -- no light-on-light text found; day labels are legible at full resolution but become small at mobile (~400px) scale (see weaknesses).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Same title, hour tick labels, day-spoke labels, and legend labels as the light render, now rendered in light ink against the dark background -- all clearly legible. Day labels use a dark halo stroke that still contrasts against the colored wedges. No dark-on-dark text found.
+      Data: Identical wedge geometry and identical green-to-blue sequential colors as the light render -- confirms only chrome (background + text color) flipped between themes; data colors are unchanged, including the same Saturday ~1pm hotspot and Fri/Sat midnight nightlife band.
+      Legibility verdict: PASS -- no dark-on-dark text found.
+
+    Cross-render check: the continuous colorbar gradient and all 168 wedge colors are pixel-identical between the two renders; only background, text, and stroke-halo colors flipped, matching the theme-adaptive-chrome requirement.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, hour ticks, day-spoke labels, and legend text all readable
+          in both themes at full resolution; day labels (14px) get hard to read once
+          downscaled to ~400px mobile width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data collisions in either render; day-label
+          spoke sits cleanly on the hour-11/12 wedge boundary without colliding with
+          the 12pm hour tick
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 168 wedges with thicker (2.5px) background-colored borders keep cell
+          density readable; sequential scale distinguishable across the range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential imprint_seq gradient is CVD-safe; no red-green
+          used as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift); nothing clipped; legend now has comfortable
+          bottom margin after the 130->185 increase
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive mandated title; hour ticks at readable clock intervals;
+          legend labeled with units (visits/hr)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_seq stops for the continuous scale; theme-correct #FAF8F1/#1A1A17
+          backgrounds confirmed in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuinely custom polar SVG composition (no native MUI X polar support);
+          removing the angular gap restores a symmetric, intentional wheel
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, subtle cell borders, generous whitespace, thin radial
+          spoke instead of a chart-breaking gap
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Cyclic-continuity story now reads correctly (no seam at midnight);
+          day-to-day baseline spread creates a real focal point (Saturday afternoon
+          peak) though ring-to-ring contrast is still a bit subtle at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar heatmap with angular=hour, radial=day-of-week
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Full 360-degree continuous wrap (gap removed), colorbar legend, cell
+          borders, and readable hour-tick intervals all present -- the attempt-1 continuity
+          violation is fixed
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 168 cells (7 days x 24 hours) rendered, axes correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format with descriptive prefix; legend labels correct
+          with units
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers hour/day/value encoding with weekday/weekend/nightlife structure
+          and a per-day baseline; radial contrast confirmed real via pixel sampling
+          but still subtle at a glance
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral website-traffic-by-hour scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 14-134 visits/hr is a believable hourly traffic range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (gauss, cyclicDist, visits, mixHex, seqColor, wedgePath)
+          are justified by the custom polar-geometry math required since community
+          MUI X has no polar/heatmap primitive
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic formula-based data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer, useDrawingArea, ContinuousColorLegend imported
+          from @mui/x-charts, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean custom SVG math, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default export, skipAnimation, sized from
+          window.ANYPLOT_SIZE'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of ChartContainer/useDrawingArea/zAxis colorMap to
+          work around missing community polar/heatmap support
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Real ContinuousColorLegend tied to zAxis colorMap is a genuine distinctive
+          touch, but the rest of the rendering is generic custom SVG rather than a
+          further library-distinctive feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
