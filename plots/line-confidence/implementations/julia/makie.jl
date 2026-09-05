@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-confidence: Line Plot with Confidence Interval
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 84/100 | Created: 2026-09-05
+# Quality: 86/100 | Created: 2026-09-05
 
 using CairoMakie
 using Colors
