@@ -1,0 +1,234 @@
+library: highcharts
+language: javascript
+specification_id: line-loss-training
+created: '2026-09-05T07:24:30Z'
+updated: '2026-09-05T07:37:07Z'
+generated_by: claude-sonnet
+workflow_run: 33952288941
+issue: 2860
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'All three weaknesses from the attempt-1 review are cleanly addressed: the overfitting
+    divergence is now clearly visible (overfitTerm coefficient tripled from 0.0009
+    to 0.0026), the unused xAxis.gridLineColor was removed, and xAxis.min/max now
+    tighten the axis to the actual epoch range.'
+  - Correct Imprint palette usage (brand green first, canonical lavender second) with
+    pixel-identical data colors across light/dark themes.
+  - Distinctive use of xAxis.plotLines plus an overlay scatter marker to highlight
+    the best (minimum validation loss) epoch, directly implementing the spec's optional
+    early-stopping callout.
+  - Deterministic, seeded synthetic data with a realistic training/validation loss
+    trajectory.
+  weaknesses:
+  - Chrome styling still reads close to a well-configured default (DE-01/DE-02) -
+    could gain more visual distinctiveness from typography or a subtle accent treatment
+    such as a shaded post-overfitting region.
+  - The highlight technique (plotLine + scatter overlay), while effective, is a fairly
+    common annotation pattern rather than a feature unique to Highcharts (LM-02).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "line-loss-training · javascript · highcharts · anyplot.ai" in bold dark ink at top; x-axis title "Epoch" and y-axis title "Cross-Entropy Loss" in soft ink; tick labels in soft ink; subtle horizontal-only gridlines; legend at bottom with three entries (Training loss, Validation loss, Best epoch (min val. loss)). X-axis is now tightened to the 1-60 data range (min/max set explicitly), removing the previous leading gap. All text is clearly readable against the light background.
+      Data: Training loss is brand green (#009E73), decaying smoothly from ~1.9 to ~0.15. Validation loss is Imprint-position-2 lavender, tracking training early on then clearly plateauing and climbing back up to ~0.65 by epoch 60 - the strengthened overfitTerm coefficient makes the overfitting gap unambiguous. A dashed amber vertical plotLine at epoch 39 labeled "Best epoch: 39" with an amber scatter marker (dark outline) marks the minimum validation loss.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Same title in white/light ink, axis titles and tick labels in light soft-ink gray, subtle horizontal gridlines visible against the dark background, legend text in light gray. Pixel-level check of the rotated "Best epoch: 39" label confirms it renders in legible light-gray ink, no dark-on-dark issue.
+      Data: Training loss (green) and validation loss (lavender) are identical hex values to the light render - only chrome (background, text, grid) flipped as expected. Amber dashed plotline and best-epoch marker are equally visible on dark.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable and well-proportioned in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths and highlight marker clearly visible on both backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/amber all mutually distinguishable, no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: xAxis.min/max now tightens the range to the data, fixing the prior
+          leading gap
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles naming the loss function
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, second canonical lavender, theme-correct
+          backgrounds
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean but close to a well-configured default beyond the plotLine
+          + marker highlight
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Unused xAxis.gridLineColor removed, clean horizontal-only grid, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strengthened overfitTerm makes the widening train/val gap clearly
+          visible; best-epoch marker+label gives an immediate focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dual curves, legend, labeled axes, and optional best-epoch marking
+          implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=epoch, Y=loss correct, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Decay, noise, plateau, and now-clear overfitting divergence plus
+          best-epoch marking all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral ML-training scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible cross-entropy-loss magnitudes and epoch range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled everywhere
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic plotLines + scatter overlay usage, proper theming via ANYPLOT_TOKENS
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: plotLine label + scatter marker combo is a fairly common annotation
+          pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
