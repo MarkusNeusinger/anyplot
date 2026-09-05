@@ -1,0 +1,246 @@
+library: ggplot2
+language: r
+specification_id: line-styled
+created: '2026-09-05T08:17:10Z'
+updated: '2026-09-05T08:29:39Z'
+generated_by: claude-sonnet
+workflow_run: 33954718629
+issue: 2598
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Correct Imprint palette in canonical order (green/lavender/blue/ochre), identical
+    data colors between light and dark renders — only chrome flips
+  - Four genuinely distinct line styles (solid, dashed, a fine custom dot pattern,
+    and a custom dash-dot pattern) mapped in one legend to both color and linetype,
+    satisfying the spec's black-and-white/accessibility use case with real redundant
+    encoding
+  - Endpoint annotation ('+71%') on the Hardware series creates a clear focal point
+    and a small data story without needing to break the spec's 'consistent line width
+    across styles' requirement
+  - 'Theme-adaptive chrome handled carefully: grid alpha-blended into the ink color
+    via adjustcolor() (a valid workaround since element_line() has no alpha param),
+    L-shaped axis lines, fully legible text in both themes'
+  - 'Clean, idiomatic, reproducible ggplot2 code: single seed, current API (linewidth,
+    ragg device), no unused imports, no fake interactivity'
+  weaknesses:
+  - The 'Services' dotted line (custom dash code "15") renders as small elongated
+    dash marks rather than crisp round dots — at a glance it can read as a broken/scattered
+    line instead of a clean 'dotted' style; a shorter, more uniform pattern (e.g.
+    "12" or "13") would read more clearly as dots while still avoiding the dash-dot's
+    leading sub-pattern
+  - Design excellence stays close to theme_minimal defaults (standard legend box,
+    no de-emphasis of non-focal series) — consider muting the three background series
+    slightly (lower alpha or muted-token color) to sharpen the visual hierarchy around
+    the highlighted Hardware growth story
+  - Line width (1.1) is on the thinner side for only 4 series over 24 points; per
+    the data-density heuristic (few series → thicker lines for prominence), nudging
+    to ~1.3-1.5 would add prominence, especially at mobile scale
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching the required #FAF8F1 surface — not pure white.
+      Chrome: Title "line-styled · r · ggplot2 · anyplot.ai" in dark ink at top-left, comfortably sized (~40% of plot width, no overflow). X-axis "Quarter" and rotated Y-axis "Revenue Index (base = 100)" labels are dark and clearly readable. Tick labels (5/10/15/20/25 on x; 100/125/150/175 on y) are legible in a slightly softer ink tone. Subtle horizontal gridlines only, at low opacity, not competing with data. Legend "Product Line" sits at the right in an elevated off-white box with dark title text and softer entry labels.
+      Data: Four lines from a shared baseline near 100 at quarter 1, diverging over 24 quarters. Hardware (brand green #009E73, solid) climbs steadily to ~172 with a highlighted endpoint dot and "+71%" annotation in matching green. Software (lavender #C475FD, dashed) and Services (blue #4467A3, fine dot pattern) hover and drift upward around 105-127. Accessories (ochre #BD8233, dash-dot pattern) drifts down to ~85. All four styles are visually distinguishable by shape alone, not just color.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching the required #1A1A17 surface — not pure black.
+      Chrome: Same title, now in light ink (#F0EFE8-equivalent), clearly visible against the dark background. Axis titles and tick labels flip to light/soft-light tones and remain fully legible. Gridlines are still subtle, now light-on-dark. Legend box flips to the dark elevated surface (#242420) with light text, fully readable.
+      Data: Identical line colors and styles to the light render — brand green, lavender, blue, ochre — confirming positions 1-4 of the Imprint palette are held constant between themes; only the chrome (background, text, grid, legend frame) changed.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick label, and legend entry is clearly visible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; no dark-on-dark
+          or light-on-light issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, and data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines distinguishable, but the custom dotted pattern reads as small
+          dashes rather than crisp dots
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe palette plus redundant linetype encoding; no red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, canvas gate passed at 3200x1800
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (base = 100)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical order for positions 1-4, correct
+          theme backgrounds, identical data colors across themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom dash patterns and endpoint annotation show real polish, but
+          overall look stays close to theme_minimal defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid alpha-blended, L-shaped axis lines, but legend/frame stays standard
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Endpoint '+71%' annotation gives a clear focal point; no further
+          hierarchy (e.g. de-emphasizing background series)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct styled line plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 distinct line styles, legend mapping styles to series, consistent
+          line width across all styles
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=quarter, Y=revenue index, all 24 quarters x 4 series shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match product line names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 series with distinct trend shapes (strong growth, mild growth,
+          volatile, decline) show the full range of line-style-distinction use cases
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly revenue index by product line is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Index values (80-172, base 100) are sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only ggplot2 and ragg loaded, both used; tibble referenced via ::'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current linewidth API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: scale_color_manual/scale_linetype_manual, aes mapping both to the
+          same variable, theme_minimal layering — correct idiomatic ggplot2 patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom numeric dash codes, adjustcolor() alpha-blend workaround for
+          grid color, annotate() endpoint highlight — real R/ggplot2-specific depth
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

@@ -1,0 +1,243 @@
+library: muix
+language: javascript
+specification_id: line-stepwise
+created: '2026-09-05T08:11:13Z'
+updated: '2026-09-05T08:21:57Z'
+generated_by: claude-sonnet
+workflow_run: 33954351200
+issue: 2600
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/muix/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Step curve uses mid-point alignment (curve="step"), explicitly justified in code
+    comments by realistic telemetry-sampling reasoning — genuine design thinking,
+    not an arbitrary default.
+  - Gradient area fill under the step line (35%→03% opacity) adds depth without competing
+    with the step shape; identical data color confirmed across both themes.
+  - ChartsReferenceLine annotating the peak setpoint gives the chart a clear focal
+    point (Data Storytelling).
+  - Time-of-day formatted x-axis ticks (HH:MM) instead of raw decimal hours is a thoughtful
+    UX detail.
+  - Plausible, neutral, deterministic thermostat-schedule dataset with clear sample-cadence
+    math.
+  weaknesses:
+  - Design Excellence is still fairly modest — beyond the gradient fill and reference
+    line, the palette and typography stay close to library defaults; consider more
+    visual hierarchy (e.g. subtle marker/callout at the step transitions) to push
+    DE-01/DE-02 further.
+  - Only one series is shown; not required by spec, but a second comparison series
+    (e.g., actual measured temperature vs. setpoint) would raise DQ-01 feature coverage
+    and LM-02 distinctiveness.
+  - LM-02 usage is present but modest — lean further into MUI X's community surface
+    (e.g. more elaborate tooltip/valueFormatter usage visible in the HTML detail view)
+    for full marks.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "line-stepwise · javascript · muix · anyplot.ai" top-left; axis titles "Time of Day" / "Setpoint (°F)"; tick labels on both axes; horizontal-only grid, subtle gray lines. All clearly readable against the light background.
+      Data: Brand-green (#009E73) step line with gradient area fill beneath; dashed peak reference line at y=72 with label "Peak 72°F · evening comfort". First (only) series is the brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/axis labels/ticks now rendered in light ink; horizontal grid lines subtle but visible against dark background. No dark-on-dark issues found — all text clearly legible.
+      Data: Same brand-green step line and gradient area fill, same setpoint values as light render — confirms data colors are identical between themes and only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All labels explicitly sized and legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Reference-line label, axis labels, and title all clear of each other
+          and of the data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Step line + gradient area clearly visible; showMark=false reasonable
+          for a 96-point step series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green, high contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title ~35% width, balanced axis labels, no overflow/clipping, canvas
+          gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time of Day / Setpoint (°F) — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds match tokens, chrome-only theme
+          flip confirmed'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Gradient fill and reference line show intent, but palette stays a
+          single flat color
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean grid and whitespace, custom stroke width; still close to defaults
+          otherwise
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Peak reference line gives a clear focal point beyond the raw step
+          shape
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine step line via curve="step"
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal and vertical segments both visible; mid alignment deliberately
+          chosen
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=time, y=setpoint, both axes cover full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend correctly hidden for single
+          series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Five distinct plateaus demonstrate the step concept well
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Smart-thermostat schedule plausible, neutral, real-world grounded
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 55-78°F range and 62-72°F setpoints sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes; one justified helper (formatHour)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, in-memory data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows harness contract; skipAnimation set
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: curve="step" + area + ChartsReferenceLine are idiomatic community-surface
+          patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom SVG gradient via defs+sx is distinctive but implementation
+          otherwise close to a single-series baseline
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending
+  - grid-styling
