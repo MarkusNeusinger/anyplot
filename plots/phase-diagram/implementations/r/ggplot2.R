@@ -5,6 +5,7 @@
 
 library(ggplot2)
 library(dplyr)
+library(grid)
 library(ragg)
 
 set.seed(42)
@@ -20,6 +21,14 @@ IMPRINT_PALETTE <- c(
   "#C475FD", # 2 - lavender
   "#4467A3"  # 3 - blue
 )
+
+# Blend grid color toward the page background so it recedes behind the data
+# (more so in dark theme, where a flat INK grid reads too bright).
+mix_color <- function(c1, c2, weight) {
+  rgb_mix <- col2rgb(c1) * weight + col2rgb(c2) * (1 - weight)
+  rgb(rgb_mix[1], rgb_mix[2], rgb_mix[3], maxColorValue = 255)
+}
+GRID_COLOR <- mix_color(INK, PAGE_BG, if (THEME == "light") 0.35 else 0.22)
 
 # --- Data: damped harmonic oscillator state space ---------------------------
 # dx/dt = v ; dv/dt = -omega^2 * x - 2 * zeta * omega * v (underdamped spiral)
@@ -52,21 +61,47 @@ initial_conditions <- tibble::tibble(
   label = c("x0 = 2.5, v0 = 0.0", "x0 = -2.0, v0 = 1.5", "x0 = 1.0, v0 = -2.2")
 )
 
-trajectories <- bind_rows(lapply(seq_len(nrow(initial_conditions)), function(i) {
+# Direction arrows: a few short tangent segments sampled along the early/mid
+# part of each spiral (skipped near the fixed point, where segments would be
+# too short to read) so a viewer can tell which way the system evolves.
+make_direction_arrows <- function(traj, label, n_arrows = 4, step_ahead = 7) {
+  n <- nrow(traj)
+  idx <- unique(round(seq(0.05, 0.55, length.out = n_arrows) * n))
+  idx <- idx[idx >= 1 & idx + step_ahead <= n]
+  tibble::tibble(
+    x     = traj$x[idx],
+    y     = traj$dx_dt[idx],
+    xend  = traj$x[idx + step_ahead],
+    yend  = traj$dx_dt[idx + step_ahead],
+    label = label
+  )
+}
+
+trajectory_list <- lapply(seq_len(nrow(initial_conditions)), function(i) {
   cond <- initial_conditions[i, ]
   integrate_trajectory(cond$x0, cond$v0) |> mutate(label = cond$label)
-}))
+})
+trajectories <- bind_rows(trajectory_list)
 trajectories$label <- factor(trajectories$label, levels = initial_conditions$label)
+
+arrows <- bind_rows(lapply(seq_len(nrow(initial_conditions)), function(i) {
+  make_direction_arrows(trajectory_list[[i]], initial_conditions$label[i])
+}))
+arrows$label <- factor(arrows$label, levels = initial_conditions$label)
 
 start_points <- initial_conditions |>
   transmute(x = x0, dx_dt = v0, label = factor(label, levels = initial_conditions$label))
+
+# Square the data domain so coord_fixed's 1:1 aspect fills the square canvas
+# instead of letterboxing (the raw x/y ranges aren't symmetric).
+half_extent <- max(abs(trajectories$x), abs(trajectories$dx_dt)) * 1.08
 
 # --- Theme --------------------------------------------------------------
 anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.25),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
@@ -87,7 +122,14 @@ p <- ggplot() +
   geom_path(
     data = trajectories,
     aes(x = x, y = dx_dt, color = label),
-    linewidth = 1.0, lineend = "round"
+    linewidth = 0.85, alpha = 0.85, lineend = "round"
+  ) +
+  geom_segment(
+    data = arrows,
+    aes(x = x, y = y, xend = xend, yend = yend, color = label),
+    linewidth = 0.85,
+    arrow = arrow(length = unit(0.2, "cm"), type = "closed", angle = 24),
+    show.legend = FALSE
   ) +
   geom_point(
     data = start_points,
@@ -99,6 +141,8 @@ p <- ggplot() +
     size = 3.5, shape = 4, stroke = 1.3, color = INK
   ) +
   scale_color_manual(values = IMPRINT_PALETTE) +
+  scale_x_continuous(limits = c(-half_extent, half_extent), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(-half_extent, half_extent), expand = c(0, 0)) +
   coord_fixed(ratio = 1) +
   labs(
     title = "phase-diagram · r · ggplot2 · anyplot.ai",
