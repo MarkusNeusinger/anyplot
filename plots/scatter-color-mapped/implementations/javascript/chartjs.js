@@ -23,7 +23,7 @@ for (let i = 0; i < n; i++) {
   const distanceEast = rand() * 100;
   const distanceNorth = rand() * 100;
   const temperature =
-    24 - 0.09 * distanceNorth + 0.03 * distanceEast + (rand() - 0.5) * 4;
+    24 - 0.09 * distanceNorth + 0.03 * distanceEast + (rand() - 0.5) * 3;
   readings.push({ x: distanceEast, y: distanceNorth, temperature });
 }
 
@@ -38,13 +38,14 @@ function hexToRgb(hex) {
 }
 const seqLow = hexToRgb(t.seq[0]);
 const seqHigh = hexToRgb(t.seq[1]);
+const inkRgb = hexToRgb(t.ink);
 
 function colorForTemperature(value) {
   const ratio = (value - tempMin) / (tempMax - tempMin);
   const r = Math.round(seqLow[0] + ratio * (seqHigh[0] - seqLow[0]));
   const g = Math.round(seqLow[1] + ratio * (seqHigh[1] - seqLow[1]));
   const b = Math.round(seqLow[2] + ratio * (seqHigh[2] - seqLow[2]));
-  return `rgba(${r}, ${g}, ${b}, 0.85)`;
+  return `rgba(${r}, ${g}, ${b}, 0.78)`;
 }
 
 const pointColors = readings.map((r) => colorForTemperature(r.temperature));
@@ -53,14 +54,30 @@ const pointColors = readings.map((r) => colorForTemperature(r.temperature));
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
+// --- Colorbar sizing: measure the tick labels up front so the layout's
+// right padding hugs the colorbar instead of leaving guessed-at dead space ---
+const colorbarFont = "14px sans-serif";
+const measureCtx = canvas.getContext("2d");
+measureCtx.font = colorbarFont;
+const tickLabels = [`${tempMax.toFixed(1)}°C`, `${tempMin.toFixed(1)}°C`];
+const maxTickWidth = Math.max(
+  ...tickLabels.map((label) => measureCtx.measureText(label).width),
+);
+const barGap = 20;
+const barWidth = 24;
+const tickLabelGap = 8;
+const axisLabelGap = 18;
+const rightMargin = 14;
+const axisLabelOffset = barGap + barWidth + tickLabelGap + maxTickWidth + axisLabelGap;
+const colorbarSpace = axisLabelOffset + rightMargin;
+
 // --- Colorbar plugin: draws the imprint_seq gradient as a reference scale ---
 const colorbarPlugin = {
   id: "colorbar",
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
     const { top, bottom, right } = chartArea;
-    const barX = right + 24;
-    const barWidth = 26;
+    const barX = right + barGap;
 
     const gradient = ctx.createLinearGradient(0, bottom, 0, top);
     gradient.addColorStop(0, t.seq[0]);
@@ -74,13 +91,13 @@ const colorbarPlugin = {
     ctx.strokeRect(barX, top, barWidth, bottom - top);
 
     ctx.fillStyle = t.ink;
-    ctx.font = "14px sans-serif";
+    ctx.font = colorbarFont;
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
-    ctx.fillText(`${tempMax.toFixed(1)}°C`, barX + barWidth + 8, top);
-    ctx.fillText(`${tempMin.toFixed(1)}°C`, barX + barWidth + 8, bottom);
+    ctx.fillText(tickLabels[0], barX + barWidth + tickLabelGap, top);
+    ctx.fillText(tickLabels[1], barX + barWidth + tickLabelGap, bottom);
 
-    ctx.translate(barX + barWidth + 68, (top + bottom) / 2);
+    ctx.translate(barX + axisLabelOffset, (top + bottom) / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = "center";
     ctx.fillText("Temperature (°C)", 0, 0);
@@ -97,10 +114,10 @@ new Chart(canvas, {
         label: "Sensor reading",
         data: readings,
         backgroundColor: pointColors,
-        borderColor: t.pageBg,
+        borderColor: `rgba(${inkRgb[0]}, ${inkRgb[1]}, ${inkRgb[2]}, 0.35)`,
         borderWidth: 1,
-        pointRadius: 9,
-        pointHoverRadius: 9,
+        pointRadius: 7.5,
+        pointHoverRadius: 7.5,
       },
     ],
   },
@@ -108,7 +125,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { right: 150 } },
+    layout: { padding: { right: colorbarSpace } },
     plugins: {
       title: {
         display: true,
@@ -123,11 +140,13 @@ new Chart(canvas, {
         title: { display: true, text: "Distance East (km)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
+        border: { color: t.inkSoft, width: 1.5 },
       },
       y: {
         title: { display: true, text: "Distance North (km)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
+        border: { color: t.inkSoft, width: 1.5 },
       },
     },
   },
