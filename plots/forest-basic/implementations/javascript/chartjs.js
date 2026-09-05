@@ -1,7 +1,7 @@
 // anyplot.ai
 // forest-basic: Meta-Analysis Forest Plot
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 const MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
