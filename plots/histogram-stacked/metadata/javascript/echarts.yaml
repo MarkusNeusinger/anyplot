@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-stacked
 created: '2026-09-05T04:30:34Z'
-updated: '2026-09-05T04:34:36Z'
+updated: '2026-09-05T04:43:59Z'
 generated_by: claude-sonnet
 workflow_run: 33944545695
 issue: 2601
@@ -12,48 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/echarts/plot-dark.html
-quality_score: 82
+quality_score: 89
 review:
   strengths:
+  - 'Repair directly addressed every attempt-1 weakness: a pageBg-colored border now
+    separates stacked segments (itemStyle.borderColor/borderWidth), the topmost Suburban
+    series gets rounded top corners, x/y axisLabel fontSize is now unified at 14,
+    and emphasis.focus plus a custom tooltip formatter (per-bin total) add genuine
+    ECharts-specific polish.'
   - 'Correct stacked-histogram construction: all three groups share identical bin
-    boundaries (computed from the combined value range) so segments stack meaningfully
+    boundaries computed from the combined value range, so segments stack meaningfully
     within each bin.'
-  - 'Palette compliance is exemplary: Downtown uses brand green #009E73 first, Uptown
-    and Suburban follow the canonical Imprint order, and both light/dark renders keep
-    data colors identical while chrome (background, grid, text) flips correctly with
-    no legibility issues.'
+  - 'Exemplary Imprint palette compliance: Downtown uses brand green #009E73 first,
+    Uptown and Suburban follow canonical order 2/3, and data colors are pixel-identical
+    between light and dark renders while chrome flips correctly with no legibility
+    issues in either theme.'
   - Groups are ordered by increasing mean wait time (Downtown 4.0 < Uptown 6.5 < Suburban
-    9.0), which produces a pleasing diagonal color gradient across the distribution
-    and reinforces the story of composition shifting by bin.
+    9.0), producing a pleasing diagonal color gradient across bins that reinforces
+    the composition story.
   - 'Deterministic, dependency-free code: a small seeded LCG (no Math.random) drives
     reproducible sampling and manual binning, with clean adherence to the ECharts
     mount-node contract (animation: false, no explicit size/devicePixelRatio).'
-  - Title format, legend labels, and axis titles (with units, 'Wait Time (minutes)'
-    / 'Frequency') all match spec requirements.
+  - Title format, legend labels, and axis titles (with units) all match spec requirements
+    exactly.
   weaknesses:
-  - 'Design Excellence is generic: beyond the required theme-token chrome, there is
-    no visual refinement distinguishing the stacked segments (e.g. a thin pageBg/white
-    border between segments via itemStyle.borderColor) or any polish like subtle rounded
-    corners on the topmost bar series — it reads as default ECharts bar styling.'
-  - No distinctive ECharts-only feature is demonstrated (e.g. emphasis.focus='series'
-    for cross-segment highlighting, a markLine for the overall mean, or a customized
-    tooltip formatter) — the implementation only uses the baseline bar+stack API,
-    so Library Mastery reads as purely idiomatic rather than showcasing the library.
-  - 'Minor inconsistency: x-axis axisLabel fontSize is 13 while y-axis axisLabel fontSize
-    is 14, and axis name fontSize is 16 for both — align tick-label sizes for a tidier
-    look.'
+  - 'Data storytelling is still implicit: the diagonal color gradient from mean-ordering
+    is the only hierarchy cue — no markLine or annotation calls out group means or
+    the overall pattern explicitly.'
+  - borderRadius for rounded corners is only applied to the topmost (Suburban) series;
+    the same treatment is not extended to intermediate segment tops when a lower group's
+    stack ends before the top of the bar, though this is a very minor polish item.
+  - emphasis.focus and the custom tooltip formatter only add value in the interactive
+    HTML view — Library Mastery would read even stronger with one more feature visible
+    in the static PNG itself, e.g. a subtle markLine for a combined mean or median.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "histogram-stacked · javascript · echarts · anyplot.ai" is dark ink, centered, clearly legible. Legend swatches (Downtown/Uptown/Suburban) and labels are dark and legible. X-axis tick labels (bin ranges like "0.2–1.3") and axis names ("Wait Time (minutes)", "Frequency") are dark/soft-ink and clearly readable. Horizontal gridlines are subtle light gray, visible but unobtrusive.
-      Data: First series (Downtown) is brand green #009E73, second (Uptown) is lavender/violet, third (Suburban) is muted blue — matches the canonical Imprint categorical order. Bars are stacked per bin with no gaps between adjacent bins (barCategoryGap: 0%), forming a continuous histogram silhouette. The diagonal color blend (green dominant in low bins, lavender in mid bins, blue in high bins) clearly shows the three groups' means shifting rightward.
-      Legibility verdict: PASS
+      Chrome: Title "histogram-stacked · javascript · echarts · anyplot.ai" is dark, centered, fully visible, not clipped. Legend (Downtown/Uptown/Suburban) and axis titles ("Wait Time (minutes)", "Frequency") render in dark/soft-ink and are clearly legible. Tick labels on both axes are readable and consistently sized (fontSize 14 on both axes). Horizontal gridlines are subtle; y-axis line is hidden, x-axis line is a soft neutral tone.
+      Data: 14 adjacent bins (no gaps) form a continuous stacked-histogram silhouette. Downtown (brand green #009E73) dominates the low bins, Uptown (lavender, palette position 2) the middle bins, Suburban (blue, palette position 3) the high bins — a clean diagonal gradient reflecting the three groups' increasing means. Thin pageBg-colored borders separate each stacked segment, and the topmost (Suburban) series has rounded top corners for a refined silhouette.
+      Legibility verdict: PASS — no overlap, no clipping, no light-on-light text found.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, legend text, axis tick labels, and axis names all render in light/off-white ink, clearly legible against the dark background. No dark-on-dark text found anywhere (title, legend, ticks, axis names all confirmed readable). Gridlines are subtle and still visible.
-      Data: Colors are pixel-identical to the light render — green #009E73, lavender, blue — confirming only chrome (background/text/grid) flipped between themes, not data colors.
-      Legibility verdict: PASS
+      Chrome: Title, legend, and both axis titles/tick labels render in light ink and remain clearly legible against the dark surface — no dark-on-dark failures anywhere. Gridlines and axis lines flip to their light-theme-adaptive tones as expected.
+      Data: Green/lavender/blue segment colors are pixel-identical to the light render, confirming only chrome (background, text, grid) flipped between themes. Segment borders and the rounded top-corner treatment are preserved identically.
+      Legibility verdict: PASS — no dark-on-dark text, all elements distinguishable from the background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,73 +67,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; minor axis tick fontsize inconsistency
-          (13 vs 14) between x/y.
+        comment: Explicit font sizes throughout; x/y axisLabel fontSize now unified
+          at 14 (fixed from attempt 1's 13/14 mismatch); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No text/element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and stacked segments clearly distinguishable; appropriate for
-          1500-point binned dataset.
+        comment: Bars sized appropriately for 14 bins x 3 groups x 500 points/group;
+          segment borders keep stack layers distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue combination has adequate contrast; no red-green-only
-          encoding.
+        comment: Imprint palette is CVD-safe; no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 3200x1800; no overflow or cut-off elements;
-          well-proportioned margins.
+        comment: Plot fills a healthy majority of the canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Wait Time (minutes)'' and ''Frequency'' are descriptive with units.'
+        comment: '"Wait Time (minutes)" has units; "Frequency" is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; canonical Imprint order used; theme-correct
-          backgrounds in both renders.'
+        comment: 'First series #009E73, canonical order 2/3, backgrounds and chrome
+          theme-correct in both renders'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Default ECharts bar styling with only required theme-token chrome
-          applied; no custom polish beyond baseline.
+        passed: true
+        comment: Repair added pageBg segment borders and rounded top corners — clearly
+          above default ECharts bar styling now
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No segment borders/edge-highlighting between stacked series, no rounded
-          corners or other refinement touches.
+        passed: true
+        comment: Segment separation borders + rounded top silhouette + hidden y-axis
+          line + subtle single-axis grid show real refinement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Ordering groups by increasing mean creates a mild diagonal visual
-          hierarchy, but no explicit emphasis/annotation guides the viewer further.
+        comment: Diagonal color gradient from mean-ordering still the only hierarchy
+          cue — no explicit annotation/markLine added
     spec_compliance:
       score: 15
       max: 15
@@ -140,26 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram via stacked bar series over shared bins.
+        comment: Correct stacked histogram via shared bins + stacked bar series
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Shared bin boundaries, distinct group colors, legend, total-height
-          stacking all present.
+          stacking all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = bin ranges, Y = frequency; axes show full data range.
+        comment: X = wait-time bins, Y = frequency, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match series names (Downtown/Uptown/Suburban).
+        comment: Title format exact match; legend labels match series/tooltip names
     data_quality:
       score: 15
       max: 15
@@ -169,20 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three groups, 500 points each (1500 total), well within recommended
-          50-5000 range; full histogram+stacking behavior shown.
+        comment: Three distinct group distributions with different means/spreads fully
+          populate the bin range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral, plausible scenario: transit wait times by city area (Downtown/Uptown/Suburban).'
+        comment: Neutral, plausible service/transit wait-time scenario across three
+          location types
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wait times of 0-15 minutes with realistic means/std-devs per group.
+        comment: Wait times (0.2-15.4 min) and group means (4.0/6.5/9.0 min) are realistic
+          and internally consistent
     code_quality:
       score: 10
       max: 10
@@ -192,58 +195,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small, justified helper functions for RNG/sampling/binning; no classes,
-          single linear flow.
+        comment: Minimal helper functions only for the seeded RNG/binning the browser
+          environment requires; single setOption call
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic, no Math.random.
+        comment: Fixed-seed LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided echarts global; nothing unused.
+        comment: No imports beyond the preloaded echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the task; no fake interactivity.
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: echarts.init on #container, no explicit
-          size/devicePixelRatio, animation: false.'
+        comment: 'Correct mount-node contract, animation: false, current API'
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic stacked-bar + category axis + axisPointer shadow + tooltip
+          formatter usage
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Standard, correct stacked-bar-over-category-axis approach for histograms
-          in ECharts (no native histogram type exists).
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No ECharts-distinctive feature used (e.g. emphasis.focus, markLine,
-          custom tooltip formatter) — purely baseline bar+stack API.
-  verdict: REJECTED
+        comment: emphasis.focus='series' cross-segment highlighting and a custom per-bin-total
+          tooltip formatter were added per the attempt-1 feedback
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - stacked-bars
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - binning
-  styling: []
+  styling:
+  - edge-highlighting
