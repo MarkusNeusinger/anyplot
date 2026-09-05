@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: maze-printable
 created: '2026-09-05T09:19:02Z'
-updated: '2026-09-05T09:24:40Z'
+updated: '2026-09-05T09:36:06Z'
 generated_by: claude-sonnet
 workflow_run: 33957315556
 issue: 3232
@@ -12,53 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
   - 'Mathematically correct maze: recursive-backtracker DFS spanning tree guarantees
-    exactly one solution path with no loops or isolated pockets.'
-  - 'Print-friendly minimalist look: axes and grid fully hidden, thick consistent
-    wall strokes (borderWidth 9, square caps/joins), generous canvas margins.'
-  - 'Idiomatic vector-drawing trick: renders the entire maze as a single line dataset
-    with null-point breaks between wall segments, a clean use of Chart.js primitives
-    to draw arbitrary shapes.'
-  - Clear Start (green triangle, top-left) / Goal (purple star, bottom-right) markers
-    in canonical Imprint order, matching the spec's example layout, with the internal
-    'Walls' dataset correctly filtered out of the legend.
-  - 'Fully theme-adaptive chrome: title, legend, and background correctly flip between
-    the FAF8F1/1A1A17 surfaces while the Start/Goal marker colors stay pixel-identical
-    across both renders.'
-  - Deterministic reproducibility via a tiny fixed-seed LCG, appropriate for a browser
-    runtime with no native seeded RNG.
+    exactly one solution path, no loops or isolated pockets'
+  - 'Chart.js-idiomatic wall rendering: a custom plugin (beforeDatasetsDraw) draws
+    walls directly on the canvas 2D context, mapping data-space coordinates through
+    the chart''s own scale.getPixelForValue API instead of a portable point/line-dataset
+    trick'
+  - 'Print-friendly minimalist look: axes/grid fully hidden, thick consistent wall
+    strokes, generous canvas margins'
+  - Clear Start (green triangle) / Goal (lavender star) markers in canonical Imprint
+    order, matching the spec's top-left/bottom-right example
+  - Fully theme-adaptive chrome (walls use t.ink) with pixel-identical marker colors
+    across light and dark renders
+  - Deterministic, fixed-seed LCG generation appropriate for a browser runtime with
+    no native seeded RNG
+  - 'KISS-ified since attempt 1: cellIndex helper inlined, only the two functions
+    the algorithm truly needs (makeRng, shuffle) remain'
   weaknesses:
-  - Walls are colored with the theme-adaptive ink token, so they invert to white-on-black
-    in the dark render — pleasant for the website but a slight departure from the
-    spec's explicit 'black walls on white background for maximum contrast and ink
-    efficiency' intent (the light render, which users would actually print, is unaffected,
-    so this is a minor nuance rather than a defect).
-  - 'Library Mastery is generic (LM-02): the null-point line-segment technique for
-    drawing walls is portable to any point/line-based charting library. A Chart.js-native
-    custom plugin (options.plugins with an afterDraw canvas hook) would better showcase
-    a feature distinctive to this library.'
-  - 'Minor KISS deviation (CQ-01): several small helper functions (makeRng, shuffle,
-    cellIndex, addWall) are used — reasonable given the maze-generation algorithm''s
-    complexity, but slightly beyond the ''no functions'' ideal; cellIndex in particular
-    could be inlined.'
-  - Design Excellence is solid but stops short of publication-grade polish (DE-01/DE-02/DE-03
-    in the 4-6 range) — e.g. no subtle refinement such as a soft accent on the Start/Goal
-    markers or an emphasis cue beyond shape/color to elevate visual hierarchy further.
+  - Walls use the theme-adaptive ink token, so they invert to white-on-black in the
+    dark render — correct for the website's theme system, but a slight departure from
+    the spec's literal 'black walls on white background for maximum contrast and ink
+    efficiency' (the light/printable render itself is unaffected)
+  - 'Goal marker (pointStyle: ''star'') renders as a thin multi-line asterisk, visually
+    lighter-weight than the solid filled Start triangle — a filled shape (e.g. pointStyle
+    ''rect'' or a custom glyph) would give the two markers more symmetric visual weight'
+  - Design Excellence held flat since attempt 1 (DE-01/02/03 still 6/5/4) — the requested
+    extra layer of visual polish on the Start/Goal markers wasn't added this round
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "maze-printable · javascript · chartjs · anyplot.ai" at the top, clearly legible; a "Start / Goal" legend in dark text sits below the maze. All chrome text reads cleanly against the light surface.
-      Data: A dense 20x20 black-line maze fills most of the square canvas — thick, consistent double-line walls forming corridors with a fully enclosed outer boundary. A filled green triangle (#009E73) marks Start in the top-left cell; a lavender star marks Goal in the bottom-right cell. Colors match Imprint palette positions 1-2 in canonical order.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "maze-printable · javascript · chartjs · anyplot.ai" centered at top, clearly legible. A "Start / Goal" legend in dark text sits centered below the maze. No axes/ticks/grid shown (intentionally hidden — cell coordinates carry no measurement meaning).
+      Data: A dense 20x20 black-line maze fills nearly the whole square canvas — thick (9px), consistent wall strokes with a fully enclosed outer boundary and a single-solution internal corridor structure. A filled green triangle (#009E73, Imprint position 1) marks Start in the top-left cell; a lavender star (#C475FD, Imprint position 2) marks Goal in the bottom-right cell, exactly matching the spec's example layout.
+      Legibility verdict: PASS — title, legend, and all maze structure are crisp and readable; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title now renders in light/off-white text, clearly legible; legend text is light-colored and readable. No dark-on-dark failures — every chrome element correctly flipped from the light render.
-      Data: Maze walls have inverted to off-white/cream lines on the dark background (still crisp and consistent) since walls use the theme-adaptive ink token rather than a palette color. The Start (green triangle) and Goal (lavender star) markers are pixel-identical in color and position to the light render — only chrome (walls included) flipped as expected for non-data structural elements.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and legend now render in light/off-white text, clearly legible — no dark-on-dark failures. Maze walls have inverted to off-white/cream lines (they use the theme-adaptive ink token, same as text), still crisp and uniformly thick.
+      Data: Start (green triangle) and Goal (lavender star) markers are pixel-identical in color, size, and position to the light render — only the chrome (including the wall color, since it's theme ink rather than a palette color) flipped, as expected.
+      Legibility verdict: PASS — all text and maze structure clearly readable in the dark theme; data marker colors confirmed identical across both renders.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,49 +63,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (22px) and legend (16px) font sizes explicitly set, well-proportioned,
-          readable in both themes.
+        comment: Title (22px) and legend (16px) explicitly sized, readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, maze, legend, or markers.
+        comment: No overlap between title, legend, and maze
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wall strokes (borderWidth 9) and Start/Goal markers (radius 26/30)
-          are clearly visible and well-sized relative to the 20x20 grid.
+        comment: Wall strokes and Start/Goal markers well-sized for the 20x20 grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Start/Goal use distinct shape (triangle/star) plus color, good contrast
-          on both backgrounds.
+        comment: Distinct shape and color for Start/Goal, CVD-safe Imprint pair
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Maze, title, and legend fill the canvas with balanced margins; nothing
-          cut off.
+        comment: Maze fills the canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes are intentionally hidden (spatial grid, not measured quantities)
-          — analogous to a heatmap/map; title is fully descriptive.
+        comment: Axes intentionally hidden (spatial grid, no measured quantities),
+          title fully descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Start=#009E73 (palette[0]), Goal=palette[1] in canonical order; backgrounds
-          theme-correct in both renders.
+        comment: Start/Goal use Imprint positions 1-2 in canonical order; theme-correct
+          chrome in both renders
     design_excellence:
       score: 15
       max: 20
@@ -121,22 +112,19 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful minimalist puzzle aesthetic with intentional Start/Goal
-          shape choices, clearly above library defaults.
+        comment: Thoughtful minimalist puzzle aesthetic, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No axes, no grid, generous whitespace, legend correctly filters out
-          the internal 'Walls' dataset.
+        comment: No axes/grid, generous whitespace, clean legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-contrasted Start/Goal markers create clear focal points guiding
-          the eye through the puzzle.
+        comment: Color-contrasted Start/Goal markers create clear focal points
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly represents a printable maze puzzle using Chart.js line/point
-          primitives.
+        comment: Correct rectangular printable maze
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Single-solution DFS maze, marked Start/Goal, consistent print-friendly
-          wall thickness, adequate margins.
+          wall thickness, adequate margins
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Grid coordinates correctly mapped so row 0 (start) renders at top;
-          all cells represented.
+        comment: Full 20x20 grid visible, Start top-left / Goal bottom-right matching
+          spec example
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels 'Start'/'Goal'
-          correct and 'Walls' filtered out.
+        comment: Title format correct, legend labels match Start/Goal
     data_quality:
       score: 14
       max: 15
@@ -178,60 +164,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full maze structure: enclosed boundary, internal walls, unique
-          path, Start and Goal.'
+        comment: 'Full maze structure: boundary, internal walls, unique path, Start/Goal'
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Neutral, comprehensible puzzle scenario; inherently abstract/generative
-          rather than real-world sampled data.
+        comment: Neutral, comprehensible puzzle scenario (inherently generative rather
+          than sampled real-world data)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20x20 grid sits squarely within the spec's recommended 15-40 cell
-          range.
+        comment: 20x20 grid within the spec's recommended 15-40 range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: A few small helper functions (makeRng, shuffle, cellIndex, addWall)
-          are used — reasonable for the algorithm but slightly beyond minimal KISS.
+        comment: cellIndex helper inlined since attempt 1; only makeRng/shuffle remain,
+          both required by the algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only browser globals used.
+        comment: No unused imports; only globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a maze generator, no fake functionality.
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses new Chart(canvas, ...), animation:false, mount-node contract
-          respected.
+        comment: Follows mount-node contract, animation:false, current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -239,25 +222,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Clean, idiomatic use of Chart.js datasets, pointStyle, legend filter,
-          and linear scales.
+        comment: Clean use of datasets, pointStyle, linear scales, and the plugin
+          lifecycle API
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: The null-point line-segment wall-drawing trick is portable to any
-          point/line library rather than distinctly Chart.js — a custom afterDraw
-          canvas plugin would score higher.
-  verdict: REJECTED
+        passed: true
+        comment: 'Fixed since attempt 1: now a Chart.js-native plugin (beforeDatasetsDraw)
+          drawing walls via scales.getPixelForValue, instead of a portable null-point
+          line-dataset trick'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - custom-plugin
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
