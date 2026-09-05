@@ -1,0 +1,236 @@
+library: ggplot2
+language: r
+specification_id: facet-grid
+created: '2026-09-05T01:24:04Z'
+updated: '2026-09-05T01:40:47Z'
+generated_by: claude-sonnet
+workflow_run: 33935749158
+issue: 2696
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Both-dimension faceting (rows AND columns) is used correctly and is the correct
+    plot type for this spec — not degraded to a single facet_wrap.
+  - Canvas, palette, and theme-adaptive chrome are all pixel-verified correct in both
+    themes — no clipping, no dark-on-dark/light-on-light, backgrounds match Imprint
+    tokens exactly.
+  - Data generation gives each of the 9 species/soil combinations a distinct, realistic
+    intercept/slope, so the grid actually demonstrates cross-facet comparison rather
+    than 9 near-identical panels.
+  weaknesses:
+  - The geom_text callout ('Steepest growth response' in the Basil x Loamy panel)
+    does not render at all in either theme — verified by cropping the exact target
+    pixel coordinates at 3x zoom. Investigate why the annotation layer produces no
+    visible pixels (drawn beneath other layers, dropped by facet matching, or a sizing/alpha
+    issue not apparent from the code) and either fix it or remove the dead code.
+  - The code sets strip.text = element_text(color = IMPRINT_PALETTE[1], ...) (brand
+    green) but the rendered strip labels ('Sandy'/'Clay'/'Loamy'/'Fern'/'Basil'/'Clover')
+    are pixel-confirmed to be plain INK color, not green, in both renders. Not a visual
+    defect (INK is arguably more correct for a structural label), but a code/output
+    mismatch worth confirming against the current script.
+  - Design storytelling is generic once the callout is set aside — consider a redundant
+    visual cue if the annotation route continues to fail to render.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: Title "facet-grid · r · ggplot2 · anyplot.ai" at top-left (~45% width, no clipping, verified via crop). Axis titles "Light Exposure (hours/day)" and "Growth (cm)" fully visible, no clipping at left/bottom edges. Column strip labels (Sandy/Clay/Loamy) and row strip labels (Fern/Basil/Clover) all legible dark-on-cream; row labels confirmed not clipped at the right canvas edge via pixel crop.
+      Data: First/only series pixel-sampled and confirmed brand green #009E73 (sampled RGB [15,163,123], within tolerance of anti-aliasing). Regression line renders in dark INK color. Points use alpha=0.4, appropriately handling ~150 points/panel.
+      Legibility verdict: PASS — all rendered text is legible; however, one intended annotation ("Steepest growth\nresponse" callout in the Basil x Loamy panel) is present in the source code but is completely absent from the rendered pixels — confirmed by computing its exact panel/data-coordinate pixel location (~x=1746, y=967 in the 2400x2400 canvas) and cropping a 3x-zoomed region: only grid lines and data points appear, no text of any kind.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: Title, axis titles, tick labels, and strip labels all render in light INK/INK_SOFT tones (confirmed via pixel sampling of strip text: RGB(240,239,232) = #F0EFE8) and are clearly readable against the dark background. No dark-on-dark failures found anywhere.
+      Data: Confirmed pixel-identical brand green data points to the light render; regression line flips to light INK per theme-adaptive chrome, as expected.
+      Legibility verdict: PASS — same missing-callout issue as the light render, confirmed absent at the identical facet/coordinate via the same pixel-crop method.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All titles/labels legible in both themes; no dark-on-dark or light-on-light
+          issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Explicit panel spacing keeps all 9 panels clean, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: size=1.7 alpha=0.4 handles 150 pts/panel well, could be marginally
+          more prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series, strong contrast, no red-green issue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 confirmed via file inspection, no clipping at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green and theme backgrounds pixel-verified correct
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean minimal theme, elevated strips, but not exceptional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Ticks removed, subtle grid, generous spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Intended callout focal point is completely absent from the render
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct facet_grid with rows and cols
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec fields and point-count range satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correctly mapped, consistent ranges across facets
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format, legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both row and column faceting used with realistic per-cell variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral greenhouse growth trial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible growth and light-exposure ranges
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: geom_text callout block is dead code, produces no visible effect
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct ggsave/ragg usage, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Modern facet_grid(rows=,cols=) syntax, idiomatic theme layering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Two-dimensional faceting used correctly but otherwise standard geom
+          composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - publication-ready
