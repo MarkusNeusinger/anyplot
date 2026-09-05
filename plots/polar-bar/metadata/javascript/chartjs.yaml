@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: polar-bar
 created: '2026-09-05T11:06:46Z'
-updated: '2026-09-05T11:11:46Z'
+updated: '2026-09-05T11:25:06Z'
 generated_by: claude-sonnet
 workflow_run: 33962235483
 issue: 2693
@@ -12,52 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/chartjs/plot-dark.html
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - 'Correct chart type: Chart.js''s native `polarArea` is the idiomatic fit for a
-    wind-rose/polar-bar spec, with bars radiating from the center by compass direction.'
-  - Full 8-slot Imprint categorical palette in canonical order, first series is brand
-    green `#009E73`, and data colors are pixel-identical between light and dark renders.
-  - 'Theme-adaptive chrome is fully correct in both renders: `#FAF8F1`/`#1A1A17` backgrounds,
-    readable ink-toned title/ticks/legend, subtle theme-adaptive grid — no dark-on-dark
-    or light-on-light failures.'
-  - Realistic, neutral dataset (coastal wind-direction frequency) that sums to exactly
-    100% and tells a clear SW-prevailing-wind story.
-  - 'Clean, minimal, idiomatic code: KISS structure, deterministic hardcoded data,
-    `animation: false` set per the mount-node contract, no fake interactivity.'
+  - 'Layout fix from attempt 1: legend moved from an isolated far-right column to
+    a centered bottom row, resolving the prior VQ-05 whitespace imbalance.'
+  - 'Subtitle ''Radial axis: frequency (% of hours)'' now labels the r-scale unit,
+    resolving the prior VQ-06 gap.'
+  - Dominant wedge (SW, value 20) gets a visibly thicker border (5px vs 3px) for subtle
+    data-storytelling emphasis, addressing the DE-03 note.
+  - 'Full 8-slot Imprint categorical palette in canonical order, first series #009E73,
+    pixel-identical data colors between light and dark renders.'
+  - Theme-adaptive chrome fully correct in both renders — no dark-on-dark or light-on-light
+    failures; radial axis max (20) matches the data max exactly, so there is no wasted
+    axis headroom.
+  - 'Clean, minimal, idiomatic Chart.js polarArea usage with animation: false per
+    the mount-node contract; realistic, neutral coastal wind dataset summing to 100%.'
   weaknesses:
-  - 'Unbalanced canvas whitespace: the polar chart hugs the left and bottom canvas
-    edges (SW wedge touches the left border) while the entire right ~25-30% of the
-    square canvas is empty except for the right-aligned legend floating in isolation,
-    with a large visible gap between the chart and the legend column. Rebalance by
-    centering the chart in the full canvas (e.g. reduce legend width/font, or move
-    legend to ''bottom'' under the circle) so margins are even on all sides.'
-  - The radial (r) axis shows bare numeric ticks (0-20) with no visible label or unit
-    — nothing on the chart itself states these are '% of hours'. Add an r-scale axis
-    title (or a subtitle) so the tick meaning doesn't rely solely on the dataset's
-    internal 'Frequency (%)' label, which never renders on the static PNG.
-  - Design reads close to a well-configured Chart.js polarArea default beyond the
-    palette choice — the wedge borders are a nice touch, but there's no additional
-    visual emphasis (e.g. subtly highlighting the dominant SW wedge) to elevate it
-    from 'correct' to 'polished/storytelling'.
+  - A sizable blank region remains between the subtitle and the top of the circle
+    (the N wedge, value 8, is short, leaving upper grid rings visibly empty) — this
+    is largely data-driven (N is the smallest value) but the overall composition could
+    still be tightened, e.g. by trimming top padding or slightly enlarging the plot
+    area.
+  - Design still reads close to a well-configured Chart.js default beyond the palette
+    and border emphasis; a bit more polish (e.g. a callout label on the dominant SW
+    wedge, or subtler radial grid) would lift Design Excellence further.
+  - Only a single series is shown; the spec's optional 'stacked speed ranges' richer
+    variant is not explored (not required, but would raise Data Quality feature coverage).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Wind Rose · polar-bar · javascript · chartjs · anyplot.ai" in dark ink, clearly readable at the top. Radial tick labels (0-20, step 2) in soft dark gray, legend entries (N, NE, E, SE, S, SW, W, NW) in dark ink at the right. Grid rings and angle lines are thin and subtle. All text is legible against the light background.
-      Data: 8 wedges radiating from center, one per compass direction, using the full Imprint categorical palette in canonical order (N=brand green #009E73, NE=lavender, E=blue, SE=ochre, S=matte red, SW=cyan, W=rose/purple, NW=lime), each separated by a thin pageBg-colored border. SW is the longest wedge (value 20, dominant direction), N and NW are shortest.
-      Layout note: the plot is pushed toward the left/bottom of the canvas (SW wedge touches the left edge) while a large empty region sits on the right side around the legend, which sits at a visible distance from the chart body — unbalanced margins.
+      Background: Warm off-white (#FAF8F1), correct.
+      Chrome: Title "Wind Rose · polar-bar · javascript · chartjs · anyplot.ai" and subtitle "Radial axis: frequency (% of hours)" in dark ink at top, both clearly legible. Radial tick labels (0-20, step 2) in soft dark ink along the top spoke, legible. Legend in a centered bottom row (N, NE, E, SE, S, SW, W, NW with swatches), legible dark ink.
+      Data: Eight wedges radiate from a shared center in canonical Imprint palette order (N=brand green #009E73, NE=lavender, E=blue, SE=ochre, S=matte red, SW=cyan, W=magenta, NW=olive), each separated by a thin page-background border. SW (cyan) is visibly the longest wedge, reaching the outermost grid ring (value 20, the dominant direction) and rendered with a thicker border (5px vs 3px) to emphasize it.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, tick labels, and legend text all rendered in light ink tones, clearly readable against the dark surface — no dark-on-dark failures observed. Grid rings and angle lines are faint but visible.
-      Data: Identical wedge colors and identical proportions/order to the light render — confirms data colors are theme-invariant, only chrome flipped.
-      Layout note: same left/bottom-hugging, right-side-empty imbalance as the light render (this is theme-independent, a layout/config issue rather than a theme issue).
+      Background: Warm near-black (#1A1A17), correct.
+      Chrome: Same title, subtitle, tick labels, and legend now rendered in light ink tones — clearly readable, no dark-on-dark failures anywhere.
+      Data: Wedge colors, proportions, and the SW dominant-wedge border emphasis are pixel-identical to the light render, confirming only chrome flipped.
       Legibility verdict: PASS
+
+    Both renders pass legibility with no dark-on-dark/light-on-light issues. The legend, now bottom-centered in both renders, resolves the isolated-far-right-column layout problem flagged in attempt 1.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,73 +63,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, legend 16, ticks 14); readable
-          in both themes with no clipping
+        comment: All text readable in both themes; fonts explicitly sized
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No collisions between text, legend, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Wedges are large, clearly distinguishable, well-suited to 8-category
-          data
+        comment: Wedges clearly distinguishable with page-bg borders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Position (angle) plus pageBg wedge borders and legend provide redundant
-          encoding beyond hue alone for the 8-series palette
+        comment: Imprint palette, CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Chart hugs left/bottom edges while the right ~25-30% of the canvas
-          is empty aside from an isolated legend column — unbalanced margins
+        passed: true
+        comment: Legend now centered at bottom (fixes attempt-1 isolated-legend issue);
+          some data-driven blank space remains above the short N wedge
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Radial ticks show bare numbers (0-20) with no visible unit/axis label
-          on the chart itself
+        passed: true
+        comment: Subtitle now labels the radial axis unit (% of hours)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order, first series #009E73, identical data colors
-          across themes, correct theme backgrounds/chrome'
+        comment: Canonical Imprint order, correct theme backgrounds both renders
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library default with palette applied; not yet publication-level
+        comment: Polished palette + border emphasis, still not fully publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Subtle grid and wedge borders are a nice touch, but the layout imbalance
-          undercuts overall refinement
+        comment: Subtle grid, page-bg wedge borders, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data varies meaningfully by direction but no additional visual emphasis
-          highlights the dominant SW wedge
+        comment: Dominant SW wedge now emphasized via thicker border, addressing attempt-1
+          feedback
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +133,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: polarArea is the correct wind-rose/polar-bar chart type
+        comment: Native Chart.js polarArea is the idiomatic wind-rose fit
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars radiate from center by compass direction; 8 compass points per
-          spec notes
+        comment: 8 compass directions, magnitude via radial length
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle=direction, radius=frequency, full data range shown on axis
+        comment: Angle=direction, radius=frequency, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match direction categories
+        comment: Title matches mandated format; legend labels match direction data
     data_quality:
       score: 14
       max: 15
@@ -171,19 +161,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Good spread across all 8 directions with meaningful variation
+        comment: Single-series only; spec's optional stacked speed-range variant not
+          explored
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible coastal-station wind-direction scenario
+        comment: Neutral, plausible coastal wind-direction dataset, sums to 100%
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum to exactly 100%, consistent with a real frequency distribution
+        comment: Percentage values 8-20 are sensible for a directional frequency distribution
     code_quality:
       score: 10
       max: 10
@@ -193,33 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward flow
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data arrays
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global Chart
+        comment: No imports; uses only provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract; animation disabled
+        comment: 'Mounts to #container, animation: false, current Chart.js API'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -227,15 +218,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses Chart.js's purpose-built polarArea high-level API
+        comment: polarArea used per the library's recommended high-level API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: polarArea is a distinctive Chart.js chart type, though used without
-          further customization
-  verdict: REJECTED
+        passed: false
+        comment: Per-wedge variable borderWidth for dominant-value emphasis is a nice
+          distinctive touch, still fairly standard config overall
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
