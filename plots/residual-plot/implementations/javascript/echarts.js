@@ -43,8 +43,8 @@ fitted.forEach((value, i) => {
   }
 });
 
-const xMin = Math.floor(Math.min(...fitted) - 2);
-const xMax = Math.ceil(Math.max(...fitted) + 2);
+const xMin = Math.floor((Math.min(...fitted) - 2) / 5) * 5;
+const xMax = Math.ceil((Math.max(...fitted) + 2) / 5) * 5;
 const bandLow = -2 * std;
 const bandHigh = 2 * std;
 
@@ -66,6 +66,12 @@ chart.setOption({
     data: ["Normal", "Outlier (|z| > 2.5σ)"],
     top: 72,
     textStyle: { color: t.ink, fontSize: 16 },
+  },
+  tooltip: {
+    trigger: "item",
+    axisPointer: { type: "cross", lineStyle: { color: t.inkSoft, type: "dashed" } },
+    formatter: (p) =>
+      `${p.seriesName}<br/>Predicted: ${p.value[0].toFixed(1)} min<br/>Residual: ${p.value[1].toFixed(2)} min`,
   },
   grid: { left: 110, right: 60, top: 130, bottom: 90 },
   xAxis: {
