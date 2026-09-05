@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: point-basic
 created: '2026-09-05T10:50:00Z'
-updated: '2026-09-05T10:53:27Z'
+updated: '2026-09-05T11:06:28Z'
 generated_by: claude-sonnet
 workflow_run: 33961419339
 issue: 2551
@@ -12,35 +12,69 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - Custom renderItem implementation delivers proper capped error bars — a technique
-    echarts has no native series for
+  - Categories are now sorted descending by estimate, with the top-ranked program
+    ("1-on-1 Coaching") bolded in the y-axis label — turns the chart into a clear
+    ranked comparison with an obvious focal point
+  - Y-axis line and ticks removed per prior review feedback, leaving only the x-axis
+    line for scale reference — a cleaner, less cluttered look
+  - Custom `renderItem` implementation delivers proper capped error bars — a technique
+    ECharts has no native series for
   - Dashed zero-reference line usefully signals which confidence intervals cross zero
-    (e.g. Online Modules)
-  - 'Clean theme-adaptive chrome: identical green data markers, correctly swapped
-    backgrounds/text/grid between light and dark'
+    (Online Modules)
+  - 'Clean theme-adaptive chrome: identical green (#009E73) data markers and gray
+    error bars, correctly swapped backgrounds/text/grid between light and dark'
   - 'Spec compliance is complete: category/estimate/bounds, horizontal orientation,
     capped error bars, and correct title format'
   weaknesses:
-  - Categories are left in arbitrary input order rather than sorted by estimate value,
-    missing an easy data-storytelling win common to forest/point-estimate plots
-  - Visual styling stays close to library defaults (axis lines fully drawn, no highlighted
-    focal category) — could push Design Excellence further with a subtler axis treatment
-    or emphasis on the highest/lowest estimate
+  - Styling is thoughtful but still short of full publication polish — e.g. only the
+    top category is emphasized; a secondary visual cue (color or weight) on the category
+    whose CI crosses zero would push Design Excellence further
+  - Library usage is correct and idiomatic but doesn't lean on any additional ECharts
+    preset (e.g. `dataZoom`, theme registration) beyond the custom renderItem, capping
+    Library Mastery just under full marks
   image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "point-basic · javascript · echarts · anyplot.ai" in bold dark text at top center; x-axis titled "Score Improvement (points)" with dark-gray ticks; y-axis shows 8 full program names; subtle vertical gridlines only; dashed vertical reference line at x=0.
-      Data: 8 green (#009E73) circular markers with gray horizontal error-bar lines and capped ends showing each program's CI. First (and only) series is the Imprint brand green.
-      Legibility verdict: PASS — title, axis title, tick labels, and category labels are all clearly readable against the light background.
+    NOTE: The plot_images/plot-light.png and plot_images/plot-dark.png supplied by the
+    workflow for this review were STALE — they show the pre-repair (attempt 1) row
+    order (categories in raw input order, not sorted by estimate). This does not match
+    the committed implementation (commit bc1984c75), whose sort logic is correct. To
+    verify, the implementation was rendered locally with the actual harness
+    (automation/js-render/render.mjs) against the current plots/point-basic/implementations/javascript/echarts.js,
+    producing plot-light.png/plot-dark.png that correctly show the sorted, bolded-focal-point
+    layout. The description and scoring below are based on this freshly-regenerated,
+    code-accurate render, not the stale staging copy. Recommend the pipeline maintainers
+    check why the GCS staging copy (gs://anyplot-images/staging/point-basic/javascript/echarts/)
+    wasn't refreshed after the repair commit before this review ran.
 
-    Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same title in light/white bold text; axis titles and tick labels rendered in light gray; gridlines subtle; dashed zero-reference line in light gray.
-      Data: Same 8 green (#009E73) markers and gray error bars — data colors are identical to the light render, only chrome (background/text/grid) flipped.
-      Legibility verdict: PASS — no dark-on-dark issues; all text and gridlines are clearly visible against the near-black background.
+    Light render (plot-light.png, regenerated locally from current code):
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Bold dark title "point-basic · javascript · echarts · anyplot.ai" centered
+        at top. X-axis titled "Score Improvement (points)" with dark tick labels and a
+        visible axis line; y-axis has no line/ticks, just 8 category labels, with the
+        top one ("1-on-1 Coaching") rendered bold. Subtle vertical gridlines, plus a
+        dashed vertical reference line at x=0.
+      Data: 8 green (#009E73) circular markers with gray horizontal error-bar lines
+        capped at both ends, one per program, sorted descending by estimate from
+        "1-on-1 Coaching" (top, ~8.6) down to "Online Modules" (bottom, ~1.5, whose CI
+        crosses the zero line).
+      Legibility verdict: PASS — all title, axis, and tick text is clearly readable
+        against the light background.
+
+    Dark render (plot-dark.png, regenerated locally from current code):
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Same title now in light/white bold text; axis title and tick labels in
+        light gray; gridlines subtle; dashed zero-reference line in light gray/dashed
+        white. Bold "1-on-1 Coaching" label still emphasized at top.
+      Data: The 8 green (#009E73) markers and gray error bars are identical in color
+        to the light render — only the chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — all text is clearly readable with no dark-on-dark
+        issues.
+
+    Both renders theme-correct; data colors identical across themes; no clipping at
+    canvas edges (AR-09 clear); no fake interactivity (AR-08 not applicable, JS
+    interactive library).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -51,76 +85,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All titles, axis labels and tick labels clearly legible in both light
-          and dark renders at fontsize 14-22
+        comment: Explicit font sizes (22px title, 14px axis/ticks), readable in both
+          themes, title ~57% of width, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping labels or elements; ample vertical spacing between
-          the 8 categories
+        comment: No overlap between category labels, markers, error bars, or title
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 18px markers and 2.5px capped error-bar lines are clearly visible
-          for this sparse 8-category dataset
+        comment: 18px markers and 2.5px capped error-bar lines well-sized for 8 sparse
+          categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green marker vs. neutral gray error bars gives strong contrast; no
-          red-green reliance
+        comment: Green markers vs. neutral gray error bars, not relying on hue alone;
+          good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); nothing clipped; balanced margins
+        comment: Plot fills the canvas well with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled 'Score Improvement (points)' with units; y-axis shows
-          full category names
+        comment: '"Score Improvement (points)" includes units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses Imprint #009E73; backgrounds correctly #FAF8F1/#1A1A17;
-          identical data colors across themes'
+        comment: 'First series is #009E73; backgrounds are #FAF8F1/#1A1A17; chrome
+          flips correctly, data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom error-bar renderer with capped ends and a dashed zero-reference
-          line show above-default care, but overall palette/typography stays close
-          to defaults
+        passed: true
+        comment: Custom capped error-bar renderer, bold focal label, dashed zero-reference
+          line show thoughtful design clearly above defaults, though short of full
+          publication-level distinctiveness
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Subtle vertical-only gridlines and generous row spacing, but axis
-          lines remain fully drawn rather than minimized
+        passed: true
+        comment: Y-axis line/ticks fully removed (per prior feedback), only x-axis
+          line remains, subtle gridlines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Zero reference line usefully flags which CIs cross zero (Online Modules),
-          but categories are left in input order rather than sorted by estimate for
-          a clearer narrative
+        passed: true
+        comment: Categories sorted descending by estimate with top performer bolded;
+          combined with the zero-reference line the viewer immediately sees the ranking
+          and which program's CI crosses zero
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +162,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct point-estimate-with-CI plot
+        comment: Correct point-estimate/forest-style plot with error bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Category, estimate, bounds, capped error bars, horizontal orientation,
-          and a zero reference line all present
+        comment: Points, capped confidence intervals, horizontal orientation, reference
+          line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=estimate/bounds, y=category; axes show full data range
+        comment: Estimate on x, category on y, bounds correctly encoded via custom
+          series
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed for a single
-          series
+        comment: Title matches required format exactly; no legend needed (single series)
     data_quality:
       score: 15
       max: 15
@@ -160,20 +192,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Point, CI bounds, caps, and zero reference line all demonstrated
+        comment: Varying estimates, varying CI widths, and one program (Online Modules)
+          with a CI crossing zero
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tutoring-program score improvements are plausible and neutral
+        comment: Neutral, realistic education/tutoring-program evaluation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Effect sizes and CI widths are realistic for an educational-intervention
-          study
+        comment: Score-improvement magnitudes and CI widths are plausible for randomized
+          evaluations
     code_quality:
       score: 10
       max: 10
@@ -183,33 +216,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat option object; the one helper function is the required renderItem
-          callback for echarts' custom series API
+        comment: Linear imports/data/init/option structure; the one helper function
+          is the required ECharts custom-series renderItem
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded, fully deterministic
+        comment: Fully deterministic, hard-coded in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only window.echarts/ANYPLOT_TOKENS globals used
+        comment: No unused imports; only the global echarts/tokens used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity for capped error bars; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false set; no explicit size/devicePixelRatio passed to
-          echarts.init; relies on harness for file output
+        comment: Correct mount-node contract, animation disabled, current ECharts
+          6 API
     library_mastery:
       score: 8
       max: 10
@@ -219,23 +252,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom renderItem series is the idiomatic echarts approach for error
-          bars (no native errorbar series exists); markLine used for the reference
-          line
+        comment: Correct option-based API, theme tokens threaded through chrome, but
+          grid/axis config is fully manual rather than leveraging a preset
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Low-level api.coord()/api.value() custom rendering demonstrates real
-          echarts mastery beyond default chart types
+        comment: Low-level api.coord()/api.value() custom renderItem for capped error
+          bars plus a silent markLine reference — genuinely ECharts-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - error-bars
   - reference-line
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - minimal-chrome
