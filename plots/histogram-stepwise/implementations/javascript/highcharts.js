@@ -45,21 +45,33 @@ function histogram(values) {
   return counts;
 }
 
-// Explicit step vertices (left edge, top, right edge) so a plain line series
-// traces the step function exactly — no fill, outline only, dropping to zero
-// at both ends like a classic step histogram.
-function stepOutline(counts) {
+// One (left-edge, count) point per bin plus a leading/trailing zero — with
+// `plotOptions.series.step: "left"` Highcharts interpolates the horizontal
+// bin segments and vertical connectors itself, dropping to zero at both ends.
+function stepPoints(counts) {
   const points = [[edges[0], 0]];
-  for (let i = 0; i < counts.length; i += 1) {
-    points.push([edges[i], counts[i]]);
-    points.push([edges[i + 1], counts[i]]);
-  }
+  counts.forEach((count, i) => points.push([edges[i], count]));
   points.push([edges[edges.length - 1], 0]);
   return points;
 }
 
+function argmax(arr) {
+  return arr.reduce((best, v, i) => (v > arr[best] ? i : best), 0);
+}
+
 const morningCounts = histogram(morningScores);
 const eveningCounts = histogram(eveningScores);
+
+// Callout on the modal (tallest) bin across both classes — a small design
+// touch that adds a focal point beyond the plain overlay comparison.
+const morningPeakIdx = argmax(morningCounts);
+const eveningPeakIdx = argmax(eveningCounts);
+const morningIsPeak = morningCounts[morningPeakIdx] >= eveningCounts[eveningPeakIdx];
+const peakIdx = morningIsPeak ? morningPeakIdx : eveningPeakIdx;
+const peakCount = morningIsPeak ? morningCounts[morningPeakIdx] : eveningCounts[eveningPeakIdx];
+const peakSeriesName = morningIsPeak ? "Morning Class" : "Evening Class";
+const peakColor = morningIsPeak ? t.palette[0] : t.palette[1];
+const peakX = (edges[peakIdx] + edges[peakIdx + 1]) / 2;
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -68,6 +80,23 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    events: {
+      load() {
+        const chart = this;
+        const px = chart.xAxis[0].toPixels(peakX);
+        const py = Math.max(chart.yAxis[0].toPixels(peakCount), chart.plotTop + 14);
+        const labelOnRight = px < chart.plotLeft + chart.plotWidth / 2;
+        chart.renderer
+          .circle(px, py, 5)
+          .attr({ fill: peakColor, stroke: t.pageBg, "stroke-width": 2, zIndex: 6 })
+          .add();
+        chart.renderer
+          .text(`Modal bin · ${peakSeriesName}: ${peakCount} students`, px + (labelOnRight ? 10 : -10), py - 12)
+          .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
+          .attr({ align: labelOnRight ? "left" : "right" })
+          .add();
+      },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -103,11 +132,12 @@ Highcharts.chart("container", {
       animation: false,
       marker: { enabled: false },
       lineWidth: 3,
+      step: "left",
       states: { hover: { lineWidthPlus: 0 } },
     },
   },
   series: [
-    { name: "Morning Class", data: stepOutline(morningCounts) },
-    { name: "Evening Class", data: stepOutline(eveningCounts) },
+    { name: "Morning Class", data: stepPoints(morningCounts) },
+    { name: "Evening Class", data: stepPoints(eveningCounts) },
   ],
 });
