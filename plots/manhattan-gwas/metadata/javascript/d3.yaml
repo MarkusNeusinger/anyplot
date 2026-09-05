@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: manhattan-gwas
 created: '2026-09-05T08:57:16Z'
-updated: '2026-09-05T09:02:10Z'
+updated: '2026-09-05T09:14:03Z'
 generated_by: claude-sonnet
 workflow_run: 33956416633
 issue: 2925
@@ -12,119 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/d3/plot-dark.html
-quality_score: 85
+quality_score: 77
 review:
   strengths:
-  - Chromosome lengths approximate real GRCh38 values (chr1=248.9Mb, chr2=242.2Mb,
-    etc.), and cumulative genomic position is correctly computed with chromosome tick
-    labels centered on each region.
-  - 'Both required threshold lines present and correctly labeled: genome-wide significance
-    (p=5x10^-8, ~7.3) in semantic matte-red, plus the optional suggestive threshold
-    (p=1x10^-5, =5) in muted grey.'
-  - First alternating color is brand green (#009E73) per the Imprint hard rule; the
-    second color is blue (#4467A3), which matches the spec's own 'e.g., blue/gray'
-    suggestion for adjacent-chromosome alternation.
-  - 'Full theme adaptivity: background, title, axis labels, tick labels, grid, and
-    threshold-line labels all flip correctly between light (#FAF8F1) and dark (#1A1A17)
-    with no dark-on-dark or light-on-light failures.'
-  - Marker size (r=2.2) and opacity (0.85) are well-tuned for the ~5.7k-point density,
-    keeping the null-distribution 'sea of points' band readable without heavy overplotting.
-  - 'Idiomatic D3 usage: data-join with .join(''circle''), scaleLinear/scaleOrdinal,
-    and axisBottom with custom tickValues/tickFormat mapped to chromosome midpoints.'
-  - Deterministic LCG (seed=42) for reproducible data; title format exactly matches
-    'manhattan-gwas . javascript . d3 . anyplot.ai'.
+  - 'Significant-SNP highlighting added: variants crossing the genome-wide threshold
+    now get a larger (r=3.2), stroked, fully-opaque marker distinct from the null-band
+    points, directly addressing the prior review''s DE-01 weakness.'
+  - New lead-signal callout uses a d3-quadtree nearest-neighbor lookup to anchor the
+    'chr6 lead signal' annotation to a real rendered datum rather than an idealized
+    coordinate -- a genuine D3-specific technique that improves both LM-02 and DE-03.
+  - Point density increased roughly 5x (~27,000 points across 22 autosomes + X) versus
+    the prior attempt, giving the null-distribution band a much more realistic dense-GWAS-scan
+    appearance.
+  - Chromosome lengths approximate real GRCh38 Mb values and cumulative genomic position
+    is computed correctly, with chromosome tick labels centered on each region.
+  - Genome-wide significance threshold (p=5x10^-8, ~7.3) renders correctly and legibly
+    in both themes using valid theme tokens (t.palette[4] for the line/label, t.ink
+    for the callout).
+  - 'First categorical color (chromosome 1) is brand green #009E73 per the Imprint
+    hard rule; alternating blue/green chromosome banding matches the spec''s own ''blue/gray''
+    suggestion.'
+  - Deterministic seeded LCG (seed=42); idiomatic D3 usage throughout (data joins
+    with .join('circle'), scaleLinear/scaleOrdinal, axisBottom with custom tickValues/tickFormat
+    mapped to chromosome midpoints).
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level rather than publication-ready:
-    no visual emphasis distinguishes genome-wide-significant SNPs from the rest of
-    the data beyond the shared chromosome banding color -- consider a subtle outline,
-    size bump, or label on points crossing the genome-wide threshold to sharpen the
-    focal point (spec explicitly allows this: ''Significant SNPs above threshold may
-    be labeled or highlighted with different color'').'
-  - No annotation calls out the strongest peak(s) (e.g. an SNP id or chromosome:position
-    label near the chr6 or chr2 peaks) -- a single well-placed callout would turn
-    this from 'data displayed' into a clear guided insight (DE-03).
-  - Point count (~5,700 variants) is far below the 100k-1M typical GWAS scale noted
-    in the spec; while a full-scale SVG render would be too heavy for the browser
-    harness, consider increasing the background-noise density somewhat (e.g. 5-10x)
-    to make the null band read more like a dense GWAS scan and less like a sparse
-    scatter.
-  - 'Library Mastery is generic-D3: the implementation could lean on a more distinctive
-    D3-only technique (e.g. d3-quadtree/hexbin for the dense null band, or a d3.forceSimulation-based
-    label layout to avoid future overlap when adding SNP callouts) to better showcase
-    D3''s low-level flexibility versus a higher-level charting library.'
-  - Threshold-line labels are relatively small (13px) and the suggestive-threshold
-    line/label (muted grey) is quite low-contrast against the background -- intentional
-    per its 'secondary' semantic role, but worth confirming it stays legible at mobile
-    scale (~400px width).
+  - 'CRITICAL: ''t.muted'' is not a property of window.ANYPLOT_TOKENS (the harness
+    only exposes theme, pageBg, elevatedBg, ink, inkSoft, grid, palette, amber, seq,
+    div -- see automation/js-render/render.mjs themeTokens()). The call `thresholdLine(suggestiveThreshold,
+    "Suggestive (p = 1x10^-5)", t.muted)` passes `undefined` as both the line stroke
+    and the label fill, so the browser falls back to the SVG default paint, pure black
+    (rgb(0,0,0), pixel-verified in both renders). In the light theme this coincidentally
+    still reads (black on #FAF8F1), but in the dark theme it produces true black-on-near-black
+    (#1A1A17 = rgb(26,26,23)) -- the suggestive-threshold dashed line and its label
+    are effectively invisible (pixel diff from background < 10 across almost the entire
+    line). Fix: replace `t.muted` with an existing theme-adaptive token, e.g. `t.inkSoft`
+    (#4A4A44 light / #B8B7B0 dark).'
+  - Because of the above, the spec's optional suggestive-threshold feature is reliably
+    visible in only one of the two required renders -- a partial Required-Features
+    miss until fixed.
+  - Library Mastery is good but could push further into D3-unique territory beyond
+    the new quadtree lookup (e.g. density shading for the null band) -- not required,
+    just a future opportunity.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "manhattan-gwas · javascript · d3 · anyplot.ai" in bold dark ink, centered near top. Y-axis label "−log₁₀(p-value)" rotated at left, "Chromosome" x-axis label centered below tick labels. Subtle horizontal gridlines (light grey, low opacity). Tick labels (1–22, X) all legible and evenly spaced under their chromosome regions. All text is dark ink against the light background — fully readable.
-      Data: Points alternate between brand green (#009E73) and blue (#4467A3) by chromosome, correctly starting with green on chromosome 1. Five distinct peaks rise above the background noise on chromosomes 2, 6, 9, 11, and 17, several crossing the red dashed genome-wide-significance line (~7.3) and one (chr9) staying near the grey suggestive line (5). Genome-wide threshold line/label in semantic matte red (#AE3030); suggestive threshold line/label in muted grey — both clearly distinguishable from data colors.
-      Legibility verdict: PASS
+      Chrome: Title "manhattan-gwas · javascript · d3 · anyplot.ai" in bold dark ink, centered near top, comfortably within canvas bounds. Y-axis label "−log₁₀(p-value)" rotated at left, "Chromosome" label centered below tick labels 1-22 and X. Subtle horizontal gridlines. All axis text is dark ink against the light background and reads clearly.
+      Data: ~27,000 points span 22 autosomes + chromosome X, alternating brand green (#009E73) and blue (#4467A3) by chromosome, starting green on chromosome 1. Five peaks rise above background noise on chromosomes 2, 6, 9, 11, and 17; genome-wide-significant points (crossing the red dashed line at ~7.3) get larger, dark-outlined, fully-opaque markers. A "chr6 lead signal" callout with a leader line points to the tallest peak's top point, anchored via nearest-neighbor lookup.
+      Legibility verdict: PASS, EXCEPT one element: the "Suggestive (p = 1×10⁻⁵)" threshold line and its label render in pure black (rgb(0,0,0)) rather than a genuine muted-grey token -- legible here only because black-on-off-white still has contrast; pixel-sampled and confirmed as an undefined-token fallback (t.muted does not exist), not an intentional dark ink choice.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title now rendered in light/near-white ink, fully legible. Axis labels and tick labels switch to light grey/white tones, gridlines switch to a faint light-grey overlay. Threshold labels: genome-wide line stays a similar red hue that reads clearly against the dark background; suggestive line/label switches to a light grey that is visible (not dark-on-dark).
-      Data: Same green/blue alternating chromosome coloring, pixel-identical to the light render — confirms data colors are constant across themes. Peaks at the same chromosomes/heights.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; brand green remains clearly visible on the dark surface.
+      Chrome: Title, axis labels, and tick labels correctly flip to light tones and are fully legible. Grid lines flip to a faint light overlay. The genome-wide-significant threshold line/label stay a clearly visible red/ink combination.
+      Data: Same green/blue alternating chromosome coloring and significant-SNP highlighting, pixel-identical in hue to the light render -- data colors are correctly theme-invariant. The lead-signal callout line/text correctly flips to light ink and is legible.
+      Legibility verdict: FAIL for one element -- the "Suggestive (p = 1×10⁻⁵)" dashed threshold line and its label are rendered in pure black (rgb(0,0,0)) against the #1A1A17 (~rgb(26,26,23)) background. Pixel sampling along the expected line row shows no discernible difference from the background color at all -- this is a genuine dark-on-dark failure caused by referencing a nonexistent token (t.muted) instead of a valid theme-adaptive one (e.g. t.inkSoft). All other chrome and data elements pass.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 19
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 0
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 26px, axis labels 17px, tick/threshold
-          labels 13-14px); readable in both themes. Threshold labels at 13px are the
-          smallest element, borderline at mobile scale.
+        passed: false
+        comment: 'The ''Suggestive (p = 1×10⁻⁵)'' label renders in pure black (rgb(0,0,0))
+          via an undefined ''t.muted'' token; on the #1A1A17 dark background this
+          is effectively invisible (dark-on-dark). All other text passes in both themes,
+          but per policy any unreadable element in either render drops this to 0.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axis labels, tick labels, threshold labels,
-          or data.
+        comment: No collisions between title, axis labels, tick labels, threshold
+          labels, the new lead-signal callout, or data -- pixel-checked around the
+          right-edge labels and the annotation region.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker size (r=2.2, alpha=0.85) well-tuned for the density used,
-          though the underlying point count is sparser than a realistic full-scale
-          GWAS scan.
+        comment: Marker size/opacity well-tuned for the ~27k-point density; significant
+          SNPs get a distinct larger/outlined marker. Minor deduction because the
+          suggestive-threshold line itself is also invisible in dark mode (same root-cause
+          bug as VQ-01).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue alternating bands plus semantic red/grey thresholds avoid
-          red-green-only encoding; good contrast in both themes.
+        comment: Green/blue chromosome banding plus semantic red threshold avoids
+          red-green-only encoding; good contrast where colors are actually applied.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large majority of the canvas, balanced margins,
-          nothing cut off.
+        comment: Canvas gate passed (no drift file present); title ~35% width with
+          comfortable margins, no overflow or clipping in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"−log₁₀(p-value)" and "Chromosome" are descriptive and standard
+        comment: '''−log₁₀(p-value)'' and ''Chromosome'' are descriptive and standard
           for this plot type.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series is #009E73 as required; alternating blue matches the
-          spec''s own ''blue/gray'' suggestion (semantic exception). Backgrounds and
-          chrome are theme-correct in both renders.'
+        passed: false
+        comment: 'First series is #009E73 as required and data colors are theme-invariant,
+          but the suggestive-threshold chrome uses an undefined token that falls back
+          to black, producing wrong-theme (dark-on-dark) chrome in the dark render
+          -- hard rule violation per the theme-readability gate.'
     design_excellence:
       score: 13
       max: 20
@@ -134,25 +135,28 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Thoughtful semantic color use (red danger line, muted secondary line,
-          chromosome banding) beyond a plain default, but no distinguishing treatment
-          for significant SNPs.
+        comment: 'Real polish added since attempt 1: distinct significant-SNP markers,
+          semantic threshold colors, chromosome banding. Held back by the broken suggestive-line
+          styling, which undercuts the otherwise deliberate color system.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped spines, subtle Y-only gridlines, generous margins — clear
-          refinement over library defaults.
+        comment: L-shaped spines, subtle Y-only gridlines, generous margins are clear
+          refinements; the invisible dark-mode line is a refinement failure specific
+          to that one element.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Threshold lines and labels give the reader direct interpretive context,
-          but no callout highlights the strongest peak/SNP.
+        comment: The new lead-signal callout and highlighted significant SNPs create
+          a real focal point and guide the reader, addressing the prior review's exact
+          ask -- though the secondary suggestive-threshold storytelling context is
+          lost in dark mode.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -164,12 +168,13 @@ review:
           -log10(p) on Y.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
         comment: Cumulative position axis with centered chromosome labels, alternating
-          colors, both threshold lines, reduced marker size for density — all present.
-          Optional per-SNP highlighting/labeling not included but spec marks it optional.
+          colors, genome-wide threshold, reduced marker size, and now significant-SNP
+          highlighting are all present and correct. The optional suggestive threshold
+          is present in code but only reliably visible in the light render.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -182,34 +187,33 @@ review:
         max: 3
         passed: true
         comment: Title format exact match; no legend needed since chromosome identity
-          is already shown via x-axis labels.
+          is shown via x-axis labels.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows background null distribution, suggestive-only peak (chr9),
-          and multiple genome-wide-significant peaks of varying heights.
+        comment: Shows dense background null distribution, a suggestive-only peak
+          (chr9), and multiple genome-wide-significant peaks of varying heights.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible GWAS scan scenario.
+        comment: Neutral, plausible simulated GWAS scan scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Chromosome lengths match real GRCh38 approximations closely; point
-          density (~5.7k) is much lower than a realistic full GWAS array, a reasonable
-          but noticeable trade-off for browser SVG rendering.
+        comment: Chromosome lengths match real GRCh38 approximations; ~27k-point density
+          is a much more realistic stand-in for a full GWAS scan than the prior ~5.7k.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -217,8 +221,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions (makeLcg, thresholdLine) used for deterministic
-          RNG and DRY threshold-line drawing; reasonable, not over-engineered.
+        comment: makeLcg and thresholdLine helpers are reasonable and DRY, not over-engineered.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -233,11 +236,12 @@ review:
         comment: Only the global d3 is used, no extraneous imports.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for cumulative-position computation and peak
-          overlay; no fake UI.
+        passed: false
+        comment: 'Real correctness bug: `t.muted` references a token key that does
+          not exist on window.ANYPLOT_TOKENS, silently falling back to black instead
+          of throwing or being caught.'
       - id: CQ-05
         name: Output & API
         score: 1
@@ -246,7 +250,7 @@ review:
         comment: 'Correctly mounts into #container per the D3 harness contract; sizes
           svg from window.ANYPLOT_SIZE.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -254,17 +258,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct data-join (.join('circle')), scale usage, and axis customization
-          (tickValues/tickFormat mapped to chromosome midpoints).
+        comment: Correct data-join, scale usage, and axis customization; the undefined-token
+          bug is a small mastery/attention-to-contract gap.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom tick-value-to-label mapping for chromosome centering is a
-          genuine D3-axis-API technique, but overall the implementation doesn't lean
-          on D3-unique capabilities (e.g. quadtree/hexbin, force-based label layout)
-          that would be hard to replicate in a higher-level charting library.
+        comment: d3.quadtree nearest-neighbor lookup to anchor the lead-signal annotation
+          to a real datum is a genuine D3-only technique that directly answers the
+          prior review's ask for more distinctive D3 usage.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -279,3 +282,4 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
+  - edge-highlighting
