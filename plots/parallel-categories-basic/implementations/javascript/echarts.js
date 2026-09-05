@@ -6,17 +6,14 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// Customer journey: acquisition channel -> product category -> purchase outcome.
-// ECharts has no dedicated "parallel categories" chart (that's a numeric
-// parallel-coordinates variant); a Sankey diagram is its native equivalent for
-// width-proportional ribbons flowing between categorical stages.
-const CHANNELS = [
-  "Organic Search",
-  "Paid Ads",
-  "Social Media",
-  "Email Campaign",
-];
+// Customer journey across four categorical dimensions: acquisition channel ->
+// product category -> device type -> purchase outcome. ECharts has no
+// dedicated "parallel categories" chart (that's a numeric parallel-coordinates
+// variant); a Sankey diagram is its native equivalent for width-proportional
+// ribbons flowing between categorical stages.
+const CHANNELS = ["Organic Search", "Paid Ads", "Social Media", "Email Campaign"];
 const CATEGORIES = ["Electronics", "Apparel", "Home & Garden"];
+const DEVICES = ["Desktop", "Mobile"];
 const OUTCOMES = ["Purchased", "Abandoned"];
 
 // channel -> category visit counts
@@ -35,22 +32,40 @@ const channelToCategory = [
   ["Email Campaign", "Home & Garden", 60],
 ];
 
-// category -> outcome counts
-const categoryToOutcome = [
-  ["Electronics", "Purchased", 720],
-  ["Electronics", "Abandoned", 330],
-  ["Apparel", "Purchased", 520],
-  ["Apparel", "Abandoned", 440],
-  ["Home & Garden", "Purchased", 230],
-  ["Home & Garden", "Abandoned", 190],
+// category -> device counts (each category's flow conserved into Desktop/Mobile)
+const categoryToDevice = [
+  ["Electronics", "Desktop", 630],
+  ["Electronics", "Mobile", 420],
+  ["Apparel", "Desktop", 528],
+  ["Apparel", "Mobile", 432],
+  ["Home & Garden", "Desktop", 210],
+  ["Home & Garden", "Mobile", 210],
 ];
 
-// Color by first dimension (source channel); category nodes stay neutral so the
-// channel provenance reads through the ribbons, outcome nodes carry the
-// pass/fail semantic (Purchased -> brand green, Abandoned -> matte red).
-const channelColor = Object.fromEntries(
-  CHANNELS.map((name, i) => [name, t.palette[i]]),
-);
+// device -> outcome counts (Desktop converts noticeably better than Mobile)
+const deviceToOutcome = [
+  ["Desktop", "Purchased", 1000],
+  ["Desktop", "Abandoned", 368],
+  ["Mobile", "Purchased", 470],
+  ["Mobile", "Abandoned", 592],
+];
+
+// Color by first dimension (source channel) and last dimension (target
+// outcome). Category nodes now carry their own semantic hue (fits the
+// domain: Electronics -> cyan/tech, Home & Garden -> lime/growth, Apparel ->
+// rose) so the middle of the flow keeps visual hierarchy instead of going
+// fully neutral; only the small Desktop/Mobile waypoint stays neutral.
+const channelColor = {
+  "Organic Search": t.palette[0],
+  "Paid Ads": t.palette[1],
+  "Social Media": t.palette[2],
+  "Email Campaign": t.palette[3],
+};
+const categoryColor = {
+  Electronics: t.palette[5],
+  "Home & Garden": t.palette[7],
+  Apparel: t.palette[6],
+};
 const outcomeColor = { Purchased: t.palette[0], Abandoned: t.palette[4] };
 
 const nodes = [
@@ -59,6 +74,10 @@ const nodes = [
     itemStyle: { color: channelColor[name] },
   })),
   ...CATEGORIES.map((name) => ({
+    name,
+    itemStyle: { color: categoryColor[name] },
+  })),
+  ...DEVICES.map((name) => ({
     name,
     itemStyle: {
       color: t.elevatedBg,
@@ -72,9 +91,6 @@ const nodes = [
   })),
 ];
 
-// First stage ribbons take the channel (source) color; second stage ribbons
-// take the outcome (target) color, so the terminal green/red split reads
-// clearly instead of fading into the neutral category-node color.
 const links = [
   ...channelToCategory.map(([source, target, value]) => ({
     source,
@@ -82,7 +98,13 @@ const links = [
     value,
     lineStyle: { color: channelColor[source], opacity: 0.5, curveness: 0.5 },
   })),
-  ...categoryToOutcome.map(([source, target, value]) => ({
+  ...categoryToDevice.map(([source, target, value]) => ({
+    source,
+    target,
+    value,
+    lineStyle: { color: categoryColor[source], opacity: 0.5, curveness: 0.5 },
+  })),
+  ...deviceToOutcome.map(([source, target, value]) => ({
     source,
     target,
     value,
@@ -100,7 +122,7 @@ chart.setOption({
   title: {
     text: "parallel-categories-basic · javascript · echarts · anyplot.ai",
     subtext:
-      "Customer journey: acquisition channel → product category → purchase outcome",
+      "Customer journey: acquisition channel → product category → device → purchase outcome",
     left: "center",
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 600 },
     subtextStyle: { color: t.inkSoft, fontSize: 16 },
@@ -110,18 +132,26 @@ chart.setOption({
     {
       type: "sankey",
       left: 40,
-      right: 220,
+      right: 160,
       top: 130,
       bottom: 60,
-      nodeWidth: 26,
-      nodeGap: 26,
+      nodeWidth: 22,
+      nodeGap: 22,
+      nodeAlign: "justify",
+      // Raised from the default 32: more Gauss-Seidel relaxation passes let
+      // ECharts' own node-ordering algorithm converge further toward
+      // fewer ribbon crossings.
+      layoutIterations: 100,
       orient: "horizontal",
       draggable: false,
       emphasis: { focus: "adjacency" },
       label: {
         color: t.ink,
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 500,
+        backgroundColor: t.pageBg,
+        padding: [3, 6],
+        borderRadius: 3,
       },
       data: nodes,
       links,
