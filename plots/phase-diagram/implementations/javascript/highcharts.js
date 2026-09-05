@@ -47,6 +47,41 @@ const trajectories = initialConditions.map((ic) => ({
   points: integrateTrajectory(ic.theta0, ic.omegaDot0),
 }));
 
+function hexToRgba(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Each trajectory is drawn as a run of short line segments whose opacity rises
+// from faint (t=0, far from equilibrium) to solid (final points, at rest) —
+// a time-evolution cue that follows the actual path order, unlike a bounding-box
+// SVG gradient which would fade by spatial position instead of by time.
+const SEGMENTS = 10;
+function fadedTrailSegments(traj, baseColor) {
+  const pts = traj.points;
+  const segLen = Math.ceil(pts.length / SEGMENTS);
+  const segments = [];
+  for (let s = 0; s < SEGMENTS; s++) {
+    const start = s * segLen;
+    if (start >= pts.length - 1) break;
+    const end = Math.min(pts.length - 1, start + segLen);
+    const alpha = 0.22 + (0.78 * s) / (SEGMENTS - 1);
+    segments.push({
+      name: traj.label,
+      type: "line",
+      data: pts.slice(start, end + 1),
+      color: hexToRgba(baseColor, alpha),
+      lineWidth: 2.5,
+      marker: { enabled: false },
+      showInLegend: s === SEGMENTS - 1,
+    });
+  }
+  return segments;
+}
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -95,14 +130,17 @@ Highcharts.chart("container", {
     series: { animation: false },
   },
   series: [
-    ...trajectories.map((traj, i) => ({
-      name: traj.label,
-      type: "line",
-      data: traj.points,
-      color: t.palette[i],
-      lineWidth: 2.5,
-      marker: { enabled: false },
-    })),
+    {
+      name: "Equilibrium halo",
+      type: "scatter",
+      data: [[0, 0]],
+      color: hexToRgba(t.ink, 0.08),
+      marker: { symbol: "circle", radius: 34, lineWidth: 0 },
+      enableMouseTracking: false,
+      showInLegend: false,
+      zIndex: 0,
+    },
+    ...trajectories.flatMap((traj, i) => fadedTrailSegments(traj, t.palette[i])),
     ...trajectories.map((traj, i) => ({
       name: `${traj.label} start`,
       type: "scatter",
@@ -111,6 +149,7 @@ Highcharts.chart("container", {
       marker: { symbol: "circle", radius: 6, lineWidth: 1.5, lineColor: t.pageBg },
       enableMouseTracking: false,
       showInLegend: false,
+      zIndex: 4,
     })),
     {
       name: "Equilibrium",
