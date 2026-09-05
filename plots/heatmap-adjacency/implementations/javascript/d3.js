@@ -56,6 +56,41 @@ const blocks = departments.map((dept) => {
   return { name: dept.name, start, end: cursor, mid: start + dept.size / 2 };
 });
 
+// --- Insight: densest internal cluster + sparsest cross-team pair -----------
+// A short reinforcing takeaway beyond "block-diagonal is visible".
+const deptAvg = blocks.map((b) => {
+  let sum = 0;
+  let count = 0;
+  for (let i = b.start; i < b.end; i++) {
+    for (let j = b.start; j < b.end; j++) {
+      if (i !== j && matrix[i][j] !== null) {
+        sum += matrix[i][j];
+        count++;
+      }
+    }
+  }
+  return { name: b.name, avg: count ? sum / count : 0 };
+});
+const densest = deptAvg.reduce((best, d) => (d.avg > best.avg ? d : best));
+
+let sparsestPair = null;
+for (let a = 0; a < blocks.length; a++) {
+  for (let b = a + 1; b < blocks.length; b++) {
+    const ba = blocks[a];
+    const bb = blocks[b];
+    let count = 0;
+    for (let i = ba.start; i < ba.end; i++) {
+      for (let j = bb.start; j < bb.end; j++) {
+        if (matrix[i][j] !== null) count++;
+      }
+    }
+    const density = count / ((ba.end - ba.start) * (bb.end - bb.start));
+    if (!sparsestPair || density < sparsestPair.density) {
+      sparsestPair = { a: ba.name, b: bb.name, density };
+    }
+  }
+}
+
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
@@ -91,6 +126,8 @@ svg
   .attr("fill", (d) => (d.value === null ? t.elevatedBg : color(d.value)));
 
 // --- Block separators (mark cluster / department boundaries) ----------------
+// Kept subtle (t.grid, the 15%-alpha ink rule token) so only the outer frame
+// reads at full ink weight, per the Imprint "subtle structural line" convention.
 const separators = svg.append("g");
 blocks.forEach((b) => {
   if (b.start === 0) return;
@@ -101,16 +138,16 @@ blocks.forEach((b) => {
     .attr("x2", pos)
     .attr("y1", gridY)
     .attr("y2", gridY + gridSize)
-    .attr("stroke", t.ink)
-    .attr("stroke-width", 2);
+    .attr("stroke", t.grid)
+    .attr("stroke-width", 1.5);
   separators
     .append("line")
     .attr("x1", gridX)
     .attr("x2", gridX + gridSize)
     .attr("y1", gridY + b.start * cell)
     .attr("y2", gridY + b.start * cell)
-    .attr("stroke", t.ink)
-    .attr("stroke-width", 2);
+    .attr("stroke", t.grid)
+    .attr("stroke-width", 1.5);
 });
 // Outer frame around the full matrix.
 separators
@@ -161,12 +198,15 @@ const gradient = defs
   .attr("x2", "0%")
   .attr("y1", "100%")
   .attr("y2", "0%");
+// d3.quantize samples the interpolator at N evenly-spaced points in one call,
+// avoiding a hand-rolled d3.range/offset loop for the gradient stops.
+const stopColors = d3.quantize((tt) => color(tt * maxWeight), 11);
 gradient
   .selectAll("stop")
-  .data(d3.range(0, 1.001, 0.1))
+  .data(stopColors)
   .join("stop")
-  .attr("offset", (d) => `${d * 100}%`)
-  .attr("stop-color", (d) => color(d * maxWeight));
+  .attr("offset", (d, i) => `${(i / (stopColors.length - 1)) * 100}%`)
+  .attr("stop-color", (d) => d);
 
 svg
   .append("rect")
@@ -179,7 +219,13 @@ svg
   .attr("stroke-width", 1);
 
 const legendScale = d3.scaleLinear().domain([0, maxWeight]).range([legendY + legendH, legendY]);
-const legendAxis = d3.axisRight(legendScale).ticks(5).tickFormat(d3.format(".1f"));
+// Force a tick at the true data ceiling so the legend never appears to stop
+// short of the actual max weight.
+const legendTickValues = legendScale.ticks(4);
+if (legendTickValues[legendTickValues.length - 1] < maxWeight * 0.97) {
+  legendTickValues.push(maxWeight);
+}
+const legendAxis = d3.axisRight(legendScale).tickValues(legendTickValues).tickFormat(d3.format(".2f"));
 const legendAxisG = svg
   .append("g")
   .attr("transform", `translate(${legendX + legendW},0)`)
@@ -234,3 +280,15 @@ svg
   .attr("fill", t.inkSoft)
   .style("font-size", "15px")
   .text(`${n}-person collaboration network across 4 departments, reordered to reveal team clusters`);
+
+svg
+  .append("text")
+  .attr("x", width / 2)
+  .attr("y", 112)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-style", "italic")
+  .text(
+    `Densest cluster: ${densest.name} (avg weight ${densest.avg.toFixed(2)}) · sparsest cross-team ties: ${sparsestPair.a}–${sparsestPair.b}`,
+  );
