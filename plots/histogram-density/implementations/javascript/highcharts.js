@@ -1,6 +1,7 @@
 // anyplot.ai
 // histogram-density: Density Histogram
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 84/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
@@ -42,6 +43,7 @@ diameters.forEach((value) => {
   const bin = Math.min(NUM_BINS - 1, Math.floor((value - dataMin) / binWidth));
   counts[bin] += 1;
 });
+const sampleMean = diameters.reduce((sum, v) => sum + v, 0) / N;
 const histogramData = counts.map((count, i) => {
   const center = dataMin + (i + 0.5) * binWidth;
   const density = count / (N * binWidth);
@@ -82,16 +84,38 @@ Highcharts.chart("container", {
       text: "Bolt Diameter (mm)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickWidth: 0,
     gridLineColor: t.grid,
     labels: {
       style: { color: t.inkSoft, fontSize: "14px" },
       format: "{value:.2f}",
     },
+    plotLines: [
+      {
+        value: sampleMean,
+        color: t.inkSoft,
+        width: 1.5,
+        dashStyle: "ShortDot",
+        zIndex: 5,
+        label: {
+          text: `Mean ${sampleMean.toFixed(3)} mm`,
+          rotation: 0,
+          align: "center",
+          verticalAlign: "top",
+          y: 8,
+          backgroundColor: t.pageBg,
+          borderRadius: 3,
+          padding: 4,
+          style: { color: t.inkSoft, fontSize: "13px", fontWeight: "600" },
+        },
+      },
+    ],
   },
   yAxis: {
     title: { text: "Density", style: { color: t.inkSoft, fontSize: "16px" } },
+    lineWidth: 0,
+    min: 0,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
@@ -119,9 +143,10 @@ Highcharts.chart("container", {
     },
     {
       name: "Normal PDF (fit)",
-      type: "spline",
+      type: "areaspline",
       data: pdfCurve,
       color: t.ink,
+      fillOpacity: 0.08,
       dashStyle: "Dash",
       lineWidth: 2.5,
       marker: { enabled: false },
