@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-timeseries-rolling
 created: '2026-09-05T08:42:39Z'
-updated: '2026-09-05T08:46:24Z'
+updated: '2026-09-05T08:53:36Z'
 generated_by: claude-sonnet
 workflow_run: 33955838735
 issue: 2786
@@ -12,50 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-time
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Excellent visual hierarchy: a thin semi-transparent (alpha=0.4) raw-data line
-    is paired with a bold, opaque rolling-average line, cleanly separating signal
-    from noise per the spec''s ''lighter raw data / prominent rolling average'' guidance.'
-  - Legend labels are descriptive and dynamic (e.g. 'Rolling Average (14-day)'), surfacing
-    the window size directly as the spec notes suggest.
-  - Title correctly encodes descriptive text + spec-id + language + library per SC-04,
-    with a dynamically computed fontsize that keeps it from overflowing.
-  - Theme tokens (PAGE_BG/INK/INK_SOFT/GRID) are threaded through plot/panel background,
-    axis text, and gridlines consistently — both renders are fully legible with no
-    dark-on-dark or light-on-light issues.
-  - 'Data colors (#009E73 raw, #4467A3 rolling average) are pixel-identical between
-    light and dark renders; only chrome flips as required.'
+  - 'Palette compliance fixed: the rolling-average line now uses canonical position-2
+    lavender #C475FD instead of the previously flagged position-3 blue, resolving
+    the VQ-07 weakness from attempt 1 — data colors are pixel-identical between light
+    and dark renders.'
+  - 'Added a peak annotation (geom_point + annotate("text", ...) labeling "Peak: 76.7")
+    that creates a clear focal point and directly incorporates the distinctive ggplot2
+    layering technique requested in the prior review''s Library Mastery feedback.'
+  - 'Excellent visual hierarchy is preserved: a thin, semi-transparent (alpha=0.4)
+    raw-data line is paired with a bold, opaque rolling-average line, cleanly separating
+    signal from noise per the spec''s guidance.'
+  - Theme tokens (PAGE_BG/INK/INK_SOFT/GRID) correctly propagate to every element,
+    including the new annotation color, so both renders stay fully legible with no
+    dark-on-dark or light-on-light failures.
+  - Title dynamically sized to avoid overflow, descriptive axis labels, and title
+    format correctly follows SC-04 with a descriptive prefix.
   weaknesses:
-  - 'Second series (Rolling Average) uses blue #4467A3 (canonical position 3) instead
-    of the canonical position-2 lavender #C475FD, with no real-world color association
-    (like temperature or water) justifying the skip — violates the ''use positions
-    1→N in order, don''t cherry-pick'' palette rule. Fix: switch the rolling-average
-    line color to #C475FD, or use a documented semantic exception.'
-  - 'Design Excellence is largely default styling: no annotation calling out the peak/trough
-    for storytelling, and vertical gridlines at month breaks (if present) are extremely
-    subtle given the low-contrast GRID token — consider slightly stronger vertical
-    gridlines so date reference lines stay legible, per the spec''s ''grid lines on
-    both axes'' note.'
-  - Library Mastery is generic idiomatic ggplot2 (geom_line + scale_color_manual +
-    theme) without leveraging any distinctive ggplot2-specific capability (e.g. annotate()
-    to mark the peak, or a geom_ribbon band) that would set the implementation apart.
+  - Vertical month-break gridlines remain very subtle against the low-contrast GRID
+    token in both themes — still not distinctly visible as separate date reference
+    lines despite the spec's 'grid lines on both axes' note; this was flagged in attempt
+    1 and is still unaddressed.
+  - Design Excellence outside the new annotation is still close to a standard theme_minimal
+    treatment — no custom typography, secondary accent, or added refinement (e.g.
+    a subtle geom_ribbon band around the rolling average) to lift DE-01/DE-02 further.
+  - The peak annotation only marks the single maximum; a complementary marker for
+    the trough (~60 in March) would round out the storytelling and better justify
+    the spec's 'reveals underlying trends' framing.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), matches spec.
-      Chrome: Title "14-Day Rolling Average · line-timeseries-rolling · r · ggplot2 · anyplot.ai" is dark and fully readable at ~55% plot width. Axis titles "Date" and "Engagement Score" are dark and legible. Tick labels (INK_SOFT gray) are clearly readable, x-axis ticks rotated ~30° avoiding overlap. Legend ("Raw Data", "Rolling Average (14-day)") sits centered above the plot area, fully legible.
-      Data: First series (Raw Data) is a thin, semi-transparent brand-green (#009E73) line showing noisy daily engagement scores; second series (Rolling Average) is a bold, opaque blue (#4467A3) line tracing the smoothed 14-day trend through a seasonal sine-like pattern with an upward drift.
+      Background: Warm off-white, consistent with #FAF8F1, matches spec.
+      Chrome: Title "14-Day Rolling Average · line-timeseries-rolling · r · ggplot2 · anyplot.ai" is dark ink and fully readable, comfortably sized without overflow or clipping. Axis titles "Date" and "Engagement Score" are dark and legible. Tick labels (INK_SOFT gray) are clearly readable; x-axis ticks rotated ~30° avoid overlap. Legend ("Raw Data", "Rolling Average (14-day)") sits centered above the plot area, fully legible. A bold "Peak: 76.7" annotation sits just above the rolling-average line's peak point, dark and legible, with no overlap with other elements.
+      Data: First series (Raw Data) is a thin, semi-transparent brand-green (#009E73) line showing noisy daily engagement scores; second series (Rolling Average) is a bold, opaque lavender (#C475FD) line tracing the smoothed 14-day trend through a seasonal, sine-like pattern with an upward mid-cycle bump. A small lavender dot marks the peak.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), matches spec.
-      Chrome: Title, axis titles, and tick labels all render in light ink tones (INK / INK_SOFT) against the dark background — no dark-on-dark failures observed. Gridlines are faint but visible. Legend text is legible in light gray.
-      Data: Raw data (green) and rolling average (blue) colors are identical to the light render — only the background/chrome flipped as expected.
+      Background: Warm near-black, consistent with #1A1A17, matches spec.
+      Chrome: Title, axis titles, and tick labels all render in light ink tones (INK / INK_SOFT) against the dark background — no dark-on-dark failures observed. Gridlines are faint but visible. Legend text is legible in light gray. The "Peak: 76.7" annotation renders in light ink (theme-adaptive INK token), fully legible against the dark background — no dark-on-dark issue here either.
+      Data: Raw data (green) and rolling average (lavender) colors are identical to the light render — only the background/chrome flipped as expected.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,13 +63,14 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text legible in both themes; rotated x tick labels avoid collision
+        comment: All text legible in both themes; rotated x tick labels avoid collision;
+          sizes explicitly set
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements
+        comment: No collisions between text, legend, data, or the new peak annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -82,14 +83,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Green/blue combination has good contrast; not a red-green-only signal
+        comment: Green/lavender combination has good contrast; not a red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Title ~55% width, balanced axis labels, no overflow or clipping,
-          canvas gate passed
+        comment: Title fits without overflow, balanced axis labels, no clipping, canvas
+          gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -98,13 +100,13 @@ review:
         comment: Descriptive axis labels with units, window size stated in title
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73, but second series uses position-3
-          blue instead of canonical position-2 lavender with no semantic justification'
+        passed: true
+        comment: 'Fixed from attempt 1: second series now uses canonical position-2
+          lavender #C475FD; first series correctly #009E73; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -112,22 +114,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Alpha layering and dynamic title sizing show some polish beyond defaults,
-          but overall a fairly standard theme_minimal treatment
+        comment: Alpha layering, dynamic title sizing, and the peak annotation show
+          polish beyond defaults, but overall still a fairly standard theme_minimal
+          treatment
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Grid is subdued and panel minimal, but axis lines remain and no further
-          refinement beyond theme_minimal defaults
+        comment: Grid remains subdued but vertical month-break gridlines are still
+          very low-contrast; unaddressed since attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bold trend line vs. faint raw noise creates a clear focal point that
-          guides the eye through the seasonal cycle
+        comment: 'Bold trend line vs. faint raw noise plus explicit ''Peak: 76.7''
+          annotation creates a strong, immediate focal point'
     spec_compliance:
       score: 15
       max: 15
@@ -167,7 +170,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows raw data, rolling average, and window size clearly
+        comment: Shows raw data, rolling average, window size, and peak highlight
+          clearly
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -215,26 +219,28 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic dplyr + ggplot2 patterns (filter, slice_max, scale_color_manual,
+          annotate)
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Idiomatic dplyr + ggplot2 patterns (filter, scale_color_manual),
-          nothing beyond standard usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No distinctive ggplot2-only features leveraged (e.g. annotate, geom_ribbon)
+        comment: Now uses annotate() + geom_point layering to mark the peak, a distinctive
+          ggplot2 technique requested in the prior review
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
