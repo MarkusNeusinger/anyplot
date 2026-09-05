@@ -6,9 +6,11 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ---------------------------------------
-// Quarterly revenue-growth forecast: downside risk shrinks while upside
-// potential grows across the forecast horizon (planned product launches),
-// producing genuinely asymmetric 10th-90th percentile bounds per quarter.
+// Quarterly revenue-growth forecast. Upside potential grows every quarter
+// (planned product launches expand the ceiling), while downside risk spikes
+// in Q3 (a flagged supply-chain risk) before easing back — so the total
+// interval widens unevenly toward the end of the horizon, including one
+// quarter (Q3) whose low bound dips below 0%.
 const quarters = ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6"];
 const forecast = [3.2, 4.1, 2.8, 5.5, 4.7, 6.0];
 const errorLower = [1.5, 2.0, 3.2, 1.8, 2.5, 3.0];
@@ -17,6 +19,15 @@ const errorUpper = [0.8, 1.0, 1.2, 2.5, 3.5, 4.0];
 const lowerBound = forecast.map((y, i) => y - errorLower[i]);
 const upperBound = forecast.map((y, i) => y + errorUpper[i]);
 const rangeData = quarters.map((_, i) => [i, lowerBound[i], upperBound[i]]);
+
+// Total interval width per quarter drives the error bar's stroke weight —
+// a redundant visual encoding so the widening-uncertainty trend reads at a
+// glance, not just from careful axis reading.
+const totalWidth = quarters.map((_, i) => errorLower[i] + errorUpper[i]);
+const minWidth = Math.min(...totalWidth);
+const maxWidth = Math.max(...totalWidth);
+const lineWidthFor = (i) =>
+  2 + ((totalWidth[i] - minWidth) / (maxWidth - minWidth)) * 2.5;
 
 const brand = t.palette[0];
 
@@ -29,7 +40,11 @@ function renderErrorBar(params, api) {
   const lowPoint = api.coord([xValue, api.value(1)]);
   const highPoint = api.coord([xValue, api.value(2)]);
   const halfWidth = api.size([1, 0])[0] * 0.15;
-  const style = { stroke: brand, lineWidth: 3, lineCap: "round" };
+  const style = {
+    stroke: brand,
+    lineWidth: lineWidthFor(params.dataIndex),
+    lineCap: "round",
+  };
 
   return {
     type: "group",
@@ -69,15 +84,19 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "errorbar-asymmetric · javascript · echarts · anyplot.ai",
+    subtext: "Bars mark the 10th-90th percentile forecast range per quarter",
     left: "center",
-    textStyle: { color: t.ink, fontSize: 22 },
+    top: 24,
+    textStyle: { color: t.ink, fontSize: 27, fontWeight: "bold" },
+    subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
   legend: {
-    top: 56,
+    icon: "roundRect",
+    top: 112,
     data: ["10th-90th percentile range", "Point forecast"],
     textStyle: { color: t.inkSoft, fontSize: 16 },
   },
-  grid: { left: 90, right: 60, top: 150, bottom: 80 },
+  grid: { left: 90, right: 60, top: 190, bottom: 80 },
   xAxis: {
     type: "category",
     data: quarters,
