@@ -1,0 +1,229 @@
+library: ggplot2
+language: r
+specification_id: histogram-stepwise
+created: '2026-09-05T04:54:55Z'
+updated: '2026-09-05T05:05:11Z'
+generated_by: claude-sonnet
+workflow_run: 33945720183
+issue: 2645
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Correct step-histogram grammar (geom_step, direction="hv", no fill) precisely
+    matching the spec's outline-only requirement
+  - Effective overlay of two conditions for direct distribution comparison, with legend
+    labels matching the data
+  - Thoughtful mean-gap annotation and dashed reference lines add a clear narrative
+    focal point without excessive clutter
+  - Theme-adaptive chrome correctly implemented — data colors identical between light/dark,
+    only chrome flips
+  - Imprint palette used in correct order with correct light/dark backgrounds
+  - Clean, reproducible, KISS-structured code with no unused imports
+  weaknesses:
+  - The "+52 ms slower under dim light" annotation overlaps the green dashed mean-line
+    for "Bright light" — the vertical guide passes directly through the text. Reposition
+    the annotation or shorten the vline's vertical extent so it stops below the annotation.
+  - Library Mastery is generic — no strongly distinctive ggplot2-specific technique
+    beyond geom_step + vline/annotate layering
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "histogram-stepwise · r · ggplot2 · anyplot.ai" top-left in dark ink; top-aligned legend "Condition" (Bright light / Dim light); axis titles "Reaction Time (ms)" / "Number of Trials" and tick labels in dark/soft ink; only horizontal gridlines, subtle. All chrome clearly readable.
+      Data: Two overlaid step histograms (green #009E73 = Bright light, lavender #C475FD = Dim light), two dashed vertical mean-marker lines, centered annotation "+52 ms slower under dim light" above the peaks. First series is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same layout as light render; title, legend, axis titles, and tick labels rendered in light ink, fully legible against the dark background. No dark-on-dark failures. Gridlines remain subtle but visible.
+      Data: Colors are pixel-identical to the light render (green #009E73, lavender #C475FD) — only chrome flipped, confirming theme-adaptive implementation.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Fully legible in both themes; annotation is crossed by the green
+          dashed mean-line
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation text overlaps the green dashed mean-line for Bright light
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Step lines clearly distinguishable; central overlap zone is dense
+          but readable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, not solely red-green coded
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; well-proportioned, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint order and theme-correct backgrounds
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom palette + annotation beyond generic defaults, but fairly standard
+          composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Minimal theme, horizontal-only grid, no border
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: Mean lines + annotation create a clear narrative focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step histogram via geom_step(direction="hv"), no fill
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal + vertical step segments; overlay for distribution comparison
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=bin_start, Y=count; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match data conditions
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full distribution shapes for both groups plus derived mean-gap summary
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral reaction-time scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible reaction-time and count values for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves via ragg::agg_png as plot-{THEME}.png
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_step, scale_color_manual, tidyverse data prep
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Competent but not a strongly distinctive ggplot2 feature showcase
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
