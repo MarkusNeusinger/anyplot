@@ -1,7 +1,3 @@
-// anyplot.ai
-// hive-basic: Basic Hive Plot
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 // anyplot.ai
 // hive-basic: Basic Hive Plot
@@ -105,28 +101,61 @@ AXES.forEach((axis) => {
 // --- Chart geometry ----------------------------------------------------------
 const TITLE = "hive-basic · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 70;
-// Equal-size drawing area on both axes keeps the hand-computed polar layout
-// undistorted — a hive plot's angles and radii only read correctly on a
-// true 1:1 pixel-per-unit mapping.
-const MARGIN = { top: 60, right: 95, bottom: 60, left: 95 };
 
 // The 3-axis star is vertically lopsided (the Core spoke points straight up
-// while Utility/Interface point down-left/down-right), so a domain centered
-// on the hub wastes canvas below the triangle. Center the domain on the
-// content's own bounding box instead, with one shared half-span on both axes
-// so the pixel-per-unit ratio stays equal (required for undistorted angles).
+// while Utility/Interface point down-left/down-right) and wider than it is
+// tall. Center the domain on the content's own bounding box, using a
+// *separate* half-span per axis so each hugs its own content tightly — then
+// give the plot area that same width:height ratio (below) so the
+// pixel-per-unit mapping stays equal on both axes (required for undistorted
+// angles) without padding the shorter axis out to match the longer one.
 const LABEL_R = OUTER_R * 1.16;
 const TOP_Y = LABEL_R; // Core points at 90°, sin(90°) = 1
 const BOTTOM_Y = LABEL_R * Math.sin((210 * Math.PI) / 180); // Utility/Interface, negative
 const SIDE_X = LABEL_R * Math.cos((330 * Math.PI) / 180); // symmetric left/right extent
 const CONTENT_Y_CENTER = (TOP_Y + BOTTOM_Y) / 2;
-const HALF_SPAN = Math.max(SIDE_X, (TOP_Y - BOTTOM_Y) / 2) * 1.08;
-const X_MIN = -HALF_SPAN;
-const X_MAX = HALF_SPAN;
-const Y_MIN = CONTENT_Y_CENTER - HALF_SPAN;
-const Y_MAX = CONTENT_Y_CENTER + HALF_SPAN;
+const PAD = 1.12; // clearance for label text extending past its anchor point
+const X_HALF_SPAN = SIDE_X * PAD;
+const Y_HALF_SPAN = ((TOP_Y - BOTTOM_Y) / 2) * PAD;
+const X_MIN = -X_HALF_SPAN;
+const X_MAX = X_HALF_SPAN;
+const Y_MIN = CONTENT_Y_CENTER - Y_HALF_SPAN;
+const Y_MAX = CONTENT_Y_CENTER + Y_HALF_SPAN;
+
+// Fit the widest possible plot area of ratio X_HALF_SPAN:Y_HALF_SPAN inside
+// the canvas (minus a flat outer-margin floor), then split the leftover
+// canvas space evenly as margin on whichever pair of sides has slack.
+const MIN_MARGIN = 48;
+const FRAME_W = window.ANYPLOT_SIZE.width;
+const FRAME_H = window.ANYPLOT_SIZE.height - TITLE_HEIGHT;
+const domainRatio = X_HALF_SPAN / Y_HALF_SPAN;
+const innerW = FRAME_W - 2 * MIN_MARGIN;
+const innerH = FRAME_H - 2 * MIN_MARGIN;
+const plotW = innerW / innerH > domainRatio ? innerH * domainRatio : innerW;
+const plotH = innerW / innerH > domainRatio ? innerH : innerW / domainRatio;
+const MARGIN = {
+  top: (FRAME_H - plotH) / 2,
+  bottom: (FRAME_H - plotH) / 2,
+  left: (FRAME_W - plotW) / 2,
+  right: (FRAME_W - plotW) / 2,
+};
 
 const AXIS_INDEX = Object.fromEntries(AXES.map((axis, i) => [axis.id, i]));
+
+// Degree-based halo behind each marker reinforces the radial ordering: nodes
+// pushed to the rim (higher degree) get a visibly larger glow than nodes near
+// the hub, so the encoded property reads at a glance instead of only through
+// position.
+const degrees = allNodes.map((n) => n.degree);
+const MIN_DEGREE = Math.min(...degrees);
+const MAX_DEGREE = Math.max(...degrees);
+const HALO_MIN_PX = 6;
+const HALO_MAX_PX = 20;
+function haloRadiusFor(node) {
+  if (MAX_DEGREE === MIN_DEGREE) return (HALO_MIN_PX + HALO_MAX_PX) / 2;
+  const frac = (node.degree - MIN_DEGREE) / (MAX_DEGREE - MIN_DEGREE);
+  return HALO_MIN_PX + frac * (HALO_MAX_PX - HALO_MIN_PX);
+}
 
 // --- Custom overlay: axis spokes, category labels, and edge curves. Community
 // `@mui/x-charts/hooks` (useXScale/useYScale) map the hand-computed polar
@@ -139,6 +168,19 @@ function HiveGeometry() {
 
   return (
     <g>
+      {allNodes.map((node) => {
+        const p = toPx(node);
+        return (
+          <circle
+            key={`halo-${node.id}`}
+            cx={p.x}
+            cy={p.y}
+            r={haloRadiusFor(node)}
+            fill={t.palette[AXIS_INDEX[node.axis]]}
+            fillOpacity={0.22}
+          />
+        );
+      })}
       {edges.map((edge, i) => {
         const source = nodesById[edge.source];
         const target = nodesById[edge.target];
