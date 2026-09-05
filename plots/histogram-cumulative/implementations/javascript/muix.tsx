@@ -1,8 +1,7 @@
 // anyplot.ai
 // histogram-cumulative: Cumulative Histogram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-05
+// Quality: 78/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 
 const t = window.ANYPLOT_TOKENS;
