@@ -1,0 +1,243 @@
+library: muix
+language: javascript
+specification_id: histogram-density
+created: '2026-09-05T04:38:58Z'
+updated: '2026-09-05T04:52:31Z'
+generated_by: claude-sonnet
+workflow_run: 33944925185
+issue: 2442
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Genuine MUI X combo chart built from ChartContainer primitives (BarPlot + LinePlot
+    sharing one band x-axis) rather than a manual overlay hack
+  - Descriptive subtitle with computed sample mean/SD adds real quantitative context
+    and storytelling
+  - Theme-correct, pixel-identical data colors between light and dark renders; all
+    chrome properly theme-adaptive
+  - Realistic, neutral packaging-QC scenario with a plausible process SD
+  weaknesses:
+  - Axis lines/ticks are recolored to the grid token but not removed - a fully pared-back
+    L-shaped (or spineless) frame would read as more refined per the style guide's
+    top Visual-Refinement tier
+  - Data storytelling relies on the subtitle text and curve overlay alone; an explicit
+    visual callout (e.g. a shaded +/-1 SD band or a goodness-of-fit annotation) would
+    push Design Excellence further
+  - The bar+line combo pattern, while implemented idiomatically for MUI X, is also
+    straightforward in other JS charting libraries - a more MUI-X-distinctive touch
+    (e.g. gradient fills, custom axis highlight) would raise Library Mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "Package Weight Distribution · histogram-density · javascript · muix · anyplot.ai" in dark ink at top-left; soft-gray subtitle "Mean 500.2 g · SD 6.1 g — fitted Normal PDF overlay" below it; axis labels "Package Weight (g)" and "Density" both clearly visible; tick labels (484-518 on x, 0.000-0.075 on y) readable; legend top-right with "Observed density" / "Fitted Normal PDF" swatches; faint horizontal grid lines.
+      Data: 18 green (#009E73) bars forming a bell-shaped density histogram, overlaid with a smooth lavender (#C475FD) line (fitted Normal PDF) tracking the bar heights closely.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title/subtitle text now in light ink/gray; axis labels and tick labels in light gray, clearly readable; legend rendered with light text; faint light-colored horizontal grid lines. No dark-on-dark issues observed anywhere.
+      Data: Bar color (#009E73) and line color (#C475FD) are identical to the light render - confirmed unchanged, only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, fully readable in both themes, no
+          overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between any text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 18 bars for 400 observations read clearly; smooth monotoneX PDF curve
+          is clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender gives strong hue+lightness contrast; not red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart occupies the large majority of the canvas with balanced margins;
+          legend near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Package Weight (g)" has units; "Density" is the correct concept
+          for a normalized histogram'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD (canonical order); theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dynamic title sizing, computed-stats subtitle, rounded bar corners,
+          softened axis-line color - above-default polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and generous whitespace, but axis lines are recolored
+          rather than removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle + PDF overlay create a clear goodness-of-fit narrative;
+          no explicit visual callout beyond that
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine area-normalized density histogram with theoretical PDF overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Density y-axis, consistent bin width, theoretical PDF overlay implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = weight bin centers, Y = density; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean unimodal distribution with well-fitting Normal overlay; no
+          skewed/multimodal variant shown but not required
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Package-filling-line weight variability around 500g nominal - realistic,
+          neutral manufacturing/QC scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SD ~6g (~1.2% CV) on 500g nominal fill is a plausible process variability
+          value
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports -> data -> bin -> chart structure; only necessary RNG
+          helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct ChartContainer/BarPlot/LinePlot composition, skipAnimation
+          set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ChartContainer composition API - MUI X's recommended pattern
+          for combo charts
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses MUI-X-specific composition (ChartContainer, axisClasses, slotProps),
+          though combo charts are replicable elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
+  - grid-styling

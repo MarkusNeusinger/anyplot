@@ -1,0 +1,258 @@
+library: d3
+language: javascript
+specification_id: histogram-stepwise
+created: '2026-09-05T04:51:35Z'
+updated: '2026-09-05T05:02:40Z'
+generated_by: claude-sonnet
+workflow_run: 33945502137
+issue: 2645
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/d3/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Correctly builds the step-histogram outline (fill: none) with a drop-to-zero
+    segment at both ends, matching the matplotlib histtype=''step'' convention the
+    spec describes.'
+  - Uses shared bin thresholds across both series so the Bus and Train step outlines
+    are directly comparable — a thoughtful touch that fulfills the spec's 'overlaying
+    multiple distributions' application.
+  - Theme-adaptive chrome is threaded correctly through every element (axis text,
+    ticks, grid, legend, title) via window.ANYPLOT_TOKENS; both light and dark renders
+    are fully legible.
+  - 'Palette compliance is correct: Bus uses Imprint #009E73 (position 1), Train uses
+    #C475FD (position 2), identical across both themes.'
+  - Deterministic LCG + Irwin-Hall normal approximation gives fully reproducible synthetic
+    data without relying on a seeded RNG in the browser.
+  weaknesses:
+  - 'Typography hierarchy is inverted: the title and the axis labels both use 18px
+    (title only distinguished by font-weight 600). Per the style guide''s JS sizing
+    defaults, the title should read noticeably larger (~22px) than axis labels (~14px)
+    so it reads as ''the first thing readers see'' — right now it barely stands out.'
+  - 'Design storytelling is minimal: both series carry equal visual weight with no
+    emphasis or callout on the clear insight in the data (Train commuters peak ~8
+    minutes earlier and with a tighter spread than Bus commuters) — a missed opportunity
+    for a stronger focal point.'
+  - The right margin reserved for the legend (260px) is much wider than the left margin
+    (100px), creating slightly unbalanced whitespace distribution around the plot.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Commute Times by Transit Mode · histogram-stepwise · javascript · d3 · anyplot.ai" is dark and centered at top; x-axis label "Commute Time (minutes)" and y-axis label "Number of Commuters" are dark and clearly legible; tick labels are a slightly softer dark gray; subtle horizontal gridlines run only on the y-axis; legend ("Bus" / "Train" with colored line swatches) sits to the right of the plot area.
+      Data: Two step-outline (unfilled) histograms — Bus in Imprint brand green (#009E73) peaking around 33-38 minutes, Train in lavender (#C475FD) peaking earlier around 24-27 minutes with a narrower spread. Both curves drop cleanly to zero at their outer edges, confirming proper step-histogram construction.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels have flipped to light/off-white tones and remain fully legible; gridlines are still subtle; legend text and swatches are visible against the dark background.
+      Data: Bus and Train step outlines use the identical #009E73 / #C475FD hex values as the light render — only the chrome (background, text, grid) flipped, confirming correct theme-adaptive implementation.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and both data series are clearly distinguishable from the background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes, but title
+          (18px, bold) and axis labels (18px, regular) share the same font-size, inverting
+          the intended typography hierarchy.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, legend, or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3.5px step outlines are clearly visible and well-separated for the
+          binned data density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender pairing is CVD-safe and high-contrast; only two
+          series so no redundant encoding needed.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area occupies ~79% of the canvas; legend sits directly adjacent
+          to the plot, not isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Commute Time (minutes)" and "Number of Commuters" are descriptive
+          and include units where applicable.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD — correct Imprint canonical
+          order; identical across both theme-correct backgrounds.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: 'Reads as a well-configured default: correct palette and clean lines,
+          but no distinctive typographic or compositional choices beyond the baseline.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, L-shaped spines, and theme tokens threaded
+          consistently show real refinement, though the title/label size clash undercuts
+          polish slightly.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Both series are shown with equal visual weight; the clear insight
+          (Train peaks earlier and tighter than Bus) is left for the viewer to find,
+          with no emphasis or callout.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct unfilled step-histogram construction with drop-to-zero ends.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No fill, horizontal bin segments, vertical connectors, and overlay
+          of two distributions all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = commute time, Y = count; full data range shown on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels (Bus/Train) match the data series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Directly demonstrates the spec's 'comparing multiple distributions'
+          application with two distinct, comparable distributions.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Commute times by transit mode is a real, neutral, easily understood
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Means (24/32 min) and spreads (6/8 min) with a floor of 2 minutes
+          are realistic for commute-time data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script; small helper functions are necessary for
+          RNG/step-point construction in JS, not over-abstracted.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (42, 1337) makes the data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the provided d3 global is used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom step-histogram; no fake UI or
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; current d3 7.9 API (d3.bin,
+          scaleLinear, line) with no deprecated calls.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct idiomatic use of d3.bin, scales, axes, and line generator;
+          series are drawn with a plain for-loop plus .append() rather than a canonical
+          selection.data().join() pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combining d3.bin() with a custom line generator to synthesize a step-outline
+          shape (with shared thresholds across series) leverages D3's low-level composability
+          in a way high-level chart libraries can't easily replicate.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - grid-styling
