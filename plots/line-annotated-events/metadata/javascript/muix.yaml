@@ -1,0 +1,263 @@
+library: muix
+language: javascript
+specification_id: line-annotated-events
+created: '2026-09-05T06:47:24Z'
+updated: '2026-09-05T07:01:48Z'
+generated_by: claude-sonnet
+workflow_run: 33950458344
+issue: 2997
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/muix/plot-dark.html
+quality_score: 96
+review:
+  strengths:
+  - 'Fixed both weaknesses from Attempt 1 precisely: the Service Outage event now
+    shows a negative -15 step (alongside the four positive events), giving full feature
+    coverage of both impact directions, and the new GrowthPhaseBand overlay (a subtle
+    7%-opacity brand-green shaded region after the Enterprise Tier event, built with
+    the useXScale/useDrawingArea hooks) adds a deliberate design accent beyond a stock
+    MUI X default.'
+  - Alternating top/bottom + start/end label placement for the 5 reference lines avoids
+    any overlap between labels or with the data line in either theme.
+  - Fully explicit font sizing (dynamic title scaling, 14/16px axis/tick labels, 14px
+    bold event labels) with confirmed legibility in both light and dark themes; correct
+    Imprint palette and theme-adaptive chrome throughout (background, grid, axis line,
+    and text all theme-correct).
+  - 'Idiomatic, layered MUI X composition: dataset-driven series with valueFormatter,
+    custom tickInterval to avoid a crowded time axis, ChartsReferenceLine for event
+    annotations, and a custom hook-based child component (useXScale + useDrawingArea)
+    to draw a scale-synced overlay — a genuinely MUI-X-specific compositional pattern.'
+  - Deterministic LCG-based data generation produces a realistic, neutral product-growth
+    narrative where every event date visibly coincides with a step change in the DAU
+    trend, now including both an upward and downward shock.
+  weaknesses:
+  - Aesthetic sophistication is strong but not yet at full publication polish — the
+    growth-phase band and dashed reference lines are the only accents beyond a well-configured
+    MUI X line chart; a future pass could add a second, subtler design touch (e.g.
+    a distinct marker/callout on the single most consequential event) to push Design
+    Excellence toward the top of the range.
+  - The reference lines and growth-phase band both key off the same ink/brand-green
+    tokens as the chrome and data line respectively — visually correct and non-competing,
+    but it means every event currently reads with equal visual weight; consider whether
+    the largest-magnitude event (Enterprise Tier, +17) should carry a slightly stronger
+    visual cue than the smaller ones for a clearer focal point.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Dark-ink title "line-annotated-events · javascript · muix · anyplot.ai" centered at top, clearly readable. Axis labels "Date" and "Daily Active Users (thousands)" and all tick labels render in dark ink, fully legible. Subtle horizontal gridlines (light, non-competing). Five vertical dashed ink-colored reference lines mark "Beta Launch", "Mobile App Release", "Service Outage", "API v2 Launch", and "Enterprise Tier", with bold labels alternating between the top and bottom of the plot area and alternating start/end horizontal alignment, so no label collides with another label, the axis, or the data line.
+      Data: Single brand-green (#009E73) line tracing Daily Active Users (thousands) from ~42k up through ~57k, ~75k, down to ~60k after the Service Outage, then up to ~90k+ after Enterprise Tier — five clear step changes, four positive and one negative, each aligned with its reference line. A subtle brand-green shaded band (~7% opacity) covers the plot area after the Enterprise Tier line, highlighting the sustained higher-growth phase.
+      Legibility verdict: PASS — no text is light-on-light or otherwise hard to read.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all render in light ink, fully readable against the dark background. The five reference lines are light-grey/ink dashed lines with light-ink bold labels — no dark-on-dark failures anywhere. Gridlines are faint but visible.
+      Data: Line color is identical #009E73 green to the light render — confirmed only chrome (background, text, grid, band tint) flipped between themes, not the data color. The post-Enterprise-Tier shaded band uses the same brand-green tint at the same low opacity, reading correctly on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark or other theme-adaptation failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (dynamic title scaling, 14/16px axis/tick,
+          14px event labels); readable in both themes, no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alternating top/bottom + start/end placement for all 5 reference-line
+          labels avoids any collision with each other or the data line
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'strokeWidth 3 line reads clearly for 270 points; showMark: false
+          correctly avoids marker clutter at this density'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green line plus neutral-ink dashed reference lines;
+          no red/green-only signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills a well-balanced majority of the canvas, margins reasonable,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (Daily Active Users (thousands)); X-axis 'Date'
+          needs none
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73; backgrounds and all chrome theme-correct
+          in both renders; growth-phase band reuses the same brand color at low opacity'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design above defaults: the new growth-phase shaded band is
+          a deliberate custom accent beyond the mandated brand green, but overall
+          still short of full publication-level polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, reduced-opacity axis line, thin dashed
+          reference lines, and a soft 7%-opacity band all show attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Now shows both positive and negative event impacts plus a highlighted
+          sustained-growth phase after the largest step — a clear, immediate visual
+          narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated line chart with event markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertical dashed lines mark events, labels avoid overlap via alternating
+          placement, event lines visually distinct from the data line (dashed ink
+          vs. solid brand green)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=DAU correctly mapped, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend correctly hidden
+          for the single data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 events now include both positive step-ups and one negative dip
+          (Service Outage, -15), fully covering the spec's both-directions requirement
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Believable, neutral product-growth narrative (Beta, Mobile App, Outage,
+          API v2, Enterprise Tier)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: DAU trajectory and per-event bump/dip sizes are plausible for the
+          scenario
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data generation -> exported chart component, plus one
+          small hook-based overlay component required by the muix contract (hooks
+          only work as chart descendants) — not gratuitous abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, current MUI X API (ChartsReferenceLine, dataset-based
+          series, hooks)
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Dataset pattern, valueFormatter, custom tickInterval, theme tokens
+          threaded through tickLabelStyle/labelStyle
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine with labelAlign/spacing plus a custom overlay
+          built on useXScale/useDrawingArea — a compositional pattern fairly specific
+          to MUI X's chart-context architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
