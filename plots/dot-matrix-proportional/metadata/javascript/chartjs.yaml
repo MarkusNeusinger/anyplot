@@ -1,0 +1,254 @@
+library: chartjs
+language: javascript
+specification_id: dot-matrix-proportional
+created: '2026-09-05T00:12:07Z'
+updated: '2026-09-05T00:17:21Z'
+generated_by: claude-sonnet
+workflow_run: 33931797857
+issue: 5241
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Grid-fill algorithm exactly matches the spec: dots are assigned left-to-right,
+    top-to-bottom in category order, verified pixel-for-pixel against the 47/34/19
+    counts (row 5 correctly splits 7 green + 3 red, row 9 correctly splits 1 red +
+    9 gray).'
+  - 'Thoughtful semantic color mapping (Agreed -> brand green #009E73, Disagreed ->
+    matte-red semantic anchor, No opinion -> theme-adaptive muted anchor) that follows
+    the style guide''s documented semantic-exception pattern instead of mechanically
+    applying palette order.'
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white / near-black
+    backgrounds, readable ink-colored title and legend text, no dark-on-dark or light-on-light
+    failures, and identical data colors between light and dark.'
+  - Legend doubles as a count readout ('Agreed (47)', 'Disagreed (34)', 'No opinion
+    (19)'), satisfying the spec's suggestion to add count/percentage context without
+    cluttering the canvas.
+  - Creative but idiomatic use of Chart.js's scatter type (hidden linear scales used
+    as a grid coordinate system, fixed pointRadius, page-background-colored point
+    borders for dot separation) to implement a chart type Chart.js has no native support
+    for, avoiding any plugin or NOT_FEASIBLE shortcut.
+  weaknesses:
+  - Chose total=100 with a perfectly square 10x10 grid -- the simplest possible case.
+    The spec description highlights 'variable grid sizes' (e.g. 10x50 for a total
+    of 500) as a distinguishing feature of dot-matrix vs. waffle charts; a non-square
+    total would better showcase that flexibility.
+  - Agreed vs. Disagreed rely on green vs. red hue as the sole visual distinguisher
+    with no redundant shape/pattern encoding; consider a subtle shape or texture cue
+    to further strengthen accessibility for this specific semantic pairing, even though
+    the Imprint palette is CVD-optimized.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "dot-matrix-proportional · javascript · chartjs · anyplot.ai" is bold dark ink text, clearly legible and comfortably sized (~60% of canvas width, no clipping). Legend sits below the grid with three circular swatches and labels "Agreed (47)", "Disagreed (34)", "No opinion (19)" in dark ink text, fully readable.
+      Data: A 10x10 grid of uniform circular dots. Dots are filled left-to-right, top-to-bottom: first 47 dots brand green (#009E73, "Agreed"), next 34 dots matte red ("Disagreed"), final 19 dots muted gray ("No opinion"). The category boundaries land mid-row exactly where expected (row 5 = 7 green + 3 red, row 9 = 1 red + 9 gray), confirming correct proportional counts. Each dot has a thin border matching the page background, creating clean visual separation between dots.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and legend text render in light ink color, clearly legible against the dark background. No dark-on-dark failures observed anywhere (title, legend labels, counts all readable).
+      Data: Identical dot grid and category boundaries as the light render. Data colors are pixel-identical to the light version -- brand green, matte red, and muted gray (the muted anchor itself is theme-adaptive and appropriately lighter here to stay visible against the dark surface) -- confirming only chrome flips between themes, not data colors.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background; no dark-on-dark or unreadable elements found.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 22px, legend 16px); readable in both themes;
+          title fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between dots, legend, or title
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 100 dots is a sparse count; fixed pointRadius produces prominent,
+          clearly visible circles with clean spacing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses the CVD-optimized Imprint palette per the documented semantic-exception
+          pattern (green=positive, red=negative, muted=neutral)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid and legend well balanced on the 2400x2400 square canvas, generous
+          but not excessive margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes intentionally hidden (not applicable to a dot-matrix grid);
+          title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; semantic-exception colors for Disagreed/No
+          opinion match style guide guidance; backgrounds theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color choice clearly above mechanical palette-order
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/spines hidden, generous whitespace, subtle page-bg-colored dot
+          borders for separation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color semantics plus legend counts give the viewer an immediate sentiment
+          read without needing extra annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dot-matrix grid implementation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid matches total, one dot per unit, color-coded, filled left-to-right/top-to-bottom,
+          legend with labels and counts
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Grid coordinates correctly derived from index; all 100 dots accounted
+          for
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; legend labels and counts match
+          data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows proportional coloring and count-based grid well but chose the
+          simplest square total (100) rather than demonstrating a non-square grid
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral civic-infrastructure survey scenario (bike-lane expansion),
+          plausible and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts sum correctly to the stated total; proportions plausible for
+          survey results
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear data -> mapping -> mount -> chart flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the global Chart and ANYPLOT_TOKENS
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Creative, idiomatic repurposing of Chart.js's scatter type with hidden
+          linear scales as a grid coordinate system, staying within core Chart.js
+          (no plugins)
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Page-bg-colored point borders and usePointStyle legend are Chart.js-specific
+          touches, though not highly distinctive versus other point-based libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
