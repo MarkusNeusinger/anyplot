@@ -11,6 +11,8 @@
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { ChartsVoronoiHandler } from "@mui/x-charts/ChartsVoronoiHandler";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -56,6 +58,13 @@ const series = CATEGORIES.map((category) => {
   };
 });
 
+// CVD-safety: green ("Agreed") vs. red ("Disagreed") is otherwise a pure-hue
+// distinction, so the "Disagreed" dots get a non-color ring cue (a shape/
+// contrast difference, not just a different hex) that a red-green colorblind
+// viewer can still pick up. It's a decorative overlay -- not a chart series --
+// so it never touches MUI X's Voronoi hit-testing or the hover tooltip.
+const disagreedData = series.find((s) => s.id === "Disagreed").data;
+
 const TITLE_HEIGHT = 76;
 const LEGEND_HEIGHT = 84;
 
@@ -69,6 +78,13 @@ export default function Chart() {
   const gridArea = Math.min(width, height - TITLE_HEIGHT - LEGEND_HEIGHT);
   const cellSize = gridArea / GRID_COLS;
   const markerSize = cellSize * 0.38;
+
+  // Ring sized to clear the fill dot with a visible gap, and its outer edge
+  // (ringRadius + ringStrokeWidth / 2 = markerSize * 1.21) stays inside half a
+  // cell (0.5 * cellSize) so rings on adjacent "Disagreed" dots never touch.
+  const ringGap = markerSize * 0.05;
+  const ringStrokeWidth = Math.max(1.5, markerSize * 0.16);
+  const ringRadius = markerSize + ringGap + ringStrokeWidth / 2;
 
   return (
     <Box
@@ -94,37 +110,62 @@ export default function Chart() {
         </Typography>
       </Box>
 
-      <ChartContainer
-        width={gridArea}
-        height={gridArea}
-        margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-        skipAnimation
-        series={series.map((s) => ({ ...s, markerSize }))}
-        xAxis={[
-          {
-            scaleType: "linear",
-            min: -0.5,
-            max: GRID_COLS - 0.5,
-            domainLimit: "strict",
-            disableLine: true,
-            disableTicks: true,
-            tickLabelInterval: () => false,
-          },
-        ]}
-        yAxis={[
-          {
-            scaleType: "linear",
-            min: -0.5,
-            max: GRID_ROWS - 0.5,
-            domainLimit: "strict",
-            disableLine: true,
-            disableTicks: true,
-            tickLabelInterval: () => false,
-          },
-        ]}
-      >
-        <ScatterPlot />
-      </ChartContainer>
+      <Box sx={{ position: "relative", width: gridArea, height: gridArea, flexShrink: 0 }}>
+        <ChartContainer
+          width={gridArea}
+          height={gridArea}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          skipAnimation
+          series={series.map((s) => ({ ...s, markerSize }))}
+          xAxis={[
+            {
+              scaleType: "linear",
+              min: -0.5,
+              max: GRID_COLS - 0.5,
+              domainLimit: "strict",
+              disableLine: true,
+              disableTicks: true,
+              tickLabelInterval: () => false,
+            },
+          ]}
+          yAxis={[
+            {
+              scaleType: "linear",
+              min: -0.5,
+              max: GRID_ROWS - 0.5,
+              domainLimit: "strict",
+              disableLine: true,
+              disableTicks: true,
+              tickLabelInterval: () => false,
+            },
+          ]}
+        >
+          <ScatterPlot />
+          <ChartsVoronoiHandler />
+          <ChartsTooltip trigger="item" />
+        </ChartContainer>
+
+        {/* Decorative CVD-safety ring, matches the grid's own domain-to-pixel
+            mapping ((value + 0.5) * cellSize, y flipped since row 0 is top). */}
+        <svg
+          width={gridArea}
+          height={gridArea}
+          viewBox={`0 0 ${gridArea} ${gridArea}`}
+          style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }}
+        >
+          {disagreedData.map((point) => (
+            <circle
+              key={point.id}
+              cx={(point.x + 0.5) * cellSize}
+              cy={gridArea - (point.y + 0.5) * cellSize}
+              r={ringRadius}
+              fill="none"
+              stroke={t.ink}
+              strokeWidth={ringStrokeWidth}
+            />
+          ))}
+        </svg>
+      </Box>
 
       <Box
         sx={{
@@ -145,6 +186,9 @@ export default function Chart() {
                 borderRadius: "50%",
                 backgroundColor: category.color,
                 flexShrink: 0,
+                // Mirrors the grid's CVD-safety ring so the legend swatch
+                // matches what's actually drawn for "Disagreed" dots.
+                boxShadow: category.label === "Disagreed" ? `0 0 0 2px ${t.pageBg}, 0 0 0 4px ${t.ink}` : "none",
               }}
             />
             <Typography sx={{ color: t.ink, fontSize: 16, fontFamily: FONT }}>
