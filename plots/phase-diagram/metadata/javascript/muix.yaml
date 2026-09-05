@@ -1,0 +1,234 @@
+library: muix
+language: javascript
+specification_id: phase-diagram
+created: '2026-09-05T10:50:05Z'
+updated: '2026-09-05T11:01:51Z'
+generated_by: claude-sonnet
+workflow_run: 33961430933
+issue: 3004
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Direction-of-travel arrowheads (new this attempt) directly resolve the previous
+    review's top weakness — motion along the spirals is now unambiguous in the static
+    render, satisfying the spec's explicit suggestion.
+  - Correct phase-diagram construction (x vs dx/dt) from a closed-form damped-harmonic-oscillator
+    solution; four initial conditions spiral into a shared equilibrium, revealing
+    basin-of-attraction structure.
+  - Explicit equilibrium marker at (0, 0) with a legible backing plate, plus ChartsReferenceLine
+    axes at x=0/y=0.
+  - 'Both renders theme-correct: correct backgrounds, first series is brand green,
+    identical data and arrowhead colors across themes, only chrome flips.'
+  - No clipping in either render — title, axis labels, tick labels, and legend are
+    all fully visible with generous margins.
+  weaknesses:
+  - The four spirals still bunch tightly right around the shared equilibrium and remain
+    harder to individually trace there at a glance — an inset zoom near the origin
+    was not added.
+  - Only the damped (spiraling) regime is demonstrated; the spec's optional closed-loop/periodic
+    (limit-cycle) variant isn't shown.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "Damped Oscillator · phase-diagram · javascript · muix · anyplot.ai" centered at top in dark ink; "Position x" / "Velocity dx/dt" axis titles and tick labels dark and clearly legible; subtle light-gray grid plus bold x=0/y=0 reference lines; bottom legend with 4 swatches all legible.
+      Data: Four spiral trajectories in teal/green (#009E73, first series), magenta, blue, and amber, each spiraling from a colored start-point circle into a shared black equilibrium marker labeled "Equilibrium (0, 0)" on an opaque backing plate. New: small colored triangular arrowheads at intervals along each spiral, tangent-oriented to show direction of travel.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title and axis chrome now in light/near-white text, clearly legible, no dark-on-dark issues; grid lines dim but visible; legend text legible.
+      Data: Trajectory and arrowhead colors identical to light render; only chrome (background, grid, ink, and the equilibrium marker fill, which flips black->white via the ink token) adapted to the theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; equilibrium label has backing plate
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Direction arrows help, but innermost windings near equilibrium remain
+          visually dense
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, good proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with clear units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical data colors across themes, correct
+          backgrounds'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom equilibrium annotation and new arrowheads add polish; still
+          reads as a well-executed standard phase-portrait
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, theme-adaptive thin strokes, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New arrowheads give explicit time-direction cue, resolving prior
+          weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct phase diagram (x vs dx/dt)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Now also implements the spec's suggested direction arrows
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format, legend labels match trajectories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Time-direction indicator now present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible damped oscillator physics, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible amplitude/velocity ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes; simple functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic closed-form trajectories
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean tangent-angle arrowhead geometry, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness mount contract respected, skipAnimation set
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Composition API (ChartContainer) rather than all-in-one LineChart
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Per-series xAxisId + useXScale/useYScale hooks driving custom SVG
+          overlay including new tangent-oriented arrowheads
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
