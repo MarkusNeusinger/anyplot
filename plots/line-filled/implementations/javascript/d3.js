@@ -49,20 +49,32 @@ const grid = g.append("g").call(d3.axisLeft(y).tickSize(-iw).tickFormat(""));
 grid.selectAll("line").attr("stroke", t.grid);
 grid.select(".domain").remove();
 
+// --- Area gradient (opaque near the line, fading to the baseline) --------------
+const gradientId = "line-filled-area-gradient";
+const gradient = svg.append("defs")
+  .append("linearGradient")
+  .attr("id", gradientId)
+  .attr("gradientUnits", "userSpaceOnUse")
+  .attr("x1", 0).attr("y1", 0)
+  .attr("x2", 0).attr("y2", ih);
+gradient.append("stop").attr("offset", "0%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.45);
+gradient.append("stop").attr("offset", "100%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.04);
+
 // --- Area + line ----------------------------------------------------------------
 const area = d3.area()
+  .curve(d3.curveMonotoneX)
   .x((d) => x(d.date))
   .y0(ih)
   .y1((d) => y(d.visitors));
 const line = d3.line()
+  .curve(d3.curveMonotoneX)
   .x((d) => x(d.date))
   .y((d) => y(d.visitors));
 
 g.append("path")
   .datum(dailyVisitors)
   .attr("d", area)
-  .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.35)
+  .attr("fill", `url(#${gradientId})`)
   .attr("stroke", "none");
 
 g.append("path")
@@ -71,6 +83,27 @@ g.append("path")
   .attr("fill", "none")
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 3.5);
+
+// --- End-point focal marker (emphasizes the overall upward trend) --------------
+const last = dailyVisitors[dailyVisitors.length - 1];
+const first = dailyVisitors[0];
+const growthPct = Math.round(((last.visitors - first.visitors) / first.visitors) * 100);
+g.append("circle")
+  .attr("cx", x(last.date))
+  .attr("cy", y(last.visitors))
+  .attr("r", 6)
+  .attr("fill", t.palette[0])
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2);
+
+g.append("text")
+  .attr("x", x(last.date))
+  .attr("y", y(last.visitors) - 16)
+  .attr("text-anchor", "end")
+  .attr("fill", t.ink)
+  .style("font-size", "15px")
+  .style("font-weight", "600")
+  .text(`+${growthPct}% vs. day 1`);
 
 // --- Axes -----------------------------------------------------------------------
 const xAxis = g.append("g")
@@ -100,7 +133,7 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "16px")
-  .text("Daily Visitors");
+  .text("Daily Visitors (count)");
 
 // --- Title ----------------------------------------------------------------------
 svg.append("text")
