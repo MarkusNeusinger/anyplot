@@ -35,14 +35,21 @@ const genomeLength = cursor;
 const PEAK_CHROM_INDICES = [5, 10, 16]; // chr6, chr11, chr17 (0-indexed)
 const PEAK_HEIGHTS = [14.5, 9.6, 11.3];
 
+const GENOME_WIDE_SIGNIFICANCE = -Math.log10(5e-8); // ≈ 7.3
+const SUGGESTIVE_THRESHOLD = -Math.log10(1e-5); // 5
+
 const oddPoints = [];
 const evenPoints = [];
+const significantPoints = [];
 let pointId = 0;
 
 function pushPoint(chromIndex, position, negLogP) {
-  const point = { x: position, y: Math.min(negLogP, 16), id: pointId };
+  const y = Math.min(negLogP, 16);
+  const point = { x: position, y, id: pointId };
   pointId += 1;
-  if (chromIndex % 2 === 0) {
+  if (y >= GENOME_WIDE_SIGNIFICANCE) {
+    significantPoints.push(point);
+  } else if (chromIndex % 2 === 0) {
     oddPoints.push(point);
   } else {
     evenPoints.push(point);
@@ -78,8 +85,10 @@ chromRanges.forEach((range, chromIndex) => {
 const centerToLabel = new Map(chromRanges.map((r) => [r.center, r.label]));
 const tickCenters = chromRanges.map((r) => r.center);
 
-const GENOME_WIDE_SIGNIFICANCE = -Math.log10(5e-8); // ≈ 7.3
-const SUGGESTIVE_THRESHOLD = -Math.log10(1e-5); // 5
+// Dense baseline/peak points get a touch of transparency to combat
+// overplotting in the association clusters; the sparse highlighted hits
+// below stay fully opaque.
+const MARKER_ALPHA = "CC"; // ~80% opacity, appended as 8-digit hex alpha
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
@@ -104,7 +113,7 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 22,
+          fontSize: 26,
           fontWeight: 600,
           color: t.ink,
           letterSpacing: 0.15,
@@ -119,16 +128,23 @@ export default function Chart() {
           {
             id: "odd",
             label: "Odd chromosomes",
-            color: t.palette[0],
+            color: `${t.palette[0]}${MARKER_ALPHA}`,
             markerSize: 3,
             data: oddPoints,
           },
           {
             id: "even",
             label: "Even chromosomes",
-            color: t.palette[2],
+            color: `${t.palette[1]}${MARKER_ALPHA}`,
             markerSize: 3,
             data: evenPoints,
+          },
+          {
+            id: "significant",
+            label: "Genome-wide significant",
+            color: `${t.amber}${MARKER_ALPHA}`,
+            markerSize: 5,
+            data: significantPoints,
           },
         ]}
         xAxis={[
