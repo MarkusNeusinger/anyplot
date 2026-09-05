@@ -20,19 +20,23 @@ function noise() {
 }
 
 const CATEGORY_CONFIG = [
-  { category: "morning", angle: 65, angleSpread: 35, speedBase: 6, speedSpread: 3 },
-  { category: "afternoon", angle: 205, angleSpread: 30, speedBase: 14, speedSpread: 4 },
-  { category: "evening", angle: 245, angleSpread: 25, speedBase: 9, speedSpread: 3 },
-  { category: "night", angle: 350, angleSpread: 40, speedBase: 4, speedSpread: 2 },
+  { category: "morning", angle: 65, angleSpread: 38, speedBase: 8, speedSpread: 4 },
+  { category: "afternoon", angle: 205, angleSpread: 34, speedBase: 15, speedSpread: 5 },
+  { category: "evening", angle: 245, angleSpread: 30, speedBase: 10, speedSpread: 4 },
+  { category: "night", angle: 350, angleSpread: 42, speedBase: 5, speedSpread: 3 },
 ];
 const POINTS_PER_CATEGORY = 30;
+const OUTLIER_EVERY = 10; // every 10th observation is a genuine outlier gust
+const OUTLIER_SPREAD_MULTIPLIER = 1.7;
 
 const data = [];
 for (const cfg of CATEGORY_CONFIG) {
   for (let i = 0; i < POINTS_PER_CATEGORY; i++) {
-    const theta = (cfg.angle + noise() * cfg.angleSpread + 360) % 360;
-    const speed = Math.max(0.5, cfg.speedBase + noise() * cfg.speedSpread);
-    data.push({ theta, speed, category: cfg.category });
+    const isOutlier = i % OUTLIER_EVERY === OUTLIER_EVERY - 1;
+    const spreadMul = isOutlier ? OUTLIER_SPREAD_MULTIPLIER : 1;
+    const theta = (cfg.angle + noise() * cfg.angleSpread * spreadMul + 360) % 360;
+    const speed = Math.max(0.5, cfg.speedBase + noise() * cfg.speedSpread * spreadMul);
+    data.push({ theta, speed, category: cfg.category, isOutlier });
   }
 }
 
@@ -48,9 +52,10 @@ const cx = margin.left + availableWidth / 2;
 const cy = margin.top + availableHeight / 2;
 
 const maxSpeed = d3.max(data, (d) => d.speed);
-const domainMax = Math.ceil(maxSpeed / 5) * 5;
+const domainMax = Math.ceil(maxSpeed / 2) * 2;
 const radialScale = d3.scaleLinear().domain([0, domainMax]).range([0, plotRadius]);
 const radialTicks = d3.range(1, 5).map((i) => (domainMax * i) / 4);
+const markerRadius = d3.scaleLinear().domain([0, domainMax]).range([5, 10]).clamp(true);
 
 function toXY(thetaDeg, r) {
   const rad = (thetaDeg * Math.PI) / 180;
@@ -60,26 +65,48 @@ function toXY(thetaDeg, r) {
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
+// --- Radial bands (subtle depth cue, outermost ring first) -----------------
+const bandGroup = svg.append("g");
+bandGroup
+  .selectAll("circle.radial-band")
+  .data([...radialTicks].reverse())
+  .join("circle")
+  .attr("class", "radial-band")
+  .attr("cx", cx)
+  .attr("cy", cy)
+  .attr("r", (d) => radialScale(d))
+  .attr("fill", (d, i) => (i % 2 === 0 ? t.grid : t.pageBg))
+  .attr("fill-opacity", (d, i) => (i % 2 === 0 ? 0.08 : 1));
+
 // --- Radial gridlines + tick labels ----------------------------------------
 const gridGroup = svg.append("g");
-for (const tick of radialTicks) {
-  gridGroup
-    .append("circle")
-    .attr("cx", cx)
-    .attr("cy", cy)
-    .attr("r", radialScale(tick))
-    .attr("fill", "none")
-    .attr("stroke", t.grid)
-    .attr("stroke-width", 1);
+gridGroup
+  .selectAll("circle.grid-ring")
+  .data(radialTicks)
+  .join("circle")
+  .attr("class", "grid-ring")
+  .attr("cx", cx)
+  .attr("cy", cy)
+  .attr("r", (d) => radialScale(d))
+  .attr("fill", "none")
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
 
-  gridGroup
-    .append("text")
-    .attr("x", cx + 8)
-    .attr("y", cy - radialScale(tick) - 6)
-    .attr("fill", t.inkSoft)
-    .style("font-size", "14px")
-    .text(`${d3.format(".0f")(tick)} m/s`);
-}
+// Labels sit along a clear sector (between E and SE) so they never collide
+// with a data cluster, unlike a fixed N-spoke placement.
+const TICK_LABEL_ANGLE = 115;
+gridGroup
+  .selectAll("text.grid-label")
+  .data(radialTicks)
+  .join("text")
+  .attr("class", "grid-label")
+  .attr("x", (d) => toXY(TICK_LABEL_ANGLE, radialScale(d))[0] + 6)
+  .attr("y", (d) => toXY(TICK_LABEL_ANGLE, radialScale(d))[1])
+  .attr("text-anchor", "start")
+  .attr("dominant-baseline", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text((d) => `${d3.format(".0f")(d)} m/s`);
 
 // Outer domain circle
 svg
@@ -104,43 +131,48 @@ const COMPASS = [
 ];
 
 const spokeGroup = svg.append("g");
-for (const { deg, label } of COMPASS) {
-  const [x2, y2] = toXY(deg, plotRadius);
-  spokeGroup
-    .append("line")
-    .attr("x1", cx)
-    .attr("y1", cy)
-    .attr("x2", x2)
-    .attr("y2", y2)
-    .attr("stroke", t.grid)
-    .attr("stroke-width", 1);
+spokeGroup
+  .selectAll("line.spoke")
+  .data(COMPASS)
+  .join("line")
+  .attr("class", "spoke")
+  .attr("x1", cx)
+  .attr("y1", cy)
+  .attr("x2", (d) => toXY(d.deg, plotRadius)[0])
+  .attr("y2", (d) => toXY(d.deg, plotRadius)[1])
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
 
-  const [lx, ly] = toXY(deg, plotRadius + 34);
-  spokeGroup
-    .append("text")
-    .attr("x", lx)
-    .attr("y", ly)
-    .attr("text-anchor", "middle")
-    .attr("dominant-baseline", "middle")
-    .attr("fill", t.ink)
-    .style("font-size", "16px")
-    .style("font-weight", "600")
-    .text(label);
-}
+spokeGroup
+  .selectAll("text.compass-label")
+  .data(COMPASS)
+  .join("text")
+  .attr("class", "compass-label")
+  .attr("x", (d) => toXY(d.deg, plotRadius + 34)[0])
+  .attr("y", (d) => toXY(d.deg, plotRadius + 34)[1])
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .style("font-weight", "600")
+  .text((d) => d.label);
 
-// --- Data points -------------------------------------------------------
+// --- Data points ---------------------------------------------------------
+// Marker radius grows with speed and outlier gusts render slightly larger
+// and more opaque, giving the cluster a subtle visual hierarchy instead of
+// a flat wall of uniform dots.
 svg
   .selectAll("circle.observation")
   .data(data)
   .join("circle")
-  .attr("class", "observation")
+  .attr("class", (d) => `observation${d.isOutlier ? " outlier" : ""}`)
   .attr("cx", (d) => toXY(d.theta, radialScale(d.speed))[0])
   .attr("cy", (d) => toXY(d.theta, radialScale(d.speed))[1])
-  .attr("r", 8)
+  .attr("r", (d) => markerRadius(d.speed) + (d.isOutlier ? 2 : 0))
   .attr("fill", (d) => color(d.category))
-  .attr("fill-opacity", 0.75)
+  .attr("fill-opacity", (d) => (d.isOutlier ? 0.95 : 0.7))
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 1);
+  .attr("stroke-width", (d) => (d.isOutlier ? 1.5 : 1));
 
 // --- Title + subtitle ----------------------------------------------------
 svg
@@ -168,25 +200,35 @@ const swatch = 16;
 const legendGap = 26;
 const legendWidths = categories.map((c) => c.length * 9 + swatch + legendGap);
 const legendTotalWidth = legendWidths.reduce((a, b) => a + b, 0);
-let legendX = width / 2 - legendTotalWidth / 2;
 const legendY = height - 48;
 
-categories.forEach((cat, i) => {
-  legendGroup
-    .append("rect")
-    .attr("x", legendX)
-    .attr("y", legendY - swatch / 2)
-    .attr("width", swatch)
-    .attr("height", swatch)
-    .attr("fill", color(cat));
+const legendEntries = (() => {
+  let x = width / 2 - legendTotalWidth / 2;
+  return categories.map((cat, i) => {
+    const entry = { cat, x };
+    x += legendWidths[i];
+    return entry;
+  });
+})();
 
-  legendGroup
-    .append("text")
-    .attr("x", legendX + swatch + 8)
-    .attr("y", legendY + swatch / 2 - 2)
-    .attr("fill", t.inkSoft)
-    .style("font-size", "15px")
-    .text(cat.charAt(0).toUpperCase() + cat.slice(1));
+legendGroup
+  .selectAll("rect.legend-swatch")
+  .data(legendEntries)
+  .join("rect")
+  .attr("class", "legend-swatch")
+  .attr("x", (d) => d.x)
+  .attr("y", legendY - swatch / 2)
+  .attr("width", swatch)
+  .attr("height", swatch)
+  .attr("fill", (d) => color(d.cat));
 
-  legendX += legendWidths[i];
-});
+legendGroup
+  .selectAll("text.legend-label")
+  .data(legendEntries)
+  .join("text")
+  .attr("class", "legend-label")
+  .attr("x", (d) => d.x + swatch + 8)
+  .attr("y", legendY + swatch / 2 - 2)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "15px")
+  .text((d) => d.cat.charAt(0).toUpperCase() + d.cat.slice(1));
