@@ -47,11 +47,18 @@ plot_df <- df %>%
     )
   )
 
-axis_limit <- max(abs(df$value_left), df$value_right) * 1.08
+axis_limit <- max(abs(df$value_left), df$value_right) * 1.15
 
 # --- Plot ---------------------------------------------------------------------
 p <- ggplot(plot_df, aes(x = category, y = population, fill = side)) +
   geom_col(width = 0.75) +
+  geom_text(
+    aes(
+      label = sprintf("%.1f", abs(population)),
+      hjust = ifelse(population < 0, 1.15, -0.15)
+    ),
+    size = 2.6, color = INK_SOFT, show.legend = FALSE
+  ) +
   coord_flip() +
   scale_y_continuous(
     limits = c(-axis_limit, axis_limit),
@@ -73,7 +80,10 @@ p <- ggplot(plot_df, aes(x = category, y = population, fill = side)) +
     panel.grid.minor   = element_blank(),
     axis.title         = element_text(color = INK, size = 10),
     axis.text          = element_text(color = INK_SOFT, size = 8),
-    axis.line          = element_line(color = INK_SOFT),
+    axis.line.x.bottom = element_line(color = INK_SOFT, linewidth = 0.3),
+    axis.line.x.top    = element_blank(),
+    axis.line.y.left   = element_line(color = INK_SOFT, linewidth = 0.3),
+    axis.line.y.right  = element_blank(),
     plot.title         = element_text(color = INK, size = 12),
     legend.position     = "top",
     legend.background   = element_rect(fill = ELEVATED_BG, color = NA),
