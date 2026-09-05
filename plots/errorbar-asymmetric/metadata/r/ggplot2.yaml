@@ -1,0 +1,272 @@
+library: ggplot2
+language: r
+specification_id: errorbar-asymmetric
+created: '2026-09-05T01:28:37Z'
+updated: '2026-09-05T01:43:08Z'
+generated_by: claude-sonnet
+workflow_run: 33935086548
+issue: 2781
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Correctly implements asymmetric error bars via geom_errorbar(aes(ymin = median_mm
+    - error_lower, ymax = median_mm + error_upper)), with visibly different upper/lower
+    magnitudes across stations due to the right-skewed lognormal sampling
+  - Stations sorted ascending by median rainfall (factor releveled via order(median_mm))
+    turns the plot into an effective ranking chart, giving the reader a clear visual
+    narrative for free
+  - 'Clean theme-adaptive chrome: correct #FAF8F1/#1A1A17 backgrounds, INK/INK_SOFT
+    tokens correctly threaded through title, subtitle, axis text and axis line in
+    both renders, first-and-only series correctly uses Imprint brand green #009E73'
+  - 'Realistic, neutral, well-scoped data: 12 major world cities with annual-rainfall
+    medians and 10th-90th percentile bands that are directionally correct versus real-world
+    climate figures (Manaus/Singapore very wet, Cairo/Phoenix very dry)'
+  - Title format, subtitle (doubling as the spec-required explanation of the 10th-90th
+    percentile bounds), axis label with units, and no redundant legend for a single
+    series are all handled correctly
+  - scales::label_comma() on the rainfall axis avoids raw scientific/unformatted numbers
+    on values above 1000mm
+  weaknesses:
+  - 'The geom_hline() reference line and the annotate(''text'', x = 12.5, ...) ''All-station
+    median'' label added in this repair round to improve DE-03 storytelling render
+    as literally nothing in both plot-light.png and plot-dark.png -- verified by pixel-diffing
+    the region above the Manaus row against the background in both themes, no dashed
+    line and no annotation text exist anywhere in either PNG. Likely cause: x = 12.5
+    sits right at the edge of the discrete station-axis expansion (levels 1-12 expand
+    to only ~[0.4, 12.6] by default), and the vjust = 0 text anchor pushes the glyphs
+    further outward from there, past the small plot.margin top = 22 headroom, so despite
+    coord_flip(clip = ''off'') the label and its baseline never intersect the saved
+    canvas. Fix by either giving the annotation real room (e.g. increase the top expansion
+    via scale_x_discrete(expand = expansion(add = c(0.6, 2))) and/or move it to a
+    caption/subtitle instead of a data-space annotate call), or drop the two now-dead
+    layers entirely since the subtitle already states the percentile range.'
+  - Because the reference-line/annotation layers are invisible, the plot's only storytelling
+    device is the ascending sort -- solid but not the 'clear anchor' the code comment
+    intends, so Design Excellence storytelling stays below the strong tier this fix
+    round was aiming for
+  - geom_point(size = 2.8) and the errorbar linewidth (0.8) are only marginally above
+    generic ggplot2 defaults for a very sparse 12-point dataset; the style guide's
+    density heuristic calls for more prominent markers/lines when n < 50
+  - All 12 stations share the same right-skew direction (error_upper > error_lower
+    everywhere) -- the dataset never shows the opposite skew, so a reader can't see
+    how the chart would represent a left-skewed / symmetric case
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Bold dark title "errorbar-asymmetric · r · ggplot2 · anyplot.ai" and italic dark-gray subtitle "Median annual rainfall with 10th-90th percentile range" both read clearly against the light background. Station names (y-axis, after coord_flip) and the "Annual rainfall (mm)" x-axis title/tick labels are dark/soft-dark and fully legible. Faint vertical gridlines at 1,000 / 2,000 / 3,000 are subtle, not competing with data. No text overlaps another element.
+      Data: All 12 error bars, caps, and point markers render in the same brand green (#009E73). Error bars are visibly asymmetric per station (upper whisker longer than lower whisker for every station, consistent with the right-skewed lognormal generator). NOTE: the code also adds a dashed INK_SOFT reference line at the cross-station median and an italic "All-station median: ... mm" annotation above the Manaus row -- neither is visible anywhere in this PNG (confirmed by pixel inspection of the region between the subtitle and the top error bar); these two layers render as nothing.
+      Legibility verdict: PASS (all rendered chrome and data are legible; the only issue is that two decorative layers silently fail to render at all, which is a correctness bug rather than a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title and subtitle flip to light ink tones (light/soft-light) and remain fully readable against the dark background; no dark-on-dark text anywhere. Axis labels, tick labels, and station names are all light-toned and legible. Gridlines are faint light lines, correctly inverted from the light theme.
+      Data: Data colors are pixel-identical to the light render -- brand green #009E73 error bars, caps, and points, confirming only chrome (not data color) flips between themes. Same missing reference-line/annotation issue as the light render, confirmed by the same crop-and-inspect check.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; the missing annotation is a rendering bug, not a theme-legibility failure).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout (theme(), plot.title, plot.subtitle, axis.title,
+          axis.text); readable in both themes; title comfortably fits without overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Visible but only marginally above generic defaults (point size 2.8,
+          errorbar linewidth 0.8) for a very sparse 12-point dataset that could support
+          more prominent marks
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green series, good contrast against both backgrounds,
+          no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills most of the 3200x1800 canvas with balanced margins; nothing
+          cut off; canvas-dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Annual rainfall (mm)" has units; y-axis (station names) is self-explanatory'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73, identical in both renders; backgrounds
+          are #FAF8F1/#1A1A17; chrome theme-correct in both'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom minimal theme, single brand color, thoughtful token-driven
+          chrome -- clearly above a raw library default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor gridlines suppressed, y-axis gridlines removed, ticks removed,
+          generous margins -- close to perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Ascending sort gives a real ranking narrative, but the reference-line
+          + annotation added specifically to strengthen this criterion render as nothing
+          in both themes (see weaknesses), so the intended 'anchor' payoff never reaches
+          the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct asymmetric error-bar plot with independent upper/lower magnitudes
+          per point
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible caps, subtitle explains the 10th-90th percentile bounds,
+          12 points within the 3-20 spec range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Station (categorical) vs. rainfall (numeric) correctly mapped, all
+          data visible after coord_flip
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; single series correctly
+          omits a legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide range of dispersion widths (narrow for Cairo/Phoenix, wide for
+          Manaus/Singapore) but every station shares the same right-skew direction
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible scenario (world-city annual rainfall)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Typical rainfall values and relative ordering are directionally correct
+          for the named cities
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, scales, ragg all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Otherwise clean, but the geom_hline()+annotate() block is dead code
+          that produces zero visible output -- not fake-UI, but not functioning either
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave(..., device = ragg::agg_png) to plot-{THEME}.png, no deprecated
+          size= usage
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_errorbar/geom_point/coord_flip/scale_y_continuous(labels=)
+          usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_flip-driven horizontal Cleveland-style dot-and-errorbar layout
+          plus scales::label_comma() integration
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
