@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-timeseries-rolling
 created: '2026-09-05T08:49:21Z'
-updated: '2026-09-05T08:53:51Z'
+updated: '2026-09-05T09:04:35Z'
 generated_by: claude-sonnet
 workflow_run: 33956072401
 issue: 2786
@@ -19,43 +19,46 @@ review:
     with a bold brand-green 30-day rolling average, exactly matching the spec''s requested
     technique'
   - 'Smart semantic color usage: the raw/noisy series is rendered in the INK_MUTED
-    anchor (theme-adaptive ''muted'' role) rather than an arbitrary color, reserving
-    Imprint brand green #009E73 for the ''hero'' trend line'
-  - Explicit font sizing throughout (title 20, axis labels 14, tick labels 12) with
-    theme tokens correctly threaded to every chrome element (title, axis labels, ticks,
-    spines, grid, legend) in both light and dark renders
+    anchor rather than an arbitrary color, reserving Imprint brand green #009E73 for
+    the hero trend line'
+  - Explicit font sizing throughout with theme tokens correctly threaded to every
+    chrome element in both light and dark renders
   - Rolling average line correctly starts 30 days after raw data, visually reflecting
-    the window-size requirement called out in the specification
-  - 'Clean, idiomatic CairoMakie code: Axis kwargs, axislegend, colorant/RGBAf helpers,
-    closely matching the library''s recommended skeleton'
-  - Realistic, neutral SaaS daily-active-users scenario with a believable upward growth
-    trend, weekend dip pattern, and plausible noise magnitude
+    the window-size requirement from the spec
+  - Realistic, neutral SaaS daily-active-users scenario with believable growth trend,
+    weekend-dip pattern, and noise
+  - Confidence band (band!) around the rolling average is a genuine Makie-distinctive
+    touch that does render (faintly) in both themes
   weaknesses:
-  - 'Design excellence is solid but not yet distinctive: no annotation, end-of-line
-    value label, or standout visual technique separates this from a generic two-line
-    chart. Consider a subtle callout (e.g. total growth over the period) or a filled
-    confidence band around the rolling average to strengthen the data storytelling
-    (DE-03).'
-  - 'Library Mastery is generic (LM-02): nothing here is distinctly Makie-only. Consider
-    a Makie-specific feature such as band!() for a rolling std-dev envelope around
-    the trend line, or a customized Legend() object, to demonstrate library-specific
-    strength.'
-  - Title occupies a comparatively small share of the plot width (~30%) given the
-    short spec-id; not a defect since there is no overflow, but there is room to size
-    it slightly larger for a stronger visual hierarchy (DE-01/VQ-01 polish opportunity,
-    not a deduction as-is).
+  - 'CRITICAL BUG (not visible in either render): the end-of-line scatter!() marker
+    and the ''+N% growth'' text!() annotation added in the repair are NOT appearing
+    in plot-light.png or plot-dark.png. Pixel-level inspection of both PNGs at the
+    exact endpoint (rolling_days[end], rolling_avg[end]) finds only the plain line
+    stroke — no distinct marker blob and zero ink-colored/INK-colored pixels anywhere
+    near the expected text position. The line simply terminates with no dot and no
+    label. This is very likely a z-order/limits or API-usage issue in the makie.jl
+    text!/scatter! calls (e.g. axis autolimits or scene clipping swallowing the added
+    plots) rather than a display artifact — verify by actually running the script
+    and inspecting the raw PNG, not just eyeballing a downsized preview.'
+  - The band!() confidence envelope around the rolling average does render, but at
+    color=(BRAND, 0.12) it is barely perceptible against the busy raw-data lines crossing
+    through it — confirmed present only via pixel-color search, not by eye. Consider
+    bumping alpha to ~0.18-0.22 for genuine visual value.
+  - Because the growth-callout annotation is invisible, Design Excellence / Library
+    Mastery did not actually improve versus the pre-repair version from the reader's
+    perspective — the code changed but the rendered plot did not.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white.
-      Chrome: Title "line-timeseries-rolling · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center. Axis labels "Date" (x) and "Daily Active Users (thousands)" (y) in dark ink, both readable. Tick labels (dates on x, numeric values on y) in a slightly softer gray, fully legible. Subtle light-gray vertical and horizontal gridlines visible but not competing with data. Legend in the top-left corner, borderless, text in dark ink, clearly readable against the plot background.
-      Data: Two series — a thin, semi-transparent muted-gray "Raw Data" line showing noisy daily values, and a thick, solid brand-green (#009E73) "30-Day Rolling Average" line tracing a smooth upward trend through the noise. The rolling-average line visibly starts ~30 days after the raw data begins, as expected from the window requirement.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: bold dark-ink title "line-timeseries-rolling · julia · makie · anyplot.ai" centered at top; axis labels "Date" (x) and "Daily Active Users (thousands)" (y) in dark ink; tick labels in softer gray; subtle light-gray gridlines on both axes; borderless legend top-left reading "Raw Data" and "30-Day Rolling Average" — all clearly readable against the light background.
+      Data: thin, semi-transparent muted-gray raw-data line showing daily noise with a weekend-dip pattern, overlaid with a thick brand-green (#009E73) rolling-average line tracing a smooth upward trend from ~53 to ~80 (thousands); the green line starts ~30 days after the raw data, matching the window requirement. A very faint green-tinted confidence band is present around the rolling-average line (confirmed via pixel sampling; visually near-imperceptible). The end-of-line growth-percentage annotation and scatter marker described in the code are NOT visible — pixel inspection at the line's terminus shows only the bare line end, no dot, no text.
+      Legibility verdict: PASS (for the visible chrome/text elements). The missing annotation is a rendering bug, not a legibility failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black.
-      Chrome: Title, axis labels, and tick labels have flipped to light-colored ink (off-white/light-gray), clearly visible against the dark background. Gridlines are faint light lines, subtle but present. Legend box borderless, light-colored text, easily readable.
-      Data: Same two series as the light render — the muted-gray raw-data line and the brand-green rolling-average line are visually identical in hue to the light render; only the chrome (background, text, grid) has flipped as expected.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/label/tick text is clearly visible against the near-black background, and the brand green remains vivid on the dark surface.
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title, axis labels, and tick labels flipped to light-colored ink and remain clearly legible; gridlines faint but present; legend borderless with light-colored text. No dark-on-dark failures.
+      Data: colors identical to the light render — same muted-gray raw line and brand-green rolling-average line, confirming only chrome flipped between themes. Same missing end-of-line scatter marker and "+N% growth" text annotation as in the light render — confirmed absent via pixel search (zero ink-colored pixels in the expected bounding box).
+      Legibility verdict: PASS (for visible elements); the intended growth annotation is absent in this render too, consistently with the light render.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -67,49 +70,45 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 20, axis labels 14, ticks 12);
-          well-proportioned, no overflow, readable in both themes
+          well-proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; legend sits in empty space
-          clear of the lines
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thin semi-transparent raw-data line vs. thick solid trend line is
-          well-adapted to the 220-point medium-density series
+        comment: Thin semi-transparent raw line vs. thick solid trend line well-adapted
+          to the 220-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green trend line vs. muted-gray raw line distinguished by both hue
-          and line weight/alpha, not hue alone
+        comment: Green vs. muted-gray distinguished by hue AND line weight/alpha
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing cut off;
-          canvas dimension gate passed
+        comment: Good canvas utilization, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units ('thousands'); x-axis 'Date' is a standard
-          label for a formatted date axis
+        comment: Y-axis has units (thousands)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 on the hero trend line, INK_MUTED semantic anchor
-          on the reference raw-data line, theme-correct backgrounds and chrome in
+        comment: 'Brand green #009E73 reserved for the hero trend line, INK_MUTED
+          semantic anchor for the raw-data reference line, theme-correct chrome in
           both renders'
     design_excellence:
       score: 14
@@ -119,23 +118,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Thoughtful color roles (muted vs. brand) and clean typography, clearly
-          above library defaults, but not yet publication-showcase level
+        passed: false
+        comment: Thoughtful color roles and clean typography, above library defaults,
+          but not publication-showcase level
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        passed: true
-        comment: Subtle grid, top/right spines removed, borderless legend, generous
-          whitespace
+        passed: false
+        comment: Subtle grid, spines removed, borderless legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Color contrast and line-weight hierarchy guide the reader to the
-          trend, but no annotation or callout pushes it to an immediate-insight level
+        passed: false
+        comment: Color contrast and line-weight hierarchy guide the reader, but the
+          intended growth-callout annotation does not render, so no explicit insight
+          callout reaches the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -151,22 +150,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent raw data, prominent rolling-average line, legend
-          distinguishing both, window size in legend, grid on both axes, shorter rolling
-          line
+        comment: Semi-transparent raw data, prominent contrasting rolling-average
+          line, distinguishing legend with window size, grid on both axes, shorter
+          rolling line
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, DAU value on y, all points visible
+        comment: Date on x, DAU on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels 'Raw Data' / '30-Day Rolling
-          Average' match the spec's suggested naming
+        comment: Title format correct; legend labels match spec's suggested naming
     data_quality:
       score: 15
       max: 15
@@ -176,23 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows raw noise, weekend dip pattern, upward trend, and the rolling
-          average smoothing it all
+        comment: Shows raw noise, weekend dip, upward trend, and the smoothing rolling
+          average
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible SaaS daily-active-users growth scenario
+        comment: Neutral, plausible SaaS DAU growth scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Growth from ~52k to ~84k over 220 days with realistic noise and weekend
+        comment: Growth from ~52k to ~84k over 220 days, realistic noise and weekend
           dips
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -200,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Single flat script: imports, theme tokens, data, plot, save'
+        comment: Imports -> Data -> Plot -> Save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,21 +210,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics, Dates — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean and appropriately simple, no fake functionality
+        passed: false
+        comment: scatter!()/text!() calls for the end-of-line marker and growth annotation
+          do not produce any visible output in either render -- dead/buggy plotting
+          calls
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via save(..., px_per_unit=2)
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -234,25 +234,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level Axis/lines!/axislegend usage matching the library's
-          recommended skeleton
+        comment: Correct high-level Axis/lines!/band!/axislegend usage matching the
+          library's recommended skeleton
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic two-line usage; nothing here is distinctly Makie-only (e.g.
-          no band!, no custom Legend layout)
-  verdict: REJECTED
+        comment: band!() confidence envelope is a genuine Makie-distinctive feature
+          and does render (faintly); the more distinctive scatter!()/text!() growth
+          callout does not render at all, so only partial credit
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - dual-series-overlay
+  - confidence-band
+  - trend-annotation
   patterns:
   - data-generation
+  - rolling-window-calculation
   dataprep:
-  - rolling-window
-  - time-series
+  - rolling-mean
+  - rolling-std
   styling:
-  - alpha-blending
-  - grid-styling
+  - theme-adaptive
+  - publication-ready
