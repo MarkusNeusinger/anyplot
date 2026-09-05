@@ -1,0 +1,262 @@
+library: muix
+language: javascript
+specification_id: diagnostic-regression-panel
+created: '2026-09-05T00:10:24Z'
+updated: '2026-09-05T00:29:08Z'
+generated_by: claude-sonnet
+workflow_run: 33931588386
+issue: 5242
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Faithful, complete replication of R's classic plot(lm) four-panel diagnostic layout
+    with all four required subplot types (Residuals vs Fitted, Normal Q-Q, Scale-Location,
+    Residuals vs Leverage)
+  - 'Deliberately engineered synthetic data (heteroscedastic dose-response with two
+    injected influential points) that exercises every diagnostic feature: mild non-linearity,
+    growing variance, non-normal tails, and high-leverage/high-residual outliers'
+  - Sophisticated custom InfluentialLabels component using useXScale/useYScale hooks
+    with a genuine collision-avoidance stagger algorithm, so labels for observations
+    1, 2, and 55 never overlap across any of the four panels
+  - 'Thoughtful, semantically correct color usage: brand green (#009E73) for all data
+    points, amber (#DDCC77) for Cook''s-distance threshold contours (a warning/threshold
+    role), and ink-neutral dashed reference lines — identical data colors across light/dark
+    renders'
+  - Clean, generous 2x2 layout with balanced whitespace and no clipping at any canvas
+    edge; correct square-orientation canvas for this grid-based plot
+  weaknesses:
+  - Tick labels in each of the four subplots become quite small once the PNG is scaled
+    to a ~400px mobile width (each panel is only a quarter of the canvas) — consider
+    bumping TICK_LABEL_STYLE fontSize slightly (e.g., 12) for more mobile headroom
+  - The LOWESS smoother in 'Residuals vs Fitted' swings sharply downward at the rightmost
+    fitted values, driven almost entirely by the single high-leverage outlier (#55)
+    at the boundary — mathematically expected behavior for a local smoother with sparse
+    boundary data, but it visually overstates the 'trend'; a larger bandwidth fraction
+    near the boundary would tone this down
+  - Subplot title treatment (SubplotTitle) is plain medium-weight text; a slightly
+    more editorial touch (e.g., smaller caps or a subtler weight/color step) would
+    push Visual Refinement a bit closer to a fully polished look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "diagnostic-regression-panel · javascript · muix · anyplot.ai" centered at top; four dark-gray subplot titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage"); dark axis labels and tick labels throughout, all clearly legible against the cream background; subtle light-gray gridlines on both axes of every panel.
+      Data: All scatter points render in brand green (#009E73), identical marker size/style across all four panels; a blue (#4467A3) LOWESS smoother line in the Residuals-vs-Fitted and Scale-Location panels; a gray dashed zero-reference line and Q-Q 45° diagonal; amber (#DDCC77) dashed Cook's-distance contours (0.5 and 1.0 levels) in the Residuals-vs-Leverage panel. Observations 1, 2, and 55 are labeled with small dark-gray index numbers, staggered to avoid overlap; observation 55 is clearly visible as a strong outlier in three of the four panels.
+      Legibility verdict: PASS — all text is readable against the light background at full resolution; tick labels remain readable (though smaller) when the composite is scaled to ~400px mobile width.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis labels render in light ink; subplot titles and tick labels render in light gray, all clearly legible against the dark surface; gridlines are subtle light-gray at low opacity, still visible.
+      Data: Green markers, blue smoother line, and amber Cook's-distance contours are pixel-identical to the light render — only the chrome (background, text, grid) flipped as expected. No dark-on-dark failures observed anywhere — every axis label, tick label, and subplot title is clearly legible, and the amber contour lines remain distinctly visible against the near-black background.
+      Legibility verdict: PASS — no theme-adaptation failures found; both renders are fully readable and the data colors match exactly between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (axis 13px, tick 11px, subplot title
+          15px, main title 22px); readable in both themes with no overflow; tick labels
+          get small at 400px mobile width given the dense 2x2 layout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom collision-avoidance staggering keeps influential-point labels
+          (1, 2, 55) clear of markers and each other in every panel
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size (6.5) and LOWESS/contour line weights are well-suited
+          to the n=56 point density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green markers, blue smoother, and amber contours are all mutually
+          distinguishable with good contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced 2x2 grid, generous margins, no clipping at any canvas edge,
+          good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels appropriate for standardized/unitless diagnostic
+          quantities (Fitted Values, Residuals, Theoretical Quantiles, Leverage, etc.)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both themes; amber used correctly as
+          a semantic warning/threshold anchor for Cook''s distance; backgrounds are
+          theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color use, consistent multi-panel styling, and
+          custom label placement go clearly beyond a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous whitespace, subtle grid, staggered labels and dashed reference/contour
+          styling show real attention to detail; subplot titles remain fairly plain
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Consistent labeling of the same influential observations across all
+          four panels immediately draws the eye to the outlier story (esp. observation
+          55)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: All four required diagnostic subplot types present in a 2x2 grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: LOWESS smoothers, zero/45° reference lines, Cook's distance contours
+          at 0.5/1.0, and top-3 influential-point labels are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correctly assigned per subplot per the specification
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; no legend needed given
+          single-series-per-panel design
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Data shows non-linearity, heteroscedasticity, and two distinct injected
+          influential points (high residual, high leverage)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic dose-response/biomarker scenario matching the
+          spec's pharma application example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dose and response ranges and injected outlier magnitudes are plausible
+          for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Multiple helper functions (LCG/normal RNG, inverse-normal CDF, LOWESS,
+          Cook's branches) are necessary given the statistics the spec requires and
+          React's component model
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=20260905) makes the whole dataset deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every imported MUI X component and hook is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering; complexity is proportional to the
+          diagnostic-panel statistics required
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct component-export contract; skipAnimation set on every ChartContainer
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the ChartContainer + composed sub-components pattern (ScatterPlot,
+          LinePlot, ChartsGrid, ChartsReferenceLine, ChartsXAxis/YAxis) — the recommended
+          approach for custom multi-element charts
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses useXScale/useYScale hooks to place custom ChartsText annotations
+          synced to the live chart scale — a MUI X-specific capability not trivially
+          portable to other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
