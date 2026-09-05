@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: pyramid-basic
 created: '2026-09-05T12:24:04Z'
-updated: '2026-09-05T12:27:48Z'
+updated: '2026-09-05T12:36:57Z'
 generated_by: claude-sonnet
 workflow_run: 33965524940
 issue: 1000
@@ -12,49 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 95
 review:
   strengths:
-  - Correct three-grid layout technique (left bars + centered label column + right
-    bars) puts the shared category axis on the pyramid's central spine, the idiomatic
-    echarts approach for population pyramids
+  - 'Both attempt-1 weaknesses fixed cleanly: descriptive "Population (thousands)"
+    axis name added to both x-axes, and a markArea + annotation now calls out the
+    male/female crossover at 60-69/70+ — the most interesting feature in the dataset'
+  - Correct three-grid layout (left bars + centered label column + right bars) puts
+    the shared category axis on the pyramid's central spine — the idiomatic echarts
+    approach for population pyramids
   - Symmetric axis scales (0-50k, mirrored) on both sides for fair visual comparison,
     per spec requirement
-  - 'Imprint palette compliance: Male = #009E73 (brand green, position 1), Female
-    = lavender (position 2), identical across both themes; backgrounds correctly #FAF8F1
-    light / #1A1A17 dark'
+  - 'Imprint palette compliance: Male = #009E73 (position 1), Female = lavender #C475FD
+    (position 2), identical across both themes; backgrounds correctly #FAF8F1 light
+    / #1A1A17 dark'
   - 'Realistic demographic data: bulge shape peaking at 20-29 with a male/female crossover
-    at the older cohorts (female population exceeds male at 60-69 and 70+, matching
-    real-world longevity patterns) instead of flat/identical bars'
-  - All text (title, legend, tick labels, category labels) explicitly sized and clearly
-    readable in both light and dark renders, no overlap or clipping
-  - Clean, deterministic, KISS-structured code with no fake interactivity
+    at the older cohorts, matching real-world longevity patterns'
+  - 'Clean, deterministic, KISS-structured code with no fake interactivity; animation:
+    false, no explicit size/devicePixelRatio passed to echarts.init'
   weaknesses:
-  - X-axis has no descriptive axis title/name — only tick labels suffixed with 'k'
-    hint at units. Add an explicit axis name (e.g. 'Population (thousands)') for full
-    VQ-06 credit.
-  - 'Design Excellence is at the ''well-configured default'' tier: the three-grid
-    layout is a functional necessity for the pyramid shape, not an added aesthetic
-    flourish. Consider a secondary polish pass (e.g. thinner/removed axis lines, a
-    subtle highlight band, refined legend styling) to push past generic.'
-  - No visual-storytelling emphasis beyond the plot type's inherent left/right comparison
-    — e.g. no annotation calling out the male/female crossover at the older age groups,
-    which is the most interesting feature in this dataset.
+  - Combining an axis name of "Population (thousands)" with "k"-suffixed tick labels
+    (e.g. "40k") is a minor redundant unit convention — not incorrect, but a future
+    pass could drop one of the two
+  - 'Design Excellence is close to full marks but still slightly shy of "distinctive":
+    consider one more polish touch (e.g. a lightly styled tooltip theme, or thinner/lighter
+    split lines) to push toward a truly bespoke feel'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "pyramid-basic · javascript · echarts · anyplot.ai" in bold dark ink, centered and fully visible. Legend ("Male" / "Female" swatches) directly below title, readable dark-gray text. Y-axis category labels (age groups 0-9 through 70+) sit in the central gutter in dark text, clearly legible. X-axis tick labels ("0k" to "50k") in medium-gray, readable. Vertical gridlines are subtle and do not compete with the bars.
-      Data: Left bars (Male) in brand green #009E73, right bars (Female) in lavender/purple #C475FD — both are the first two Imprint palette positions in canonical order. Bars extend symmetrically outward from the shared central axis, values ranging from ~15k-47k, decreasing at the youngest and oldest age groups with a peak around 20-39.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "pyramid-basic · javascript · echarts · anyplot.ai" bold and centered in dark ink; legend (Male/Female) below title in readable gray; central gutter carries age-group labels (0-9 through 70+) in dark, legible text; both x-axes carry "Population (thousands)" name plus "0k"-"50k" tick labels.
+      Data: Male bars (left) in brand green #009E73, Female bars (right) in lavender #C475FD — Imprint palette, canonical order. A subtle amber-tinted markArea band highlights the 60-69/70+ rows, with an inline annotation "Female exceeds Male past 60".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title now rendered in light/near-white ink, fully legible. Legend text light-gray, readable. Category labels in the central gutter switched to light text, clearly visible against the dark background. X-axis tick labels in light gray, readable. Gridlines subtle, same low-opacity treatment adapted to the dark surface.
-      Data: Bar colors are pixel-identical to the light render — brand green and lavender — confirming only chrome (background/text/grid) flipped, not the data-color palette.
-      Legibility verdict: PASS — no dark-on-dark failures observed; every title, legend entry, tick label, and category label is clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title, legend, category labels, axis names, and tick labels all flip to light/near-white text; fully legible, no dark-on-dark failures.
+      Data: Bar colors (green #009E73 / lavender #C475FD) pixel-identical to the light render — only chrome flipped. Amber highlight band and annotation remain visible and legible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,73 +59,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, legend/axis/tick 14px),
-          well-proportioned, readable in both themes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No collisions between text, bars, or annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 age-group bars at 65% barWidth are clearly visible and well-sized
-          for the data density
+        comment: Bars clearly visible, appropriately sized for 8 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender is CVD-safe and high-contrast, no red-green reliance
+        comment: Green/lavender contrast is CVD-safe, not red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills most of the 3200x1800 canvas with balanced margins, legend
-          near plot
+        comment: Canvas gate passed (3200x1800), good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Tick labels carry a 'k' unit suffix but there is no descriptive x-axis
-          name/title (e.g. 'Population (thousands)')
+        passed: true
+        comment: 'Fixed from attempt 1: explicit ''Population (thousands)'' axis name
+          added'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series Imprint position 2, identical
-          across themes, backgrounds theme-correct'
+        comment: 'First series #009E73, second series Imprint lavender, correct backgrounds
+          both themes'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; the three-grid trick is a functional
-          necessity, not an added aesthetic flourish
+        passed: true
+        comment: Three-grid layout plus amber highlight band shows intentional hierarchy,
+          still close to well-configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace, but axis lines are left at default
-          and no extra polish pass was applied
+        passed: true
+        comment: Amber-tinted band adds a refinement pass; subtle grid, generous whitespace,
+          no stray center axis line
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed but not interpreted — no annotation or emphasis
-          on the male/female crossover at older age groups
+        passed: true
+        comment: Highlighted band plus annotation gives a clear focal point on the
+          male/female crossover
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct back-to-back population pyramid
+        comment: Correct pyramid/butterfly chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Symmetric scales, distinct colors, central category axis, legend
-          all present
+        comment: Symmetric scales, distinct colors, shared central category axis,
+          legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value_left/value_right correctly mapped to left/right bars, all categories
-          shown
+        comment: value_left/value_right correctly mapped to opposing sides
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels Male/Female match the data
+        comment: Title matches mandated format, legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -168,21 +161,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bulge shape and a realistic male/female crossover at older
-          ages, not identical bars
+        comment: 8 age-group categories, both sides populated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world demographic scenario
+        comment: Age/gender population pyramid, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and the age-based crossover align with real-world demographic
-          patterns
+        comment: Values 15-47k, realistic population-in-thousands scale
     code_quality:
       score: 10
       max: 10
@@ -192,33 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: Hardcoded deterministic arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses the global echarts
+        comment: No imports, uses provided globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a 3-grid pyramid, no fake UI
+        comment: No fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false set, mount-node contract respected
+        comment: Follows mount-node contract, animation disabled, no explicit size/devicePixelRatio
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -226,22 +217,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses the recommended multi-grid/linked-axis echarts pattern for pyramid
-          charts
+        comment: Linked grids/xAxis/yAxis arrays, correct gridIndex/xAxisIndex/yAxisIndex
+          wiring
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Three linked grids with an inverted axis is a distinctive echarts
-          capability, not trivially replicated elsewhere
-  verdict: REJECTED
+        comment: Three linked grids with inverted axis plus markArea overlay with
+          inline label
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
+  - minimal-chrome
