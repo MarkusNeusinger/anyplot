@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: residual-plot
 created: '2026-09-05T12:29:53Z'
-updated: '2026-09-05T12:34:04Z'
+updated: '2026-09-05T12:41:59Z'
 generated_by: claude-sonnet
 workflow_run: 33965979122
 issue: 2332
@@ -12,124 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Correct standard residual-plot structure: fitted (predicted) values on the x-axis,
-    residuals on the y-axis, and a theme-adaptive zero reference line via markLine'
-  - Heteroscedasticity is genuinely baked into the synthetic data (noise scale grows
-    with predicted delivery time), producing a visible fan-out pattern that matches
-    the spec's diagnostic use case
-  - ±2σ band via markArea plus a separate 2.5σ outlier threshold, with outliers rendered
-    in semantic matte-red and with larger size + higher opacity than normal points
-    — real redundant encoding, not color alone
-  - Theme-adaptive chrome is threaded through consistently (ink/inkSoft/grid tokens
-    on title, legend, axis labels, axis lines, split lines, and the zero-line itself)
-  - Clean, deterministic, seeded (LCG) data generation in-browser with no external
-    dependencies
+  - 'Correct residual plot structure: fitted/predicted values on x-axis, residuals
+    on y-axis, with a clean horizontal zero-reference line (markLine) representing
+    perfect predictions'
+  - Realistic delivery-time regression context with genuine mild heteroscedasticity
+    baked into the data generation (noise scale grows with predicted minutes) — a
+    real diagnostic scenario, not a random blob
+  - Outliers use a z-score threshold and are differentiated by color, larger marker
+    size, and higher opacity — multi-channel encoding, not color alone, which helps
+    CVD accessibility
+  - Alpha transparency (opacity 0.6) on normal points sensibly reduces overplotting
+    with n=300 observations
+  - Theme-adaptive chrome correctly threads tokens through title/legend/axis/gridlines/reference
+    line in both renders; data colors (green normal, red outlier) are identical between
+    light and dark
+  - Clean, deterministic, dependency-free implementation using a small seeded LCG
+    + Box-Muller-style Gaussian generator
   weaknesses:
-  - X-axis ticks are unevenly spaced near the edges (13, 20, 30, 40, 50, 60, 62) because
-    explicit min/max (floor(min-2)/ceil(max+2)) override ECharts' auto interval —
-    the boundary labels 13 and 62 sit awkwardly close to the neighboring round ticks
-    (60). Round min/max to nicer numbers (e.g. min:10, max:65) or set an explicit
-    xAxis.interval for evenly spaced ticks.
-  - LM-02 (distinctive features) is only modestly demonstrated — beyond markLine/markArea,
-    no other ECharts-specific configuration (e.g. tooltip formatter, axisPointer)
-    is used to strengthen the interactive HTML detail view.
-  - Outlier vs normal points are distinguished by color plus size/opacity, which is
-    adequate, but an additional marker-shape difference would give extra CVD safety
-    margin beyond the semantic green/red pairing.
+  - The shaded ±2σ band (markArea, bandLow/bandHigh = 2*std) and the outlier-coloring
+    threshold (2.5*std) don't match — several points sit visibly outside the gray
+    band yet remain colored 'Normal' (e.g. near predicted≈36min/residual≈-7.3, and
+    predicted≈57min/residual≈8.4 in both renders). Align both to the same multiple
+    of sigma so the shaded region and the colored outliers tell one consistent story.
+  - No LOWESS/smoothing trend line through the residuals — optional per spec, but
+    a simple moving-average or binned-mean line would strengthen the non-linearity-detection
+    storytelling and could raise Library Mastery / Data Storytelling further.
+  - Legend text (16px) is noticeably smaller than the title (22px); likely fine at
+    desktop but worth double-checking legibility at the ~400px mobile preview size.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "residual-plot · javascript · echarts · anyplot.ai" in dark ink, centered top, clearly readable. Legend ("Normal" / "Outlier (|z| > 2.5σ)") below the title, dark text, readable swatches. Axis titles "Predicted Delivery Time (min)" and "Residual (min)" in dark ink, tick labels in a slightly softer dark gray — both legible. Gridlines are light gray, subtle but visible on both axes. A solid dark horizontal line marks residual = 0. A light-gray shaded band marks the ±2σ zone.
-      Data: ~300 green (#009E73) circular points scattered around zero with a visible increase in spread toward higher predicted values (heteroscedasticity), plus 6 larger, more opaque matte-red (#AE3030) circles marking |z| > 2.5σ outliers, clustered mostly at higher predicted values and at the extremes of the residual range.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1-style), not pure white.
+      Chrome: Title "residual-plot · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend ("Normal" green dot, "Outlier (|z| > 2.5σ)" red dot) below title in dark ink, readable. X-axis "Predicted Delivery Time (min)" and y-axis "Residual (min)" labels in dark ink, readable. Tick labels in a softer dark gray, legible. Gridlines light gray and subtle. A solid black horizontal reference line marks y=0. A gray shaded band marks the ±2σ region.
+      Data: First series (Normal) uses the brand green #009E73 at opacity 0.6, second series (Outlier) uses a red/terracotta tone at opacity 0.9 with a larger marker. Residuals scatter around zero with visible mild heteroscedasticity (wider spread at higher predicted values) and 6 flagged outliers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis titles render in light/off-white ink, tick labels in a softer light gray — both clearly legible against the dark background. Legend text is light-colored and readable. Gridlines are a subtle light gray, visible but not competing with the data. The zero-reference line is rendered in the light ink token (flips correctly from dark to light for contrast). The ±2σ band renders as a slightly lighter charcoal rectangle, still distinguishable from the pure dark background.
-      Data: Same green (#009E73) and matte-red (#AE3030) data colors as the light render, in the same positions — confirms the Imprint categorical palette data colors are identical across themes; only chrome (background, text, grid, zero-line, band fill) adapted.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the dark surface.
+      Background: Warm near-black (#1A1A17-style), not pure black.
+      Chrome: Title, legend, and both axis titles render in light/off-white text, clearly readable against the dark background. Tick labels in a lighter soft gray, legible — no dark-on-dark failures observed. Gridlines are subtle dark gray, still visible. The zero-reference line correctly flips to white/light color for dark-mode contrast. The ±2σ band renders as a slightly lighter gray-on-black region, still discernible from the background.
+      Data: Confirmed identical green (#009E73) and red marker colors and identical point positions to the light render — only chrome (background, text, line/band colors) adapted to the theme.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title, legend, axis labels, and ticks are all explicitly sized and
-          fully readable in both themes
+        comment: All text readable in both themes; legend/tick sizes slightly small
+          relative to title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data collisions observed
+        comment: No text/data collisions observed
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 300 points with alpha=0.6 to combat overplotting; outliers sized
-          18px + alpha=0.9 to stand out
+        comment: Alpha 0.6 on 300 points and larger/opaque outlier markers manage
+          density well
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Outliers are redundantly encoded via color, size, and opacity, not
-          color alone
+        comment: Outliers distinguished by size+opacity in addition to color, mitigating
+          CVD risk
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins and no clipping, but explicit xAxis min/max produces
-          unevenly spaced boundary ticks (13, ..., 60, 62)
+        comment: Canvas gate passed; proportions balanced, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (min)
+        comment: Both axes labeled with units (min)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; outlier series uses matte-red (palette
-          slot 5) under the semantic exception for an error/outlier role; backgrounds
-          and chrome are theme-correct in both renders'
+        comment: 'First series is #009E73; backgrounds match theme spec in both renders'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Semantic color choice, shaded confidence band, and zero-line show
-          deliberate design beyond defaults
+        passed: false
+        comment: Custom palette and shaded-band technique beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtle gridlines, no boxed frame, generous margins
+        passed: false
+        comment: Subtle gridlines, reasonable whitespace
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Outlier highlighting and the ±2σ band create a clear focal point,
-          though no smoothing/trend line to further guide the reader
+        passed: false
+        comment: Outlier highlighting and zero-line aid diagnosis, but band/threshold
+          mismatch undercuts the story
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,50 +136,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct residual scatter plot
+        comment: Correct residual-vs-fitted scatter plot
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Zero line, fitted-vs-residual mapping, alpha transparency, ±2σ bands,
-          and outlier coloring all present
+        comment: Zero reference line, alpha for overlap, and outlier band/coloring
+          all present, but the ±2σ band and 2.5σ outlier threshold disagree
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=fitted/predicted, y=residuals, all data shown
+        comment: x=fitted/predicted, y=residual, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels are descriptive
+        comment: Title format correct; legend labels match series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heteroscedasticity, outliers, zero line, and confidence band all
-          represented
+        comment: Shows random scatter, heteroscedasticity, and outliers; no non-linearity
+          pattern shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Delivery-time prediction context is plausible and neutral
+        comment: Delivery-time prediction is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15-60 min predicted delivery times with a few-minute residual scale
-          are sensible for the domain
+        comment: 15-60 min predicted range, residuals in single-digit-to-low-teens
+          minutes, sensible
     code_quality:
       score: 10
       max: 10
@@ -190,19 +189,19 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Flat script, only small arrow-function helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Seeded LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals
+        comment: No imports; uses global echarts only
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -214,33 +213,32 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, current ECharts API
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of markLine and markArea for the reference line and
-          confidence band
+        comment: Idiomatic scatter series with markLine/markArea
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Only markLine/markArea used; no further ECharts-distinctive configuration
-          (tooltip formatter, axisPointer, etc.)
+        comment: markLine + markArea are distinctive ECharts features beyond a bare
+          scatter
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - outlier-detection
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - outlier-detection
   styling:
   - alpha-blending
