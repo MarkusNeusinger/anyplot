@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: scatter-annotated
 created: '2026-09-05T13:04:46Z'
-updated: '2026-09-05T13:09:33Z'
+updated: '2026-09-05T13:20:47Z'
 generated_by: claude-sonnet
 workflow_run: 33967454267
 issue: 2790
@@ -12,122 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 0
 review:
   strengths:
-  - Custom greedy 8-direction label placement algorithm (an adjustText equivalent)
-    avoids all label/marker overlaps across all 18 annotated points, in both themes
-  - Correct Imprint theme tokens threaded through every chrome element (axes, gridlines,
-    title, tick/axis labels) with clean light/dark parity and identical data color
-  - Leverages the real Chromium render harness's getBBox() to measure actual text
-    width for collision detection instead of estimating widths — a genuinely D3-specific
-    technique enabled by the browser-based harness
-  - 'Faithfully implements the spec''s notes: 10-50 point range (18 used), moderate
-    marker transparency (alpha 0.7), and subtle leader lines connecting offset labels
-    back to their points'
-  - Canvas gate passed cleanly; no clipping at any edge (verified title, y-axis title,
-    and rightmost/leftmost labels via pixel-level crops)
+  - Greedy label-placement algorithm uses real SVG getBBox() measurement (only possible
+    because the D3 harness renders in an actual browser) to avoid overlaps between
+    labels, markers, and leader lines — no collisions anywhere in either render.
+  - 'Clear data storytelling: a trend-relative residual calculation identifies the
+    biggest over-performer (''Cobalt Interactive'') and renders it larger, fully opaque,
+    and bold, creating an immediate focal point instead of a flat data dump.'
+  - Subtle leader lines connect offset labels back to their points exactly as the
+    spec's notes request, and point opacity (0.7, 1.0 for the standout) matches the
+    spec's 'moderate transparency to reveal overlap' guidance.
+  - Only a curated subset of points is labeled (extremes + biggest residuals) rather
+    than all 18, keeping the chart legible per the spec's guidance for larger datasets.
+  - 'Theme-adaptive chrome is correctly threaded through tokens: identical brand-green
+    (#009E73) data color, correct #FAF8F1/#1A1A17 backgrounds, and readable text in
+    both light and dark renders.'
+  - Deterministic LCG-based data generation (seeded, no Math.random()) with a plausible
+    R&D-spend-vs-revenue business scenario.
   weaknesses:
-  - At the 400px mobile thumbnail, individual company name labels shrink to near-illegible
-    size due to the 18-point density — consider labeling only a subset of key/outlier
-    points as the spec notes suggest, so mobile previews stay legible
-  - Visual design is fairly plain — a single marker hue, uniform size, and uniform
-    opacity throughout with no emphasis on any particular point — a bit more hierarchy
-    (e.g. size or color emphasis on a standout company) would strengthen data storytelling
-  - Axis domain lines are kept on both x and y axes; the style guide favors minimal
-    chrome so consider removing or lightening them for a more refined look
+  - 'AR-09 edge clipping (both renders): the ''Solstice Tech'' label at the top-right
+    of the chart is cut off at the canvas''s right border — pixel-level inspection
+    confirms label ink extends into the very last column (x=3199 of 3200) of both
+    plot-light.png and plot-dark.png, isolated to rows ~198-208 (the label''s y-position).
+    The final letter ''h'' of ''Solstice Tech'' is chopped off outside the saved PNG
+    bounds. Cause: the labeled point for ''Solstice Tech'' sits near the maximum x-domain
+    value, and the greedy label-placement algorithm chose a rightward (dx=1) compass
+    direction/radius that pushes the label''s right edge past the canvas edge — margin.right
+    (90 css px) is not enough clearance for a ~13px-per-char label at this data position.
+    Fix: bias the compass/radius search to prefer leftward or downward placements
+    for points near the right/top domain edges (e.g. skip dx>0 directions once anchorX
+    + labelWidth > iw - margin.right, or clamp the chosen box''s x1 to stay within
+    the mount width), or increase margin.right slightly to give the rightmost labels
+    room.'
+  - Title 'scatter-annotated · javascript · d3 · anyplot.ai' occupies only ~30% of
+    the plot width at 22px — noticeably smaller than the typical ~50-70% (or 70-85%
+    for the full mandated string length) expected proportion; a slightly larger title
+    fontsize would improve visual hierarchy without risking overflow, since there's
+    clearly headroom.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
-      Chrome: Title "scatter-annotated · javascript · d3 · anyplot.ai" centered at top in bold dark ink; x-axis "R&D Spending ($M)" and y-axis "Annual Revenue ($M)" labels both descriptive with units; tick labels and gridlines in a soft gray-brown ink, subtle but visible; axis domain lines present in the same soft ink. All chrome text is clearly legible against the light background.
-      Data: 18 green (#009E73) circular markers at fill-opacity 0.7, each connected via a thin leader line to a text label placed in one of 8 compass directions around the point, avoiding overlap with other labels and markers. Labels use a slightly softer ink tone than axis chrome, still clearly readable.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-annotated · javascript · d3 · anyplot.ai" in bold dark text, centered top. Axis labels "R&D Spending ($M)" (x) and "Annual Revenue ($M)" (y) in dark ink, both axes gridlines subtle light gray. Tick labels dark, readable.
+      Data: 18 green (#009E73) circles scattered showing a positive R&D-spend-vs-revenue correlation. 9 points carry text-label annotations with thin gray leader lines connecting offset labels to their markers. The point "Cobalt Interactive" is rendered larger, at full opacity, with a bold dark label — a clear focal point (the biggest revenue-per-R&D-dollar over-performer). Other points use fill-opacity 0.7.
+      Defect found: the "Solstice Tech" label at the top-right corner is clipped at the canvas's right edge — pixel inspection shows ink at the very last column (x=3199 of 3200 px) confined to the label's row band, meaning the final letter of "Solstice Tech" is cut off outside the saved PNG. This is an AR-09 edge-clipping violation.
+      Legibility verdict: FAIL (edge-clipped label "Solstice Tech"; all other text is otherwise clearly readable against the light background).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
-      Chrome: Same title, axis labels, tick labels, and gridlines as the light render, but rendered in light ink tones (off-white/light gray) that read clearly against the dark background — no dark-on-dark failures observed.
-      Data: Same 18 green (#009E73) markers at the same positions and opacity as the light render — data colors are identical between themes, confirming only chrome flipped. Leader lines and point labels remain legible in light gray against the dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink, clearly legible against the dark background — no dark-on-dark failures observed. Gridlines flip to a subtle light-on-dark tone.
+      Data: Identical marker positions, sizes, and the same brand-green (#009E73) fill as the light render — confirms data colors are unchanged between themes, only chrome flipped.
+      Defect found: the same "Solstice Tech" label is clipped at the identical right-edge pixel columns (verified programmatically) — the defect reproduces in both themes since it stems from the label-placement geometry, not from theme-specific styling.
+      Legibility verdict: FAIL (same edge-clipped "Solstice Tech" label; all other chrome and data are correctly theme-adapted and legible).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 0
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 0
         max: 8
-        passed: true
-        comment: Title/axis/tick text clear in both themes at full size; at the 400px
-          mobile thumbnail, dense company-name labels shrink to near-illegible size
+        passed: false
+        comment: 'AR-09 override: ''Solstice Tech'' label unreadable in both themes
+          because its final letter is clipped at the canvas edge. Underlying sizing
+          (13-22px, explicit) was otherwise sound.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Greedy 8-direction placement produces zero label/marker overlaps
-          across all 18 points in both renders
+        comment: Greedy getBBox-based placement avoids all label/marker/leader-line
+          collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker radius 10px and 0.7 opacity are well-suited to a sparse 18-point
-          dataset
+        comment: Marker size and 0.7 alpha well-tuned for 18 sparse points; standout
+          point enlarged appropriately.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Strong contrast of #009E73 markers against both surfaces; no red-green
-          sole-signal issue'
+        comment: Single-series green with white/pageBg strokes, good contrast on both
+          surfaces.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Canvas gate passed; balanced proportions; no clipping detected at
-          title, axis titles, or edge labels
+        passed: false
+        comment: 'AR-09 override: content (Solstice Tech label) cut off at canvas
+          border.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive with units ($M)
+        comment: Descriptive axis labels with units ($M).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; correct #FAF8F1/#1A1A17 backgrounds; both
-          renders theme-correct'
+        comment: 'First series is #009E73, backgrounds and chrome are theme-correct
+          in both renders.'
     design_excellence:
-      score: 13
+      score: 0
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Competent but plain — single hue, uniform marker treatment, no secondary
-          visual accents beyond leader lines
+        passed: true
+        comment: Trend-relative standout highlighting and curated subset labeling
+          go beyond a well-configured default. AR-09 forces overall category to 0.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle gridlines and generous margins; axis domain lines kept on
-          both axes rather than removed for a more minimal look
+        comment: Spines removed, subtle gridlines, generous whitespace, subtle leader
+          lines. AR-09 forces overall category to 0.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Overall R&D-vs-revenue trend is visible but no point or cluster is
-          emphasized to create a clear focal point
+        passed: true
+        comment: Clear focal point (the biggest R&D-to-revenue over-performer) via
+          size + weight + opacity emphasis. AR-09 forces overall category to 0.
     spec_compliance:
-      score: 15
+      score: 0
       max: 15
       items:
       - id: SC-01
@@ -135,90 +153,90 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with point annotations
+        comment: Correct annotated scatter plot. AR-09 forces overall category to
+          0.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Text labels near points, leader lines for offset labels, alpha~0.7
-          transparency, and collision avoidance all implemented per spec notes
+        comment: Labels, leader lines, moderate alpha, and subset annotation all present
+          per spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=R&D spend, y=revenue correctly mapped; axes show full data range
-          via .nice()
+        comment: X=R&D spend, Y=revenue, axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no legend needed for single
-          series
+        comment: Title format correct; single series needs no legend.
     data_quality:
-      score: 14
+      score: 0
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 18 labeled points (within the 10-50 recommended range) covering a
-          spread of magnitudes
+        comment: Shows full range of spend/revenue combinations, labeled outliers
+          and a clear standout. AR-09 forces overall category to 0.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fictional tech companies with plausible, neutral R&D-vs-revenue relationship
+        comment: Fictional tech companies, R&D-vs-revenue is a neutral, realistic
+          business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: R&D $18-400M vs. revenue $35-2500M with a believable multiplier relationship
+        comment: R&D spend ($18-400M) and revenue values are plausible and internally
+          consistent with a noisy positive correlation.
     code_quality:
-      score: 10
+      score: 0
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No classes; small helper functions are justified by the label-placement
-          problem
+        comment: Mostly linear imports->data->plot flow; a few small helper functions
+          (labelBox, overlaps) are justified by the label-placement algorithm's complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) makes data fully deterministic
+        comment: Deterministic seeded LCG PRNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, no extraneous imports
+        comment: No imports beyond the d3 global, as required.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the collision-avoidance requirement; no
-          fake UI/interactivity
+        comment: No fake functionality; complexity is proportional to the label-collision
+          problem being solved.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly builds into #container via ANYPLOT_SIZE/ANYPLOT_TOKENS
-          per the mount-node contract'
+        comment: Correct mount-node contract, current D3 v7 API, no transitions/animations.
     library_mastery:
-      score: 8
+      score: 0
       max: 10
       items:
       - id: LM-01
@@ -226,23 +244,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scaleLinear/axisBottom/axisLeft/selectAll-join usage throughout
+        comment: Idiomatic scales/axes/join pattern; label placement is hand-rolled
+          rather than a library-native force layout, but reasonable given D3 has no
+          adjustText equivalent.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses the real-browser getBBox() text measurement (only possible because
-          the harness renders in Chromium, not jsdom) to drive genuine collision-free
-          label placement
-  verdict: APPROVED
+        comment: Leverages the browser harness's real SVG getBBox() text measurement
+          for collision-free label placement — a technique unavailable to jsdom-based
+          or static-image libraries.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
+  - publication-ready
   - alpha-blending
   - edge-highlighting
