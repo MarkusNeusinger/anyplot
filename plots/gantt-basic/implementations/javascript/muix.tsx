@@ -21,6 +21,18 @@ const PROJECT_START = toDay(2026, 0, 5);
 const CATEGORIES = ["Design", "Development", "Testing", "Launch"];
 const CATEGORY_COLOR = Object.fromEntries(CATEGORIES.map((category, i) => [category, t.palette[i]]));
 
+// Lighter tint of a category's brand color for the "remaining" (not-yet-done)
+// portion of a bar — keeps the categorical hue but visually recedes relative
+// to the solid "done" segment, echoing the status reference line below.
+const hexToRgba = (hex, alpha) => {
+  const clean = hex.replace("#", "");
+  const r = parseInt(clean.substring(0, 2), 16);
+  const g = parseInt(clean.substring(2, 4), 16);
+  const b = parseInt(clean.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+const REMAINING_ALPHA = 0.4;
+
 const TASKS = [
   { task: "Requirements Gathering", category: "Design", start: [2026, 0, 5], end: [2026, 0, 12] },
   { task: "Wireframing", category: "Design", start: [2026, 0, 10], end: [2026, 0, 20] },
@@ -44,6 +56,16 @@ const TASK_NAMES = TASKS.map((row) => row.task);
 const MAX_DAY = Math.max(...TASKS.map((row) => row.end));
 const STATUS_DAY = toDay(2026, 1, 20) - PROJECT_START;
 
+// Split every task's duration at the status date: "done" = portion already
+// elapsed (solid category color), "remaining" = portion still ahead (lighter
+// tint of the same color). A finished task gets remaining = 0; an unstarted
+// task gets done = 0 — both fall out naturally from the clamped math below.
+const PROGRESS = TASKS.map((row) => ({
+  ...row,
+  done: Math.max(0, Math.min(row.end, STATUS_DAY) - row.start),
+  remaining: Math.max(0, row.end - Math.max(row.start, STATUS_DAY)),
+}));
+
 const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 const formatDay = (offsetDays) => dateFormatter.format(new Date((PROJECT_START + offsetDays) * DAY_MS));
 
@@ -51,8 +73,9 @@ const TICKS = [];
 for (let d = 0; d <= MAX_DAY; d += 14) TICKS.push(d);
 
 // --- Series: an invisible "offset" segment (start of timeline -> task start)
-// stacked with one visible duration segment per category (task start -> end),
-// null everywhere except the row that belongs to it. ------------------------
+// stacked with, per category, a solid "done" segment and a lighter "remaining"
+// segment (split at the status date) — null everywhere except the row that
+// belongs to it. -------------------------------------------------------------
 const OFFSET_SERIES = {
   id: "offset",
   stack: "timeline",
@@ -61,15 +84,30 @@ const OFFSET_SERIES = {
   valueFormatter: () => null,
 };
 
-const CATEGORY_SERIES = CATEGORIES.map((category) => ({
-  id: category,
-  label: category,
-  stack: "timeline",
-  color: CATEGORY_COLOR[category],
-  data: TASKS.map((row) => (row.category === category ? row.end - row.start : null)),
-  valueFormatter: (value, { dataIndex }) =>
-    value == null ? null : `${formatDay(TASKS[dataIndex].start)} – ${formatDay(TASKS[dataIndex].end)}`,
-}));
+const PROGRESS_SERIES = CATEGORIES.flatMap((category) => [
+  {
+    id: `${category}-done`,
+    label: category,
+    stack: "timeline",
+    color: CATEGORY_COLOR[category],
+    data: PROGRESS.map((row) => (row.category === category && row.done > 0 ? row.done : null)),
+    valueFormatter: (value, { dataIndex }) =>
+      value == null
+        ? null
+        : `${formatDay(PROGRESS[dataIndex].start)} – ${formatDay(Math.min(PROGRESS[dataIndex].end, STATUS_DAY))} (done)`,
+  },
+  {
+    id: `${category}-remaining`,
+    label: category,
+    stack: "timeline",
+    color: hexToRgba(CATEGORY_COLOR[category], REMAINING_ALPHA),
+    data: PROGRESS.map((row) => (row.category === category && row.remaining > 0 ? row.remaining : null)),
+    valueFormatter: (value, { dataIndex }) =>
+      value == null
+        ? null
+        : `${formatDay(Math.max(PROGRESS[dataIndex].start, STATUS_DAY))} – ${formatDay(PROGRESS[dataIndex].end)} (remaining)`,
+  },
+]);
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
@@ -80,7 +118,7 @@ export default function Chart() {
   const CHART_TOP = 122;
 
   const title = "Website Redesign Timeline · gantt-basic · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
+  const titleSize = title.length > 67 ? Math.round((26 * 67) / title.length) : 26;
 
   return (
     <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
@@ -88,13 +126,26 @@ export default function Chart() {
         <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500 }}>{title}</Typography>
       </Box>
 
-      <Stack direction="row" spacing={3} sx={{ position: "absolute", top: LEGEND_TOP, left: 56 }}>
-        {CATEGORIES.map((category) => (
-          <Stack key={category} direction="row" spacing={1} alignItems="center">
-            <Box sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: CATEGORY_COLOR[category] }} />
-            <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>{category}</Typography>
-          </Stack>
-        ))}
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ position: "absolute", top: LEGEND_TOP, left: 56, right: 56 }}
+      >
+        <Stack direction="row" spacing={3}>
+          {CATEGORIES.map((category) => (
+            <Stack key={category} direction="row" spacing={1} alignItems="center">
+              <Box sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: CATEGORY_COLOR[category] }} />
+              <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>{category}</Typography>
+            </Stack>
+          ))}
+        </Stack>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Box sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: t.inkSoft }} />
+          <Typography sx={{ color: t.inkSoft, fontSize: 13 }}>Done</Typography>
+          <Box sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: hexToRgba(t.inkSoft, REMAINING_ALPHA) }} />
+          <Typography sx={{ color: t.inkSoft, fontSize: 13 }}>Remaining vs. status date</Typography>
+        </Stack>
       </Stack>
 
       <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
@@ -104,7 +155,7 @@ export default function Chart() {
           layout="horizontal"
           skipAnimation
           borderRadius={3}
-          series={[OFFSET_SERIES, ...CATEGORY_SERIES]}
+          series={[OFFSET_SERIES, ...PROGRESS_SERIES]}
           grid={{ vertical: true }}
           xAxis={[
             {
