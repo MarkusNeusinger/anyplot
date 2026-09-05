@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-annotated
 created: '2026-09-05T13:00:08Z'
-updated: '2026-09-05T13:04:49Z'
+updated: '2026-09-05T13:16:41Z'
 generated_by: claude-sonnet
 workflow_run: 33967336904
 issue: 2790
@@ -12,49 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Custom greedy de-collision algorithm (labels placed in x-order, nudged upward
-    on overlap) keeps all 16 point labels readable with zero text-on-text collisions
-    in both renders.
-  - 'Idiomatic Chart.js usage: custom drawing goes through the native `afterDatasetsDraw`
-    plugin hook instead of faking interactivity or reaching for an unsupported chartjs-chart-*
-    plugin.'
-  - 'Implements every spec note explicitly: ~70% marker alpha to reveal overlap, subtle
-    leader lines from point to offset label, and all 16 points labeled (within the
-    10-50 recommended range).'
-  - Theme tokens are threaded through every chrome element (title, axis titles, ticks,
-    grid, leader-line color) and the brand-green data color is pixel-identical between
-    light and dark renders.
+  - Custom afterDatasetsDraw plugin implements label placement with fan-out from the
+    point-cloud centroid plus a greedy x-sorted de-collision pass, all drawn with
+    subtle leader lines — a genuinely idiomatic use of Chart.js's plugin architecture
+    to solve the spec's core requirement (avoid overlapping labels) without reaching
+    for an external library.
+  - Two hand-placed outliers (Origami Cloud, Tundra Works) are visually promoted with
+    bold labels, full opacity, and a larger point radius, while the trend cloud sits
+    at ~70% alpha — this directly matches the spec's 'highlight outliers' use case
+    and creates a clear focal point (DE-03).
+  - Deterministic fixed-seed LCG stands in for Math.random() with a code comment explaining
+    why (browser has no seeded RNG) — CQ-02 handled correctly for the JS runtime.
+  - Theme tokens (t.ink, t.inkSoft, t.grid, t.pageBg) are threaded through title,
+    axis titles, ticks, grid, marker borders, and the label/leader-line plugin; both
+    renders are legible with correct backgrounds and identical data colors.
   weaknesses:
-  - valuation = revenue * 3.4 + noise (noise range only ±15) produces an almost perfectly
-    linear cloud; the code comment claims 'two clear outliers deserve their labels
-    most' but no point actually deviates meaningfully from the trend line, undercutting
-    the annotation narrative the spec's use cases describe (labeling outliers/top
-    performers). Widen the noise or hand-place 1-2 genuine outliers so the labels
-    earn their keep.
-  - Point-label font (13px) is smaller than the tick-label font (14px) even though
-    the per-point label is the primary content the spec asks for — bump it to ~14-15px
-    for a clearer hierarchy.
-  - Every point is labeled with identical size/weight/color, so there is no visual
-    emphasis on the points that matter most (per the spec's 'outlier cities', 'top
-    performers' applications) — consider differentiating a highlighted subset.
+  - 'The greedy de-collision pass only compares each label against previously-placed
+    labels'' bounding boxes — it doesn''t check a label''s leader line against other
+    labels'' text. Result: Driftline''s leader line is drawn directly through the
+    ''Pixelforge'' label text (visible in both themes, bottom-left cluster around
+    x=8-15, y=65-90). Route leader lines around already-placed label boxes, not just
+    resolve label-vs-label box overlap.'
+  - Meadowstack's own marker and its neighbor Brightloom's leader line both cross
+    directly through the 'Meadowstack' label text (the label sits immediately above
+    its own point with no vertical offset, so the connecting line clips the letters
+    'ows'). Increase LEADER_PX or add a minimum label-to-marker clearance check for
+    points that are close together vertically.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), not pure white, not dark.
-      Chrome: Title "scatter-annotated · javascript · chartjs · anyplot.ai" in dark ink, centered, comfortably sized, not clipped. Axis titles "Annual Revenue ($M)" / "Valuation ($M)" in dark ink, balanced sizes. Tick labels in soft grey, subtle light grid lines on both axes. All chrome text clearly legible against the light background.
-      Data: 16 brand-green (#009E73, ~70% alpha) circular markers with a subtle cream/pageBg edge stroke, tracing a roughly linear revenue-vs-valuation trend from bottom-left to top-right. Every point has a text label in dark ink connected by a thin grey leader line, fanned outward from the point cloud so no label overlaps another label or a marker. No clipping at any canvas edge (checked bottom-left cluster and the top-right "Vantage Grid" point closely).
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-annotated · javascript · chartjs · anyplot.ai" in dark ink, centered, clearly legible. Axis titles "Annual Revenue ($M)" and "Valuation ($M)" in dark ink at balanced sizes. Tick labels in a softer gray-brown, subtle horizontal/vertical gridlines visible but not dominant.
+      Data: 16 startup points in Chart.js green (#009E73), ~70% alpha for the 14 trend points and full opacity + larger radius for the 2 outliers (Origami Cloud, Tundra Works), which also get bold black labels. Each point has a thin gray leader line to its name label. Points trace a near-linear revenue-to-valuation trend with the two outliers clearly separated above/below it.
+      Legibility verdict: PASS — all title, axis, and tick text is clearly readable against the light background. Two label/leader-line overlaps found in the crowded bottom-left cluster (Driftline's leader line crosses the "Pixelforge" text; the Brightloom leader line and Meadowstack's own marker cross the "Meadowstack" text) — a VQ-02 deduction, but no text is fully obscured or unreadable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), not pure black, not light.
-      Chrome: Same title and axis titles now rendered in light ink (near-white), tick labels in light soft grey, grid lines subtle and still visible against the dark surface. No dark-on-dark text anywhere — every label, tick, and leader line is clearly visible.
-      Data: Same 16 brand-green (#009E73) markers at the same positions and same alpha as the light render — confirmed identical data color and layout; only the chrome (text, grid, leader-line color reference) flipped to the dark-theme tokens.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and axis titles now rendered in light/white ink, clearly legible against the dark background. Tick labels in a lighter soft gray. Gridlines subtle and visible.
+      Data: Identical green marker colors, alpha levels, radii, and outlier emphasis as the light render — only chrome (text, grid, background) flipped, data colors unchanged as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is clearly visible against the near-black surface. The same two label/leader-line overlaps present in the light render recur here (same layout, theme-independent issue).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -62,36 +63,37 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; point-label font (13px) is slightly
-          small relative to its importance as the primary annotation content.
+        comment: Explicit font sizes throughout; readable in both themes with correct
+          ink/inkSoft mapping.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: De-collision pass handles most of the 16 labels, but two leader-line/text
+          overlaps remain in the crowded bottom-left cluster (Driftline through 'Pixelforge';
+          Meadowstack's own line through its label).
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Greedy de-collision keeps all 16 labels distinct in both renders;
-          verified closely on the dense bottom-left cluster.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Marker size (radius 9) and 70% alpha are appropriate for 16 sparse
-          points, matching the spec's transparency note.
+        comment: Sparse data (16 points) with prominent 9-13px markers; outliers upsized
+          and full-opacity for emphasis.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, no red-green reliance, good contrast on
-          both surfaces.
+        comment: Single-hue green varying by alpha/size, not relying on hue distinctions;
+          no red-green signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title and axis proportions balanced;
-          no overflow at any edge, including the top-right 'Vantage Grid' label.
+        comment: Good margins, no clipping at edges (checked left, top-right corners);
+          minor deduction for the crowded lower-left cluster layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,31 +108,30 @@ review:
         comment: 'First series is #009E73 in both themes; backgrounds match #FAF8F1
           / #1A1A17.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom centroid-fan label placement and leader lines go beyond a
-          default scatter, raised above the DE-01=4 baseline.
+        comment: Custom label-placement plugin, deliberate alpha/size hierarchy for
+          outliers vs. trend — well above generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid and border tokens, generous canvas padding for the top-right
-          label; raised above the DE-02=2 baseline.
+        comment: Subtle grid, generous padding, theme-adaptive borders; refinement
+          dinged by the label/leader overlaps.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Labels aid identification but every point shares identical styling
-          — no visual emphasis on standout points despite the code comment implying
-          two intentional outliers.
+        passed: true
+        comment: Bold, full-opacity outliers vs. faded trend cloud creates a clear,
+          immediate focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -140,52 +141,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter type.
+        comment: Correct scatter chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x, y, per-point text label, leader lines, and moderate alpha all
-          present.
+        comment: Text labels per point, ~0.7 alpha on trend points, subtle leader
+          lines from offset labels to points — all spec notes covered.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Revenue on x, valuation on y; axes cover full data range.
+        comment: Revenue on x, valuation on y; axis ranges cover full data extent.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend correctly omitted for a single
-          series.
+        comment: Title matches required format exactly; legend correctly hidden for
+          the single dataset.
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 16 points (within the 10-50 recommendation), all labeled, with connecting
-          lines and transparency.
+        comment: Covers labeling, outlier identification; per-point labels for all
+          16 points.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral fictional startup data, but the near-perfect linear
-          fit undersells the 'find the outlier' scatter narrative.
+        comment: Plausible, neutral startup revenue-vs-valuation scenario with realistic
+          multiples.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue $6-110M and valuation $20-370M are sensible startup-scale
-          numbers.
+        comment: Revenue $6-110M, valuation $30-350M — sensible SaaS-style ranges.
     code_quality:
       score: 9
       max: 10
@@ -195,50 +195,52 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: The label-placement plugin and LCG helper are justified complexity
-          for automatic de-collision, not gratuitous structure.
+        comment: One helper function and a plugin object with a moderately involved
+          collision-avoidance routine — justified by the feature but not minimal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG makes the jitter deterministic.
+        comment: Fixed-seed LCG, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided Chart.js global.
+        comment: No imports; uses only the provided Chart global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; complexity matches the task.
+        comment: No fake interactivity; the plugin is a real rendering technique,
+          not simulated UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, `animation: false` set.'
+        comment: Mount-node contract respected; animation:false set; current Chart.js
+          v4 API.
     library_mastery:
       score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses the native plugin/hook system (`afterDatasetsDraw`) for custom
-          drawing, the recommended Chart.js pattern.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom collision-avoiding label layout with leader lines is a genuinely
-          distinctive, library-appropriate feature beyond a stock scatter example.
+        comment: Native scatter type, idiomatic plugin hook (afterDatasetsDraw), theme
+          tokens mapped correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom canvas-drawing plugin for label/leader-line annotation is
+          a genuinely distinctive Chart.js technique, not generic usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -250,3 +252,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
