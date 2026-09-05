@@ -82,18 +82,50 @@ function nodeRadius(deg, maxDeg) {
   return 7 + (deg / maxDeg) * 12;
 }
 
-// --- Edge series: one 2-point line per edge (drawn beneath the nodes) -------
-const edgeSeries = edges.map((e) => {
+// --- Hub node: highest-degree node across both sets, highlighted below ------
+let hubNode = null;
+let hubDegree = -1;
+nodesA.forEach((d) => {
+  if (degreeA[d.name] > hubDegree) {
+    hubDegree = degreeA[d.name];
+    hubNode = { ...d, isUser: true };
+  }
+});
+nodesB.forEach((d) => {
+  if (degreeB[d.name] > hubDegree) {
+    hubDegree = degreeB[d.name];
+    hubNode = { ...d, isUser: false };
+  }
+});
+const hubColor = hubNode.isUser ? t.palette[0] : t.palette[1];
+const hubRadius = hubNode.isUser
+  ? nodeRadius(degreeA[hubNode.name], maxDegA)
+  : nodeRadius(degreeB[hubNode.name], maxDegB);
+
+// --- Edge series: one gently bowed spline per edge (drawn beneath nodes) ----
+// A slight perpendicular bend (alternating by index) separates edges that
+// would otherwise stack into straight overlapping segments in the crossing
+// zone, and doubles as a distinctive Highcharts touch beyond a plain line.
+const edgeSeries = edges.map((e, i) => {
   const s = posOf[e.source];
   const dst = posOf[e.target];
+  const mx = (s.x + dst.x) / 2;
+  const my = (s.y + dst.y) / 2;
+  const dx = dst.x - s.x;
+  const dy = dst.y - s.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const bend = (0.03 * (((i % 3) - 1) || 1)) / (0.6 + e.weight / 5);
+  const cx = mx + (-dy / len) * bend;
+  const cy = my + (dx / len) * bend;
   return {
-    type: "line",
+    type: "spline",
     data: [
       [s.x, s.y],
+      [cx, cy],
       [dst.x, dst.y],
     ],
     color: t.inkSoft,
-    opacity: 0.12 + (e.weight / 5) * 0.28,
+    opacity: 0.08 + (e.weight / 5) * 0.3,
     lineWidth: 0.8 + (e.weight / 5) * 1.8,
     marker: { enabled: false },
     enableMouseTracking: false,
@@ -149,6 +181,28 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    events: {
+      // Distinctive Highcharts touch: a renderer-drawn double halo gives the
+      // busiest hub a clear focal point instead of relying on size alone.
+      load() {
+        const chart = this;
+        const px = chart.xAxis[0].toPixels(hubNode.x);
+        const py = chart.yAxis[0].toPixels(hubNode.y);
+
+        [hubRadius + 6, hubRadius + 12].forEach((r, i) => {
+          chart.renderer
+            .circle(px, py, r)
+            .attr({
+              fill: "none",
+              stroke: hubColor,
+              "stroke-width": 1.5,
+              opacity: i === 0 ? 0.55 : 0.25,
+              zIndex: 6,
+            })
+            .add();
+        });
+      },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
