@@ -61,10 +61,25 @@ ax = PolarAxis(
     rticklabelsize = 12,
     rticklabelcolor = INK_SOFT,
     rtickformat = values -> ["$(round(Int, v)) m/s" for v in values],
+    rtickangle = pi / 4,  # place radial tick labels near NE, clear of the SW data cluster
     spinecolor = INK_SOFT,
     rgridcolor = GRID,
     thetagridcolor = GRID,
     backgroundcolor = PAGE_BG,
+)
+
+# Prevailing-direction focal point: circular mean bearing across all observations,
+# drawn as a subtle dashed spoke from the origin to just past the outer data extent
+mean_bearing_rad = atan(sum(sin, wind_bearing_rad), sum(cos, wind_bearing_rad))
+max_r = maximum(wind_speed)
+lines!(
+    ax, fill(mean_bearing_rad, 2), [0.0, max_r * 1.1];
+    color = INK_SOFT, linestyle = :dash, linewidth = 1.5,
+)
+text!(
+    ax, mean_bearing_rad, max_r * 1.02;
+    text = "prevailing", color = INK_SOFT, fontsize = 12,
+    align = (:center, :center),
 )
 
 series_plots = []
@@ -72,7 +87,7 @@ for (i, period) in enumerate(time_of_day)
     mask = period_index .== i
     p = scatter!(
         ax, wind_bearing_rad[mask], wind_speed[mask];
-        color = IMPRINT_PALETTE[i], markersize = 14, alpha = 0.85,
+        color = IMPRINT_PALETTE[i], markersize = 11, alpha = 0.7,
         strokewidth = 1, strokecolor = PAGE_BG, label = period,
     )
     push!(series_plots, p)
