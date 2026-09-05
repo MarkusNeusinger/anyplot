@@ -21,10 +21,11 @@ IMPRINT_PALETTE <- c(
 BRAND <- IMPRINT_PALETTE[1]
 
 # --- Data -----------------------------------------------------------------
-# An elevator's floor position during a service run: it holds a floor while
-# passengers board or alight, then jumps instantly to the next requested
-# floor. The value is only known at each stop and is constant in between.
-n_stops <- 14
+# An elevator's floor position over an extended service period: it holds a
+# floor while passengers board or alight, then jumps instantly to the next
+# requested floor. The value is only known at each stop and is constant in
+# between.
+n_stops <- 90
 floor_num <- integer(n_stops)
 floor_num[1] <- sample(1:12, 1)
 for (i in 2:n_stops) {
@@ -39,17 +40,37 @@ elapsed_min <- cumsum(c(0, wait_min[-n_stops]))
 
 df <- tibble::tibble(elapsed_min = elapsed_min, floor_num = floor_num)
 
+# Call out the single largest floor change: this is the moment the elevator
+# travels farthest in one hop, giving the plot a focal point beyond the raw
+# step shape.
+floor_diff <- diff(floor_num)
+jump_idx <- which.max(abs(floor_diff))
+jump_size <- floor_diff[jump_idx]
+jump_x <- elapsed_min[jump_idx + 1]
+jump_y <- floor_num[jump_idx + 1]
+
 # --- Plot -------------------------------------------------------------------
 title_text <- "Elevator Floor Position · line-stepwise · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(df, aes(x = elapsed_min, y = floor_num)) +
   geom_step(color = BRAND, linewidth = 1.1, direction = "hv") +
-  geom_point(color = BRAND, size = 2.5) +
+  geom_point(color = BRAND, size = 1.6, alpha = 0.85) +
+  geom_vline(xintercept = jump_x, color = INK_SOFT, linetype = "dashed", linewidth = 0.4) +
+  geom_point(
+    data = data.frame(x = jump_x, y = jump_y),
+    mapping = aes(x = x, y = y),
+    shape = 21, size = 4.5, fill = BRAND, color = PAGE_BG, stroke = 1.2,
+    inherit.aes = FALSE
+  ) +
   scale_y_continuous(breaks = breaks_width(2)) +
   labs(
     title = title_text,
     x = "Elapsed Time (minutes)",
-    y = "Floor"
+    y = "Floor",
+    caption = sprintf(
+      "Largest single change: %+d floors at %.0f min elapsed",
+      jump_size, jump_x
+    )
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -63,6 +84,7 @@ p <- ggplot(df, aes(x = elapsed_min, y = floor_num)) +
     axis.line = element_line(color = INK_SOFT),
     axis.ticks = element_blank(),
     plot.title = element_text(color = INK, size = 12),
+    plot.caption = element_text(color = INK_SOFT, size = 7, hjust = 0),
     panel.border = element_blank()
   )
 
