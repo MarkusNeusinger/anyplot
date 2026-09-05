@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-tilegrid
 created: '2026-09-05T09:18:12Z'
-updated: '2026-09-05T09:23:18Z'
+updated: '2026-09-05T09:33:15Z'
 generated_by: claude-sonnet
 workflow_run: 33957153737
 issue: 5246
@@ -12,231 +12,234 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tileg
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/muix/plot-dark.html
-quality_score: 0
+quality_score: 93
 review:
   strengths:
-  - Clever reuse of ScatterChart band scales + a custom scatter slot to draw equal-area
-    square tiles, which the MUI X community surface has no native tile-grid/heatmap
-    component for
-  - Approximate compass-style geographic layout (row 0 = north) with real ISO country
-    abbreviations makes the tile positions intuitively readable
-  - Continuous Imprint sequential colormap (green→blue) correctly built from tokens.seq,
-    identical data colors between light and dark renders
-  - Per-tile text color picked from WCAG relative luminance of the actual fill so
-    labels stay legible across the whole color range
-  - Data is realistic, neutral (renewable electricity share by European country) and
-    spans a wide, factually plausible 9%-98% range
+  - Custom square-tile slot component computes per-tile text color from WCAG relative
+    luminance, guaranteeing legible abbreviation labels against every fill color in
+    both themes
+  - Precise geometry math (cellPitch from available width/height, legend safety strip)
+    keeps every tile perfectly equal-area and prevents the continuous colorbar legend
+    from clipping against the physical canvas edge
+  - 'Idiomatic, advanced use of the community @mui/x-charts surface: band-scale axes
+    for the grid, a continuous zAxis colorMap, and ContinuousColorLegend, composed
+    correctly within the harness contract (skipAnimation, export default, sizing from
+    ANYPLOT_SIZE)'
+  - Realistic, geographically-plausible European renewable-electricity-share data
+    (Norway/Iceland high, Poland/Hungary lower) placed on a sensible approximate compass
+    grid
   weaknesses:
-  - 'AR-09 edge clipping: the continuous color legend''s max-value label "98%" is
-    clipped at the canvas''s right border in BOTH plot-light.png and plot-dark.png
-    — pixel inspection confirms non-background label ink extends into the very last
-    image column (x = width-1), i.e. part of the ''%'' glyph is rendered off-canvas
-    and permanently lost. Root cause is almost certainly that LEGEND_RESERVE (170
-    CSS px) plus the ContinuousColorLegend''s own label width isn''t enough margin
-    for the label text, which is measured/positioned independently of the reserved
-    margin box — increase LEGEND_RESERVE (or add explicit right margin/marginRight
-    padding) so the legend''s rendered label bounding box, not just its bar, fits
-    inside window.ANYPLOT_SIZE.width.'
-  - Large uneven whitespace gap between the right edge of the tile grid and the color
-    legend (roughly a quarter of canvas width) while the left margin is comparatively
-    tight — worth tightening once the clipping fix changes the margin math anyway.
-  - Legend only labels the min/max stops (9%/98%) with no visible intermediate scale
-    ticks — acceptable for a compact continuous legend, but an additional mid-point
-    tick would make the color-to-value mapping easier to read at a glance.
+  - 'DE-03: No visual emphasis or annotation calls out standout countries (e.g. Norway
+    at 98%) — a subtle highlight would sharpen the storytelling beyond the color scale
+    alone'
+  - 'CQ-01: Two helper functions (textColorFor, CountryTile) are necessary for the
+    custom-slot tile pattern but push slightly past a bare declarative KISS baseline'
+  - Legend value labels are set at 13px — on the smaller side; worth double-checking
+    they stay legible at the ~400px mobile preview scale
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "map-tilegrid · javascript · muix · anyplot.ai" and the subtitle are dark ink, clearly legible. The continuous color legend on the right shows "98%" (top) and "9%" (bottom) labels in soft dark ink.
-      Data: 28 European countries drawn as equally-sized, rounded-corner square tiles arranged in an approximate compass grid, colored on the Imprint sequential green→blue scale (green = low renewable share, blue = high). Norway (98%) and Iceland (85%) render blue; low-share countries (Hungary 14%, Ukraine 9%) render green. Each tile carries a white/cream country-code label with a thin page-background stroke separating tiles.
-      Legibility verdict: FAIL — the legend's top label "98%" is clipped at the canvas's right edge: pixel inspection shows label ink reaching the very last column of the 3200px-wide image, meaning part of the "%" glyph is rendered off-canvas and missing.
+      Background: Warm off-white (#FAF8F1), correct and consistent across the whole canvas.
+      Chrome: Title "map-tilegrid · javascript · muix · anyplot.ai" and subtitle "Renewable electricity share by country — equal tile weight, not land area" render in dark ink, both fully legible and not clipped. The vertical colorbar legend on the right shows "98%" (top) and "9%" (bottom) in dark gray text, clear of the canvas edge.
+      Data: 27 square tiles arranged on an approximate European compass grid (Iceland/Norway/Sweden/Finland along the top, Mediterranean countries at the bottom), each filled with a continuous blue-to-green gradient color keyed to renewable electricity share. Each tile carries a bold two-letter country code; the label ink flips between near-white and near-black per tile so it always reads clearly against that tile's fill (e.g. white text on the darker blue NO tile, dark text on the lighter green HU tile). Rounded tile corners with a thin off-white stroke create clean separation between neighboring tiles.
+      Legibility verdict: PASS — all title, subtitle, tile-label, and legend text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and subtitle render in light ink, clearly legible against the dark surface. Legend labels "98%"/"9%" are in light-gray ink.
-      Data: Identical tile layout and identical data colors to the light render (Imprint green→blue gradient unchanged) — only the page background and text/legend chrome flipped to the dark tokens, as required.
-      Legibility verdict: FAIL — same AR-09 clipping as the light render: the "98%" legend label's ink reaches the last pixel column of the canvas, confirming the glyph is cut off at the right border in this theme too.
+      Background: Warm near-black (#1A1A17), correct and consistent across the whole canvas.
+      Chrome: Title and subtitle render in light ink, fully legible against the dark background. The colorbar legend labels ("98%" / "9%") render in light gray, clearly visible and not clipped at the right edge.
+      Data: Same 27 tiles in the same compass layout with an IDENTICAL blue-to-green data gradient to the light render — only the page background and text chrome flipped, confirming the Imprint continuous palette held constant across themes. Per-tile label ink still flips appropriately (white on darker tiles, near-black on the lightest green tiles), so no tile shows dark-on-dark text.
+      Legibility verdict: PASS — all chrome and tile-label text is clearly readable against the dark background; no dark-on-dark failures found.
   criteria_checklist:
     visual_quality:
-      score: 0
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: AR-09 auto-reject overrides scoring; legend label clipped in both
-          themes
+        passed: true
+        comment: Title, subtitle, tile labels, and legend text all readable in both
+          themes; legend font (13px) is on the smaller side
       - id: VQ-02
         name: No Overlap
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: No collisions between tiles, labels, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Tiles are large and prominent, appropriate for 27 data points
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Blue-green sequential scale plus per-tile luminance-computed text
+          color guarantees contrast; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Legend max-value label '98%' clipped at right canvas edge in both
-          renders
+        passed: true
+        comment: Nothing cut off, legend has a dedicated safety margin, tiles centered
+          and equally sized
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Descriptive title/subtitle with units (%) on the legend
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: AR-09 auto-reject overrides scoring (palette itself was otherwise
-          compliant)
+        passed: true
+        comment: Continuous scale built from imprint_seq stops (t.seq[0]/t.seq[1]);
+          backgrounds match theme tokens exactly; identical data colors across themes
     design_excellence:
-      score: 0
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 0
+        score: 7
         max: 8
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Custom slot component, luminance-based text contrast, careful margin
+          math — clearly beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 0
+        score: 5
         max: 6
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: No axes/spines shown, minimal chrome, generous whitespace, subtle
+          rounded tile corners
       - id: DE-03
         name: Data Storytelling
-        score: 0
+        score: 4
         max: 6
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Geographic arrangement plus color gradient tells a regional story,
+          but no explicit emphasis/annotation on standout values
     spec_compliance:
-      score: 0
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: AR-09 auto-reject overrides scoring (tile grid type itself was correct)
+        passed: true
+        comment: Correct equal-area tile grid map
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Square tiles, sequential colormap, region labels, colorbar legend,
+          equal-area sizing — all present
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: row/col placement and value-to-color mapping correct
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Title matches exact required format; colorbar legend present with
+          correct min/max
     data_quality:
-      score: 0
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: region, value, row, col all represented; equal-area concept clearly
+          demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Plausible, neutral European renewable-electricity-share data
       - id: DQ-03
         name: Appropriate Scale
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Percentage range (9-98%) is sensible for the domain
     code_quality:
-      score: 0
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 2
         max: 3
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Two helper functions needed for the custom-slot tile pattern, slightly
+          beyond a bare declarative baseline
       - id: CQ-02
         name: Reproducibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Fully deterministic, hardcoded in-memory data
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Only used imports (Box, Typography, ScatterChart, ContinuousColorLegend)
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Appropriate complexity for the custom tile-grid pattern; no fake
+          UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: skipAnimation set, sized from ANYPLOT_SIZE, default-exported component
+          per harness contract
     library_mastery:
-      score: 0
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
+        passed: true
+        comment: Band-scale axes, continuous zAxis colorMap, ContinuousColorLegend,
+          custom scatter slot — all community-surface, all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: AR-09 auto-reject overrides scoring
-  verdict: REJECTED
+        passed: true
+        comment: Creative use of custom slots + bandwidth-derived tile sizing to work
+          around MUI X's lack of a native tile-grid chart type
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - patches
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
-  - minimal-chrome
   - edge-highlighting
