@@ -1,0 +1,284 @@
+library: makie
+language: julia
+specification_id: diagnostic-regression-panel
+created: '2026-09-05T00:07:11Z'
+updated: '2026-09-05T00:22:06Z'
+generated_by: claude-sonnet
+workflow_run: 33931440509
+issue: 5242
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Faithful, statistically correct replication of R''s plot(lm) four-panel layout:
+    hat-matrix leverage, studentized residuals, Cook''s distance, a hand-rolled inverse-normal-CDF
+    for the Q-Q plot, and a Gaussian-kernel LOWESS smoother, all implemented without
+    external stats packages.'
+  - Consistent point styling and clear influential-point flagging (transparent red-ringed
+    markers + observation-index text labels) applied identically across all four panels,
+    precisely matching the spec's 'label the 2-3 most influential points' and 'consistent
+    point styling' notes.
+  - Theme-adaptive chrome is correctly threaded through every Axis (backgrounds, ink,
+    grid, spines); both light and dark renders are legible with identical data colors
+    and only chrome flipping.
+  - 'Palette compliance: first series is Imprint #009E73, LOWESS trend uses ochre,
+    flagged points use matte red, Cook''s distance contours use the documented semantic
+    amber — all per the style guide''s semantic-exception rules.'
+  - 'Realistic, neutral dose-response dataset engineered specifically to exercise
+    every diagnostic panel: a plateauing non-linear mean, dose-dependent heteroscedastic
+    noise, and injected high-leverage/large-residual points create genuine visual
+    signal in all four subplots.'
+  - 'Clean, reproducible script: fixed seed, only used imports (CairoMakie, Colors,
+    Random, LinearAlgebra), no fake interactivity, correct plot-$(THEME).png save
+    call with px_per_unit=2.'
+  weaknesses:
+  - 'Residuals vs Leverage panel (bottom-right): the ''D=1.0'' Cook''s-distance contour
+    label sits directly on top of the dotted amber line it annotates, so the ''D''
+    glyph is bisected by the line and reads like a struck-through ''Ð'' in both light
+    and dark renders. Nudge that label''s offset further right/up (e.g. offset = (-2,
+    10) instead of (-2, 3), or place it just past where the curve exits the axis)
+    so the line clears the glyph; the ''D=0.5'' label a bit lower has more clearance
+    and does not have this problem.'
+  - Two hand-written helper functions (norm_quantile, lowess_smooth) are needed since
+    Julia's base/allowed packages lack an inverse-normal-CDF and LOWESS, which is
+    a reasonable justification, but it does move away from the strict single-flow
+    KISS ideal — keep them as tightly scoped, clearly-separated math utilities as
+    they are now if kept.
+  - 'Library Mastery is solid but generic: only common Axis/scatter!/lines!/hlines!/text!
+    primitives and a GridLayout-spanning Label are used. A genuinely Makie-distinctive
+    touch (e.g. a shared Legend/Colorbar, linkyaxes! between the two ''Fitted Values''
+    panels, or a Makie recipe) would raise this further.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 across the full canvas and all four subplot backgrounds.
+      Chrome: Bold dark title "diagnostic-regression-panel · julia · makie · anyplot.ai" is clearly readable at the top. Each of the four subplot titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage") is bold dark text, fully legible. Axis titles ("Fitted Values (% relief)", "Residuals", "Theoretical Quantiles", "Standardized Residuals", "Leverage", "√|Standardized Residuals|") are dark and legible. Tick labels are a softer dark gray, still clearly readable. Top/right spines are removed; left/bottom spines and gridlines are subtle warm-gray.
+      Data: Green (#009E73) scatter points in all four panels — residuals vs fitted, Q-Q, scale-location, and residuals vs leverage. An ochre LOWESS trend line runs through panels 1 and 3. Observations 1, 9, and 43 (highest Cook's distance) are ringed in matte red and labeled with their index in every panel where they appear. Panel 4 shows two dotted amber Cook's-distance contour curves (D=0.5, D=1.0); the "D=1.0" label is bisected by the dotted line it names, a minor overlap.
+      Legibility verdict: PASS (aside from the minor "D=1.0"/line overlap noted above, which is a VQ-02 overlap issue, not a legibility failure — the text is still readable).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 across the canvas and all subplot panels.
+      Chrome: Title and all four subplot titles are rendered in light/off-white text, fully legible against the dark background. Axis titles are light-colored and legible; tick labels use a lighter soft gray, clearly distinguishable from the background — no dark-on-dark failures observed anywhere in the panel.
+      Data: All data colors are identical to the light render — same brand green scatter, same ochre smoother, same matte-red rings/labels on observations 1, 9, 43, and the same amber dotted Cook's-distance contours with the same D=1.0/line overlap. Only the chrome (background, ink, grid, spines) flipped between renders, as required.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all titles, axis labels and ticks
+          readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: The 'D=1.0' Cook's-distance label is bisected by its own dotted contour
+          line in panel 4 (both renders); otherwise no overlaps, including between
+          the close influential-point labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markersize 13 with alpha 0.75 is appropriate for n=90; flagged points
+          get a larger open red ring for extra visibility.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Flagged (red) vs normal (green) points are distinguished by shape
+          (open ring vs filled) in addition to hue, so the signal survives red-green
+          CVD.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No canvas-gate failure; balanced 2x2 grid, no clipping or overflow,
+          sensible rowgap/colgap.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ('% relief'); mandated title format
+          followed exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73; ochre/matte-red/amber used per
+          documented semantic-exception roles; backgrounds correct in both themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate multi-color scheme (brand/ochre/matte-red/amber) with
+          clear semantic roles; polished, publication-style diagnostic layout.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle single-axis-tint gridlines, tick
+          marks hidden, generous row/col gaps.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Red-ringed, indexed influential points create a clear focal point
+          in every panel and guide the viewer straight to the diagnostic story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 regression-diagnostic panel replicating R's plot(lm).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four required subplots present with zero-line, LOWESS smoothers,
+          Q-Q reference line, and Cook's distance 0.5/1.0 contours.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Fitted/residuals/std residuals/leverage mapped exactly as specified
+          in each subplot.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{spec-id} · julia · makie · anyplot.ai'; no legend
+          needed given self-explanatory single-series + annotated outliers.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Non-linearity, heteroscedasticity, non-normal tails, and high-leverage/high-residual
+          influence are all deliberately engineered into the data so every panel shows
+          real signal.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral dose-response (drug dose vs % symptom relief) framing, plausible
+          and non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dose 5-95mg (with one 150mg extrapolated outlier) and % relief values
+          are sensible for the domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions (norm_quantile, lowess_smooth) are used,
+          justified by the lack of a stats package for inverse-normal-CDF/LOWESS,
+          but this departs from a pure no-function script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) fixed at top of script.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, LinearAlgebra are all used (diag/inv
+          for hat matrix).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriately scoped complexity for the
+          statistics involved.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct current
+          CairoMakie API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic GridLayout-based 2x2 Axis composition with a Label spanning
+          both columns for the shared title.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Relies on generic scatter!/lines!/hlines!/text! primitives; no distinctive
+          Makie-only feature (e.g. Legend, Colorbar, linkyaxes!, custom recipe) is
+          showcased.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors-jl
+  - linearalgebra
+  techniques:
+  - subplots
+  - annotations
+  - reference-line
+  - lowess-smoothing
+  - contour-lines
+  - manual-ticks
+  patterns:
+  - data-generation
+  - custom-statistics
+  dataprep:
+  - standardization
+  - outlier-injection
+  styling:
+  - publication-ready
+  - theme-adaptive
