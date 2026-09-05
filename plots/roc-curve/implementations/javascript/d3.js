@@ -1,12 +1,8 @@
 // anyplot.ai
 // roc-curve: ROC Curve with AUC
-// Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 83/100 | Created: 2026-09-05
-//# anyplot-orientation: square
-// anyplot.ai
-// roc-curve: ROC Curve with AUC
 // Library: d3 7.9.0 | JavaScript 22
 // Quality: pending | Created: 2026-09-05
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 const isDark = window.ANYPLOT_THEME === "dark";
@@ -16,7 +12,9 @@ const margin = { top: 110, right: 90, bottom: 100, left: 120 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
-// --- Data: synthetic diagnostic-test scores (deterministic LCG) ------------
+// --- Data: three synthetic diagnostic-test classifiers of varying skill, each
+// built from a deterministic LCG (own seed per model, so runs stay reproducible
+// and independent of each other) ---------------------------------------------
 function makeLcg(seed) {
   let state = seed >>> 0;
   return () => {
@@ -24,41 +22,56 @@ function makeLcg(seed) {
     return state / 4294967296;
   };
 }
-const rand = makeLcg(42);
-function randNormal() {
-  const u1 = Math.max(rand(), 1e-9);
-  const u2 = rand();
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-}
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 
-const nDiseased = 150;
-const nHealthy = 150;
-const diseasedScores = Array.from({ length: nDiseased }, () => clamp01(0.66 + 0.16 * randNormal()));
-const healthyScores = Array.from({ length: nHealthy }, () => clamp01(0.34 + 0.16 * randNormal()));
+function buildRoc({ seed, muDiseased, muHealthy, sd }) {
+  const rand = makeLcg(seed);
+  function randNormal() {
+    const u1 = Math.max(rand(), 1e-9);
+    const u2 = rand();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  }
 
-const labeledScores = [
-  ...diseasedScores.map((score) => ({ score, isDiseased: true })),
-  ...healthyScores.map((score) => ({ score, isDiseased: false })),
-].sort((a, b) => b.score - a.score);
+  const nDiseased = 150;
+  const nHealthy = 150;
+  const diseasedScores = Array.from({ length: nDiseased }, () => clamp01(muDiseased + sd * randNormal()));
+  const healthyScores = Array.from({ length: nHealthy }, () => clamp01(muHealthy + sd * randNormal()));
 
-// Sweep the decision threshold from high to low, accumulating hits/misses —
-// the same construction sklearn.metrics.roc_curve uses on predicted scores.
-let truePositives = 0;
-let falsePositives = 0;
-const rocPoints = [{ fpr: 0, tpr: 0 }];
-for (const { isDiseased } of labeledScores) {
-  if (isDiseased) truePositives += 1;
-  else falsePositives += 1;
-  rocPoints.push({ fpr: falsePositives / nHealthy, tpr: truePositives / nDiseased });
+  const labeledScores = [
+    ...diseasedScores.map((score) => ({ score, isDiseased: true })),
+    ...healthyScores.map((score) => ({ score, isDiseased: false })),
+  ].sort((a, b) => b.score - a.score);
+
+  // Sweep the decision threshold from high to low, accumulating hits/misses —
+  // the same construction sklearn.metrics.roc_curve uses on predicted scores.
+  let truePositives = 0;
+  let falsePositives = 0;
+  const points = [{ fpr: 0, tpr: 0 }];
+  for (const { isDiseased } of labeledScores) {
+    if (isDiseased) truePositives += 1;
+    else falsePositives += 1;
+    points.push({ fpr: falsePositives / nHealthy, tpr: truePositives / nDiseased });
+  }
+
+  let auc = 0;
+  for (let i = 1; i < points.length; i++) {
+    const a = points[i - 1];
+    const b = points[i];
+    auc += ((b.fpr - a.fpr) * (a.tpr + b.tpr)) / 2;
+  }
+  return { points, auc };
 }
 
-let auc = 0;
-for (let i = 1; i < rocPoints.length; i++) {
-  const a = rocPoints[i - 1];
-  const b = rocPoints[i];
-  auc += ((b.fpr - a.fpr) * (a.tpr + b.tpr)) / 2;
-}
+const models = [
+  { name: "Strong classifier", seed: 42, muDiseased: 0.66, muHealthy: 0.34, sd: 0.16 },
+  { name: "Moderate classifier", seed: 7, muDiseased: 0.6, muHealthy: 0.4, sd: 0.2 },
+  { name: "Weak classifier", seed: 99, muDiseased: 0.56, muHealthy: 0.44, sd: 0.24 },
+].map((spec) => ({ ...spec, ...buildRoc(spec) }));
+
+const color = d3
+  .scaleOrdinal()
+  .domain(models.map((m) => m.name))
+  .range(t.palette);
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -99,26 +112,29 @@ g.append("line")
   .attr("stroke-width", 2.5)
   .attr("stroke-dasharray", "10,8");
 
-// --- Area fill under the ROC curve, then the curve itself --------------------
+// --- Area fill under the strongest curve only, to keep a single focal point,
+// then the ROC curve for each model in its own Imprint color -----------------
 const area = d3
   .area()
   .x((d) => x(d.fpr))
   .y0(ih)
   .y1((d) => y(d.tpr));
-g.append("path").datum(rocPoints).attr("fill", t.palette[0]).attr("opacity", 0.1).attr("d", area);
+g.append("path").datum(models[0].points).attr("fill", color(models[0].name)).attr("opacity", 0.1).attr("d", area);
 
 const line = d3
   .line()
   .x((d) => x(d.fpr))
   .y((d) => y(d.tpr));
-g.append("path")
-  .datum(rocPoints)
+g.selectAll(".roc-line")
+  .data(models)
+  .join("path")
+  .attr("class", "roc-line")
   .attr("fill", "none")
-  .attr("stroke", t.palette[0])
+  .attr("stroke", (d) => color(d.name))
   .attr("stroke-width", 4)
   .attr("stroke-linejoin", "round")
   .attr("stroke-linecap", "round")
-  .attr("d", line);
+  .attr("d", (d) => line(d.points));
 
 // --- Axes -------------------------------------------------------------------
 const xAxis = g
@@ -149,33 +165,35 @@ g.append("text")
   .style("font-size", "18px")
   .text("True Positive Rate");
 
-// --- Legend (bottom-right — the ROC curve bows toward the top-left, so this
-// corner stays clear of the data) ---------------------------------------------
-const legend = g.append("g").attr("transform", `translate(${iw - 420}, ${ih - 130})`);
-legend.append("line").attr("x1", 0).attr("x2", 36).attr("y1", 0).attr("y2", 0).attr("stroke", t.palette[0]).attr("stroke-width", 4);
-legend
-  .append("text")
-  .attr("x", 48)
-  .attr("y", 5)
-  .attr("fill", t.ink)
-  .style("font-size", "15px")
-  .text(`Diagnostic test (AUC = ${auc.toFixed(2)})`);
-legend
+// --- Legend (bottom-right — every ROC curve stays at/above the diagonal, so
+// the low-TPR/high-FPR corner below it stays clear of the data) --------------
+const legendEntries = [
+  ...models.map((m) => ({ label: `${m.name} (AUC = ${m.auc.toFixed(2)})`, stroke: color(m.name), dash: null })),
+  { label: "Random classifier (AUC = 0.50)", stroke: muted, dash: "8,6" },
+];
+const legend = g.append("g").attr("transform", `translate(${iw - 460}, ${ih - 160})`);
+const rows = legend
+  .selectAll(".legend-row")
+  .data(legendEntries)
+  .join("g")
+  .attr("class", "legend-row")
+  .attr("transform", (_, i) => `translate(0, ${i * 34})`);
+rows
   .append("line")
   .attr("x1", 0)
   .attr("x2", 36)
-  .attr("y1", 32)
-  .attr("y2", 32)
-  .attr("stroke", muted)
-  .attr("stroke-width", 2.5)
-  .attr("stroke-dasharray", "8,6");
-legend
+  .attr("y1", 0)
+  .attr("y2", 0)
+  .attr("stroke", (d) => d.stroke)
+  .attr("stroke-width", (d) => (d.dash ? 2.5 : 4))
+  .attr("stroke-dasharray", (d) => d.dash);
+rows
   .append("text")
   .attr("x", 48)
-  .attr("y", 37)
-  .attr("fill", t.inkSoft)
+  .attr("y", 5)
+  .attr("fill", (d, i) => (i === legendEntries.length - 1 ? t.inkSoft : t.ink))
   .style("font-size", "15px")
-  .text("Random classifier (AUC = 0.50)");
+  .text((d) => d.label);
 
 // --- Title --------------------------------------------------------------------
 svg
