@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-color-mapped: Color-Mapped Scatter Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 0/100 | Created: 2026-09-05
+// Quality: 87/100 | Created: 2026-09-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
