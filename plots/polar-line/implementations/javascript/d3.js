@@ -18,6 +18,9 @@ const directions = [
 const summerSpeed = [12, 10, 9, 8, 7, 6, 7, 9, 12, 15, 18, 22, 25, 23, 19, 15];
 const winterSpeed = [18, 16, 14, 12, 10, 9, 10, 13, 17, 22, 27, 32, 36, 33, 28, 22];
 
+// Winter intentionally uses palette[2] (blue) rather than the canonical
+// palette[1] (lavender) — a deliberate warm/cold semantic pairing with the
+// brand-green Summer series, not an arbitrary skip.
 const series = [
   { name: "Summer", values: summerSpeed, color: t.palette[0] },
   { name: "Winter", values: winterSpeed, color: t.palette[2] },
@@ -69,7 +72,7 @@ g.selectAll(".radius-tick")
   .attr("x", (d) => radius(d) * Math.sin(tickAngle) + 6)
   .attr("y", (d) => -radius(d) * Math.cos(tickAngle))
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "15px")
   .text((d) => `${d} km/h`);
 
 // --- Direction labels ---------------------------------------------------------
@@ -90,12 +93,27 @@ g.selectAll(".direction-label")
   .style("font-size", "15px")
   .text((i) => directions[i]);
 
+// --- Radial fill between the two series — spotlights the seasonal gap -------
+const seasonGap = d3
+  .areaRadial()
+  .angle((d, i) => angle(i))
+  .innerRadius((d, i) => radius(summerSpeed[i]))
+  .outerRadius((d, i) => radius(winterSpeed[i]))
+  .curve(d3.curveCardinalClosed);
+
+g.append("path")
+  .datum(d3.range(directions.length))
+  .attr("d", seasonGap)
+  .attr("fill", series[1].color)
+  .attr("fill-opacity", 0.12)
+  .attr("stroke", "none");
+
 // --- Lines (closed loop — cyclical data) + markers ---------------------------
 const lineRadial = d3
   .lineRadial()
   .angle((d, i) => angle(i))
   .radius((d) => radius(d))
-  .curve(d3.curveLinearClosed);
+  .curve(d3.curveCardinalClosed);
 
 for (const s of series) {
   g.append("path")
@@ -130,6 +148,14 @@ series.forEach((s, i) => {
     .attr("y2", 0)
     .attr("stroke", s.color)
     .attr("stroke-width", 3);
+  item
+    .append("circle")
+    .attr("cx", 12)
+    .attr("cy", 0)
+    .attr("r", 5)
+    .attr("fill", s.color)
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 1.5);
   item
     .append("text")
     .attr("x", 32)
