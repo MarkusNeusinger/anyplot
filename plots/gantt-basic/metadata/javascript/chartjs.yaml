@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: gantt-basic
+created: '2026-09-05T02:41:30Z'
+updated: '2026-09-05T02:57:04Z'
+generated_by: claude-sonnet
+workflow_run: 33939370296
+issue: 2377
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/chartjs/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'The repair loop directly addressed the prior review''s DE-01/DE-03 feedback:
+    alternating row bands, per-bar ''Nd'' duration labels, and bold-outlined + bold-text
+    emphasis on the two tasks currently straddling the ''Today'' line together create
+    a clear focal point that was previously missing'
+  - 'Every spec requirement is covered: category color coding, start-date ordering,
+    adequate row spacing, clear calendar-date x-axis formatting, and a dashed ''Today''
+    reference line'
+  - 'Both renders are fully theme-correct with identical Imprint data colors (canonical
+    order: green/lavender/blue/ochre/red) and no legibility failures in either theme'
+  - 'The floating-bar `[start, end]` technique on an `indexAxis: ''y''` bar chart,
+    combined with three custom Chart.js plugins (row bands, duration labels, reference
+    line), is an idiomatic and well-executed solution to a chart type Chart.js has
+    no native support for'
+  weaknesses:
+  - The new duration-label plugin renders at 11px, smaller than every other text element
+    in the chart (ticks are 14-15px, title 22px) — it will be close to unreadable
+    at small thumbnail sizes; consider bumping to ~12-13px
+  - tooltip.enabled is set to false, fully disabling Chart.js's built-in tooltip rather
+    than customizing its callback to show formatted dates/duration — this throws away
+    a signature interactive feature of the HTML detail view instead of fixing the
+    raw day-offset numbers it would otherwise display
+  - Three plugin objects plus several helper functions (dayOffset, formatDayOffset,
+    isActive) add real structure to the script; justified by the lack of a native
+    Chart.js Gantt/date-scale API, but it is the most complex script in the catalog's
+    chartjs entries so far
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "gantt-basic · javascript · chartjs · anyplot.ai" in bold dark ink, centered top. A 5-entry legend (Planning/Design/Development/Testing/Launch) with color swatches sits below the title. X-axis "Timeline (2026)" title and Jan 5 - May 6 tick labels in dark/soft-dark ink, all clearly legible. Y-axis task-name labels fully legible, no truncation. Subtle alternating row bands (light gray) help trace rows across the timeline. A dashed vertical "Today" line crosses near Mar 2, with a "Today" label sitting just above the x-axis inside the plot area.
+      Data: 12 horizontal floating bars, one per task, colored by category using the Imprint palette in canonical order (green #009E73 = Planning, lavender = Design, blue = Development, ochre = Testing, red = Launch). Each bar has a small "Nd" duration label; the two bars currently straddling "Today" (Backend API, Frontend Build) get a bold dark outline and bold "· in progress" label text as a focal-point callout.
+      Legibility verdict: PASS — no light-on-light text anywhere; the smallest text (11px duration labels) is legible at full render size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend text, axis titles, and tick labels all flip to light ink / softer light gray and remain fully readable. Alternating row bands flip to a slightly lighter dark gray, still subtle. The dashed "Today" line and its label flip to light ink and stay legible against the dark background — no dark-on-dark failures.
+      Data: Bar colors (green/lavender/blue/ochre/red) are pixel-identical to the light render — only chrome (background, text, grid, row bands) flipped, confirming correct theme-adaptive token usage. Bold in-progress outlines/labels remain equally visible.
+      Legibility verdict: PASS — no dark-on-dark text; all chrome and data elements clearly distinguishable from the background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; the new 11px
+          duration-label plugin is the smallest text element in the chart and borderline
+          at small thumbnail sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between bars, duration labels, legend, ticks, or the
+          'Today' annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars are clearly visible and well-spaced; bold outline on in-progress
+          bars improves distinguishability further
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; category is redundantly encoded via
+          legend, row position, and now bold in-progress outlines
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; no overflow or clipping in either render
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Timeline (2026)'' x-axis title present; y-axis needs none since
+          task names are self-explanatory'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First category (Planning) = #009E73; canonical Imprint order for
+          the rest; both renders theme-correct backgrounds'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded bars, custom legend, alternating row bands, duration labels,
+          and bold in-progress emphasis show clear, deliberate design effort beyond
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid correctly omitted, x-grid kept subtle, row bands add
+          refinement without adding visual noise
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bold-outlined, bold-labeled in-progress bars against the dashed 'Today'
+          line create a clear focal point that directly answers the prior review's
+          ask
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct floating horizontal-bar Gantt via indexAxis: ''y'' with
+          [start, end] data pairs'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time-axis bars, calendar date formatting, category color coding,
+          start-date ordering, 'Today' reference line, adequate row spacing — every
+          spec note covered
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = day-offset-mapped calendar dates, Y = task rows; full date range
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          5 categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows durations, sequencing/overlap, category grouping, and a current-date
+          marker
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral software-release schedule (Requirements to Launch)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 tasks (within the 5-30 spec range), ~4-month span, sensible task
+          durations
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three plugin objects plus several helper functions add structure
+          beyond a flat script, justified by the lack of a native Chart.js Gantt/date-scale
+          API
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded dates, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the provided globals are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; custom plugins are a legitimate Chart.js
+          extension mechanism
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, current Chart.js
+          API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Floating-bar [start, end] data pairs on a horizontal bar chart is
+          the standard idiomatic Chart.js Gantt pattern; disabling tooltip entirely
+          rather than formatting its callback is a minor miss
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Three custom plugins (row bands, duration labels, reference line)
+          plus a custom generateLabels legend go well beyond basic API usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - edge-highlighting
