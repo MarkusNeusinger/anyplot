@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: gain-curve
 created: '2026-09-05T01:59:53Z'
-updated: '2026-09-05T02:05:26Z'
+updated: '2026-09-05T02:14:53Z'
 generated_by: claude-sonnet
 workflow_run: 33937597884
 issue: 2440
@@ -12,45 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 94
 review:
   strengths:
-  - 'Correctly implements the cumulative gains chart concept: X-axis population targeted
-    0-100%, Y-axis responders captured 0-100%, ranked descending by predicted score'
-  - Diagonal random-selection baseline is present and clearly differentiated from
-    the model curve via both color (inkSoft grey) and dash pattern, not relying on
-    hue alone
-  - Deterministic LCG-based data generation (seed 42) produces a realistic skewed-propensity
-    response model with a plausible business scenario (marketing campaign response)
-  - All font sizes explicitly set (14px ticks, 16px axis labels, 22px title); both
-    renders remain legible even scaled down to a 400px thumbnail
+  - 'Directly addresses Review 1 feedback: shaded d3.area() gain region between the
+    model curve and the random-selection baseline makes the ''lift'' immediately obvious,
+    and a peak-lift callout annotation (''39% targeted → 79% captured'') pinpoints
+    the model''s strongest operating point'
+  - curveMonotoneX interpolation applied consistently to both the model curve and
+    the area generator for a smooth, polished line
+  - 'Correctly implements the cumulative gains chart: X-axis population targeted 0-100%,
+    Y-axis responders captured 0-100%, ranked descending by predicted score, with
+    the mandatory diagonal random-selection baseline'
+  - Baseline is differentiated from the model curve via both color (inkSoft) and dash
+    pattern, not relying on hue alone (VQ-04)
+  - Deterministic LCG (seed 42) with a skewed propensity distribution produces a realistic,
+    neutral marketing-response scenario
+  - All font sizes explicitly set (22px title, 16px axis labels, 14px ticks/legend/annotation);
+    both renders remain legible at mobile scale
   - 'First categorical series correctly uses Imprint #009E73; chrome (background,
-    text, grid) is theme-correct and identical data colors across light and dark renders'
-  - 'Clean, idiomatic D3 usage: scaleLinear + axisBottom/axisLeft + line generator
-    + data joins, appropriate for the mount-node/harness contract'
+    text, grid, legend) is fully theme-correct and identical data colors across light/dark'
+  - 'Clean, idiomatic D3 usage: scales, axis generators, area + line generators, manually
+    constructed legend rows'
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level: no fill/area shading
-    between the model curve and baseline to visually emphasize the ''gain'' (the actual
-    insight of a gain chart), no annotation calling out a key operating point (e.g.
-    ''20% of population captures 58% of responders'')'
-  - 'Library Mastery is generic: only uses core d3 scale/axis/line primitives that
-    any charting library could replicate with similar effort — no distinctive D3-only
-    technique (e.g. d3.curveMonotoneX smoothing, area-between-curves via d3.area(),
-    or a custom annotation layer) to showcase what sets D3 apart'
-  - Grid is y-axis-only which is good, but visual refinement stops there — no additional
-    polish like a subtle area fill under the model curve or emphasis at the point
-    of maximum lift over baseline
+  - The area fill, curveMonotoneX smoothing, and annotation layer are useful but not
+    deeply D3-distinctive techniques — the same visual effect (shaded gain area +
+    callout) could be replicated fairly easily in another charting library, capping
+    Library Mastery slightly below top marks
+  - Design Excellence is solid but still uses only the mandated token palette (green
+    + inkSoft) rather than an additional custom accent color to further separate the
+    annotation/callout from the data layer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "gain-curve · javascript · d3 · anyplot.ai" in dark bold text at top, comfortably within plot width (~55-60%). Axis labels "Population Targeted (%)" and "Responders Captured (%)" in dark ink, tick labels in a slightly softer dark grey, all clearly legible. Subtle horizontal-only gridlines at 20% intervals, unobtrusive.
-      Data: Solid thick green (#009E73) curve rising steeply from 0% and flattening as it approaches 100%, clearly above a grey dashed diagonal reference line (random-selection baseline). Legend top-right lists "Model (ranked by score)" (green solid) and "Random selection (baseline)" (grey dashed), positioned in open whitespace above the curve's plateau with no overlap.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "gain-curve · javascript · d3 · anyplot.ai" in bold dark ink at top (~55-60% of plot width, no clipping). Axis labels "Population Targeted (%)" and "Responders Captured (%)" in dark ink; tick labels (0%-100% on both axes) in softer grey-brown. Subtle horizontal-only gridlines every 20%. All text clearly readable against the light background.
+      Data: Thick solid green (#009E73) model curve, smoothed with curveMonotoneX, rising steeply from (0,0) and flattening near (100,100). Light-green (12% alpha) shaded area fills the gap between the model curve and the grey dashed diagonal baseline, visually emphasizing the "gain". A small green dot marks the peak-lift point (~39% targeted) with a bold callout label "39% targeted → 79% captured" placed in open space just above-right of the dot, no overlap with the curve or legend. Legend (top-right) lists "Model (ranked by score)" (solid green) and "Random selection (baseline)" (dashed grey), sitting in whitespace above the curve's plateau with no overlap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink tones, fully readable against the dark background. Gridlines remain subtle and visible. No dark-on-dark text found anywhere (title, axis labels, ticks, legend all light-colored).
-      Data: Model curve and baseline are rendered in identical colors to the light render (#009E73 green, grey dashed baseline) — confirms data colors do not shift with theme, only chrome (background/text/grid) flips as required.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, axis labels, and tick labels rendered in light ink tones, fully readable — no dark-on-dark failures anywhere. Gridlines remain subtle but visible against the dark background.
+      Data: Model curve, shaded gain area, dashed baseline, peak-lift dot, and callout annotation are all rendered in identical colors to the light render (green solid + grey dashed + green dot), confirming only chrome flips with theme, not data colors. Callout text is in light ink and reads clearly against the dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,35 +64,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14/16/22px); readable in both themes
-          and at 400px thumbnail scale
+        comment: All font sizes explicitly set; readable in both themes and at thumbnail
+          scale; title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in open whitespace above the curve's plateau; no text/data
-          collisions
+        comment: No overlap between curve, legend, and peak-lift callout in either
+          theme
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths (4px model, 2px dashed baseline) appropriately visible
-          for a continuous line chart
+        comment: 4px line width and 6px peak-lift marker are well-adapted to the smooth
+          curve
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Model vs baseline distinguished by both color and dash pattern, not
-          hue alone
+        comment: Model vs. baseline distinguished by color AND dash pattern, not hue
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing cut off
+        comment: Plot fills a large, balanced share of the canvas with even margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,33 +104,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint #009E73; background theme-correct in both
-          renders; data colors identical across themes'
+        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default look; no custom color harmony or hierarchy
-          beyond required tokens
+        passed: true
+        comment: Shaded gain area + callout annotation + font-weight hierarchy show
+          thoughtful design, clearly above bare defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Y-only subtle grid, spines minimized — some refinement, but no area
-          fill or extra polish
+        passed: true
+        comment: Subtle y-only grid, no harsh spines, generous whitespace, area fill
+          adds polish
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Data is displayed but not further interpreted beyond the required
-          baseline comparison; no annotation or emphasis on a key operating point
+        passed: true
+        comment: Shaded gain area plus the peak-lift callout make the model's advantage
+          immediately visible, exactly the insight the chart type exists to convey
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative gains chart with reference baseline
+        comment: Correct cumulative gains chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal random-selection reference present, correct axis ranges,
-          sorted by score descending
+        comment: Diagonal random-selection baseline present, sorted descending by
+          score, 0-100% axes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = population targeted, Y = cumulative responders captured, both
-          0-100%
+        comment: X = population targeted, Y = responders captured, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match the two series
+        comment: Title matches mandated format exactly; legend labels correctly describe
+          both series
     data_quality:
       score: 15
       max: 15
@@ -168,21 +170,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Curve shows steep initial slope and asymptotic flattening near 100%,
-          full range covered
+        comment: Full curve shape, baseline comparison, and peak-lift operating point
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic marketing-response scenario
+        comment: Neutral, realistic marketing-response modeling scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Skewed propensity + noise produces a plausible, well-scaled model
-          curve
+        comment: Skewed propensity distribution and response rates are plausible for
+          the domain
     code_quality:
       score: 10
       max: 10
@@ -192,35 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports->data->plot flow; small LCG helper is the library-mandated
-          deterministic-RNG pattern, not over-engineering
+        comment: Linear imports → data → draw structure; only tiny LCG/noise helpers,
+          no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42)
+        comment: Fixed-seed LCG (seed=42) as required for browser runtime
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global d3
+        comment: No stray imports; uses the global d3 only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, no over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current d3 7.9 API, animation-free static
-          draw
+        comment: Correct mount-node contract, animations disabled by omission
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -228,22 +229,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic scales, axis generators, line generator, and data joins
+        comment: Idiomatic scales, axis generators, area + line generators with curveMonotoneX
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic line-chart usage; no D3-distinctive technique like area-between-curves
-          or curve interpolation
-  verdict: REJECTED
+        passed: true
+        comment: Uses d3.area()/curveMonotoneX and a manually built annotation layer
+          — solid D3-specific usage but not a technique unique to D3 alone
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - grid-styling
+  - alpha-blending
