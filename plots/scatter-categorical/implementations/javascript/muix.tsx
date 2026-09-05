@@ -61,6 +61,10 @@ const series = SPECIES.map((sp, i) => ({
   label: sp.name,
   color: t.palette[i],
   markerSize: 7,
+  // Fade the other two species when one is hovered, showcasing MUI X's
+  // built-in cross-series highlight/fade interaction (purely additive —
+  // has no effect on the static screenshot).
+  highlightScope: { highlight: "series", fade: "global" },
   data: Array.from({ length: sp.n }, () => ({
     x: Math.round(sp.flipperMean + randn() * sp.flipperSd),
     // Body mass in kg (not g) — keeps y tick labels short ("3.7", not
@@ -97,6 +101,18 @@ export default function Chart() {
       series={series}
       skipAnimation
       grid={{ vertical: true, horizontal: true }}
+      // Scatter markers are the only <circle> elements this chart renders
+      // (legend swatches are <rect>s) — a page-background-colored edge
+      // stroke plus slight fill transparency keeps overlapping Adelie/
+      // Chinstrap points individually distinguishable instead of merging
+      // into solid blobs, in both themes.
+      sx={{
+        "& circle": {
+          stroke: t.pageBg,
+          strokeWidth: 1.5,
+          fillOpacity: 0.82,
+        },
+      }}
       xAxis={[
         {
           min: X_MIN,
