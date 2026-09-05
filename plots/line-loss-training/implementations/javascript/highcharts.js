@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-loss-training: Training Loss Curve
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
+// Quality: 90/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
