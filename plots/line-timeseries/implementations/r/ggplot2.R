@@ -4,7 +4,6 @@
 #' Quality: 79/100 | Created: 2026-09-05
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -17,6 +16,7 @@ INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 GRID     <- scales::alpha(INK, 0.15)  # faint grid — element_line has no alpha arg
 BRAND    <- "#009E73"  # Imprint palette position 1 — ALWAYS first series
+MUTED    <- if (THEME == "light") "#6B6A63" else "#A8A79F"  # Imprint muted anchor — reference line
 
 # --- Data ---------------------------------------------------------------
 # Six months of daily outdoor temperature readings with a seasonal warm-up
@@ -25,7 +25,7 @@ n_days <- 182
 dates <- seq(as.Date("2024-01-01"), by = "day", length.out = n_days)
 day_idx <- seq_len(n_days)
 
-seasonal_trend <- 4 + 14 * sin(2 * pi * (day_idx - 10) / 365)
+seasonal_trend <- 4 + 14 * sin(2 * pi * (day_idx - 109) / 365)
 weekly_wobble <- 1.2 * sin(2 * pi * day_idx / 7)
 sensor_noise <- rnorm(n_days, mean = 0, sd = 1.6)
 temperature_c <- seasonal_trend + weekly_wobble + sensor_noise
@@ -36,7 +36,11 @@ title_text <- "line-timeseries · r · ggplot2 · anyplot.ai"
 
 # --- Plot -----------------------------------------------------------------
 p <- ggplot(df, aes(x = date, y = temperature_c)) +
-  geom_line(color = BRAND, linewidth = 1.1) +
+  geom_smooth(
+    method = "loess", span = 0.3, se = FALSE,
+    color = MUTED, linewidth = 0.8, linetype = "dashed"
+  ) +
+  geom_line(color = BRAND, linewidth = 2) +
   scale_x_date(
     date_breaks = "1 month",
     labels = scales::label_date("%b")
@@ -45,7 +49,7 @@ p <- ggplot(df, aes(x = date, y = temperature_c)) +
   labs(
     title = title_text,
     x = "Date",
-    y = "Outdoor Temperature"
+    y = "Outdoor Temperature (°C)"
   ) +
   theme_minimal(base_size = 8) +
   theme(
