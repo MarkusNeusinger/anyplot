@@ -1,0 +1,240 @@
+library: ggplot2
+language: r
+specification_id: line-filled
+created: '2026-09-05T07:19:30Z'
+updated: '2026-09-05T07:42:05Z'
+generated_by: claude-sonnet
+workflow_run: 33952088783
+issue: 2643
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - The critical rendering bug from the previous attempts (annotations/average line
+    rendering as zero pixels) is now fixed — both geom_hline and all three annotate()
+    layers render correctly in both themes.
+  - 'Correct, spec-compliant filled-line construction: semi-transparent fill (alpha
+    0.35) with a crisp opaque line on top, baseline pinned at y=0.'
+  - Theme adaptation is flawless — the data color (#009E73) is pixel-identical between
+    light/dark renders; only chrome (background, ink, grid) flips.
+  - Realistic, neutral synthetic data (daily page views with a plausible weekend dip)
+    with a reproducible (set.seed(42)) pipeline.
+  - Peak and monthly-average annotations now give the chart real visual hierarchy
+    and a data-storytelling focal point.
+  weaknesses:
+  - Line markers (geom_point(size = 1.8)) still only modestly stand out from the 1.4pt
+    line at 30 data points — a touch more size or a subtle background-colored edge
+    would improve element visibility.
+  - Annotation text (size = 2.6–3) is noticeably smaller than the axis chrome; consider
+    nudging it up slightly for better balance at thumbnail scale.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "line-filled · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible. Axis titles "Day of Month"/"Page Views" and tick labels (0-30, 0-6,000) in dark ink / soft gray, clearly legible. Three subtle horizontal gridlines at 2,000/4,000/6,000; no vertical gridlines.
+      Data: Single series in #009E73 — semi-transparent filled area (baseline y=0), opaque line, small point markers, larger highlighted marker at the peak (day 25). Dashed gray reference line + "Monthly avg: 4,941" label, and "Peak: 6,363 views (day 25)" text callout — both render correctly (this was broken in the prior attempt).
+      Legibility verdict: PASS (all text readable; no light-on-light issues).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title and axis titles in near-white ink; tick labels/gridlines in light gray — all clearly legible.
+      Data: Identical #009E73 green fill/line/markers as the light render (apparent fill tone differs only due to alpha-blending over a different background — the underlying RGBA is unchanged, as expected). Dashed average line and both annotation callouts render correctly in this theme too.
+      Legibility verdict: PASS (no dark-on-dark failures; the previous attempt's missing-annotation bug is confirmed fixed in this theme as well).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis titles, tick labels, and both annotation callouts are
+          legible in both themes; annotation text is fairly small relative to the
+          rest of the chrome
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, markers, or the fill
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line markers (size 1.8) only modestly more visible than the 1.4pt
+          line; dedicated peak marker (size 3.5) stands out well
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green has good contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800 (gate passed); nothing clipped; well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Day of Month' / 'Page Views' labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exactly #009E73; backgrounds match spec; both renders
+          theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Peak callout, average reference line, and highlighted peak marker
+          show real design intent beyond a bare area chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/ticks removed, only y-major gridlines kept, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Peak/average annotations now render and give the chart a clear focal
+          point and narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled-line/area chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill (0.35), opaque line on top, fill matches line
+          color, baseline at y=0
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: day vs page_views, full range 1-30 shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Trend, weekend dip, peak, and monthly-average context all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral daily page-views scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value range (~3,700-6,400 views)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Only ggplot2/ragg loaded; tibble::/scales:: used inline'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI; previous dead-code/rendering
+          bug is fixed
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_area/geom_line/geom_point/annotate/scale_*/coord_cartesian(clip='off')
+          usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Peak/average annotation pattern is a nice touch but a fairly common
+          one for this chart type
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  - tibble
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready
