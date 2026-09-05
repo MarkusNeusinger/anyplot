@@ -1,0 +1,237 @@
+library: ggplot2
+language: r
+specification_id: gain-curve
+created: '2026-09-05T02:04:38Z'
+updated: '2026-09-05T02:31:25Z'
+generated_by: claude-sonnet
+workflow_run: 33937827935
+issue: 2440
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Cumulative-gains math is correctly implemented: samples ranked by descending
+    model_score, cumulative churner count divided by total churners, producing a textbook
+    gain-curve shape.'
+  - Baseline 'Random targeting' line correctly uses the theme-adaptive neutral anchor
+    (ANYPLOT_NEUTRAL = INK) rather than a categorical palette slot — exactly the semantic-anchor
+    use case (reference/baseline line) described in the style guide.
+  - Redundant encoding via linetype (solid vs dashed) and linewidth alongside color
+    makes the two series distinguishable even without color vision.
+  - Both renders correctly use warm off-white (#FAF8F1) / warm near-black (#1A1A17)
+    plot backgrounds with identical data colors between themes — only chrome flips.
+  - Title, axis labels (with units), and legend content all match the mandated conventions
+    and the spec's required diagonal reference line.
+  weaknesses:
+  - Line widths (Churn model = 1.8, Random targeting = 1.0) are thinner than the style
+    guide's recommended 2.5-3.5 for a 1-3 series line chart — increase geom_line linewidth
+    so the curves stay prominent when scaled down to mobile widths.
+  - Grid line opacity (scales::alpha(INK, 0.05)) is well below the style guide's recommended
+    10-15% range, making the gridlines almost invisible in both renders — raise to
+    roughly 0.12-0.15 so they remain a subtle but present reference.
+  - No visual emphasis (e.g. shaded gap between the model curve and baseline) highlights
+    the model's discrimination advantage — a light fill or callout would strengthen
+    data storytelling.
+  - The spec's 'perfect model' reference (vertical rise to the positive rate, then
+    horizontal) is omitted — optional per the spec notes, but including it as a third
+    light dotted line would make the comparison more complete.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Churn Model · gain-curve · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly readable. Axis titles "Percentage of Customers Targeted" (x) and "Percentage of Churners Captured" (y) in dark ink, tick labels ("0%"..."100%") in a softer gray-ink, all legible. Grid lines are extremely faint vertical guides at 25/50/75/100% — present but very subtle. Legend box (light elevated fill, no border) sits in the lower-right, away from the data lines.
+      Data: First series "Churn model" is solid brand green (#009E73), rising steeply then leveling near 100%. Second series "Random targeting" is a black dashed diagonal from (0,0) to (100,100).
+      Legibility verdict: PASS — no light-on-light or illegible text observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title and axis titles now in light ink (near-white), tick labels in a lighter soft-gray, both clearly readable against the dark surface. Grid lines remain faint but present. Legend box uses the dark elevated fill with light text, positioned identically in the lower-right, no overlap with the curve.
+      Data: "Churn model" series is the same brand green (#009E73) as in the light render — confirmed identical hue. "Random targeting" baseline flips to a white/light dashed line (theme-adaptive neutral anchor), correctly inverting for contrast against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and both lines are clearly distinguishable from the background.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; sizes explicit (title 11pt, axis.title
+          10pt, axis.text 8pt).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; legend sits clear of the curve.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Lines are visible but thinner (1.8 / 1.0) than the style guide's
+          2.5-3.5 recommendation for a 1-3 series line chart, hurting mobile-scale
+          prominence.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color + linetype + linewidth redundancy; no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); no clipping or overflow; balanced
+          axis label sizes.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with % units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; baseline correctly uses the theme-adaptive
+          neutral semantic anchor; correct light/dark backgrounds.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Clean, deliberate palette/semantic choices; not exceptionally polished.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Spines and ticks removed, subtle grid, generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        comment: Clear model-vs-baseline separation but no additional emphasis (shaded
+          gap, annotation) to sharpen the story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative gains chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal random-selection baseline included; axes 0-100%.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapped correctly, full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches convention; legend labels are clear and descriptive.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Model + baseline curves shown; perfect-model reference omitted (optional
+          per spec).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral churn-prediction scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2000 customers, 18% churn rate — plausible values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave via ragg::agg_png to plot-{theme}.png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Idiomatic scale_manual + theme_minimal usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Multi-aesthetic mapping (color+linetype+linewidth) to one variable
+          is a nice ggplot-specific redundant-encoding technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - dplyr
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - grid-styling

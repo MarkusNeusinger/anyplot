@@ -1,0 +1,261 @@
+library: highcharts
+language: javascript
+specification_id: funnel-basic
+created: '2026-09-05T02:09:45Z'
+updated: '2026-09-05T02:29:12Z'
+generated_by: claude-sonnet
+workflow_run: 33937869626
+issue: 789
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Fixed the prior review''s layout-imbalance weakness: the composition is now re-centered
+    using the actual rendered bounding box (g.getBBox(true) + translateX shift) instead
+    of the abstract BLOCK_W split, so left/right whitespace is visually balanced in
+    both renders.'
+  - 'Added the previously-missing steepest-drop-off callout: a native Highcharts SVGRenderer
+    "callout" label (bordered, pointer-anchored) calling out the Product Views → Added
+    to Cart transition (−57.6%), sharpening the funnel''s data storytelling.'
+  - Hand-drawn trapezoid technique via chart.renderer.path/text/g remains the correct,
+    documented workaround for the missing core-bundle funnel module, consistent with
+    sibling hand-drawn implementations (treemap-basic, sunburst-basic, sankey-basic).
+  - 'Thoughtful semantic color choice: explicitly skips the matte-red palette anchor
+    for the successful final stage, with a clear code comment referencing the style
+    guide''s semantic-exception rule.'
+  - Per-segment label text color is computed via relative luminance (labelColorFor)
+    so in-band value labels stay legible against every segment fill in both themes.
+  - Title font size scales dynamically with title length via a documented formula;
+    all font sizes are explicit; theme tokens (ink, inkSoft, pageBg, elevatedBg, amber)
+    are correctly threaded through every chrome element including the new callout;
+    data colors are identical between light and dark renders.
+  weaknesses:
+  - Two small helper functions (addTooltip, labelColorFor) still deviate slightly
+    from the strict flat KISS structure — reasonably justified by the hand-drawn technique,
+    so only a minor CQ-01 deduction.
+  - The composition still leaves a sizeable empty band (roughly the bottom ~20%) of
+    the square 2400×2400 canvas below the last stage's label — extending bandHeight/GAP
+    or the label block to use more of the available plot height would make fuller
+    use of the canvas.
+  - 'Library Mastery: the SVG path/text drawing technique, while correctly applied,
+    isn''t unique to Highcharts (any SVG-capable library could replicate the trapezoid
+    drawing) — the new renderer "callout" label is a nice distinctive touch but the
+    core technique remains generic.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches the #FAF8F1 target.
+      Chrome: Title "Checkout Conversion · funnel-basic · javascript · highcharts · anyplot.ai" in bold dark ink, comfortable margin above it, no clipping; subtitle in medium-gray ink-soft directly below stating "Simulated site sessions, 48,000 visitors → 3,850 purchases (8.0% overall)". Five stage labels (bold dark name + lighter gray "count · pct" line) sit in a right-hand gutter, each connected to its segment by a thin ink-soft leader line. A bordered amber-outlined callout box reading "Steepest drop: −57.6%" points at the Product Views → Added to Cart transition, dark text on a light elevated-surface fill. All chrome text is clearly readable against the light background.
+      Data: Five trapezoidal funnel segments stacked top-to-bottom, narrowing per value: brand green (Site Visitors, 48,000), lavender-purple (Product Views, 26,400), blue (Added to Cart, 11,200), ochre (Started Checkout, 6,100), cyan (Completed Purchase, 3,850) — matte red (palette position 5) intentionally skipped for the successful final stage. First series is #009E73 as required. The two widest segments (green, purple) carry an in-band value label (white-on-green, near-black-on-purple) chosen via computed luminance contrast.
+      Legibility verdict: PASS — all text readable, no light-on-light or overlap issues found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches the #1A1A17 target.
+      Chrome: Same title/subtitle/stage-label layout, now in light ink and light-gray secondary text against the dark background — fully legible, no dark-on-dark failures observed anywhere (title, subtitle, stage names, value/percentage lines, leader lines all clearly visible). The steepest-drop callout box now renders as a dark elevated-surface chip (#242420-family) with light text and the same amber border, correctly flipped from the light render's light chip — confirmed by pixel crop, not a dark-on-dark or light-on-light failure.
+      Data: Identical segment colors and identical proportions to the light render (green/lavender/blue/ochre/cyan) — only the chrome (background, text, leader-line, callout chip) flipped as required. In-band value labels still contrast correctly against their segment fills.
+      Legibility verdict: PASS — all text readable, brand green still reads clearly on the dark surface.
+
+    Layout note (both renders): the funnel+label composition is now visibly re-centered on the canvas (roughly symmetric left/right margins), fixing the prior attempt's left-shifted layout. A moderate amount of empty space remains at the bottom of the square canvas below the last stage label — noted as a minor VQ-05 weakness, not an overflow/clipping issue.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; title scales with length via documented
+          formula; readable in both themes, including the new callout label
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render, including the new callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segment widths clearly proportional to values, well visible in both
+          themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, luminance-based label text color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Prior left-shifted imbalance fixed via bbox re-centering; composition
+          now visually balanced left/right, but a notable empty band remains at the
+          bottom of the square canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (funnel), but stage/value/percentage labels and
+          subtitle are fully descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order with a well-documented,
+          justified semantic skip of the red anchor; theme-correct chrome (including
+          callout chip) in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hand-drawn shapes, thoughtful color reasoning, computed label
+          contrast, native callout — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle leader lines, consistent gaps, clean stroke separation between
+          segments
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Steepest-drop callout now sharpens the at-a-glance insight, addressing
+          the prior review's gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct trapezoidal funnel, narrowing top to bottom
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, value+percentage labels, ordered largest-to-smallest,
+          width proportional to first stage
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Stage/value mapping correct, all stages visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed since segments carry direct
+          labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Decreasing values, percentages, distinct colors, taper shape, and
+          drop-off callout all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible e-commerce checkout funnel
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stage-to-stage drop-off rates are plausible for an e-commerce checkout
+          flow
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly flat script, but two small helper functions (addTooltip, labelColorFor)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a hand-drawn chart, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set in both required places, current renderer API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly uses chart.renderer path/text/g/label exactly as the library's
+          own docs recommend for series types outside the core bundle
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Native Highcharts renderer "callout" label shape and SVG <title>
+          tooltips are distinctive, though the base path-drawing technique remains
+          generic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - hover-tooltips
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
