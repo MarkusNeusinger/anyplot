@@ -21,6 +21,16 @@ function randNormal(mean, std) {
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
   return mean + z * std;
 }
+function linearRegression(points) {
+  const n = points.length;
+  const sumX = points.reduce((s, p) => s + p.x, 0);
+  const sumY = points.reduce((s, p) => s + p.y, 0);
+  const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
+  const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  return { slope, intercept };
+}
 
 const vehicleClasses = ["Sedan", "SUV"];
 const drivetrains = ["FWD", "AWD", "RWD"];
@@ -41,7 +51,12 @@ for (const vehicleClass of vehicleClasses) {
       const fuelEconomy = Math.max(8, baseMpg + randNormal(0, 2.5));
       points.push({ x: engineSize, y: fuelEconomy });
     }
-    facets.push({ row: vehicleClass, col: drivetrain, points });
+    facets.push({
+      row: vehicleClass,
+      col: drivetrain,
+      points,
+      trend: linearRegression(points),
+    });
   }
 }
 
@@ -114,7 +129,10 @@ for (const drivetrain of drivetrains) {
   cell.style.color = t.ink;
   cell.style.fontSize = "15px";
   cell.style.fontWeight = "600";
-  cell.style.paddingBottom = "8px";
+  cell.style.background = t.elevatedBg;
+  cell.style.borderRadius = "6px";
+  cell.style.padding = "5px 6px";
+  cell.style.marginBottom = "6px";
   colHeaderRow.appendChild(cell);
 }
 const colHeaderSpacer = document.createElement("div");
@@ -145,6 +163,8 @@ vehicleClasses.forEach((vehicleClass, rowIdx) => {
     cellWrap.style.minWidth = "0";
     cellWrap.style.background = t.elevatedBg;
     cellWrap.style.border = `1px solid ${t.grid}`;
+    cellWrap.style.borderRadius = "8px";
+    cellWrap.style.overflow = "hidden";
 
     const canvas = document.createElement("canvas");
     cellWrap.appendChild(canvas);
@@ -155,16 +175,36 @@ vehicleClasses.forEach((vehicleClass, rowIdx) => {
     );
     const isLeftCol = colIdx === 0;
     const isBottomRow = rowIdx === vehicleClasses.length - 1;
+    const { slope, intercept } = facet.trend;
+    const trendLine = [
+      { x: X_MIN, y: slope * X_MIN + intercept },
+      { x: X_MAX, y: slope * X_MAX + intercept },
+    ];
 
     new Chart(canvas, {
       type: "scatter",
       data: {
         datasets: [
           {
+            label: "points",
             data: facet.points,
-            backgroundColor: t.palette[0],
-            pointRadius: 3.2,
-            pointHoverRadius: 3.2,
+            backgroundColor: `${t.palette[0]}B3`,
+            pointRadius: 4,
+            pointHoverRadius: 5,
+            order: 1,
+          },
+          {
+            type: "line",
+            label: "trend",
+            data: trendLine,
+            borderColor: t.inkSoft,
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            fill: false,
+            tension: 0,
+            order: 0,
           },
         ],
       },
@@ -172,7 +212,18 @@ vehicleClasses.forEach((vehicleClass, rowIdx) => {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
-        plugins: { legend: { display: false }, title: { display: false } },
+        plugins: {
+          legend: { display: false },
+          title: { display: false },
+          tooltip: {
+            filter: (item) => item.datasetIndex === 0,
+            callbacks: {
+              title: () => `${vehicleClass} · ${drivetrain}`,
+              label: (ctx) =>
+                `${ctx.parsed.x.toFixed(1)}L → ${ctx.parsed.y.toFixed(1)} mpg`,
+            },
+          },
+        },
         scales: {
           x: {
             min: X_MIN,
@@ -180,7 +231,7 @@ vehicleClasses.forEach((vehicleClass, rowIdx) => {
             ticks: {
               display: isBottomRow,
               color: t.inkSoft,
-              font: { size: 12 },
+              font: { size: 13 },
               maxTicksLimit: 5,
             },
             grid: { color: t.grid },
@@ -191,7 +242,7 @@ vehicleClasses.forEach((vehicleClass, rowIdx) => {
             ticks: {
               display: isLeftCol,
               color: t.inkSoft,
-              font: { size: 12 },
+              font: { size: 13 },
               maxTicksLimit: 5,
             },
             grid: { color: t.grid },
@@ -212,6 +263,8 @@ vehicleClasses.forEach((vehicleClass, rowIdx) => {
   rowLabel.style.color = t.ink;
   rowLabel.style.fontSize = "15px";
   rowLabel.style.fontWeight = "600";
+  rowLabel.style.background = t.elevatedBg;
+  rowLabel.style.borderRadius = "6px";
   rowDiv.appendChild(rowLabel);
 
   rowsWrap.appendChild(rowDiv);
