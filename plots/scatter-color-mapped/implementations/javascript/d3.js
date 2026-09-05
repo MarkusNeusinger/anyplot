@@ -38,10 +38,14 @@ const color = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain([tempMin,
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-// --- Gridlines (both axes, scatter convention) -------------------------
+// --- Gridlines (both axes, L-shaped: skip the domain-extreme ticks so the
+// gridlines don't double up with the axis lines and form a full box-frame) --
+const [xDomainMin, xDomainMax] = x.domain();
+const [yDomainMin, yDomainMax] = y.domain();
+
 g.append("g")
   .selectAll("line")
-  .data(x.ticks(8))
+  .data(x.ticks(8).filter((d) => d > xDomainMin && d < xDomainMax))
   .join("line")
   .attr("x1", (d) => x(d))
   .attr("x2", (d) => x(d))
@@ -51,7 +55,7 @@ g.append("g")
 
 g.append("g")
   .selectAll("line")
-  .data(y.ticks(8))
+  .data(y.ticks(8).filter((d) => d > yDomainMin && d < yDomainMax))
   .join("line")
   .attr("y1", (d) => y(d))
   .attr("y2", (d) => y(d))
@@ -63,7 +67,7 @@ g.append("g")
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(8));
 const yAxis = g.append("g").call(d3.axisLeft(y).ticks(8));
 for (const ax of [xAxis, yAxis]) {
-  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
   ax.selectAll("line").attr("stroke", t.inkSoft);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
@@ -86,15 +90,45 @@ g.append("text")
   .style("font-size", "16px")
   .text("Distance North of City Center (km)");
 
-// --- Points ---------------------------------------------------------------
-g.selectAll("circle")
+// --- Urban-core focal annotation (data storytelling) -----------------------
+// A dashed reference ring around the city center draws the eye to where the
+// heat-island effect should be strongest, before the points render on top.
+const coreRadiusKm = 6;
+const coreRx = Math.abs(x(coreRadiusKm) - x(0));
+const coreRy = Math.abs(y(0) - y(coreRadiusKm));
+g.append("ellipse")
+  .attr("cx", x(0))
+  .attr("cy", y(0))
+  .attr("rx", coreRx)
+  .attr("ry", coreRy)
+  .attr("fill", "none")
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "5,4")
+  .attr("opacity", 0.45);
+
+g.append("text")
+  .attr("x", x(0))
+  .attr("y", y(0) - coreRy - 10)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-style", "italic")
+  .text("Urban core");
+
+// --- Points -----------------------------------------------------------------
+// Warmest stations (top quartile) render larger and more opaque, creating a
+// focal point that surfaces the heat-island clustering near the city center.
+const hotThreshold = tempMin + (tempMax - tempMin) * 0.75;
+g.selectAll("circle.station")
   .data(stations)
   .join("circle")
+  .attr("class", "station")
   .attr("cx", (d) => x(d.distanceEast))
   .attr("cy", (d) => y(d.distanceNorth))
-  .attr("r", 9)
+  .attr("r", (d) => (d.surfaceTemp >= hotThreshold ? 12 : 8))
   .attr("fill", (d) => color(d.surfaceTemp))
-  .attr("fill-opacity", 0.85)
+  .attr("fill-opacity", (d) => (d.surfaceTemp >= hotThreshold ? 0.95 : 0.75))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
 
@@ -134,7 +168,7 @@ const barAxis = g
       .ticks(6)
       .tickFormat((d) => `${d.toFixed(0)}°`),
   );
-barAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "13px");
+barAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
 barAxis.selectAll("line").attr("stroke", t.inkSoft);
 barAxis.select(".domain").attr("stroke", t.inkSoft);
 
