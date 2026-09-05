@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: manhattan-gwas
+created: '2026-09-05T09:13:24Z'
+updated: '2026-09-05T09:30:14Z'
+generated_by: claude-sonnet
+workflow_run: 33956863970
+issue: 2925
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Genome-wide (~7.30) and suggestive (5.0) threshold lines rendered with distinct
+    dash styles and clear legend labels
+  - SNP density increased to ~109,000 variants (36 SNPs/Mb x 3029 Mb), now solidly
+    within the spec's 100,000-1,000,000+ typical GWAS range, fixing the prior attempt's
+    DQ-03 weakness
+  - Chromosome tick-label crowding at the right edge (18-22, X) from the previous
+    attempt is resolved -- labels are legible with clear spacing
+  - Theme-adaptive chrome is fully correct in both renders -- only chrome flips, data
+    colors are pixel-identical
+  - Significant SNPs are distinguished with a larger amber marker and ink stroke,
+    clearly visible against the denser baseline cloud
+  - Baseline marker size/alpha (markersize=3, alpha=0.6) is well-tuned for the increased
+    ~109k-point density, avoiding a solid overplotted blob
+  weaknesses:
+  - 'The new `text!(ax, top_hit_pos, top_hit_p .+ 0.6; text = top_hit_labels, ...)`
+    call intended to label the top SNP per peak chromosome does not render any visible
+    text in either theme -- verified by cropping all 5 peak regions (chromosomes 2,
+    6, 9, 17, X) at 2x zoom in both plot-light.png and plot-dark.png; no label glyphs
+    appear above any peak. Likely a Makie API issue: passing separate x/y vectors
+    alongside a `text=` keyword may not be a valid vectorized-text signature for CairoMakie''s
+    Text recipe -- try `text!(ax, Point2f.(top_hit_pos, top_hit_p .+ 0.6); text =
+    top_hit_labels, ...)` instead, and visually confirm the labels actually appear
+    before resubmitting.'
+  - Because the labels don't render, the data-storytelling improvement requested last
+    review (calling out the strongest hit per peak) did not materialize -- the plot
+    still relies solely on the amber color/size encoding for hierarchy, unchanged
+    from the previous attempt
+  - The dead `top_hit_pos`/`top_hit_p`/`top_hit_labels` bookkeeping and non-functional
+    `text!` call add code complexity with no visible payoff -- fix or remove
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark title "manhattan-gwas · julia · makie · anyplot.ai" clearly legible at top. "Chromosome" and "-log10(p-value)" axis titles and all chromosome/y-axis tick labels are readable in dark/soft-dark ink. Chromosome tick labels for 18-22 and X (previously cramped) now have clear spacing with no overlap. Top-left legend (cream box, frameless) lists "Genome-wide significant SNP", "Suggestive (p < 1x10^-5)", and "Genome-wide significance (p < 5x10^-8)" clearly.
+      Data: Baseline SNPs (~109,000 points) alternate green (#009E73) / blue by chromosome, rendered as a dense but non-saturated cloud at markersize=3/alpha=0.6. Amber (#DDCC77) markers highlight genome-wide-significant hits at chromosomes 2, 6, 9, 17, and X. Dotted gray suggestive line at y=5 and dashed amber threshold line at y~7.3 are both visible and legend-matched. No "rs..." SNP-ID text labels are visible above any of the 5 peaks despite the code attempting to add them via `text!` -- confirmed by zoomed crops of all 5 peak regions.
+      Legibility verdict: PASS (all rendered text is readable; the missing SNP-ID labels are a functional bug, not a legibility failure, since no text pixels are drawn at all)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17.
+      Chrome: Title, axis titles, and tick labels flip to light/off-white and remain fully legible. Legend box flips to a dark elevated fill with light text, still readable. Grid lines are subtle light-on-dark.
+      Data: Colors are pixel-identical to the light render (green/blue chromosome alternation, amber highlight and threshold line) -- only chrome flipped. Same missing-SNP-label issue confirmed via zoomed crop of the chromosome-2 peak region: no "rs..." text visible anywhere above the topmost significant markers.
+      Legibility verdict: PASS (no dark-on-dark failures found; the missing labels are a rendering bug in the `text!` call, not a theme-contrast issue)
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable in both themes; chromosome tick
+          crowding from attempt 1 resolved
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Baseline markersize=3/alpha=0.6 well-adapted to the new ~109k-point
+          density; amber hits stand out
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, amber highlight not reliant on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73, amber semantic anchor, theme-correct
+          both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful amber highlight + alternating hues, above default but
+          not publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, frameless legend, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Attempted top-hit labeling to sharpen storytelling but the text!
+          call does not render -- no improvement over attempt 1
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Manhattan scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative position, centered chromosome labels, alternating colors,
+          both threshold lines, dense-data sizing, significant-hit highlighting all
+          present and working; optional snp_id labeling is attempted but non-functional,
+          not deducted since highlighting (the spec's OR alternative) works
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Null distribution, 5 varied-height significant peaks, suggestive-only
+          bumps, differing chromosome lengths
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral GWAS scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~109,000 SNPs, now within the spec's 100k-1M+ typical range (fixed
+          from attempt 1's ~42,400)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Non-functional text! block ships dead code with no visible payoff
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Good Axis/hlines!/axislegend usage overall, but the vectorized text!
+          call is a demonstrated Makie API misuse
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Per-point color vector, RGBAf-derived alpha gridcolor, layered hlines!+scatter!+axislegend
+          composition
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
