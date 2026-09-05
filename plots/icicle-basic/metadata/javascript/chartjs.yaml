@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: icicle-basic
 created: '2026-09-05T05:17:08Z'
-updated: '2026-09-05T05:21:51Z'
+updated: '2026-09-05T05:33:50Z'
 generated_by: claude-sonnet
 workflow_run: 33946545392
 issue: 2497
@@ -12,131 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - Correctly builds the icicle chart's core semantic — adjacent rectangles laid out
-    in layered rows, sized by proportional share — entirely from core Chart.js `bar`
-    type via floating-bar ranges ([x0, x1] per node), respecting the library's 'no
-    plugin/workaround' rule.
-  - A deterministic queue-based partition algorithm computes each node's horizontal
-    span from its parent's span and value, mirroring d3's partition layout without
-    any extra dependency.
-  - Color is inherited down the hierarchy from each top-level branch, visually reinforcing
-    parent-child grouping across all three rows.
-  - The custom `afterDatasetsDraw` plugin renders node names centered on each rectangle
-    and automatically hides labels that don't fit (`rectWidth < textWidth + 16`),
-    directly satisfying the spec's 'label if space, else hide' requirement.
-  - The root 'project' node swaps ink/pageBg for its own fill/text pair so it stays
-    legible in both themes despite being the neutral top-level node — data colors
-    otherwise stay identical between light and dark, only chrome flips.
-  - Fully in-memory, deterministic dataset (15 nodes, 3 levels) with no external dependencies
-    beyond Chart.js.
+  - Faithfully reproduces an icicle chart with core Chart.js (no unsupported treemap/sankey
+    plugin) via a horizontal floating-bar trick — each hierarchy level is a row, each
+    node a [x0, x1] range bar sized by its share of the parent, exactly matching the
+    spec's partition-layout semantics
+  - Custom afterDatasetsDraw plugin computes per-segment label color via WCAG relative-luminance
+    contrast against each fixed fill color, guaranteeing readable text on every rectangle
+    in both themes
+  - Labels are hidden when a rectangle is too narrow to fit the text (measureText
+    check), matching the spec's explicit 'hide labels for small nodes' guidance
+  - Correct Imprint palette usage (src/tests/docs/config = palette[0..3], root uses
+    the theme-adaptive ink/pageBg swap for a distinct root treatment), thin borderColor
+    separators between adjacent segments, and identical data colors between light
+    and dark renders
+  - Both renders pass the theme-readability and canvas-dimension checks cleanly, including
+    at the 400px mobile-preview scale
   weaknesses:
-  - The plugin-drawn rectangle labels use a hardcoded 'Segoe UI' font stack while
-    the title/axis/tick labels rely on Chart.js's default font — pick one font family
-    for a fully consistent typographic voice.
-  - In dark theme, rectangle labels are dark text (t.pageBg) on mid-saturation palette
-    fills (e.g. black text on the green 'src'/'components' segments) — contrast margin
-    is noticeably tighter than the white-on-color pairing used in light theme; worth
-    spot-checking WCAG contrast for the darkest palette entries.
-  - No legend maps top-level branch colors to folder names beyond the in-rectangle
-    labels; harmless here since every visible rectangle carries its own name, but
-    would help if a future revision hides more labels at low zoom.
-  - The narrowest level-2 slivers (webpack, eslint under config) sit almost seamlessly
-    against their neighbor at this size — a touch more borderWidth or spacing would
-    keep them visually distinct even without room for a label.
+  - Several small helper functions (relativeLuminance, contrastRatio, labelColorFor)
+    plus the plugin object push the file past strict KISS single-script simplicity
+    — acceptable given they implement a genuine accessibility feature, but a future
+    pass could inline/simplify the contrast math if the file grows further
+  - Root row uses a distinct ink/pageBg swap rather than a palette color, which is
+    a deliberate and effective design choice but means the root node sits slightly
+    outside the categorical color story used for the rest of the hierarchy — worth
+    a one-line code comment if this trips up future maintainers
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), matches the Imprint light surface — not pure white.
-      Chrome: Title "icicle-basic · javascript · chartjs · anyplot.ai" is bold dark text, fully visible, not clipped. Y-axis row labels (Project, Folder, File) and x-axis tick labels (0%–100%) are dark-gray/soft-ink and clearly readable. Axis titles "Share of Project Size" (x) and "Hierarchy Level" (y) are dark ink and legible. Subtle vertical gridlines are visible without dominating.
-      Data: Root "project" row is rendered near-black with white "project" label (intentional ink/pageBg swap for the neutral root). Folder row shows four palette-colored segments — green "src" (first series, #009E73-consistent), purple "tests", blue "docs", amber "config" — each with a white centered label. File row subdivides each folder into its children, inheriting the parent's color, with white labels on all boxes wide enough to hold text; the two narrowest config children (webpack, eslint) correctly show no label. All text is legible against the light background.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), consistent with the Imprint light surface — not pure white.
+      Chrome: Title "icicle-basic · javascript · chartjs · anyplot.ai" in dark bold text, clearly readable. Y-axis row labels (Project, Folder, File) and axis titles ("Hierarchy Level", "Share of Project Size") in dark ink, fully legible. X-axis percentage ticks (0%-100%) in soft dark grey, legible. Subtle vertical gridlines only on the x-axis.
+      Data: Three stacked horizontal rows form the icicle partition. Root row is a single near-black bar spanning 0-100% labeled "project" in white text. Folder row splits into src (#009E73 green), tests (violet/purple), docs (blue), config (amber) — first series is the mandated brand green. File row further subdivides each folder's span into its children, with labels shown only where the segment is wide enough (components, utils, api, styles, unit, integration, guides all labeled; a few narrow segments — e.g. docs/reference, config's two children — are intentionally left unlabeled per the spec's "hide labels for small nodes" guidance). Thin light-colored borders separate adjacent segments.
+      Legibility verdict: PASS — no light-on-light or unreadable text anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Title is bold off-white text, fully visible, not clipped. Row labels and tick labels are light-gray/soft-ink and readable against the dark background. Axis titles are light ink and legible. Gridlines remain subtle but visible.
-      Data: Data colors are identical to the light render (green/purple/blue/amber segments unchanged) — confirming only chrome flipped. The root "project" row now renders as a light off-white box with dark "project" text (the ink/pageBg swap correctly inverted for the theme). Folder- and file-row rectangles keep their palette colors, now labeled with dark text (t.pageBg is dark in this theme) — readable on all four hues, though contrast margin is visibly tighter on the greener/bluer segments than the white-on-color pairing in light mode. No dark-on-dark or light-on-light failures observed; no clipped or missing text.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Title in white/light text, clearly readable. Axis titles and row labels in light ink, tick labels in soft light grey — all legible against the dark background. Gridlines subtle but visible.
+      Data: Identical branch/file colors to the light render (green/violet/blue/amber unchanged — only chrome flipped as required). Root row flips to a warm off-white bar (the theme-adaptive ink/pageBg swap) with dark text label "project", preserving strong contrast. Per-segment text labels use the same luminance-based dark/light color choice as the light render since fill colors are identical across themes, so labels remain readable in both.
+      Legibility verdict: PASS — no dark-on-dark failures; all text elements have strong contrast against their local background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; dark-on-mid-saturation-color labels
-          in dark theme have a tighter contrast margin than the white-on-color light-theme
-          pairing, and the plugin label font family doesn't match the rest of the
-          chrome
+        comment: All chrome and per-segment labels readable in both themes and at
+          400px mobile scale; explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; labels for too-narrow rectangles are correctly
-          suppressed
+        comment: No text/text or text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All segments clearly visible with white/pageBg borders separating
-          adjacent rectangles
+        comment: Segments clearly bordered and distinguishable; density-appropriate
+          labeling (hidden on narrow nodes)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four distinguishable Imprint hues used, not solely red/green
+        comment: Per-segment luminance-based label contrast; no red-green sole signal;
+          Imprint palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, title within bounds, nothing cut off, canvas gate
-          passed
+        comment: Canvas gate passed (3200x1800); no overflow or clipping; title comfortably
+          sized, not squeezed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (% share) and hierarchy level
+        comment: '''Share of Project Size'' and ''Hierarchy Level'' are descriptive
+          with units (%) on x ticks'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First branch uses #009E73, canonical palette order for remaining
-          branches, correct theme-adaptive backgrounds in both renders'
+        comment: 'First categorical series is #009E73; backgrounds match #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Color-by-branch inheritance and the label overlay go beyond generic
-          defaults, but overall look is still fairly flat/utilitarian
+        passed: true
+        comment: Custom luminance-based per-segment label contrast and a distinct
+          root treatment show real design intent beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Y-axis grid removed, x-grid subtle, adequate whitespace, but plugin
-          label font is inconsistent with the rest of the chrome
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Consistent branch coloring across rows makes proportions and hierarchy
-          easy to trace, though no single element is emphasized as a clear focal point
+        comment: Clean segment borders, subtle x-only gridlines, no legend clutter,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Root/branch/leaf hierarchy is visually obvious; proportional widths
+          tell the size story at a glance
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements icicle chart's layered-adjacent-rectangle semantic
-          via a legitimate Chart.js core-API workaround
+        comment: Genuine icicle/partition layout via stacked horizontal range bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal top-to-bottom orientation, color by hierarchy/category,
-          labels hidden for small nodes, root at top — all four spec notes satisfied
+        comment: Horizontal top-to-bottom orientation, category coloring, small-node
+          label hiding — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = share of project size, Y = hierarchy level, all 15 nodes represented
+        comment: X = share of project size (0-100%), Y = hierarchy level; all 15 nodes
+          rendered
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'icicle-basic · javascript · chartjs · anyplot.ai';
-          no legend needed since every visible rectangle is self-labeled
+        comment: Title matches required format exactly; no legend needed since labels
+          are drawn in-place
     data_quality:
       score: 15
       max: 15
@@ -177,38 +169,37 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three hierarchy levels with names, values, and parent-child
-          structure
+        comment: Full 3-level hierarchy, 15 nodes, within the 10-100 recommended range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral file-system-size scenario (project/src/tests/docs/config)
+        comment: Plausible, neutral file-system/project-size scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 nodes within the spec's 10-100 range, values 3-100 are sensible
-          relative sizes
+        comment: Values (3-100 KB-like) are sensible and sum consistently at every
+          level
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No unnecessary classes; the one plugin object is required for the
-          label technique
+        comment: A few small helper functions (luminance/contrast) and a plugin object
+          add minor complexity, though justified by the accessibility feature
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic in-memory data, no RNG
+        comment: Fully deterministic, hard-coded in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -220,34 +211,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the partition-layout technique, no fake
-          UI
+        comment: No fake UI/interactivity; complexity is proportional to the problem
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, current Chart.js 4
+        comment: Correct mount-node contract, animation:false set, current Chart.js
           API
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Floating-bar-range technique is the recommended Chart.js community
-          pattern for this kind of custom layout
+        comment: Uses Chart.js's floating-bar range data ([x0,x1]) and indexAxis:'y'
+          idiomatically to express a chart type the library has no native support
+          for
       - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Custom afterDatasetsDraw plugin using getDatasetMeta/getProps to
-          draw and conditionally suppress labels is a genuinely advanced, distinctive
-          technique
+        comment: Custom afterDatasetsDraw plugin for conditional, contrast-aware in-place
+          labeling is a genuinely distinctive, well-executed use of the plugin API
   verdict: APPROVED
 impl_tags:
   dependencies: []

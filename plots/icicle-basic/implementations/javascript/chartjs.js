@@ -1,7 +1,7 @@
 // anyplot.ai
 // icicle-basic: Basic Icicle Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-05
+// Quality: 94/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
