@@ -126,7 +126,7 @@ chart.setOption({
             { yAxis: 100 },
           ],
           [
-            { yAxis: 0, itemStyle: { color: hexToRgba(t.palette[0], 0.1) } },
+            { yAxis: 0, itemStyle: { color: hexToRgba(t.inkSoft, 0.12) } },
             { yAxis: 30 },
           ],
         ],
@@ -135,7 +135,7 @@ chart.setOption({
         silent: true,
         symbol: "none",
         lineStyle: { type: "dashed", color: t.inkSoft, width: 1.5 },
-        label: { color: t.inkSoft, fontSize: 13, formatter: "{b}", position: "end" },
+        label: { color: t.inkSoft, fontSize: 14, formatter: "{b}", position: "end" },
         data: [
           { yAxis: 70, name: "Overbought" },
           { yAxis: 50, name: "Neutral", lineStyle: { type: "dotted" } },
