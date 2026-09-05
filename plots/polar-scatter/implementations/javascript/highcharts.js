@@ -49,11 +49,11 @@ for (let i = 0; i < N_OBSERVATIONS; i += 1) {
 }
 
 const maxSpeed = Math.max(...observations.map((o) => o.speed));
-const MAX_RADIUS = Math.ceil(maxSpeed / 5) * 5;
-const RING_LEVELS = [];
-for (let level = MAX_RADIUS / 4; level <= MAX_RADIUS + 0.01; level += MAX_RADIUS / 4) {
-  RING_LEVELS.push(Math.round(level));
-}
+// Round up to a multiple of 4 (not 5) so MAX_RADIUS/4 is always a whole
+// number — every ring label is a clean, evenly-spaced integer.
+const MAX_RADIUS = Math.ceil(maxSpeed / 4) * 4;
+const RING_STEP = MAX_RADIUS / 4;
+const RING_LEVELS = [RING_STEP, RING_STEP * 2, RING_STEP * 3, MAX_RADIUS];
 const COMPASS = [
   { deg: 0, label: "N" },
   { deg: 45, label: "NE" },
@@ -128,15 +128,44 @@ const pointAt = (bearing, radiusFrac) => {
 // the data-bound series below use (yAxis increases upward, so flip y).
 const toAxisXY = ([sx, sy]) => [sx - chart.plotLeft, chart.plotTop + chart.plotHeight - sy];
 
+// Convert a palette hex color to rgba so overlapping markers can be given a
+// slight fill translucency without losing the category color.
+const hexToRgba = (hex, alpha) => {
+  const clean = hex.replace("#", "");
+  const value = parseInt(clean, 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+// Subtle radial tint behind the grid — lifts the chrome beyond a flat plane
+// without competing with the data. Low alpha throughout so it reads as a
+// faint glow, not a filled disc.
+chart.renderer
+  .circle(cx, cy, outerR)
+  .attr({
+    fill: {
+      radialGradient: { cx: 0.5, cy: 0.5, r: 0.5 },
+      stops: [
+        [0, hexToRgba(t.elevatedBg, 0.4)],
+        [1, hexToRgba(t.elevatedBg, 0)],
+      ],
+    },
+    zIndex: 0,
+  })
+  .add();
+
 // --- Radial grid rings + value labels (no native polar axis without more.js) --
 // The two prevailing-wind clusters sit around 48° (20°-76°) and 232°
 // (210°-254°), so the SE sector stays clear of data at every radius — the
 // natural spot for the scale.
 const RING_LABEL_ANGLE = 145;
-RING_LEVELS.forEach((level) => {
+RING_LEVELS.forEach((level, index) => {
+  const isOutermost = index === RING_LEVELS.length - 1;
   chart.renderer
     .circle(cx, cy, outerR * (level / MAX_RADIUS))
-    .attr({ stroke: t.grid, "stroke-width": 1, fill: "none", zIndex: 1 })
+    .attr({ stroke: t.grid, "stroke-width": isOutermost ? 2 : 1, fill: "none", zIndex: 1 })
     .add();
 
   const [lx, ly] = pointAt(RING_LABEL_ANGLE, level / MAX_RADIUS);
@@ -176,7 +205,12 @@ const series = TIME_OF_DAY.map((name, categoryIndex) => {
     type: "scatter",
     name,
     color: t.palette[categoryIndex],
-    marker: { radius: 6, lineColor: t.pageBg, lineWidth: 1 },
+    marker: {
+      radius: 6,
+      lineColor: t.pageBg,
+      lineWidth: 1,
+      fillColor: hexToRgba(t.palette[categoryIndex], 0.85),
+    },
     data,
   };
 });
