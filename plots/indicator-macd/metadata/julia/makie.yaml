@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: indicator-macd
 created: '2026-09-05T05:46:11Z'
-updated: '2026-09-05T05:50:41Z'
+updated: '2026-09-05T05:59:12Z'
 generated_by: claude-sonnet
 workflow_run: 33947838549
 issue: 3181
@@ -12,55 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 84
 review:
   strengths:
-  - 'All three MACD elements are present and clearly rendered: MACD line, signal line,
-    and green/red histogram, plus a dashed zero reference line for spotting crossovers'
-  - Standard parameters (12, 26, 9) are explicitly noted right in the legend labels
-    ('MACD (12, 26)', 'Signal (9)'), satisfying the spec's requirement elegantly without
-    cluttering the title
-  - Theme-adaptive chrome is correctly implemented — both renders pass the light/dark
-    legibility check, with identical data colors and only chrome (background, ink,
-    grid) flipping
-  - 'Clean visual refinement: top/right spines hidden, subtle horizontal-only gridlines,
-    frameless legend'
-  - Reproducible synthetic data (seeded at 42) with a plausible cumulative price walk
-    + sinusoidal trend that exercises multiple full positive/negative MACD cycles,
-    giving the chart real pattern variety
+  - 'Color-clash issue from Attempt 1 fully resolved: MACD line is now Imprint blue
+    (#4467A3), fully distinguishable from the green/red histogram in both themes'
+  - New crossover markers (green/red triangles) at MACD/signal crossings directly
+    address the prior review's data-storytelling feedback and reinforce the spec's
+    buy/sell-signal narrative
+  - 'All three MACD elements present and clearly rendered: MACD line, signal line,
+    green/red histogram, plus a dashed zero reference line'
+  - Standard parameters (12, 26, 9) explicitly noted in the legend labels
+  - Theme-adaptive chrome correctly implemented -- both renders pass the light/dark
+    legibility check with identical data colors
   weaknesses:
-  - 'MACD_COLOR and GAIN_COLOR are both #009E73 (identical brand green) — the MACD
-    line and the positive histogram bars share the exact same hue, which hurts distinguishability
-    where the line runs directly along the tops of the green bars (e.g. trading days
-    ~60-80 and ~115-120). The spec itself suggests ''distinct colors (e.g., blue and
-    orange)'' for the MACD/signal lines precisely to avoid this. Recommend changing
-    MACD_COLOR to the Imprint blue (#4467A3, palette position 3) so the line reads
-    independently from the green/red gain/loss histogram semantic, while keeping the
-    signal line lavender.'
-  - X-axis uses a plain 1:120 'Trading Day' integer index rather than the spec's `date`
-    (datetime) field — consider generating an actual date range (e.g. via a formatted
-    date string on a subset of ticks) so the axis maps more literally to the spec's
-    data schema. Minor, optional polish.
-  - Library Mastery is generic (LM-02) — only basic barplot!/lines!/hlines! primitives
-    are used; no Makie-distinctive feature (e.g. band! for a shaded MACD-signal spread,
-    or a custom tick formatter) is demonstrated.
+  - 'X-axis still uses a plain 1:120 ''Trading Day'' integer index rather than the
+    spec''s date (datetime) field. Minor/optional: consider generating an actual date
+    range for closer schema alignment.'
+  - Library Mastery remains generic -- only basic barplot!/lines!/hlines!/scatter!
+    primitives are used; no Makie-distinctive feature (e.g. band! for a shaded MACD-signal
+    spread) is demonstrated.
+  - Design Excellence is still at 'clean default' level -- no custom typography or
+    additional visual polish beyond spine removal and the new crossover markers.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "indicator-macd · julia · makie · anyplot.ai" is bold dark text, clearly visible top-center. "Trading Day" (x-axis) and "MACD Value" (y-axis) labels are dark ink, clearly legible. Tick labels are a slightly softer dark gray, clearly legible against the light background. A frameless legend at top-left lists "MACD (12, 26)" in green and "Signal (9)" in lavender. Horizontal gridlines are subtle light gray, visible but not dominant. Top/right spines are hidden; left/bottom spines are a soft gray.
-      Data: First series (MACD line) is brand green #009E73, second series (signal line) is lavender #C475FD — both clearly distinguishable from each other and from the background. The histogram is rendered as green (positive) / red (negative) bars around a dashed zero reference line, correctly encoding financial gain/loss semantics. All data elements are visually separable from the light surface.
+      Background: warm off-white, consistent with #FAF8F1, not pure white
+      Chrome: bold dark title "indicator-macd · julia · makie · anyplot.ai" top-center; "Trading Day"/"MACD Value" axis labels and tick labels dark/soft-dark; frameless top-left legend ("MACD (12, 26)", "Signal (9)"); subtle horizontal-only gridlines; top/right spines hidden -- all readable
+      Data: MACD line is Imprint blue (#4467A3), signal line lavender (#C475FD), histogram bars green (#009E73, gain) / red (#AE3030, loss), dashed zero reference line, and new green/red triangle markers at crossover points
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels ("Trading Day", "MACD Value") render in near-white ink, clearly legible against the dark background. Tick labels are a lighter soft-gray tone, clearly legible — no dark-on-dark issue found. Legend text is near-white and readable. Gridlines are subtle and still visible without dominating. Spines match the same soft-gray treatment as the light render, appropriately dimmed for dark mode.
-      Data: MACD line (#009E73 green) and signal line (#C475FD lavender) are pixel-identical to the light render — only the chrome (background/ink/grid) flipped, as required. Histogram green/red bars are unchanged from the light version and remain clearly visible against the dark surface.
+      Background: warm near-black, consistent with #1A1A17, not pure black
+      Chrome: title, axis labels, tick labels, and legend text render in near-white/light-gray ink, clearly legible against the dark surface; no dark-on-dark failures found
+      Data: colors are pixel-identical to the light render (blue MACD line, lavender signal line, green/red histogram, green/red crossover triangles) -- only chrome flipped
       Legibility verdict: PASS
-
-    Cross-theme note: Data colors confirmed identical between renders; only chrome tokens differ, per the theme-adaptive chrome contract. One recurring visual concern across BOTH renders (not a theme bug): the MACD line and the histogram's positive bars share the identical green hue (#009E73 used for both MACD_COLOR and GAIN_COLOR), which reduces separability where the line traces along the top of tall green bar clusters — see weaknesses for the fix recommendation.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,50 +56,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit, title fits comfortably, readable in both
-          themes; not quite maximal polish
+        comment: All font sizes explicitly set, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; legend sits clear of the data in both renders
+        comment: No collisions between text, lines, bars, or markers
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Line/bar identical green hue (MACD_COLOR == GAIN_COLOR) reduces separability
-          where they overlap
+        comment: MACD line is now blue, fully distinct from green/red histogram; crossover
+          triangles clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green gain-loss is a sanctioned finance semantic and reinforced
-          by bar position relative to zero line, not color alone
+        comment: Good contrast, CVD-safe, gain/loss also redundantly encoded by bar
+          direction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 3200x1800; good proportions, nothing clipped
+        comment: Balanced margins, legend near plot, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with clear units implied (MACD Value, Trading
-          Day)
+        comment: Descriptive axis labels (Trading Day, MACD Value)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green, second lavender, finance semantic override
-          for histogram, correct theme backgrounds both renders
+        comment: Imprint palette (blue/lavender) plus finance semantic green/red for
+          gain/loss; theme-correct chrome in both renders
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -119,22 +105,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Default polish level — clean but not exceptional customization beyond
-          the semantic finance colors
+        comment: Clean but still default-level polish
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Spines removed, subtle horizontal-only grid, frameless legend — genuine
-          but modest refinement
+        comment: Spines removed, subtle grid, frameless legend -- modest but real
+          refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Zero line and histogram give some hierarchy, but no additional emphasis
-          (e.g. crossover markers) beyond the raw indicator lines
+        passed: true
+        comment: New crossover triangle markers create clear visual hierarchy reinforcing
+          the buy/sell narrative
     spec_compliance:
       score: 14
       max: 15
@@ -144,28 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MACD indicator chart
+        comment: Correct MACD chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: MACD line, signal line, histogram, zero line, semantic histogram
-          colors, distinct MACD/signal colors — all present
+        comment: MACD line, signal line, histogram, zero line all present
       - id: SC-03
         name: Data Mapping
         score: 2
         max: 3
         passed: true
-        comment: X uses a plain trading-day index rather than the spec's `date` datetime
-          field; Y correctly shows MACD value
+        comment: Uses plain trading-day integer index rather than spec's date datetime
+          field
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match series
-          and note the standard parameters
+        comment: Title format correct, legend labels correct with parameters noted
     data_quality:
       score: 15
       max: 15
@@ -175,21 +158,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All MACD components represented with multiple full bullish/bearish
-          cycles
+        comment: Shows bullish and bearish cycles, crossovers, varying histogram magnitude
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral synthetic price-derived series
+        comment: Plausible stock-price-derived MACD scenario, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MACD/signal magnitude range is sensible for a ~150-level price series
-          with the given volatility
+        comment: Price levels and oscillator magnitudes are realistic
     code_quality:
       score: 10
       max: 10
@@ -199,7 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only one small reusable `ema` helper function, no classes
+        comment: Imports -> data -> minimal ema helper -> plot -> save
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,13 +198,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2 correctly
+        comment: Saves plot-$(THEME).png with px_per_unit=2
     library_mastery:
       score: 5
       max: 10
@@ -233,15 +214,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: barplot!, lines!, hlines!, axislegend used idiomatically with theme
-          tokens threaded through
+        comment: Correct, idiomatic use of Axis/barplot!/lines!/scatter!/axislegend
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No Makie-distinctive feature beyond basic primitives
-  verdict: REJECTED
+        comment: Generic primitives only, no Makie-distinctive feature such as band!
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -249,7 +229,7 @@ impl_tags:
   patterns:
   - data-generation
   dataprep:
+  - rolling-window
   - cumulative-sum
-  - exponential-moving-average
   styling:
-  - minimal-chrome
+  - publication-ready
