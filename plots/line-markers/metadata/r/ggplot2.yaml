@@ -1,0 +1,248 @@
+library: ggplot2
+language: r
+specification_id: line-markers
+created: '2026-09-05T07:39:57Z'
+updated: '2026-09-05T07:53:49Z'
+generated_by: claude-sonnet
+workflow_run: 33953043381
+issue: 2599
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - First-series brand green (#009E73) and theme-adaptive chrome verified correct
+    via pixel sampling in both plot-light.png (#FAF8F1 bg) and plot-dark.png (#1A1A17
+    bg)
+  - 'Clean theme_minimal styling: no boxed panel/spines, subtle y-axis-only gridlines,
+    generous margins, legend placed top-center close to the plot'
+  - Distinct marker shapes (circle vs. triangle) give redundant shape encoding on
+    top of color, which is good for CVD accessibility
+  - Realistic, neutral quality-control scenario (machined part diameter readings across
+    two production lines) with plausible mm-scale tolerances
+  - All font sizes explicitly set (base_size, axis.title, axis.text, plot.title, legend.text);
+    both renders fully legible with no overlap or clipping
+  weaknesses:
+  - The crossover callout (annotate 'point' shape=1 ring + annotate 'text' "Lines
+    converge" at shift=6) never appears in either render — confirmed via pixel-level
+    inspection of both plot-light.png and plot-dark.png at the shift=6 crossing point,
+    only the two regular series markers are visible with no extra ring or gray text
+    nearby. Fix the layer so it actually paints on top, or remove the dead annotation
+    code.
+  - 'scale_fill_manual(values = c(IMPRINT_PALETTE[1], PAGE_BG)) intends Line A''s
+    circle markers to render solid-green-filled versus Line B''s hollow triangles,
+    but pixel sampling shows BOTH series render as hollow outlines with background-colored
+    interiors (marker center reads exactly #FAF8F1 in light / matches bg in dark)
+    — the fill mapping has no visible effect. Either fix the fill scale so Line A
+    markers are visibly solid, or drop the unused fill aesthetic.'
+  - Second series color skips Imprint canonical position 2 (#C475FD lavender) and
+    jumps to position 3 (#4467A3 blue) with no semantic justification — production-line
+    categories carry no inherent color association, so a 2-series chart should use
+    canonical positions 1 and 2.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (verified by pixel sample at (50,50) = rgb(250,248,241)).
+      Chrome: Title "line-markers · r · ggplot2 · anyplot.ai" top-left in dark ink; legend "Line A" / "Line B" centered above the plot; axis titles "Inspection Shift" (x) and "Part Diameter (mm)" (y) in dark ink; tick labels in softer gray; subtle horizontal gridlines only (no vertical gridlines). All readable against the light background.
+      Data: Two series across 16 inspection shifts. Line A (green, circle markers) starts near 25.00, dips to ~24.965 at shifts 2-3, crosses Line B around shift 4-6, then climbs steadily to ~25.105 by shift 16. Line B (blue, triangle markers) starts near 25.03, declines through the crossover, then oscillates lower (~24.92-24.96) through the rest of the series. Both marker types render as hollow outlines (green ring / blue ring) with background-colored interiors rather than the solid-green fill the code's scale_fill_manual intends for Line A — verified by pixel sampling at marker centers (returns exact background color, not #009E73). Border colors confirmed as #009E73 (Line A) and #4467A3 (Line B) via pixel sampling. The "Lines converge" annotation described in the source code (open ring + text label at the shift-6 crossover) is NOT visible anywhere near that point in the render.
+      Legibility verdict: PASS (no readability issues; the annotation absence is a content bug, not a legibility bug)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (verified by pixel sample at (50,50) = rgb(26,26,23)).
+      Chrome: Same layout as light render; title/axis text render in light ink (#F0EFE8, verified by pixel sample), tick labels in softer light gray. All text clearly readable against the dark background — no dark-on-dark failures observed.
+      Data: Data colors identical to the light render — Line A green (#009E73) and Line B blue (#4467A3) borders confirmed unchanged. Same hollow-marker rendering and same missing crossover annotation as in the light render (checked at the equivalent shift=6 pixel region).
+      Legibility verdict: PASS (no dark-on-dark text; same content-bug caveat as light render)
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes with no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well-sized for 16-point sparse series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint colors plus redundant marker-shape encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend near plot, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with unit on y-axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly #009E73, but second series uses Imprint position
+          3 (#4467A3) instead of canonical position 2 (#C475FD) with no semantic reason'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful color/typography above library defaults, but not top-tier
+          polish; intended fill differentiation never renders
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed, y-axis-only grid, generous whitespace; grid uses
+          full-strength INK color rather than a faint tint
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: The intended focal-point callout (crossover annotation) never renders,
+          so no storytelling technique is actually delivered to the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line-plot-with-markers type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Markers visible against line, distinct shapes per series, size proportional
+          to line thickness
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=shift, Y=diameter correctly assigned, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match data factor
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows convergence/divergence pattern with noise, though the crossover
+          isn't emphasized due to the broken annotation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible manufacturing QC scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: mm-scale tolerances are realistic for a machined part
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, tibble, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Two code paths (annotation layer, fill scale) produce no visible
+          effect in the render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ragg::agg_png, plot-{theme}.png, current linewidth= API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic grammar-of-graphics usage, though the annotate() layers
+          are non-functional
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Multi-aesthetic mapping (color+shape+fill to one grouping variable)
+          is a reasonable ggplot2 pattern, but the fill differentiation doesn't actually
+          render
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - publication-ready
