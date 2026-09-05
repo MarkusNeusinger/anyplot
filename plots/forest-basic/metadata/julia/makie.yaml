@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: forest-basic
 created: '2026-09-05T01:50:38Z'
-updated: '2026-09-05T02:40:40Z'
+updated: '2026-09-05T02:57:55Z'
 generated_by: claude-sonnet
 workflow_run: 33936894150
 issue: 2378
@@ -12,74 +12,64 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 60
+quality_score: 92
 review:
   strengths:
-  - 'Idiomatic Makie construction in the delivered render: rangebars! for CI whiskers,
-    scatter! with weight-proportional marker sizes, a hand-built poly! diamond for
-    the pooled estimate, and a custom Legend built from MarkerElement/PolyElement
-    rather than relying on plot-call auto-legending.'
-  - 'All spec-required features are present and correctly mapped in the delivered
-    image: point estimates with 95% CI whiskers, marker size proportional to study
-    weight, a diamond for the pooled estimate, and a dashed vertical reference line
-    at RR = 1.0, with studies ordered by descending effect size.'
-  - 'Both themes render legibly with correct chrome: #FAF8F1/#1A1A17 backgrounds,
-    ink-token-driven axis/tick/title colors, and an identical brand-green (#009E73)
-    data color between light and dark — no dark-on-dark or light-on-light failures.'
-  - The meta-analysis math is genuine (inverse-variance fixed-effect pooling on the
-    log-RR scale) rather than faked, producing a plausible, neutral risk-ratio scenario
-    with realistic CI widths.
+  - Both PNGs now render successfully for the current source (row banding, pooled-RR
+    text annotation, and the fig[2,1] footer label all confirmed present and correctly
+    positioned in the actual images) — the pipeline-render issue that blocked the
+    previous two attempts is resolved.
+  - 'All spec-required forest-plot features are present and correctly executed: point
+    estimates with 95% CI whiskers via rangebars!, marker size proportional to study
+    weight, a hand-built poly! diamond for the pooled estimate, and a dashed vertical
+    reference line at RR = 1.0.'
+  - Genuine inverse-variance fixed-effect meta-analysis math (not faked), producing
+    realistic, heterogeneous CI widths and a pooled RR = 0.69 with narrow pooled CI
+    — correctly narrower than any individual study's interval.
+  - 'Strong data storytelling: subtle zebra row-banding plus a brand-tinted highlight
+    band on the pooled row, a bold diamond, and an explicit ''Pooled RR = 0.69 (95%
+    CI 0.67–0.71)'' annotation immediately draw the eye to the headline result; the
+    ''Favors treatment / Favors control'' footer clarifies direction without needing
+    to read axis semantics.'
+  - Correct, restrained use of the Imprint semantic 'neutral' anchor (INK) for the
+    pooled diamond and legend swatch — appropriately distinct from the single-series
+    brand green used for individual studies — and both flip correctly between themes
+    with data colors held identical.
+  - 'Idiomatic Makie usage: rangebars!, hspan! for banding, poly! for the diamond,
+    a hand-built Legend from MarkerElement/PolyElement, and a dedicated fig[2,1] grid
+    row for the footer text via Makie''s layout system.'
+  - Realistic, neutral, well-known clinical scenario (12 real statin RCTs, e.g. 4S,
+    WOSCOPS, HPS, JUPITER) ordered by descending effect size, with one study (TNT)
+    whose CI crosses the null line — good demonstration of heterogeneity.
   weaknesses:
-  - 'BLOCKING PIPELINE ISSUE (confirmed via CI logs, not just suspected): the repair
-    step has now failed TWICE in a row to actually render this implementation. Repair
-    attempt 1 (workflow run 33937603556, job 101228459702, step ''Process repaired
-    image'' at 2026-09-05T02:00:40Z) logged ''##[warning]Missing plot-{light,dark}.png
-    after repair'' and its own `ls -la` showed only makie.jl in plots/forest-basic/implementations/julia/
-    — no PNGs. Repair attempt 2 (workflow run 33938423914, job 101230835026, same
-    step at 2026-09-05T02:24:13Z) logged the identical warning, again only makie.jl
-    present. Because ''Upload repaired plot to GCS staging'' guards on `[ -f plot-light.png
-    ]`, staging was never updated by either repair, so this review (and the previous
-    one) is downloading the ORIGINAL render from the very first impl-generate run
-    — not a render of the code now on this branch. The commit message on the latest
-    fix (a7d5b51c2) states ''Verified locally (light + dark) that the current script
-    already renders correctly,'' but that claim is directly contradicted by the pipeline''s
-    own file-existence check in that same job run.'
-  - 'CQ-05 (Output & API) cannot be confirmed for the currently committed script:
-    there is no CI evidence that plots/forest-basic/implementations/julia/makie.jl,
-    as it stands now (with real trial names, the longer x-axis label, hspan! row banding,
-    the pooled-RR text! annotation, and the fig[2,1] footer Label added in commit
-    8c9d61108), actually completes `save(...)` successfully for either theme. Approving
-    now would certify a script whose ability to render is unverified for two consecutive
-    attempts.'
-  - 'Actionable fix for the next repair attempt: do not rely on an agent''s self-report
-    of ''verified locally.'' The repair step must actually execute the render for
-    both themes from the repo root (e.g. `ANYPLOT_THEME=light julia --project=. plots/forest-basic/implementations/julia/makie.jl`
-    then `ANYPLOT_THEME=dark ...`), check the exit code, and confirm with `test -f
-    plot-light.png && test -f plot-dark.png` inside plots/forest-basic/implementations/julia/
-    before finishing. If the script errors, the stacktrace must be captured and the
-    failing call fixed — prime suspects are the API calls added in commit 8c9d61108
-    that were never confirmed to run: hspan!, text!(...; font = :bold), and Label(fig[2,
-    1], ...) against the pinned Makie 0.21.9.'
-  - Once a genuine re-render is confirmed, re-check VQ-01/VQ-02/VQ-05 for the added
-    footer Label(fig[2,1], ...) row and the pooled-RR text! annotation near y = pooled_y
-    - 0.75 for overlap or crowding — neither has ever been visually verified.
+  - 'Minor decoration: small perpendicular tick marks are still visible on the x-axis
+    (Makie default) rather than being suppressed per the style guide''s ''remove tick
+    marks, keep tick labels'' guidance — cosmetic only, not a functional issue.'
+  - Library Mastery is solid but mostly composed of general-purpose primitives (rangebars!,
+    poly!, hspan!) that have close analogues in other plotting libraries; leaning
+    further into a Makie-distinctive feature (e.g. a custom Makie recipe/theme, or
+    Legend layout tricks unique to the GridLayout system) would raise LM-02.
+  - Design is clean and effective but still a fairly restrained two-tone (brand green
+    + ink) composition; there is room for further aesthetic sophistication (e.g. subtle
+    weight-driven opacity or a secondary accent) before it reaches top-tier publication
+    polish.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "forest-basic · julia · makie · anyplot.ai" bold, centered, fully visible at top. X-axis label reads "Risk Ratio (95% CI)" — legible, dark ink on light background. Y-axis tick labels read generic "Trial A (2013)" ... "Trial L (2024)" plus "Pooled effect", all fully visible with no clipping at the left edge. X-axis ticks from 0.4 to 1.2 are clear. All text is dark ink on the light background; no light-on-light issues.
-      Data: All markers/whiskers/reference-line use the Imprint brand green (#009E73). Marker size scales visibly with study weight (small ~14px to large ~40px). Horizontal CI whiskers are clean with visible end caps. A dashed vertical reference line sits at RR = 1.0. A solid black diamond marks the pooled effect at the bottom row. A small legend ("Individual study" circle, "Pooled effect" diamond) sits top-right with no overlap with data or axis text. Studies are ordered by descending effect size. No row banding, no pooled-value text annotation, and no "Favors treatment/control" footer are visible in this render.
-      Legibility verdict: PASS (for what is actually rendered).
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "forest-basic · julia · makie · anyplot.ai" bold, centered, fully visible below the top margin. X-axis label "Risk Ratio for Major Cardiovascular Events (95% CI)" is descriptive and legible in dark ink. Y-axis tick labels show 12 real trial names ("4S (1994)" ... "TNT (2005)") plus "Pooled effect", all fully visible with generous left margin and no clipping. X-axis ticks (0.4-1.2) and subtle vertical gridlines are visible but unobtrusive. All text is dark ink on the light background — no light-on-light issues anywhere.
+      Data: All individual-study markers, CI whiskers, and the dashed null-effect reference line use the Imprint brand green (#009E73). Marker size clearly scales with study weight (small ~14px up to large ~40px). Subtle zebra row-banding alternates behind study rows; the pooled row has a distinct light-green highlight band. A solid dark (INK-colored) diamond marks the pooled estimate, with a bold "Pooled RR = 0.69 (95% CI 0.67-0.71)" annotation directly beneath it, and an italic "← Favors treatment / Favors control →" footer below that. A small unframed legend (green circle "Individual study", dark diamond "Pooled effect") sits top-right with no overlap with the TNT whisker or any other element.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same title, axis labels, and tick labels as the light render, now in light ink color, fully legible against the dark background — no dark-on-dark failures observed.
-      Data: Brand-green (#009E73) markers, whiskers, and reference line are pixel-identical in hue to the light render — correct, only chrome flipped. The pooled-effect diamond flips from black to a warm off-white/cream fill matching the dark-theme INK token, which is the correct theme-adaptive behavior. Legend renders identically in dark, top-right, no overlap.
-      Legibility verdict: PASS (for what is actually rendered).
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title, axis labels, and tick labels as the light render, now rendered in light ink, fully legible against the dark background — no dark-on-dark failures anywhere (titles, tick labels, footer text, and the bold pooled-RR annotation are all clearly visible).
+      Data: Brand-green (#009E73) markers, whiskers, and reference line are pixel-identical in hue to the light render — only the chrome flipped, as required. The pooled-effect diamond and its legend swatch correctly flip from dark ink to a warm off-white/cream fill (the theme-adaptive INK/neutral token), which is the intended semantic-anchor behavior, not a bug. Row banding and the pooled-row highlight are visible at appropriately reduced opacity for the dark surface.
+      Legibility verdict: PASS.
 
-    IMPORTANT CAVEAT (confirmed via CI logs, not just visual suspicion): both renders were generated by the ORIGINAL implementation, before the "real trial names / longer x-axis label / row banding / pooled-RR annotation / footer" changes landed in commit 8c9d61108. Workflow run 33937603556 (repair attempt 1) and workflow run 33938423914 (repair attempt 2) both logged "Missing plot-{light,dark}.png after repair" — neither repair actually produced new PNGs, so GCS staging (and therefore this review) still serves the pre-fix artifact. The scores below describe what is genuinely visible in these two images; they do not confirm the additional elements the current source code claims to add.
+    Both renders confirm the elements added in the most recent commit (hspan! row banding, the text! pooled-RR annotation, and the fig[2,1] footer Label) now render correctly without overlap or crowding — resolving the rendering-verification gap flagged in the previous (REJECTED) review.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -88,78 +78,78 @@ review:
         max: 8
         passed: true
         comment: Explicit font sizes throughout (titlesize 20, xlabelsize 14, tick
-          label sizes 12); all text readable in both themes with no dark-on-dark/light-on-light
-          issues.
+          label sizes 12, legend/footer 12-13); all text readable in both themes,
+          no proportion issues.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions; largest weight-scaled markers
-          sit close to but do not overlap adjacent CI whiskers or labels.
+        comment: No text-text or text-data collisions; legend sits clear of the TNT
+          whisker; footer and annotation have dedicated vertical space.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: Markers scale visibly with weight (~14-40px), CI whiskers have clear
-          end caps, diamond is visually distinct from circular markers.
+          end caps, diamond visually distinct from circular markers.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue brand green plus a neutral (ink-toned) diamond is CVD-safe;
-          no red-green encoding.
+        comment: Single-hue brand green plus a neutral ink-toned diamond is CVD-safe;
+          white/PAGE_BG marker strokes aid separation; no red-green encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas dimension gate passed (3200x1800); no clipping or overflow.
-          Minor: bottom margin below the pooled-effect row is a little sparse without
-          the (unrendered) footer label.'
+        comment: Plot area uses the large majority of the canvas, balanced margins,
+          legend near plot, dedicated footer row, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format matches the required pattern; x-axis label names the
-          metric and shows the CI convention.
+        comment: X-axis label names the metric with CI convention; title matches required
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) categorical series is #009E73; backgrounds correctly
-          #FAF8F1 (light) / #1A1A17 (dark); data colors identical across themes.'
+        comment: 'First series is #009E73, identical across themes; pooled diamond
+          correctly uses the theme-adaptive neutral anchor; backgrounds are #FAF8F1/#1A1A17;
+          chrome theme-correct in both renders.'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Weight-proportional marker sizing, a custom poly!-built diamond,
-          and a hand-assembled legend show some intent above generic defaults, but
-          overall styling is otherwise plain.
+        passed: true
+        comment: Thoughtful, restrained use of semantic color (brand green vs. neutral
+          diamond), weight-proportional sizing, and a hand-built legend clearly above
+          library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, subtle single-axis grid; no row banding visible in
-          the delivered render (source adds it but it is unverified — see Weaknesses).
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace, framed-less
+          legend, zebra row-banding; minor default tick marks still present.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Descending effect-size ordering and a visually distinct pooled diamond
-          create some hierarchy; the pooled-value annotation and favors-treatment/control
-          footer that would strengthen this are unverified — see Weaknesses.
+        passed: true
+        comment: Pooled row highlight, bold diamond, explicit pooled-RR annotation,
+          and a directional favors-treatment/control footer immediately guide the
+          reader to the headline result.
     spec_compliance:
       score: 15
       max: 15
@@ -169,29 +159,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Unambiguously a forest plot: point estimates, CI whiskers, pooled
-          diamond, reference line.'
+        comment: 'Unambiguous forest plot: point estimates, CI whiskers, pooled diamond,
+          reference line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diamond for pooled estimate, vertical null-effect reference line,
-          and weight-proportional marker sizing are all present.
+        comment: Diamond, null-effect reference line, weight-proportional markers,
+          and descending-effect-size ordering all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Effect size on X, studies ordered by effect size on Y, all studies
-          plus pooled row shown.
+        comment: Effect size on X, studies + pooled row on Y, all data visible within
+          axis limits.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the required '{spec-id} · {language} · {library} ·
-          anyplot.ai' format; legend labels match the plotted elements.
+        comment: Title matches required format exactly; legend labels ('Individual
+          study', 'Pooled effect') match plotted elements.
     data_quality:
       score: 15
       max: 15
@@ -201,24 +191,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Point estimates, CIs, weight-scaled markers, pooled estimate, and
-          reference line are all present.
+        comment: Point estimates, CIs of varying width, weight-scaled markers, pooled
+          estimate, and a study (TNT) whose CI crosses the null line all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral risk-ratio meta-analysis scenario; spec explicitly
-          allows generic study identifiers, so 'Trial A/B/C' labels are acceptable.
+        comment: Real, well-known statin RCTs in a neutral clinical meta-analysis
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: Risk ratios (~0.5-1.15) and CI widths are realistic for this class
-          of clinical trial meta-analysis.
+          of cardiovascular RCT meta-analysis.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -247,32 +237,32 @@ review:
         comment: Appropriate complexity for a meta-analysis forest plot; no fake UI/interactivity.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'BLOCKING: two consecutive repair runs (33937603556, 33938423914)
-          failed to produce plot-light.png/plot-dark.png from the current script —
-          save(...) success for this exact source is unconfirmed.'
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) confirmed to produce
+          both PNGs for the current script — the prior rendering-verification gap
+          is resolved.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: rangebars!, scatter!, poly!, and a hand-built Legend from MarkerElement/PolyElement
-          are idiomatic Makie patterns, confirmed in the delivered render.
+        comment: rangebars!, scatter!, poly!, hspan!, and a hand-built Legend from
+          MarkerElement/PolyElement are all idiomatic, high-level Makie patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Weight-proportional sizing and the poly!-built diamond are nice distinctive
-          touches; the hspan! banding and footer Label added in source are distinctive
-          but unverified rendered.
-  verdict: REJECTED
+        passed: true
+        comment: Use of Makie's GridLayout (fig[2,1] footer row) and hspan! banding
+          are reasonably distinctive; no single feature that is uniquely hard to replicate
+          elsewhere.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -281,7 +271,8 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
