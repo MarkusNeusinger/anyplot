@@ -84,6 +84,24 @@ const pxPerYUnit = plotHeight / (RANGE_MAX - RANGE_MIN);
 const markerRadius = (BIN_WIDTH * Math.min(pxPerXUnit, pxPerYUnit)) / 2 + 0.4;
 
 // --- Custom colorbar (core SVGRenderer — no colorAxis module required) -----
+// Vertical position on the bar is linear in log1p(count), matching colorForCount().
+// Intermediate ticks are placed at their real log-spaced count values so the bar
+// doesn't read as a plain linear count scale.
+function colorbarTicks(maxCountValue, barHeight) {
+  const denom = Math.log1p(maxCountValue) || 1;
+  const raw = [0, 1 / 3, 2 / 3, 1].map((r) => {
+    const value = Math.max(1, Math.round(Math.expm1(r * denom)));
+    return { value, ratio: Math.log1p(value) / denom };
+  });
+  const ticks = [];
+  for (const tick of raw) {
+    const y = barHeight * (1 - tick.ratio);
+    const prev = ticks[ticks.length - 1];
+    if (!prev || Math.abs(y - prev.y) >= 16) ticks.push({ ...tick, y });
+  }
+  return ticks;
+}
+
 function drawColorbar(chart) {
   const barWidth = 26;
   const barX = chart.plotLeft + chart.plotWidth + 30;
@@ -104,12 +122,22 @@ function drawColorbar(chart) {
       'stroke-width': 1,
     })
     .add();
-  chart.renderer.text('Count', barX, barY - 14).css({ color: t.inkSoft, fontSize: '14px' }).add();
   chart.renderer
-    .text(String(maxCount), barX + barWidth + 8, barY + 12)
+    .text('Count (log scale)', barX, barY - 14)
     .css({ color: t.inkSoft, fontSize: '14px' })
     .add();
-  chart.renderer.text('1', barX + barWidth + 8, barY + barHeight).css({ color: t.inkSoft, fontSize: '14px' }).add();
+
+  for (const tick of colorbarTicks(maxCount, barHeight)) {
+    const y = barY + tick.y;
+    chart.renderer
+      .path(['M', barX + barWidth, y, 'L', barX + barWidth + 6, y])
+      .attr({ stroke: t.inkSoft, 'stroke-width': 1 })
+      .add();
+    chart.renderer
+      .text(String(tick.value), barX + barWidth + 9, y + 4)
+      .css({ color: t.inkSoft, fontSize: '12px' })
+      .add();
+  }
 }
 
 // --- Chart -------------------------------------------------------------
