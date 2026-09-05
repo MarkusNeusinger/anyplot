@@ -1,0 +1,245 @@
+library: muix
+language: javascript
+specification_id: dot-matrix-proportional
+created: '2026-09-05T00:26:12Z'
+updated: '2026-09-05T00:44:13Z'
+generated_by: claude-sonnet
+workflow_run: 33932647863
+issue: 5241
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/muix/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Grid size exactly matches total (100 = 10x10); fill order follows left-to-right,
+    top-to-bottom reading order with exact per-category counts (47/35/18)
+  - 'CVD-safety fix from the last review is correctly implemented: ''Disagreed'' dots
+    now carry a decorative ink-colored ring (and the legend swatch mirrors it with
+    a matching box-shadow ring), giving the green-vs-red distinction a non-color cue'
+  - Added ChartsTooltip + ChartsVoronoiHandler for genuine per-dot hover detail in
+    the interactive HTML output, addressing the prior 'generic usage' Library Mastery
+    gap
+  - 'Both themes render with fully theme-adaptive chrome and pixel-identical data
+    colors -- correct #FAF8F1 / #1A1A17 backgrounds, ring color correctly flips from
+    dark ink (light theme) to light ink (dark theme)'
+  - Clean, deterministic, reproducible code with no fake interactivity and only used
+    imports
+  weaknesses:
+  - DE-03 data-storytelling feedback from the last review was not addressed -- there
+    is still no visual emphasis calling out the majority 'Agreed' segment beyond the
+    inherent reading-order fill
+  - 'Design Excellence remains mostly functional rather than polished: no additional
+    refinement (e.g. subtle depth, spacing rhythm, or accent) beyond removing axes/ticks
+    and the new CVD ring'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "dot-matrix-proportional · javascript · muix · anyplot.ai" centered above the grid in dark ink, clearly legible. Legend below the grid pairs a colored circular swatch with "Category — count (percent)" text in dark ink for all three categories; the "Disagreed" swatch has a visible ink-colored ring around it matching the grid's ring cue.
+      Data: 10x10 grid of uniform circular dots filled left-to-right, top-to-bottom: 47 brand-green (#009E73) "Agreed" dots, 35 matte-red "Disagreed" dots each with a thin dark ring for CVD-safety, 18 muted-gray "No opinion" dots. Counts and fill order match the legend exactly.
+      Legibility verdict: PASS -- all text and rings are clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title and legend layout, now rendered in light ink -- fully readable, no dark-on-dark issues anywhere. The "Disagreed" ring and legend swatch outline switch to light ink so they remain visible against the dark dot fill.
+      Data: Same 47/35/18 dot counts and identical green/red/gray hues as the light render -- only the chrome (background, text, ring color) flips, exactly as required.
+      Legibility verdict: PASS -- no dark-on-dark or light-on-light failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and legend text clear and correctly sized in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between dots, rings, legend, or title; rings on adjacent
+          Disagreed dots do not touch
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dot size (cellSize x 0.38) fills the 10x10 grid appropriately without
+          overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed since last review: Disagreed dots now carry a non-color ring
+          cue in addition to hue, addressing the CVD gap'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correctly sized, balanced title/grid/legend
+          proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for this plot type (correctly hidden); title is descriptive
+          and exact
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73; semantic-exception order (positive->green,
+          negative->red, neutral->muted); correct theme backgrounds'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: The new CVD-safety ring shows accessibility-minded polish, but overall
+          design is still fairly functional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Axes/ticks fully removed, generous whitespace, but otherwise minimal
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Prior review's ask for a majority-category emphasis was not addressed;
+          only the reading-order fill narrates proportion
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dot-matrix chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid size matches total exactly (10x10=100), uniform dot size/spacing,
+          color-coded by category, legend with counts+percentages
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Grid position correctly encodes reading order; all 100 units shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid sizing, sequential fill, legend counts/percentages all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral workplace-policy survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Total=100 within spec's 50-1000 range, sensible category split (47/35/18)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, including the newly added ChartsTooltip and ChartsVoronoiHandler
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, ring overlay is a legitimate decorative SVG
+          layer, not fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: skipAnimation, sized from window.ANYPLOT_SIZE,
+          no manual mount/save calls'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good composition of ChartContainer + ScatterPlot with ChartsVoronoiHandler
+          for accurate hit-testing
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Fixed since last review: now wires up ChartsTooltip with trigger=''item'',
+          giving the interactive HTML real per-dot hover detail'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - edge-highlighting
