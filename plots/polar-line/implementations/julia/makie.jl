@@ -68,9 +68,9 @@ ax = PolarAxis(
     thetagridcolor = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-# Subtle fill under the highest-variance series gives the chart a focal point
+# Fill under the highest-variance series gives the chart a focal point
 band!(ax, theta_closed, zeros(length(theta_closed)), tropical_closed;
-    color = (IMPRINT_PALETTE[1], 0.12))
+    color = (IMPRINT_PALETTE[1], 0.20))
 
 lines!(ax, theta_closed, tropical_closed; color = IMPRINT_PALETTE[1], linewidth = 3.5)
 lines!(ax, theta_closed, temperate_closed; color = IMPRINT_PALETTE[2], linewidth = 3.5)
@@ -86,9 +86,10 @@ text!(
     ax, peak_theta, peak_r;
     text = "peak wet season",
     color = INK,
-    fontsize = 13,
+    fontsize = 16,
+    font = :bold,
     align = (:center, :bottom),
-    offset = (0, 12),
+    offset = (0, 14),
 )
 
 # A slim row below the plot (not a side column) keeps the circle horizontally
@@ -100,11 +101,13 @@ Legend(
      LineElement(color = IMPRINT_PALETTE[3], linewidth = 3.5)],
     ["Tropical", "Temperate", "Arid"];
     orientation = :horizontal,
+    tellwidth = false,
     labelsize = 16,
     labelcolor = INK,
     backgroundcolor = ELEVATED_BG,
     framevisible = false,
 )
+colsize!(fig.layout, 1, Fixed(1200))
 rowsize!(fig.layout, 2, Fixed(70))
 
 # --- Save -------------------------------------------------------------------
