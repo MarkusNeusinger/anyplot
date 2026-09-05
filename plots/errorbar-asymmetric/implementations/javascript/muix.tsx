@@ -30,6 +30,10 @@ const errorUpper = [2, 5, 8, 11, 13, 11, 9];
 const Y_MIN = 0;
 const Y_MAX = Math.max(...median.map((m, i) => m + errorUpper[i])) * 1.1;
 
+// Plateau starts once the median gain stops climbing meaningfully — highlight
+// that region to call out the diminishing-returns / widening-uncertainty story.
+const PLATEAU_START_INDEX = doses.indexOf("160");
+
 // Must be rendered inside ChartContainer to access its scale context
 function ErrorBars() {
   const xScale = useXScale();
@@ -38,9 +42,32 @@ function ErrorBars() {
   if (!xScale || !yScale || typeof xScale.bandwidth !== "function") return null;
 
   const capHalfWidth = Math.min(18, xScale.bandwidth() * 0.28);
+  const halfGap = (xScale.step() - xScale.bandwidth()) / 2;
+  const plateauX0 = +xScale(doses[PLATEAU_START_INDEX]) - halfGap;
+  const plateauX1 = +xScale(doses[doses.length - 1]) + xScale.bandwidth() + halfGap;
+  const [yRangeTop, yRangeBottom] = yScale.range();
+  const plateauLabelY = Math.min(yRangeTop, yRangeBottom) + 18;
 
   return (
     <g>
+      <rect
+        x={plateauX0}
+        y={Math.min(yRangeTop, yRangeBottom)}
+        width={plateauX1 - plateauX0}
+        height={Math.abs(yRangeBottom - yRangeTop)}
+        fill={t.palette[0]}
+        opacity={0.06}
+      />
+      <text
+        x={(plateauX0 + plateauX1) / 2}
+        y={plateauLabelY}
+        textAnchor="middle"
+        fontSize={13}
+        fontStyle="italic"
+        fill={t.inkSoft}
+      >
+        Diminishing returns, widening spread
+      </text>
       {doses.map((dose, i) => {
         const cx = +xScale(dose) + xScale.bandwidth() / 2;
         const yTop = +yScale(median[i] + errorUpper[i]);
@@ -69,7 +96,8 @@ function ErrorBars() {
   );
 }
 
-const TITLE = "errorbar-asymmetric · javascript · muix · anyplot.ai";
+const TITLE = "Nitrogen Response Curve · errorbar-asymmetric · javascript · muix · anyplot.ai";
+const TITLE_FONT_SIZE = Math.round(22 * Math.min(1, 67 / TITLE.length));
 const SUBTITLE = "Median yield increase · whiskers span the 10th–90th percentile range";
 const TITLE_HEIGHT = 68;
 const SUBTITLE_HEIGHT = 44;
@@ -97,7 +125,7 @@ export default function Chart() {
           flexShrink: 0,
         }}
       >
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500 }}>
+        <Typography sx={{ color: t.ink, fontSize: TITLE_FONT_SIZE, fontWeight: 500 }}>
           {TITLE}
         </Typography>
       </Box>
@@ -127,6 +155,7 @@ export default function Chart() {
           label: "Nitrogen Dose (kg/ha)",
           labelStyle: { fontSize: 15, fill: t.ink },
           tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+          tickSize: 0,
         }]}
         yAxis={[{
           scaleType: "linear",
@@ -135,6 +164,7 @@ export default function Chart() {
           label: "Yield Increase (%)",
           labelStyle: { fontSize: 15, fill: t.ink },
           tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+          tickSize: 0,
         }]}
         sx={{
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeOpacity: 0.5 },
