@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-confidence
 created: '2026-09-05T06:57:22Z'
-updated: '2026-09-05T07:01:20Z'
+updated: '2026-09-05T07:11:09Z'
 generated_by: claude-sonnet
 workflow_run: 33950964733
 issue: 2007
@@ -12,129 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-conf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - Confidence band correctly built with d3.area + curveMonotoneX and fill-opacity
-    0.25, squarely inside the spec's suggested 0.2-0.4 alpha range
-  - 'Palette compliant: first series is the mandated #009E73 from window.ANYPLOT_TOKENS,
-    band and line share the same hue (satisfies the spec''s ''contrasting but related
-    colors'' guidance via opacity contrast)'
-  - Legend clearly and separately labels the central line ('Forecast') and the shaded
-    band ('90% Prediction Interval')
-  - Y-axis-only gridlines and undecorated left/bottom axis domains keep the chrome
-    minimal and uncluttered
-  - Title exactly matches the mandated 'line-confidence · javascript · d3 · anyplot.ai'
-    format
-  - Both themes render correctly with identical data colors and only chrome (background,
-    ticks, text) flipping - no dark-on-dark or light-on-light failures
-  - No edge clipping in either render; canvas is exactly 3200x1800 (landscape target)
-  - Deterministic fixed-seed LCG for the synthetic forecast noise, clean flat procedural
-    code with no unused imports
+  - Custom gradient-fill confidence band that visually reinforces growing forecast
+    uncertainty over time — a distinctive D3 technique using a linearGradient tied
+    to the x-axis
+  - Clear annotation explicitly calling out the widening-interval insight, directly
+    guiding the reader to the storytelling point
+  - 'Clean minimal chrome: y-axis-only gridlines, no unnecessary spines/box, generous
+    whitespace, explicit font sizing throughout'
+  - Correct Imprint palette usage identical across themes; both light and dark renders
+    are fully readable with proper theme-adaptive chrome
+  - Legend cleanly identifies both the central line and the confidence band with custom-built
+    swatches placed near the plot
   weaknesses:
-  - Title font is a modest 30px, giving the mandated title string noticeably less
-    visual weight/width (~40% of plot width) than the style guide's expected ~70-85%
-    for a title this length - consider ~38-44px for stronger hierarchy without risking
-    overflow
-  - Design excellence is competent but generic for this chart type - no additional
-    device (e.g. an annotation calling out the widening uncertainty over time, or
-    subtle markers at key inflection points) reinforces the data story beyond the
-    band shape itself
-  - Legend swatch for the band is a flat rectangle with no border - a thin outline
-    matching the band's edge would tie it more clearly to the shaded region on both
-    themes
-  - Distinctive D3 features are limited to curveMonotoneX smoothing and area/line
-    composition; nothing further differentiates a hand-authored D3 solution from a
-    generic sparkline-with-band chart (e.g. no gradient fill, no clip-path reveal,
-    no HTML-side hover readout of interval bounds)
+  - Confidence-band gradient opacity dips to 0.12 at the start of the series, below
+    the spec's suggested 0.2-0.4 alpha range — clamp the low end to >=0.2 so the band
+    stays clearly visible near the origin
+  - Margins are asymmetric (left 110 vs right 60, top 110 vs bottom 90); while partly
+    justified by the rotated y-axis label, tightening the imbalance would improve
+    visual balance
+  - The dashed annotation connector line is very short and subtle — a slightly longer
+    or bolder connector would draw the eye more effectively to the exact widening
+    region
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Bold centered title "line-confidence · javascript · d3 · anyplot.ai" in dark ink at the top; "Month" x-axis label and rotated "Units Sold (forecast)" y-axis label in dark ink; tick labels (Jan '25 ... Oct '26 on x, 400-800 on y) in a softer dark gray; subtle horizontal gridlines only on the y-axis. Legend top-left with a green line swatch labeled "Forecast" and a light-green rectangle swatch labeled "90% Prediction Interval". All text is clearly readable against the light background - no light-on-light issues.
-      Data: A single prominent teal-green trend line (#009E73-family) tracing a rising-with-seasonal-wobble forecast from ~480 to ~680 units, surrounded by a semi-transparent light-green confidence band that visibly narrows around month ~8 and widens substantially toward month ~15-18, communicating growing forecast uncertainty.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "line-confidence · javascript · d3 · anyplot.ai" centered at top, clearly readable. X-axis labeled "Month" with quarterly tick labels (Jan '25, Apr '25, ... Oct '26); Y-axis labeled "Units Sold (forecast)" with numeric ticks 400-800. Subtle horizontal gridlines only. Legend top-left shows a green line swatch labeled "Forecast" and a translucent green box swatch labeled "90% Prediction Interval". An italic annotation "Interval widens as the forecast horizon grows" with a short dashed connector sits above the band on the right side.
+      Data: Central forecast line in solid #009E73 (Imprint green), rising from ~480 to ~750 over 24 months with a seasonal wave. Confidence band in the same green hue with opacity that increases left-to-right (gradient fill), visually showing the growing uncertainty.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/white-ish tones against the dark background; gridlines are a subtle dark-gray, still visible but unobtrusive. Legend uses the same layout with light text labels, clearly legible.
-      Data: The trend line and confidence band use the identical underlying green hue as the light render (only appearing visually brighter due to the dark surround, which is expected color-perception contrast, not a different color value) - band shape and line path are pixel-identical to the light render.
-      Legibility verdict: PASS - no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light render, but title, axis labels, tick labels, legend text and annotation are all rendered in light/white tones, clearly legible against the dark background. Gridlines remain subtle.
+      Data: Central line and band use the identical #009E73 green data color as the light render (only chrome — background, text, grid — flips); the band appears as a darker, muted green fill because the same opacity values sit over a near-black backdrop, which is expected alpha-blending behavior, not a data color change.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text is clearly legible, and the brand green line/band remain visible and consistent with the light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes and at 400px
-          mobile scale
+        comment: All font sizes explicitly set (16-40px); readable in both themes;
+          title fits comfortably without overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements
+        comment: No collisions between title, legend, axes, annotation, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bold 4px line and 0.25-alpha band are both clearly visible and appropriately
-          weighted
+        comment: 4px line and gradient band are well-adapted to the smooth 24-point
+          time series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue palette with opacity contrast, no red-green reliance
+        comment: Single-hue line/band with strong contrast against both backgrounds,
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, no overflow or cutoff, balanced margins
+        comment: Plot area covers ~70% of canvas; margins mostly balanced (minor left/right
+          asymmetry for rotated y-label)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Month' and 'Units Sold (forecast)' labels
+        comment: '"Units Sold (forecast)" and "Month" are descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 from tokens, correct theme-adaptive backgrounds
-          in both renders'
+        comment: 'First series is #009E73, identical across themes; backgrounds are
+          theme-correct #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Smooth curveMonotoneX interpolation and rounded line caps show some
-          polish, but overall composition is standard for this chart type
+        passed: true
+        comment: Gradient-fill band, refined typography, and custom legend clearly
+          exceed library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only gridlines, no boxed spines, generous whitespace
+        comment: Subtle y-axis-only grid, no box/spines, generous whitespace; minor
+          margin asymmetry keeps it just short of perfect
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Widening band implicitly tells the uncertainty story but nothing
-          calls it out explicitly
+        passed: true
+        comment: Explicit annotation plus the widening gradient communicate the core
+          insight, though the connector is subtle
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -145,24 +137,24 @@ review:
         comment: Correct line-with-confidence-band chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Prominent central line, semi-transparent band (alpha 0.25), legend,
-          gridlines all present
+        comment: Band opacity gradient dips to 0.12, below the spec's 0.2-0.4 suggested
+          range at the low end
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=month, y=forecast with lower/upper bounds, full 24-month range
-          shown
+        comment: X=month, Y=forecast with lower/upper bounds correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly, legend labels are clear
+        comment: Title matches required format exactly; legend labels are clear and
+          accurate
     data_quality:
       score: 15
       max: 15
@@ -172,20 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Central trend, lower bound, upper bound all present and visible
+        comment: Shows trend, seasonality, and a widening interval over the forecast
+          horizon
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral demand-forecast scenario with trend + seasonality
-          + growing spread
+        comment: Neutral, plausible demand-forecasting business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 480-750 unit range is sensible for a units-sold forecast
+        comment: Values and growth trajectory are sensible for a monthly unit-sales
+          forecast
     code_quality:
       score: 10
       max: 10
@@ -195,58 +188,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script, no functions/classes
+        comment: Linear top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG for noise generation
+        comment: Fixed-seed LCG makes the noise deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, no unused imports
+        comment: Only the d3 global is used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Appropriately scoped, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly uses the #container mount-node contract, no manual file
-          writes'
+        comment: Correct mount-node contract, current D3 v7 API, no animation
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of scales, axes, area/line generators, curveMonotoneX
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper use of d3.area/d3.line generators, scales, and axes
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: curveMonotoneX smoothing and layered area+line composition are used,
-          but nothing more distinctive to D3 specifically
+        comment: Custom SVG linearGradient tied to data position is a distinctly low-level
+          D3 technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - custom-legend
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - gradient-fill
   - alpha-blending
+  - minimal-chrome
