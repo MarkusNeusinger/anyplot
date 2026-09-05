@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: precision-recall
 created: '2026-09-05T12:11:39Z'
-updated: '2026-09-05T12:15:34Z'
+updated: '2026-09-05T12:23:19Z'
 generated_by: claude-sonnet
 workflow_run: 33965073429
 issue: 2274
@@ -12,50 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Precision/recall computed correctly via a descending-score threshold sweep with
-    cumulative TP/FP counts, and Average Precision computed as the proper step-function
-    sum of precision times delta-recall
-  - 'Palette compliance verified at the pixel level: the curve renders as rgb(0,158,115)
-    = #009E73 identically in both light and dark PNGs, and page backgrounds are exact
-    matches for #FAF8F1 / #1A1A17'
-  - Realistic, neutral fraud-detection scenario (2000 transactions, 8% fraud rate,
-    noisy score distributions) that plausibly produces the shown AP = 0.74 curve shape
-  - 'Stepped line (step: "start") accurately represents the threshold-based curve
-    as required by the spec, with showSymbol disabled to avoid clutter across ~1800
-    threshold points'
-  - Subtle area fill under the curve and a dashed, theme-adaptive-ink baseline give
-    the chart a clear focal point and an easy visual comparison against the random-classifier
-    baseline
-  - 'Clean, reproducible code: single fixed-seed LCG, no unused imports/dependencies,
-    correct mount-node contract (animation: false, no explicit size/devicePixelRatio)'
-  - Canvas is exactly 3200x1800 with no clipped or overflowing elements in either
-    render
+  - First-series brand green (#009E73) used consistently for the classifier curve
+    on both themes, per Imprint palette rules
+  - Idiomatic use of ECharts markArea + markLine to surface the Average Precision
+    value and the random-classifier baseline directly on the chart instead of adding
+    extra series
+  - 'Correct stepped line style (step: "start") accurately represents the threshold-based
+    precision-recall curve as required by the spec'
+  - Deterministic fixed-seed LCG data generation with a realistic, neutral fraud-detection
+    scenario (2000 samples, 8% fraud rate)
+  - 'Clean theme-adaptive chrome: title, axis names, tick labels, grid, and baseline
+    line all correctly threaded through window.ANYPLOT_TOKENS with no dark-on-dark
+    or light-on-light failures'
+  - 'showSymbol: false is the right call for a dense 2000+ point curve; avoids marker
+    clutter while keeping the line clearly visible'
   weaknesses:
-  - The random baseline is implemented as a second full line series (with its own
-    legend entry and area-less line) rather than ECharts' idiomatic markLine — a markLine
-    would better signal 'reference line' semantics and is a more distinctive use of
-    the library's API
-  - Chrome styling (grid, axis lines, spines) relies mostly on ECharts defaults with
-    the theme tokens plugged in; there's little additional deliberate visual refinement
-    beyond the required token mapping (e.g. no markArea shading for precision/recall
-    quality bands)
-  - The spec's optional suggestion to overlay iso-F1 contour curves for reference
-    was not attempted, which would have added an extra layer of analytical value
+  - The markArea rectangle spans the full recall range (0 to 1) at height AP=0.74,
+    which reads as a flat reference band rather than the true area under the PR curve
+    — it visually overlaps the actual areaStyle fill under the curve, so two different
+    shaded meanings (true curve area vs. AP reference band) coexist in the same green
+    tint and could momentarily confuse a viewer. Consider a thin horizontal marker
+    line at y=AP with just the label, or a distinctly different color/hatch for the
+    AP band so it doesn't blend with the curve's own area fill.
+  - Design excellence is solid but not exceptional — the chart is fundamentally a
+    well-executed default step-line plot; consider a bit more visual hierarchy (e.g.
+    de-emphasizing the AP band or emphasizing the knee of the curve) to lift it further
+    above a competent baseline.
+  - iso-F1 contour reference curves are optional per spec ("Consider showing...")
+    and were not included — acceptable, but would have been a nice differentiator
+    for LM-02.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, verified by pixel sample at (10,10) = rgb(250,248,241) = #FAF8F1, matches spec exactly.
-      Chrome: title "precision-recall · javascript · echarts · anyplot.ai" in bold dark ink, centered top; legend below title with two entries ("Fraud classifier (AP = 0.74)" and "Random baseline") in dark ink text; axis names "Recall" (x, bottom-center) and "Precision" (y, rotated) in dark ink; tick labels in softer gray-ink; subtle light-gray gridlines on both axes. All text is clearly readable against the light background.
-      Data: fraud classifier curve is a brand-green (#009E73) step line with a light green area fill beneath it, no point markers (appropriate given ~1800 dense threshold points); random baseline is a black dashed horizontal line at the ~0.08 positive-class ratio.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "precision-recall · javascript · echarts · anyplot.ai" bold and centered at top, clearly readable in dark ink. Legend "Fraud classifier (AP = 0.74)" below title, readable. Axis names "Recall" (x, middle) and "Precision" (y, middle) both legible dark text. Tick labels (0, 0.2, ... 1 on both axes) legible in soft gray-ink. Grid lines subtle, visible but not dominant.
+      Data: Stepped green (#009E73) line from (0,1) down to (1,~0.19), with a light green area fill under the curve. A secondary lighter/darker banded region from y=0 to y=0.74 spans the full x-range with an "AP = 0.74" label at upper-left inside it. A black dashed horizontal "Random baseline" line sits near y=0.08 with its label at the right end. All elements clearly distinguishable from the light background.
+      Legibility verdict: PASS — no light-on-light issues, all text readable.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, verified by pixel sample at (10,10) = rgb(26,26,23) = #1A1A17, matches spec exactly.
-      Chrome: same title and legend text now rendered in white/light-ink, fully legible; axis names in white ink; tick labels in a lighter soft-gray; gridlines are subtle light gray, still visible against the dark surface. No dark-on-dark or unreadable text anywhere.
-      Data: fraud classifier curve confirmed via pixel sample at the same curve location to be the identical rgb(0,158,115) = #009E73 as the light render (only the area-fill perception differs due to the darker backdrop, not the underlying hex value); random baseline dashed line flips to white (theme-adaptive ink used for the neutral reference line, not part of the categorical data palette, which is the documented convention for baseline/reference series).
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, axis names, and tick labels all rendered in light/white text, clearly legible against the dark background. Grid lines subtle white/gray, visible without dominating.
+      Data: Curve color is identical #009E73 green to the light render (confirmed same hue/saturation). The AP shaded band and "AP = 0.74" label render in muted light-gray text, legible. The dashed baseline line switches to white/light dashes with "Random baseline" label in light gray — clearly visible against the dark background, no dark-on-dark failure.
+      Legibility verdict: PASS — no dark-on-dark issues, all text and the dashed baseline line are clearly visible.
+
+    Cross-render check: data curve color (#009E73) is pixel-identical between the two renders; only chrome (background, text, grid, dashed-line color) adapts to theme, as required.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,71 +68,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; legend/tick
-          text share similar weight with little size hierarchy
+        comment: All text readable in both themes at appropriate sizes; small AP/baseline
+          annotation labels (12-13px) remain legible but are the smallest text elements
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No collisions between title, legend, axis text, or data annotations
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: showSymbol disabled and thin line appropriate for ~1800 dense threshold
-          points; area fill aids visibility
+        comment: 'showSymbol: false is correct for a dense 2000+ point curve; line
+          width 3 is clearly visible'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. black/white dashed baseline, no red-green reliance
+        comment: Single-series green curve with strong contrast on both backgrounds;
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no clipping/overflow, generous margins
+        comment: Canvas gate passed (no gate file present); balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Recall/Precision axis names, mandated title format
+        comment: '"Recall" / "Precision" are the standard, descriptive names for this
+          plot type'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series pixel-verified as #009E73 identical across themes;
-          backgrounds pixel-verified exact'
+        comment: 'First series is #009E73, backgrounds match Imprint theme tokens
+          in both renders'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Area fill under curve and dashed reference line show some intentional
-          polish beyond bare defaults
+        passed: false
+        comment: Competent but default-shaped step-line curve; markArea/markLine add
+          some polish without a distinctive visual identity
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Grid/axis styling mostly relies on ECharts defaults with tokens plugged
-          in; no additional refinement like markArea bands
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Area fill plus dashed baseline creates a clear focal point and an
-          easy visual comparison against random performance
+        comment: Subtle grid, generous margins, no clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: AP band and baseline line add narrative value, but the AP rectangle
+          overlapping the curve's own area fill is slightly ambiguous (see weaknesses)
     spec_compliance:
       score: 15
       max: 15
@@ -146,42 +150,43 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: AP in legend, baseline reference line, stepped line style all present
+        comment: AP in legend + annotation, baseline reference line, stepped line
+          style all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Recall on x, precision on y, full 0-1 domain shown
+        comment: Recall on x, precision on y, correct ranges [0,1]
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match series
+        comment: Title matches mandated format exactly; legend label matches series
+          name
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers curve shape, AP, baseline; optional iso-F1 contours from spec
-          notes not attempted
+        comment: Full curve shape, AP summary, and baseline all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible fraud-detection scenario
+        comment: Fraud-detection scenario is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2000 samples, 8% fraud rate, realistic score noise
+        comment: 2000 samples, 8% positive rate — sensible for imbalanced classification
     code_quality:
       score: 10
       max: 10
@@ -191,33 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes
+        comment: Flat script, only a small lcg() helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond globals
+        comment: No imports; uses global echarts/tokens per mount-node contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity
+        comment: No fake functionality, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: 'Correct echarts.init/setOption pattern, animation: false, no explicit
+          size/DPR'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -225,18 +231,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard idiomatic setOption usage with areaStyle and step line
+        comment: markArea/markLine used instead of extra series — idiomatic, high-level
+          ECharts API usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Baseline implemented as a full series instead of the more distinctive/idiomatic
-          markLine feature
+        passed: true
+        comment: markArea + markLine combo is a solid distinctive touch; optional
+          iso-F1 contours were not attempted
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
