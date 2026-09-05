@@ -129,13 +129,24 @@ export default function Chart() {
   const chartWidth = width;
   const chartHeight = height - TITLE_BLOCK_HEIGHT;
 
+  // ContinuousColorLegend positions its bounding box (bar + both labels)
+  // flush against the *full* width passed to ScatterChart — it ignores
+  // margin.right entirely, so the tile grid's margin math can't push it
+  // inward. Render the chart itself slightly narrower than the mount so a
+  // safety strip of true background is always left between the legend's
+  // rightmost label glyph and the physical canvas edge.
+  const RIGHT_SAFETY = 12;
+  const renderWidth = chartWidth - RIGHT_SAFETY;
+
   // Reserve a slice on the right for the continuous colorbar legend, then
   // fit the largest uniform tile pitch that keeps every tile the same size
   // (the "equal area" rule the spec calls out as the whole point of a tile
-  // grid map) inside whatever space remains.
+  // grid map) inside whatever space remains. The legend itself is only as
+  // wide as its longest label (its bar and labels are stacked, not summed),
+  // so the reserve only needs to cover that plus a small gap.
   const PAD = 28;
-  const LEGEND_RESERVE = 170;
-  const availW = chartWidth - PAD * 2 - LEGEND_RESERVE;
+  const LEGEND_RESERVE = 64;
+  const availW = renderWidth - PAD * 2 - LEGEND_RESERVE;
   const availH = chartHeight - PAD * 2;
   const cellPitch = Math.min(availW / N_COLS, availH / N_ROWS);
   const gridWidth = cellPitch * N_COLS;
@@ -143,7 +154,7 @@ export default function Chart() {
 
   const marginLeft = PAD + (availW - gridWidth) / 2;
   const marginTop = PAD + (availH - gridHeight) / 2;
-  const marginRight = chartWidth - marginLeft - gridWidth;
+  const marginRight = renderWidth - marginLeft - gridWidth;
   const marginBottom = chartHeight - marginTop - gridHeight;
 
   return (
@@ -166,7 +177,7 @@ export default function Chart() {
       </Box>
       <Box sx={{ flex: 1, display: "flex" }}>
         <ScatterChart
-          width={chartWidth}
+          width={renderWidth}
           height={chartHeight}
           skipAnimation
           disableVoronoi
@@ -208,7 +219,16 @@ export default function Chart() {
             thickness={14}
             minLabel={({ formattedValue }) => `${formattedValue}%`}
             maxLabel={({ formattedValue }) => `${formattedValue}%`}
-            labelStyle={{ fontSize: 13, fill: tokens.inkSoft, fontFamily: "inherit" }}
+            // MUI X measures this label off-screen against `document.body`
+            // (not `#container`), so "inherit" would pick up the browser's
+            // default serif font instead of the sans-serif stack the label
+            // actually renders in — an explicit family keeps the measured
+            // and rendered widths in sync.
+            labelStyle={{
+              fontSize: 13,
+              fill: tokens.inkSoft,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+            }}
           />
         </ScatterChart>
       </Box>
