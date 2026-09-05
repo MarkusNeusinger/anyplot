@@ -69,15 +69,33 @@ outcome <- vapply(product, function(p) {
   sample(names(probs), 1, prob = probs)
 }, character(1))
 
+# --- Crossing-minimization: order each downstream stage by the weighted
+# barycenter of its predecessor's node positions (forward Sugiyama sweep),
+# instead of fixed definition order, so fewer ribbons cross between hops.
+barycenter_order <- function(from_vec, to_vec, prev_order) {
+  prev_pos <- setNames(seq_along(prev_order), prev_order)
+  agg <- as.data.frame(table(from = from_vec, to = to_vec), stringsAsFactors = FALSE)
+  categories <- unique(agg$to)
+  bary <- vapply(categories, function(cat) {
+    rows <- agg[agg$to == cat, ]
+    sum(prev_pos[rows$from] * rows$Freq) / sum(rows$Freq)
+  }, numeric(1))
+  categories[order(bary)]
+}
+
+device_order  <- barycenter_order(channel, device, channel_levels)
+product_order <- barycenter_order(device, product, device_order)
+outcome_order <- barycenter_order(product, outcome, product_order)
+
 df <- tibble::tibble(
   channel = factor(channel, levels = channel_levels),
-  device  = factor(device,  levels = device_levels),
-  product = factor(product, levels = product_levels),
-  outcome = factor(outcome, levels = outcome_levels)
+  device  = factor(device,  levels = device_order),
+  product = factor(product, levels = product_order),
+  outcome = factor(outcome, levels = outcome_order)
 )
 
-# --- Node totals & stacked y-ranges per stage (fixed category order) ----
-GAP <- n_customers * 0.02
+# --- Node totals & stacked y-ranges per stage (crossing-minimized order) ----
+GAP <- n_customers * 0.03
 
 node_totals_for <- function(values, stage_x) {
   tibble::tibble(category = values) %>%
@@ -162,7 +180,7 @@ p <- ggplot() +
   geom_ribbon(
     data = bands,
     aes(x = x, ymin = ymin, ymax = ymax, group = group_id, fill = origin),
-    color = INK, linewidth = 0.12, alpha = 0.5
+    color = INK, linewidth = 0.12, alpha = 0.35
   ) +
   geom_rect(
     data = node_all,
