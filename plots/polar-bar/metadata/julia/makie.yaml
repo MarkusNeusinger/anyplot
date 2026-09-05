@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: polar-bar
 created: '2026-09-05T11:30:42Z'
-updated: '2026-09-05T11:35:42Z'
+updated: '2026-09-05T11:57:45Z'
 generated_by: claude-sonnet
 workflow_run: 33962811054
 issue: 2693
@@ -12,50 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Compass orientation is mathematically correct (N up, clockwise through E/S/W)
-    and the prevailing SW-W wind pattern reads immediately from bar length alone
-  - Curved outer arc edges on each stacked wedge (sampled along 24 points) give the
-    bars a natural wind-rose silhouette instead of flat-edged pie sectors
-  - Stroke color set to the page background cleanly separates the three stacked speed
-    bands without adding a competing outline color
-  - Data colors are pixel-identical between light and dark renders; only chrome (background,
-    grid, text) flips as required
-  - Radial tick labels are rotated to run along their spoke and placed in the empty
-    N-NE gap, keeping their tangential footprint narrow near the center
-  - Clean KISS script structure with explicit seed, only used imports, and no fake
-    interactive elements
+  - Uses native CairoMakie PolarAxis with band! for true curved-arc stacked wedges
+    instead of hand-rolled sin/cos polygon math — idiomatic, distinctive Makie usage.
+  - Imprint palette applied in correct canonical order across the stack (Light=#009E73
+    innermost/first series, Moderate=#C475FD, Strong=#4467A3), identical across both
+    themes.
+  - Theme-adaptive chrome (background, ink, ink-soft, grid alpha) correctly threaded
+    through PolarAxis kwargs — both renders are readable and theme-correct.
+  - 'Realistic, well-constructed wind-rose dataset: prevailing SW/W quadrant pattern
+    via a cosine model, three sensible speed bins, natural per-direction variation
+    via seeded randomness.'
+  - Clean KISS script structure with explicit font sizes, seeded RNG, and correct
+    plot-light/plot-dark output naming.
   weaknesses:
-  - 'Library Mastery gap: the polar geometry (grid circles, spokes, wedges) is built
-    entirely by hand with sin/cos loops on a plain Cartesian Axis + DataAspect, instead
-    of using Makie''s native PolarAxis (available since Makie 0.19) which is the library''s
-    dedicated, idiomatic tool for exactly this wind-rose/polar-bar chart type — a
-    missed opportunity to showcase a distinctive Makie feature and would also simplify
-    the code'
-  - Radial tick labels ('26h','52h','78h','104h') at fontsize=11 are noticeably smaller/thinner
-    than the compass direction labels at fontsize=16, creating a mild size imbalance
-    between the two label families — consider bumping to ~13-14 for better visual
-    parity
-  - Legend sits alone in the empty NE/E/SE quadrant with a large amount of surrounding
-    whitespace; this is a reasonable wind-rose convention to avoid covering data,
-    but pulling it slightly closer to the plot center would tighten the composition
+  - 'Manual legend rows (drawn via scatter!+text! at decreasing radii along legend_theta=100°)
+    are spaced too tightly: the ''Moderate'' swatch overlaps the ''(20-30 kn)'' text
+    of the ''Strong'' row above it, and the ''Light'' swatch overlaps the tail of
+    the ''Moderate'' row''s text — real character-level occlusion, not just crowding.
+    Increase the radial gap between legend_radii entries (or switch to a fixed pixel
+    line-height via stacked offset= values) so each row''s text bounding box clears
+    the swatch above/below it.'
+  - The r-axis '26h' tick label (rtickangle = sector_rad/2, positioned in the N-NE
+    gap) sits right against the NE direction bar's outer (Strong/blue) segment — the
+    label's trailing character touches the bar's stroke outline. Nudge the tick label
+    radius/angle slightly further from the first non-zero radial ring, or shrink rticklabelsize
+    further, so it clears the NE wedge with a visible gap in both themes.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "polar-bar · julia · makie · anyplot.ai" in bold dark ink at top, comfortably sized (~35% of canvas width). Compass labels N/NE/E/SE/S/SW/W/NW in dark ink around the outer ring, all clearly legible. Radial tick labels ("26h","52h","78h","104h") in soft gray, rotated along their spoke, sitting in the empty gap between the N and NE bars. Thin gray radial grid circles and compass spokes are subtle but visible. Legend ("Light (0-10 kn)", "Moderate (10-20 kn)", "Strong (20-30 kn)") sits unframed in the empty SE quadrant with dark labels.
-      Data: Eight direction wedges, each stacked from center outward in green (#009E73, Light), lavender (#C475FD, Moderate), and blue (#4467A3, Strong), with a thin background-colored stroke separating segments. Bars are visibly longest in the SW/W/NW quadrant (prevailing wind) and shortest in the NE/E quadrant.
-      Legibility verdict: PASS — all title, compass, tick, and legend text is clearly readable against the light background; no clipping at any canvas edge (checked top, left, bottom-left, and legend corners via pixel crops).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "polar-bar · julia · makie · anyplot.ai" centered at top in dark ink, fully visible with margin. Compass ticks (N, NE, E, SE, S, SW, W, NW) in dark ink around the rim. Radial hour-ticks (26h/52h/78h/104h) in soft grey, subtle radial/angular gridlines at ~15% opacity. All chrome text clearly readable against the light background.
+      Data: Eight stacked wedges (one per compass direction), inner segment green (#009E73, "Light"), middle segment lavender (#C475FD, "Moderate"), outer segment blue (#4467A3, "Strong"), thin white divider lines between segments. Prevailing wind clearly visible as the longest bars in the SW/W quadrant. Manual legend (three swatch+text rows) sits in the empty NE/E gap.
+      Legibility verdict: FAIL (partial) — legend rows overlap: the "Moderate" swatch is drawn on top of "(20-30 kn)" from the "Strong" row above, and "Light"'s swatch overlaps the tail of the "Moderate" row's text. All other text (title, compass ticks, radial ticks) is fully readable; the "26h" radial tick also sits flush against the NE bar's blue segment.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title now rendered in light ink (#F0EFE8), fully legible. Compass labels flip to light text. Radial tick labels flip to light gray (#B8B7B0), still legible against the dark background — no dark-on-dark failure observed. Grid circles/spokes remain subtle. Legend text flips to light ink, still unframed and legible.
-      Data: Identical green/lavender/blue wedge colors and identical wedge geometry to the light render — only the chrome (background, text, grid) changed color, confirming data colors are theme-independent as required.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found in either theme.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and compass/radial ticks now rendered in light ink (#F0EFE8) / soft light grey (#B8B7B0), fully legible against the dark background — no dark-on-dark failures observed. Gridlines remain subtle.
+      Data: Identical data colors to the light render (#009E73 / #C475FD / #4467A3 stack, white dividers) — confirms the "chrome only" theme rule was followed.
+      Legibility verdict: FAIL (partial) — same legend overlap issue reproduces identically (it's a geometry bug independent of theme), and the "26h" tick again sits against the NE bar's blue segment. All other text is readable and correctly theme-adapted.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -63,74 +62,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set, readable in both themes; radial tick labels
-          (11pt) are notably smaller than compass labels (16pt), a minor imbalance
+        comment: All font sizes explicitly set (titlesize=20, thetaticklabelsize=16,
+          rticklabelsize=13, legend fontsize=13); readable in both themes at full
+          size. Minor deduction for the crowded legend area.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: No overlap between any text, wedges, grid, or legend
+        passed: false
+        comment: Manual legend rows overlap each other (swatch of one row drawn on
+          top of the text of the row above); '26h' radial tick touches the NE bar's
+          blue segment. Main chart content otherwise clean.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked wedges clearly visible and well-proportioned for 8 directions
-          x 3 bins
+        comment: Stacked wedge bands are prominent and clearly separated by thin white
+          divider lines.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint categorical colors with background-colored stroke separation;
-          no red-green-only signal
+        comment: Green/lavender/blue combination is CVD-safe with good contrast on
+          both surfaces.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Rose fills a large, balanced portion of the square canvas; legend
-          placed in the naturally empty NE/E/SE quadrant
+        comment: Square 2400x2400 canvas well suited to the polar layout; bars use
+          a large, balanced share of the canvas; legend sits near the plot in the
+          empty gap, not isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Compass directions and radial hour ticks ('Xh') are descriptive with
-          units
+        comment: Radial ticks carry units ('26h', '52h', ...); compass ticks are descriptive
+          direction labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second/third in canonical order #C475FD/#4467A3;
-          backgrounds and chrome theme-correct in both renders'
+        comment: 'First (innermost) series is #009E73, remaining series follow canonical
+          Imprint order (#C475FD, #4467A3); backgrounds and chrome are theme-correct
+          in both renders; data colors identical across themes.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Curved arc wedge edges and background-matched strokes go clearly
-          beyond a default polar bar
+        comment: Clean compass-rose composition with intentional legend placement
+          in the data gap; above a bare library default but not yet publication-level
+          polish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Spines/decorations fully hidden, subtle grid, generous whitespace;
-          radial tick sizing is the one rough edge
+        comment: Subtle gridlines, soft spine color, and white segment dividers show
+          refinement, but the overlapping legend rows read as sloppy.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Prevailing SW-W wind pattern is immediately visible through bar-length
-          hierarchy alone, no annotation needed
+        comment: The prevailing SW/W wind pattern is immediately visible through bar-length
+          hierarchy and stacked speed-band coloring, guiding the reader to the insight
+          without needing annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -139,27 +142,24 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct polar/wind-rose bar chart with bars radiating from center
+        comment: Correct polar/wind-rose bar chart with stacked sub-bars per direction.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: 8 compass directions, stacked speed bands, color-encoded additional
-          variable all present
+        comment: 8 compass directions, stacked speed bins, bars radiating from center
+          — matches all spec notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Angle=direction, radius=cumulative frequency, all data visible
+        comment: Angle = direction, radius = frequency (hours); all directions shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format exact; legend labels match speed-bin data with units
+        comment: Title format exactly matches the mandated pattern; legend labels
+          correctly match the three speed-bin series.
     data_quality:
       score: 15
       max: 15
@@ -168,21 +168,19 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: Shows directional variance, three speed bins, and a clear prevailing-wind
-          pattern
+        comment: All 8 directions populated with distinct magnitudes and all 3 speed
+          bins present per direction.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, plausible meteorological station scenario
+        comment: Neutral, comprehensible meteorological wind-observation scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Hour counts and speed-band proportions are plausible for wind observations
+        comment: Hour counts and prevailing-direction bias are physically plausible
+          for a station wind climatology.
     code_quality:
       score: 10
       max: 10
@@ -191,66 +189,54 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Flat imports -> data -> plot -> save script, no functions/classes
+        comment: Flat imports/data/plot/save structure, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only CairoMakie and Random imported, both used
+        comment: Only CairoMakie and Random imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI, appropriate complexity for the manual polar geometry
-          chosen
+        comment: Appropriate complexity for stacked polar bands; no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-$(THEME).png via px_per_unit=2, current CairoMakie API
+        comment: Saves plot-$(THEME).png via current save/px_per_unit API.
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct Makie primitives (poly!, lines!, text!, axislegend) but does
-          not use Makie's dedicated PolarAxis for a native polar-coordinate chart
+        comment: Uses native PolarAxis with its theta/r tick and grid kwargs rather
+          than a hand-rolled Axis + trig transform.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: The manual sin/cos wedge construction is generic and could be replicated
-          in any library with a polar projection; misses Makie's distinctive native
-          PolarAxis
-  verdict: REJECTED
+        comment: band! sampled across an arc for true curved-edge stacked wedges under
+          PolarAxis's per-vertex transform is a Makie-specific technique, not trivially
+          replicated elsewhere.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - manual-ticks
   - custom-legend
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - cumulative-sum
-  styling:
-  - publication-ready
-  - edge-highlighting
-  - grid-styling
+  styling: []
