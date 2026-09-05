@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: elbow-curve
+created: '2026-09-05T00:48:48Z'
+updated: '2026-09-05T00:59:42Z'
+generated_by: claude-sonnet
+workflow_run: 33934031725
+issue: 2333
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
+review:
+  strengths:
+  - Clean single-series elbow curve with a correct steep-then-flat decay shape that
+    clearly shows the k=4 inflection.
+  - The elbow point is visually distinguished with an outlined/hollow marker plus
+    a dashed vertical guide line — a thoughtful touch beyond a plain line+scatter.
+  - Explicit font sizing throughout (titlesize=20, xlabelsize/ylabelsize=14, tick
+    label size=12) and theme-adaptive chrome tokens are correctly threaded through
+    the Axis kwargs; both renders are fully legible.
+  - 'Correct Imprint palette usage (brand green #009E73 for the series) and correct
+    theme backgrounds (#FAF8F1 light / #1A1A17 dark), with identical data color across
+    both themes.'
+  - Reproducible synthetic data (Random.seed!(42)) with a realistic K-means inertia
+    decay curve for a customer-segmentation scenario.
+  weaknesses:
+  - The "k=4 (optimal)" text!() annotation defined in the code (around lines 82-90)
+    does not render in either plot-light.png or plot-dark.png — only the outlined
+    marker and dashed guide line are visible near k=4. This is dead/non-rendering
+    code; verify the Makie text! position/offset/font arguments (offset units, align,
+    font=:bold validity) so the label actually appears, or remove the call if it cannot
+    be made to render.
+  - Because the annotation text is missing, the "optimal" callout has no explanatory
+    label — a first-time viewer sees an outlined point and a dashed line without knowing
+    why, which weakens the intended storytelling payoff.
+  - The line uses straight segments between markers rather than any smoothing; acceptable
+    per the spec's loose wording but a slightly refined curve could read even cleaner
+    (very minor, not required).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "elbow-curve · julia · makie · anyplot.ai" centered at top; x-axis label "Number of Clusters (k)" and y-axis label "Inertia (Within-Cluster Sum of Squares)" both in dark ink; tick labels (1-10 on x, 1000-5000 on y) in a softer dark gray. Subtle low-opacity gridlines. All chrome clearly readable against the light background.
+      Data: Single brand-green (#009E73) line with filled circular markers at each k from 1 to 10, showing a steep drop from k=1 (~5200) through k=3, then flattening toward k=10 (~290). At k=4 the marker is replaced with a hollow/outlined circle (background-colored fill, green stroke) and a dashed vertical guide line marks that x-position, visually distinguishing the elbow point from the rest of the series. NOTE: the code contains a text!() call meant to label this point "k=4 (optimal)" in blue bold text, but no such text is visible anywhere in the render - the annotation does not appear to render.
+      Legibility verdict: PASS (all title/axis/tick text clearly readable; the missing annotation is a rendering defect, not a legibility failure of existing text).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis labels, and tick labels flip to light ink tones, clearly readable against the dark background - no dark-on-dark issues found. Gridlines remain faint but visible.
+      Data: The line and markers are the identical brand green (#009E73) as the light render - confirms data colors are theme-invariant, only chrome flipped. The k=4 elbow point still shows the outlined marker and dashed vertical guide line (rendered in a lighter tone for dark-bg contrast). Same as light render, the "k=4 (optimal)" text annotation defined in code is NOT visible in this render either.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures on any text element that actually rendered).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, label=14, ticks=12);
+          readable in both themes with balanced proportions
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (10 points) with prominent markersize=16 (22 for the
+          elbow highlight) and linewidth=3.0
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green reads with good contrast on both surfaces; no
+          red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a healthy majority of the canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels: "Number of Clusters (k)" and "Inertia (Within-Cluster
+          Sum of Squares)"'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; theme-correct backgrounds (#FAF8F1/#1A1A17)
+          and chrome in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Outlined elbow marker + dashed guide line show intentional design
+          beyond generic defaults, but the broken text annotation undercuts the intended
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle low-opacity grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: A focal point was attempted at k=4 via the outlined marker and guide
+          line, but the missing explanatory text label leaves the emphasis unexplained
+          to the viewer
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct elbow/line-with-markers curve for k vs inertia
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: Markers at each k and a connecting line are present, and the elbow
+          is highlighted via marker style + guide line, but the intended "k=4 (optimal)"
+          annotation text fails to render
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: k on x-axis, inertia on y-axis; all 10 k-values shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for a single series
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Full curve shape shown: steep initial decline, clear inflection
+          at k=4, long flattening tail to k=10'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible, neutral customer-segmentation K-means scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Inertia values and decay ratios are realistic for this domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports → data → plot → save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Contains a text!() annotation call that produces no visible output
+          in either render — dead code, though not fake-functionality per AR-08
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2, current CairoMakie
+          API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of Axis kwargs, lines!/scatter!/vlines!; the text!
+          misfire is the only blemish
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses vlines! and an outlined-marker technique (stroke color matched
+          to background) that go slightly beyond generic scatter+line usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
