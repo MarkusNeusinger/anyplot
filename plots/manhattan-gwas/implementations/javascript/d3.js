@@ -142,7 +142,7 @@ function thresholdLine(value, label, stroke) {
     .style("font-size", "13px")
     .text(label);
 }
-thresholdLine(suggestiveThreshold, "Suggestive (p = 1×10⁻⁵)", t.muted);
+thresholdLine(suggestiveThreshold, "Suggestive (p = 1×10⁻⁵)", t.inkSoft);
 thresholdLine(genomeWideThreshold, "Genome-wide significant (p = 5×10⁻⁸)", t.palette[4]);
 
 // --- Points: alternating chromosome color, sized down for overplotting ------
