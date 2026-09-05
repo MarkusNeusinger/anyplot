@@ -96,6 +96,7 @@ ax = Axis(
     xgridvisible      = false,
     xticks            = (x[1:20:end], Dates.format.(rsi_dates[1:20:end], "u d")),
     xticklabelrotation = pi / 6,
+    yticks            = ([0, 30, 50, 70, 100], ["0", "30", "50", "70", "100"]),
 )
 
 ylims!(ax, 0, 100)
@@ -108,10 +109,24 @@ hspan!(ax, 0, 30; color = RGBAf(OVERSOLD_COLOR.r, OVERSOLD_COLOR.g, OVERSOLD_COL
 hlines!(ax, [70, 30]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
 hlines!(ax, [50]; color = INK_MUTED, linestyle = :dot, linewidth = 1.2)
 
+# Alpha-blended fill from the centerline to the RSI line, reinforcing
+# distance-from-neutral at a glance (band! fills between two curves).
+band!(
+    ax, x, min.(rsi_values, 50.0), max.(rsi_values, 50.0);
+    color = RGBAf(RSI_COLOR.r, RSI_COLOR.g, RSI_COLOR.b, 0.15),
+)
+
 lines!(ax, x, rsi_values; color = RSI_COLOR, linewidth = 3)
 
-text!(ax, x[1], 96; text = "Overbought", color = INK_SOFT, fontsize = 12, align = (:left, :top))
-text!(ax, x[1], 4; text = "Oversold", color = INK_SOFT, fontsize = 12, align = (:left, :bottom))
+# Data-aware label placement: anchor each zone label at the point of
+# greatest vertical clearance from the RSI line within the opening window,
+# rather than a fixed x[1] that could collide with the line for other seeds.
+early_window = 1:max(1, round(Int, length(x) * 0.2))
+ob_idx = early_window[argmin(rsi_values[early_window])]
+os_idx = early_window[argmax(rsi_values[early_window])]
+
+text!(ax, x[ob_idx], 96; text = "Overbought", color = INK_SOFT, fontsize = 12, align = (:left, :top))
+text!(ax, x[os_idx], 4; text = "Oversold", color = INK_SOFT, fontsize = 12, align = (:left, :bottom))
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
