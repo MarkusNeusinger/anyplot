@@ -23,11 +23,21 @@ const IMPRINT_PALETTE = [
 # --- Data ---------------------------------------------------------------
 # Net weight (grams) of cereal boxes off a filling line, nominal fill 500 g.
 box_weights = 500 .+ 15 .* randn(450)
+nominal_fill = 500.0
+n_bins = 20
 
 mu = mean(box_weights)
 sigma = std(box_weights)
 x_fit = range(minimum(box_weights), maximum(box_weights); length = 200)
 pdf_fit = @. 1 / (sigma * sqrt(2π)) * exp(-0.5 * ((x_fit - mu) / sigma)^2)
+
+# Locate the isolated out-of-spec box (heaviest bin) for a callout annotation.
+bin_edges = range(minimum(box_weights), maximum(box_weights); length = n_bins + 1)
+bin_width = step(bin_edges)
+outlier_lo = bin_edges[end-1]
+outlier_mid = (bin_edges[end-1] + bin_edges[end]) / 2
+outlier_density = count(>=(outlier_lo), box_weights) / (length(box_weights) * bin_width)
+outlier_label_y = outlier_density + 0.0045
 
 # --- Plot -----------------------------------------------------------------
 title_text = "Cereal Box Net Weight · histogram-density · julia · makie · anyplot.ai"
@@ -67,14 +77,35 @@ ax = Axis(
 hist!(
     ax, box_weights;
     normalization = :pdf,
-    bins          = 25,
+    bins          = n_bins,
     color         = IMPRINT_PALETTE[1],
     strokewidth   = 1,
     strokecolor   = PAGE_BG,
     label         = "Observed boxes",
 )
 
+band!(ax, x_fit, zeros(length(x_fit)), pdf_fit; color = (IMPRINT_PALETTE[2], 0.12))
 lines!(ax, x_fit, pdf_fit; color = IMPRINT_PALETTE[2], linewidth = 3, label = "Normal fit")
+
+density!(
+    ax, box_weights;
+    npoints     = 200,
+    color       = :transparent,
+    strokecolor = IMPRINT_PALETTE[3],
+    strokewidth = 2.5,
+    label       = "Smoothed density (KDE)",
+)
+
+vlines!(ax, [nominal_fill]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5, label = "Nominal fill (500 g)")
+
+lines!(
+    ax, [outlier_mid, outlier_mid], [outlier_density, outlier_label_y];
+    color = INK_SOFT, linewidth = 1, linestyle = :dot,
+)
+text!(
+    ax, outlier_mid, outlier_label_y;
+    text = "Out-of-spec box", align = (:center, :bottom), color = INK_SOFT, fontsize = 11,
+)
 
 axislegend(
     ax;
