@@ -101,11 +101,34 @@ g.selectAll("circle")
   .join("circle")
   .attr("cx", (d) => x(d.flipperLength))
   .attr("cy", (d) => y(d.bodyMass))
-  .attr("r", 8)
+  .attr("r", 6.5)
   .attr("fill", (d) => color(d.species))
-  .attr("fill-opacity", 0.75)
+  .attr("fill-opacity", 0.65)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
+
+// --- Centroid markers (data storytelling: per-species mean) -----------------
+// d3-shape symbol generator, not just circles — highlights each species'
+// average flipper length / body mass as a focal point above the raw cloud.
+const diamond = d3.symbol().type(d3.symbolDiamond).size(450);
+const centroids = species.map((s) => {
+  const speciesPoints = points.filter((d) => d.species === s.name);
+  return {
+    name: s.name,
+    flipperLength: d3.mean(speciesPoints, (d) => d.flipperLength),
+    bodyMass: d3.mean(speciesPoints, (d) => d.bodyMass),
+  };
+});
+
+g.selectAll(".centroid")
+  .data(centroids)
+  .join("path")
+  .attr("class", "centroid")
+  .attr("d", diamond)
+  .attr("transform", (d) => `translate(${x(d.flipperLength)},${y(d.bodyMass)})`)
+  .attr("fill", (d) => color(d.name))
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 2.5);
 
 // --- Legend -----------------------------------------------------------------
 const legend = svg
@@ -123,6 +146,23 @@ categories.forEach((name, i) => {
     .style("font-size", "16px")
     .text(name);
 });
+
+const legendNote = legend
+  .append("g")
+  .attr("transform", `translate(0,${categories.length * 36 + 14})`);
+legendNote
+  .append("path")
+  .attr("d", d3.symbol().type(d3.symbolDiamond).size(220))
+  .attr("fill", t.inkSoft)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
+legendNote
+  .append("text")
+  .attr("x", 20)
+  .attr("y", 5)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text("Species mean");
 
 // --- Title ------------------------------------------------------------------
 svg
