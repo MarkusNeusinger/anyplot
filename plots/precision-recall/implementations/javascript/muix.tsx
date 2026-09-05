@@ -1,3 +1,7 @@
+// anyplot.ai
+// precision-recall: Precision-Recall Curve
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-09-05
 //# anyplot-orientation: landscape
 // anyplot.ai
 // precision-recall: Precision-Recall Curve
