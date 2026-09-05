@@ -15,18 +15,22 @@ PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Imprint categorical palette — position 1 is always brand green
-IMPRINT_PALETTE = [
-    colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
-    colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
-]
+# Semantic anchors (see prompts/default-style-guide.md "Semantic anchors"):
+# sentiment/polarity categories map to green (positive) / red (negative) /
+# adaptive muted gray (neutral) rather than the canonical palette order.
+MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
+CATEGORY_COLOR = Dict(
+    "Satisfied"    => colorant"#009E73",
+    "Neutral"      => MUTED,
+    "Dissatisfied" => colorant"#AE3030",
+)
 
 # --- Data: customer satisfaction survey, 300 respondents -----------------------
 categories = ["Satisfied", "Neutral", "Dissatisfied"]
 counts     = [168, 72, 60]
 total      = sum(counts)
 
-n_cols = 17
+n_cols = 15
 n_rows = cld(total, n_cols)
 
 dot_category = String[]
@@ -53,7 +57,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title            = "dot-matrix-proportional · julia · makie · anyplot.ai",
-    titlesize        = 26,
+    titlesize        = 30,
     titlecolor       = INK,
     subtitle         = "$(total) survey respondents, one dot per person",
     subtitlesize     = 16,
@@ -69,7 +73,7 @@ for (i, cat) in enumerate(categories)
     pct = round(100 * counts[i] / total; digits = 1)
     scatter!(
         ax, dot_x[mask], dot_y[mask];
-        color       = IMPRINT_PALETTE[i],
+        color       = CATEGORY_COLOR[cat],
         markersize  = 30,
         strokewidth = 0,
         label       = "$cat — $(counts[i]) ($(pct)%)",
