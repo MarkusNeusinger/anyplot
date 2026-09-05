@@ -1,0 +1,257 @@
+library: d3
+language: javascript
+specification_id: histogram-stacked
+created: '2026-09-05T04:28:34Z'
+updated: '2026-09-05T04:43:28Z'
+generated_by: claude-sonnet
+workflow_run: 33944429331
+issue: 2601
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Shared bin edges (d3.bin().domain([0, maxValue]).thresholds(18)) applied identically
+    across all three groups, satisfying the spec's core requirement
+  - 'Correct Imprint palette: Standard=#009E73 (bottom of stack), Express and Same-Day
+    follow canonical palette order 2/3, identical across light/dark renders'
+  - Composition-shift annotation (dashed rule + "Standard becomes dominant \u2192"
+    label) turns a plain stacked histogram into a small data story about how tier
+    mix changes with delivery time
+  - Thin pageBg strokes between stacked bar segments and between adjacent bins keep
+    the stack readable without a bold outline
+  - Interactive legend (hover isolates a series via opacity) is a genuine value-add
+    for the HTML export and does not hurt the static PNG
+  - 'Both themes verified theme-correct: FAF8F1/1A1A17 backgrounds, light text on
+    dark and dark text on light, no dark-on-dark or light-on-light failures'
+  - Deterministic seeded LCG normal sampler keeps the three-tier delivery-time dataset
+    fully reproducible
+  weaknesses:
+  - '"Same-Day" tier is parameterized with mean=1.1 days, std=0.4 (min clamp 0.1),
+    so roughly half of its orders take MORE than one day — that undercuts the semantic
+    meaning of a same-day delivery promise. Tighten the distribution (e.g. mean~0.6,
+    std~0.2) so the bulk of Same-Day mass sits within the 0-1 day bin, or rename the
+    tier to something that doesn''t imply a same-day SLA.'
+  - Groups are stacked in a fixed order (Standard, Express, Same-Day) in every bin
+    rather than by per-bin size as the spec's "Consider ordering groups by size within
+    bins" note suggests — optional per the spec wording, not a hard requirement, but
+    would add polish if addressed
+  - 'Design Excellence is solid but still short of publication-grade: the chart is
+    a well-executed standard stacked histogram plus one annotation, not a deeply customized
+    visual system — room to push DE-01/DE-02 further (e.g. subtle bin-count density
+    cue, refined annotation placement) in a future pass'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (not pure white).
+      Chrome: Title "histogram-stacked · javascript · d3 · anyplot.ai" centered at top in dark bold text, clearly legible. X-axis label "Delivery Time (days)" and Y-axis label "Number of Orders" both dark, readable, similarly sized. Tick labels on both axes dark and legible. Subtle horizontal gridlines only (y-axis), light gray, unobtrusive. Legend top-right with three swatches (Standard/Express/Same-Day) and dark readable labels. A dashed vertical rule near x=4 with italic bold annotation "Standard becomes dominant →" is clearly visible above the bars.
+      Data: First series "Standard" renders in Imprint green (#009E73) as the bottom stack segment; "Express" is purple (Imprint palette position 2); "Same-Day" is slate blue (Imprint palette position 3). Segments separated by thin off-white strokes. Bars show a clear left-to-right narrative: Same-Day dominates short delivery times (bins near 1 day), Express dominates the middle (2-4 days), Standard dominates from ~4 days onward.
+      Legibility verdict: PASS - all text (title, axis labels, ticks, legend, annotation) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (not pure black).
+      Chrome: Same title, axis labels, tick labels, legend and annotation text now rendered in light/off-white tones, fully legible against the dark background. Gridlines are a subtle darker-gray line, still visible without dominating. No dark-on-dark text anywhere.
+      Data: Data colors are pixel-identical to the light render - Standard is still #009E73 green, Express still purple, Same-Day still slate blue. Only the chrome (background, text, grid, legend box) has flipped for the dark theme.
+      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (14/16/22px); readable in both themes; balanced
+          title/axis proportions
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render; annotation sits in empty
+          space above the tallest bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar segments clearly visible with separator strokes; well-adapted
+          to ~1280-point dataset across 18 bins
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue distinguishable without relying on hue alone; stroke
+          separators aid contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills ~90% width / ~79% height of the mount; legend sits
+          near the plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Delivery Time (days)" has units; "Number of Orders" is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard=#009E73 first series; Express/Same-Day follow canonical
+          Imprint order 2/3; identical across themes; correct FAF8F1/1A1A17 backgrounds
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color use and typography, clearly above a configured default,
+          but still a fairly standard stacked-bar treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-only subtle grid, generous whitespace, bar-separator strokes; axis
+          domain lines remain (minor)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Crossover annotation explicitly names the insight (tier-mix shift
+          at ~4 days) rather than leaving the viewer to find it
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked histogram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shared bin edges, distinct group colors, legend, total bar height
+          = combined frequency
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=delivery time bins, Y=order count, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match group keys
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three tiers with distinct means/spreads and a visible composition
+          crossover
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral e-commerce shipping-tier scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 2
+        max: 4
+        passed: false
+        comment: Same-Day tier mean (1.1d, std 0.4) puts roughly half its mass past
+          1 day, undercutting the same-day promise semantically
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot flow; the seeded-RNG closure is the justified
+          exception the library guide recommends
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG normal sampler
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: d3 global only, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriately concise given binning+stacking+annotation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds svg from ANYPLOT_SIZE into #container per the mount-node
+          contract'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.bin(), d3.stack(), scaleLinear/axisBottom/axisLeft, data joins
+          with .join()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.stack()-driven layout plus data-bound legend hover highlighting
+          is distinctly D3-idiomatic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting
+  - publication-ready
