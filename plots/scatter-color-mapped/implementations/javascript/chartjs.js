@@ -69,7 +69,10 @@ const tickLabelGap = 8;
 const axisLabelGap = 18;
 const rightMargin = 14;
 const axisLabelOffset = barGap + barWidth + tickLabelGap + maxTickWidth + axisLabelGap;
-const colorbarSpace = axisLabelOffset + rightMargin;
+// colorbarSpace reserves layout.padding.right; it must include barGap because
+// barX is measured from chartArea.right (= canvasWidth - colorbarSpace), not
+// from canvasWidth itself, or the rotated label's anchor lands past the edge.
+const colorbarSpace = barGap + axisLabelOffset + rightMargin;
 
 // --- Colorbar plugin: draws the imprint_seq gradient as a reference scale ---
 const colorbarPlugin = {
