@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: polar-scatter
 created: '2026-09-05T11:46:28Z'
-updated: '2026-09-05T11:50:30Z'
+updated: '2026-09-05T12:01:09Z'
 generated_by: claude-sonnet
 workflow_run: 33963826994
 issue: 2023
@@ -12,50 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-sca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correctly implements polar scatter with a manual Cartesian projection because
-    highcharts-more/PolarComposition is not in the vendored core bundle — the header
-    comment documents the reasoning clearly.
-  - Ring value labels are placed at a fixed 145° angle (SE sector), a spot the two
-    wind clusters never occupy, so scale labels never collide with data.
+  - Radial scale labels are now clean, evenly-spaced round numbers (6/12/18/24 m/s)
+    — the attempt-1 weakness of non-round quarter-step labels is fixed by rounding
+    MAX_RADIUS up to a multiple of 4.
+  - Overlapping markers within the two dense wind clusters now use 0.85-alpha fills
+    with a thin pageBg-colored stroke, meaningfully improving per-point separability
+    versus attempt 1 while keeping the color/shape category encoding intact.
+  - Correctly implements polar scatter via manual Cartesian projection since highcharts-more/PolarComposition
+    is not in the vendored core bundle — the header comment documents the reasoning
+    clearly, and real data-bound scatter points preserve hover/tooltip in the interactive
+    HTML.
+  - Ring value labels are anchored at a fixed 145° angle (SE sector), a spot the two
+    wind clusters never occupy at any radius, so scale labels never collide with data.
   - Marker shape AND color both encode the time-of-day category — a redundant, CVD-friendly
     encoding.
-  - Compass labels (N/NE/E/SE/S/SW/W/NW) with radial spokes stand in cleanly for the
-    missing native polar axis.
-  - Data colors are pixel-identical between light/dark renders; theme tokens are threaded
-    through every chrome element (grid, ticks, tooltip, legend).
-  - Realistic bimodal wind data (light north-easterly breeze vs. strong south-westerly
+  - Data colors are pixel-identical between light/dark renders; every chrome element
+    (rings, spokes, labels, tooltip) is threaded through theme tokens correctly.
+  - Realistic bimodal wind data (light north-easterly breeze vs. stronger south-westerly
     wind) creates a clear, readable visual story.
   - Deterministic seeded LCG RNG makes the dataset fully reproducible.
   weaknesses:
-  - Ring value labels come out as non-round numbers (6, 13, 19, 25 m/s) because MAX_RADIUS/4
-    fractions get rounded independently — pick a MAX_RADIUS that divides evenly (e.g.
-    round up to the nearest multiple of 20) or label with one decimal so the scale
-    reads as clean, evenly-spaced values.
-  - Within the core of each prevailing-wind cluster, markers overlap heavily and individual
-    points become hard to distinguish — a slight opacity reduction (~0.85) or a subtle
-    white/pageBg marker outline would improve separability without losing the color/shape
-    category encoding.
-  - Design excellence is solid but still fairly restrained (thin gray rings/spokes,
-    no shading or emphasis) — a subtle radial background tint or slightly bolder ring/spoke
-    treatment on the outermost ring could push the aesthetic further.
+  - Within the densest core of the SW wind cluster, many markers still overlap heavily
+    enough that individual points blur into a mass — the 0.85 alpha and thin stroke
+    help at the edges but don't fully resolve the innermost overlap; consider dropping
+    fill-opacity a bit further (~0.7) or reducing marker radius slightly in the densest
+    regions.
+  - Design excellence is solid but still fairly restrained — thin gray rings/spokes
+    and a very subtle radial glow, no additional shading, emphasis ring, or bolder
+    treatment on the outermost boundary to lift the aesthetic further.
+  - 'Data storytelling: two wind-direction clusters compete for attention rather than
+    one being visually emphasized as primary — a subtle size, opacity, or annotation
+    cue distinguishing the dominant SW regime from the secondary NE regime could sharpen
+    the narrative.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "polar-scatter · javascript · highcharts · anyplot.ai" and subtitle in dark ink, clearly legible. Compass labels (N/NE/E/SE/S/SW/W/NW) in dark gray, radial spokes and rings in a subtle light-gray stroke, ring value labels (6/13/19/25 m/s) in muted gray placed in the empty SE sector. Legend at the bottom (Morning/Afternoon/Evening/Night) in dark-gray text with matching colored/shaped swatches.
-      Data: Two dense point clusters — one centered around the NE sector (light breeze, small radius) and one larger cluster around the SW sector (strong wind, larger radius). First series (Morning) uses the mandated brand green #009E73 circles; Afternoon is purple diamonds, Evening is blue squares, Night is amber/brown triangles.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Chrome: Title "polar-scatter · javascript · highcharts · anyplot.ai" and subtitle "Wind bearing and speed from 130 station observations" in dark ink, clearly legible. Compass labels (N/NE/E/SE/S/SW/W/NW), radial spokes, and radial rings with clean round-number value labels (6 m/s, 12 m/s, 18 m/s, 24 m/s placed in the empty SE sector) all render in subtle dark gray. Legend at the bottom (Morning/Afternoon/Evening/Night) is legible with matching colored, shaped swatches (circle/diamond/square/triangle).
+      Data: Two clusters — a lighter, sparser NE cluster (weaker breeze) and a denser, stronger SW cluster. First series (Morning) uses the mandated brand green #009E73 circles; Afternoon is lavender diamonds, Evening is blue squares, Night is ochre triangles — matches Imprint canonical order. Markers use ~0.85 alpha fill with a thin light-colored stroke, which helps distinguish overlapping points inside the dense clusters, though the innermost core of the SW cluster still shows heavy overlap.
+      Legibility verdict: PASS — all text is readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle rendered in light/off-white ink, clearly legible. Compass labels, spokes, rings, and ring labels rendered in light gray, easily visible against the dark background. Legend text is light gray with the same colored/shaped swatches.
-      Data: Identical cluster layout and marker colors/shapes to the light render — green circles, purple diamonds, blue squares, amber triangles — confirming data colors did not shift with theme, only chrome flipped.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+      Chrome: Title, subtitle, compass labels, radial spokes/rings, and ring value labels all flip to light gray / off-white and remain clearly legible. No dark-on-dark issues found on any text element.
+      Data: Cluster layout, marker shapes, and marker colors are pixel-identical to the light render — only chrome (background, text, grid) flipped, confirming the Imprint palette data-color rule is honored.
+      Legibility verdict: PASS — all text is readable against the dark background, no dark-on-dark failures.
+
+    Both renders pass the theme-readability check (5c) and no AR-09 edge-clipping is present on title, compass labels, ring labels, or legend in either render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,77 +71,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/subtitle/axis/legend text is explicitly sized and clearly
-          readable in both themes; title fontsize is dynamically scaled to the mandated
-          title's length.
+        comment: Title, subtitle, compass labels, ring labels, legend all readable
+          in both themes; title fontsize correctly scaled to the mandated 67-char
+          title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text or with data; ring labels are placed
-          in a fixed SE sector that stays clear of both wind clusters.
+        comment: No text-on-text or text-on-data collisions; ring labels anchored
+          in the empty SE sector
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers are a reasonable size for ~130 points, but the cores of the
-          two clusters overlap heavily and individual points blur together there.
+        comment: Attempt-1 marker-overlap weakness improved with 0.85-alpha fill +
+          thin stroke; residual overlap only in the innermost cluster core
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Category is double-encoded by color AND marker shape, which is CVD-safe;
-          no red-green-only signal.
+        comment: Marker shape + color redundant encoding; Imprint palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas well-proportioned, centered, nothing cut off, generous
-          margins for compass labels.
+        comment: Square 2400x2400 canvas gate passed; well-centered polar layout with
+          generous padding, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Compass directions are descriptive and clear, but radial value labels
-          (6/13/19/25 m/s) are awkward non-round numbers from an unrounded MAX_RADIUS/4
-          split.
+        passed: true
+        comment: 'Attempt-1 weakness fixed: ring labels now clean round numbers (6/12/18/24
+          m/s) instead of 6/13/19/25'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; palette identical between light/dark; backgrounds
-          match Imprint theme tokens in both renders.'
+        comment: 'First series brand green #009E73, canonical Imprint order for all
+          4 categories, correct theme backgrounds'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Custom-built polar chrome via the SVG renderer (rings, spokes, compass
-          labels) shows real design effort beyond defaults, but the visual treatment
-          itself (thin gray lines, flat markers) is still fairly plain.
+        passed: false
+        comment: Genuine custom-built polar chrome (rings, spokes, radial glow) but
+          treatment remains fairly restrained
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Grid/spokes are appropriately subtle and whitespace is generous,
-          but there's no additional refinement (e.g. radial shading, outlined markers)
-          beyond the functional minimum.
+        passed: false
+        comment: Subtle grid, alpha-blended markers with stroke; improved refinement
+          over attempt 1 but still modest
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: The bimodal NE-light/SW-strong wind pattern is immediately visible
-          and forms a clear focal structure, though the two clusters compete for attention
-          rather than one being emphasized.
+        passed: false
+        comment: Clear bimodal wind pattern, but the two clusters compete rather than
+          one being emphasized
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +149,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine polar scatter (theta=bearing, radius=speed), not a disguised
-          Cartesian scatter.
+        comment: Genuine polar scatter via projected Cartesian coordinates
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, angular compass ticks at 45° intervals, category
-          color/shape encoding, centered layout, radius starting at 0 — all present.
+        comment: Radial gridlines, angular compass ticks, category color encoding,
+          centered layout with padding — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bearing and speed correctly mapped to angle/radius; all 130 points
-          shown.
+        comment: theta=bearing (degrees, compass-oriented), r=speed (m/s), correctly
+          mapped and radius axis starts at 0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated 'polar-scatter · javascript · highcharts
-          · anyplot.ai' format; legend labels match the four time-of-day categories.
+        comment: Title matches mandated format exactly; legend labels match the 4
+          time-of-day categories
     data_quality:
       score: 15
       max: 15
@@ -175,22 +180,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows angle, radius, and categorical color/shape encoding — full
-          feature coverage for the plot type.
+        comment: Covers angle, radius, and categorical color encoding as specified
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral wind-observation dataset with a realistic bimodal
-          prevailing-wind pattern.
+        comment: Plausible bimodal prevailing-wind pattern (SW strong regime, NE light
+          regime), neutral subject matter
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds (~0.6-25 m/s) and bearings (0-360°) are realistic for
-          the domain.
+        comment: Wind speeds (0.6-24 m/s) and 130 observations are realistic for the
+          domain
     code_quality:
       score: 9
       max: 10
@@ -199,35 +203,35 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: A handful of small helper functions (lcg, randNormal, angleOf, pointAt,
-          toAxisXY) are used, justified by the manual polar-projection math required
-          since highcharts-more isn't loaded.
+        passed: true
+        comment: A handful of small helper functions (angleOf, pointAt, toAxisXY,
+          hexToRgba), justified by the manual polar-projection math this library's
+          core bundle requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42) makes the dataset deterministic.
+        comment: Seeded LCG RNG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the provided globals are used.
+        comment: No imports beyond the global Highcharts/tokens
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the constraint, well-commented on WHY,
-          no fake interactivity.
+        comment: No fake interactivity; real data-bound scatter series retain tooltip/hover
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract exactly: no explicit width/height,
-          animation disabled on chart and series.'
+        comment: 'Harness contract respected: no explicit width/height, animation
+          disabled, mount-node id used correctly'
     library_mastery:
       score: 8
       max: 10
@@ -236,16 +240,17 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correctly recognizes the highcharts-more/polar-composition gap and
-          falls back to core-bundle scatter + renderer, exactly per the library's
-          own guidance for this constraint.
+        passed: true
+        comment: Correctly falls back to core-bundle scatter + SVG renderer since
+          highcharts-more/PolarComposition isn't loaded, rather than faking or importing
+          a forbidden module
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Makes real use of the Highcharts SVG renderer API (chart.renderer.circle/path/text)
-          for custom overlays, plus a custom tooltip formatter — genuinely distinctive,
-          not generic scatter usage.
+        passed: true
+        comment: Genuine use of the SVG renderer API (circle/path/text), a custom
+          tooltip formatter, and fixed-extent hidden axes for coordinate binding
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -259,4 +264,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
+  - alpha-blending
+  - gradient-fill
