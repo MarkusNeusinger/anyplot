@@ -1,0 +1,252 @@
+library: muix
+language: javascript
+specification_id: line-confidence
+created: '2026-09-05T07:10:43Z'
+updated: '2026-09-05T07:27:45Z'
+generated_by: claude-sonnet
+workflow_run: 33951531689
+issue: 2007
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Correctly works around a known MUI X quirk: the library derives an area''s fill
+    from `d3Color(color).brighter(0.5).formatHex()`, which drops any alpha in the
+    series `color` — the implementation overrides `fill`/`fillOpacity` directly on
+    `.MuiAreaElement-series-band` to get a genuinely semi-transparent band (alpha
+    0.22, within the spec''s 0.2-0.4 range), and documents why in a code comment.'
+  - 'Drop-shadow halo (`filter: drop-shadow(...)` using the page background color)
+    on the central line cleanly separates it from the underlying band in both themes,
+    improving VQ-03 element visibility without adding a stroke that would fight the
+    palette.'
+  - 'Full theme correctness: identical `#009E73` data color in both renders, correct
+    `#FAF8F1`/`#1A1A17` backgrounds, all chrome (title, axis labels, ticks, legend)
+    readable in both light and dark with no dark-on-dark or light-on-light failures.'
+  - 'Title fontsize scaling formula (`title.length > 67 ? round(22*67/title.length)
+    : 22`) is correctly applied for the long mandated+descriptive title, keeping it
+    comfortably within canvas bounds.'
+  - The confidence band widens naturally with the forecast horizon (1.96*sigma growing
+    linearly with day index) — a realistic, well-executed rendition of the spec's
+    core forecast-uncertainty idea, plus weekly seasonality in the central trend.
+  weaknesses:
+  - X-axis shows ~13 date tick labels across the 3200px canvas; at the ~400px mobile
+    width these will compress substantially and risk crowding — consider a coarser
+    `tickInterval` or fewer ticks for better small-viewport legibility.
+  - '`yAxis[0].tickFontSize: 30` is not a real @mui/x-charts axis option (tick font
+    size is controlled via `tickLabelStyle.fontSize`, already set to 14 on the same
+    axis) — it''s silently ignored dead code; remove it to avoid signaling uncertainty
+    about the API surface.'
+  - The confidence band is built via a hidden 'lower' stacked series as a scaffold
+    to fake a range-area — functional and correctly hidden from the legend, but it's
+    a workaround rather than a first-class API; a brief comment on *why* stacking
+    was chosen (no native range-area component in community MUI X) would help future
+    maintainers.
+  - Design excellence is solid but not exceptional beyond the halo/fillOpacity fix
+    — no additional storytelling elements (e.g. an annotation marking where the forecast/uncertainty
+    regime changes) that would lift it further above baseline.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "Active User Forecast · line-confidence · javascript · muix · anyplot.ai" in dark ink, clearly visible at top-left. Legend below title with two swatches ("95% confidence interval" light-green, "Forecast (mean)" solid green), both readable in dark text. Y-axis label "Daily active users" (rotated) and X-axis label "Date" in matching dark ink, similar sizing. Tick labels (dates on x, "10k"-"19k" on y) in slightly softer dark gray, all legible. Subtle horizontal grid lines only.
+      Data: Central trend line in brand green (#009E73) with a thin light halo separating it from the band; semi-transparent light-green confidence band beneath/around it, widening steadily from left to right. First (and only) series color is confirmed brand green.
+      Legibility verdict: PASS — no light-on-light issues, all text crisp against the cream background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, legend text, and axis labels/ticks all rendered in light/white ink, clearly visible against the dark background. Grid lines subtle but visible as faint light horizontal strokes.
+      Data: Central line and legend swatch use the identical #009E73 green hex as the light render (confirmed same underlying data color); the confidence band renders as a deeper, more saturated-looking green due to alpha blending against the black background, but this is expected alpha-over-dark behavior, not a color-value change — the band remains clearly distinguishable from the background and the line remains distinguishable from the band via its bright color and drop-shadow separation.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements read clearly.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit font sizes; dense x-axis
+          tick count is a mild mobile-scale risk
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Drop-shadow halo cleanly separates line from band; band alpha well-chosen
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue line+band distinguished by brightness and shape, not color
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, title correctly scaled, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units (users, date)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes, correct theme
+          backgrounds'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom fillOpacity fix and halo effect show real polish beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Widening band clearly tells the forecast-uncertainty story but no
+          extra annotation/callout
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line with confidence band
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Prominent central line, alpha 0.22 band, legend for both
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=date, y=daily active users, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Central trend, weekly seasonality, growing uncertainty band all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral DAU forecast scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12k-19k DAU range is sensible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single component, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic sinusoidal generation, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: 'yAxis tickFontSize: 30 is not a real @mui/x-charts prop -- dead/incorrect
+          config'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real functionality, well-commented library-quirk workaround
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: export default, skipAnimation, sized to ANYPLOT_SIZE
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct LineChart/xAxis/yAxis usage; confidence band via stacked-area
+          workaround rather than a native range API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sx overrides for fill/fillOpacity, drop-shadow filter, stacking trick,
+          valueFormatter usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - stacked-area
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - edge-highlighting
