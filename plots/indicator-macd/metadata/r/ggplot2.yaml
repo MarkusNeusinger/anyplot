@@ -1,0 +1,231 @@
+library: ggplot2
+language: r
+specification_id: indicator-macd
+created: '2026-09-05T05:38:33Z'
+updated: '2026-09-05T05:49:47Z'
+generated_by: claude-sonnet
+workflow_run: 33947617771
+issue: 3181
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - All three MACD components (line, signal, histogram) present with a zero reference
+    line, and standard parameters (12, 26, 9) surfaced directly in the legend labels
+  - 'Correct semantic color use: histogram bars map Positive/Negative to the finance-convention
+    green/red per the style guide''s semantic-exception rule, while MACD/Signal lines
+    use distinct blue/ochre'
+  - New bullish-crossover annotation with a circle marker and bold label gives the
+    chart a clear focal point, directly addressing the prior review's data-storytelling
+    gap
+  - Y-axis gridline now uses an alpha-reduced INK token (adjustcolor alpha=0.18) instead
+    of full-strength ink, reading as properly subtle
+  - Theme-adaptive chrome correctly threaded through both renders; data colors identical
+    across themes; canvas gate passed (3200x1800)
+  weaknesses:
+  - A few very small near-zero histogram bars are still slightly hard to see at alpha=0.75
+  - Beyond the crossover annotation, usage remains fairly standard ggplot2 composition
+    with no library-distinctive features (e.g. facets, coord transforms)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "indicator-macd · r · ggplot2 · anyplot.ai" and axis titles ("Date", "MACD Value") render in dark ink, fully legible. Tick labels in softer gray, legible. Top legend merges MACD/Signal line swatches with Positive/Negative fill swatches. "Bullish crossover" annotation renders in bold dark text above a white-filled circle marker at the crossover point.
+      Data: Green (#009E73) bars for positive histogram values, matte red (#AE3030) bars for negative values, blue (#4467A3) MACD line, ochre (#BD8233) signal line — all clearly distinguishable. Dashed zero-reference line clearly visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, axis titles, and tick labels flip to light ink tones, all fully legible against the dark surface. Zero-reference dashed line flips to light ink and remains visible. "Bullish crossover" annotation text flips to light ink, fully readable — no dark-on-dark issue.
+      Data: Bar/line colors are pixel-identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, explicit sizes set
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions, including new crossover annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: A few very small near-zero histogram bars are slightly hard to see
+          at alpha=0.75
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Position relative to zero line reinforces the red/green sign encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), no clipping/overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive Date / MACD Value labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Finance semantic-exception order for histogram; blue/ochre for lines;
+          correct theme backgrounds
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Semantic color choices plus new crossover annotation improve polish
+          over library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Gridline now alpha-reduced per style guide; L-shaped spines retained
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Crossover annotation gives the chart a clear, labeled focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct MACD indicator chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Histogram, zero line, distinct line colors, 12/26/9 params all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=date, y=MACD value, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels clear
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: MACD, signal, histogram, zero line, crossover all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible random-walk price series, neutral content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MACD values in sensible range for ~100-150 price level
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single small ema() helper is justified reuse, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused dplyr import removed; only ggplot2/ragg loaded
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, plot-{theme}.png
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_col/geom_line/scale_*_manual/theme_minimal composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Merged discrete+fill legend is a nice touch, otherwise fairly generic
+          usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending
+  - grid-styling
