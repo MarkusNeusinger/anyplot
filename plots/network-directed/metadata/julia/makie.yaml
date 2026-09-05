@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: network-directed
 created: '2026-09-05T10:02:52Z'
-updated: '2026-09-05T10:08:01Z'
+updated: '2026-09-05T10:26:36Z'
 generated_by: claude-sonnet
 workflow_run: 33959120233
 issue: 2858
@@ -12,55 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Faithful to the spec's suggested "software package dependency" scenario, with
-    a genuine topological layering (longest-dependency-chain layer assignment via
-    edge relaxation to a fixpoint) substituting for the banned NetworkLayout.jl, clearly
-    explained in comments
+  - 'Both Attempt-1 weaknesses are directly addressed: the graph-to-legend gap is
+    tightened (rowgap!(fig.layout, 0), rowsize!(..., Auto(0.05))) and a barycenter/median-neighbor
+    reordering pass now runs across layers to reduce edge crossings'
+  - Genuine topological layering (longest-dependency-chain via edge relaxation to
+    a fixpoint) plus barycenter reordering substitutes convincingly for the banned
+    NetworkLayout.jl, and is clearly commented
   - Indegree-driven node sizing gives visual weight to heavily-depended-upon nodes
-    (e.g. the "logging" sink), reinforcing the dependency story rather than being
-    purely decorative
-  - Tier-based Imprint palette color coding (Applications=green, Services=lavender,
-    Infrastructure/utilities=blue, Data format=ochre, Core=red) doubles as real information,
-    not decoration, and matches the canonical palette order for an abstract ordinal
-    category
-  - Implements the spec's explicit suggestion to curve an edge ("cli → logging") around
-    intermediate nodes via a dog-leg waypoint to avoid cutting through unrelated nodes
-  - Theme-adaptive chrome correctly implemented; categorical node colors are pixel-identical
-    between light and dark renders, only chrome (background, text, edge alpha reference)
-    flips
+    (e.g. the 'logging' sink), reinforcing the dependency story
+  - Tier-based Imprint palette color coding doubles as real information, not decoration,
+    and matches canonical palette order for an abstract ordinal category
+  - Theme-adaptive chrome correctly implemented; data colors pixel-identical between
+    light/dark renders
   weaknesses:
-  - Edge crossings create visual clutter near the middle of the graph (around the
-    'auth'/'renderer' services layer) — several arrows cross unnecessarily; reordering
-    nodes within each layer with a barycenter/crossing-minimization heuristic would
-    reduce clutter and improve visual refinement
-  - Large empty gap (roughly a quarter of the canvas height) between the bottom node/label
-    ('logging') and the legend row — tighten `rowsize!(fig.layout, 2, Auto(0.12))`
-    or the axis y-limits so the legend sits closer to the graph and canvas utilization
-    improves
-  - 'Minor: helper functions (`pull_in`, `draw_arrow!`) deviate from the pure top-down
-    "Imports → Data → Plot → Save" KISS script convention — acceptable given the geometric
-    math required, but could be simplified/inlined'
-  - Library Mastery is generic beyond the layout work itself — consider a more Makie-distinctive
-    touch (e.g. a genuinely curved/Bezier path for the routed edge instead of a straight
-    dog-leg) to better showcase library-specific features
+  - A handful of edge crossings remain in the top two tiers (Applications -> Services
+    fan-out) - largely unavoidable given two nodes each connecting to overlapping
+    subsets of three service nodes, but a further alternating-sweep iteration count
+    bump could shave off one or two more crossings
+  - Arrow linewidth/arrowsize are on the thin side for a dense 2400x2400 canvas with
+    19 edges; slightly bolder strokes would read better at small preview sizes (400px)
+  - Edge weight (optional per spec) isn't used to vary arrow thickness - would add
+    another dimension of information for minimal extra code
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "network-directed · julia · makie · anyplot.ai" in bold dark ink at top, clearly readable. Node ID labels (webapp, cli, api-client, auth, renderer, http, config, crypto, cache, svg-utils, json, logging) sit below each node in dark ink, all legible. Legend at the bottom ("Applications", "Services", "Infrastructure/utilities", "Data format", "Core") uses matching dark text with colored circular swatches, fully readable, no frame box.
-      Data: 12 nodes arranged in 5 hierarchical layers (diamond composition), colored by tier from the Imprint palette - green (Applications), lavender (Services), blue (Infrastructure/utilities), ochre (Data format), red (Core). Node size scales with in-degree. Directed edges are soft gray arrows (~55% alpha) with visible arrowheads pointing from consumer to dependency; one edge (cli → logging) is routed as a dog-leg to avoid cutting through unrelated nodes.
-      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark-ink title "network-directed · julia · makie · anyplot.ai" at top; node id labels beneath each node; horizontal two-row legend beneath the graph with minimal gap. All readable against the light background.
+      Data: 12 nodes in 5 hierarchical tiers colored via the Imprint palette (green=Applications, lavender=Services, blue=Infrastructure/utilities, ochre=Data format, red=Core). First categorical series is #009E73 (Applications tier). Node radius scales with in-degree. Directed edges are soft gray (~55% alpha) arrows with visible arrowheads, including one dog-leg-routed long-range edge.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title, node labels, and legend text now rendered in light ink, clearly legible against the dark background. No dark-on-dark text observed anywhere (title, node labels, legend text, and tier names are all light-colored and crisp).
-      Data: Node colors are pixel-identical to the light render (green/lavender/blue/ochre/red tier colors unchanged) - only the background and text chrome flipped, exactly as required. Arrow color/alpha is unchanged and remains clearly visible against the dark surface.
-      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title, node labels, and legend now in light ink, clearly legible against the dark surface. No dark-on-dark failures anywhere.
+      Data: Node/tier colors and edge alpha are pixel-identical to the light render; only background and text chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,50 +58,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, node label fontsize=13);
-          readable in both themes at full resolution
+        comment: Font sizes explicit, all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data elements despite dense edge crossings
+        comment: No text/edge/node collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size scales with indegree; arrows and nodes clearly visible
-          for this sparse 12-node graph
+        comment: Indegree-scaled marker sizes clearly visible for this sparse graph
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint palette, no red-green-only signal
+        comment: CVD-safe Imprint palette, good contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Diamond layout uses canvas reasonably but leaves a large empty gap
-          (~25% of height) between the graph and the legend row
+        passed: true
+        comment: Attempt-1 gap between graph and legend fixed; residual corner whitespace
+          is inherent to the diamond composition
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A traditional x/y axes (network diagram, decorations hidden); legend
-          + node labels are fully descriptive
+        comment: No traditional axes needed; legend + node labels fully descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First tier (source nodes) is #009E73; remaining tiers follow canonical
-          Imprint order; identical data colors across themes; correct theme backgrounds'
+        comment: 'First tier #009E73, canonical Imprint order, identical across themes,
+          correct theme backgrounds'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -119,22 +106,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom hierarchical layout with tier-driven color semantics, clearly
-          above library defaults
+        comment: Custom hierarchical layout with tier-driven color semantics and indegree-driven
+          sizing
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines/decorations fully hidden, generous whitespace, subtle edge
-          alpha; edge crossings reduce polish slightly
+        comment: Barycenter crossing-minimization visibly straightens the middle-layer
+          fan-out vs. Attempt 1; a few crossings remain in the top tiers
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Layered layout + tier color coding + indegree-based sizing create
-          a clear visual hierarchy toward the shared 'logging' sink
+        comment: Layered layout, tier coloring, and indegree sizing create a clear
+          visual hierarchy converging on the shared 'logging' sink
     spec_compliance:
       score: 15
       max: 15
@@ -150,8 +137,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Unique node IDs, directed edges, consistent arrow style, one curved/dog-leg
-          edge to avoid overlap as suggested by the spec
+        comment: Unique node IDs, directed edges, consistent arrow style, dog-leg
+          edge per spec's overlap-avoidance suggestion
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -164,8 +151,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match the tier categories used
-          for node colors
+        comment: Title format correct; legend matches tier colors
     data_quality:
       score: 14
       max: 15
@@ -175,21 +161,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows varying indegree, multi-layer hierarchy, and one routed edge;
-          no weighted edges since weight is optional in the spec
+        comment: Varying in-degree, multi-layer hierarchy, one routed edge; optional
+          edge weight not used for thickness
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral software package dependency graph
+        comment: Realistic, neutral software package dependency graph matching the
+          spec's own example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 nodes / 19 edges is plausible and within the spec's 10-50 node
-          guidance
+        comment: 12 nodes / 19 edges, within the spec's 10-50 node guidance
     code_quality:
       score: 9
       max: 10
@@ -199,14 +185,14 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions (pull_in, draw_arrow!) deviate from a
-          pure top-down script but are justified by the arrow-clearance geometry
+        comment: Helper functions and the barycenter loop deviate from a pure top-down
+          script but are justified by the layout math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42) set; layout is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -218,16 +204,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the geometry required, no fake UI
+        comment: Appropriate complexity for a from-scratch graph layout, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via px_per_unit=2; uses current Figure(size=...)
+        comment: Saves plot-$(THEME).png via px_per_unit=2; current Figure(size=...)
           API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -235,23 +221,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic use of Axis, scatter!, arrows!, text!, Legend, hidedecorations!/hidespines!,
+        comment: Idiomatic Axis, scatter!, arrows!, text!, Legend, hidedecorations!/hidespines!,
           DataAspect()
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses Makie's arrows! primitive and manual Legend construction with
-          MarkerElement/nbanks, but the routing itself is generic geometry
-  verdict: REJECTED
+        comment: From-scratch Sugiyama-style barycenter crossing-minimization working
+          around the disallowed NetworkLayout.jl
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - graph-layout
   - custom-legend
-  - annotations
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
   - minimal-chrome
