@@ -12,22 +12,21 @@ const ih = height - margin.top - margin.bottom;
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Delivery time (days) for three shipping tiers, binned and stacked so the
 // total bar height shows combined order volume with a per-tier breakdown.
-function makeLcg(seed) {
+function makeNormalSampler(seed) {
   let state = seed >>> 0;
-  return () => {
+  const rng = () => {
     state = (Math.imul(1103515245, state) + 12345) >>> 0;
     return state / 4294967296;
   };
+  return () => {
+    let u = 0;
+    let v = 0;
+    while (u === 0) u = rng();
+    while (v === 0) v = rng();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  };
 }
-const rng = makeLcg(20260905);
-
-function randNormal() {
-  let u = 0;
-  let v = 0;
-  while (u === 0) u = rng();
-  while (v === 0) v = rng();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
+const randNormal = makeNormalSampler(20260905);
 
 const tiers = [
   { key: "Standard", n: 600, mean: 5.4, std: 1.6 },
@@ -57,6 +56,12 @@ const binData = binsByGroup[groups[0]].map((b, i) => {
 const series = d3.stack().keys(groups)(binData);
 const maxStack = d3.max(binData, (d) => groups.reduce((sum, g) => sum + d[g], 0));
 
+// Composition-shift insight: the bin where "Standard" first overtakes the
+// other tiers as the largest segment, i.e. where the stack flips from
+// same-day-dominated to standard-dominated.
+const dominantByBin = binData.map((row) => groups.reduce((best, g) => (row[g] > row[best] ? g : best), groups[0]));
+const crossoverIdx = dominantByBin.findIndex((g, i) => g === "Standard" && dominantByBin[i - 1] !== "Standard");
+
 // --- Scales -------------------------------------------------------------------
 const x = d3.scaleLinear().domain([0, maxValue]).nice().range([0, iw]);
 const y = d3.scaleLinear().domain([0, maxStack]).nice().range([ih, 0]);
@@ -76,17 +81,46 @@ g.append("g")
 
 // --- Bars ----------------------------------------------------------------
 const barGap = 3;
-g.selectAll(".series")
+const seriesGroups = g
+  .selectAll(".series")
   .data(series)
   .join("g")
-  .attr("fill", (d) => color(d.key))
+  .attr("class", "series")
+  .attr("fill", (d) => color(d.key));
+seriesGroups
   .selectAll("rect")
   .data((d) => d)
   .join("rect")
   .attr("x", (d) => x(d.data.x0) + barGap / 2)
   .attr("width", (d) => Math.max(0, x(d.data.x1) - x(d.data.x0) - barGap))
   .attr("y", (d) => y(d[1]))
-  .attr("height", (d) => y(d[0]) - y(d[1]));
+  .attr("height", (d) => y(d[0]) - y(d[1]))
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 1);
+
+// --- Composition-shift callout (visual-hierarchy emphasis) -----------------
+if (crossoverIdx !== -1) {
+  const cx = x(binData[crossoverIdx].x0);
+  const labelOnLeft = cx > iw * 0.6;
+  g.append("line")
+    .attr("x1", cx)
+    .attr("x2", cx)
+    .attr("y1", 0)
+    .attr("y2", ih)
+    .attr("stroke", t.ink)
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "6,4")
+    .attr("opacity", 0.55);
+  g.append("text")
+    .attr("x", cx + (labelOnLeft ? -8 : 8))
+    .attr("y", 16)
+    .attr("text-anchor", labelOnLeft ? "end" : "start")
+    .attr("fill", t.ink)
+    .style("font-size", "14px")
+    .style("font-weight", "600")
+    .style("font-style", "italic")
+    .text(labelOnLeft ? "← Standard becomes dominant" : "Standard becomes dominant →");
+}
 
 // --- Axes ----------------------------------------------------------------
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(9));
@@ -116,10 +150,20 @@ g.append("text")
   .text("Number of Orders");
 
 // --- Legend (top-right, ordered to match stack) -----------------------------
+// Hovering a legend row highlights its segment across every bin (leveraging
+// the interactive HTML export, not just the static screenshot).
 const legend = svg.append("g").attr("transform", `translate(${width - margin.right - 170},${margin.top - 50})`);
 groups.forEach((name, i) => {
-  const row = legend.append("g").attr("transform", `translate(0,${i * 26})`);
-  row.append("rect").attr("width", 16).attr("height", 16).attr("fill", color(name));
+  const row = legend.append("g").attr("transform", `translate(0,${i * 26})`).style("cursor", "pointer");
+  row
+    .append("rect")
+    .attr("width", 16)
+    .attr("height", 16)
+    .attr("rx", 3)
+    .attr("ry", 3)
+    .attr("fill", color(name))
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 1);
   row
     .append("text")
     .attr("x", 24)
@@ -127,6 +171,9 @@ groups.forEach((name, i) => {
     .attr("fill", t.inkSoft)
     .style("font-size", "14px")
     .text(name);
+  row
+    .on("mouseenter", () => seriesGroups.attr("opacity", (d) => (d.key === name ? 1 : 0.25)))
+    .on("mouseleave", () => seriesGroups.attr("opacity", 1));
 });
 
 // --- Title -------------------------------------------------------------------
