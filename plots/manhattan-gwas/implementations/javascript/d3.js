@@ -1,7 +1,7 @@
 // anyplot.ai
 // manhattan-gwas: Manhattan Plot for GWAS
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 85/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
