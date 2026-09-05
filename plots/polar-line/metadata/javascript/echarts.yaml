@@ -1,0 +1,242 @@
+library: echarts
+language: javascript
+specification_id: polar-line
+created: '2026-09-05T11:20:56Z'
+updated: '2026-09-05T11:35:22Z'
+generated_by: claude-sonnet
+workflow_run: 33962637182
+issue: 2692
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Repair raised the series resolution from 12 sparse monthly vertices to 52 weekly
+    points per ring via a calibrated annual sinusoid, producing smooth, natural-looking
+    curves and pushing point count solidly into the spec's 20-500 recommended range.
+  - 'Clever closeLoop() technique solves the classic ECharts polar gotcha: a category
+    angleAxis can''t close the ring, so the axis runs on a continuous 0-12 value scale
+    with a month-name formatter, and each series repeats its January value at position
+    12 to draw a fully closed loop.'
+  - Marker size and line width were proportionally reduced (9px/3.5px to 6px/3px)
+    to match the new higher point density, avoiding overplotting.
+  - Data choice (Northern vs. Southern hemisphere monthly temperatures, opposite seasonal
+    phase) gives the polar form genuine storytelling value.
+  - Theme tokens correctly threaded through all chrome - both renders fully legible,
+    no dark-on-dark/light-on-light issues, identical data colors across themes.
+  - Correct Imprint palette usage (#009E73 first series, canonical second color).
+  weaknesses:
+  - 'The outermost radial tick label (''30°C'') still sits directly on the outer grid
+    circle at the Jan axis in both themes, slightly crowding the boundary - the added
+    radiusAxis label margin (18px) did not fully clear this specific top-of-circle
+    case; try radiusAxis.max headroom (e.g. max: 32) or a small negative label offset
+    instead.'
+  - Design excellence is still close to a well-themed default - no distinctive visual
+    touch (e.g. subtle area fill under one series, refined split-line opacity gradient)
+    beyond the dashed angleAxis grid added in this repair.
+  - No explicit descriptive radial-axis title beyond the °C-suffixed tick labels.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "polar-line · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Month labels (Jan-Dec) around the angle axis and °C-suffixed radius ticks (-5°C to 30°C) render in soft dark gray, all legible. Concentric circular grid lines are subtle solid gray; radial spokes are subtle dashed gray (new in this repair). Legend ("Northern hemisphere", "Southern hemisphere") centered at the bottom with matching colored swatches, text crisp and correctly spelled.
+      Data: Two smooth closed rings built from 52 weekly points each (up from 12 in the prior attempt): brand-green "Northern hemisphere" (small inner ring, ~0°C in winter rising to ~26°C in summer) and lavender "Southern hemisphere" (larger outer ring, ~23°C in Jan/Feb dropping to ~12°C in Jul), each with small circular markers (6px) sized appropriately for the higher point density, connected by 3px lines. First series is #009E73 as required.
+      Legibility verdict: PASS. Minor cosmetic note - the "30°C" outer radial tick label touches the outermost grid circle at the Jan axis but no pixels are clipped/missing.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title, now in light ink, clearly readable. Month and temperature tick labels render in light gray - no dark-on-dark failures anywhere. Grid circles and dashed radial spokes are subtle light gray at low opacity. Legend text is light-colored and reads cleanly.
+      Data: Data rings are in the identical green/lavender colors and positions as the light render - only chrome flipped, confirming theme-adaptive tokens were applied correctly. Same 52-point smooth rings, same marker/line sizing.
+      Legibility verdict: PASS. Same minor "30°C" boundary-touch as the light render, present identically in both themes - not a theme-specific defect.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, readable in both themes; 30°C tick still sits
+          close to the outer grid circle
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No severe collisions; minor crowding between top radius tick and
+          outer split line, unchanged from prior attempt
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 6px markers / 3px lines correctly scaled down to match the new 52-points-per-series
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender clearly distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas is the right call; polar center/radius offset leaves
+          clean legend room; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Month labels + °C-suffixed radius ticks, descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical second color; backgrounds theme-correct
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Smoother 52-point curves read as more refined than the prior 12-point
+          polygon, but overall still close to a well-themed default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Repair added dashed angleAxis split lines and denser/smoother curves,
+          a small but real refinement over the prior solid-line default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Opposite-phase hemisphere data creates a clear inner/outer ring contrast
+          that tells the seasonal story at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Closed rings, theta-ordered connection, concentric + radial grid
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Theta/radius correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 52 unique points per series now covers a full smooth seasonal cycle,
+          resolving the prior attempt's low point count
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral opposite-hemisphere seasonal temperature data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic seasonal temperature ranges for both hemispheres
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data-then-option structure, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic sinusoid formula, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false, current setOption API, mount-node contract respected'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic polar series configuration
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Continuous-value angleAxis + repeated-endpoint trick to force a closed
+          polar ring is a genuinely distinctive, non-obvious ECharts technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
