@@ -45,14 +45,44 @@ for (let percent = 1; percent <= 100; percent++) {
 }
 
 const DECILE_STEP = 10;
+// Deciles called out with an explicit numeric label (spec: "actual values at
+// key percentiles"); FOCUS_DECILE also gets a larger marker as the chart's
+// single focal point.
+const CALLOUT_DECILES = [10, 30];
+const FOCUS_DECILE = 10;
 
 // --- Mount -------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
+// --- Plugins ---------------------------------------------------------------
+// Draws "3.1x at 10%" callouts above the CALLOUT_DECILES markers.
+const decileCalloutPlugin = {
+  id: "decileCallout",
+  afterDatasetsDraw(chart) {
+    const meta = chart.getDatasetMeta(0);
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.font = "bold 15px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textAlign = "left";
+    // Offset up-and-right of the marker: the falling curve approaches from
+    // the upper-left and departs to the lower-right, so that quadrant stays clear.
+    for (const percent of CALLOUT_DECILES) {
+      const point = meta.data[percent - 1];
+      if (!point) continue;
+      const value = liftPoints[percent - 1].y;
+      const labelY = Math.max(point.y - 22, chartArea.top + 14);
+      ctx.fillText(`${value.toFixed(1)}x at ${percent}%`, point.x + 14, labelY);
+    }
+    ctx.restore();
+  },
+};
+
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
   type: "line",
+  plugins: [decileCalloutPlugin],
   data: {
     datasets: [
       {
@@ -64,7 +94,11 @@ new Chart(canvas, {
         pointBackgroundColor: t.palette[0],
         pointBorderColor: t.pageBg,
         pointBorderWidth: 2,
-        pointRadius: (ctx) => (ctx.dataIndex + 1) % DECILE_STEP === 0 ? 6 : 0,
+        pointRadius: (ctx) => {
+          const percent = ctx.dataIndex + 1;
+          if (percent === FOCUS_DECILE) return 8;
+          return percent % DECILE_STEP === 0 ? 6 : 0;
+        },
         pointHoverRadius: 7,
         tension: 0.15,
         fill: false,
@@ -76,8 +110,12 @@ new Chart(canvas, {
           { x: 100, y: 1 },
         ],
         borderColor: t.ink,
+        backgroundColor: t.pageBg,
         borderWidth: 2,
         borderDash: [8, 4],
+        pointBackgroundColor: t.pageBg,
+        pointBorderColor: t.ink,
+        pointBorderWidth: 2,
         pointRadius: 0,
         fill: false,
       },
