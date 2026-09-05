@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 110, right: 260, bottom: 110, left: 120 };
+const margin = { top: 110, right: 284, bottom: 110, left: 120 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -101,6 +101,16 @@ const line = d3
   .y((d) => y(d.activity));
 
 for (const s of series) {
+  const peak = s.values.reduce((a, b) => (b.activity > a.activity ? b : a));
+
+  // Soft halo behind the optimum point gives each curve a clear focal point.
+  g.append("circle")
+    .attr("cx", x(peak.ph))
+    .attr("cy", y(peak.activity))
+    .attr("r", 26)
+    .attr("fill", s.color)
+    .attr("opacity", 0.16);
+
   g.append("path")
     .datum(s.values)
     .attr("fill", "none")
@@ -108,11 +118,10 @@ for (const s of series) {
     .attr("stroke-width", 3)
     .attr("d", line);
 
-  const symbolPath = d3.symbol().type(s.symbol).size(260)();
   g.selectAll(`.marker-${s.name.replace(/\s/g, "")}`)
     .data(s.values)
     .join("path")
-    .attr("d", symbolPath)
+    .attr("d", (d) => d3.symbol().type(s.symbol).size(d === peak ? 460 : 260)())
     .attr("transform", (d) => `translate(${x(d.ph)},${y(d.activity)})`)
     .attr("fill", s.color)
     .attr("stroke", t.pageBg)
@@ -147,7 +156,7 @@ series.forEach((s, i) => {
   row
     .append("line")
     .attr("x1", 0)
-    .attr("x2", 36)
+    .attr("x2", 60)
     .attr("y1", 0)
     .attr("y2", 0)
     .attr("stroke", s.color)
@@ -155,13 +164,13 @@ series.forEach((s, i) => {
   row
     .append("path")
     .attr("d", d3.symbol().type(s.symbol).size(260)())
-    .attr("transform", "translate(18,0)")
+    .attr("transform", "translate(30,0)")
     .attr("fill", s.color)
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 2);
   row
     .append("text")
-    .attr("x", 52)
+    .attr("x", 76)
     .attr("y", 0)
     .attr("dominant-baseline", "middle")
     .attr("fill", t.inkSoft)
