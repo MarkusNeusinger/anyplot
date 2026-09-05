@@ -28,7 +28,10 @@ percentages = round.(Int, values ./ values[1] .* 100)
 
 # Each trapezoid tapers from the boundary above it to the boundary below it,
 # so adjacent stages share an edge and the whole shape narrows continuously.
-normalized = values ./ values[1]
+# A sqrt scale (rather than linear) keeps the taper visible through the tail
+# of the funnel, where later stages would otherwise compress into a near-flat
+# strip once their values are small relative to the first stage.
+normalized = sqrt.(values ./ values[1])
 max_half_width = 5.0
 boundaries = Vector{Float64}(undef, n + 1)
 boundaries[1] = normalized[1]
@@ -76,7 +79,7 @@ for i in 1:n
     text!(
         ax, max_half_width + 1.0, y_center - 0.22;
         text = "$(value_display[i]) · $(percentages[i])%",
-        color = INK_SOFT, fontsize = 16, align = (:left, :center),
+        color = INK_SOFT, fontsize = 19, align = (:left, :center),
     )
 end
 
