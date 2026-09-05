@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: line-loss-training
 created: '2026-09-05T07:19:49Z'
-updated: '2026-09-05T07:25:22Z'
+updated: '2026-09-05T07:33:43Z'
 generated_by: claude-sonnet
 workflow_run: 33952053332
 issue: 2860
@@ -12,43 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
+  - 'Repair correctly resolved both attempt-1 weaknesses: axis lines are now consistently
+    hidden on both x and y (no more mismatched spine treatment), and a subtle stacked-area
+    fill now shades the train/val gap past the stopping epoch, making the overfitting
+    divergence the chart''s clear visual focal point'
+  - 'Perfect Imprint palette compliance: first series exactly #009E73, second series
+    canonical position 2 (#C475FD), identical across light/dark renders; both backgrounds
+    pixel-correct (#FAF8F1 / #1A1A17) with fully theme-correct chrome'
   - Implements the spec's optional 'mark the epoch with minimum validation loss' feature
-    via a markLine + scatter overlay with an auto-positioned label
-  - 'Perfect Imprint palette compliance: first series is exactly #009E73, second is
-    palette position 2 (#C475FD), both identical across light/dark renders'
-  - 'Backgrounds are pixel-exact #FAF8F1 (light) / #1A1A17 (dark); all chrome (title,
-    legend, ticks, grid) is theme-correct in both renders'
-  - Realistic, deterministic training/validation loss curves (seeded LCG) that clearly
-    show the overfitting divergence pattern after ~epoch 28
-  - Title and legend exactly match the mandated format and data labels; no clipping
-    or overlap in either render
+    via a scatter ring + dashed markLine + auto-positioned label, and now reinforces
+    it with the shaded generalization-gap area
+  - Realistic, deterministic (seeded LCG) training/validation loss curves that clearly
+    show both the shared exponential decay and the post-epoch-28 overfitting divergence
+  - 'Clean idiomatic ECharts option object: value-type x-axis, phantom stacked series
+    for the gap fill is a genuinely ECharts-specific technique (stack composition
+    with invisible base + visible delta series) rather than a generic line-chart trick'
   weaknesses:
-  - 'DE-01/DE-02: reads as a well-configured chart rather than design-forward — the
-    x-axis spine is kept while the y-axis spine is hidden (inconsistent choice); pick
-    one treatment (both hidden, or both present as an L-frame) for a more polished
-    look'
-  - 'DE-03: the dashed marker + label calls out the minimum-val-loss epoch, but the
-    actual overfitting story (the growing gap between train and val loss after ~epoch
-    28) isn''t otherwise emphasized — consider shading the gap region between the
-    two curves past the stopping point, or a subtle color/opacity shift, to make the
-    divergence the clear visual focal point'
-  - 'VQ-01: font sizes are all explicitly set and well-proportioned, but there''s
-    room to push title/legend typography further for a more distinctive hierarchy'
+  - Title/legend typography is solid but still reads as well-configured rather than
+    distinctively designed — pushing the title weight/size hierarchy further would
+    strengthen DE-01
+  - The gap-shading fill (opacity 0.14) is subtle; a marginally stronger fill or a
+    short inline label naming the shaded region ('generalization gap') would make
+    the storytelling insight even more immediate without adding clutter
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, confirmed pixel-exact #FAF8F1 (sampled RGB 250,248,241).
-      Chrome: Title "line-loss-training · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend below title ("Training loss", "Validation loss") in soft dark gray. X-axis "Epoch" (1-60) and Y-axis "Cross-Entropy Loss" (0-2.5) labels and tick labels all dark/soft-dark and crisp against the light background. A dashed vertical reference line at epoch 43 has a small rotated label "Min val loss · epoch 43".
-      Data: Two lines — training loss in brand green (#009E73) dropping smoothly from ~2.1 to ~0.15; validation loss in lavender-purple (#C475FD) tracking closely early on, then plateauing and drifting back up after ~epoch 28-30, visibly diverging from the training curve (overfitting). A small open circle marks the minimum validation loss point (~epoch 43).
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "line-loss-training · javascript · echarts · anyplot.ai" centered in dark ink; legend ("Training loss", "Validation loss") directly below it; "Epoch" x-axis name and "Cross-Entropy Loss" y-axis name in dark ink; tick labels in softer gray; horizontal grid lines subtle. Both axis lines are hidden (consistent minimal-chrome treatment, fixing attempt-1's mismatched spines). All text is clearly readable against the light background.
+      Data: Training loss (brand green #009E73) decays smoothly from ~2.1 to ~0.15 over 60 epochs. Validation loss (lavender #C475FD) tracks it closely early on, then plateaus and drifts back up after ~epoch 28, diverging from the training curve. A small ring marker plus dashed vertical line with rotated label "Min val loss · epoch 43" marks the optimal stopping point. Past that point, the gap between the two curves is filled with a light lavender-tinted shaded area, visually emphasizing the widening generalization gap. First series is exactly #009E73 as required.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, confirmed pixel-exact #1A1A17 (sampled RGB 26,26,23).
-      Chrome: Same title, legend, and axis structure, now rendered in light ink/soft-light gray. Gridlines remain subtle. The epoch-43 marker line and label are visible in a muted light gray.
-      Data: Training loss remains the identical brand green (#009E73); validation loss remains the identical lavender-purple (#C475FD) — confirmed pixel-identical data colors between the two renders, only chrome flipped.
-      Legibility verdict: PASS — title, axis labels, tick labels, and legend are all light-colored and clearly legible against the dark background; no dark-on-dark failures found.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title/legend/axis-name layout, now rendered in light ink (title/axis names) and soft light-gray (tick labels, marker label) — no dark-on-dark failures anywhere. Axis lines remain hidden, consistent with the light render.
+      Data: Colors are pixel-identical to the light render (#009E73 green, #C475FD lavender) — only chrome flipped, as required. The gap-shading fill is visible as a darker tinted purple region past epoch 43, same relative visibility as in light mode.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,79 +59,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title/legend/axis proportions are
-          well-balanced and readable at both full resolution and mobile (~400px) scale
-          in both themes.
+        comment: Explicit font sizes throughout, well-balanced, readable in both themes
+          and at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, legend, axis labels, ticks, or the epoch-43
-          annotation label in either render.
+        comment: No overlap anywhere in either render, including the min-loss label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines rendered without symbols (appropriate for 60 dense points);
-          the stopping-point scatter+circle marker is clearly visible and unambiguous.
+        comment: 3.5px lines appropriate for 60-point series; 16px ring marker makes
+          the stopping point prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender-purple gives strong CVD-safe contrast; no red-green
-          pairing used.
+        comment: Green vs. lavender, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the 3200x1800 canvas with balanced
-          margins; legend sits directly under the title, close to the plot.
+        comment: Plot fills the large majority of the canvas, balanced margins, canvas-gate
+          passed (3200x1800)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Cross-Entropy Loss'' names the specific loss function as the spec
-          requests; ''Epoch'' needs no unit.'
+        comment: '''Cross-Entropy Loss'' names the specific loss function; ''Epoch''
+          is clear'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is exactly #009E73, second is Imprint position 2 (#C475FD);
-          backgrounds pixel-verified #FAF8F1/#1A1A17; all chrome theme-correct in
-          both renders.'
+        comment: '#009E73 first series, #C475FD second (canonical order), theme-correct
+          backgrounds and chrome in both renders'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a bare default (clean legend styling, thoughtful annotation),
-          but reads as a well-configured chart rather than a design-forward one.
+        passed: true
+        comment: 'Strong, thoughtful design: minimal chrome, restrained palette, gap-shading
+          — clearly above a configured default'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Y-axis spine hidden and grid restricted to horizontal lines only
-          (good), but the x-axis spine is kept while the y-axis one is hidden — an
-          inconsistent treatment.
+        passed: true
+        comment: 'Repair fixed attempt-1''s inconsistent spines: both axis lines now
+          hidden, y-axis-only subtle grid, generous whitespace'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: The dashed marker + label calls out the min-val-loss epoch, but the
-          actual overfitting divergence isn't otherwise visually emphasized (no shading/color
-          shift on the gap).
+        passed: true
+        comment: Repair added shaded generalization-gap fill past the stopping epoch
+          — the overfitting insight is now visually reinforced beyond just the marker
+          line
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-line chart.
+        comment: Correct dual-line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, x-axis 1-60, y-axis names the loss function,
-          and the optional min-val-loss marker is implemented.
+        comment: Distinct colors, legend, x-axis from epoch 1, loss-function-specific
+          y-label, optional stopping-point marker all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Epoch on x, loss on y; full range shown.
+        comment: Epoch on x, loss on y, full range shown (1-60)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; legend labels match data
-          series.
+        comment: Exact mandated title format, correct legend labels
     data_quality:
       score: 15
       max: 15
@@ -171,21 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both the training-loss decay AND the validation-loss overfitting
-          divergence after ~epoch 28 — the two core features of this plot type.
+        comment: Shows both the shared decay phase and the overfitting divergence
+          phase
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral ML-training scenario.
+        comment: Neutral, realistic ML-training scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting cross-entropy ~2.1 (plausible for a small multi-class problem)
-          decaying to ~0.15-0.2 with a realistic small-scale overfit gap.
+        comment: Plausible cross-entropy magnitudes and overfit-gap growth rate
     code_quality:
       score: 10
       max: 10
@@ -195,33 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> init -> option, no functions/classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG seeded at 42.
+        comment: Seeded LCG(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports/globals.
+        comment: No unused imports; ECharts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: chart.setOption with real series; animation disabled.
+        comment: Follows the mount-node contract, animation disabled
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -229,17 +222,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic option-based API, value-type x-axis instead of category,
-          mixed line+scatter series combined correctly.
+        comment: Value-type x-axis, mixed line+scatter+markLine series, declarative
+          option API
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ECharts' markLine (dashed reference line + auto-positioned label)
-          tied to a scatter overlay — a reasonably distinctive echarts pattern, though
-          not pushed further (no dataZoom, tooltip formatter, or visualMap).
-  verdict: REJECTED
+        passed: true
+        comment: Phantom stacked-series technique (invisible base + visible delta
+          area) for the gap fill is a genuinely ECharts-specific pattern, combined
+          with markLine auto-labeling
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,4 +241,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
+  - minimal-chrome
