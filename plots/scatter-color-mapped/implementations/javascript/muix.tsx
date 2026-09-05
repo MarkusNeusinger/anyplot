@@ -38,6 +38,18 @@ const temperatures = buoys.map((buoy) => buoy.z);
 const tempMin = Math.min(...temperatures);
 const tempMax = Math.max(...temperatures);
 
+// Overlapping buoys (dense clusters near the warm core) stay distinguishable
+// with moderate transparency baked into the colormap stops themselves, since
+// the scatter series has no direct opacity prop.
+const withAlpha = (hex: string, alpha: number) => {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+const MARKER_ALPHA = 0.85;
+
 // --- Title (fontsize scales with title length, see plot-generator.md) -------
 const TITLE = "scatter-color-mapped · javascript · muix · anyplot.ai";
 const TITLE_FONTSIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
@@ -50,7 +62,7 @@ export default function Chart() {
       height={height}
       skipAnimation
       legend={{ hidden: true }}
-      grid={{ vertical: true, horizontal: true }}
+      grid={{ horizontal: true }}
       margin={{ top: 90, right: 190, bottom: 110, left: 110 }}
       xAxis={[
         {
@@ -79,7 +91,7 @@ export default function Chart() {
             type: "continuous",
             min: tempMin,
             max: tempMax,
-            color: [t.seq[0], t.seq[1]],
+            color: [withAlpha(t.seq[0], MARKER_ALPHA), withAlpha(t.seq[1], MARKER_ALPHA)],
           },
         },
       ]}
@@ -88,7 +100,7 @@ export default function Chart() {
           id: "buoys",
           label: "Ocean buoys",
           data: buoys,
-          markerSize: 14,
+          markerSize: 17,
           color: t.palette[0],
         },
       ]}
