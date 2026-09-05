@@ -24,7 +24,7 @@ for (let epoch = 1; epoch <= epochs; epoch++) {
   const valNoise = (lcgRandom() - 0.5) * 0.09;
   const trainValue = 0.15 + 2.1 * Math.exp(-epoch / 12) + trainNoise;
   // Validation loss tracks training early on, then overfits and creeps back up.
-  const overfitTerm = epoch > 22 ? 0.0009 * Math.pow(epoch - 22, 1.35) : 0;
+  const overfitTerm = epoch > 22 ? 0.0026 * Math.pow(epoch - 22, 1.35) : 0;
   const valValue = 0.28 + 2.3 * Math.exp(-epoch / 13) + overfitTerm + valNoise;
   trainLoss.push(Math.max(0.05, Number(trainValue.toFixed(4))));
   valLoss.push(Math.max(0.08, Number(valValue.toFixed(4))));
@@ -57,8 +57,9 @@ Highcharts.chart("container", {
     title: { text: "Epoch", style: { color: t.inkSoft, fontSize: "16px" } },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    min: 1,
+    max: epochs,
     plotLines: [
       {
         value: minValEpoch,
