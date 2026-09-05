@@ -31,19 +31,23 @@ node_axis = repeat(1:length(axis_names), inner = n_per_axis)  # 1=Core 2=Utility
 
 # Dependency edges only connect modules on *different* axes — the classic
 # hive-plot convention where axis membership, not adjacency, tells the story.
-edges = Tuple{Int, Int}[]
+# Each edge also carries a strength `weight` (optional per spec), later shown
+# via line width/opacity — probabilities are kept modest to limit crossing
+# density near the Utility–Interface base.
+edges = Tuple{Int, Int, Float64}[]
 for i in 1:n_nodes, j in (i + 1):n_nodes
     if node_axis[i] != node_axis[j]
         pair = sort([node_axis[i], node_axis[j]])
-        edge_probability = pair == [1, 2] ? 0.22 : pair == [2, 3] ? 0.18 : 0.08
+        edge_probability = pair == [1, 2] ? 0.16 : pair == [2, 3] ? 0.12 : 0.06
         if rand() < edge_probability
-            push!(edges, (i, j))
+            weight = 1.0 + 4.0 * rand()  # dependency strength, 1 (weak) – 5 (strong)
+            push!(edges, (i, j, weight))
         end
     end
 end
 
 degree = zeros(Int, n_nodes)
-for (source, target) in edges
+for (source, target, _) in edges
     degree[source] += 1
     degree[target] += 1
 end
@@ -105,9 +109,19 @@ for (i, angle) in enumerate(axis_angles)
     )
 end
 
+# Caption spelling out what radial position means — without it, the
+# center→tip degree ordering (the whole point of a hive plot) is invisible
+text!(
+    ax, 0.0, -1.08;
+    text = "position ∝ degree (center = low, tip = high)",
+    color = INK_SOFT, fontsize = 13, align = (:center, :center),
+)
+
 # Edges — quadratic Bezier curves bowed toward the origin (never through
-# nodes on the third axis), muted so the categorical node colors lead
-for (source, target) in edges
+# nodes on the third axis). Weak edges drawn first and kept faint/thin,
+# strong edges drawn last and bolder — both de-clutters the base region and
+# visualizes the optional edge-weight field via width/opacity.
+for (source, target, weight) in sort(edges, by = e -> e[3])
     angle_a = axis_angles[node_axis[source]]
     angle_b = axis_angles[node_axis[target]]
     control_angle = atan(sin(angle_a) + sin(angle_b), cos(angle_a) + cos(angle_b))
@@ -118,7 +132,10 @@ for (source, target) in edges
     t = range(0.0, 1.0, length = 30)
     curve_x = @. (1 - t)^2 * p0x + 2 * (1 - t) * t * p1x + t^2 * p2x
     curve_y = @. (1 - t)^2 * p0y + 2 * (1 - t) * t * p1y + t^2 * p2y
-    lines!(ax, curve_x, curve_y; color = (INK_SOFT, 0.3), linewidth = 1.3)
+    weight_frac = (weight - 1.0) / 4.0  # 0 (weak) .. 1 (strong)
+    edge_alpha = 0.14 + 0.34 * weight_frac
+    edge_width = 0.8 + 1.4 * weight_frac
+    lines!(ax, curve_x, curve_y; color = (INK_SOFT, edge_alpha), linewidth = edge_width)
 end
 
 # Nodes — colored by axis category (Imprint palette, first series always brand green)
