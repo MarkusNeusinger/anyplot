@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-stacked: Stacked Histogram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Quality: 92/100 | Created: 2026-09-05
 import { BarChart } from "@mui/x-charts/BarChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
