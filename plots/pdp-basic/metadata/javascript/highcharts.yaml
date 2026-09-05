@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: pdp-basic
+created: '2026-09-05T10:36:49Z'
+updated: '2026-09-05T10:41:19Z'
+generated_by: claude-sonnet
+workflow_run: 33960771310
+issue: 2922
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Confidence band uses a genuine area+"erase" compositing technique (upper area
+    fill vs. a page-bg-colored lower area) producing a clean translucent ring instead
+    of a block filled down to the axis floor.
+  - Rug plot lives on a hidden secondary y-axis in its own bottom panel and visually
+    correlates with CI width (narrower band where training data is denser, wider band
+    at sparse edges) -- genuine data storytelling, not decoration.
+  - Deterministic seeded PRNG (mulberry32, seed=42) matches the library guide's browser-reproducibility
+    requirement; no fetch/network/imports.
+  - 'Both renders are clean: identical brand-green hue for line and band, all title/subtitle/axis/tick
+    text legible against both #FAF8F1 and #1A1A17, no dark-on-dark or light-on-light
+    failures, no edge clipping.'
+  - Title format matches exactly (`pdp-basic · javascript · highcharts · anyplot.ai`);
+    subtitle adds useful methodological context (model, feature, CI meaning) without
+    cluttering the chart.
+  weaknesses:
+  - Legend swatch for "Training data distribution" renders as a circle even though
+    the underlying series is a column/bar type -- minor visual mismatch between symbol
+    and series shape.
+  - Y-axis upper bound ($320,000, from the ceil-to-10k rounding) leaves a sizeable
+    empty band above the highest CI point (~$305,000) -- could tighten yMax rounding
+    for less top whitespace.
+  - Spec's optional suggestion to center the partial dependence at zero for easier
+    relative-effect reading was not explored (not required, but would add an alternative
+    framing).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: title "pdp-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top center; subtitle in soft gray below it; y-axis title "Predicted Sale Price ($)" rotated on the left; x-axis title "Living Area (sq ft)" below the axis; y-axis tick labels formatted as "$160,000"..."$320,000"; x-axis tick labels "600"..."4000"; bottom legend with three entries ("90% confidence interval", "Training data distribution", "Partial dependence"). All chrome text is dark and clearly readable against the light background; confirmed via zoomed crops of the left axis and right edge -- no clipping.
+      Data: a green (#009E73) spline rises from ~$210k at 500 sq ft, decelerates smoothly, and flattens near ~$270k above ~3000 sq ft (diminishing-returns curve). A translucent light-green confidence band surrounds the line, narrow (~$12k tall) near the median living area (~2000-2600 sq ft) and wide (~$70k tall) at both sparse edges. Below the main panel, thin gray vertical rug marks (in their own bottom strip, secondary hidden y-axis) show the training data's feature distribution, denser in the 1500-2600 sq ft range -- which matches where the CI band is narrowest.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: same title/subtitle/axis titles/tick labels, now rendered in light ink/gray tones. Confirmed via zoomed crops of the left axis -- fully legible, no dark-on-dark failures on any title, axis label, or tick label.
+      Data: same brand-green (#009E73) line and band shape/values as the light render -- data colors are identical between themes, only chrome (background, text, grid) flipped. Rug marks remain a neutral gray, visible against the dark background.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 22px, subtitle/tick/legend
+          14px, axis titles 16px); all text readable in both themes, confirmed via
+          zoomed crops.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; rug panel is cleanly separated from the
+          main plot and its axis.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 3, band opacity 0.18, rug marks thin (pointWidth 2) and
+          appropriate for 160 dense samples.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Only brand green + neutral gray data colors; no red-green as sole
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off at either edge, title well within
+          width bounds.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes have descriptive labels with units (sq ft, $).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds match #FAF8F1/#1A1A17; data colors
+          identical across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom area+erase compositing for the CI band, dual-panel layout
+          with hidden secondary axis for the rug plot -- deliberate, non-default design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Grid restricted to y-axis only (x gridLineWidth: 0), muted rug color,
+          subtle band opacity.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: CI band width visually correlates with rug density, guiding the reader
+          to the trustworthy region of the curve.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PDP line/spline chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: feature_values, partial_dependence, confidence_interval band, and
+          rug plot all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapped correctly; axis range covers the full feature grid.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match series
+          names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: PD line, CI band, and rug plot together cover all spec-mentioned
+          aspects.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Gradient-boosting house-price-vs-living-area scenario is plausible
+          and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible living-area (500-4000 sq ft) and price ($175k-$310k) ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; the one small PRNG factory is the library-recommended
+          way to seed randomness in the browser.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32(42) PRNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only the provided globals, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the technique used; no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; animation disabled in both chart
+          and series; credits disabled.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of multi-axis panes, area threshold fills, and spline
+          series.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Erase-band compositing and a dedicated hidden-axis rug panel are
+          genuinely distinctive Highcharts techniques, not boilerplate.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
