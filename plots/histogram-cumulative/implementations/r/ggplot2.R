@@ -35,10 +35,17 @@ cum_df <- data.frame(
 n_total <- length(box_weights)
 
 # --- Plot -------------------------------------------------------------------
+x_max <- max(cum_df$weight)
+
 p <- ggplot(cum_df, aes(x = weight, y = cum_count)) +
-  geom_hline(yintercept = n_total, linetype = "dashed", color = INK_SOFT, linewidth = 0.4) +
+  geom_hline(yintercept = n_total, linetype = "dashed", color = BRAND, linewidth = 0.6, alpha = 0.45) +
   geom_step(color = BRAND, linewidth = 1.1, direction = "hv") +
-  geom_point(data = cum_df[-1, ], color = BRAND, size = 2) +
+  geom_point(data = cum_df[-1, ], color = BRAND, size = 2.75) +
+  annotate(
+    "text",
+    x = x_max, y = n_total, label = sprintf("Total (n = %d)", n_total),
+    color = INK_SOFT, size = 2.8, hjust = 1, vjust = -0.7
+  ) +
   labs(
     title = "histogram-cumulative · r · ggplot2 · anyplot.ai",
     x     = "Box fill weight (g)",
