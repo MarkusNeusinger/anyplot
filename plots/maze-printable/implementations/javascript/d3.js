@@ -40,7 +40,12 @@ while (stack.length > 0) {
     { col, row: row + 1, dir: "bottom", opp: "top" },
     { col: col - 1, row, dir: "left", opp: "right" },
   ].filter(
-    (n) => n.col >= 0 && n.col < cols && n.row >= 0 && n.row < rows && !cells[index(n.col, n.row)].visited
+    (n) =>
+      n.col >= 0 &&
+      n.col < cols &&
+      n.row >= 0 &&
+      n.row < rows &&
+      !cells[index(n.col, n.row)].visited,
   );
 
   if (candidates.length === 0) {
@@ -60,48 +65,101 @@ while (stack.length > 0) {
 const margin = { top: 120, right: 70, bottom: 80, left: 70 };
 const availableWidth = width - margin.left - margin.right;
 const availableHeight = height - margin.top - margin.bottom;
-const cellSize = Math.floor(Math.min(availableWidth / cols, availableHeight / rows));
+const cellSize = Math.floor(
+  Math.min(availableWidth / cols, availableHeight / rows),
+);
 const mazeWidth = cellSize * cols;
 const mazeHeight = cellSize * rows;
 const offsetX = margin.left + (availableWidth - mazeWidth) / 2;
 const offsetY = margin.top + (availableHeight - mazeHeight) / 2;
 
 // --- SVG mount ------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${offsetX},${offsetY})`);
 
-// --- Walls (print-friendly, consistent thickness, max contrast) -----------
-const wallSegments = [];
-for (let row = 0; row < rows; row += 1) {
-  for (let col = 0; col < cols; col += 1) {
-    const cell = cells[index(col, row)];
-    const x0 = col * cellSize;
-    const y0 = row * cellSize;
-    const x1 = x0 + cellSize;
-    const y1 = y0 + cellSize;
-    if (row === 0 && cell.top) wallSegments.push([x0, y0, x1, y0]);
-    if (col === 0 && cell.left) wallSegments.push([x0, y0, x0, y1]);
-    if (cell.right) wallSegments.push([x1, y0, x1, y1]);
-    if (cell.bottom) wallSegments.push([x0, y1, x1, y1]);
-  }
-}
+// --- Walls: merge same-direction adjacent segments into fewer path elements
+// via d3.path, and give the outer border a heavier stroke than the interior
+// walls so the puzzle frame reads as a clear visual hierarchy (DE-01) --------
+const innerWallPaths = [];
 
-g.selectAll("line.wall")
-  .data(wallSegments)
-  .join("line")
-  .attr("class", "wall")
-  .attr("x1", (d) => d[0])
-  .attr("y1", (d) => d[1])
-  .attr("x2", (d) => d[2])
-  .attr("y2", (d) => d[3])
+// Interior horizontal grid lines (between row r-1 and row r), run-length
+// encoded with d3.path so a contiguous stretch of wall becomes one subpath.
+d3.range(1, rows).forEach((r) => {
+  const p = d3.path();
+  let runStart = null;
+  d3.range(cols + 1).forEach((col) => {
+    const hasWall = col < cols && cells[index(col, r - 1)].bottom;
+    if (hasWall && runStart === null) runStart = col;
+    if (!hasWall && runStart !== null) {
+      p.moveTo(runStart * cellSize, r * cellSize);
+      p.lineTo(col * cellSize, r * cellSize);
+      runStart = null;
+    }
+  });
+  const d = p.toString();
+  if (d) innerWallPaths.push(d);
+});
+
+// Interior vertical grid lines (between col c-1 and col c), same run-length
+// merge along the column.
+d3.range(1, cols).forEach((c) => {
+  const p = d3.path();
+  let runStart = null;
+  d3.range(rows + 1).forEach((row) => {
+    const hasWall = row < rows && cells[index(c - 1, row)].right;
+    if (hasWall && runStart === null) runStart = row;
+    if (!hasWall && runStart !== null) {
+      p.moveTo(c * cellSize, runStart * cellSize);
+      p.lineTo(c * cellSize, row * cellSize);
+      runStart = null;
+    }
+  });
+  const d = p.toString();
+  if (d) innerWallPaths.push(d);
+});
+
+g.selectAll("path.wall-inner")
+  .data(innerWallPaths)
+  .join("path")
+  .attr("class", "wall-inner")
+  .attr("d", (d) => d)
+  .attr("fill", "none")
   .attr("stroke", t.ink)
-  .attr("stroke-width", 4)
+  .attr("stroke-width", 3)
   .attr("stroke-linecap", "square");
+
+// Outer border: the maze boundary is always fully closed (the DFS carver
+// never removes a perimeter wall), so it renders as a single heavier-stroke
+// rectangle that frames the puzzle.
+const borderPath = d3.path();
+borderPath.moveTo(0, 0);
+borderPath.lineTo(mazeWidth, 0);
+borderPath.lineTo(mazeWidth, mazeHeight);
+borderPath.lineTo(0, mazeHeight);
+borderPath.closePath();
+
+g.append("path")
+  .attr("class", "wall-border")
+  .attr("d", borderPath.toString())
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 6)
+  .attr("stroke-linejoin", "miter");
 
 // --- Start / goal markers ---------------------------------------------------
 const markers = [
   { col: 0, row: 0, label: "S", name: "Start", color: t.palette[0] },
-  { col: cols - 1, row: rows - 1, label: "G", name: "Goal", color: t.palette[1] },
+  {
+    col: cols - 1,
+    row: rows - 1,
+    label: "G",
+    name: "Goal",
+    color: t.palette[1],
+  },
 ];
 
 const markerGroup = g
@@ -111,10 +169,14 @@ const markerGroup = g
   .attr("class", "marker")
   .attr(
     "transform",
-    (d) => `translate(${d.col * cellSize + cellSize / 2},${d.row * cellSize + cellSize / 2})`
+    (d) =>
+      `translate(${d.col * cellSize + cellSize / 2},${d.row * cellSize + cellSize / 2})`,
   );
 
-markerGroup.append("circle").attr("r", cellSize * 0.36).attr("fill", (d) => d.color);
+markerGroup
+  .append("circle")
+  .attr("r", cellSize * 0.36)
+  .attr("fill", (d) => d.color);
 markerGroup
   .append("text")
   .attr("text-anchor", "middle")
@@ -147,7 +209,10 @@ svg
 // --- Legend -----------------------------------------------------------------
 const legend = svg
   .append("g")
-  .attr("transform", `translate(${width / 2 - 130},${height - margin.bottom / 2 + 8})`);
+  .attr(
+    "transform",
+    `translate(${width / 2 - 130},${height - margin.bottom / 2 + 8})`,
+  );
 
 const legendItems = legend
   .selectAll("g.legend-item")
@@ -156,7 +221,11 @@ const legendItems = legend
   .attr("class", "legend-item")
   .attr("transform", (_, i) => `translate(${i * 140},0)`);
 
-legendItems.append("circle").attr("r", 12).attr("cy", -6).attr("fill", (d) => d.color);
+legendItems
+  .append("circle")
+  .attr("r", 12)
+  .attr("cy", -6)
+  .attr("fill", (d) => d.color);
 legendItems
   .append("text")
   .attr("x", 22)
