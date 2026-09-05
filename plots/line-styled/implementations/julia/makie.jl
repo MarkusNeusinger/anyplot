@@ -41,9 +41,12 @@ fig = Figure(
 
 ax = Axis(
     fig[1, 1];
-    title              = "line-styled · julia · makie · anyplot.ai",
+    title              = "API Latency Percentiles · line-styled · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
+    subtitle           = "p99.9 tail latency runs ~6× the p50 baseline",
+    subtitlesize       = 15,
+    subtitlecolor      = INK_SOFT,
     xlabel             = "Time (hours)",
     ylabel             = "Response Time (ms)",
     xlabelsize         = 14,
@@ -65,12 +68,17 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
+# Distinctive Makie touch: shade the p99-p99.9 tail spread as a translucent
+# band so the widening gap between the two most extreme percentiles reads at
+# a glance, without darkening the whole canvas.
+band!(ax, hours, p99, p999; color = (IMPRINT_PALETTE[4], 0.12))
+
 lines!(ax, hours, p50; color = IMPRINT_PALETTE[1], linestyle = :solid, linewidth = 2.75, label = "p50")
 lines!(ax, hours, p90; color = IMPRINT_PALETTE[2], linestyle = :dash, linewidth = 2.75, label = "p90")
 lines!(ax, hours, p99; color = IMPRINT_PALETTE[3], linestyle = :dot, linewidth = 2.75, label = "p99")
 lines!(ax, hours, p999; color = IMPRINT_PALETTE[4], linestyle = :dashdot, linewidth = 2.75, label = "p99.9")
 
-axislegend(ax; position = :lt, labelcolor = INK_SOFT, framevisible = false)
+axislegend(ax; position = :rb, labelcolor = INK_SOFT, framevisible = false)
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
