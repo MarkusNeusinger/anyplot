@@ -1,0 +1,245 @@
+library: highcharts
+language: javascript
+specification_id: line-annotated-events
+created: '2026-09-05T06:44:55Z'
+updated: '2026-09-05T07:01:20Z'
+generated_by: claude-sonnet
+workflow_run: 33950232218
+issue: 2997
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Semantic-red Server Outage marker (#AE3030) contrasted with lavender for the positive
+    events reinforces the up/down data story — directly addresses the prior review's
+    DE-03 feedback.
+  - Title fontsize increased to 27px and top spacing tightened (spacingTop, title
+    margin), closing the empty band flagged in attempt 1 and improving layout balance.
+  - Alternating event-label heights keep all 5 milestone labels legible without colliding
+    with the trend line, the markers, or each other.
+  - 'Theme-adaptive chrome is fully correct in both renders: identical data colors,
+    correct #FAF8F1/#1A1A17 backgrounds, all text readable light-on-dark and dark-on-light.'
+  - Deterministic fixed-seed LCG data generation with a realistic, neutral SaaS growth
+    scenario that includes both positive and negative milestones.
+  weaknesses:
+  - Title still occupies only ~45-50% of plot width at 27px — improved from attempt
+    1 but still well under the ~70-85% naturally expected for this mandated title
+    length; a further bump would strengthen the visual hierarchy.
+  - Visual refinement remains close to the prescribed theme-token recipe — no additional
+    grid or typography polish beyond the standard recipe (DE-02).
+  - Line weight (3px) and marker radius (7px) are visible but not maximally tuned
+    for the ~180-point density; a touch larger would sharpen the focal points at the
+    milestones.
+  - All 5 events share the same abrupt step-change shape — varying the onset (gradual
+    ramp vs. sudden shift) would demonstrate more of the plot type's range (DQ-01).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark-ink title "line-annotated-events · javascript · highcharts · anyplot.ai" at 27px, centered at top with a tightened top margin. Axis titles "Date" (x) and "Daily Active Users" (y) in medium-gray ink-soft; matching tick labels. All clearly readable against the light background.
+      Data: Green (#009E73) spline trending from ~9,800 to ~15,500 DAU over ~180 days with weekly seasonality and noise. Five dashed vertical event lines with inline labels ("v2.0 Launch", "Referral Program", "Server Outage", "Marketing Campaign", "Holiday Surge") at alternating heights. Four positive-event markers are lavender (#C475FD); the one negative event (Server Outage) uses the Imprint semantic-red anchor (#AE3030) for both its plotLine and marker — first data series is confirmed #009E73. Legend at bottom reads "Daily Active Users" / "Milestones".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout; title and axis titles now near-white ink, tick/legend/event labels light gray. All text clearly readable light-on-dark — no dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — green line, lavender markers, and the single red Server Outage marker/line are unchanged, confirming only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 27px, axis 16px, ticks 14px, event
+          labels 12px), readable in both themes; title still runs narrower than the
+          naturally-expected width for its length.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alternating label heights keep all 5 event labels clear of the line
+          and each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 3px line + radius-7 markers suit the ~180-point density; visible
+          but not maximally tuned.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender vs semantic-red with light-stroke halo, CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Tightened top spacing and larger title closed the empty band from
+          attempt 1; balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Date" and "Daily Active Users" are descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, milestones use Imprint palette (lavender for
+          positive, semantic-red anchor for the negative event), identical across
+          themes; chrome fully theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Semantic color-coding and a larger title add intentionality, but
+          the design still leans on the prescribed theme-token recipe.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Layout tightened (spacing/margin), single-axis grid subtle, but limited
+          additional polish beyond token defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The negative Server Outage event now reads in semantic red against
+          lavender positives, giving the chart a clear color-coded up/down narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated line/spline chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertical event lines, distinct marker color/dash, alternating label
+          heights, legend all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, Daily Active Users on y, full series visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match series names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Growth trend, seasonality, noise, and both positive and negative
+          events shown; all events share the same abrupt step shape.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral SaaS daily-active-users scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible DAU magnitude and growth rate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data → chart, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only ANYPLOT_TOKENS and Highcharts global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level Highcharts.chart usage with xAxis.plotLines +
+          spline/scatter series.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: plotLines with inline per-line labels and per-point dynamic coloring
+          is Highcharts-specific, though usage is otherwise straightforward.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - edge-highlighting
