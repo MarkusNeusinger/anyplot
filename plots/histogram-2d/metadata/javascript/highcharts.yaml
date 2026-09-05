@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: histogram-2d
 created: '2026-09-05T03:57:41Z'
-updated: '2026-09-05T04:03:18Z'
+updated: '2026-09-05T04:10:50Z'
 generated_by: claude-sonnet
 workflow_run: 33942886416
 issue: 2012
@@ -12,12 +12,15 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
   - Correctly works around the missing heatmap/colorAxis modules by rendering the
     2D histogram as a scatter series with square markers colored per-point on a log1p-scaled
     Imprint sequential ramp — exactly the fallback the library prompt calls for.
+  - The repaired colorbar now plots real log-spaced tick values (80, 18, 3, 1) instead
+    of only the two endpoints, so it honestly communicates the log-scaled color mapping
+    rather than implying a linear one.
   - Custom colorbar built with the core SVGRenderer (gradient rect + text) is a creative,
     idiomatic use of Highcharts' lower-level API given no colorAxis module is available.
   - Realistic, business-neutral financial-returns scenario (correlated daily asset
@@ -28,26 +31,23 @@ review:
     between light and dark renders.
   - Deterministic seeded LCG produces reproducible data with no external RNG dependency.
   weaknesses:
-  - The custom colorbar renders as a plain linear gradient labeled only with the two
-    endpoints ('1' at the bottom, the max count e.g. '80' at the top), but colorForCount()
-    maps data to color via a log1p ratio. A reader will assume the bar is linear (count=40
-    sits at the vertical midpoint), when the true log-scaled position for count=40
-    sits much closer to the top. Add 2-3 intermediate tick labels at their real (log-spaced)
-    count values, or otherwise indicate the scale is logarithmic, so the colorbar
-    communicates the mapping it actually uses.
   - Optional marginal 1D histograms on the top/right edges (explicitly called out
-    as optional in the spec) are not implemented — would strengthen univariate context
-    but is not required.
+    as optional in the spec) are still not implemented — would strengthen univariate
+    context but is not required.
+  - Zero-count bins are simply skipped, leaving background-colored gaps scattered
+    near the edges of the correlated cloud; a one-line note in the colorbar or tooltip
+    that gaps mean count=0 (rather than missing data) would remove any residual ambiguity,
+    though this is a minor, optional polish item.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "histogram-2d · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Simulated daily returns · rho ~ 0.65 · n = 4,000" in softer gray beneath it. Axis titles "Asset A Daily Return (%)" / "Asset B Daily Return (%)" and tick labels (-10..10) render in dark/soft-dark text, all clearly legible against the light surface. Subtle light-gray gridlines at 0/±5/±10. Custom colorbar top-right labeled "Count", with "80" near the top and "1" near the bottom, rendered in soft-dark text.
+      Chrome: Title "histogram-2d · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Simulated daily returns · rho ~ 0.65 · n = 4,000" in softer gray beneath it. Axis titles "Asset A Daily Return (%)" / "Asset B Daily Return (%)" and tick labels (-10..10) render in dark/soft-dark text, all clearly legible against the light surface. Subtle light-gray gridlines at 0/±5/±10. Custom colorbar top-right labeled "Count (log scale)", now with four tick labels (80, 18, 3, 1) placed at their real log-spaced positions rather than just the two endpoints, rendered in soft-dark text.
       Data: A diagonal, elongated cluster of square bins running from bottom-left to top-right (reflecting the positive rho ≈ 0.65 correlation), colored on a green-to-blue sequential ramp — brand green (#009E73) for the sparsest bins (count=1), shifting toward blue for the densest bins near the center. No red/green-only encoding.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/axis titles/tick labels now rendered in light ink/soft-light gray, fully legible against the dark surface. Gridlines are faint light lines at the same reference values. Colorbar labels ("Count", "80", "1") also render in light-gray text, clearly visible against the dark background — no dark-on-dark failures observed.
+      Chrome: Same title/subtitle/axis titles/tick labels now rendered in light ink/soft-light gray, fully legible against the dark surface. Gridlines are faint light lines at the same reference values. Colorbar labels ("Count (log scale)", "80", "18", "3", "1") also render in light-gray text, clearly visible against the dark background — no dark-on-dark failures observed.
       Data: Identical diagonal density cluster and identical green-to-blue color mapping as the light render — data colors are unchanged between themes, confirming only chrome flipped.
       Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark text found.
   criteria_checklist:
@@ -68,7 +68,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements observed in either render.
+        comment: No overlapping text or data elements observed in either render, including
+          the new intermediate colorbar tick labels.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -89,7 +90,7 @@ review:
         max: 4
         passed: true
         comment: Plot area uses a large, well-balanced share of the square canvas;
-          extra right margin is justified by the colorbar.
+          extra right margin is justified by the colorbar and its new tick labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -130,7 +131,7 @@ review:
         comment: Color-intensity gradient and diagonal shape clearly convey the correlated
           density pattern, guiding the reader toward the high-density core.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,12 +143,12 @@ review:
           square markers.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Colorbar and log-scale color mapping present per spec notes, but
-          the colorbar's linear-looking gradient doesn't communicate the underlying
-          log transform (see weaknesses).
+        comment: Colorbar now shows real log-spaced tick values (80, 18, 3, 1) instead
+          of only two endpoints, fully resolving the prior attempt's weakness — the
+          log-scale mapping is now honestly communicated.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -245,7 +246,7 @@ review:
         comment: Directly using chart.renderer.rect with a linearGradient plus post-render
           chart.plotLeft/plotWidth introspection is a genuinely Highcharts-specific
           technique, though replicable via raw SVG in other libraries.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
