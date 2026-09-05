@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: hive-basic
 created: '2026-09-05T05:12:50Z'
-updated: '2026-09-05T05:17:50Z'
+updated: '2026-09-05T05:26:46Z'
 generated_by: claude-sonnet
 workflow_run: 33946246743
 issue: 1879
@@ -12,56 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/chartjs/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Genuine custom hive-plot geometry implemented via a Chart.js scatter chart plus
-    a custom canvas plugin (quadratic bezier edges, manually computed radial axes)
-    — real engineering rather than a templated chart type, faithful to the spec's
-    reproducible/non-hairball requirement via a deterministic LCG.
-  - Axis colors correctly follow the Imprint palette order (green/purple/blue), consistent
-    between light and dark; all chrome (background, axis lines, labels, legend) is
-    properly theme-adaptive with no dark-on-dark or light-on-light failures.
-  - 'Node degree is encoded twice, reinforcing the key metric: rank-based position
-    along each axis (avoids raw-value stacking collisions) and marker radius.'
-  - Edge transparency (alpha=0.3) plus axis-colored curves keep ~85 cross-axis edges
-    legible instead of collapsing into a hairball.
-  - Deterministic LCG-seeded data generation gives full reproducibility, matching
-    the spec's core motivation for choosing a hive plot over force-directed layouts.
+  - 'The two attempt-1 weaknesses are both genuinely fixed: the y-scale is now asymmetric
+    (-9..15) matching the actual hive geometry span, so the triangle fills the square
+    canvas far more efficiently with no large dead margin below the axis tips; cross-axis
+    edges now use a two-stop linear gradient between both endpoint colors instead
+    of only the lower-index node''s color.'
+  - Genuine custom hive-plot geometry via a Chart.js scatter chart plus a beforeDatasetsDraw
+    plugin (manually computed radial axes, quadratic-bezier edges) — real engineering
+    rather than a templated chart type, faithful to the spec's reproducible/non-hairball
+    motivation via a deterministic LCG.
+  - 'Node degree is encoded twice for emphasis: rank-based position along each axis
+    (avoids raw-value stacking collisions) and marker radius, both correctly reinforcing
+    the same key metric.'
+  - Imprint palette used correctly (brand green first, then lavender, then blue),
+    identical across light/dark; all chrome (background, axis lines, labels, legend)
+    is properly theme-adaptive with no dark-on-dark or light-on-light failures, confirmed
+    at both full size and the 400px mobile thumbnail.
+  - Only cross-axis edges are drawn (same-axis edges skipped, matching hive-plot convention),
+    and alpha=0.3 plus the new gradient keeps roughly 85 edges legible instead of
+    collapsing into a hairball.
   weaknesses:
-  - 'The scatter scales are symmetric (x: -16..16, y: -16..16) but the hive geometry
-    only spans y ≈ -6.9 to +13.8 (axis angles 90/210/330, R_MAX=11.5, LABEL_R=13.8),
-    leaving roughly a third of the square canvas as dead blank margin below the Utility/Interface
-    axis tips, before the legend. Rescale the y-domain asymmetrically (e.g. min ≈
-    -9, max ≈ 15) or shift the axis-angle origin so the triangle is vertically centered
-    and the canvas is used efficiently.'
-  - 'Cross-axis edge color is taken only from the lower-index endpoint''s axis color
-    (`color: a.axisColor`) rather than a symmetric treatment, a minor inconsistency
-    in an otherwise well-handled density-of-edges treatment.'
+  - Only one property (degree) drives both axis position and marker size — DQ-01 caps
+    just under full marks because a second distinct encoded property (e.g. edge weight
+    via line thickness, or a secondary node attribute) would show a broader feature
+    set.
+  - 'Design excellence is solid but not exceptional: the radial axis lines and edges
+    are functionally correct but visually plain (thin uniform gray axis lines, no
+    additional refinement like tapered edge widths or a stronger focal emphasis on
+    the highest-degree hub nodes) — there is room to push aesthetic sophistication
+    and storytelling further before this would read as publication-grade.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matching #FAF8F1 — not pure white.
-      Chrome: Title "hive-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, clearly readable. Three bold axis labels ("Core" top, "Utility" bottom-left, "Interface" bottom-right) in dark ink, clearly legible. Thin gray radial axis lines from center to each label. Bottom legend with three swatches ("Core modules", "Utility modules", "Interface modules") in dark text, readable.
-      Data: 12 nodes per axis, colored by axis (green #009E73 for Core, purple for Utility, blue for Interface — first series correctly uses the brand green). Node radius grows from small (near center, low degree) to large (near axis tip, high degree). Semi-transparent curved (bezier) edges connect nodes across different axes only, colored by the source node's axis color, forming a converging braid toward the plot center without becoming an unreadable hairball.
-      Legibility verdict: PASS — all text (title, axis labels, legend) is clearly readable against the light background; no light-on-light issues.
+      Chrome: Title "hive-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, clearly readable. Three bold axis labels ("Core" top, "Utility" bottom-left, "Interface" bottom-right) in dark ink. Thin gray radial axis lines from center to each label. Bottom legend with three swatches ("Core modules", "Utility modules", "Interface modules") in dark text. The triangle now fills most of the square canvas — the previously reported dead margin below the Utility/Interface tips is gone; the plot reaches close to the bottom edge before the legend, with balanced whitespace on all sides.
+      Data: 12 nodes per axis, colored by axis (brand green #009E73 for Core, lavender for Utility, blue for Interface — first series correctly uses the brand green, canonical Imprint order for the rest). Node radius grows with degree, and higher-degree nodes also sit further out along their axis (redundant encoding). Semi-transparent curved (bezier) edges connect nodes across different axes only; each edge is now a two-color linear gradient between its two endpoint colors, symmetric rather than favoring one side, forming a converging braid toward the plot center without becoming an unreadable hairball.
+      Legibility verdict: PASS — all text (title, axis labels, legend) is clearly readable against the light background at both full resolution and the 400px mobile thumbnail; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matching #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white ink, clearly readable. Axis labels ("Core", "Utility", "Interface") in light ink, legible. Axis lines rendered in a lighter gray appropriate for the dark surface. Legend text in light ink, readable.
-      Data: Identical node and edge colors to the light render (same green/purple/blue palette, same edge curvature and node sizing) — only chrome (background, text, axis-line gray) flipped, confirming theme-adaptive tokens were threaded through correctly.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis-label/legend text remains clearly visible against the near-black background.
+      Chrome: Same title, now in light ink, clearly readable. Axis labels ("Core", "Utility", "Interface") in light ink. Axis lines rendered in a lighter gray appropriate for the dark surface. Legend text in light ink. Same improved canvas utilization as the light render.
+      Data: Identical node and edge colors to the light render (same green/lavender/blue palette, same symmetric gradient edges, same degree-based node sizing) — only chrome (background, text, axis-line gray) flipped, confirming theme-adaptive tokens were threaded through correctly.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis-label/legend text remains clearly visible against the near-black background, confirmed at both full resolution and the 400px mobile thumbnail.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, and legend all use explicit font sizes and are
-          clearly readable in both themes.
+        comment: Title, axis labels, and legend all use explicit font sizes and remain
+          clearly readable in both themes, including at the 400px mobile thumbnail.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -74,8 +80,8 @@ review:
         max: 6
         passed: true
         comment: Degree-scaled marker radius plus edge alpha=0.3 keeps ~85 cross-axis
-          edges legible; smallest low-degree markers are near the lower end of the
-          visible range.
+          edges legible; the smallest low-degree markers are near the lower end of
+          the visible range.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -84,12 +90,12 @@ review:
         comment: Three well-separated hues, no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Symmetric -16..16 y-scale leaves ~a third of the square canvas as
-          blank margin below the triangle; nothing is clipped but space is not used
-          efficiently.
+        passed: true
+        comment: 'Fixed from attempt 1: asymmetric y-scale (-9..15) now matches the
+          hive geometry''s actual span, so the triangle fills the canvas efficiently
+          with balanced margins and no wasted space.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,31 +111,33 @@ review:
         comment: 'First series is #009E73, correct Imprint order, correct theme backgrounds,
           identical data colors across themes.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom canvas plugin builds genuine hive geometry (radial axes, bezier
-          edges) beyond a templated chart type — real polish, though undercut by the
-          wasted canvas space.
+        comment: Custom canvas plugin builds genuine hive geometry (radial axes, symmetric-gradient
+          bezier edges) beyond a templated chart type; the canvas-utilization fix
+          removes the prior undercut.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid/axis lines are subtle and unobtrusive, but the unbalanced blank
-          margin below the plot hurts overall refinement.
+        comment: Grid/axis lines are subtle and unobtrusive and whitespace is now
+          balanced; axis lines remain a plain uniform gray with no further refinement
+          (e.g. tapering).
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Redundant degree encoding (position + size) and edge transparency
-          create a clear converging focal point and visual hierarchy.
+        comment: Redundant degree encoding (position + size) plus the new symmetric
+          edge gradient create a converging focal point, but the story stops at a
+          single property (degree) with no additional emphasis technique.
     spec_compliance:
       score: 15
       max: 15
@@ -226,7 +234,7 @@ review:
         comment: Follows the mount-node contract; animation:false set; no filesystem
           calls.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -238,11 +246,12 @@ review:
           to add capabilities beyond the native chart types.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Per-point radius/hover-radius callbacks and a custom drawing plugin
-          are genuinely distinctive Chart.js features, used correctly.
+        comment: Per-point radius/hover-radius callbacks, a custom drawing plugin,
+          and now symmetric canvas gradients on the edges are genuinely distinctive
+          Chart.js features, used correctly.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -255,3 +264,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - gradient-fill
