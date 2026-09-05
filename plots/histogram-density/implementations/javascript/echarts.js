@@ -38,7 +38,7 @@ const variance =
 const sampleStd = Math.sqrt(variance);
 
 // --- Binning: normalize so total bar area == 1 (density, not raw count) ----
-const binCount = 26;
+const binCount = 20;
 const minValue = Math.min(...reactionTimes);
 const maxValue = Math.max(...reactionTimes);
 const binWidth = (maxValue - minValue) / binCount;
@@ -57,6 +57,17 @@ const normalPdf = binCenters.map((x) => {
   const z = (x - sampleMean) / sampleStd;
   return Math.exp(-0.5 * z * z) / (sampleStd * Math.sqrt(2 * Math.PI));
 });
+
+// Nearest-bin lookups drive the mean/±1σ annotations below.
+const nearestBinIndex = (target) =>
+  binCenters.reduce(
+    (best, c, i) =>
+      Math.abs(c - target) < Math.abs(binCenters[best] - target) ? i : best,
+    0,
+  );
+const meanBinLabel = binLabels[nearestBinIndex(sampleMean)];
+const lowStdBinLabel = binLabels[nearestBinIndex(sampleMean - sampleStd)];
+const highStdBinLabel = binLabels[nearestBinIndex(sampleMean + sampleStd)];
 
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -96,9 +107,15 @@ chart.setOption({
     nameLocation: "center",
     nameGap: 65,
     nameTextStyle: { color: t.ink, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (value) => value.toFixed(3) },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      formatter: (value) => value.toFixed(3),
+    },
     axisLine: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
+    // Headroom above the tallest bar/curve keeps the "Mean" markLine label clear of the data.
+    max: (value) => value.max * 1.18,
   },
   series: [
     {
@@ -108,6 +125,26 @@ chart.setOption({
       barCategoryGap: "0%",
       itemStyle: { color: t.palette[0] },
       z: 2,
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.palette[0], opacity: 0.12 },
+        label: { show: false },
+        data: [[{ xAxis: lowStdBinLabel }, { xAxis: highStdBinLabel }]],
+      },
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dotted", width: 1.5 },
+        label: {
+          formatter: "Mean",
+          color: t.inkSoft,
+          fontSize: 13,
+          rotate: 0,
+          position: "end",
+          distance: 8,
+        },
+        data: [{ xAxis: meanBinLabel }],
+      },
     },
     {
       name: "Normal fit",
@@ -115,6 +152,7 @@ chart.setOption({
       data: normalPdf,
       smooth: true,
       symbol: "none",
+      itemStyle: { color: t.ink },
       lineStyle: { color: t.ink, width: 3, type: "dashed" },
       z: 3,
     },
