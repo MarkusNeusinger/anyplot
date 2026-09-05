@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: hive-basic
 created: '2026-09-05T05:16:55Z'
-updated: '2026-09-05T05:21:21Z'
+updated: '2026-09-05T05:31:13Z'
 generated_by: claude-sonnet
 workflow_run: 33946583071
 issue: 1879
@@ -12,55 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Faithful hand-built hive plot in ggplot2 (no native hiveplotlib-style support):
-    radial axis geometry, quadratic-Bezier edge bundling through a shared interior
-    control point, and coord_equal(clip="off") for label overflow are all correctly
-    composed from primitives.'
-  - Degree-based radial node positioning creates a clear visual hierarchy — busier
-    hub modules sit farther from the hive center — directly satisfying the spec's
-    'meaningful property' axis-position requirement.
-  - Imprint palette applied in canonical order (Core=#009E73 first series, Utility=#C475FD,
-    Interface=#4467A3), identical between light and dark renders; theme tokens (PAGE_BG/INK/INK_SOFT/ELEVATED_BG)
-    correctly thread through title, axis labels, and legend chrome in both themes.
-  - Edge weight mapped to alpha (0.12-0.55) with the alpha legend suppressed (guide="none")
-    — sensible transparency handling for the dense edge bundle, and a clean way to
-    avoid a redundant legend.
+  - 'Center-clump complaint from attempt 1 is resolved: the Bezier control point now
+    sits at (x0+x1)/2.5 instead of /4, and the new annotate() hive-center marker (a
+    small ring at the origin) turns the convergence point from visual clutter into
+    a deliberate, well-defined focal element — confirmed by close inspection of the
+    origin region in both renders.'
+  - 'Vertical whitespace is rebalanced: coord_equal(ylim = c(-0.62, 1.18)) plus symmetric
+    plot.margin(20, 30, 20, 30) removes the top-heavy composition flagged in attempt
+    1 — title, plot, and legend now occupy visually balanced bands of the square canvas.'
+  - Degree-based radial node positioning still creates a clear visual hierarchy (busier
+    hub modules sit farther from the hive center), directly satisfying the spec's
+    'meaningful property' axis-position requirement, and the new center hub node reinforces
+    this as an explicit structural reference point.
+  - 'Imprint palette applied in canonical order (Core = #009E73 first series, Utility
+    = #C475FD, Interface = #4467A3), pixel-identical between light and dark renders;
+    theme tokens (PAGE_BG/INK/INK_SOFT/ELEVATED_BG) correctly thread through title,
+    axis labels, and legend chrome in both themes with no dark-on-dark or light-on-light
+    failures.'
   weaknesses:
-  - 'CQ-01: Two custom helper functions (sample_edges, bezier_points) are defined
-    — defensible given the plot''s inherent geometric complexity, but deviates from
-    the ''no functions/classes'' KISS ideal; consider inlining bezier_points via a
-    vectorized sapply/map if a future pass wants to reclaim these points.'
-  - 'VQ-05/DE-02: Noticeable asymmetric negative space above the ''Core'' axis label
-    relative to the legend area at the bottom — the composition reads slightly top-heavy.
-    Tightening ylim (e.g. c(-0.62, 1.18)) or plot.margin top value would rebalance
-    it.'
-  - 'VQ-03: Edges converge into a dense clump right at the hive center despite alpha
-    blending, since the Bezier control point (cx,cy = midpoint/4) sits very close
-    to the origin — moving the control point further out (e.g. divide by 2 instead
-    of 4, or scale by radius) would spread the bundle and reduce clutter exactly where
-    the three axes meet.'
-  - 'LM-02: Beyond the necessary geom_segment/geom_path/geom_point/geom_text composition,
-    no distinctly ggplot2-specific flourish (e.g. a stat transform, annotate() layer,
-    or facet) is used to showcase library mastery beyond what any grammar-of-graphics
-    library would need for this construction.'
+  - 'CQ-01: sample_edges and bezier_points helper functions remain (noted as optional
+    in attempt 1) — still a minor deviation from the pure-inline KISS ideal, though
+    defensible given the plot''s geometric complexity.'
+  - 'LM-02: the added annotate() hive-center marker is a welcome ggplot2-specific
+    touch, but the overall construction (geom_segment/geom_path/geom_point/geom_text
+    composition) remains something any grammar-of-graphics library (letsplot, plotnine)
+    could replicate almost identically — a stat_* transform or a more distinctly ggplot2-only
+    mechanism would push Library Mastery further.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
-      Chrome: Title "hive-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, clearly readable. Three bold black axis labels ("Core" top, "Utility" bottom-left, "Interface" bottom-right) sit just outside the ends of their radial axes. A bottom legend "Module type" with three color swatches (Core/Utility/Interface) sits on a slightly elevated off-white card. All text is dark-on-light and fully legible.
-      Data: Three radial axes at 120° spaced apart, meeting at a shared center. Nodes are dots colored by module type — Core = brand green (#009E73), Utility = lavender/purple (#C475FD), Interface = blue (#4467A3) — positioned along each axis by degree (busier modules farther from center). Grey Bezier-curved edges (alpha-blended by weight) arc between nodes on different axes, bundled through a shared interior point near the hive center.
+      Chrome: Title "hive-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, clearly readable, comfortably within canvas width (no overflow). Three bold dark axis labels ("Core" top, "Utility" bottom-left, "Interface" bottom-right) sit just outside the ends of their radial axes. A bottom legend "Module type" with three color swatches (Core/Interface/Utility) sits on a slightly elevated off-white card. All text is dark-on-light and fully legible.
+      Data: Three radial axes at 120 degrees apart, meeting at a shared center marked by a small ring (the "hive center" hub, a new annotate() flourish since attempt 1). Nodes are dots colored by module type — Core = brand green (#009E73), Utility = lavender/purple (#C475FD), Interface = blue (#4467A3) — positioned along each axis by degree (busier modules farther from center). Grey Bezier-curved edges (alpha-blended by weight) arc between nodes on different axes. Zoomed inspection of the origin confirms the attempt-1 "dense clump" issue is resolved: the wider Bezier control point (divide by 2.5 instead of 4) keeps individual curve paths distinguishable right up to the hive-center ring instead of collapsing into a solid blob.
       Legibility verdict: PASS — no light-on-light or unreadable text anywhere.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
-      Chrome: Same title, now in light ink (near-white), clearly readable against the dark background. Axis labels "Core"/"Utility"/"Interface" render in light-toned bold text, fully legible. Legend text and title also switch to light ink on a slightly-elevated dark card background — no dark-on-dark failures observed.
-      Data: Node colors are pixel-identical to the light render (green/lavender/blue) — only the chrome (background, text, edge-line grey, legend card) flipped tone. Edge lines use a lighter grey-on-dark that remains subtle but visible.
+      Chrome: Same title, now in light ink (near-white), clearly readable against the dark background. Axis labels "Core"/"Utility"/"Interface" render in light-toned bold text, fully legible. Legend text and title switch to light ink on a slightly-elevated dark card background — no dark-on-dark failures observed.
+      Data: Node colors are pixel-identical to the light render (green/lavender/blue) — only the chrome (background, text, edge-line grey, legend card, hive-center ring stroke) flipped tone. Edge lines use a lighter grey-on-dark that remains subtle but visible; the hive-center ring and its three spokes are distinct against the dark surface, matching the light render's improved center clarity.
       Legibility verdict: PASS — no dark-on-dark failures; all chrome elements read clearly against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,7 +63,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, legend all readable in both themes; sizes explicit
+        comment: Title, axis labels, legend all readable in both themes; sizes explicit;
+          title well within canvas bounds
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -77,11 +73,12 @@ review:
         comment: No text/data collisions; axis labels and legend well separated
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Node markers well sized; edges alpha-blended by weight but converge
-          into a dense clump right at the hive center
+        comment: Bezier control point moved from /4 to /2.5, spreading the bundle;
+          the hive center now reads as a deliberate hub marker rather than a dense
+          clump (verified via zoomed crop of the origin)
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -90,11 +87,11 @@ review:
         comment: Distinguishable hues, not red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400); slightly top-heavy negative space
-          above 'Core' label
+        comment: Tightened ylim(-0.62, 1.18) and symmetric plot.margin resolve the
+          attempt-1 top-heavy imbalance; canvas gate passed (2400x2400)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,7 +106,7 @@ review:
         comment: Core=#009E73 first series, canonical palette order, correct theme
           backgrounds both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -117,15 +114,15 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Hand-built hive geometry with bundled Bezier edges — above generic
-          default
+        comment: Hand-built hive geometry with bundled Bezier edges and a styled center
+          hub — above generic default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_void strips chrome, generous whitespace, but composition slightly
-          top-heavy
+        comment: theme_void strips chrome, generous whitespace, and the attempt-1
+          top-heavy imbalance is now corrected
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -172,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Axes, degree-based position, weighted/alpha-blended edges, categorical
-          coloring all present
+        comment: Shows layered dependency structure (core->utility, utility->interface,
+          core->interface) with varied degree distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral software module dependency network matching the
-          spec's own example
+        comment: Software module dependency network — real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 nodes (12/10/8), ~45 deduplicated edges — sensible scale within
-          spec's 20-100 node range
+        comment: 20-100 node guidance met (30 nodes), balanced axis counts, plausible
+          edge weights
     code_quality:
       score: 9
       max: 10
@@ -197,34 +194,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions (sample_edges, bezier_points) — defensible for
-          the geometry but not pure inline code
+        comment: Two helper functions (sample_edges, bezier_points) remain — defensible
+          for the geometry, still not pure inline code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42)
+        comment: set.seed(42) at top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2/dplyr/tibble/ragg all used
+        comment: ggplot2, dplyr, tibble, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a from-scratch hive layout, no fake UI
+        comment: No fake functionality, appropriate complexity for hand-built hive
+          geometry
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png, plot-{theme}.png
+        comment: ggsave with ragg::agg_png, correct plot-{theme}.png naming
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,29 +230,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic layered grammar-of-graphics composition (geom_segment/geom_path/geom_point/geom_text),
-          theme_void + coord_equal used correctly
+        comment: Correct layered grammar-of-graphics composition, coord_equal, theme_void
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Continuous alpha aesthetic with guide suppression is a nice touch,
-          but no further distinctly ggplot2-specific flourish beyond the necessary
-          geoms
-  verdict: REJECTED
+        passed: true
+        comment: New annotate() hive-center marker is a small ggplot2-specific flourish
+          addressing attempt-1 feedback, though the overall construction is still
+          replicable in other grammar-of-graphics libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  - groupby-aggregation
   dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
-  - publication-ready
