@@ -1,0 +1,253 @@
+library: highcharts
+language: javascript
+specification_id: gain-curve
+created: '2026-09-05T02:07:36Z'
+updated: '2026-09-05T02:23:12Z'
+generated_by: claude-sonnet
+workflow_run: 33937956918
+issue: 2440
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gain-curve/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'The repair directly addresses all three prior weaknesses: a filled area under
+    the model curve, an xAxis/yAxis plotLine dropline pinpointing where the model
+    first captures 95% of fraud, and a tooltip formatter surfacing lift-vs-random
+    — turning a generic line chart into a chart that argues a point'
+  - The plotLine dropline with its inline label ('95% captured at 60% targeted') is
+    a genuine Highcharts-specific feature (not trivially replicated in most static
+    libraries) and gives the plot a clear focal point / diminishing-returns story
+  - Area fillOpacity (0.15) reads correctly in both themes without harming contrast
+    or legibility, and the baseline still reads via the theme-adaptive 'neutral' ink
+    token (black-on-cream light, white-on-near-black dark)
+  - All font sizes remain explicitly set (title 22px, subtitle 14px, axis titles 16px,
+    ticks/legend 14px, dropline label 12px) with no overlap, overflow, or clipping
+    in either render
+  - Realistic fraud-detection scenario retained with a believable imperfect-model
+    curve (steep rise, plateau, no artificial perfection); deterministic seeded RNG
+    and clean KISS top-to-bottom structure unchanged
+  weaknesses:
+  - 'Design Excellence is stronger but still short of publication-ready: no custom
+    spine/frame treatment or additional grid refinement beyond the added area fill
+    and dropline — a slightly more restrained/subtle dropline color or an additional
+    light shading band could push polish further'
+  - The dropline currently marks only one fixed threshold (95% capture); pairing it
+    with a second marker (e.g. the point of maximum lift, or the top-decile targeting
+    point) would deepen the storytelling further without adding much complexity
+  - Library Mastery is improved by the plotLine/tooltip additions but still stops
+    short of a truly unique Highcharts capability (e.g. drilldown, a custom SVG-rendered
+    annotation, or a themed data-label callout) — minor, not blocking
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "gain-curve · javascript · highcharts · anyplot.ai" centered at top, clearly readable; grey subtitle "Fraud investigations ranked by model risk score vs. random selection" readable beneath it; dark axis titles "Transactions Investigated (%)" and "Fraud Cases Captured (%)"; grey tick labels at 0/20/40/60/80/100% on both axes, all legible; subtle horizontal grid lines; legend at bottom with green line swatch "Fraud Risk Model" and black dashed swatch "Random Selection".
+      Data: Solid green (#009E73) step-like line with a light green area fill underneath, rising steeply from 0% and reaching ~95% capture by the mid-30% targeted range, then plateauing before a further step-rise to 100% by ~75% targeted. A dotted horizontal plotLine at ~95% and a dotted vertical plotLine at 60% intersect with an inline label "95% captured at 60% targeted" placed just above the x-axis, fully inside the plot area — no clipping or overlap with tick labels. Black dashed diagonal "Random Selection" baseline is clearly distinguishable from the model curve by both color and dash style.
+      Legibility verdict: PASS — no light-on-light text, all chrome elements and the new dropline label read clearly.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and subtitle rendered in light/white text, clearly legible; axis titles and tick labels in light grey, clearly legible against the dark background; grid lines subtle but visible; legend rendered with light text, readable.
+      Data: The model curve and its area fill use the identical #009E73 green as the light render (confirmed same hue/shape/position). The baseline "Random Selection" line flips from black dashed (light theme) to white dashed (dark theme) — correct theme-adaptive behavior via the semantic 'neutral' ink token. The dropline plotLines and their label are rendered in the theme-adaptive inkSoft color, fully legible against the dark background, in the same position as the light render.
+      Legibility verdict: PASS — no dark-on-dark text; all title/axis/tick/legend/annotation elements are light-colored and clearly readable against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, well-proportioned, readable in both
+          themes including the new 12px dropline label
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between the new dropline label, tick labels, or data in
+          either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers correctly disabled on the dense line series; area fill and
+          line widths (3 / 2) clearly distinguish the two series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. neutral dashed line gives redundant color+dash-style encoding;
+          area fillOpacity does not harm contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a good portion of the canvas with balanced margins; new
+          dropline label fully inside canvas, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with % units via tick format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 identical across themes; baseline and dropline
+          use theme-adaptive ink/inkSoft anchors correctly; backgrounds theme-correct
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Area fill plus the dropline callout lift this clearly above a bare
+          default line chart; thoughtful, though not full publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean legend, and a restrained dashed dropline in the
+          muted inkSoft tone add refinement beyond the prior default look
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The plotLine dropline and inline label directly call out the plateau/diminishing-returns
+          point, giving the viewer a clear focal point rather than a raw data display
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative gains chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal random-selection baseline present, 0-100% axes, sorted by
+          descending predicted risk
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = % targeted, Y = % captured, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels descriptive and accurate
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Realistic non-monotonic step shape with steep initial rise and plateau,
+          showing an imperfect model
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world fraud-detection scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5% fraud rate on 2000 transactions with overlapping score distributions
+          is plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Top-to-bottom flow; the two RNG helper functions remain the required
+          pattern since the browser has no seeded RNG
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed seed 42
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; Highcharts global used directly
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: New plateau/lift logic is compact and clean, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of area series, plotLines with inline labels, and a
+          custom tooltip formatter
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: plotLine dropline with inline label and a custom lift-computing tooltip
+          formatter are genuine Highcharts-specific features, directly addressing
+          the prior generic-usage weakness
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
