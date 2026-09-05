@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 130, right: 90, bottom: 70, left: 90 };
+const margin = { top: 130, right: 90, bottom: 45, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 const radius = 26;
@@ -20,7 +20,7 @@ const tiers = [
   { name: "Foundation", color: t.palette[3], ids: ["db", "config", "logging", "utils"] },
 ];
 
-const edges = [
+const rawEdges = [
   ["app", "api"], ["app", "admin"],
   ["cli", "scheduler"], ["cli", "admin"],
   ["worker", "scheduler"], ["worker", "queue"],
@@ -32,13 +32,32 @@ const edges = [
   ["queue", "config"], ["queue", "utils"],
 ];
 
-// --- Layout: fixed layered positions (no force simulation → reproducible) --
+// Weight each edge by its target's in-degree: packages many others depend on
+// ("db", "config") read as thicker, more prominent arrows — a data-driven
+// stand-in for the spec's optional edge-weight attribute.
+const inDegree = d3.rollup(rawEdges, (v) => v.length, ([, target]) => target);
+const weightScale = d3
+  .scaleLinear()
+  .domain([1, d3.max(inDegree.values())])
+  .range([2, 3.2])
+  .clamp(true);
+const edges = rawEdges.map(([source, target]) => ({
+  source,
+  target,
+  weight: weightScale(inDegree.get(target)),
+}));
+
+// --- Layout: fixed layered columns; every tier's node row spans the same
+// fraction of the plot height regardless of node count, so all four columns
+// use the canvas evenly instead of the shortest tier leaving slack below it.
+const yScale = d3.scaleLinear().domain([0, 1]).range([margin.top + ih * 0.08, margin.top + ih * 0.92]);
+
 const nodeById = new Map();
 tiers.forEach((tier, ti) => {
   const x = margin.left + ti * (iw / (tiers.length - 1));
-  const step = ih / (tier.ids.length + 1);
   tier.ids.forEach((id, i) => {
-    nodeById.set(id, { id, x, y: margin.top + step * (i + 1), tier: ti, color: tier.color });
+    const frac = tier.ids.length > 1 ? i / (tier.ids.length - 1) : 0.5;
+    nodeById.set(id, { id, x, y: yScale(frac), tier: ti, color: tier.color });
   });
 });
 
@@ -68,8 +87,8 @@ svg
   .attr("viewBox", "0 0 10 10")
   .attr("refX", 9)
   .attr("refY", 5)
-  .attr("markerWidth", 7)
-  .attr("markerHeight", 7)
+  .attr("markerWidth", 8)
+  .attr("markerHeight", 8)
   .attr("orient", "auto")
   .append("path")
   .attr("d", "M0,0 L10,5 L0,10 Z")
@@ -81,16 +100,17 @@ svg
   .data(edges)
   .join("path")
   .attr("class", "edge")
-  .attr("d", ([sourceId, targetId], i) => {
-    const source = nodeById.get(sourceId);
-    const target = nodeById.get(targetId);
+  .attr("d", (d, i) => {
+    const source = nodeById.get(d.source);
+    const target = nodeById.get(d.target);
     const skipsTier = target.tier - source.tier > 1;
     const bow = skipsTier ? (i % 2 === 0 ? 60 : -60) : 0;
     return edgePath(source, target, bow);
   })
   .attr("fill", "none")
   .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 1.8)
+  .attr("stroke-opacity", 0.85)
+  .attr("stroke-width", (d) => d.weight)
   .attr("marker-end", "url(#arrowhead)");
 
 // --- Nodes --------------------------------------------------------------------
