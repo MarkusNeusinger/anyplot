@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-categorical
 created: '2026-09-05T13:22:13Z'
-updated: '2026-09-05T13:25:49Z'
+updated: '2026-09-05T13:35:21Z'
 generated_by: claude-sonnet
 workflow_run: 33968518578
 issue: 2597
@@ -12,53 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/chartjs/plot-dark.html
-quality_score: 82
+quality_score: 88
 review:
   strengths:
+  - 'Both weaknesses from Attempt 1 are fixed: hexToRgba alpha-blending (0.8) now
+    handles overplotting in the dense Budget/Regular clusters, and each segment gets
+    a distinct pointStyle (circle/triangle/rect/rectRot) for a colorblind-safe redundant
+    channel.'
   - 'First categorical series is the mandated brand green #009E73, and the remaining
     three segments follow the canonical Imprint palette order (lavender, blue, ochre)
     exactly.'
-  - Data colors are pixel-identical between the light and dark renders — only chrome
-    (background, title, ticks, grid) flips, exactly as required.
-  - Four customer segments are cleanly separable with a realistic, monotonic spend-vs-visits
-    relationship; the legend uses matching circular point styles for quick color-to-label
-    lookup.
-  - Deterministic in-memory data generation via a tiny fixed-seed LCG plus a Box-Muller
-    gaussian, with no external dependencies and no filesystem access — matches the
-    JS runtime contract.
-  - 'animation:false, responsive:true, maintainAspectRatio:false all set correctly
-    per the mount-node contract; a single canvas is appended to #container.'
+  - Data colors, alpha, and marker shapes are pixel-identical between light and dark
+    renders — only chrome flips, as required.
+  - 'Four customer segments are cleanly separable with a realistic, monotonic spend-vs-visits
+    relationship; legend uses matching point-style swatches (usePointStyle: true).'
+  - Deterministic in-memory data generation via a fixed-seed LCG + Box-Muller gaussian,
+    no external dependencies, no filesystem access.
+  - 'animation: false, responsive: true, maintainAspectRatio: false all correctly
+    set; single canvas appended to #container.'
   weaknesses:
-  - No alpha transparency on the point fills despite the spec explicitly suggesting
-    it ('Consider alpha transparency for overlapping points') — the Budget and Regular
-    clusters have visibly overlapping markers that fully occlude each other; add backgroundColor
-    alpha (e.g. ~0.8) to let occluded points show through.
-  - Styling is close to Chart.js defaults beyond the white point border — no distinctive
-    library feature is used (e.g. per-segment pointStyle shapes, scriptable point
-    radius/opacity, a subtle trend/callout annotation) to lift Design Excellence and
-    Library Mastery above a generic scatter.
-  - Marker shapes are identical circles across all four categories; the spec notes
-    shape variation is an option for additional distinction on top of color — using
-    Chart.js's pointStyle per dataset would add a redundant (colorblind-friendly)
-    encoding channel.
-  - No visual hierarchy or storytelling device (e.g. a highlighted VIP cluster, a
-    subtle trend guide, or annotated callout) — the chart reads as four same-weight
-    clusters with no guided focal point.
+  - No explicit visual hierarchy or storytelling device beyond the four same-weight
+    clusters — e.g. no annotation calling out the VIP segment's higher variance, no
+    trend guide.
+  - Styling still leans on Chart.js defaults for grid/legend chrome beyond the palette
+    tokens; a bit more visual refinement would lift DE-02 further.
+  - Library Mastery is solid but not exceptional — pointStyle variation is the only
+    distinctive Chart.js touch; no scriptable options, custom tooltip formatting,
+    or other library-specific features.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "scatter-categorical · javascript · chartjs · anyplot.ai" centered at top, fully visible. Legend below the title with four circular swatches labeled Budget/Regular/Premium/VIP in dark ink. Axis titles "Monthly Spend ($)" and "Visit Frequency (visits/month)" in dark ink, tick labels in a slightly softer gray. Grid lines are light gray, subtle but visible. All chrome text is clearly readable against the light background.
-      Data: Four color-coded clusters — Budget (brand green #009E73), Regular (lavender #C475FD), Premium (blue #4467A3), VIP (ochre #BD8233) — each point has a thin white border for edge definition. Points show a clear positive relationship between spend and visit frequency, progressing diagonally from bottom-left (Budget) to top-right (VIP). Some markers within the Budget and Regular clusters overlap and fully occlude one another (no alpha transparency applied).
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "scatter-categorical · javascript · chartjs · anyplot.ai" centered at top; top legend with four point-style swatches (circle/Budget, triangle/Regular, square/Premium, diamond/VIP); dark axis titles; softer-gray tick labels; subtle light-gray gridlines on both axes. All clearly readable.
+      Data: Four color-and-shape-coded clusters (green circles, lavender triangles, blue squares, ochre diamonds) with semi-transparent fills (alpha 0.8) and white marker borders. First series is #009E73 brand green. Clear positive spend-vs-visits trend across segments.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and legend labels rendered in light/white ink, clearly legible against the dark background. Axis titles and tick labels are light gray / off-white, easily readable. Grid lines are a subtle dark gray, visible without dominating the plot. No dark-on-dark text anywhere.
-      Data: Same four category colors as the light render (green, lavender, blue, ochre) at identical hex values — only the chrome (background, text, grid) has flipped for the dark theme. Same overlap pattern as the light render in the Budget/Regular clusters.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, legend, axis titles and tick labels render in light/white ink and remain fully legible; gridlines are subtle light-on-dark. No dark-on-dark failures.
+      Data: Colors, alpha, and marker shapes are pixel-identical to the light render — only chrome flipped. Brand green #009E73 unmistakable on both surfaces.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,74 +61,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22, axis titles/legend 16, ticks 14);
-          readable in both themes
+        comment: All text readable in both themes at appropriate font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; legend and title well separated
+        comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Point radius 9 with white border is visible, but overlapping points
-          in Budget/Regular clusters fully occlude without alpha
+        comment: Alpha-blended fills + white borders keep overlapping points in dense
+          clusters distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe, distinct hue families, no red-green-only
-          signal
+        comment: Marker-shape redundancy on top of Imprint palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas, no clipping, balanced margins
+        comment: Canvas dimension gate passed; good proportions, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units ($, visits/month)
+        comment: Descriptive with units ($, visits/month)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining series follow canonical Imprint
-          order; correct theme backgrounds in both renders'
+        comment: 'First series #009E73, canonical order, correct theme-adaptive backgrounds'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean but close to library defaults; white point borders are the
-          only deliberate polish
+        passed: true
+        comment: pointStyle variation + alpha-blended fills + white borders read as
+          deliberate polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace, but no further refinement (no
-          alpha to manage overplotting)
+        passed: true
+        comment: Overplotting now handled via alpha; grid/whitespace still library-default
+          otherwise
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Clear category separation and trend, but no focal point, annotation,
-          or hierarchy beyond raw color grouping
+        comment: Shape+color redundancy aids readability but no explicit focal point
+          or emphasis device
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,27 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Correct categorical scatter
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Distinct colors and legend present; no marker-shape variation or
-          overlap alpha, both suggested by the spec
+        comment: Marker-shape variation AND alpha transparency both implemented, matching
+          spec Notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to spend/visits, full data range shown
+        comment: X/Y correct, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match category
-          names
+        comment: Title format correct, legend labels match categories
     data_quality:
       score: 14
       max: 15
@@ -171,20 +162,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows scatter + categorical color + legend; missing optional shape
-          variation
+        comment: Covers categorical grouping, correlation-by-category, overlap handling
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer segments (spend vs visit frequency) are plausible and neutral
+        comment: Realistic, neutral customer-segment scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible value ranges for both axes
+        comment: Sensible spend/visit ranges
     code_quality:
       score: 10
       max: 10
@@ -194,34 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only small helper functions for the required LCG/gaussian RNG, no
-          unnecessary abstraction
+        comment: No unnecessary classes; small helper functions only
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart global used directly
+        comment: No unused imports (none needed)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract followed correctly, animation disabled
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -229,20 +218,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Chart.js scatter config, correct options structure
+        comment: Idiomatic scatter config, per-dataset styling
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: No distinctive Chart.js features used (e.g. per-dataset pointStyle,
-          scriptable options)
-  verdict: REJECTED
+        comment: pointStyle-per-dataset is a real secondary channel but the only distinctive
+          touch
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
