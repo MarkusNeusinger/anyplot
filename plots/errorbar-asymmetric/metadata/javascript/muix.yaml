@@ -1,0 +1,235 @@
+library: muix
+language: javascript
+specification_id: errorbar-asymmetric
+created: '2026-09-05T01:18:03Z'
+updated: '2026-09-05T01:30:39Z'
+generated_by: claude-sonnet
+workflow_run: 33935482030
+issue: 2781
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Plateau shading + annotation deliver real data storytelling tied directly to the
+    diminishing-returns / widening-spread pattern in the data
+  - Subtitle explicitly names the percentile range, satisfying the spec's asymmetric-bounds
+    explanation requirement
+  - Marker halo (stroke={t.pageBg}) gives clean figure-ground separation without extra
+    colors
+  - Correctly falls back to a custom SVG overlay (via useXScale/useYScale) for a chart
+    type the MUI X community surface doesn't natively support, rather than reaching
+    for Pro/Premium or a different library
+  - Theme-adaptive chrome and identical data color confirmed correct in both renders
+  weaknesses:
+  - Tick labels and plateau annotation at 13px CSS are slightly below the 14-16px
+    guidance for axis/legend text in the mount's CSS coordinate space
+  - Custom SVG error-bar elements aren't wired into MUI X's tooltip system, so the
+    interactive HTML output has no hover detail on the error bars themselves
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Title and subtitle centered in dark ink / soft gray; axis labels and tick labels in ink/ink-soft tones; all clearly readable.
+      Data: Brand green (#009E73) markers with cream/pageBg halo stroke, error bars with visible caps; plateau region (doses 160-240) tinted pale green with italic annotation "Diminishing returns, widening spread".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Title and axis labels in light ink, tick labels/subtitle in softer light gray; annotation text legible light-gray-on-near-black italic; no dark-on-dark failures.
+      Data: Same brand green (#009E73) markers and error bars as light render - confirmed identical data color, only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; 13px annotation/tick
+          labels slightly small for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between error bars, markers, plateau shading, or text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (7 points) with prominent r=10 markers and 3px error-bar
+          strokes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: White/cream marker halo provides figure-ground separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean proportions, generous margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first series, correct theme backgrounds in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Title fontsize scaling formula, marker halo, tinted plateau region
+          show deliberate polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped implicit frame, subtle horizontal grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Plateau shading + annotation is genuine, well-placed storytelling
+          tied to the data pattern
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct asymmetric error-bar plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible caps; subtitle explains the 10th-90th percentile bounds
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapped correctly, all 7 points shown with correct asymmetric
+          spans
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; single series correctly omits
+          legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Median + independent upper/lower error magnitudes shown for every
+          category
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Nitrogen fertilizer dose-response with diminishing returns is plausible
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible agronomic dose and yield-increase values; 7 points within
+          spec range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper component required by hook-access pattern, not incidental
+          complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, default export, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scale-hook overlay is the documented pattern when no built-in series
+          covers asymmetric error bars
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Distinctive scale-driven SVG composition; custom marks aren't wired
+          into MUI X tooltip system
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
