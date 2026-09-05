@@ -1,0 +1,249 @@
+library: highcharts
+language: javascript
+specification_id: line-markers
+created: '2026-09-05T07:43:14Z'
+updated: '2026-09-05T07:55:24Z'
+generated_by: claude-sonnet
+workflow_run: 33953157668
+issue: 2599
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Excellent data storytelling: a per-point marker override plus a data-label annotation
+    calls out the "Refractory dip" anomaly, a dashed plotLine marks the spec threshold,
+    and a "+2.8 HRC vs B" callout closes the comparison — the chart has a clear narrative
+    focal point, not just raw series.'
+  - Series are differentiated by BOTH marker shape (circle vs diamond) AND dash style
+    (solid vs short-dash), not color alone — satisfies the spec's "use different marker
+    shapes for multiple series" note and is CVD-safe/print-safe.
+  - 'Theme-adaptive chrome is fully correct in both renders: background, text, and
+    grid flip between light/dark while data colors (including the amber anomaly marker)
+    stay identical; first categorical series is Imprint green #009E73.'
+  - 'Clean, idiomatic Highcharts snippet: deterministic in-memory data, animation
+    disabled on chart and series, credits disabled, no bare plot.png output, no add-on
+    modules.'
+  weaknesses:
+  - X-axis renders weeks as discrete categories ("Week 1"..."Week 10") rather than
+    a continuous numeric axis, though the spec defines x as continuous numeric — fine
+    for evenly-spaced weekly cadence, but a numeric xAxis would match the spec more
+    literally and support uneven spacing if the data ever needs it.
+  - Annotation/dataLabel text ("Refractory dip", "+2.8 HRC vs B") is set at 12px,
+    the smallest text on the chart — bump to ~13-14px so callouts stay legible at
+    reduced viewport sizes without changing the axis-tick/label balance.
+  - Distinctive-feature usage is solid (per-point marker override, plotLines with
+    label, dataLabels) but stays within a fairly common Highcharts toolkit — a plotBand
+    around the anomaly week or a zoom/reset-zoom affordance would push library mastery
+    further for the HTML detail view.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), consistent with the light theme surface, not pure white.
+      Chrome: Bold dark title "line-markers · javascript · highcharts · anyplot.ai" centered at top; axis titles "Production Week" (x) and "Hardness (HRC)" (y) in dark-gray; tick labels "Week 1"..."Week 10" and 51-64 gridline labels all in dark-gray, clearly legible; subtle light-gray horizontal gridlines only (no vertical gridlines); dashed amber "Min spec: 56 HRC" reference line with its own label; bottom legend with "Furnace A" (circle icon) and "Furnace B" (diamond icon) in dark-gray text.
+      Data: Furnace A is a solid Imprint-green (#009E73) line with filled circle markers, trending up 58.2 -> 63.0 HRC with a "+2.8 HRC vs B" callout near its last point. Furnace B is a dashed light-purple line with diamond markers, dipping sharply at week 7 to a highlighted amber diamond marker labeled "Refractory dip" before recovering. All series/annotation text is dark and reads clearly against the light background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Title, axis titles, tick labels, legend text, and the "Min spec" plotLine label all render in light/white tones, clearly legible against the dark surface. Gridlines are subtle dark-gray, still visible. No dark-on-dark text found anywhere (title, ticks, legend, annotations all flip to light text).
+      Data: Furnace A green line/markers and Furnace B purple dashed line/diamond markers are pixel-identical in hue to the light render — only the chrome (background, text, grid) flipped, as required. The amber anomaly marker and dashed spec line remain visible and legible against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; annotation/dataLabel text (12px)
+          is the smallest element on the chart but stays legible at full size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, legend, or annotations in either
+          render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers sized appropriately for 10-point sparse series (radius 6,
+          radius 9 for the highlighted anomaly point)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Series differentiated by marker shape and dash style in addition
+          to color; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, balanced axis titles/ticks, nothing cut off or
+          overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Production Week" and "Hardness (HRC)" are descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint green #009E73; both renders theme-correct
+          backgrounds; data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom per-point styling (amber anomaly marker), dash-style + shape
+          differentiation beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean minimal-chrome grid (horizontal-only), generous whitespace,
+          no clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Annotated anomaly, spec-threshold reference line, and comparison
+          callout create a clear narrative focal point
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line-with-markers chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible markers, different shapes per series, marker size proportional
+          to line thickness, filled markers with distinct outline colors
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: true
+        comment: X-axis uses discrete week categories rather than a continuous numeric
+          axis as the spec describes; acceptable for evenly-spaced weekly data but
+          a literal deviation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match series names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple series, threshold line, per-point annotation, comparison
+          callout all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Furnace hardness QC readings are realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: HRC values (52.5-63.0) are sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the Highcharts global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container via Highcharts.chart, animation disabled,
+          current API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of plotLines, dataLabels, per-point marker overrides
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point marker/dataLabel override and plotLine label are genuinely
+          Highcharts-distinctive; more could be leveraged (plotBands, zoom)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
