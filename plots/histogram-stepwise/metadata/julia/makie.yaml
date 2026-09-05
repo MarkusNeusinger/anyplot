@@ -1,0 +1,248 @@
+library: makie
+language: julia
+specification_id: histogram-stepwise
+created: '2026-09-05T05:08:16Z'
+updated: '2026-09-05T05:26:15Z'
+generated_by: claude-sonnet
+workflow_run: 33945931793
+issue: 2645
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - Correctly uses Makie's native stephist! recipe -- the idiomatic, purpose-built
+    API for outline-only step histograms, exactly matching the spec's 'no fill, only
+    outline' requirement.
+  - 'Addressed attempt-1 feedback directly: the driver distribution now has a real
+    right-skewed secondary mode (congestion_hit) instead of a plain bell curve, giving
+    the step outline actual shape to reveal.'
+  - Dashed median vlines for both series add an explicit storytelling focal point
+    -- the ~10-minute commute-time gap between cyclists and drivers is now readable
+    at a glance, not just inferred from color contrast.
+  - Title size increased from 20 to 23, resolving the prior under-sized-title weakness;
+    now occupies a comfortable proportion of the canvas.
+  - Differentiated linewidths (3.0 cyclists vs 4.0 drivers) create subtle intentional
+    hierarchy beyond flat style-guide defaults.
+  - 'Full theme-adaptive chrome with Imprint data colors (#009E73, #C475FD) pixel-identical
+    between light and dark renders; both renders pass the theme-readability check
+    with no dark-on-dark or light-on-light issues.'
+  - Clean KISS script structure, Random.seed!(42) for reproducibility, only-used imports
+    (CairoMakie, Colors, Random, Statistics all exercised).
+  weaknesses:
+  - Data storytelling still relies on dashed median lines alone -- a short text annotation
+    or subtitle naming the ~10-minute gap would push DE-03 further, though this is
+    a minor polish item, not a defect.
+  - LM-02 distinctive-feature usage (vlines median markers, linewidth hierarchy) is
+    solid but still modest relative to the 5/5 ceiling -- richer use of Makie-specific
+    idioms (e.g. band!/rangebars! for an IQR ribbon) could be explored in a future
+    iteration.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "histogram-stepwise · julia · makie · anyplot.ai" centered at top; dark-ink axis labels "Commute Time (minutes)" (x) and "Number of Commuters" (y); softer-gray tick labels; subtle horizontal-only gridlines; L-shaped spine (top/right removed). All clearly readable.
+      Data: Two outline-only step histograms, no fill -- green "Cyclists" (Imprint #009E73, unimodal, peak ~28 min) at linewidth 3.0, and lavender "Drivers" (Imprint #C475FD, right-skewed with a visible secondary bump ~37-40 min from the congestion effect) at linewidth 4.0. Two dashed vertical median lines (translucent, matching each series' color) mark ~28 min (cyclists) and ~40 min (drivers), making the commute-time gap explicit. Frameless legend top-right, no overlap with data or axes.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same title/axis/tick text now rendered in light/off-white tones; spines and gridlines flipped to light-tinted low-opacity variants; legend text light-colored. All clearly legible -- no dark-on-dark failures.
+      Data: Colors are pixel-identical to the light render (#009E73 green, #C475FD lavender) and the same shapes/secondary mode/median lines are preserved -- confirms only chrome flips between themes, not data encoding.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 23, axis 14, ticks 12); readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend top-right clear of data peaks; median lines translucent, no
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step-line widths (3.0/4.0) clearly distinguish the two series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender, CVD-safe, not red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed (gate passed); title now proportionate
+          after size bump; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units (minutes, count)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD (canonical order); backgrounds
+          correct in both themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dashed median markers, linewidth hierarchy, larger title -- intentional
+          touches beyond flat defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle theme-derived grid alpha, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed median lines give an explicit focal point for the commute-time
+          gap; a text annotation would push further
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: stephist! -- outline-only step histogram, no fill, matches spec exactly
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal/vertical step segments, overlaid distributions for comparison
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = commute time, Y = count, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Driver distribution now has a genuine right-skewed secondary mode,
+          showcasing step-histogram shape detail
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cyclist vs driver commute times, realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=900 per series, sensible minute-scale values with a physical floor
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current stephist!/vlines!
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: stephist! is the dedicated Makie recipe, not a manual step-line reconstruction
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: vlines! median markers + linewidth hierarchy add distinctive touches
+          beyond the baseline recipe call
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - step-histogram
+  - overlaid-distributions
+  - reference-lines
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - median
+  styling:
+  - publication-ready
+  - theme-adaptive

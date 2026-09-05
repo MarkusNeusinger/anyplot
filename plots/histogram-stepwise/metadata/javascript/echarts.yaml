@@ -1,0 +1,252 @@
+library: echarts
+language: javascript
+specification_id: histogram-stepwise
+created: '2026-09-05T04:53:37Z'
+updated: '2026-09-05T05:07:13Z'
+generated_by: claude-sonnet
+workflow_run: 33945609980
+issue: 2645
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Fixed: step outline now uses ECharts'' native `step: "end"` line option instead
+    of manually pushing paired left/right-edge points — idiomatic, simpler code, and
+    a library-distinctive rendering path.'
+  - 'Fixed: reaction-time data is now generated as an ex-Gaussian (normal + exponential
+    tail) instead of a symmetric normal, producing the correct sharp-rise/long-right-tail
+    shape real reaction-time distributions have.'
+  - 'Fixed: a `markLine` annotation now marks the distribution''s peak ("Peak: 249
+    ms"), giving the chart a clear focal point and visual hierarchy instead of leaving
+    the viewer to find the mode unaided.'
+  - 'Correct step-histogram semantics preserved: outline-only line (`showSymbol: false`,
+    no `areaStyle`), closed to zero at both ends, exactly matching the spec''s "no
+    fill, only outline" requirement.'
+  - 'Clean, refined chrome: horizontal-only split lines, no axis ticks, no y-axis
+    line — minimal-chrome styling above library defaults.'
+  - 'Palette and theme compliance: the single series is `#009E73` in both renders;
+    backgrounds are `#FAF8F1`/`#1A1A17`; all text uses theme-correct tokens with no
+    dark-on-dark or light-on-light failures, and no edge clipping.'
+  - Deterministic, reproducible data generation via a fixed-seed LCG (seed=42), n=1500,
+    realistic and neutral scenario.
+  - Title format matches the mandated `{spec-id} · {language} · {library} · anyplot.ai`
+    convention exactly.
+  weaknesses:
+  - Overall aesthetic is still a single default-weight green line with one annotation
+    — polished and correct, but not yet an exceptional, highly art-directed look (DE-01
+    headroom).
+  - Only one distinctive ECharts feature (markLine) is leveraged; a second touch (e.g.
+    a subtle low-alpha area fill strictly secondary to the stroke, or a second markLine/markArea
+    for the mean or a percentile band) would further raise Library Mastery and Data
+    Storytelling.
+  - The step still shows a fairly sharp single-bin drop right after the peak (~215
+    to ~130 count) — plausible for an ex-Gaussian tail, but slightly more bins or
+    a touch more smoothing would soften the transition and read less abruptly.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-stepwise · javascript · echarts · anyplot.ai" centered near the top in dark ink, fully visible with no clipping. X-axis title "Reaction Time (ms)" and rotated y-axis title "Count" are both legible in dark ink. Tick labels (160-620 on x, 0-250 on y) are legible in secondary gray. Only horizontal grid lines are drawn; no axis ticks, no y-axis line — clean minimal-chrome treatment. A dashed vertical markLine with rotated label "Peak: 249 ms" sits just below the title, fully within the canvas (verified via pixel crop — no clipping at the top edge).
+      Data: Single green (#009E73) step-line, ~3px stroke, no fill, no markers, tracing a right-skewed (ex-Gaussian) distribution: sharp rise to a peak near 220-250 ms then a long tail out past 600 ms.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, and peak annotation, now rendered in light ink tones — fully legible, no dark-on-dark failures anywhere (title, ticks, peak label all confirmed readable via pixel crop).
+      Data: Step-line is the identical #009E73 green, same shape and position as the light render — confirming only chrome (background + text) flips between themes, not data colors.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text (title, axis titles, ticks, peak label) explicitly sized
+          and readable in both themes; no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px step-line clearly visible against both backgrounds; density appropriate
+          for n=1500 binned data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green reads with strong contrast on both surfaces; single-hue
+          encoding, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (Reaction Time (ms), Count)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only series is #009E73; backgrounds #FAF8F1/#1A1A17 correct
+          in both themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean, well-configured, but still a single default-weight line plus
+          one annotation — not yet exceptional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Horizontal-only subtle grid, no ticks, no y-axis line — above bare
+          defaults but not fully refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Fixed: markLine now marks the peak (249 ms), giving the chart a
+          clear focal point that guides the viewer'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step histogram via native step line
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Outline-only (no fill), horizontal bin segments, vertical connectors,
+          closed to zero at both ends
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction time, Y = count, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; single series, no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full distribution shape shown across 24 bins plus a peak annotation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated cognitive-test reaction times, realistic and neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed: ex-Gaussian (normal + exponential tail) produces the correct
+          right-skewed reaction-time shape instead of a symmetric normal'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only small, necessary helper functions (lcg, randNormal, randExponential)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Uses mount-node contract correctly, animation: false'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Fixed: uses ECharts'' native series.step: ''end'' instead of manually
+          constructed step points'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: One distinctive feature used (markLine peak annotation); room for
+          a second (e.g. markArea/percentile band) to fully showcase the library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - minimal-chrome
