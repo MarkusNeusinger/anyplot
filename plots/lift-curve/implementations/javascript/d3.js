@@ -45,11 +45,12 @@ const curve = customers.map((c, i) => {
   return { pct: ((i + 1) / n) * 100, lift: cumChurned / (i + 1) / overallRate };
 });
 
+const bisectPct = d3.bisector((d) => d.pct).left;
 const deciles = d3.range(1, 11).map((k) => {
-  const idx = Math.round((k / 10) * n) - 1;
-  return { pct: curve[idx].pct, lift: curve[idx].lift };
+  const idx = Math.min(bisectPct(curve, k * 10), n - 1);
+  return { pct: curve[idx].pct, lift: curve[idx].lift, decile: k * 10 };
 });
-const labeledDeciles = new Set([10, 20, 30, 50]);
+const labeledDeciles = new Set([20, 40, 60, 80, 100]);
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3
@@ -124,7 +125,7 @@ g.selectAll("circle.decile")
   .attr("stroke-width", 2);
 
 g.selectAll("text.decile-label")
-  .data(deciles.filter((d) => labeledDeciles.has(Math.round(d.pct))))
+  .data(deciles.filter((d) => labeledDeciles.has(d.decile)))
   .join("text")
   .attr("class", "decile-label")
   .attr("x", (d) => x(d.pct))
@@ -194,4 +195,4 @@ svg
   .attr("fill", t.ink)
   .style("font-size", "22px")
   .style("font-weight", "600")
-  .text("lift-curve · javascript · d3 · anyplot.ai");
+  .text("Model Lift Chart · lift-curve · javascript · d3 · anyplot.ai");
