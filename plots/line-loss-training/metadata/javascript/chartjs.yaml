@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-loss-training
 created: '2026-09-05T07:14:46Z'
-updated: '2026-09-05T07:18:44Z'
+updated: '2026-09-05T07:28:18Z'
 generated_by: claude-sonnet
 workflow_run: 33951819974
 issue: 2860
@@ -12,55 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Correct plot type with both required curves (training and validation loss) rendered
-    clearly and mapped to the right axes
-  - 'All spec features present: legend labeling both curves, epoch axis from 1 to
-    60, loss-function-specific y-axis label, and an explicit marker for the optimal
-    early-stopping epoch'
-  - Excellent theme adaptation — light and dark renders are both fully legible, no
-    dark-on-dark or light-on-light failures, and the Imprint data colors are pixel-identical
-    across themes
-  - 'Deterministic, closed-form data generation (no RNG) that realistically shows
-    the overfitting pattern: validation loss tracks training loss early on, then diverges
-    upward past ~epoch 30'
-  - Clean KISS code structure with idiomatic Chart.js usage — mixed line + scatter
-    dataset types to overlay the early-stopping marker on the same chart, animation
-    disabled per the mount-node contract
-  - 'Title format matches the mandated pattern exactly: "line-loss-training · javascript
-    · chartjs · anyplot.ai"'
+  - 'Palette fix applied correctly: Validation loss now uses t.palette[1] (#C475FD
+    lavender, canonical position 2) instead of the prior skip to position 3 — first
+    series stays #009E73 brand green as required'
+  - New overfitting-region plugin shades epoch > 32 with a subtle theme-adaptive fill
+    and an italic 'Overfitting region →' label, giving the divergence insight a clear
+    visual anchor beyond the marker alone
+  - 'Axis border treatment is now consistent — both x and y scales set border: { display:
+    false }, resolving the prior asymmetric-spine inconsistency'
+  - 'All spec features present: distinct colors for both curves, legend labeling all
+    three series, epoch axis 1–60, loss-function-specific y-axis label (''Cross-Entropy
+    Loss''), and an explicit early-stopping marker at the validation-loss minimum'
+  - Excellent theme adaptation — both renders are fully legible with no dark-on-dark
+    or light-on-light failures, and data colors are pixel-identical between light
+    and dark
+  - Deterministic, closed-form data generation showing a realistic overfitting pattern
+    (validation loss tracks training loss, then diverges upward past ~epoch 30)
+  - 'Clean, idiomatic Chart.js usage: mixed line + scatter dataset types for the early-stopping
+    marker, custom plugin hooks (beforeDatasetsDraw/afterDraw) for the region shading,
+    animation disabled per the mount-node contract'
   weaknesses:
-  - 'VQ-07: The second series (Validation loss) uses t.palette[2] (#4467A3, canonical
-    position 3 / blue) instead of the canonical position 2 (#C475FD lavender) that
-    should follow the brand-green first series. There''s no strong real-world color
-    association (''validation loss'' does not read as inherently blue) that justifies
-    skipping a slot — switch to t.palette[1] (lavender) or use canonical positional
-    order for the second series.'
-  - 'DE-01/DE-03: The chart is technically polished but visually generic — beyond
-    the early-stopping marker there is no visual emphasis (e.g. a subtle shaded region
-    for epoch > 32 highlighting the overfitting zone, or a short annotation label
-    near the marker like ''Optimal stop'') to make the divergence insight jump out
-    immediately.'
-  - 'DE-02: Axis chrome is slightly inconsistent — the x-axis keeps a border while
-    the y-axis border is hidden; unify the spine treatment (e.g. drop both, or keep
-    both subtle) for a more deliberate, polished look.'
+  - 'DE-01: Still reads as a well-configured but somewhat conventional line-chart
+    design overall — the region shading helps, but typography and color use elsewhere
+    (legend, ticks) remain close to library defaults rather than a fully bespoke composition'
+  - The 'Overfitting region →' annotation label sits close to the early-stopping marker
+    and the validation curve as it climbs past epoch 50–60 — consider nudging it upward
+    slightly in a future pass so it never risks touching the rising validation line
+    at larger canvas scales
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), not pure white — matches the required light-theme surface.
-      Chrome: Title "line-loss-training · javascript · chartjs · anyplot.ai" in dark ink at top center; legend row below the title with three swatches (green circle "Training loss", blue circle "Validation loss", amber-ringed circle "Early-stopping point (epoch 32)"); y-axis title "Cross-Entropy Loss" and x-axis title "Epoch" in dark ink; tick labels in a slightly softer gray-black. Subtle horizontal gridlines only. All text is clearly dark-on-light and fully readable.
-      Data: Training loss (brand green #009E73) descends smoothly from ~2.45 to near 0 by epoch 60. Validation loss (blue #4467A3) starts higher (~2.6), tracks the training curve down to a minimum around epoch 30–35, then climbs back up to ~1.25 by epoch 60 — a textbook overfitting divergence. A single amber-filled, dark-ringed circle marks the validation-loss minimum at epoch 32.
+      Chrome: Title "line-loss-training · javascript · chartjs · anyplot.ai" in dark ink at top center; legend row below with three swatches — green circle "Training loss", lavender circle "Validation loss", amber-ringed circle "Early-stopping point (epoch 32)". Y-axis title "Cross-Entropy Loss" and x-axis title "Epoch" in dark ink; tick labels in softer gray-black. Subtle horizontal-only gridlines (x-axis grid hidden). A faint gray shaded band covers epoch > 32 with an italic "Overfitting region →" label. All text is dark-on-light and fully readable.
+      Data: Training loss (brand green #009E73) descends smoothly from ~2.45 to near 0 by epoch 60. Validation loss (lavender #C475FD) starts higher (~2.6), tracks the training curve down to a minimum around epoch 30–35, then climbs back up to ~1.25 by epoch 60 — a textbook overfitting divergence. A single amber-filled, dark-ringed circle marks the validation-loss minimum at epoch 32, sitting right at the edge of the shaded overfitting band.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), not pure black — matches the required dark-theme surface.
-      Chrome: Same title, legend, and axis titles now rendered in light ink/off-white, tick labels in a lighter soft gray. Gridlines remain subtle and visible against the dark background. No dark-on-dark text anywhere — every label, title, and tick reads cleanly against the near-black surface.
-      Data: Training loss and validation loss curves are the identical #009E73 green and #4467A3 blue as the light render; the amber early-stopping marker is unchanged. Only the chrome (background, text, grid) flipped, exactly as required.
+      Chrome: Same title, legend, and axis titles now rendered in light ink/off-white, tick labels in a lighter soft gray. Gridlines remain subtle and visible against the dark background. The overfitting-region shading uses a lighter, low-alpha off-white fill appropriate for the dark surface, with the same italic label. No dark-on-dark text anywhere — every label, title, and tick reads cleanly against the near-black surface.
+      Data: Training loss and validation loss curves are the identical #009E73 green and #C475FD lavender as the light render; the amber early-stopping marker is unchanged. Only the chrome (background, text, grid, region-shade tint) flipped, exactly as required — data colors are pixel-identical across themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -88,54 +84,54 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Green/blue pairing has good contrast and is CVD-safe; not relying
+        comment: Green/lavender pairing has good contrast and is CVD-safe; not relying
           on red-green alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; legend sits close
-          to the plot
+        comment: Canvas gate passed; plot fills the canvas with balanced margins,
+          legend close to plot, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Cross-Entropy Loss" and "Epoch" are descriptive and specify the
-          loss function per spec'
+        comment: '''Cross-Entropy Loss'' and ''Epoch'' are descriptive and specify
+          the loss function per spec'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73, but second series uses palette position
-          3 (blue) instead of canonical position 2 (lavender) without semantic justification'
+        passed: true
+        comment: 'Fixed from prior attempt: first series #009E73, second series now
+          t.palette[1] (#C475FD lavender, canonical position 2); both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured but generic — reads as a polished library default
-          rather than a custom design
+        passed: true
+        comment: Overfitting-region shading plugin and early-stopping marker add real
+          polish, though overall composition still leans conventional
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Y-axis grid only, tick marks removed, generous whitespace, but x/y
-          axis border treatment is inconsistent
+        passed: true
+        comment: 'Fixed from prior attempt: both axis borders now hidden consistently;
+          x-grid off, y-grid subtle; generous whitespace'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: The early-stopping marker creates a focal point, but there's no shading/annotation
-          calling out the overfitting region explicitly
+        passed: true
+        comment: 'Fixed from prior attempt: shaded + labeled overfitting region plus
+          the early-stopping marker create a clear, immediate visual hierarchy'
     spec_compliance:
       score: 15
       max: 15
@@ -199,7 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: data generation, mount, chart config'
+        comment: 'Flat script: data generation, plugin, mount, chart config'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -226,7 +222,7 @@ review:
         comment: Follows mount-node contract; animation disabled; current Chart.js
           v4 API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -237,12 +233,12 @@ review:
         comment: Proper use of scales, tension, interaction mode, and theme tokens
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Mixes a scatter dataset with a line dataset in the same chart to
-          overlay the early-stopping marker
-  verdict: REJECTED
+        comment: Mixes a scatter dataset with a line dataset for the marker, plus
+          a custom plugin with beforeDatasetsDraw/afterDraw hooks for the region shading
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -251,4 +247,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - minimal-chrome
