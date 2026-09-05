@@ -1,0 +1,246 @@
+library: chartjs
+language: javascript
+specification_id: point-basic
+created: '2026-09-05T10:43:50Z'
+updated: '2026-09-05T10:48:30Z'
+generated_by: claude-sonnet
+workflow_run: 33961202962
+issue: 2551
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Idiomatic mixed bar+line Chart.js config: a floating ''bar'' dataset renders
+    the true 95% CI extent while a hidden-line dataset draws just the point-estimate
+    marker — a clean workaround for a chart type (forest/point plot) Chart.js has
+    no first-class support for.'
+  - Custom errorCapsPlugin derives cap positions from the actual rendered bar geometry
+    (chart.getDatasetMeta) rather than hardcoded pixel offsets, so caps stay correct
+    at any window size.
+  - 'Theme-adaptive marker halo (pointBorderColor: t.pageBg) makes the point-estimate
+    markers pop against the CI bar in both themes without introducing any new colors.'
+  - Dashed reference line at x=0 (drawn with t.inkSoft via a custom plugin) gives
+    immediate visual context for which predictors have a significant positive/negative
+    effect — genuine data storytelling.
+  - Categories sorted by effect size (documented in a comment) mirrors standard forest-plot
+    reading order, adding intentional visual hierarchy.
+  weaknesses:
+  - 'Title plugin uses font.weight: "medium", which is not a standard CSS font-weight
+    keyword (valid values are ''normal'', ''bold'', ''bolder'', ''lighter'', or a
+    number) — use "bold" or a numeric weight like 600 for reliable cross-browser rendering.'
+  - Title occupies only ~30% of the plot width even after the length-based fontsize
+    scaling formula, leaving it visually recessive relative to the ~50-70% guideline
+    target — a slightly larger base fontsize (e.g. 22 to 24) would compensate for
+    the longer descriptive-prefixed title without overflowing.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-range), not pure white — matches the required light surface.
+      Chrome: Title "House Price Model Coefficients · point-basic · javascript · chartjs · anyplot.ai" in dark ink, centered at top, fully visible with no clipping. X-axis title "Standardized Coefficient (95% CI)" in bold dark ink below the tick labels. Y-axis category labels (Square Footage, Renovated, Bathrooms, Garage Spaces, Lot Size, Age of Home, Distance to Downtown) in soft dark gray, all fully legible. X-axis tick labels (-0.4 to 0.5) in soft dark gray. Subtle vertical gridlines at each x tick, no horizontal gridlines. A black dashed vertical reference line at x=0.
+      Data: All 7 point estimates rendered as solid brand-green (#009E73) circular markers with a light halo border matching the page background, each with a lighter semi-transparent green horizontal bar spanning its 95% CI, capped with solid green vertical ticks at both endpoints. First (and only) series is correctly the brand green.
+      Legibility verdict: PASS — every title, axis label, and tick label reads clearly against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-range), not pure black — matches the required dark surface.
+      Chrome: Same title, now rendered in light/off-white ink, fully visible with no clipping. X-axis title in light ink. Y-axis category labels and x-axis tick labels in a lighter soft gray, all clearly legible against the dark background. Subtle vertical gridlines (light, low-opacity) at each x tick. The x=0 reference line is now a white/light dashed line, correctly flipped for contrast on the dark surface.
+      Data: Same 7 point estimates in the identical brand-green (#009E73) markers and CI bars/caps as the light render — data colors are unchanged between themes, only chrome flipped, as required. Marker halo border now matches the dark page background instead of the light one.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, markers, or CI bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Prominent radius-9 markers appropriate for 7 sparse categories; caps
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green encoding, no red-green reliance, good contrast
+          on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); nothing clipped, but title runs smaller
+          than the ~50-70% width guideline
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive x-axis title with units and CI note; categories self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; backgrounds match theme
+          tokens exactly'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive marker halo and alpha-blended CI bars show deliberate
+          polish beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No visible chart border/spines, subtle single-axis grid, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Effect-size sorted order plus a zero reference line create clear
+          visual hierarchy and a focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal point-estimate/forest plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Point estimates, CI bars, endpoint caps, and a zero reference line
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = coefficient/CI, Y = category, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          omitted for single visual series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All point-basic features represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral real-estate regression coefficients
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standardized coefficients in a sensible -0.3 to 0.5 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; plugin objects are structurally necessary for the technique,
+          not overengineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data array
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart object
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Caps computed from real geometry, not decorative fakes; minor font.weight
+          nit noted in weaknesses
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, current mixed-chart
+          API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed bar+line dataset with beforeDatasetsDraw/afterDatasetsDraw
+          plugin hooks is idiomatic modern Chart.js
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Floating-bar-as-error-bar plus custom cap/reference-line plugins
+          is a genuinely distinctive workaround within core Chart.js
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
