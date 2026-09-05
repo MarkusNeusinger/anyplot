@@ -5,8 +5,11 @@
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
+const TRAIN_GRADIENT_ID = "lineLossTrainingTrainFill";
+const VAL_GRADIENT_ID = "lineLossTrainingValFill";
 
 // --- Data (in-memory, deterministic LCG for reproducible noise) -------------
 function lcg(seed) {
@@ -42,6 +45,29 @@ valLoss.forEach((v, i) => {
   }
 });
 
+// Highlights the post-early-stop overfitting window (bestEpoch → last epoch)
+// as a soft background band. MUI X community has no band-annotation
+// primitive, so this reads the shared x-scale/drawing-area straight out of
+// the chart's own render context — the documented composition pattern for
+// marks outside the community surface.
+function DivergenceZone() {
+  const xScale = useXScale() as any;
+  const drawingArea = useDrawingArea();
+  if (!xScale) return null;
+  const xStart = xScale(bestEpoch);
+  const xEnd = xScale(EPOCHS);
+  return (
+    <rect
+      x={xStart}
+      y={drawingArea.top}
+      width={Math.max(0, xEnd - xStart)}
+      height={drawingArea.height}
+      fill={t.amber}
+      fillOpacity={0.08}
+    />
+  );
+}
+
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   return (
@@ -56,7 +82,8 @@ export default function Chart() {
           textAlign: "center",
           zIndex: 1,
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 600,
+          letterSpacing: "0.2px",
           color: t.ink,
           pointerEvents: "none",
           fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
@@ -71,18 +98,24 @@ export default function Chart() {
         skipAnimation
         series={[
           {
+            id: "train",
             data: trainLoss,
             label: "Training loss",
             color: t.palette[0],
             showMark: false,
             curve: "monotoneX",
+            area: true,
+            baseline: 0,
           },
           {
+            id: "val",
             data: valLoss,
             label: "Validation loss",
             color: t.palette[1],
             showMark: false,
             curve: "monotoneX",
+            area: true,
+            baseline: 0,
           },
         ]}
         xAxis={[
@@ -93,11 +126,18 @@ export default function Chart() {
             tickMinStep: 5,
           },
         ]}
-        yAxis={[{ label: "Cross-Entropy Loss" }]}
+        yAxis={[
+          {
+            label: "Cross-Entropy Loss",
+            min: 0,
+            valueFormatter: (v: number) => v.toFixed(1),
+          },
+        ]}
         grid={{ horizontal: true }}
         sx={{
           "& .MuiChartsAxis-label": {
             fontSize: "16px !important",
+            fontWeight: 500,
           },
           "& .MuiChartsAxis-tickLabel": {
             fontSize: "14px !important",
@@ -108,6 +148,12 @@ export default function Chart() {
           "& .MuiLineElement-root": {
             strokeWidth: "3px",
           },
+          "& .MuiAreaElement-series-train": {
+            fill: `url(#${TRAIN_GRADIENT_ID})`,
+          },
+          "& .MuiAreaElement-series-val": {
+            fill: `url(#${VAL_GRADIENT_ID})`,
+          },
         }}
         slotProps={{
           legend: {
@@ -117,6 +163,20 @@ export default function Chart() {
         }}
         margin={{ top: 70, right: 40, bottom: 90, left: 90 }}
       >
+        {/* Subtle fades from each line down to the zero baseline — keeps
+            visual weight on the curves themselves while grounding both
+            series against the cross-entropy-loss floor. */}
+        <defs>
+          <linearGradient id={TRAIN_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={t.palette[0]} stopOpacity={0.22} />
+            <stop offset="100%" stopColor={t.palette[0]} stopOpacity={0.02} />
+          </linearGradient>
+          <linearGradient id={VAL_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={t.palette[1]} stopOpacity={0.22} />
+            <stop offset="100%" stopColor={t.palette[1]} stopOpacity={0.02} />
+          </linearGradient>
+        </defs>
+        <DivergenceZone />
         <ChartsReferenceLine
           x={bestEpoch}
           label={`Early-stop point · epoch ${bestEpoch}`}
