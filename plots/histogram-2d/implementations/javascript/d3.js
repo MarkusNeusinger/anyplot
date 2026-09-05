@@ -18,7 +18,7 @@ function mulberry32(seed) {
 }
 
 const rand = mulberry32(42);
-const N_POINTS = 4000;
+const N_POINTS = 9000;
 const CORRELATION = 0.65;
 const MEAN_TECH = 0.05;
 const STD_TECH = 1.8;
@@ -38,7 +38,7 @@ for (let i = 0; i < N_POINTS; i++) {
 }
 
 // --- Binning (manual 2D grid — d3-array's bin() only handles 1D) -----------
-const N_BINS = 36;
+const N_BINS = 26;
 const [xMin, xMax] = d3.scaleLinear().domain(d3.extent(points, (d) => d.x)).nice().domain();
 const [yMin, yMax] = d3.scaleLinear().domain(d3.extent(points, (d) => d.y)).nice().domain();
 const xStep = (xMax - xMin) / N_BINS;
@@ -67,7 +67,7 @@ const yMarginal = d3.range(N_BINS).map((by) => d3.sum(counts.map((col) => col[by
 // --- Layout (heatmap + top/right marginal histograms + colorbar) -----------
 const gap = 8;
 const mainX0 = 90;
-const mainX1 = 1406;
+const mainX1 = 1376;
 const mainY0 = 168;
 const mainY1 = 830;
 const topMarginY0 = 90;
