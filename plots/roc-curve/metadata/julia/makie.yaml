@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: roc-curve
 created: '2026-09-05T13:04:16Z'
-updated: '2026-09-05T13:08:05Z'
+updated: '2026-09-05T13:21:44Z'
 generated_by: claude-sonnet
 workflow_run: 33967596307
 issue: 2273
@@ -12,98 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 70
 review:
   strengths:
-  - 'Correct ROC curve implementation: diagonal random-classifier reference line,
-    two biomarker curves compared, AUC values displayed directly in the legend'
-  - 'Theme-adaptive chrome works correctly in both renders — title, axis labels, ticks,
-    and grid all readable on both the warm off-white and warm near-black backgrounds;
-    data colors (#009E73 green, #C475FD lavender) are identical between themes'
-  - Correct Imprint palette order (brand green first series, lavender second) and
-    correct canonical square canvas (2400x2400, matching the Figure(1200,1200) x px_per_unit=2
-    pair)
-  - Equal aspect ratio enforced (aspect = 1, limits = (0,1,0,1)) matching the spec's
-    'equal aspect ratio preferred' note
-  - 'Clean KISS script: no functions/classes, Random.seed!(42) for reproducibility,
-    only imports actually used (CairoMakie, Colors, Random), no fake interactivity'
+  - 'Correct ROC curve fundamentals: dashed diagonal random-classifier reference,
+    two clearly distinguished model curves, aspect=1 with 0-1 limits on both axes
+    as recommended by the spec'
+  - Theme-adaptive chrome is correct and consistent in both plot-light.png and plot-dark.png
+    (backgrounds, spines, grid, tick/label colors all flip correctly; data colors
+    identical across themes)
+  - 'Palette compliance: first series is Imprint #009E73, second series is canonical
+    Imprint lavender #C475FD, legend and curves match'
+  - 'Realistic, neutral data story: two diagnostic biomarkers with meaningfully different
+    AUC (0.95 vs 0.75) in a medical-diagnostics context, generated with a seeded RNG'
+  - Explicit font sizing throughout (titlesize, xlabelsize/ylabelsize, tick label
+    sizes, legend labelsize) and a clean KISS script structure (imports -> data ->
+    plot -> save, no functions)
   weaknesses:
-  - Design excellence is competent but generic — the removed spines and subtle grid
-    are the spec-mandated baseline, not extra polish on top of it; there is no additional
-    visual hierarchy device (e.g. emphasizing the better-performing curve, or a subtle
-    fill toward the diagonal to visualize AUC)
-  - Library Mastery is basic — only standard Axis/lines!/axislegend calls; nothing
-    showcases a Makie-specific feature (e.g. scatter! at an optimal-threshold operating
-    point with a text! callout, or band!/fill between curve and diagonal) that would
-    distinguish this from an equivalent matplotlib/ggplot line plot
-  - Only 3 tick labels (0.0/0.5/1.0) per axis — functional but minimal; intermediate
-    ticks (0.25/0.75) would improve reading precision without hurting the current
-    proportional balance
+  - 'MAJOR - dead/non-functional code: the band!() AUC-advantage shading (line 101)
+    and both scatter!()/text!() optimal-operating-point markers and ''Optimal J =
+    ...'' annotations (lines 120-137) render ZERO visible pixels in BOTH plot-light.png
+    and plot-dark.png. Verified with pixel-level analysis: binary erosion of the green/purple
+    color masks (9x9 structuring element, which would easily preserve a markersize=14
+    circular marker) leaves 0 surviving pixels in either theme; sampled pixels well
+    inside the intended shaded band region are byte-identical to the pure background
+    color (250,248,241) with zero tint, even though alpha=0.07 blending of #009E73
+    into #FAF8F1 should shift RGB by roughly (-18,-6,-9); and there are zero INK-colored
+    pixels anywhere in the plot interior in either theme, so the ''Optimal J'' text
+    is not drawn at all. Debug why these five draw calls silently produce nothing
+    (check opt_fpr_a/opt_tpr_a/opt_fpr_b/opt_tpr_b are not NaN, check whether band!/scatter!/text!
+    are being clipped by the hard axis `limits = (0, 1, 0, 1)`, check z-order) and
+    make them actually render — or remove this dead code entirely rather than shipping
+    draw calls with no visual effect.'
+  - Because the optimal-point annotations don't render, Data Storytelling (DE-03)
+    currently relies entirely on the color/line-width separation between the two curves
+    rather than the explicit Youden's-J emphasis the code clearly intended to add
+  - The band!() and scatter!() calls that would have been the implementation's distinctive
+    Makie-specific touch (Library Mastery) contribute nothing visually as currently
+    shipped
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "roc-curve · julia · makie · anyplot.ai" centered at top, clearly readable. Axis labels "False Positive Rate" (x) and "True Positive Rate" (y) in dark ink, fully legible. Tick labels (0.0, 0.5, 1.0 on both axes) in soft grey, legible. Subtle grey gridlines at the 0.5 marks only, unobtrusive. Legend in the bottom-right, frameless, with dark-grey text for all three entries.
-      Data: Diagonal dashed grey reference line (Random classifier, AUC = 0.50) from (0,0) to (1,1). Green step curve (Biomarker A, AUC = 0.95) rises steeply near the y-axis, indicating strong discrimination. Lavender/purple step curve (Biomarker B, AUC = 0.75) rises more gradually, indicating moderate discrimination. First series is confirmed brand green #009E73.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 exactly (verified pixel sample: RGB 250,248,241).
+      Chrome: Bold dark title "roc-curve · julia · makie · anyplot.ai" centered at top, clearly readable. Axis labels "False Positive Rate" (x) and "True Positive Rate" (y) in dark ink, tick labels (0.0, 0.25(implicit), 0.5, 0.75(implicit), 1.0) in softer gray, subtle light-gray gridlines only at 0.5 forming a faint cross, top/right spines removed. Legend bottom-right, transparent background, text in soft gray, no overlap with data.
+      Data: Diagonal dashed gray "Random classifier (AUC = 0.50)" reference line. Green (#009E73) "Biomarker A (AUC = 0.95)" curve rises very steeply near the origin - excellent separation from random. Lavender (#C475FD) "Biomarker B (AUC = 0.75)" curve is visibly weaker, closer to the diagonal, still clearly beats random. First series is #009E73 as required. NOTE: pixel analysis found NO visible scatter markers, NO "Optimal J" text annotations, and NO band-shading tint anywhere in the image, despite the source code containing band!()/scatter!()/text!() calls intended to draw them (see weaknesses).
+      Legibility verdict: PASS (all rendered text is legible; the missing markers/annotations are a functional/code-elegance defect, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title now rendered in near-white ink, fully readable. Axis labels and tick labels flipped to light tones (white / light grey), fully legible against the dark surface. Gridlines remain subtle. Legend text is light grey, readable, frameless.
-      Data: Diagonal reference line now light grey (still dashed) for contrast against the dark background. Green (Biomarker A) and lavender (Biomarker B) curves are pixel-identical in color and shape to the light render — confirmed only chrome (background/text/grid) changed, not the data colors.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/legend text is clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 (chrome inverted correctly from light).
+      Chrome: Title and axis labels now light-colored (#F0EFE8) against the dark background, clearly readable; tick labels in the lighter INK_SOFT gray; gridlines subtle; legend text light gray, no dark-on-dark or light-on-light failures observed.
+      Data: Data colors are pixel-identical to the light render (#009E73 green, #C475FD lavender, same dashed gray diagonal) - only chrome flipped, as required. Same absence of scatter markers/annotations/band-shading confirmed via the same pixel analysis as the light render.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light issues; same non-rendering-elements defect as light render).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes and at ~400px scale
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
+          tick label sizes=12, legend labelsize=12); readable in both themes; title
+          fits comfortably without overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in the flat bottom-right corner where no curve passes;
-          no collisions
+        comment: No text/data collisions; legend sits in empty lower-right space
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Linewidth 3.5 for data series, 2.0 dashed reference — clearly distinguishable,
-          appropriate for ~300-point step curves
+        passed: false
+        comment: The three curves themselves are clearly visible and well-weighted,
+          but the optimal-point scatter markers are completely absent from the render
+          (verified via pixel erosion analysis) - a full designed element class is
+          missing, not just suboptimal sizing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair from Imprint palette is CVD-safe, not a red-green
-          pairing, good contrast on both backgrounds
+        comment: Green vs lavender + gray dashed diagonal is CVD-safe and high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas measured at 2400x2400, matches canonical square target; title
-          and axes well-proportioned, nothing cut off
+        comment: Square 2400x2400 canvas suits the 0-1 aspect=1 ROC convention; balanced
+          margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels (False/True Positive Rate); title matches
-          required format
+        comment: '''False Positive Rate'' / ''True Positive Rate'' are descriptive;
+          both are dimensionless rates so no units apply'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (canonical order); backgrounds
-          match #FAF8F1/#1A1A17; both themes correct'
+        comment: 'First series #009E73, second series canonical Imprint lavender #C475FD,
+          theme-correct backgrounds/chrome in both renders'
     design_excellence:
       score: 10
       max: 20
@@ -113,22 +126,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Follows the mandated baseline styling faithfully but adds no extra
-          polish beyond it
+        comment: 'Well-configured default: aspect=1 square layout and diagonal reference
+          are nice touches, but the intended band-shading polish does not render'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Spines removed, grid subtle, legend frameless — solid but standard
-          execution
+        comment: Spines removed, subtle grid, generous whitespace, transparent legend
+          - above-default refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clear two-curve comparison against a reference baseline, but no additional
-          emphasis device (fill, annotation) to sharpen the focal point
+        comment: Curve color separation alone provides some hierarchy, but the intended
+          Youden's-J optimal-point emphasis (the actual storytelling device) does
+          not render at all
     spec_compliance:
       score: 15
       max: 15
@@ -138,53 +152,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ROC curve
+        comment: Correct ROC curve with TPR vs FPR
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, AUC in legend, distinct colors per model,
-          0-1 axes, equal aspect — all present
+        comment: Diagonal random-classifier reference present, AUC in legend, distinct
+          colors for two models, 0-1 equal-aspect axes - all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=FPR, Y=TPR, full 0-1 range shown
+        comment: FPR on x, TPR on y, full 0-1 range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'roc-curve · julia · makie · anyplot.ai'; legend labels
-          descriptive and correct
+        comment: Title format correct; legend labels match the plotted series and
+          AUC values
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Two-model comparison, AUC computation, reference baseline — covers
-          the plot type's key features
+        comment: Two curves at different performance levels plus random baseline covers
+          the main ROC feature set
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral biomarker-vs-disease-status framing, plausible for diagnostic
-          ML evaluation
+        comment: Neutral, comprehensible medical-diagnostics biomarker scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AUC 0.95/0.75 realistic; n=300 per class is a sensible sample size
+        comment: AUC values (0.95, 0.75) and score distributions are realistic and
+          internally consistent
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -192,55 +206,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear script
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42)
+        comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        passed: false
+        comment: band!()/scatter!()/text!() calls (5 separate draw calls) produce
+          zero visible output in either theme per pixel analysis - non-functional
+          code shipped as if working; triggers the CQ-04=0 score cap
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct pattern
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) - correct current
+          API
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Correct Axis/lines!/axislegend usage with theme tokens threaded throughout
+        passed: false
+        comment: Correct Axis/lines!/axislegend usage, but the band!/scatter!/text!
+          calls meant to showcase richer usage don't deliver any visible result
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic line-plot usage; no Makie-specific technique (recipes, band!,
-          text! annotations, layout composition) demonstrated
-  verdict: APPROVED
+        comment: band!() would have been a distinctive Makie touch but renders nothing,
+          so effectively generic usage as shipped
+  verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - minimal-chrome
+  - alpha-blending
+  - grid-styling
