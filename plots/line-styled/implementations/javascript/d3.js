@@ -21,8 +21,8 @@ const months = 36;
 const series = [
   { name: "North America", start: 82, drift: 0.55, noise: 2.2, dash: null },
   { name: "Europe", start: 68, drift: 0.35, noise: 2.0, dash: "8,6" },
-  { name: "Asia-Pacific", start: 45, drift: 0.9, noise: 2.6, dash: "2,4" },
-  { name: "Latin America", start: 30, drift: 0.4, noise: 1.6, dash: "10,4,2,4" },
+  { name: "Asia-Pacific", start: 45, drift: 0.9, noise: 2.6, dash: "1,7" },
+  { name: "Latin America", start: 30, drift: 0.4, noise: 1.6, dash: "10,5,3,5" },
 ];
 
 const data = series.map((s) => {
@@ -66,7 +66,7 @@ const xAxis = g
       .ticks(9)
       .tickFormat((d) => `M${d}`),
   );
-const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickFormat((d) => `${d}`));
+const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickFormat(d3.format(",.0f")));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.grid);
@@ -109,6 +109,50 @@ g.selectAll(".series-line")
   .attr("stroke-dasharray", (d) => d.dash)
   .attr("stroke-linecap", "round")
   .attr("d", (d) => line(d.points));
+
+// --- Data-driven focal annotation (storytelling) ----------------------------
+// Highlight whichever series actually grew the fastest (relative to its own
+// start), computed from the generated points rather than hard-coded.
+const relativeGrowth = (d) =>
+  (d.points[d.points.length - 1].value - d.points[0].value) / d.points[0].value;
+const focalSeries = d3.greatest(data, (d) => relativeGrowth(d));
+const focal = { series: focalSeries, growth: relativeGrowth(focalSeries) };
+const focalEnd = focal.series.points[focal.series.points.length - 1];
+const focalColor = color(focal.series.name);
+
+// Soft halo behind the focal line only — draws the eye without changing its
+// stroke width, keeping "consistent line width across styles" intact.
+g.insert("path", ".series-line")
+  .attr("fill", "none")
+  .attr("stroke", focalColor)
+  .attr("stroke-opacity", 0.18)
+  .attr("stroke-width", 11)
+  .attr("d", line(focal.series.points));
+
+g.append("circle")
+  .attr("cx", x(focalEnd.month))
+  .attr("cy", y(focalEnd.value))
+  .attr("r", 5)
+  .attr("fill", focalColor);
+
+const calloutX = iw * 0.14;
+const calloutY = ih * 0.1;
+g.append("line")
+  .attr("x1", calloutX)
+  .attr("y1", calloutY + 12)
+  .attr("x2", x(focalEnd.month) - 8)
+  .attr("y2", y(focalEnd.value))
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "2,3");
+
+g.append("text")
+  .attr("x", calloutX)
+  .attr("y", calloutY)
+  .attr("fill", t.ink)
+  .style("font-size", "15px")
+  .style("font-weight", "600")
+  .text(`Fastest growth: ${focal.series.name} +${Math.round(focal.growth * 100)}%`);
 
 // --- Legend (style + color mapping) --------------------------------------------
 const legend = svg
