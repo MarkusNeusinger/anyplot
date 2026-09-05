@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: pdp-basic
 created: '2026-09-05T10:44:13Z'
-updated: '2026-09-05T10:48:44Z'
+updated: '2026-09-05T10:59:34Z'
 generated_by: claude-sonnet
 workflow_run: 33961000764
 issue: 2922
@@ -12,119 +12,127 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 97
 review:
   strengths:
-  - 'Builds the 95% confidence band via a stacked-area workaround (ci-lower + ci-band
-    with stack: "ci") since MUI X community has no native area-between-two-lines primitive
-    — a genuinely idiomatic solution within the community surface''s constraints.'
-  - 'Correct Imprint semantics: brand green (t.palette[0]) for the Partial dependence
-    series, and the theme-adaptive `muted` anchor for the confidence-band fill — exactly
-    the anchor''s documented role ("confidence-band fill").'
-  - The y=0 ChartsReferenceLine labeled "average prediction" directly implements the
-    spec's suggestion to center the PDP at zero, giving readers an explicit interpretive
-    baseline rather than an arbitrary absolute scale.
+  - 'All three attempt-1 weaknesses are fixed: 8 ICE (individual conditional expectation)
+    curves now render as faint background lines, the PDP series shows subtle circular
+    markers every 6th grid point, and the legend now leads with the green ''Partial
+    dependence'' swatch before the gray ''confidence interval'' swatch.'
+  - 'Builds the 95% confidence band via a stacked-area workaround (`ci-lower` + `ci-band`
+    with `stack: "ci"`) since MUI X community has no native area-between-two-lines
+    primitive — a genuinely idiomatic solution within the community surface''s constraints.'
+  - 'Correct Imprint semantics: brand green (`t.palette[0]`) for the Partial dependence
+    series and every ICE curve, theme-adaptive `muted` anchor for the confidence band
+    — exactly the anchor''s documented role.'
+  - 'The ICE curves are rendered with low opacity/width (`strokeOpacity: 0.22`, `strokeWidth:
+    1.1`) so they add genuine ''individual model behavior'' context without competing
+    visually with the bold PDP curve.'
+  - The `y=0` `ChartsReferenceLine` labeled 'average prediction' directly implements
+    the spec's centering suggestion, giving readers an explicit interpretive baseline.
   - 'Both renders are clean at native resolution: no edge clipping on title, y-axis
-    label, or the rightmost x-tick ("$66k"), correct warm off-white/near-black backgrounds,
-    and fully readable text in both themes.'
-  - Deterministic, realistic synthetic data — a logistic/saturating marketing-spend
-    response with seeded LCG noise plausibly mimics sklearn's PartialDependenceDisplay
-    output for a GradientBoostingRegressor.
+    label, or the rightmost x-tick; correct theme backgrounds; fully readable text
+    in both themes.'
+  - Deterministic, realistic synthetic data — a saturating marketing-spend response
+    with seeded LCG noise plausibly mimics sklearn's `PartialDependenceDisplay` output,
+    and every ICE curve is generated with its own midpoint/amplitude variation, avoiding
+    a flat repeated-curve look.
   weaknesses:
-  - No ICE (individual conditional expectation) lines or rug plot along the x-axis
-    — both are explicitly optional in the spec ("can show"/"consider"), but either
-    would have added the extra layer of uncertainty/data-distribution context the
-    spec highlights as valuable.
-  - showMark is false on the pdp series (no point markers) — with only 61 grid points
-    (sparse-to-medium density) a few subtle markers at intervals could reinforce that
-    this is sampled grid data, not a continuous analytic function, without hurting
-    the clean line read.
-  - Legend swatch order (confidence interval first, then the main Partial dependence
-    series) inverts the visual z-order of importance — putting the primary green series
-    first would match how a reader scans the chart.
+  - No rug plot along the x-axis showing the training-data value distribution — the
+    spec lists it as an optional addition and it's the one remaining suggestion not
+    implemented (ICE lines and the confidence band, the spec's other optional items,
+    are both now present).
+  - All ICE curves share the same hue as the PDP line (only opacity/width differ)
+    — a very subtle secondary tone could make the PDP-vs-ICE distinction even more
+    immediate, though the current opacity treatment already reads clearly.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), not pure white — matches the required light-theme surface.
-      Chrome: Title "pdp-basic · javascript · muix · anyplot.ai" top-left in dark ink, fully visible, not clipped. Rotated y-axis label "Partial dependence (Δ units sold/week)" on the far left, clear of the tick numbers. X-axis label "Weekly marketing spend ($1,000s)" below tick labels formatted as "$4k"..."$66k", rightmost tick "$66k" fully visible with no edge clipping. Legend centered above the plot area with two swatches: gray "95% confidence interval" and green "Partial dependence". Horizontal gridlines only, subtle. A dashed muted reference line at y=0 labeled "average prediction" on the right.
-      Data: First/main series is the Imprint brand green (#009E73) for "Partial dependence"; the confidence band is filled in the theme-adaptive muted gray. All text is legible — dark ink on the light cream background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "pdp-basic · javascript · muix · anyplot.ai" top-left in dark ink, fully visible and not overflowing. Rotated y-axis label "Partial dependence (Δ units sold/week)" runs along the far left in its own reserved strip, clear of tick numbers. X-axis label "Weekly marketing spend ($1,000s)" sits below tick labels formatted "$4k"..."$66k", none clipped at either edge. Legend now correctly orders "Partial dependence" (green swatch) before "95% confidence interval" (gray swatch). Horizontal gridlines subtle. Dashed muted reference line at y=0 labeled "average prediction".
+      Data: Bold green (#009E73) PDP curve with small circular markers every 6th grid point, gray stacked-area confidence band hugging the curve, and 8 faint low-opacity green ICE curves fanning out in the background showing individual model variability — all clearly distinguishable from the background and from each other.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), not pure black — matches the required dark-theme surface.
-      Chrome: Same title, axis labels, tick labels, and legend as the light render, all rendered in light ink (near-white/light-gray) against the dark background. No dark-on-dark failures observed — title, axis labels, tick labels, legend text, and the "average prediction" annotation are all clearly readable.
-      Data: The green Partial dependence line and gray confidence band are visually identical in hue/shape to the light render — confirming only chrome (background, text, grid) flips between themes while data colors stay constant, as required.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, tick labels, legend order, and reference-line annotation as the light render, all rendered in light ink against the dark background — no dark-on-dark failures anywhere; every label remains crisp.
+      Data: PDP curve, markers, confidence band, and all 8 ICE curves are visually identical in hue/shape/opacity to the light render, confirming only chrome flips between themes while data colors stay constant.
       Legibility verdict: PASS
+
+    Both renders pass the theme-readability check (5c) and show no edge clipping (AR-09 not triggered).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title ~22px, axis labels 16px, ticks/legend
-          14px); all readable in both themes.
+        comment: All text readable in both themes, no size issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No collisions between text, legend, or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line + band clearly visible; showMark:false means no point markers
-          even though density (61 pts) could support subtle ones.
+        comment: PDP markers now shown every 6th point; ICE curves and CI band both
+          clearly visible without overwhelming the main curve
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line vs. neutral gray band, no red-green reliance.
+        comment: Green/gray combination, no red-green reliance, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no clipping at any edge; generous margins.
+        comment: Good proportions, title ~40% width, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units (Δ units sold/week, $1,000s).
+        comment: Both axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series; muted anchor for CI band; correct theme
-          backgrounds both renders.
+        comment: 'First series is #009E73, correct theme-adaptive backgrounds in both
+          renders'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Clean single-series composition with a well-engineered CI band; not
-          a highly ornate design but well-considered.
+        passed: true
+        comment: ICE curves + CI band + reference line create a layered, considered
+          composition
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Subtle horizontal-only grid, generous whitespace, no boxed frame.
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace, no boxed frame,
+          low-opacity ICE lines don't clutter
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        comment: Zero-reference line with 'average prediction' label gives a clear
-          interpretive anchor for the centered curve.
+        passed: true
+        comment: 'Zero-reference baseline plus ICE curves plus CI band tell a complete
+          story: average effect, individual variability, and uncertainty together'
     spec_compliance:
       score: 15
       max: 15
@@ -133,44 +141,50 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct continuous-feature line PDP.
+        passed: true
+        comment: Correct PDP line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Confidence band present, curve centered at zero per spec notes.
+        passed: true
+        comment: Confidence band AND ICE lines both present, exceeding the spec's
+          either/or suggestion
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: x=feature_values, y=partial_dependence, full range shown.
+        passed: true
+        comment: Feature values on x, partial dependence on y, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches required format exactly; legend labels are clear and
-          descriptive.
+        passed: true
+        comment: Title format correct; legend labels match and are now ordered by
+          visual importance
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: PDP curve + CI band + zero baseline; no ICE lines or rug plot (both
-          optional).
+        passed: true
+        comment: PDP curve, CI band, ICE curves, and zero-reference line all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Marketing spend → units sold with saturating response is plausible
-          and neutral.
+        passed: true
+        comment: Plausible marketing-spend-to-sales saturating response, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: 61 grid points over a sensible spend range with realistic model noise.
+        passed: true
+        comment: Sensible spend range ($5k-$65k) and prediction deltas
     code_quality:
       score: 10
       max: 10
@@ -179,54 +193,62 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Only the harness-required Chart component plus a small justified
-          LCG helper for reproducibility.
+        passed: true
+        comment: Single Chart component plus a minimal RNG helper, no unnecessary
+          abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Seeded LCG, fully deterministic.
+        passed: true
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: All imports used.
+        passed: true
+        comment: Only LineChart, ChartsReferenceLine, Box, Typography — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity, no fake UI.
+        passed: true
+        comment: No fake UI, appropriate complexity for the feature set
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: 'Correct harness contract: default export, skipAnimation, sized to
-          ANYPLOT_SIZE.'
+        passed: true
+        comment: Correctly mounts via default export, skipAnimation set, harness handles
+          output
     library_mastery:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Idiomatic LineChart + ChartsReferenceLine usage within the community
-          surface.
+        passed: true
+        comment: ChartsReferenceLine, stacked areas, per-series sx targeting, function-based
+          showMark all idiomatic community-API usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        comment: Stacked-area confidence-band construction is a solid library-specific
-          workaround.
+        passed: true
+        comment: Stacked-area CI band trick, multi-series ICE overlay, selective marker
+          function, and per-series style overrides together exploit the community
+          surface thoroughly
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
