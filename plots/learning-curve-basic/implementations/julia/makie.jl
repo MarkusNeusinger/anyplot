@@ -20,7 +20,7 @@ const IMPRINT_PALETTE = [
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
 const TRAIN_COLOR = IMPRINT_PALETTE[1]  # brand green — always first series
-const VAL_COLOR   = IMPRINT_PALETTE[3]  # blue — second series
+const VAL_COLOR   = IMPRINT_PALETTE[2]  # lavender — second series
 
 # --- Data ---------------------------------------------------------------
 # Digit classifier learning curve: accuracy vs training set size, across
@@ -97,6 +97,17 @@ lines!(ax, train_sizes, val_mean; color = VAL_COLOR, linewidth = 3, label = "Val
 scatter!(ax, train_sizes, val_mean; color = VAL_COLOR, markersize = 11, strokewidth = 1.5, strokecolor = PAGE_BG)
 
 ylims!(ax, 0.6, 1.02)
+
+# --- Insight annotation: highlight where the bias/variance gap narrows ----
+gap = train_mean .- val_mean
+converge_idx = findfirst(<=(0.05), gap)
+x_converge = converge_idx === nothing ? train_sizes[end] : train_sizes[converge_idx]
+x_max = train_sizes[end]
+
+vspan!(ax, x_converge, x_max; color = RGBAf(INK.r, INK.g, INK.b, 0.05))
+vlines!(ax, [x_converge]; color = INK_SOFT, linestyle = :dash, linewidth = 1, ymax = 0.85)
+text!(ax, (x_converge + x_max) / 2, 1.0; text = "Diminishing returns",
+      color = INK_SOFT, fontsize = 12, align = (:center, :top))
 
 axislegend(ax; position = :rb, labelcolor = INK_SOFT, framevisible = false, labelsize = 12)
 
