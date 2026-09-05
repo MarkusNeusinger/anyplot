@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-confidence
 created: '2026-09-05T06:53:45Z'
-updated: '2026-09-05T06:57:37Z'
+updated: '2026-09-05T07:05:12Z'
 generated_by: claude-sonnet
 workflow_run: 33950848090
 issue: 2007
@@ -12,44 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-conf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
+  - 'Attempt-1 feedback fully addressed: 3.5px point markers now mark each of the
+    24 monthly observations on the central line, and the x-axis grid is restored alongside
+    the y-axis grid'
   - 'Correct Chart.js idiom for confidence bands: transparent-border helper dataset
-    + fill: ''-1'' to shade the area between two series'
-  - Legend filters out the internal 'Lower Bound' helper dataset, leaving exactly
-    the two entries the spec asks for
-  - 'Theme tokens fully threaded through: background, ink, inkSoft, and grid all mapped
-    correctly; data colors (palette[0] green, band alpha) are identical between light
-    and dark renders'
+    + fill: ''-1'' shades between two series, with the internal ''Lower Bound'' dataset
+    filtered out of the legend'
+  - Theme tokens fully threaded through background, ink, inkSoft, and grid; data colors
+    (palette[0] green, band alpha 0.25) are identical between light and dark renders
   - Deterministic fixed-seed LCG data generation, no external dependencies, clean
     canvas mount contract, animation disabled
-  - Confidence band visibly widens toward the forecast horizon, giving the chart a
-    legitimate data-storytelling element
+  - Confidence band realistically widens toward the forecast horizon (margin grows
+    with i), giving the chart a legitimate data-storytelling element
   weaknesses:
-  - 'Central line uses pointRadius: 0 with only 24 (sparse) data points — a subtle
-    point marker on the trend line would improve per-observation precision per the
-    density guideline'
-  - 'X-axis grid is disabled (grid: { display: false }) while the spec calls out grid
-    lines to aid readability — consider a subtle x-axis grid to match the y-axis treatment'
-  - Design execution is competent but generic — standard Chart.js defaults with no
-    additional visual flourish (e.g. an annotation calling out the current point or
-    the widening-uncertainty trend) beyond the required band
+  - Design execution is still competent but generic — standard Chart.js line + band
+    with no additional visual flourish (e.g. no marker/annotation distinguishing history
+    from forecast)
+  - 'fill: ''-1'' band technique remains a standard, well-documented Chart.js pattern
+    rather than a distinctive library feature'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matching the required light-theme surface.
-      Chrome: Title "line-confidence · javascript · chartjs · anyplot.ai" in bold dark ink at top; legend below title with two swatches ("95% Confidence Interval", "Predicted Revenue"); x-axis "Month" with rotated-free month/year tick labels (Jan 2025 ... Nov 2026); y-axis "Revenue ($K)" with numeric ticks 400-650; subtle horizontal grid lines on the y-axis only.
-      Data: Central trend line in solid brand green (#009E73, palette[0]), 3.5px wide, smoothly interpolated (tension 0.3); confidence band in the same hue at ~25% alpha, visibly widening from roughly ±15 near Jan 2025 to ±90 near Nov 2026, correctly conveying growing forecast uncertainty.
-      Legibility verdict: PASS — all text (title, legend, axis titles, tick labels) is clearly readable dark-on-light with no overlap or clipping.
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Bold dark title "line-confidence · javascript · chartjs · anyplot.ai" at top; legend below with two swatches ("95% Confidence Interval", "Predicted Revenue"); x-axis "Month" with month/year tick labels (Jan 2025 … Nov 2026); y-axis "Revenue ($K)" with numeric ticks 400-650; subtle grid on both axes. All chrome text is dark ink on the light surface.
+      Data: Central trend line is solid brand green (#009E73), ~3.5px, with small round markers at each of the 24 monthly points; the confidence band is the same hue at ~25% alpha and visibly widens from roughly ±15 near Jan 2025 to ±90 near Nov 2026.
+      Legibility verdict: PASS — all text clearly readable against the light background, no overlap or clipping observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matching the required dark-theme surface.
-      Chrome: Same title and legend layout, now in light/white ink; axis titles and tick labels rendered in a soft light gray; grid lines remain subtle on the y-axis.
-      Data: Central trend line and confidence band use the identical brand-green hue and alpha as the light render — only the chrome (text, grid, background) has flipped, exactly as required.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text is legible against the near-black background, and the green line/band remain clearly distinguishable from the surface.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title/legend/axis layout, now in light ink (title/axis titles) and soft light gray (tick labels); grid on both axes still subtle and visible against the dark surface.
+      Data: Line and band use the identical brand-green hue and alpha as the light render — only chrome flipped, as required. No dark-on-dark failures; line/markers/band remain clearly distinguishable from the near-black surface.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark or light-on-light issues found.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,49 +55,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both light and dark renders; consistent font
-          hierarchy (title 22px, axis titles 16px, ticks 14px).
+        comment: All text readable in both themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, title, axis labels, or data.
+        comment: No collisions between text, legend, or data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Line and band clearly visible, but 24 data points (sparse) render
-          with no point markers (pointRadius: 0), reducing per-observation precision.'
+        comment: Point markers now present on the sparse 24-point series, fixing attempt-1
+          feedback
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green line + tinted band gives strong contrast without
-          relying on a red/green pairing.
+        comment: Single brand-green series, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimensions correct, no clipping, well-proportioned margins.
+        comment: Good proportions, no clipping, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Month" and "Revenue ($K)" are descriptive, with a unit on the y-axis.'
+        comment: Month / Revenue ($K) descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73 (palette[0]); backgrounds correctly #FAF8F1
-          / #1A1A17; identical data colors across themes.'
+        comment: 'First series #009E73, correct theme backgrounds, identical data
+          colors across themes'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -107,22 +103,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Competent execution but standard Chart.js defaults with no distinctive
-          visual flourish beyond the required band.
+        comment: Standard Chart.js defaults, no distinctive flourish beyond the required
+          band
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Y-axis grid kept subtle and x-axis grid removed, but no other refinement
-          was added.
+        passed: true
+        comment: X-axis grid restored alongside y-axis grid, subtle opacity, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Widening band toward the forecast horizon conveys growing uncertainty,
-          but nothing else reinforces the story (no annotation or emphasis).
+        comment: Widening band tells a story but nothing else reinforces it (e.g.
+          no history/forecast delineation)
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct central-line + shaded-band confidence interval chart.
+        comment: Correct line-with-confidence-band chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid prominent central line, semi-transparent band (alpha 0.25),
-          and a legend identifying both are all present.
+        comment: Solid central line, semi-transparent band (alpha 0.25), legend identifying
+          both
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = month labels, Y = revenue; axes show the full data range.
+        comment: x=Month, y=Revenue, all 24 points shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the required '{spec-id} · javascript · chartjs · anyplot.ai'
-          pattern; legend labels match dataset semantics.
+        comment: Title matches mandated format; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -162,21 +157,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows central trend, confidence band, and widening uncertainty over
-          the forecast horizon — all core aspects of the plot type.
+        comment: Trend, seasonality, noise, and widening forecast uncertainty all
+          present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly revenue forecast in $K with seasonal cycle and trend — plausible
-          and neutral.
+        comment: Plausible, neutral revenue forecast scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in the 400-650 range are sensible for a $K revenue metric.
+        comment: Revenue in $K, 400-650 range, sensible
     code_quality:
       score: 10
       max: 10
@@ -186,33 +180,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; two small utility functions (LCG RNG, hex-to-rgba) are
-          appropriately minimal.
+        comment: Only small necessary helpers (LCG, hex-to-rgba)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG produces deterministic data.
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only the provided globals.
+        comment: No imports needed; uses provided globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or unnecessary complexity.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Canvas mounted to #container, animation disabled, current Chart.js
-          v4 API.'
+        comment: 'Correct mount-node contract, animation: false set'
     library_mastery:
       score: 6
       max: 10
@@ -222,21 +214,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses the standard Chart.js confidence-band idiom: transparent-border
-          helper dataset + fill: ''-1'' to shade between two series.'
+        comment: 'Idiomatic transparent-dataset + fill: ''-1'' band pattern, legend
+          filter'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: The fill-to-previous-dataset band technique is a well-documented
-          Chart.js pattern rather than a distinctive or unusual feature.
+        comment: 'fill: ''-1'' band technique is a standard, well-documented pattern'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
   dataprep:
