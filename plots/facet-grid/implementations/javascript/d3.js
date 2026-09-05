@@ -71,6 +71,26 @@ const y = d3
 const xTicks = x.ticks(4);
 const yTicks = y.ticks(4);
 
+// --- Per-facet linear trend (reinforces the sunlight→leaf-area story) -------
+function trendLine(points) {
+  const n = points.length;
+  const sumX = d3.sum(points, (d) => d.sunlightHours);
+  const sumY = d3.sum(points, (d) => d.leafAreaCm2);
+  const sumXY = d3.sum(points, (d) => d.sunlightHours * d.leafAreaCm2);
+  const sumXX = d3.sum(points, (d) => d.sunlightHours * d.sunlightHours);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  const intercept = (sumY - slope * sumX) / n;
+  const [x0, x1] = x.domain();
+  return [
+    { sunlightHours: x0, leafAreaCm2: slope * x0 + intercept },
+    { sunlightHours: x1, leafAreaCm2: slope * x1 + intercept },
+  ];
+}
+const trendPath = d3
+  .line()
+  .x((d) => x(d.sunlightHours))
+  .y((d) => y(d.leafAreaCm2));
+
 // --- SVG mount ----------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
@@ -162,15 +182,6 @@ waterLevels.forEach((water, r) => {
     const cellY = gridTop + r * (cellHeight + cellGap);
     const cell = svg.append("g").attr("transform", `translate(${cellX},${cellY})`);
 
-    // panel border
-    cell
-      .append("rect")
-      .attr("width", cellWidth)
-      .attr("height", cellHeight)
-      .attr("fill", "none")
-      .attr("stroke", t.inkSoft)
-      .attr("stroke-opacity", 0.3);
-
     // shared gridlines
     cell
       .selectAll(".gridline-y")
@@ -201,7 +212,7 @@ waterLevels.forEach((water, r) => {
         .attr("y", cellHeight + 22)
         .attr("text-anchor", "middle")
         .attr("fill", t.inkSoft)
-        .style("font-size", "13px")
+        .style("font-size", "14px")
         .text((d) => d);
     }
     if (c === 0) {
@@ -214,12 +225,23 @@ waterLevels.forEach((water, r) => {
         .attr("dy", "0.32em")
         .attr("text-anchor", "end")
         .attr("fill", t.inkSoft)
-        .style("font-size", "13px")
+        .style("font-size", "14px")
         .text((d) => d);
     }
 
-    // scatter points
+    // shared-slope trend line (reinforces the sunlight -> leaf-area story per facet)
     const facetData = data.filter((d) => d.water === water && d.fert === fert);
+    cell
+      .append("path")
+      .datum(trendLine(facetData))
+      .attr("d", trendPath)
+      .attr("fill", "none")
+      .attr("stroke", t.ink)
+      .attr("stroke-opacity", 0.35)
+      .attr("stroke-width", 2)
+      .attr("stroke-dasharray", "5,4");
+
+    // scatter points
     cell
       .selectAll("circle")
       .data(facetData)
