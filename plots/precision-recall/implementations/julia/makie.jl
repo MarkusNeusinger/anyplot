@@ -52,6 +52,14 @@ average_precision = sum(
 )
 baseline = n_positives / n_transactions
 
+# Operating point that maximizes F1 = 2PR/(P+R) — the single most useful
+# threshold for a practitioner, highlighted as a focal point on the curve.
+f1_scores = [p + r > 0 ? 2 * p * r / (p + r) : 0.0 for (p, r) in zip(precision, recall)]
+best_idx = argmax(f1_scores)
+best_f1 = f1_scores[best_idx]
+best_recall = recall[best_idx]
+best_precision = precision[best_idx]
+
 # --- Plot ---------------------------------------------------------------
 fig = Figure(
     resolution      = (1600, 900),
@@ -89,6 +97,28 @@ ax = Axis(
 xlims!(ax, -0.02, 1.02)
 ylims!(ax, 0.0, 1.05)
 
+# Iso-F1 reference contours (spec Notes: "consider showing iso-F1 curves"),
+# drawn first as light background context so the data curve stays on top.
+f1_levels = (0.2, 0.4, 0.6, 0.8)
+for (i, f1) in enumerate(f1_levels)
+    r_min = f1 / (2 - f1)
+    r_grid = collect(range(r_min, 1.0; length = 100))
+    p_grid = f1 .* r_grid ./ (2 .* r_grid .- f1)
+    lines!(
+        ax, r_grid, p_grid;
+        color = (INK_SOFT, 0.35),
+        linestyle = :dot,
+        linewidth = 1.0,
+        label = i == 1 ? "Iso-F1 (0.2 / 0.4 / 0.6 / 0.8)" : nothing,
+    )
+end
+
+# Light fill under the curve reinforces the Average Precision area visually.
+band!(
+    ax, recall_curve, zeros(length(recall_curve)), precision_curve;
+    color = (IMPRINT_PALETTE[1], 0.10),
+)
+
 stairs!(
     ax, recall_curve, precision_curve;
     step = :post,
@@ -102,6 +132,18 @@ hlines!(
     linestyle = :dash,
     linewidth = 2.0,
     label = "Baseline (fraud rate = $(round(100 * baseline, digits = 1))%)",
+)
+
+# Best-F1 operating point — a halo marker in brand green keeps the data
+# storytelling anchored on the single most actionable threshold.
+scatter!(
+    ax, [best_recall], [best_precision];
+    color = PAGE_BG,
+    strokecolor = IMPRINT_PALETTE[1],
+    strokewidth = 2.5,
+    markersize = 16,
+    marker = :circle,
+    label = "Best F1 = $(round(best_f1, digits = 2))",
 )
 
 Legend(
