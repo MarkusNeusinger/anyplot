@@ -1,0 +1,246 @@
+library: d3
+language: javascript
+specification_id: heatmap-adjacency
+created: '2026-09-05T03:05:19Z'
+updated: '2026-09-05T03:20:34Z'
+generated_by: claude-sonnet
+workflow_run: 33940539585
+issue: 5240
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Correct Imprint sequential palette (brand green -> blue) for the continuous edge-weight
+    data, with identical data colors across light/dark and fully theme-adaptive chrome
+    (background, text, grid, legend all flip correctly)
+  - Department block-diagonal structure is clearly visible via subtle separators plus
+    an appropriate outer matrix frame (the enclosed-heatmap-grid spine exception applies
+    here)
+  - Computed, data-driven insight annotation (densest cluster, sparsest cross-team
+    pair) adds genuine storytelling beyond a plain grid
+  - Colorbar legend paired with an explicit 'No link' swatch disambiguates absent
+    edges from low-weight edges
+  - Deterministic LCG-based data generation and clean idiomatic d3 join pattern (selection.data().join()),
+    d3.quantize for gradient stops, axisRight for the legend scale
+  weaknesses:
+  - Roughly 15% of the square canvas height below the matrix/legend cluster is unused
+    whitespace, unbalanced against the tighter margins elsewhere -- grow gridSize
+    proportionally or rebalance margin.top/margin.bottom so the matrix better fills
+    the available height
+  - The legend gradient's domain starts at 0, but the minimum actual edge weight is
+    ~0.1-0.35, so the bottom of the colorbar shows a color that never appears anywhere
+    in the matrix -- minor polish item, consider anchoring the color domain closer
+    to the true data minimum
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "heatmap-adjacency · javascript · d3 · anyplot.ai", a lighter gray subtitle, and an italic gray insight line ("Densest cluster: Engineering ... sparsest cross-team ties: Engineering-Marketing") all clearly legible against the light background. Department labels (Product/Engineering/Marketing/Sales) sit above and rotated to the left of the matrix in a soft dark gray, fully readable. Colorbar tick labels and "Collaboration strength" legend title are legible in the same soft gray.
+      Data: 40x40 symmetric adjacency matrix, sequential Imprint green-to-blue scale (imprint_seq) for edge weight; "No link" cells render as a distinct near-background swatch (elevatedBg) rather than the data color, with a separate legend swatch confirming this. Block-diagonal structure (dense within-department squares, sparse cross-department scatter) is clearly visible, separated by subtle grid lines and an outer black-ish frame.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Title, subtitle, and insight line render in light ink tones, clearly readable against the dark background. Department labels and colorbar text render in a light gray, no dark-on-dark issues found anywhere (title, ticks, legend text all flipped correctly).
+      Data: Same sequential green-to-blue cell colors as the light render, confirmed identical -- only the background/text/frame chrome changed. Block-diagonal structure and "No link" swatch remain equally legible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-22px); readable in both themes,
+          no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 40x40 cells sized generously enough to remain visible and distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-blue scale, no red-green sole signal, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: ~15% of canvas height below the matrix+legend is unused, unbalanced
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Department group labels + explicitly labeled 'Collaboration strength'
+          colorbar
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used for single-polarity continuous data; theme-correct
+          chrome in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: department separators, frame, colorbar with
+          no-link swatch, typography hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle separators, appropriate spine exception for an enclosed heatmap
+          grid; some whitespace imbalance
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Computed insight annotation (densest cluster / sparsest cross-team
+          pair) guides the reader beyond raw display
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct adjacency matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric matrix filling both triangles, distinct no-link background,
+          colorbar legend, group-boundary tick labels per spec's large-network allowance
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows/columns consistently ordered by department, full data shown
+          on both axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar legend labeled correctly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Dense within-department blocks, sparse cross-team edges, and absent
+          edges all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible workplace collaboration-network scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Collaboration-strength weights and within/cross-team density ranges
+          are realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a weighted adjacency matrix, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, single svg appended, current d3 API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic data joins, scales, axisRight; manual rect grid is the
+          correct approach since d3 has no built-in matrix layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.quantize gradient stops and a hand-built SVG linearGradient legend
+          are library-specific touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
