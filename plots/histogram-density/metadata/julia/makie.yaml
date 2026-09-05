@@ -1,0 +1,262 @@
+library: makie
+language: julia
+specification_id: histogram-density
+created: '2026-09-05T04:36:12Z'
+updated: '2026-09-05T05:08:03Z'
+generated_by: claude-sonnet
+workflow_run: 33944808280
+issue: 2442
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 70
+review:
+  strengths:
+  - 'First categorical series is exact Imprint brand green #009E73 (rgb(0,158,115)
+    confirmed by pixel sampling) in both themes'
+  - Correct canvas (3200x1800), correct mandated title format, theme-adaptive chrome
+    (INK/INK_SOFT) verified to swap correctly with warm off-white/near-black backgrounds
+  - Clean L-shaped spine removal, subtle y-axis-only grid at low opacity, frameless
+    legend placed without overlapping data
+  - Realistic, neutral manufacturing QC context (cereal box net weight around a 500
+    g nominal fill) with a properly area-normalized density histogram
+  - Reproducible via Random.seed!(42); histogram + normal-fit PDF overlay (the one
+    pair of layers that does render) directly satisfies the spec's 'consider a theoretical
+    PDF overlay' note
+  weaknesses:
+  - 'Three of the five coded plot layers never appear in either PNG: the density!()
+    KDE stroke (IMPRINT_PALETTE[3] blue, strokewidth=4, dashed), the vlines!() nominal-fill
+    reference line at x=500 (INK, dashed), and the dotted callout line + ''Out-of-spec
+    box'' text!() annotation. Confirmed by pixel sampling: zero pixels of color (68,103,163)
+    anywhere in either 3200x1800 render, and no INK-colored vertical line crossing
+    the bars at the x=500 column in either theme. The legend also only shows 2 of
+    the 4 labeled series (''Observed boxes'', ''Normal fit'') — ''Smoothed density
+    (KDE)'' and ''Nominal fill (500 g)'' are missing from the legend too, meaning
+    the plot objects are not being registered/drawn at all, not just rendered too
+    faintly.'
+  - Because those three layers are invisible, the intended data storytelling (comparing
+    KDE vs parametric fit, flagging the nominal fill target, calling out the out-of-spec
+    box) never reaches the viewer — the shipped chart is just a histogram + one fit
+    line, weaker than what the code implies.
+  - 'Repair guidance: don''t just retune colors/alpha — first verify each of density!(),
+    vlines!(), lines!()+text!() actually draws in isolation on a minimal script with
+    this Makie/CairoMakie version. Likely suspects: the color=:transparent fill trick
+    on density!() suppressing the stroke too (try a low-alpha solid fill instead of
+    :transparent), or the vlines!()/annotation calls being added after some limits-locking
+    step. Confirm via axislegend showing all 4 entries and via direct pixel inspection
+    before resubmitting.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (page surface), not pure white.
+      Chrome: Title "Cereal Box Net Weight · histogram-density · julia · makie · anyplot.ai" in dark ink, clearly legible; x-axis "Net Weight (g)" and y-axis "Density" labels in dark ink, legible; tick labels in soft grey ink, legible; subtle horizontal gridlines only; L-shaped spine (bottom + left only); legend box top-right, frameless, with two entries ("Observed boxes", "Normal fit") in soft grey text.
+      Data: Green (#009E73) histogram bars with a light bg-colored stroke between bars, bell-shaped distribution centered near 500 g with one isolated outlier bar far to the right (~540 g); a lavender/purple smoothed curve ("Normal fit") overlaid on top of the bars, peaking near the histogram mode. No other overlay is visible — pixel sampling confirms there is no dashed line at x=500 (nominal fill), no blue KDE stroke anywhere in the image, and no annotation text/dotted leader line near the outlier bar, even though the code defines all three.
+      Legibility verdict: PASS (everything that is actually drawn is clearly readable; the missing layers are a rendering-completeness bug, not a legibility bug).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title/axis/tick text now in light ink (#F0EFE8) / soft light grey (#B8B7B0), fully legible against the dark background — no dark-on-dark failures observed. Spines and grid flip to light-on-dark equivalents correctly.
+      Data: Histogram bars and the normal-fit curve use the identical data colors as the light render (green #009E73, purple fit line) — confirmed unchanged. As in the light render, the KDE stroke, nominal-fill reference line, and outlier annotation are absent from the pixels (verified by the same sampling: no blue-family pixels anywhere, no light-ink vertical line crossing the bars at x=500 beyond the title-text rows).
+      Legibility verdict: PASS for what is drawn; same missing-layers defect carries over identically to the dark theme, confirming it's a code/rendering bug rather than a theme-specific contrast problem.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All rendered text (title, axis labels, ticks, legend) is legible
+          in both themes with correctly themed ink colors
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 2
+        max: 6
+        passed: false
+        comment: The KDE density stroke, nominal-fill vline, and outlier annotation
+          are entirely invisible (0 matching pixels found in either render) despite
+          being coded and labeled
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs purple contrast is adequate; not relying on red/green alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, good margins, no overflow/clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (g); mandated title format used
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series confirmed exact Imprint green #009E73; backgrounds
+          theme-correct in both renders'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Default-level polish for what actually renders; the intended layered
+          sophistication (KDE, reference line, callout) never reaches the viewer
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle single-axis grid, frameless legend — genuinely
+          refined for the visible elements
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Histogram + fit line gives some narrative, but the planned focal
+          point (out-of-spec callout) and reference target (nominal fill line) are
+          missing from the visual story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct density histogram (normalization=:pdf)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area-normalized density on y-axis; PDF overlay satisfies the spec's
+          optional reference-line note
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = net weight, Y = density; axes cover full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend entries accurately match what is actually
+          visible on the chart
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: false
+        comment: Intended coverage (histogram + KDE + parametric fit + reference target
+          + outlier callout) is ambitious, but 3 of those never render
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cereal box fill-weight QC scenario is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic weight range and spread around a 500 g nominal fill
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 0
+        max: 2
+        passed: false
+        comment: Ships 3 plotting calls (density!, vlines!, annotation lines!+text!)
+          that are dead weight — labeled for the legend and clearly intended to be
+          visible, but produce zero rendered pixels; this is effectively non-functional
+          code shipped as if it worked
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-$(THEME).png save pattern with px_per_unit=2
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good idiomatic composition attempt (hist!, band!, lines!, density!,
+          vlines!, axislegend) even though part of it silently fails
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layered-geom approach is a good idea for showcasing Makie's compositional
+          API, but the distinctive parts (KDE overlay, reference line, callout) don't
+          actually show up
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
