@@ -48,6 +48,15 @@ tpr_b = vcat(0.0, cumsum(sorted_labels_b) ./ n_disease)
 fpr_b = vcat(0.0, cumsum(1 .- sorted_labels_b) ./ n_healthy)
 auc_b = sum(diff(fpr_b) .* (tpr_b[2:end] .+ tpr_b[1:(end - 1)]) ./ 2)
 
+# Optimal operating point per curve (Youden's J statistic: max(TPR - FPR))
+j_a = tpr_a .- fpr_a
+opt_idx_a = argmax(j_a)
+opt_fpr_a, opt_tpr_a = fpr_a[opt_idx_a], tpr_a[opt_idx_a]
+
+j_b = tpr_b .- fpr_b
+opt_idx_b = argmax(j_b)
+opt_fpr_b, opt_tpr_b = fpr_b[opt_idx_b], tpr_b[opt_idx_b]
+
 # --- Plot ----------------------------------------------------------------
 fig = Figure(
     size = (1200, 1200),
@@ -75,6 +84,8 @@ ax = Axis(
     backgroundcolor = PAGE_BG,
     aspect = 1,
     limits = (0, 1, 0, 1),
+    xticks = 0:0.25:1,
+    yticks = 0:0.25:1,
     topspinevisible = false,
     rightspinevisible = false,
     leftspinecolor = INK_SOFT,
@@ -84,6 +95,10 @@ ax = Axis(
     xminorgridvisible = false,
     yminorgridvisible = false,
 )
+
+# Shade the area between the better-performing curve (Biomarker A) and the
+# diagonal to visualize its AUC advantage over random guessing
+band!(ax, fpr_a, fpr_a, tpr_a; color = (IMPRINT_PALETTE[1], 0.07))
 
 lines!(
     ax, [0.0, 1.0], [0.0, 1.0];
@@ -99,6 +114,26 @@ lines!(
     ax, fpr_b, tpr_b;
     color = IMPRINT_PALETTE[2], linewidth = 3.5,
     label = "Biomarker B (AUC = $(round(auc_b; digits = 2)))",
+)
+
+# Mark each curve's optimal operating point (Youden's J statistic)
+scatter!(
+    ax, [opt_fpr_a], [opt_tpr_a];
+    color = IMPRINT_PALETTE[1], markersize = 14, strokewidth = 1.5, strokecolor = PAGE_BG,
+)
+text!(
+    ax, opt_fpr_a, opt_tpr_a;
+    text = "Optimal J = $(round(j_a[opt_idx_a]; digits = 2))",
+    color = INK, fontsize = 11, align = (:left, :bottom), offset = (8, 8),
+)
+scatter!(
+    ax, [opt_fpr_b], [opt_tpr_b];
+    color = IMPRINT_PALETTE[2], markersize = 14, strokewidth = 1.5, strokecolor = PAGE_BG,
+)
+text!(
+    ax, opt_fpr_b, opt_tpr_b;
+    text = "Optimal J = $(round(j_b[opt_idx_b]; digits = 2))",
+    color = INK, fontsize = 11, align = (:right, :top), offset = (-8, -8),
 )
 
 axislegend(ax; position = :rb, labelsize = 12, labelcolor = INK_SOFT, framevisible = false)
