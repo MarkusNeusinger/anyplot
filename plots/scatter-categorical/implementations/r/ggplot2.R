@@ -28,9 +28,15 @@ df <- penguins %>%
 # --- Plot -----------------------------------------------------------------
 title_text <- "scatter-categorical · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = bill_length_mm, y = flipper_length_mm, color = species)) +
-  geom_point(size = 2.5, alpha = 0.75) +
-  scale_color_manual(values = IMPRINT_PALETTE, name = "Species") +
+# Grid lines blended toward the background instead of full-strength INK
+# (ggplot2 does not expose grid alpha directly, so pre-mix the color).
+GRID_COLOR <- grDevices::adjustcolor(INK, alpha.f = 0.2)
+
+p <- ggplot(df, aes(x = bill_length_mm, y = flipper_length_mm, color = species, fill = species)) +
+  stat_ellipse(linewidth = 0.6, alpha = 0.6, level = 0.68, show.legend = FALSE) +
+  geom_point(shape = 21, color = "white", stroke = 0.3, size = 2.5, alpha = 0.85) +
+  scale_color_manual(values = IMPRINT_PALETTE, guide = "none") +
+  scale_fill_manual(values = IMPRINT_PALETTE, name = "Species") +
   labs(
     title = title_text,
     x = "Bill Length (mm)",
@@ -40,7 +46,7 @@ p <- ggplot(df, aes(x = bill_length_mm, y = flipper_length_mm, color = species))
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
