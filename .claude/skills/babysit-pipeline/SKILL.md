@@ -259,6 +259,19 @@ nothing failed.
   put the spec on `rescue_specs.txt`: the driver's dispatch
   auto-closes every open PR of the pair, so a regeneration fired while
   a repair is mid-flight throws that work away.
+- **A `Merge: PR #N` run that fails AFTER "Merge PR to main" leaves a
+  silent hole: the squash is on main (metadata pointing at production
+  URLs, the driver counts the pair as done) but the images are still in
+  staging, the `impl:<lib>:done` label, issue close and Postgres sync
+  never ran.** Seen on #11295 (2026-09-05, GCP auth step failed 5 s
+  after the squash). Read the failed run's step list — a failure at or
+  after `Authenticate to GCP` with `Merge PR to main` green is this
+  case — then `gh workflow run impl-merge.yml -f pr_number=N`: the
+  workflow treats an already-merged PR as success and runs the
+  post-merge steps. Never promote the images by hand. Every status
+  cycle should compare the pairs landed on main against
+  `gs://anyplot-images/plots/<spec>/<lang>/<lib>/plot-light.png`; a
+  merge failure in the run list is the trigger to look.
 - **`Merge: PR #N` failing five times with "Head branch is out of
   date" while `mergeable` stays `UNKNOWN` is a stuck PR object, not a
   branch problem.** Seen on #10850 (2026-09-01): `update-branch` had
