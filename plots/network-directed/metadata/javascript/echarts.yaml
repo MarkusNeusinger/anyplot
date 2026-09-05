@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: network-directed
+created: '2026-09-05T09:56:24Z'
+updated: '2026-09-05T10:23:11Z'
+generated_by: claude-sonnet
+workflow_run: 33958783618
+issue: 2858
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/echarts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Correct Imprint palette in canonical order (Core=#009E73, Service layer=lavender,
+    UI layer=blue, Shared utilities=ochre), identical data colors between light and
+    dark renders, with theme-correct #FAF8F1/#1A1A17 backgrounds'
+  - Adds a genuine bidirectional edge pair (State Store ↔ UI Components) that now
+    exercises the spec's curved-edge anti-overlap guidance — closes the data-coverage
+    gap flagged in attempt 1
+  - Heaviest-weight edges (weight >= 8) now render with higher opacity (0.85 vs 0.5),
+    giving the busiest dependencies a clearer visual emphasis beyond a flat edge style
+  - Node size scaled by degree and arrowheads (edgeSymbol 'arrow', size 14) clearly
+    encode hub importance and import direction
+  - Realistic, neutral 14-node/20-edge software module-dependency dataset squarely
+    in the spec's 10-50 node range
+  - 'Clean deterministic KISS code: hard-coded data, correct mount-node contract,
+    animation disabled, no explicit width/height/devicePixelRatio'
+  weaknesses:
+  - 'The bottom-most node''s rotated label (''Scheduler'', circular layout with rotateLabel:
+    true) still collides with the legend''s ''UI layer'' text directly beneath it,
+    in BOTH light and dark renders — identical to the defect flagged in attempt 1.
+    The radius reduction from 300 to 185 shrank the graph but did not add enough vertical
+    clearance before the legend. Fix explicitly: shift the series center upward (e.g.
+    center: ["50%", "42%"]) and/or push the legend further down (larger ''bottom''
+    offset), so no radial label enters the legend''s bounding box.'
+  - The circular layout with 20 edges still produces a busy crisscross of lines through
+    the center (carried over from attempt 1) — consider a tuned force layout or hierarchical/layered
+    arrangement to reduce line crossings and make the dependency flow easier to trace
+    at a glance.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "network-directed · javascript · echarts · anyplot.ai" in bold dark ink, centered at top, fully visible and not clipped. A four-item legend ("Core", "Service layer", "UI layer", "Shared utilities") with colored swatches sits at the bottom center. Node labels are dark-ink text placed radially around each node, rotated to follow the circular layout.
+      Data: 14 nodes arranged in a circular layout, colored by category (Core=green #009E73, Service layer=lavender/purple, UI layer=blue, Shared utilities=ochre/amber). Node size scales with degree - "Logger" is visibly the largest node. 21 grey directed edges with arrowheads connect the nodes (one new bidirectional pair: State Store <-> UI Components), curved slightly to reduce overlap, with line width proportional to edge weight and heavier-weight edges (>=8) rendered at higher opacity to stand out from the general crisscross.
+      Legibility verdict: FAIL (partial) - every element except one is clearly readable, but the "Scheduler" node's rotated label at the bottom of the circle visually collides with the legend's "UI layer" text directly below it, merging into hard-to-parse text. This is an overlap defect (VQ-02), not a contrast failure - the text color itself is correctly dark-on-light. This is the exact same collision flagged in attempt 1's review; the repair's radius reduction (300 -> 185) did not resolve it.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Same title, now rendered in light ink, fully visible and not clipped. Same four-item legend at bottom with light-colored swatch text. Node labels rendered in light ink, readable against the dark background.
+      Data: Identical node/edge structure and identical categorical data colors to the light render (green/lavender/blue/ochre unchanged) - only the chrome (background, text, legend) flipped to the dark theme as expected. Node sizing by degree and edge width/opacity by weight are unchanged.
+      Legibility verdict: FAIL (partial) - no dark-on-dark or light-on-light failures; all chrome text is correctly light-colored and readable. The same "Scheduler" label / "UI layer" legend collision from the light render reproduces identically here (it's a layout/spacing issue, not theme-dependent), so this render inherits the same overlap defect.
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 22, legend 16, labels 15);
+          all readable in both themes except the label/legend collision near the bottom
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: '''Scheduler'' node label still collides with the legend''s ''UI
+          layer'' text at the bottom of the circular layout in both renders - unresolved
+          from attempt 1 despite the radius reduction'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Node sizes and edge widths well-adapted to degree/weight; some visual
+          clutter from crossing edges inherent to a dense circular layout
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe categorical colors, no reliance on hue alone
+          (size + arrows also encode meaning)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Graph fills a good share of the square canvas, legend close to plot;
+          minor deduction for the label/legend collision
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A for network graphs (no axes); title correctly formatted and descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73 (Core); canonical Imprint order
+          for the remaining 3 categories; identical data colors light/dark; correct
+          theme backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful degree-based node sizing, categorical coloring, and weight-tiered
+          edge opacity clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean background, subtle alpha-blended edges, curved lines; the legend/label
+          collision costs refinement points
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Node size by degree plus opacity emphasis on heavy edges creates
+          a clear visual hierarchy that surfaces the busiest modules at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network graph via ECharts graph series with circular
+          layout and arrows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with labels/groups, directed edges with arrows, weight-driven
+          line thickness and opacity all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 14 nodes and 21 edges rendered and visible; no orphaned or hidden
+          elements
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; legend labels match the
+          4 categories used
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Good variety of node degrees and edge weights; now includes a true
+          bidirectional edge pair (State Store <-> UI Components) exercising the spec's
+          curved-edge anti-overlap note
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral software module-dependency scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Import-count weights and computed degrees are internally consistent
+          and plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> option -> setOption structure, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports; uses only the global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately concise, no over-engineering, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract; animation disabled; current API usage
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of the graph series (circular layout, categories tied
+          to legend, edgeSymbol arrows)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Circular layout with rotateLabel, curved directed edges, and weight-tiered
+          edge opacity are a reasonably distinctive use of ECharts' graph series
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - circular-layout
+  - curved-edges
+  - degree-based-sizing
+  - weighted-edges
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
