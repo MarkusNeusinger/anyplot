@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: maze-printable
 created: '2026-09-05T09:23:18Z'
-updated: '2026-09-05T09:28:15Z'
+updated: '2026-09-05T09:36:52Z'
 generated_by: claude-sonnet
 workflow_run: 33957547879
 issue: 3232
@@ -12,55 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-prin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
   - Recursive-backtracker maze generation guarantees exactly one solution path, matching
     the spec's core requirement precisely
   - Deterministic LCG-based RNG (fixed seed 20260905) makes the maze fully reproducible
     across renders
-  - Clean black-and-white wall rendering with high contrast and consistent, cell-scaled
-    wall thickness — well suited for printing
+  - Wall thickness bumped to ~12% of cell size (from ~9%) plus a doubled-width outer
+    border frame — reads as a genuinely print-ready puzzle now, with strong contrast
+    at both full size and 400px
+  - Soft radial halos (echarts.graphic.RadialGradient) behind the S/G markers add
+    a distinctive, ECharts-specific visual touch that draws the eye from start to
+    goal without cluttering the print output
   - 'Start/goal markers use color-coded circles with letter labels (S in brand green
     #009E73, G in matte red #AE3030) — clear, print-legible wayfinding that follows
-    the Imprint palette and its semantic-exception convention'
+    the Imprint palette and its semantic-exception convention, with redundant text
+    so red/green is never the sole signal'
   - 'Correct mount-node contract usage: echarts.init with no explicit size/dpr, animation:
-    false, theme tokens threaded through title/caption/walls'
+    false, theme tokens threaded through title/caption/walls/border/halos'
   - Both light and dark renders are theme-correct — background, text, and wall colors
-    flip appropriately while the S/G data colors stay identical
+    flip appropriately while the S/G data colors and halo colors stay identical
+  - Caption fontsize raised to 18px, now comfortably legible even at mobile-scaled
+    (~400px) widths
   - Title format and canvas size (square, 2400x2400 via anyplot-orientation directive)
     match spec/style-guide requirements exactly
+  - No clipping at the canvas edge — S/G markers and halos sit fully inside the outer
+    border with margin to spare
   weaknesses:
-  - Wall thickness (~9% of cell size, wallWidth = max(3, cellSize*0.09)) is on the
-    thinner side for a print-optimized puzzle — the spec calls out walls should be
-    'not too thin'; consider bumping the multiplier (e.g. cellSize*0.12) for stronger
-    contrast once printed or scaled down
-  - Design Excellence is solid but not exceptional — the maze is functionally polished
-    but visually plain beyond the S/G accents; consider small refinements (e.g. a
-    slightly heavier outer border, or marker halo) to elevate aesthetic sophistication
-    and data-storytelling focal points further
-  - 'Library Mastery: the implementation relies entirely on ECharts'' low-level graphic
-    custom-shape API (line/circle/text) rather than any higher-level declarative chart
-    construct — a reasonable choice since no native maze chart type exists, but it
-    doesn''t showcase ECharts-distinctive features beyond basic primitives'
-  - At mobile-scaled widths (~400px) the caption '26 x 26 cells - one guaranteed solution
-    path' becomes very small and borderline illegible — consider a slightly larger
-    caption fontsize
+  - Library Mastery is still capped by relying entirely on ECharts' low-level graphic
+    custom-shape API (line/circle/rect/text) rather than any higher-level declarative
+    series construct — a reasonable choice given no native maze chart type exists,
+    and the new RadialGradient halo is a nice distinctive touch, but it doesn't showcase
+    much beyond basic primitives + one gradient
+  - Design Excellence is solid but still short of exceptional — the heavier border
+    and halos help, but the maze interior remains visually plain (uniform black lines)
+    beyond the S/G accents; a subtle secondary accent (e.g. a faint solved-path hint,
+    corner tick marks, or graduated wall shading) could push the storytelling further
+  - Feature coverage shows only a single perfect maze; no demonstration of algorithmic
+    variety (e.g. a braided/looped section or difficulty callout) that the spec's
+    'algorithmic thinking' framing could support
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "maze-printable · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Caption "26 × 26 cells · one guaranteed solution path" in soft gray beneath it, readable though small. A 26x26 grid maze rendered as black wall segments (recursive-backtracker generated) fills a large centered square area with balanced margins.
-      Data: Start cell (top-left) marked with a green (#009E73, brand green / Imprint position 1) filled circle containing a white "S". Goal cell (bottom-right) marked with a matte-red (#AE3030) filled circle containing a white "G". Walls render as solid black line segments on the off-white background, uniform thickness throughout.
+      Chrome: Title "maze-printable · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Caption "26 × 26 cells · one guaranteed solution path" in soft gray beneath it, now at 18px and comfortably legible. A 26x26 grid maze fills a large centered square area with balanced margins, framed by a heavier double-width outer border that visually separates the puzzle from the page.
+      Data: Start cell (top-left) marked with a green (#009E73, brand green / Imprint position 1) filled circle containing a white "S", sitting on a soft green radial halo. Goal cell (bottom-right) marked with a matte-red (#AE3030) filled circle containing a white "G", sitting on a soft red radial halo. Both markers and halos are fully inside the outer border with no clipping. Interior walls render as solid black line segments, uniform and visibly thicker than the prior attempt, on the off-white background.
       Legibility verdict: PASS — all text (title, caption, S/G markers) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and caption render in light ink (near-white / soft gray), fully readable against the dark background. Maze wall segments render in a light/off-white stroke, clearly visible against the dark surface.
-      Data: Start marker remains the same green (#009E73) filled circle with white "S"; goal marker remains the same matte-red (#AE3030) filled circle with white "G" — confirmed identical to the light render, only the chrome (background, walls, text) flipped polarity.
+      Chrome: Title and caption render in light ink (near-white / soft gray), fully readable against the dark background. Maze wall segments and the heavier outer border render in a light/off-white stroke, clearly visible against the dark surface.
+      Data: Start marker remains the same green (#009E73) filled circle with white "S" and matching halo; goal marker remains the same matte-red (#AE3030) filled circle with white "G" and matching halo — confirmed identical in color to the light render, only the chrome (background, walls, border, text) flipped polarity.
       Legibility verdict: PASS — no dark-on-dark failures observed; all title/caption/marker text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,21 +74,23 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title and caption font sizes explicitly set (22px/16px); readable
-          in both themes with no clipping
+        comment: Title (22px) and caption (raised to 18px) explicitly set; readable
+          in both themes, no clipping, and now comfortably legible at mobile-scaled
+          (~400px) widths
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, caption, walls, or markers
+        comment: No overlap between title, caption, walls, border, halos, or markers
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wall segments visible at full size and at mobile width, but thickness
-          (~9% of cell size) is on the thin side for print use
+        comment: Wall thickness bumped to ~12% of cell size plus a doubled-width outer
+          border — strong contrast at full size and at mobile scale, print-friendly
+          now
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -95,8 +103,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Maze fills most of the square canvas with balanced margins on all
-          sides
+        comment: Maze fills most of the square canvas with balanced margins; heavier
+          border reinforces the frame without overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -112,32 +120,32 @@ review:
           uses matte red (#AE3030) as the semantic bad/stop anchor; backgrounds and
           chrome are theme-correct in both renders
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom, purpose-built design (no library default exists for mazes)
-          with thoughtful color-coded markers, but overall visual sophistication is
-          moderate rather than exceptional
+        passed: true
+        comment: The new heavier outer border and soft radial halos behind the markers
+          meaningfully elevate the polish over the prior attempt, though the maze
+          interior itself remains visually plain uniform black lines
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No grid/spines needed, generous whitespace, subtle caption typography
-          — clean and deliberate
+        comment: No grid/spines needed, generous whitespace, subtle caption typography,
+          deliberate border weight hierarchy (interior walls thinner than outer frame)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color-coded S/G markers create a clear focal point guiding the eye
-          from start to goal, but there is little additional visual hierarchy beyond
-          that
+        passed: true
+        comment: The radial halos add a soft glow that visually anchors start and
+          goal more strongly than plain circles, guiding the eye across the puzzle,
+          though hierarchy beyond that remains limited
     spec_compliance:
       score: 15
       max: 15
@@ -153,8 +161,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Single-solution-path algorithm, S/G markers, consistent wall thickness,
-          print margins, high-contrast walls — all present
+        comment: Single-solution-path algorithm, S/G markers, consistent (now thicker)
+          wall thickness, print margins, high-contrast walls — all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -202,7 +210,7 @@ review:
         max: 3
         passed: true
         comment: Flat top-to-bottom script; small helper functions (LCG RNG, coordinate
-          lookups) are the minimum necessary for maze generation, not over-structured
+          lookups, hex-to-rgba, halo builder) are the minimum necessary, not over-structured
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -230,7 +238,7 @@ review:
         comment: 'Follows the mount-node contract correctly: echarts.init(#container)
           with no explicit size/dpr, animation: false'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -239,16 +247,17 @@ review:
         max: 5
         passed: true
         comment: Correct use of ECharts' graphic custom-shape API (the right tool
-          since no native maze chart type exists), but doesn't leverage ECharts' higher-level
-          declarative series patterns
+          since no native maze chart type exists), but still doesn't leverage ECharts'
+          higher-level declarative series patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses ECharts' graphic component for custom line/circle/text primitives
-          — somewhat library-specific, but limited to basic shape primitives
-  verdict: REJECTED
+        comment: Adds echarts.graphic.RadialGradient for the marker halos on top of
+          the line/circle/rect/text primitives — a genuinely ECharts-specific touch
+          beyond basic shapes
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -259,3 +268,4 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
+  - gradient-fill

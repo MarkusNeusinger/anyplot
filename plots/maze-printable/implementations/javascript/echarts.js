@@ -1,7 +1,7 @@
 // anyplot.ai
 // maze-printable: Printable Maze Puzzle
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
+// Quality: 91/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
