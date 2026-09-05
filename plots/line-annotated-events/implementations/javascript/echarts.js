@@ -27,9 +27,9 @@ for (let i = 0, d = 0; d < NUM_DAYS; i++) {
 
 const events = [
   { dayIndex: 35, label: "v2.0 Launch" },
-  { dayIndex: 90, label: "Referral Program" },
+  { dayIndex: 90, label: "Referral Program", steep: true },
   { dayIndex: 140, label: "Mobile App Release" },
-  { dayIndex: 175, label: "Premium Tier" },
+  { dayIndex: 175, label: "Premium Tier", steep: true },
   { dayIndex: 225, label: "Holiday Campaign" },
 ];
 const eventDayIndices = new Set(events.map((e) => e.dayIndex));
@@ -46,11 +46,27 @@ for (let i = 0; i < dates.length; i++) {
 
 // Offset labels left of their marker and alternate above/below so they never
 // sit on top of the vertical dashed event line or the rising data line.
-const eventPoints = events.map((e, idx) => ({
-  coord: [dates[e.dayIndex].getTime(), series[e.dayIndex][1]],
-  label: e.label,
-  offset: [-16, idx % 2 === 0 ? -34 : 34],
-}));
+// A label offset backward in time (negative x) lands over the pre-event
+// trace, which sits at roughly the same height as a "below" placement right
+// after a steep step — so steep events shift the label forward in time
+// instead, over the flatter post-event trace, to get real clearance.
+const eventPoints = events.map((e, idx) => {
+  const magnitude = e.steep ? 40 : 34;
+  const below = idx % 2 !== 0;
+  return {
+    coord: [dates[e.dayIndex].getTime(), series[e.dayIndex][1]],
+    label: e.label,
+    offset: [e.steep && below ? 16 : -16, below ? magnitude : -magnitude],
+    align: e.steep && below ? "left" : "right",
+  };
+});
+
+// Shade a 10-business-day post-event window so viewers can see how quickly
+// each launch/campaign moved the trend, not just where it started.
+const postEventWindows = events.map((e) => {
+  const endIdx = Math.min(dates.length - 1, e.dayIndex + 10);
+  return [{ xAxis: dates[e.dayIndex].getTime() }, { xAxis: dates[endIdx].getTime() }];
+});
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -78,7 +94,7 @@ chart.setOption({
   },
   yAxis: {
     type: "value",
-    name: "Daily Active Users",
+    name: "Daily Active Users (thousands)",
     nameLocation: "middle",
     nameGap: 70,
     nameTextStyle: { color: t.ink, fontSize: 16 },
@@ -101,6 +117,11 @@ chart.setOption({
         lineStyle: { type: "dashed", width: 1.5, color: t.palette[1] },
         data: events.map((e) => ({ xAxis: dates[e.dayIndex].getTime() })),
       },
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.palette[1], opacity: 0.06 },
+        data: postEventWindows,
+      },
       markPoint: {
         symbol: "circle",
         symbolSize: 12,
@@ -116,7 +137,7 @@ chart.setOption({
           coord: p.coord,
           label: {
             position: p.offset,
-            align: "right",
+            align: p.align,
             verticalAlign: "middle",
             formatter: () => p.label,
           },
