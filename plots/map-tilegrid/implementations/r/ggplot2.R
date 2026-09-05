@@ -41,26 +41,55 @@ state_grid <- tibble::tribble(
 df <- state_grid %>%
   mutate(income_k = round(pmax(35, rnorm(n(), mean = 58, sd = 11)), 1))
 
+# --- Outlier callouts (data-storytelling touch: national average + hi/lo) --
+avg_income <- round(mean(df$income_k), 1)
+top_state    <- dplyr::slice_max(df, income_k, n = 1, with_ties = FALSE)
+bottom_state <- dplyr::slice_min(df, income_k, n = 1, with_ties = FALSE)
+
+df <- df %>%
+  mutate(
+    is_outlier  = region %in% c(top_state$region, bottom_state$region),
+    tile_color  = if_else(is_outlier, INK, PAGE_BG),   # neutral anchor for callout ring
+    tile_stroke = if_else(is_outlier, 2.6, 1.2)
+  )
+
 # --- Title (fontsize scales with title length, see plot-generator.md) -------
 title_text <- "US Per-Capita Income by State · map-tilegrid · r · ggplot2 · anyplot.ai"
 title_n <- nchar(title_text, type = "chars")
 title_size <- max(8, round(12 * min(1, 67 / title_n)))
 
+subtitle_text <- sprintf(
+  "National average $%.0fk  ·  Highest: %s ($%.0fk)  ·  Lowest: %s ($%.0fk)",
+  avg_income, top_state$region, top_state$income_k,
+  bottom_state$region, bottom_state$income_k
+)
+
 # --- Plot ---------------------------------------------------------------------
 p <- ggplot(df, aes(x = col, y = -row)) +
-  geom_tile(aes(fill = income_k), width = 0.92, height = 0.92,
-            color = PAGE_BG, linewidth = 1.4) +
+  geom_tile(aes(fill = income_k, color = tile_color, linewidth = tile_stroke),
+            width = 0.88, height = 0.88) +
   geom_text(aes(label = region), color = "#FFFFFF", size = 3.4,
             fontface = "bold") +
   scale_fill_gradient(low = "#009E73", high = "#4467A3",
-                       name = "Per-capita\nincome ($k)") +
+                       name = "Per-capita\nincome ($k)",
+                       guide = guide_colorbar(title.position = "top",
+                                              barwidth  = grid::unit(0.35, "cm"),
+                                              barheight = grid::unit(3.2, "cm"),
+                                              frame.colour  = INK_SOFT,
+                                              frame.linewidth = 0.3,
+                                              ticks.colour  = INK_SOFT)) +
+  scale_color_identity() +
+  scale_linewidth_identity() +
   coord_fixed(ratio = 1, clip = "off") +
-  labs(title = title_text) +
+  labs(title = title_text, subtitle = subtitle_text) +
   theme_void(base_size = 8) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
     plot.title          = element_text(color = INK, size = title_size,
+                                        hjust = 0.5,
+                                        margin = margin(b = 6)),
+    plot.subtitle       = element_text(color = INK_SOFT, size = 9,
                                         hjust = 0.5,
                                         margin = margin(b = 16)),
     legend.position     = "right",
