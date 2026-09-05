@@ -1,0 +1,261 @@
+library: echarts
+language: javascript
+specification_id: line-timeseries-rolling
+created: '2026-09-05T08:40:08Z'
+updated: '2026-09-05T08:53:51Z'
+generated_by: claude-sonnet
+workflow_run: 33955724185
+issue: 2786
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Palette compliance fixed: raw data uses brand green #009E73 (palette[0]) and
+    the rolling average now uses lavender #C475FD (palette[1]), the canonical next
+    ordinal position, resolving the prior review''s VQ-07 flag'
+  - 'Native ECharts time axis (type: "time") replaces the previous category-axis workaround,
+    giving automatic, evenly-spaced date/hour tick formatting — resolves the prior
+    LM-01 flag'
+  - dataZoom (inside + slider, with a live area-chart preview minimap) adds a genuine
+    ECharts-distinctive interactive feature — resolves the prior LM-02 flag
+  - 'yAxis scale: true tightens the vertical range to roughly 9-30 against a data
+    range of ~11-28, cutting the previously flagged wasted vertical space'
+  - Thin, 35%-opacity raw line vs. thick solid rolling-average line creates immediate
+    visual hierarchy that guides the eye to the smoothed trend
+  - 'Both themes render correctly: warm off-white/near-black backgrounds, ink/inkSoft/grid
+    tokens threaded through title, axes, ticks, legend and gridlines; data colors
+    identical across themes'
+  - Deterministic fixed-seed LCG data generation produces a realistic daily temperature
+    cycle plus a slow seasonal drift and noise
+  - Rolling average line correctly starts a day after the raw series (24-point window
+    warm-up), matching the spec's note that the rolling series will be shorter
+  weaknesses:
+  - Title occupies only ~33% of canvas width, notably below the 50-70% guideline for
+    a title of this length — a slightly larger title fontSize would strengthen the
+    visual hierarchy without risking overflow
+  - 'DE-01: aesthetic still leans on token defaults (alpha-blending + line-weight
+    hierarchy); a mark line/area highlighting the seasonal drift or peak/trough annotations
+    would raise sophistication further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-timeseries-rolling · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Date / Hour (UTC)" and Y-axis title "Temperature (°C)" both dark and readable. Tick labels (day-of-month on the native time axis, temperature values on Y) are a lighter grey-ink, readable. Legend at the bottom center shows "Raw Data" and "24-Hour Rolling Average" swatches, clearly legible. A dataZoom slider with a shaded area-chart preview sits above the legend, fully visible and not overlapping any other chrome. Grid lines are subtle light-grey verticals/horizontals, visible but not competing with data.
+      Data: Raw Data renders as a thin, pale seafoam-green line (brand green #009E73 at ~35% opacity) with a strong daily oscillation (~11-28°C). Rolling Average renders as a thick, solid lavender line (#C475FD, the canonical second palette slot) tracing a smooth seasonal arc that starts about a day after the raw series (24-hour window warm-up) and ends at the same point as the raw data. First series is confirmed #009E73 as required; second series is confirmed the canonical palette[1] lavender.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, tick labels, and legend text all render in light/off-white ink, clearly legible against the dark background. The dataZoom slider preview area uses dark-adapted fill/track colors, still legible. Grid lines are subtle light-grey at low opacity, visible without dominating.
+      Data: Raw Data line is the same brand green (#009E73) at the same opacity, and the Rolling Average line is the same lavender (#C475FD) as in the light render — data colors are identical between themes, only chrome flipped as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (title, axis titles, ticks, legend) is clearly visible against the #1A1A17 surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis names 16px, ticks
+          14px, legend 16px); readable in both themes; no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, dataZoom slider, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin, low-opacity raw line and thick solid rolling-average line are
+          both clearly visible and well matched to 240-point hourly density; no symbols
+          needed at this density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender combination is CVD-safe with good contrast; not
+          relying on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; yAxis scale:true now tightens the range (~9-30)
+          to the data (~11-28), removing the previously flagged wasted vertical space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units (°C, UTC)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); second series now correctly
+          uses canonical palette[1] (#C475FD lavender); theme chrome fully correct
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Alpha-blending, line-weight hierarchy, native time axis and dataZoom
+          overview together read as a deliberately composed chart, though still without
+          a distinctive typographic or annotation flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, deliberate alpha-blending/line-weight contrast, and
+          the now-tightened y-range show clear refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: thin translucent raw noise vs. thick solid
+          trend line immediately draws the eye to the smoothed signal, fulfilling
+          the plot''s trend-identification purpose'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct dual-layer line chart: raw observations plus rolling-average
+          overlay'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Lighter semi-transparent raw line, prominent contrasting rolling-average
+          line, legend distinguishing both with window size stated, grid on both axes
+          — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = timestamp (native time axis), Y = temperature, both series correctly
+          mapped and fully visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels ('Raw Data',
+          '24-Hour Rolling Average') match the data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows daily oscillation, noise, a slow seasonal drift in the trend
+          line, and the shortened rolling-average window warm-up
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Hourly outdoor temperature over 10 days is a real, neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature values (~11-28°C) and daily/seasonal amplitude are physically
+          plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> init -> option structure; the one small LCG helper function
+          is idiomatic and necessary
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed = 42) produces deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals or imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately sized for the visualization, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows mount-node contract, animation: false set, no explicit size/devicePixelRatio
+          passed'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Native type: "time" axis with automatic tick formatting, correct
+          setOption/series usage, z-index layering'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: dataZoom (inside + slider with preview minimap), scale:true axis
+          fitting, tooltip axis trigger set this apart from a generic line chart;
+          a mark line/area would push this further
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - pan-zoom
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
