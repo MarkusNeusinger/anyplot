@@ -26,7 +26,10 @@ const moduleDefs = [
   ["Utils", 3],
 ];
 
-// [source, target, weight] — weight = number of imported symbols
+// [source, target, weight] — weight = number of imported symbols.
+// The State Store -> UI Components edge closes a circular dependency with
+// UI Components -> State Store below, the kind of accidental cycle this
+// graph type is meant to surface.
 const dependencies = [
   ["App Shell", "Router", 5],
   ["App Shell", "Config", 2],
@@ -48,6 +51,7 @@ const dependencies = [
   ["State Store", "Auth Service", 5],
   ["Validator", "Utils", 3],
   ["Config", "Logger", 2],
+  ["State Store", "UI Components", 2],
 ];
 
 const degree = {};
@@ -64,10 +68,12 @@ const nodes = moduleDefs.map(([name, category]) => ({
   label: { color: t.ink },
 }));
 
+// Heaviest-weight edges (the most-imported-from modules) get a stronger
+// stroke so the busiest dependencies stand out from the general crisscross.
 const edges = dependencies.map(([source, target, weight]) => ({
   source,
   target,
-  lineStyle: { width: 1 + weight / 2.2, opacity: 0.55 },
+  lineStyle: { width: 1 + weight / 2.2, opacity: weight >= 8 ? 0.85 : 0.5 },
 }));
 
 // --- Init --------------------------------------------------------------------
@@ -95,7 +101,7 @@ chart.setOption({
       layout: "circular",
       circular: { rotateLabel: true },
       center: ["50%", "50%"],
-      radius: 300,
+      radius: 185,
       categories: CATEGORIES.map((name) => ({ name })),
       data: nodes,
       edges,
