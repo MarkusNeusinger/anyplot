@@ -20,8 +20,16 @@ const IMPRINT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 n = 250
 easting = rand(n) .* 120                                             # meters east of survey origin
 northing = rand(n) .* 80                                              # meters north of survey origin
-concentration = 40.0 .+ 25.0 .* (easting ./ 120) .+ 10.0 .* sin.(northing ./ 12) .+ 15.0 .* randn(n)
+trend(e, no) = 40.0 + 25.0 * (e / 120) + 10.0 * sin(no / 12)          # deterministic spatial gradient
+concentration = trend.(easting, northing) .+ 15.0 .* randn(n)
 concentration = clamp.(concentration, 5.0, 100.0)
+color_range = (5.0, 100.0)
+
+# Smooth backdrop of the underlying spatial trend (noise-free) so the
+# eastward concentration gradient reads at a glance, not only via the colorbar.
+trend_xs = range(0.0, 120.0; length = 60)
+trend_ys = range(0.0, 80.0; length = 40)
+trend_zs = [trend(e, no) for e in trend_xs, no in trend_ys]
 
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
@@ -56,11 +64,20 @@ ax = Axis(
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
+heatmap!(
+    ax, trend_xs, trend_ys, trend_zs;
+    colormap   = IMPRINT_SEQ,
+    colorrange = extrema(trend_zs),
+    alpha      = 0.18,
+)
+
 sc = scatter!(
     ax, easting, northing;
     color       = concentration,
     colormap    = IMPRINT_SEQ,
+    colorrange  = color_range,
     markersize  = 16,
+    alpha       = 0.85,
     strokewidth = 0.75,
     strokecolor = PAGE_BG,
 )
