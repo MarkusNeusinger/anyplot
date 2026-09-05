@@ -1,0 +1,258 @@
+library: makie
+language: julia
+specification_id: errorbar-asymmetric
+created: '2026-09-05T01:15:04Z'
+updated: '2026-09-05T01:49:16Z'
+generated_by: claude-sonnet
+workflow_run: 33935353228
+issue: 2781
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Critical bug from the previous attempt is fixed: the amber "widest spread" callout
+    marker and its numeric text annotation now render correctly in both themes (a
+    separate scatter! call avoids the earlier per-point Colorant-vector issue), confirmed
+    by direct visual inspection of both PNGs.'
+  - Clean asymmetric error bars with visible T-shaped caps (whiskerwidth=18), correct
+    Imprint brand-green (#009E73) first-series color, and theme-adaptive marker strokes
+    (strokewidth=1.4, strokecolor=PAGE_BG) for definition against the background.
+  - 'Genuine data storytelling: the amber-highlighted station plus its numeric annotation
+    ("widest spread: +6.7 / −5.5 μg/m³") creates a clear focal point and directly
+    explains what the asymmetric bounds represent, beyond the subtitle alone.'
+  - Realistic, neutral PM2.5 air-quality dataset where a log-normal back-transform
+    produces genuinely varying asymmetric uncertainty per station (8.6–34.2 μg/m³),
+    with fully theme-correct chrome and no dark-on-dark/light-on-light failures in
+    either render.
+  weaknesses:
+  - 'LM-02 is still fairly generic: the errorbars! + scatter! + text! combination,
+    while now fully functional, doesn''t showcase a truly Makie-distinctive capability
+    (e.g. custom recipes, GridLayout composition) — it could be replicated closely
+    in matplotlib or ggplot2.'
+  - Rotated station-name tick labels and the small annotation text become fairly compressed
+    at mobile/thumbnail scale (~400px) — legible at full size, but a slightly larger
+    tick/annotation fontsize would hold up better when scaled down.
+  - DE-01 aesthetic polish is solid but not exceptional — a single accent color plus
+    a subtitle is a modest, not maximal, application of visual hierarchy.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark title "errorbar-asymmetric · julia · makie · anyplot.ai" and a muted-gray
+        subtitle "Bars mark the 10th–90th percentile range (log-normal back-transform)", both
+        clearly readable. Axis labels "Monitoring Station" (x) and "PM2.5 Concentration (μg/m³)"
+        (y) are dark ink with units. Rotated station tick labels (Riverside → Northfield) are
+        readable. Top/right spines removed, subtle horizontal gridlines only.
+      Data: Eight stations, each a brand-green (#009E73) filled circle with a thin theme-adaptive
+        stroke, connected to a visibly asymmetric error bar with T-shaped caps (upper whisker
+        consistently longer than the lower one, per the log-normal back-transform). The Lakeview
+        station's marker is enlarged and colored amber (#DDCC77, the documented semantic-anchor
+        color, not a second categorical series), with a text annotation above it reading
+        "widest spread: +6.7 / −5.5 μg/m³" — this callout is now clearly visible (it was missing
+        entirely in the prior attempt).
+      Legibility verdict: PASS — no light-on-light text; all chrome and the callout are readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Title, subtitle, and axis/tick labels correctly flip to light ink — no dark-on-dark
+        failures anywhere. Spines and gridlines flip to the same light-ink-at-low-alpha treatment.
+      Data: Identical brand-green (#009E73) markers and error bars as the light render — only
+        chrome changed. The amber (#DDCC77) highlighted marker on Lakeview and its annotation
+        text render correctly here too, confirming the callout fix holds in both themes.
+      Legibility verdict: PASS — no dark-on-dark text; the callout is visible and readable.
+
+    Both renders confirmed via direct image inspection; data colors (brand green, amber accent)
+    are identical between the two renders, and only background/text/grid chrome flips.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full size; rotated tick labels
+          and the small annotation compress somewhat at ~400px thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or the callout annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and error bars clearly visible for this sparse (8-point)
+          dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast green/amber, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, no cutoff or overflow, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (μg/m³)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; amber used only as documented semantic-anchor
+          accent; backgrounds correct in both themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional amber accent + annotation now actually renders, improving
+          over the prior generic-default look
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, theme-adaptive
+          marker stroke added per prior feedback
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Amber highlight + numeric callout on the widest-spread station now
+          creates a genuine, working focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct asymmetric error bar plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible caps, subtitle + annotation explaining the percentile bounds
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y correct, all 8 stations shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Asymmetric errors, caps, and explanatory annotation all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral PM2.5 air-quality monitoring scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic PM2.5 concentrations (8.6–34.2 μg/m³) with domain-appropriate
+          log-normal asymmetry
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No dead code this time — the previously non-functional callout path
+          is now functional and verified rendering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic errorbars!/scatter! usage with full theme-token wiring
+          through Axis kwargs
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Functional now, but the technique (separate scatter! + text!) is
+          not strongly Makie-distinctive; easily replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
