@@ -35,6 +35,10 @@ const GENES = [
   "MKI67", "PCNA", "TOP2A", "CCND1", "CDK4", // proliferation markers
 ];
 const geneClusterOf = (i) => (i < 6 ? 0 : i < 11 ? 1 : 2);
+const GENE_CLUSTER_LABELS = ["Inflammatory", "Fibrosis", "Proliferation"];
+// Palette positions distinct from the Control/Treated strip (0, 1) and from the
+// diverging heatmap's red/blue endpoints (4, 2), so the row groups read as their own signal.
+const GENE_CLUSTER_PALETTE_IDX = [3, 5, 6];
 
 const SAMPLES = [
   "Control-01", "Control-02", "Control-03", "Control-04", "Control-05", "Control-06",
@@ -60,39 +64,50 @@ const matrix = GENES.map((_, i) =>
 const maxAbsValue = Math.max(...matrix.flat().map(Math.abs));
 const COLOR_DOMAIN = Math.ceil(maxAbsValue * 10) / 10;
 
-// --- Hierarchical clustering (complete linkage, Euclidean distance) ---------------
-function euclideanDistance(a, b) {
+// --- Hierarchical clustering (Ward's minimum-variance linkage, Euclidean distance) -
+function squaredEuclidean(a, b) {
   let sum = 0;
   for (let k = 0; k < a.length; k += 1) sum += (a[k] - b[k]) ** 2;
-  return Math.sqrt(sum);
+  return sum;
 }
 
 function buildTree(vectors) {
-  let nodes = vectors.map((_, i) => ({ height: 0, leaves: [i], children: null, pos: 0 }));
+  let nodes = vectors.map((v, i) => ({
+    height: 0,
+    leaves: [i],
+    children: null,
+    pos: 0,
+    centroid: v.slice(),
+    size: 1,
+  }));
   while (nodes.length > 1) {
-    let minDist = Infinity;
+    let minCost = Infinity;
     let mi = 0;
     let mj = 1;
     for (let i = 0; i < nodes.length; i += 1) {
       for (let j = i + 1; j < nodes.length; j += 1) {
-        let dist = 0;
-        for (const li of nodes[i].leaves) {
-          for (const lj of nodes[j].leaves) {
-            dist = Math.max(dist, euclideanDistance(vectors[li], vectors[lj]));
-          }
-        }
-        if (dist < minDist) {
-          minDist = dist;
+        const a = nodes[i];
+        const b = nodes[j];
+        // Ward's criterion: increase in within-cluster sum of squares from merging a, b.
+        const cost = ((a.size * b.size) / (a.size + b.size)) * squaredEuclidean(a.centroid, b.centroid);
+        if (cost < minCost) {
+          minCost = cost;
           mi = i;
           mj = j;
         }
       }
     }
+    const a = nodes[mi];
+    const b = nodes[mj];
+    const size = a.size + b.size;
+    const centroid = a.centroid.map((v, k) => (v * a.size + b.centroid[k] * b.size) / size);
     const merged = {
-      height: minDist,
-      leaves: [...nodes[mi].leaves, ...nodes[mj].leaves],
-      children: [nodes[mi], nodes[mj]],
+      height: Math.sqrt(minCost),
+      leaves: [...a.leaves, ...b.leaves],
+      children: [a, b],
       pos: 0,
+      centroid,
+      size,
     };
     nodes.splice(mj, 1);
     nodes.splice(mi, 1);
@@ -182,11 +197,13 @@ const COL_DENDRO_H = 100;
 const ANNOT_H = 16;
 const ROW_DENDRO_W = 110;
 const LABEL_RESERVE = 88;
+const ROW_ANNOT_W = 16;
+const ROW_ANNOT_GAP = 6;
 const MARGIN = {
   top: TITLE_H + 14 + COL_DENDRO_H + 6 + ANNOT_H + 6,
   right: 190,
   bottom: 130,
-  left: ROW_DENDRO_W + 8 + LABEL_RESERVE,
+  left: ROW_DENDRO_W + 8 + LABEL_RESERVE + ROW_ANNOT_GAP + ROW_ANNOT_W + ROW_ANNOT_GAP,
 };
 
 // --- Overlay: dendrograms, condition strip, and heatmap cells drawn in one pass ----
@@ -204,12 +221,15 @@ function ClusteredOverlay() {
   const colDistY = (dist) =>
     colDendroYBottom - (dist / colTree.height) * (colDendroYBottom - colDendroYTop);
 
-  const rowDendroXRight = drawingArea.left - LABEL_RESERVE - 8;
+  const rowDendroXRight = drawingArea.left - ROW_ANNOT_GAP - ROW_ANNOT_W - ROW_ANNOT_GAP - LABEL_RESERVE - 8;
   const rowDendroXLeft = 12;
   const rowDistX = (dist) =>
     rowDendroXRight - (dist / rowTree.height) * (rowDendroXRight - rowDendroXLeft);
 
   const stripTop = drawingArea.top - ANNOT_H - 4;
+  const rowStripRight = drawingArea.left - ROW_ANNOT_GAP;
+  const rowStripLeft = rowStripRight - ROW_ANNOT_W;
+  const rowHeight = drawingArea.height / orderedGeneLabels.length;
 
   return (
     <g>
@@ -234,6 +254,18 @@ function ClusteredOverlay() {
           width={drawingArea.width / orderedSampleLabels.length}
           height={ANNOT_H}
           fill={t.palette[conditionOf(sj)]}
+        />
+      ))}
+
+      {/* Gene-cluster annotation strip (Inflammatory / Fibrosis / Proliferation) */}
+      {rowOrder.map((gi, pos) => (
+        <rect
+          key={`row-strip-${gi}`}
+          x={rowStripLeft}
+          y={rowCenterY(pos) - rowHeight / 2}
+          width={ROW_ANNOT_W}
+          height={rowHeight}
+          fill={t.palette[GENE_CLUSTER_PALETTE_IDX[geneClusterOf(gi)]]}
         />
       ))}
 
@@ -280,6 +312,19 @@ function ClusteredOverlay() {
         y={50}
         style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "start", dominantBaseline: "central" }}
       />
+
+      {/* Gene-cluster legend swatches */}
+      {GENE_CLUSTER_LABELS.map((label, idx) => (
+        <g key={`gc-legend-${label}`}>
+          <circle cx={SIZE.width - 168} cy={76 + idx * 20} r={6} fill={t.palette[GENE_CLUSTER_PALETTE_IDX[idx]]} />
+          <ChartsText
+            text={label}
+            x={SIZE.width - 154}
+            y={76 + idx * 20}
+            style={{ fontSize: 13, fill: t.inkSoft, textAnchor: "start", dominantBaseline: "central" }}
+          />
+        </g>
+      ))}
 
       <ChartsText
         text="Log2 fold change"
