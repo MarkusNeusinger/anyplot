@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: histogram-stepwise
 created: '2026-09-05T04:50:03Z'
-updated: '2026-09-05T04:54:13Z'
+updated: '2026-09-05T05:04:46Z'
 generated_by: claude-sonnet
 workflow_run: 33945390941
 issue: 2645
@@ -12,48 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Imprint palette applied correctly: first series (API v1) is #009E73, second series
-    (API v2) is the canonical position-2 lavender, identical between light and dark
+  - 'Now uses Chart.js''s native `stepped: "after"` line option instead of manual
+    point-doubling — directly addresses the attempt-1 Library Mastery feedback and
+    is the idiomatic way to draw a step outline in this library'
+  - 'Imprint palette applied correctly: first series (API v1) is #009E73, second (API
+    v2) is canonical position-2 lavender #C475FD, identical between light and dark
     renders'
-  - Theme-adaptive chrome is threaded through correctly — title, legend, axis labels,
-    and tick labels are all legible in both the light (#FAF8F1) and dark (#1A1A17)
-    renders, with no dark-on-dark or light-on-light failures
-  - 'Step-outline construction correctly satisfies the spec: no fill (backgroundColor:
-    transparent, fill: false), horizontal segments at each bin''s count connected
-    by vertical segments at bin edges, and the outline closes to zero at both ends'
-  - Two overlaid distributions with distinct shapes (narrow/fast API v2 vs. wider/slower
-    API v1) directly serve the spec's 'overlaying distributions for direct comparison'
-    use case
-  - 'Clean layout: no text overlap, no edge clipping, generous canvas utilization,
-    y-axis-only grid kept subtle per style guide'
+  - Theme-adaptive chrome threaded through correctly — all text legible in both renders,
+    no dark-on-dark/light-on-light failures, gridlines subtle
+  - New adaptive borderWidth (2.75 vs 4.5) gives the rewrite's tighter/faster distribution
+    visual prominence, adding a clear focal point that was explicitly requested in
+    the previous review
+  - 'Step-outline construction correctly satisfies the spec: no fill, horizontal segments
+    at each bin''s count connected by vertical segments, outline closes to zero at
+    both ends'
+  - 'Clean layout: no overlap, no clipping, generous canvas utilization, realistic
+    API-latency scenario with well-chosen scale'
   weaknesses:
-  - 'LM-01: Misses Chart.js''s native `stepped` line option (stepped: ''before''/''after''/''middle''),
-    which draws exactly this step-outline shape natively. The implementation instead
-    manually duplicates each bin''s point onto (leftEdge, rightEdge) to fake the step
-    — more code than needed and not the library''s idiomatic pattern for this exact
-    chart shape.'
-  - 'DE-01/DE-02: Reads as a well-configured but fairly generic line chart — solid
-    execution, but no distinctive polish beyond the style-guide defaults (e.g. legend/typography
-    hierarchy, subtle emphasis on the faster distribution) that would push it into
-    ''publication-ready'' territory.'
-  - 'DE-03: Visual hierarchy is present only through color; consider a stronger focal
-    point (e.g., emphasizing the rewrite''s tighter/faster distribution) to sharpen
-    the story.'
+  - Still reads as a well-executed but not fully distinctive Chart.js showcase — the
+    `stepped` line option, while now idiomatic, is a fairly common step-line feature
+    across charting libraries rather than something unique to Chart.js
+  - Visual hierarchy relies on a single technique (line-weight contrast); a secondary
+    cue (e.g. a subtle annotation or shaded percentile band) could deepen the storytelling
+    further for a top-tier score
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "API Latency · histogram-stepwise · javascript · chartjs · anyplot.ai" in dark ink, centered top; legend below title with two line-swatch entries ("API v1 (legacy)", "API v2 (rewrite)") in soft dark text; x-axis title "Response Time (ms)" and y-axis title "Number of Requests" in dark ink; tick labels in softer dark gray; subtle horizontal gridlines only (no vertical gridlines). All text is clearly legible against the light background.
-      Data: Two step-outline (unfilled) lines — API v1 (legacy) in brand green #009E73, wider and shifted right (slower, ~150-400ms tail); API v2 (rewrite) in lavender/purple (#C475FD), narrower and shifted left (faster, peak ~130-140ms). No fill, only outline, matching the step-histogram spec. Lines cross around 180-220ms but remain distinguishable by color.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "API Latency · histogram-stepwise · javascript · chartjs · anyplot.ai" in bold dark ink centered at top (~40% of canvas width, well within bounds). Legend below title with two line-style swatches ("API v1 (legacy)", "API v2 (rewrite)") in soft dark text. Axis titles "Response Time (ms)" / "Number of Requests" in dark ink; tick labels in softer dark gray. Subtle horizontal-only gridlines (y-axis), x-axis grid off.
+      Data: Two unfilled step-outline lines — brand green #009E73 (API v1, thinner ~2.75px) and lavender #C475FD (API v2, thicker ~4.5px, deliberately emphasized as the focal point). Colors match Imprint palette positions 1 and 2.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, legend text, axis titles rendered in light/white ink; tick labels in a softer light gray; gridlines subtle and still visible. All chrome elements flipped correctly for the dark surface with no dark-on-dark or unreadable text anywhere.
-      Data: Same green (#009E73) and lavender (#C475FD) step outlines as the light render — colors are identical between themes, confirming only chrome (not data) adapts to theme.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, legend, and axis titles flip to light ink; tick labels to softer light gray; gridlines remain subtle but visible. Layout identical to light render.
+      Data: Data colors are identical to the light render (#009E73 and #C475FD, same relative line weights) — only chrome flipped, confirming palette compliance across themes.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark failures anywhere. Brand green remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -64,74 +60,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 19px, legend 14px, ticks 13px,
-          axis titles 16px); readable in both themes, title well-proportioned without
-          overflow
+        comment: All font sizes explicit, readable in both themes, title fits comfortably
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, legend, or data elements in either render
+        comment: No overlap anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3.5px step lines are clearly visible and distinguishable by color
-          even where the two distributions cross
+        comment: Line weights adapted to create emphasis, both series clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender is CVD-safe and distinguishable without relying
-          on hue alone for meaning
+        comment: Good contrast, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart area fills most of the canvas with balanced margins; nothing
-          cut off
+        comment: Balanced margins, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" and "Number of Requests" are descriptive with
-          units'
+        comment: Descriptive with units (ms), requests count
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series canonical position-2 lavender;
-          identical across themes; backgrounds theme-correct'
+        comment: 'First series #009E73, second canonical position-2 lavender, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default — clean but not distinctive
+        passed: true
+        comment: Thoughtful typography hierarchy and intentional line-weight emphasis,
+          clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Y-axis-only subtle grid, line-style legend swatches, generous whitespace
-          — some refinement above bare defaults
+        passed: true
+        comment: Subtle single-axis grid, refined line-style legend swatches, custom
+          padding
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Color contrast between the two distributions guides the reader toward
-          the comparison, but no stronger focal point/emphasis
+        passed: true
+        comment: Adaptive borderWidth creates a clear visual focal point on the rewrite's
+          tighter distribution
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step-outline histogram, no fill
+        comment: Correct step-histogram outline via stepped line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Outline-only, horizontal+vertical step segments, overlaid distributions
-          all present
+        comment: No fill, horizontal+vertical step segments, closes to zero at both
+          ends
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = response time, Y = request count, full data range visible
+        comment: Shared bin edges across both series, x/y correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match data series
+        comment: Title format correct, legend labels match data
     data_quality:
       score: 14
       max: 15
@@ -171,22 +161,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Two distinctly-shaped distributions (narrow/fast vs. wide/slow) overlaid
-          for comparison
+        comment: Shows two clearly distinct distributions, but both are unimodal (no
+          multimodal/skew variation)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API latency legacy-vs-rewrite comparison is a realistic, neutral
-          engineering scenario
+        comment: Realistic, neutral API-latency scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Latency values (5–400ms) and the rewrite-is-faster relationship are
-          plausible and internally consistent
+        comment: Plausible latency means/stdevs and sample sizes
     code_quality:
       score: 10
       max: 10
@@ -196,26 +184,26 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only small necessary helper functions (RNG, step-outline builder);
-          no classes, straightforward flow
+        comment: Simple linear flow, helper functions only for required deterministic
+          RNG and binning
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG PRNG, fully deterministic
+        comment: Fixed-seed LCG, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only
+        comment: No imports, uses global Chart
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering
+        comment: Clean, simplified further by switching to native stepped option
       - id: CQ-05
         name: Output & API
         score: 1
@@ -223,24 +211,24 @@ review:
         passed: true
         comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct usage but misses Chart.js's native `stepped` line option,
-          which is the library's built-in feature for exactly this step-outline shape
+        passed: true
+        comment: 'Now uses native stepped: ''after'' line option instead of manual
+          point-doubling'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Manual point-duplication technique is generic and could be replicated
-          in any charting library
-  verdict: REJECTED
+        passed: true
+        comment: Uses stepped line option plus adaptive per-series borderWidth, some
+          library-specific feature use
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
@@ -249,4 +237,5 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - grid-styling
