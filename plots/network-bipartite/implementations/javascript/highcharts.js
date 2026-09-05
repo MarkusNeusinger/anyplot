@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-bipartite: Bipartite Network Graph
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
+// Quality: 91/100 | Created: 2026-09-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

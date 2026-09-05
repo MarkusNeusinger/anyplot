@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: network-bipartite
 created: '2026-09-05T09:50:37Z'
-updated: '2026-09-05T09:54:56Z'
+updated: '2026-09-05T10:09:10Z'
 generated_by: claude-sonnet
 workflow_run: 33958845329
 issue: 5247
@@ -12,44 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Correctly navigates the Highcharts core-bundle constraint: since networkgraph
+  - 'Directly addressed both attempt-1 weaknesses: a renderer-drawn double halo now
+    gives the top-degree hub node (Headset) a clear, theme-correct focal point, and
+    gently bowed spline edges reduce the straight-line crossing clutter in the middle
+    of the chart.'
+  - 'Correctly navigates the Highcharts core-bundle constraint: since `networkgraph`
     lives in an unloaded add-on module, the implementation builds the bipartite graph
-    from scatter nodes plus one 2-point line series per edge — a legitimate, idiomatic
-    workaround rather than a forbidden module import.'
+    from scatter nodes plus curved spline edges — a legitimate workaround, not a forbidden
+    module import.'
   - Node radius encodes degree and edge opacity/lineWidth jointly encode weight, exactly
     matching the spec's hub-highlighting and weight-encoding notes.
-  - 'Clean two-column left/right layout with outward-aligned data labels (align: right/left
-    with offsets) keeps labels legible and clear of the dense edge tangle.'
+  - Clean two-column left/right layout with outward-aligned data labels keeps labels
+    legible and clear of the dense edge tangle in both themes.
+  - 'Theme handling is correct: identical Imprint data colors (`#009E73` users / `#C475FD`
+    products) across renders, chrome flips correctly, warm off-white / near-black
+    backgrounds match spec.'
   - Deterministic tiny LCG generates the purchase data in-browser without relying
-    on a seeded RNG, satisfying reproducibility.
-  - 'Theme handling is correct: identical data colors (green Users / violet Products)
-    across renders, chrome (title, subtitle, labels, legend) flips correctly, backgrounds
-    are the correct warm off-white / near-black.'
+    on a seeded RNG, fully reproducible.
   weaknesses:
-  - Edge density (47 edges across 22 nodes) creates a fairly busy crossing pattern
-    in the middle of the chart; slight curvature or opacity tuning on the lowest-weight
-    edges could reduce clutter further.
-  - Design excellence is solid but not pushed to a strong focal point — no single
-    hub node or edge is visually emphasized beyond size/opacity encoding (e.g., a
-    highlighted top connector or annotation) to actively guide the eye.
-  - Library mastery is functional rather than distinctive — the scatter+line composition
-    is a sound workaround for the missing networkgraph module but doesn't showcase
-    a Highcharts-unique capability beyond that.
+  - The mid-chart crossing pattern is reduced but still fairly dense given ~40 edges
+    across 22 nodes; the bowed-spline bend amounts are subtle, so the busyness improvement
+    over straight lines is modest — further opacity tapering on the lowest-weight
+    edges could clean this up more.
+  - 'Library mastery is good but not maximal: the scatter+spline+renderer-halo composition
+    is a sound, distinctive workaround, but doesn''t fully showcase a broader set
+    of Highcharts-unique capabilities beyond this single custom-rendering touch.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "network-bipartite · javascript · highcharts · anyplot.ai" and subtitle in dark ink, clearly legible; 12 green diamond node labels (Users) on the left in dark bold text, 10 violet square node labels (Products) on the right in dark bold text; legend at the bottom ("Users" diamond, "Products" square) in soft dark grey. All text reads clearly against the light background.
-      Data: Left column nodes are diamonds in brand green (#009E73), sized by degree (e.g., Sørensen, E. and Nakamura, Y. are visibly larger — higher degree; Novak, P. is smaller). Right column nodes are squares in the second Imprint palette hue (violet, #C475FD), also sized by degree (Webcam is smallest, Headset and Mech. Keyboard are larger). Grey edge lines of varying opacity/width connect users to products, encoding purchase weight.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), not pure white — matches the spec surface.
+      Chrome: Title "network-bipartite · javascript · highcharts · anyplot.ai" and subtitle "User–product purchase network · node size encodes degree, edge weight encodes purchase frequency" render in dark ink, both clearly legible. Left-column user labels (Ortiz, M. ... Petrova, I.) and right-column product labels (Wireless Mouse ... Cable Organizer) are bold dark text, fully readable. Bottom legend ("Users" diamond / "Products" square) is legible and near the plot.
+      Data: 12 green (#009E73) diamond nodes on the left (Users), 10 violet (#C475FD) square nodes on the right (Products) — correct Imprint palette positions 1 and 2. Node size scales with degree (e.g. "Webcam" is visibly tiny, "Headset" is one of the largest). Grey spline edges vary in width/opacity with purchase weight. The highest-degree hub node ("Headset") is wrapped in two concentric violet halo rings, giving the chart a clear focal point.
+      Legibility verdict: PASS — no light-on-light text, all chrome elements readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle now rendered in light ink (near-white) against the dark background, node labels in light bold text, legend text in light soft grey — all clearly legible with no dark-on-dark issues.
-      Data: Node colors are identical to the light render — green diamonds (#009E73) and violet squares (#C475FD) at the same relative sizes; edge lines use the same grey tone (theme-adaptive ink-soft) at the same opacity/width pattern. No data-color drift between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), not pure black — matches the spec surface.
+      Chrome: Title, subtitle, node labels, and legend all flip to light ink/text and remain fully legible against the dark surface. No dark-on-dark issues observed anywhere (title, node labels, tick-less axes, legend all pass).
+      Data: Node colors are pixel-identical to the light render (#009E73 green / #C475FD violet), confirming only chrome adapted to theme. The hub halo around "Headset" is still clearly visible on the dark surface. Edge styling (width/opacity by weight) is unchanged from the light render.
+      Legibility verdict: PASS — all text and data elements read clearly on the dark surface.
+
+    Both renders pass the theme-readability check; the repair-loop's hub-halo and bowed-spline additions are visible and effective in both themes.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,73 +64,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, subtitle 14px, labels 13px, legend
-          14px); readable in both themes
+        comment: All font sizes explicitly set (22px title, 14px subtitle/legend,
+          13px data labels); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Outward-aligned labels avoid collisions with the edge tangle or other
-          text
+        comment: Outward-aligned data labels avoid the dense edge tangle; no overlap
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node radius scales with degree; smallest nodes (e.g. Webcam) remain
-          visible; edge opacity keeps dense crossings from overwhelming the view
+        comment: Node size/edge width-opacity adapt to degree/weight; bowed splines
+          soften but don't eliminate mid-chart crossing density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. violet from the vetted Imprint palette, CVD-safe, adequate
-          contrast
+        comment: Green vs. violet, CVD-safe Imprint palette, neutral gray edges
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, no clipping or overflow, balanced two-column
-          layout
+        comment: Two-column layout uses canvas well, balanced margins, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for this layout; title + subtitle are descriptive
+        comment: Axes correctly hidden for a node-link diagram; subtitle explains
+          the encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series canonical palette[1]; correct
-          theme backgrounds in both renders'
+        comment: 'First series #009E73, second #C475FD (canonical order); theme-correct
+          backgrounds/chrome in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful degree/weight encoding raises it above generic defaults,
-          but no single strong focal point
+        passed: true
+        comment: Renderer-drawn hub halo is a thoughtful, above-default touch; not
+          yet full publication-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Axes fully hidden, subtle neutral edge lines, generous whitespace
+        passed: true
+        comment: Bowed splines, hidden axes, generous whitespace; mid-chart density
+          keeps it just short of perfect
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtitle explains the encoding and hub structure is visible via size
-          variation, but not actively emphasized
+        passed: true
+        comment: Hub halo + degree-sized nodes give the viewer a clear entry point
+          into the network
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bipartite network layout
+        comment: Correct bipartite layout, two clearly separated columns, cross-set
+          edges only
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two-column separation, color by set, size by degree, edge weight
-          encoding, legible labels — all present
+        comment: Set-membership color, degree-sized nodes, weight-encoded edges, legible
+          non-overlapping labels, curved edges all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target mapped to columns correctly, weight mapped to edge
-          width/opacity
+        comment: All 12 users, 10 products, and edges visible; positional layout correctly
+          used
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match series names
+        comment: Title format exact; legend labels 'Users'/'Products' match data
     data_quality:
       score: 14
       max: 15
@@ -166,20 +171,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers degree sizing, weight encoding, set separation, labeling
+        comment: Shows degree variation (low-degree Webcam to high-degree hub) and
+          weight variation, though no fully isolated (0-degree) node
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral user-product purchase domain
+        comment: Neutral, realistic user-product purchase scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 users, 10 products, 47 edges — within the spec's 10-50 nodes /
-          20-200 edges range
+        comment: 12 users / 10 products / edges within spec's 10-50 nodes and 20-200
+          edges ranges
     code_quality:
       score: 10
       max: 10
@@ -189,34 +195,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small helper functions (layout, nodeRadius), no unnecessary classes
+        comment: Small helper functions (rand, layout, nodeRadius) are a reasonable
+          necessity for network layout math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG
+        comment: Fixed-seed LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses the global Highcharts object only
+        comment: No unused imports; uses only the Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a manual network layout; no fake interactivity
+        comment: Appropriate complexity for a node-link diagram; renderer halo is
+          real, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false set on chart and plotOptions.series; harness handles
-          output files
+        comment: Correct mount-node contract, animation disabled everywhere
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -224,24 +231,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Scatter+line composition with hidden numeric axes is a sound idiom
-          for graph-like layouts given the missing networkgraph module
+        comment: Scatter+spline composition with hidden axes is a sound idiom given
+          the unavailable networkgraph module
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Functional workaround but doesn't showcase Highcharts-unique capabilities
-          beyond scatter/line series
+        passed: true
+        comment: chart.renderer.circle() custom-drawn halo is a genuinely Highcharts-specific
+          technique, hard to replicate as elegantly elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - html-export
+  - bezier-curves
+  - patches
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - minimal-chrome
+  - edge-highlighting
