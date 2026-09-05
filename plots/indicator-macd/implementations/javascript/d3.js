@@ -93,14 +93,15 @@ g.selectAll("rect.hist")
   .attr("fill", (d) => (d.histogram >= 0 ? posColor : negColor))
   .attr("opacity", 0.75);
 
-// --- Zero reference line --------------------------------------------------------
+// --- Zero reference line (dashed to read as a reference, not another series) ----
 g.append("line")
   .attr("x1", 0)
   .attr("x2", iw)
   .attr("y1", y(0))
   .attr("y2", y(0))
   .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 1.5);
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "6,4");
 
 // --- MACD + signal lines ---------------------------------------------------------
 const macdColor = t.palette[2]; // blue
@@ -126,6 +127,76 @@ g.append("path")
   .attr("stroke", signalColor)
   .attr("stroke-width", 2.5)
   .attr("d", signalPath);
+
+// --- Crossover callouts: detect sign flips of (macd - signal) past the EMA -----
+// warm-up window and label the first bullish and first later bearish crossing
+// with a leader-line + auto-sized backdrop (sized via getBBox(), not hard-coded).
+function findCrossovers(rows, minIndex) {
+  const found = [];
+  for (let i = Math.max(1, minIndex); i < rows.length; i += 1) {
+    const prevDiff = rows[i - 1].macd - rows[i - 1].signal;
+    const currDiff = rows[i].macd - rows[i].signal;
+    if (prevDiff <= 0 && currDiff > 0) found.push({ index: i, type: "bullish" });
+    else if (prevDiff >= 0 && currDiff < 0) found.push({ index: i, type: "bearish" });
+  }
+  return found;
+}
+
+const crossings = findCrossovers(data, 35);
+const bullishCross = crossings.find((c) => c.type === "bullish");
+const bearishCross = crossings.find((c) => c.type === "bearish" && (!bullishCross || c.index > bullishCross.index));
+const callouts = [bullishCross, bearishCross].filter(Boolean);
+
+const calloutGroup = g.append("g").attr("class", "callouts");
+callouts.forEach((c) => {
+  const d = data[c.index];
+  const isBullish = c.type === "bullish";
+  const cx = x(d.date);
+  const cy = y(d.macd);
+  const dy = isBullish ? -34 : 34;
+  const labelY = Math.max(14, Math.min(ih - 14, cy + dy));
+  const calloutColor = isBullish ? posColor : negColor;
+
+  calloutGroup
+    .append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 5.5)
+    .attr("fill", calloutColor)
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 2);
+
+  calloutGroup
+    .append("line")
+    .attr("x1", cx)
+    .attr("y1", cy + (labelY > cy ? 8 : -8))
+    .attr("x2", cx)
+    .attr("y2", labelY + (labelY > cy ? -8 : 8))
+    .attr("stroke", calloutColor)
+    .attr("stroke-width", 1.25)
+    .attr("stroke-dasharray", "2,2");
+
+  const label = calloutGroup
+    .append("text")
+    .attr("x", cx)
+    .attr("y", labelY)
+    .attr("text-anchor", "middle")
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .attr("fill", calloutColor)
+    .text(isBullish ? "Bullish crossover" : "Bearish crossover");
+
+  const bbox = label.node().getBBox();
+  calloutGroup
+    .insert("rect", () => label.node())
+    .attr("x", bbox.x - 6)
+    .attr("y", bbox.y - 3)
+    .attr("width", bbox.width + 12)
+    .attr("height", bbox.height + 6)
+    .attr("rx", 3)
+    .attr("fill", t.pageBg)
+    .attr("opacity", 0.85);
+});
 
 // --- Axes --------------------------------------------------------------------
 const xAxis = g
