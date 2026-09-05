@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: map-tilegrid
+created: '2026-09-05T09:02:15Z'
+updated: '2026-09-05T09:06:35Z'
+generated_by: claude-sonnet
+workflow_run: 33956583362
+issue: 5246
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Tile grid layout approximates real EU-27 geography (Sweden/Finland top, Ireland
+    far left, Iberia/Greece/Cyprus bottom) while keeping every country an equal-sized
+    square, exactly the equal-area principle the spec asks for.
+  - Correct use of the Imprint sequential colormap (window.ANYPLOT_TOKENS.seq via
+    d3.interpolateRgbBasis) for the single-polarity renewable-share data, with identical
+    data colors between the light and dark renders.
+  - Per-tile text ink is chosen dynamically from the fill's perceived luminance, so
+    labels stay legible against every tile color from pale green through deep blue
+    in both themes.
+  - Manually built gradient legend (defs/linearGradient) clearly labeled with axis
+    title and min/max values gives an honest value-to-color mapping, matching the
+    spec's 'include a colorbar or legend' requirement.
+  - All 27 EU-27 member states are present with plausible, real 2022 renewable-energy-share
+    figures (e.g., Sweden ~66%, matching real-world data) — neutral, comprehensible
+    content.
+  weaknesses:
+  - Design excellence is solid (rounded tiles, luminance-adaptive text, gradient legend)
+    but stops short of an explicit focal-point treatment — e.g. no subtle emphasis
+    (outline, callout) drawing the eye to the highest/lowest value tile beyond color
+    alone.
+  - Library mastery is correct and idiomatic (selection.join, scaleSequential/interpolateRgbBasis)
+    but doesn't reach for D3-distinctive modules (e.g. d3-hierarchy/d3-force) that
+    would set it apart further from a generic SVG implementation.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "map-tilegrid · javascript · d3 · anyplot.ai" in dark ink, centered top, clearly readable. Legend caption "Renewable energy share of consumption (%)" and min/max labels ("11%"/"66%") in soft dark gray, clearly readable against the light background.
+      Data: 27 EU country tiles arranged in a geography-approximating grid, each filled with an Imprint sequential color from pale green (low %, e.g. IE/LU/MT at 11-13%) through teal to blue (high %, SE at 66%). Each tile shows a bold country code and a lighter percentage value in white text, legible against every fill color via luminance-adaptive ink. A horizontal gradient legend bar (green→blue) sits below the grid.
+      Legibility verdict: PASS — all title, legend, and tile text is clearly readable; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title now rendered in light/white ink, still centered top and fully legible against the dark background. Legend caption and min/max value labels are in a light soft-gray tone, clearly visible against the dark background — no dark-on-dark failures observed.
+      Data: Tile fill colors are pixel-identical to the light render (verified visually) — the same green-to-blue sequential ramp, confirming only chrome (background/text) flipped. Tile code/percentage text remains white and legible against every tile fill, since the luminance-based ink function is independent of page theme.
+      Legibility verdict: PASS — all chrome and tile labels are readable; no dark-on-dark or unreadable elements found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (tile code, percentage, legend, title),
+          readable in both themes and at thumbnail scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 27 tiles, all consistently sized and clearly visible; density-appropriate
+          for a 10-60 region spec.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential ramp with luminance variation, not red-green
+          reliant, adaptive text ink for contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas gate passed; grid, legend, and title balanced
+          with no cut-off content.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend caption + units (%) descriptive; title follows mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq colormap used correctly for single-polarity data; theme-correct
+          backgrounds/chrome in both renders; data colors identical across themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded tiles, coherent gradient legend, thoughtful geographic layout
+          — clearly above a generic default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle strokes, balanced whitespace and gaps; some refinement visible
+          but not maximal polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient creates a clear visual hierarchy pointing to Sweden
+          as the standout; no explicit annotation needed per spec.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct tile grid map with equal-area squares.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region labels, sequential colormap, legend, equal-area tiling all
+          present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: row/col correctly drive tile position, value correctly drives color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels (min/max/%,
+          caption) correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 27 EU-27 states present with meaningful spread of values from
+          11% to 66%.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral scenario (EU renewable energy share, 2022) with plausible
+          per-country figures.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage values align with real-world renewable-energy-share figures
+          for these countries.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script; one small helper (textInkFor) justified by
+          the luminance calculation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded, deterministic in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3 bundle.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, sizes svg from window.ANYPLOT_SIZE,
+          no animation.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic selection.join, scaleSequential/interpolateRgbBasis, correct
+          margin convention.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom SVG gradient legend and data-driven per-tile luminance-based
+          ink; doesn't reach for more D3-distinctive modules like d3-hierarchy.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
