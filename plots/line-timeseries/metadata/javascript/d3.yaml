@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: line-timeseries
+created: '2026-09-05T08:19:44Z'
+updated: '2026-09-05T08:33:41Z'
+generated_by: claude-sonnet
+workflow_run: 33954751390
+issue: 2006
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Rolling 30-day average overlay computed via d3.cumsum prefix sums adds real analytical
+    value, giving the viewer a smoothed trend beyond the noisy daily series
+  - Theme-adaptive semantic color (t.ink) correctly used for the reference/trend line,
+    matching the style guide's 'neutral' anchor role for baseline/reference series
+  - Subtle area fill under the daily-close line (fill-opacity 0.12) emphasizes price
+    magnitude without competing with the line or the dashed average
+  - Relies on d3's native time-scale tick formatting instead of a custom multi-format
+    function, correctly matching the spec's 'intelligent date formatting' requirement
+  - Clean, idiomatic use of d3-shape (curveMonotoneX), d3-scale, and d3-array; deterministic
+    LCG-seeded random walk for reproducibility
+  weaknesses:
+  - Code comment calls the series 'one trading year' but Array.from({length:365})
+    iterates every calendar day rather than ~252 trading sessions — either adjust
+    the comment to 'calendar year' or skip weekends for stricter factual accuracy
+  - Title occupies only ~30% of plot width at the fixed 22px size; not an overflow
+    violation, but since this title is much shorter than the ~67-char mandated maximum,
+    a slightly larger fontsize would give it more visual presence as the primary focal
+    point
+  - 'Design refinement is solid but not yet publication-grade: axis domain lines remain
+    visible on both axes (default L-shape) and the legend has no elevated-background
+    box, so it reads as ''good default'' rather than fully polished'
+  - Legend text is set to 13px, slightly smaller than the 14px tick labels — harmonize
+    secondary-text sizes for a tidier typographic hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "line-timeseries · javascript · d3 · anyplot.ai" centered at top, clearly readable. Y-axis label "Closing Price (USD)" rotated, dark ink, readable. X-axis label "Date" below the tick row, dark ink, readable. Tick labels (dollar amounts on Y, month names on X) rendered in a soft dark gray, all legible against the light background. Subtle light-gray gridlines on both axes, visible but not competing with data. Legend top-right with two entries ("Daily close", "30-day avg"), text in soft dark gray, fully readable.
+      Data: First (and only categorical) series is the brand green #009E73 for the daily-close line and its light area fill; the 30-day rolling average is a dashed near-black line (theme-adaptive ink token), correctly used as a semantic reference-line color rather than a second categorical hue.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels all flipped to light/white tones, clearly readable against the dark background. Gridlines are subtle light hairlines, visible but unobtrusive. Legend text is light gray, fully readable.
+      Data: Daily-close line and area fill remain the identical brand green #009E73 as in the light render — confirmed unchanged. The 30-day average dashed line flips from near-black to near-white (correctly following the theme-adaptive ink token), which is the expected behavior for a chrome/reference element, not a data-color violation.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick is clearly visible, and the brand green remains visible against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          ticks, 13px legend), readable in both themes; legend slightly smaller than
+          ticks
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between ticks, labels, legend, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line, area fill, and dashed average line all clearly distinguishable
+          at this data density (365 points)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green line vs. dashed neutral line uses both hue and dash-pattern
+          redundant encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, well-balanced share of the canvas; legend sits
+          near the plot; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (USD); X-axis 'Date' needs none
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds are
+          theme-correct #FAF8F1/#1A1A17; reference line correctly uses the neutral
+          semantic anchor, not a categorical color'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Area fill + dashed trend overlay show design intent beyond a bare
+          default line chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid is subtle; axis domain lines still visible (default L-shape),
+          legend has no elevated box
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Rolling average creates a clear visual hierarchy and focal trend,
+          though no explicit annotation calls out specific reversals
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time series line plot with datetime x-axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Intelligent adaptive date formatting (d3 native), gridlines on both
+          axes, no tick overlap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=close price, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels ('Daily close', '30-day avg')
+          match the data series
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows volatility, multiple trend reversals, and a smoothed trend
+          line
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible stock-price scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Values/proportions plausible, but comment mislabels 365 calendar
+          days as 'one trading year' (real trading years have ~252 sessions)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 API, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic d3-scale/d3-shape/d3-axis usage with join-based rendering
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.cumsum prefix-sum technique for the rolling average is a distinctive
+          d3-array usage beyond generic line-chart boilerplate
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
