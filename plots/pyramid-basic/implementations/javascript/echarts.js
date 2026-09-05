@@ -39,9 +39,9 @@ chart.setOption({
     valueFormatter: (value) => `${Math.abs(value)}k`,
   },
   grid: [
-    { left: "4%", width: "42%", top: 150, bottom: 90 },
-    { left: "46%", width: "8%", top: 150, bottom: 90 },
-    { left: "54%", width: "42%", top: 150, bottom: 90 },
+    { left: "4%", width: "42%", top: 150, bottom: 120 },
+    { left: "46%", width: "8%", top: 150, bottom: 120 },
+    { left: "54%", width: "42%", top: 150, bottom: 120 },
   ],
   xAxis: [
     {
@@ -50,8 +50,12 @@ chart.setOption({
       inverse: true,
       min: 0,
       max: axisMax,
+      name: "Population (thousands)",
+      nameLocation: "middle",
+      nameGap: 40,
+      nameTextStyle: { color: t.inkSoft, fontSize: 13 },
       axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "{value}k" },
-      axisLine: { lineStyle: { color: t.inkSoft } },
+      axisLine: { lineStyle: { color: t.grid, width: 1 } },
       splitLine: { lineStyle: { color: t.grid } },
     },
     { type: "value", gridIndex: 1, min: 0, max: 1, show: false },
@@ -60,8 +64,12 @@ chart.setOption({
       gridIndex: 2,
       min: 0,
       max: axisMax,
+      name: "Population (thousands)",
+      nameLocation: "middle",
+      nameGap: 40,
+      nameTextStyle: { color: t.inkSoft, fontSize: 13 },
       axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "{value}k" },
-      axisLine: { lineStyle: { color: t.inkSoft } },
+      axisLine: { lineStyle: { color: t.grid, width: 1 } },
       splitLine: { lineStyle: { color: t.grid } },
     },
   ],
@@ -87,6 +95,13 @@ chart.setOption({
       data: malePopulation,
       barWidth: "65%",
       itemStyle: { color: t.palette[0] },
+      // Subtle highlight over the two oldest cohorts, where female population
+      // overtakes male — the most notable feature in this dataset.
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.amber, opacity: 0.08 },
+        data: [[{ yAxis: "60-69" }, { yAxis: "70+" }]],
+      },
     },
     {
       name: "Female",
@@ -96,6 +111,19 @@ chart.setOption({
       data: femalePopulation,
       barWidth: "65%",
       itemStyle: { color: t.palette[1] },
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.amber, opacity: 0.08 },
+        label: {
+          show: true,
+          position: "insideTop",
+          formatter: "Female exceeds\nMale past 60",
+          color: t.inkSoft,
+          fontSize: 12,
+          lineHeight: 15,
+        },
+        data: [[{ yAxis: "60-69" }, { yAxis: "70+" }]],
+      },
     },
   ],
 });
