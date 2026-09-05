@@ -32,6 +32,13 @@ const enzymeTestAuc = areaUnderCurve(enzymeTestTpr);
 const toPoints = (tprValues) =>
   falsePositiveRates.map((fpr, i) => [fpr, tprValues[i]]);
 
+// Example decision threshold called out on the best-performing curve, so the
+// chart tells a concrete "if you accept 10% false positives, you get this
+// sensitivity" story instead of stopping at the raw curve shapes.
+const thresholdIndex = 10; // falsePositiveRates[10] === 0.10 exactly
+const thresholdFpr = falsePositiveRates[thresholdIndex];
+const thresholdTpr = antibodyTestTpr[thresholdIndex];
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -51,18 +58,42 @@ Highcharts.chart("container", {
     min: 0,
     max: 1,
     tickInterval: 0.2,
+    minorTickInterval: 0.1,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     gridLineWidth: 1,
+    minorGridLineColor: t.grid,
+    minorGridLineWidth: 1,
+    minorGridLineDashStyle: "Dot",
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      {
+        value: thresholdFpr,
+        color: t.inkSoft,
+        dashStyle: "ShortDash",
+        width: 1.5,
+        zIndex: 5,
+        label: {
+          text: `FPR = ${thresholdFpr.toFixed(2)}`,
+          style: { color: t.inkSoft, fontSize: "12px" },
+          align: "left",
+          x: 6,
+          y: 14,
+        },
+      },
+    ],
   },
   yAxis: {
     title: { text: "True Positive Rate", style: { color: t.inkSoft, fontSize: "16px" } },
     min: 0,
     max: 1,
     tickInterval: 0.2,
+    minorTickInterval: 0.1,
     gridLineColor: t.grid,
+    minorGridLineColor: t.grid,
+    minorGridLineWidth: 1,
+    minorGridLineDashStyle: "Dot",
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   legend: {
@@ -78,9 +109,14 @@ Highcharts.chart("container", {
   },
   series: [
     {
+      // Area fill turns "AUC" from a legend number into a visible shape: the
+      // filled region under the top curve literally is the area it names.
+      type: "area",
       name: `Antibody test (AUC = ${antibodyTestAuc.toFixed(2)})`,
       data: toPoints(antibodyTestTpr),
       color: t.palette[0],
+      fillOpacity: 0.08,
+      threshold: 0,
       lineWidth: 3,
     },
     {
@@ -98,6 +134,22 @@ Highcharts.chart("container", {
       color: t.ink,
       dashStyle: "Dash",
       lineWidth: 2,
+      enableMouseTracking: false,
+    },
+    {
+      // Callout marker for the example operating threshold above.
+      type: "scatter",
+      name: "Example threshold",
+      data: [[thresholdFpr, thresholdTpr]],
+      color: t.palette[0],
+      marker: { enabled: true, radius: 6, lineWidth: 2, lineColor: t.ink },
+      dataLabels: {
+        enabled: true,
+        format: `TPR = ${thresholdTpr.toFixed(2)}`,
+        style: { color: t.ink, fontSize: "12px", fontWeight: "600", textOutline: "none" },
+        y: -14,
+      },
+      showInLegend: false,
       enableMouseTracking: false,
     },
   ],
