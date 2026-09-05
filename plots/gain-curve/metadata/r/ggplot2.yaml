@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: gain-curve
 created: '2026-09-05T02:04:38Z'
-updated: '2026-09-05T02:16:46Z'
+updated: '2026-09-05T02:24:29Z'
 generated_by: claude-sonnet
 workflow_run: 33937827935
 issue: 2440
@@ -21,37 +21,43 @@ review:
     (true_risk + noise) produces a smooth, plausible gains curve rather than an unrealistically
     perfect one'
   - 'Correct Imprint palette usage: first series is #009E73 (brand green) for the
-    model curve, neutral ink gray dashed line for the random baseline'
+    model curve, neutral ink-gray dashed line for the random baseline'
   - 'Theme-adaptive chrome works correctly in both renders: page background, ink,
     and grid colors flip appropriately while the green/gray data colors stay identical
     between light and dark'
   - Canvas dimensions are correct (3200x1800 landscape, canvas gate passed)
   weaknesses:
-  - 'AR-09 (auto-reject): the rightmost x-axis tick label ''100%'' is clipped at the
-    right canvas edge in BOTH plot-light.png and plot-dark.png — the ''%'' character
-    is fully cut off (renders as ''100''), confirmed by cropping the bottom-right
-    corner of both PNGs at 3x zoom. Root cause: scale_x_continuous(limits = c(0, 100),
-    expand = c(0, 0)) pins the panel exactly to x=100 with zero expansion, leaving
-    the centered ''100%'' label no room inside the canvas before the hard edge. Fix:
-    add a small amount of right-side expansion, e.g. scale_x_continuous(limits = c(0,
-    100), expand = expansion(mult = c(0, 0.02)), labels = scales::label_number(suffix
-    = ''%'')), or increase plot.margin on the right — while keeping the curve visually
-    reaching the panel edge.'
-  - Major gridlines render fairly bold/dark for a 'subtle' grid despite alpha = 0.15
-    on GRID_COLOR — worth a lighter alpha or thinner linewidth so the grid recedes
-    further behind the data lines.
+  - 'AR-09 (auto-reject, STILL PRESENT after the previous repair attempt): the rightmost
+    x-axis tick label ''100%'' is clipped at the right canvas edge in BOTH plot-light.png
+    and plot-dark.png -- the ''%'' character is entirely missing, rendering as ''100''.
+    Verified pixel-by-pixel: the glyph run for ''1'',''0'',''0'' ends at column ~3195
+    of the 3200px-wide canvas with zero non-background pixels beyond column 3195,
+    i.e. there is no room left for the ''%'' glyph before the hard canvas edge. Root
+    cause: scale_x_continuous(limits = c(0, 100), expand = expansion(mult = c(0, 0.02)))
+    still leaves too little right-side headroom for the centered ''100%'' label --
+    the previous fix (adding 0.02 multiplicative expansion) was insufficient. Fix:
+    increase the right-side expansion further (e.g. expansion(mult = c(0, 0.06)) or
+    expansion(mult = c(0, 0.02), add = c(0, 3))), and/or add right margin via theme(plot.margin
+    = margin(t = ..., r = 14, b = ..., l = ...)) so the full ''100%'' string fits
+    inside the saved PNG on both axes. Cross-check against the y-axis, which already
+    renders ''100%'' in full because the panel has enough top headroom -- apply the
+    same headroom logic to the x-axis''s right side.'
+  - Major gridlines still render fairly bold/prominent for a 'subtle' grid despite
+    the low alpha (scales::alpha(INK, 0.08)) -- worth a lower alpha or thinner linewidth
+    so the grid recedes further behind the data lines; secondary polish item, not
+    blocking on its own.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1), correct light-theme surface, not pure white.
-      Chrome: Title "Customer Churn Model · gain-curve · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible and not clipped. Axis titles "Percentage of Customers Targeted" (x) and "Percentage of Churners Captured" (y) in dark ink, readable. Tick labels ("0%".."100%" on both axes) in soft gray ink. Major gridlines at 25/50/75/100 in a fairly bold dark line (alpha=0.15 applied to a near-black ink but still fairly prominent visually). Legend box (elevated off-white background) sits inside the plot at bottom-right with "Churn model" (green solid) and "Random targeting" (gray dashed) labels, clearly readable, no overlap with the data curve.
+      Chrome: Title "Customer Churn Model · gain-curve · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible and not clipped. Axis titles "Percentage of Customers Targeted" (x) and "Percentage of Churners Captured" (y) in dark ink, readable. Tick labels ("0%".."100%" on the y-axis; "0%".."75%" plus a bare "100" on the x-axis) in soft gray ink. Major gridlines at 25/50/75/100 in a fairly dark, fairly prominent line for an alpha=0.08 grid. Legend box (elevated off-white background) sits inside the plot at bottom-right with "Churn model" (green solid) and "Random targeting" (gray dashed) labels, clearly readable, no overlap with the data curve.
       Data: Green (#009E73) solid line for "Churn model" rising steeply from 0% and flattening near 100% well above the diagonal; gray dashed line for "Random targeting" baseline running straight from (0,0) to (100,100). Colors and shapes match spec expectations for a gains chart.
-      Legibility verdict: FAIL — the rightmost x-axis tick label "100%" is clipped at the canvas edge, showing only "100" with the percent sign missing (verified via a 3x-zoomed crop of the bottom-right corner). Everything else (title, y-axis labels, legend, other x-axis labels) is fully legible.
+      Legibility verdict: FAIL -- the rightmost x-axis tick label "100%" is clipped at the canvas edge: pixel-level inspection (3x-zoomed crop of the bottom-right corner, and a column-by-column background-diff scan) shows the glyph run for "100" ends at column ~3195 of the 3200px canvas with no further non-background pixels, meaning the "%" character has zero room left and is completely missing from the saved PNG. Everything else (title, y-axis labels, legend, other x-axis labels) is fully legible.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (~#1A1A17), correct dark-theme surface, not pure black.
-      Chrome: Title and axis titles in light ink (near-white), clearly readable against the dark background. Tick labels in a lighter soft gray, readable. Gridlines flip to a light color on dark, still fairly prominent but consistent with the light render's grid weight. Legend box uses a dark elevated background with light text — readable, no dark-on-dark issues found.
-      Data: Same green (#009E73) solid "Churn model" curve and gray dashed "Random targeting" baseline as the light render — colors are identical between themes, only chrome flipped, as required.
-      Legibility verdict: FAIL — same AR-09 issue as the light render: the rightmost x-axis tick label "100%" loses its "%" character at the canvas edge (confirmed via the same crop-and-zoom check). No dark-on-dark or light-on-light text issues otherwise.
+      Chrome: Title and axis titles in light ink (near-white), clearly readable against the dark background. Tick labels in a lighter soft gray, readable. Gridlines flip to a light color on dark, still fairly prominent, consistent with the light render's grid weight. Legend box uses a dark elevated background with light text -- readable, no dark-on-dark issues found.
+      Data: Same green (#009E73) solid "Churn model" curve and gray dashed "Random targeting" baseline as the light render -- colors are identical between themes, only chrome flipped, as required.
+      Legibility verdict: FAIL -- same AR-09 issue as the light render, confirmed with the identical crop-and-scan method: the rightmost x-axis tick label loses its "%" character entirely at the canvas edge. No dark-on-dark or light-on-light text issues otherwise.
   criteria_checklist:
     visual_quality:
       score: 0
@@ -120,7 +126,8 @@ review:
         score: 0
         max: 6
         passed: false
-        comment: N/A under AR-09 auto-reject
+        comment: N/A under AR-09 auto-reject; grid also fairly prominent for a 'subtle'
+          style
       - id: DE-03
         name: Data Storytelling
         score: 0
