@@ -16,6 +16,7 @@ const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const INK_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 const BRAND    = colorant"#009E73"  # Imprint palette position 1
+const ANYPLOT_AMBER = colorant"#DDCC77"  # semantic anchor: draws the eye to the callout station
 
 # --- Data ---------------------------------------------------------------
 # Airborne particulate matter (PM2.5, μg/m3) reported as station medians. The
@@ -32,6 +33,14 @@ log_sigma = 0.14 .+ 0.22 .* rand(n)
 
 error_lower = median_conc .* (1 .- exp.(-log_sigma))
 error_upper = median_conc .* (exp.(log_sigma) .- 1)
+
+# Station with the widest asymmetric spread gets a callout accent below.
+spread = error_upper .- error_lower
+widest = argmax(spread)
+marker_colors = fill(BRAND, n)
+marker_colors[widest] = ANYPLOT_AMBER
+marker_sizes = fill(20, n)
+marker_sizes[widest] = 26
 
 # --- Plot ---------------------------------------------------------------
 fig = Figure(
@@ -71,9 +80,15 @@ ax = Axis(
 
 errorbars!(ax, positions, median_conc, error_lower, error_upper;
            color = BRAND, whiskerwidth = 18, linewidth = 2.5)
-scatter!(ax, positions, median_conc; color = BRAND, markersize = 20, strokewidth = 0)
+scatter!(ax, positions, median_conc; color = marker_colors, markersize = marker_sizes,
+         strokewidth = 1.4, strokecolor = PAGE_BG)
 
-ylims!(ax, 0, nothing)
+halign = widest <= 2 ? :left : widest >= n - 1 ? :right : :center
+text!(ax, positions[widest], median_conc[widest] + error_upper[widest];
+      text = "widest spread: +$(round(error_upper[widest], digits = 1)) / −$(round(error_lower[widest], digits = 1)) μg/m³",
+      align = (halign, :bottom), offset = (0, 10), fontsize = 12, color = INK_MUTED)
+
+ylims!(ax, 0, maximum(median_conc .+ error_upper) * 1.18)
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
