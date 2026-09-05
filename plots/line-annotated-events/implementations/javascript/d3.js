@@ -33,8 +33,8 @@ const series = [];
 for (let day = 0; day < NUM_DAYS; day++) {
   const date = new Date(START_DATE);
   date.setDate(date.getDate() + day);
-  const seasonal = 1.4 * Math.sin((day / 7) * Math.PI * 2);
-  const noise = (rand() - 0.5) * 1.6;
+  const seasonal = 0.95 * Math.sin((day / 7) * Math.PI * 2);
+  const noise = (rand() - 0.5) * 1.1;
   const launchBoost = EVENTS.some((e) => day >= e.day && day < e.day + 4) ? 0.55 : 0;
   dailyActiveUsers += 0.045 + launchBoost + noise * 0.3;
   series.push({ date, value: Math.max(dailyActiveUsers + seasonal, 1) });
@@ -69,10 +69,16 @@ g.append("g")
   .attr("stroke", t.grid);
 
 // --- Axes ----------------------------------------------------------------------
+// Multi-scale date format: spell out the year only when a tick crosses into a
+// new year, otherwise show the month abbreviation.
+const formatMonth = d3.timeFormat("%b");
+const formatMonthYear = d3.timeFormat("%b %Y");
+const monthTickFormat = (date) => (d3.timeYear(date) < date ? formatMonth(date) : formatMonthYear(date));
+
 const xAxis = g
   .append("g")
   .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)).tickFormat(d3.timeFormat("%b")));
+  .call(d3.axisBottom(x).ticks(d3.timeMonth.every(1)).tickFormat(monthTickFormat));
 const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickFormat((d) => `${d}k`));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
@@ -90,42 +96,59 @@ g.append("text")
   .style("font-size", "16px")
   .text("Daily Active Users (thousands)");
 
+// --- Area fill: subtle wash under the trend line for extra polish -----------
+const area = d3
+  .area()
+  .x((d) => x(d.date))
+  .y0(ih)
+  .y1((d) => y(d.value))
+  .curve(d3.curveMonotoneX);
+g.append("path").datum(series).attr("fill", t.palette[0]).attr("fill-opacity", 0.12).attr("d", area);
+
 // --- Event markers: dashed reference lines + alternating labels -------------
+// Built via D3's idiomatic selection.data(...).join(...) pattern rather than
+// a manual forEach + append loop.
 const eventColor = t.palette[1];
 const labelRowY = [78, 104];
-
 const eventGroup = svg.append("g");
-eventPoints.forEach((e, i) => {
-  const ex = margin.left + x(e.date);
-  eventGroup
-    .append("line")
-    .attr("x1", ex)
-    .attr("x2", ex)
-    .attr("y1", margin.top - 18)
-    .attr("y2", margin.top + ih)
-    .attr("stroke", eventColor)
-    .attr("stroke-width", 2)
-    .attr("stroke-dasharray", "6,5");
 
-  eventGroup
-    .append("circle")
-    .attr("cx", ex)
-    .attr("cy", margin.top + y(e.value))
-    .attr("r", 7)
-    .attr("fill", eventColor)
-    .attr("stroke", t.pageBg)
-    .attr("stroke-width", 2);
+eventGroup
+  .selectAll("line.event-line")
+  .data(eventPoints)
+  .join("line")
+  .attr("class", "event-line")
+  .attr("x1", (d) => margin.left + x(d.date))
+  .attr("x2", (d) => margin.left + x(d.date))
+  .attr("y1", margin.top - 18)
+  .attr("y2", margin.top + ih)
+  .attr("stroke", eventColor)
+  .attr("stroke-width", 2)
+  .attr("stroke-dasharray", "6,5");
 
-  eventGroup
-    .append("text")
-    .attr("x", ex)
-    .attr("y", labelRowY[i % 2])
-    .attr("text-anchor", "middle")
-    .attr("fill", t.ink)
-    .style("font-size", "14px")
-    .style("font-weight", "600")
-    .text(e.label);
-});
+eventGroup
+  .selectAll("circle.event-marker")
+  .data(eventPoints)
+  .join("circle")
+  .attr("class", "event-marker")
+  .attr("cx", (d) => margin.left + x(d.date))
+  .attr("cy", (d) => margin.top + y(d.value))
+  .attr("r", 7)
+  .attr("fill", eventColor)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2);
+
+eventGroup
+  .selectAll("text.event-label")
+  .data(eventPoints)
+  .join("text")
+  .attr("class", "event-label")
+  .attr("x", (d) => margin.left + x(d.date))
+  .attr("y", (d, i) => labelRowY[i % 2])
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text((d) => d.label);
 
 // --- Line ------------------------------------------------------------------------
 const line = d3
