@@ -16,6 +16,8 @@ INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
+GRID_COLOR <- scales::alpha(INK, 0.15)
+ANYPLOT_NEUTRAL <- INK
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -56,7 +58,7 @@ baseline <- tibble::tibble(
 df <- bind_rows(gains, baseline)
 
 # --- Plot -----------------------------------------------------------------
-title_text <- "Customer Churn Model · gain-curve · r · ggplot2 · anyplot.ai"
+title_text <- "Churn Model · gain-curve · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(
   df,
@@ -64,7 +66,7 @@ p <- ggplot(
       color = series, linetype = series, linewidth = series)
 ) +
   geom_line() +
-  scale_color_manual(values = c("Churn model" = IMPRINT_PALETTE[1], "Random targeting" = INK_MUTED)) +
+  scale_color_manual(values = c("Churn model" = IMPRINT_PALETTE[1], "Random targeting" = ANYPLOT_NEUTRAL)) +
   scale_linetype_manual(values = c("Churn model" = "solid", "Random targeting" = "dashed")) +
   scale_linewidth_manual(values = c("Churn model" = 1.8, "Random targeting" = 1.0)) +
   scale_x_continuous(
@@ -84,12 +86,12 @@ p <- ggplot(
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK, size = 12),
+    plot.title        = element_text(color = INK, size = 11),
     panel.border      = element_blank(),
     legend.title      = element_blank(),
     legend.text       = element_text(color = INK_SOFT, size = 8),
