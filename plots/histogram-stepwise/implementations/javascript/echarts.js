@@ -6,7 +6,9 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic LCG) -----------------------------------
-// Reaction times (ms) from a simulated cognitive test, n=1500.
+// Reaction times (ms) from a simulated cognitive test, n=1500. Modeled as an
+// ex-Gaussian (normal + exponential tail) — the standard shape for human
+// reaction-time data: a sharp rise near the mode and a long right tail.
 function lcg(seed) {
   let state = seed;
   return () => {
@@ -23,13 +25,17 @@ function randNormal(mean, std) {
   return mean + z * std;
 }
 
+function randExponential(mean) {
+  return -mean * Math.log(1 - rand());
+}
+
 const reactionTimes = [];
 for (let i = 0; i < 1500; i++) {
-  reactionTimes.push(randNormal(320, 55));
+  reactionTimes.push(randNormal(230, 28) + randExponential(55));
 }
 
 // --- Binning ----------------------------------------------------------------
-const binCount = 30;
+const binCount = 24;
 const minVal = Math.min(...reactionTimes);
 const maxVal = Math.max(...reactionTimes);
 const binWidth = (maxVal - minVal) / binCount;
@@ -41,16 +47,22 @@ for (const v of reactionTimes) {
   counts[idx]++;
 }
 
-// Step-line points: each bin drawn as a horizontal segment at its edges,
-// closed to zero at both ends so the outline reads as a step function.
-const stepData = [[minVal, 0]];
-for (let i = 0; i < binCount; i++) {
-  const left = minVal + i * binWidth;
-  const right = left + binWidth;
-  stepData.push([left, counts[i]]);
-  stepData.push([right, counts[i]]);
+const binLeftEdges = Array.from({ length: binCount }, (_, i) => minVal + i * binWidth);
+
+let peakIdx = 0;
+for (let i = 1; i < binCount; i++) {
+  if (counts[i] > counts[peakIdx]) peakIdx = i;
 }
-stepData.push([maxVal, 0]);
+const peakCenter = binLeftEdges[peakIdx] + binWidth / 2;
+
+// Step-line points: ECharts' native `step: "end"` draws the horizontal
+// segment across each bin and the vertical segment between bins; closing the
+// ends to zero makes the outline read as a step function.
+const stepData = [
+  [minVal, 0],
+  ...binLeftEdges.map((x, i) => [x, counts[i]]),
+  [maxVal, 0],
+];
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -94,11 +106,23 @@ chart.setOption({
   series: [
     {
       type: "line",
+      step: "end",
       data: stepData,
       showSymbol: false,
       lineStyle: { color: t.palette[0], width: 3 },
-      areaStyle: undefined,
       emphasis: { disabled: true },
+      markLine: {
+        symbol: "none",
+        silent: true,
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          formatter: `Peak: ${Math.round(peakCenter)} ms`,
+          color: t.ink,
+          fontSize: 13,
+          position: "insideEndTop",
+        },
+        data: [{ xAxis: peakCenter }],
+      },
     },
   ],
 });
