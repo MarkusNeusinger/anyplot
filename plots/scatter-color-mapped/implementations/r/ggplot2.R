@@ -4,7 +4,6 @@
 #' Quality: 82/100 | Created: 2026-09-05
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -31,16 +30,21 @@ stations <- tibble::tibble(longitude, latitude, temperature_c)
 # --- Plot -----------------------------------------------------------------
 title_text <- "Weather Station Temperatures · scatter-color-mapped · r · ggplot2 · anyplot.ai"
 title_size <- round(12 * min(1, 67 / nchar(title_text)))
+subtitle_text <- "Stations warm up steadily from north to south across the network"
 
 p <- ggplot(stations, aes(x = longitude, y = latitude, color = temperature_c)) +
-  geom_point(size = 3, alpha = 0.8) +
+  geom_point(size = 2.5, alpha = 0.65) +
   scale_color_gradient(
     name = "Temperature (°C)",
     low = IMPRINT_PALETTE[1],
-    high = IMPRINT_PALETTE[3]
+    high = IMPRINT_PALETTE[3],
+    guide = guide_colorbar(
+      barwidth = 0.6, barheight = 8, ticks.colour = INK, frame.colour = INK_SOFT
+    )
   ) +
   labs(
     title = title_text,
+    subtitle = subtitle_text,
     x = "Longitude (°)",
     y = "Latitude (°)"
   ) +
@@ -53,6 +57,7 @@ p <- ggplot(stations, aes(x = longitude, y = latitude, color = temperature_c)) +
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK, size = title_size),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 9),
     legend.background = element_rect(fill = PAGE_BG, color = NA),
     legend.title      = element_text(color = INK, size = 10),
     legend.text       = element_text(color = INK_SOFT, size = 8)
