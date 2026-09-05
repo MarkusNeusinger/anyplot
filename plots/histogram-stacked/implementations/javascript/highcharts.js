@@ -79,6 +79,10 @@ Highcharts.chart("container", {
     title: { text: "Number of Commuters", style: { color: t.inkSoft, fontSize: "16px" } },
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    stackLabels: {
+      enabled: true,
+      style: { color: t.inkSoft, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+    },
   },
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
@@ -86,7 +90,12 @@ Highcharts.chart("container", {
   },
   plotOptions: {
     series: { animation: false, stacking: "normal" },
-    column: { borderWidth: 0, pointPadding: 0.05, groupPadding: 0 },
+    column: {
+      borderWidth: 0,
+      pointPadding: 0.05,
+      groupPadding: 0,
+      borderRadius: { radius: 4, scope: "stack" },
+    },
   },
   series: modes.map((mode) => ({ name: mode, data: seriesData[mode] })),
 });
