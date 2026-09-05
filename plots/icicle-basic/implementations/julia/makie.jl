@@ -10,9 +10,12 @@ using Colors
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
-const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const NEUTRAL  = INK                                                     # totals / baseline (theme-adaptive)
-const MUTED    = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F" # other / rest (theme-adaptive)
+
+# Root band and the "other" leaf strip are data-bearing fills (they encode a
+# value, not chrome), so -- unlike the usual theme-adaptive neutral/muted
+# anchors -- they stay a single fixed hex in both renders.
+const FIXED_NEUTRAL = colorant"#726F64"
+const FIXED_MUTED   = colorant"#B0AA98"
 
 const IMPRINT_PALETTE = [
     colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
@@ -38,34 +41,23 @@ end
 
 # Leaves with no children stretch down to the bottom row (no children to
 # fill the space below them) -- the classic icicle-chart visual convention.
-function layout_icicle!(rects, name, x0, x1, level, max_depth, children, raw_value)
+# `branch` is threaded down from the root's direct children so each rect
+# already knows which top-level folder it belongs to (no separate parent
+# lookup needed later for coloring).
+function layout_icicle!(rects, name, x0, x1, level, max_depth, children, raw_value, branch)
     kids = get(children, name, String[])
     row_span = isempty(kids) ? (max_depth - level + 1) : 1
-    push!(rects, (name = name, x0 = x0, x1 = x1, level = level, row_span = row_span))
+    push!(rects, (name = name, x0 = x0, x1 = x1, level = level, row_span = row_span, branch = branch))
     if !isempty(kids)
         total = subtree_value(name, children, raw_value)
         cx = x0
         for k in kids
             w = subtree_value(k, children, raw_value) / total * (x1 - x0)
-            layout_icicle!(rects, k, cx, cx + w, level + 1, max_depth, children, raw_value)
+            child_branch = level == 0 ? k : branch
+            layout_icicle!(rects, k, cx, cx + w, level + 1, max_depth, children, raw_value, child_branch)
             cx += w
         end
     end
-end
-
-function branch_of(name, parent_of, root)
-    n = name
-    while parent_of[n] != root
-        n = parent_of[n]
-    end
-    n
-end
-
-# Label ink chosen per-tile by relative luminance of the fill -- keeps text
-# legible whether the tile sits at full branch saturation or a lightened tint.
-function contrast_ink(c)
-    0.2126 * red(c) + 0.7152 * green(c) + 0.0722 * blue(c) > 0.5 ?
-        colorant"#1A1A17" : colorant"#FAF8F1"
 end
 
 # Depth-within-branch tint via perceptually uniform LCHab lightness lift
@@ -118,11 +110,9 @@ tree = [
 ]
 
 children  = Dict{String,Vector{String}}()
-parent_of = Dict{String,String}()
 raw_value = Dict{String,Float64}()
 for (name, parent, value) in tree
-    raw_value[name]  = value
-    parent_of[name]  = parent
+    raw_value[name] = value
     if !isempty(parent)
         push!(get!(children, parent, String[]), name)
     end
@@ -135,7 +125,7 @@ max_depth = maximum(leaf_lvls)
 total_kb  = subtree_value(root, children, raw_value)
 
 rects = NamedTuple[]
-layout_icicle!(rects, root, 0.0, total_kb, 0, max_depth, children, raw_value)
+layout_icicle!(rects, root, 0.0, total_kb, 0, max_depth, children, raw_value, "")
 
 # Branch color: the four top-level folders each own a hue; the lone
 # root-level file (no folder of its own) reads as "other" via the muted
@@ -146,15 +136,15 @@ branch_color = Dict(
     "docs"        => IMPRINT_PALETTE[2],
     "tests"       => IMPRINT_PALETTE[3],
     "assets"      => IMPRINT_PALETTE[4],
-    "config.json" => MUTED,
+    "config.json" => FIXED_MUTED,
 )
 
 rect_colors = Vector{RGB}(undef, length(rects))
 for (i, r) in enumerate(rects)
     if r.name == root
-        rect_colors[i] = NEUTRAL
+        rect_colors[i] = FIXED_NEUTRAL
     else
-        base = branch_color[branch_of(r.name, parent_of, root)]
+        base = branch_color[r.branch]
         frac = max_depth > 1 ? (r.level - 1) / (max_depth - 1) : 0.0
         rect_colors[i] = tint_lightness(base, frac)
     end
@@ -201,14 +191,16 @@ for (i, r) in enumerate(rects)
         "$(r.name) · $(round(Int, val)) KB total" :
         "$(r.name)\n$(round(Int, val)) KB"
     maxlen = maximum(length, split(label, '\n'))
-    if w >= max(0.045 * total_kb, 0.011 * total_kb * maxlen)
+    if w >= max(0.032 * total_kb, 0.0055 * total_kb * maxlen)
         y0 = rows - (r.level + r.row_span)
         y1 = rows - r.level
+        c  = rect_colors[i]
         text!(ax, r.x0 + w / 2, (y0 + y1) / 2;
             text          = label,
             align         = (:center, :center),
             justification = :center,
-            color         = contrast_ink(rect_colors[i]),
+            color         = 0.2126 * red(c) + 0.7152 * green(c) + 0.0722 * blue(c) > 0.5 ?
+                colorant"#1A1A17" : colorant"#FAF8F1",
             fontsize      = 13,
             font          = r.name == root ? :bold : :regular,
         )
