@@ -16,7 +16,7 @@ INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
-GRID_COLOR <- scales::alpha(INK, 0.15)
+GRID_COLOR <- scales::alpha(INK, 0.08)
 ANYPLOT_NEUTRAL <- INK
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
@@ -70,11 +70,11 @@ p <- ggplot(
   scale_linetype_manual(values = c("Churn model" = "solid", "Random targeting" = "dashed")) +
   scale_linewidth_manual(values = c("Churn model" = 1.8, "Random targeting" = 1.0)) +
   scale_x_continuous(
-    limits = c(0, 100), expand = c(0, 0),
+    limits = c(0, 100), expand = expansion(mult = c(0, 0.02)),
     labels = scales::label_number(suffix = "%")
   ) +
   scale_y_continuous(
-    limits = c(0, 100), expand = c(0, 0),
+    limits = c(0, 100), expand = expansion(mult = c(0, 0.02)),
     labels = scales::label_number(suffix = "%")
   ) +
   labs(
@@ -86,7 +86,7 @@ p <- ggplot(
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.3),
+    panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.25),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
