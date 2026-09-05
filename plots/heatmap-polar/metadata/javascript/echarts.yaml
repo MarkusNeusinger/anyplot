@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: heatmap-polar
 created: '2026-09-05T03:38:06Z'
-updated: '2026-09-05T03:53:16Z'
+updated: '2026-09-05T04:16:26Z'
 generated_by: claude-sonnet
 workflow_run: 33941746271
 issue: 5244
@@ -12,147 +12,137 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/echarts/plot-dark.html
-quality_score: 64
+quality_score: 81
 review:
   strengths:
-  - 'Clean theme-adaptive chrome: day-label chips use an elevated background box so
-    ''Mon''..''Sun'' stay legible over whatever cell color sits underneath, correctly
-    z-ordered above the data layer in both themes.'
-  - 'Correct colormap choice: uses the sequential imprint_seq gradient (not a diverging
-    or custom colormap) for single-polarity visit-count data, with a clear High/Low
-    visualMap legend.'
-  - 'Faithful polar grid geometry: 7 evenly-divided radial day-rings x 24 evenly-divided
-    hourly sectors, with angular tick labels shown only at the readable 6-hour interval
-    the spec recommends (12am/6am/12pm/6pm).'
-  - Deterministic, seeded synthetic data generation (small LCG) and clean, minimal,
-    single-purpose code with no fake/simulated interactivity.
-  - Reasonable use of a 'custom' series + renderItem sector drawing as the documented
-    ECharts workaround for a plot type (polar heatmap) with no native series support.
+  - 'Critical data-color mapping bug from Attempt 1 is verifiably fixed: pixel-sampling
+    both plot-light.png and plot-dark.png at the exact (day, hour) coordinates implied
+    by the chart''s own polar geometry confirms weekday business hours (Mon 9am-5pm,
+    peak at 12-13) and weekend evening hours (Sat/Sun 6pm-11pm) now render as the
+    most saturated blue at their correct clock position, with the lunchtime bump (12-13)
+    clearly the darkest cell on weekday rings.'
+  - Data colors are byte-for-byte identical between light and dark renders at every
+    sampled coordinate - only chrome (background, text, chip fill) flips, exactly
+    as required.
+  - 'Correct colormap choice: sequential imprint_seq (green-to-blue) for single-polarity
+    visit-count data, with a clear High/Low visualMap colorbar legend.'
+  - 'Clean theme-adaptive chrome: day-label chips use an elevated-background box so
+    Mon..Sun text stays legible over any underlying cell color, in both themes.'
+  - Deterministic seeded data generation (small LCG), minimal single-purpose code,
+    and correct idiomatic use of a custom polar series (renderItem + api.coord/api.size)
+    - the documented ECharts workaround for a coordinate system with no native heatmap
+    support.
   weaknesses:
-  - 'CRITICAL DATA-MAPPING BUG: the color rendered for each polar cell does not align
-    with its labeled hour position. Pixel-sampling both plot-light.png and plot-dark.png
-    at the exact (day, hour) coordinates implied by the chart''s own declared geometry
-    (polar center [''50%'',''56%''], radius [''16%'',''80%''], radiusAxis Mon->Sun
-    inner-to-outer confirmed via the visible day-label chip order, angleAxis 24 hourly
-    categories starting at top/12am going clockwise confirmed via the visible 12am/6am/12pm/6pm
-    tick labels) shows: for weekday rings (Mon-Fri) the ''high traffic'' (blue) band
-    actually renders around hours 18:00-02:00 instead of the intended 9:00-17:00 business-hours
-    window (~9-hour angular displacement); for weekend rings (Sat-Sun) the ''high
-    traffic'' band renders around hours 12:00-17:00 instead of the intended 18:00-23:00
-    evening window (~6-hour displacement in the opposite direction). The displacement
-    is byte-for-byte identical between the light and dark renders, so it is a deterministic
-    property of the value-to-color mapping, not a sampling artifact. The 7x24 grid
-    GEOMETRY itself is correctly and evenly divided (ring/sector boundaries match
-    the axis labels exactly), so the defect is isolated to how each cell''s VALUE
-    is resolved for coloring, not to the shape math. Likely cause: the polar ''custom''
-    series has no explicit `encode`, so ECharts'' default dimension binding for a
-    polar custom series may not guarantee that visualMap''s `dimension: 2` reads the
-    same data row as the one renderItem draws via `api.value(0)`/`api.value(1)`. Fix
-    by adding an explicit `encode: { radius: 0, angle: 1, value: 2 }` (or equivalent)
-    to the series so the shape and its color are guaranteed to reference the same
-    (dayIdx, hourIdx, visits) row, then re-verify that weekday lunch hours (12-13)
-    and weekend evening hours (20-21) actually render as the most saturated blue at
-    their correct angular position.'
-  - 'DQ-03: visit counts (range ~2-110 per cell) read a little low for ''website visits''
-    by hour; a few hundred to a few thousand would feel more realistic for a site
-    with a visible daily/weekly traffic rhythm, though the current scale isn''t implausible
-    for a small site.'
-  - 'The legend/colorbar sits close to the right canvas edge (right: 24) with fairly
-    tight breathing room; a touch more margin would match the generous-whitespace
-    guidance elsewhere in the chart.'
+  - 'The radial-axis day-label chips (Mon..Sun) sit directly on top of and visually
+    hide real data cells around the ~22:00-23:00 hour position on their own ring.
+    Pixel-sampling confirms this in both renders: e.g. light render Mon@22h=(255,253,246)
+    and Mon@23h=(255,253,246) (elevated-bg white, not a data color), dark render Mon@22h=(36,36,32)
+    and Mon@23h=(36,36,32) (elevated-bg dark, not a data color) - same pattern repeats
+    for Wed and Thu. About 7-8% of the 168 cells are fully obscured behind the chip
+    artwork. Fix: shrink the chip padding/width, or move the radial-axis labels outward
+    into the empty margin beyond r_max instead of overlapping the outermost edge of
+    the actual cell ring, so no data pixel is ever covered by chrome.'
+  - The angleAxis '6am' tick label (right side of the circle) sits very close to the
+    visualMap's own 'Low' text, both landing near the same height on the right edge
+    of the canvas - crowds that corner even though the glyphs themselves don't collide.
+    Consider widening the visualMap's `right` offset or nudging the polar radius/center
+    slightly to add breathing room between the two label groups.
+  - Visit counts (roughly 15-660 per cell) read a bit low for 'website visits' by
+    hour; a few hundred to a few thousand at peak would feel more realistic for a
+    site with a visible daily/weekly rhythm, though the current scale is not implausible
+    for a small site.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Website Traffic by Hour & Day · heatmap-polar · javascript · echarts · anyplot.ai" is centered at top in dark ink, clearly readable. Angular tick labels (12am top, 6am right, 12pm bottom, 6pm left) render in soft dark gray, legible against the light background. Radial day labels (Mon..Sun, Mon innermost near the center hole, Sun outermost) sit inside white "chip" boxes with dark bold text, staying legible regardless of the cell color underneath. The "High"/"Low" visualMap legend at the right renders in soft dark gray text next to a vertical blue-to-green gradient bar.
-      Data: A 7 (day) x 24 (hour) grid of pie-slice/annulus cells fills the ring from ~16% to ~80% of the radius, colored on the green (low) to blue (high) sequential scale, separated by thin light dividing lines. The colored region visually resembles two large "wedge" fields — a blue field roughly covering the evening/midnight hours across the inner (weekday) rings and a distinct, smaller blue field roughly covering midday hours on the outer (weekend) rings — rather than a small, sharply-bounded blue patch precisely centered on the intended peak hours per ring.
-      Legibility verdict: PASS — all text is readable, no light-on-light issues.
-      Correctness verdict (see Weaknesses): pixel-level sampling of this same PNG at the coordinates implied by the polar/axis configuration shows the colored "high" bands are angularly displaced from the hours they are meant to represent (~9h displacement for weekday rings, ~6h for weekend rings) — the chart's own data-to-color mapping does not line up with its own hour-axis labels.
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "Website Traffic by Hour & Day · heatmap-polar · javascript · echarts · anyplot.ai" is centered, dark ink, clearly readable. Angular tick labels (12am top, 6am right, 12pm bottom, 6pm left) are soft dark gray and legible. Radial day labels (Mon innermost through Sun outermost) sit in white elevated-background chip boxes with bold dark text, legible over any cell color. The "High"/"Low" visualMap legend at the right shows a vertical blue(top)-to-green(bottom) gradient bar with soft dark gray text.
+      Data: 7x24 grid of annular sector cells on the green(low)->blue(high) sequential imprint_seq scale, separated by thin light dividers. Pixel-sampling at the geometrically-implied (day, hour) coordinates confirms the weekday business-hours band (Mon-Fri, ~9am-5pm, peak at 12-13) and the weekend evening band (Sat/Sun, ~6pm-11pm) now render as the most saturated blue at their CORRECT clock position - the Attempt-1 angular-mapping bug is fixed. One real defect found: the Mon/Wed/Thu day-label chips visually cover the actual data cells at ~22:00-23:00 on their own ring (sampled pixel = near-white chip background, not a data color) - roughly 7-8% of the 168 cells are hidden behind chrome.
+      Legibility verdict: PASS (all text readable; the chip/data overlap is a data-visibility defect, not a text-legibility one)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title renders in light ink (#F0EFE8-ish), clearly readable against the dark surface. Angular tick labels render in a lighter soft gray, legible. Radial day-label chips use a dark elevated-background box (~#242420) with light text, legible against any surrounding cell color. Legend text renders in light gray against the dark background, colorbar unchanged.
-      Data: Same grid structure and identical cell colors as the light render (confirmed by direct pixel comparison — the sampled RGB triples at matching (day, hour) coordinates are identical between the two PNGs), i.e., only chrome flipped between themes as required; the data-color layer did not change.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome text and the brand-green/blue/teal data colors read clearly against the near-black background.
-      Correctness verdict: same displacement bug as the light render (expected, since it stems from the shared option/data, not from theme-specific code).
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title and tick labels render in light ink/gray, clearly readable. Day-label chips use a dark elevated-background box with light text, legible over any cell color. Legend text is light gray.
+      Data: Direct pixel comparison confirms the data-layer colors are byte-for-byte identical to the light render at every sampled (day, hour) coordinate - only chrome flipped, as required. The same chip-over-data occlusion defect reproduces here (Mon/Wed/Thu ~22:00-23:00 sampled as the dark elevated-bg color, not a data color).
+      Legibility verdict: PASS (no dark-on-dark failures; same chip/data overlap defect as light render)
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title/tick/legend sizes are reasonable,
-          though the title could sit slightly larger given the ample whitespace.
+        comment: Explicit font sizes, readable in both themes, hourly labels shown
+          only at readable 6h intervals
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text/data collisions; day-label chips stay clear of surrounding
-          cells.
+        comment: No text-on-text overlap; the day-label chips do sit on top of data
+          cells (see VQ-03) but the text itself never collides
       - id: VQ-03
         name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: 168 cells at this canvas size are individually distinguishable with
-          visible dividers; innermost (Mon) ring cells are quite small but still readable.
+        comment: Cells well-sized overall, but the day-label chips fully hide ~7-8%
+          of cells (confirmed via pixel sampling at ~22:00-23:00 on Mon/Wed/Thu rings)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue imprint_seq scale is CVD-safe and not red-green
-          based.
+        comment: Green-blue sequential gradient, good contrast, not red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions overall; legend sits a bit close to the right edge.
+        comment: Good canvas utilization; minor crowding between the angleAxis '6am'
+          label and the visualMap 'Low' text on the right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and readable-interval hour labels present.
+        comment: Descriptive title and self-explanatory hour/day tick labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct use of imprint_seq for single-polarity continuous data; theme-correct
-          backgrounds in both renders.
+        comment: Correct imprint_seq for single-polarity data, theme-correct backgrounds,
+          data colors byte-identical across themes
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Competent but largely default polar-heatmap styling; elevated-bg
-          label chips are a nice touch.
+        passed: true
+        comment: Custom-crafted polar heatmap with thoughtful chip labeling, above
+          a configured-default look
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle cell dividers and generous whitespace, but otherwise unremarkable.
+        passed: true
+        comment: Subtle dividers and generous whitespace, undercut by the chip/data
+          occlusion defect
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 4
         max: 6
-        passed: false
-        comment: The visual hierarchy (which hours look 'hot') does not match the
-          underlying data due to the mapping bug — a misleading hierarchy is worse
-          than no hierarchy.
+        passed: true
+        comment: Now that the mapping bug is fixed, the blue peak wedge against the
+          green baseline clearly tells the business-hours/evening-peak story
     spec_compliance:
-      score: 9
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -160,54 +150,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine polar heatmap via custom series, matching the spec's described
-          form.
+        comment: Correct polar heatmap with continuous cyclic angular axis
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 3
         max: 4
-        passed: false
-        comment: Continuous wrap, colorbar, gridlines, and readable-interval labels
-          are present, but the core required feature — revealing the true cyclic hour/day
-          pattern — is broken by the mapping bug.
+        passed: true
+        comment: Cyclic wrap, radial rings, colorbar, and readable hour labels all
+          present; a handful of cells lose their color encoding behind label chips
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 2
         max: 3
-        passed: false
-        comment: Cell color does not correspond to its labeled (day, hour) position
-          — see critical weakness.
+        passed: true
+        comment: Angular/radial mapping is now correct for all cells; ~7-8% are visually
+          inaccessible due to chip overlap
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; High/Low legend labels are clear.
+        comment: Title format correct with descriptive prefix; colorbar legend labels
+          correct
     data_quality:
-      score: 8
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 1
+        score: 5
         max: 6
-        passed: false
-        comment: Shows hour x day variation mechanically, but not the correct business-hours
-          / weekend-evening pattern the plot type exists to reveal.
+        passed: true
+        comment: Business-hours bump, lunch bump, weekend-evening bump, and overnight
+          dip are all present and distinguishable
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Website traffic by hour/day-of-week is a plausible, neutral scenario.
+        comment: Website traffic by hour/day is a real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: Visit counts (2-110) are plausible but on the low side for the framing.
+        comment: Values (15-660) are plausible for a small site but a little low for
+          'website visits' framing
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -215,60 +205,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single renderItem function, no unnecessary abstraction.
+        comment: Flat top-to-bottom structure, renderItem is the required custom-series
+          callback
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic.
+        comment: Seeded LCG produces deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals.
+        comment: Only the echarts global is used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No fake UI, but the custom coordinate/value wiring has a real correctness
-          defect (see SC-03).
+        passed: true
+        comment: Appropriate complexity for a polar custom series, well-commented
+          on the non-obvious angle-sign quirk
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly follows the mount-node contract; animation:false set.
+        comment: Correct mount-node contract, animation disabled, chart.on('finished')
+          signal
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom series + renderItem is the documented ECharts pattern for
-          chart types without native support, but the implementation isn't correct.
+        comment: Correct documented workaround (custom series + api.coord/api.size)
+          for a coordinate system ECharts has no native heatmap for
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Polar coordinateSystem, continuous visualMap, and manual sector drawing
-          are genuinely distinctive ECharts capabilities.
-  verdict: REJECTED
+        comment: Polar coordinateSystem + continuous visualMap + manual sector rendering
+          are genuinely ECharts-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - polar-projection
   - colorbar
-  - manual-ticks
+  - polar-projection
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
