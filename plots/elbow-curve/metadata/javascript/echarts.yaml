@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: elbow-curve
 created: '2026-09-05T00:43:44Z'
-updated: '2026-09-05T00:48:23Z'
+updated: '2026-09-05T00:55:24Z'
 generated_by: claude-sonnet
 workflow_run: 33933620884
 issue: 2333
@@ -12,53 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-cur
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
+  - 'All three attempt-1 weaknesses were addressed directly: axis tooltip with custom
+    formatter added, line series smoothed (smooth: 0.25), and grid.top tightened (130
+    to 100) so the elbow label sits closer to the data.'
   - 'First series uses brand green #009E73, and data colors (line green, elbow-highlight
-    blue) are pixel-identical between light and dark renders — only chrome flips,
-    exactly per the Imprint theme-adaptive contract.'
+    blue) remain pixel-identical between light and dark renders - only chrome flips,
+    per the Imprint theme-adaptive contract.'
   - 'The elbow point at k=4 is clearly emphasized: larger marker, distinct accent
-    color (palette[2] blue), a dashed vertical guide line, and a direct ''Elbow ·
-    k = 4'' label — this creates a genuine focal point and guides the reader straight
-    to the answer, which is strong data storytelling for a diagnostic chart.'
-  - Marker size (14px, 22px for the elbow) is appropriately prominent for the sparse
-    10-point series, matching the data-density heuristic.
-  - 'Clean chrome: y-axis line hidden, only subtle horizontal gridlines, no chart
-    junk, generous margins with nothing clipped at any canvas edge in either render.'
-  - Realistic, neutral dataset (RFM-based customer segmentation inertia curve across
-    k=1..10) with a textbook elbow shape at k=4 and plausible magnitude.
+    color, dashed vertical guide line, and a direct ''Elbow · k = 4'' label - strong
+    data storytelling for a diagnostic chart.'
+  - Realistic, neutral dataset (RFM-based customer segmentation) with a textbook elbow
+    shape at k=4.
   - 'Correct ECharts mount-node contract: echarts.init() with no explicit size/devicePixelRatio,
-    animation:false, single chart instance on #container.'
+    animation: false, single chart instance.'
   weaknesses:
-  - 'No tooltip configuration is set on the option — hovering points in the interactive
-    HTML output surfaces no exact k/inertia values, missing the main value-add an
-    interactive JS library brings beyond the static PNG. Add a tooltip (e.g. `tooltip:
-    { trigger: ''axis'' }` or an item-trigger formatter showing ''k = {k}, inertia
-    = {value}'') to leverage echarts'' distinctive interactivity.'
-  - 'The specification notes ''a smooth connecting line helps visualize the curve
-    shape'', but the line series uses straight segments (no `smooth` option set).
-    Consider `smooth: 0.2`–`0.3` on the line series for a closer match to the spec''s
-    guidance, while checking it doesn''t distort the sharp early-k drop.'
-  - There is a fairly large empty margin between the title and the first (21,000)
-    gridline, leaving the 'Elbow · k = 4' annotation floating alone in otherwise empty
-    space — reducing `grid.top` slightly or nudging the label closer to the marker
-    would tighten the visual balance.
+  - Design excellence is still fairly generic beyond the elbow-highlight accent -
+    e.g. no subtle area-fill under the curve or additional typographic hierarchy to
+    further distinguish this from a default line chart.
+  - 'LM-02 could go further: e.g. a graphic or richer markPoint callout, or dataZoom
+    for the interactive HTML view, would showcase more distinctive ECharts capability.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "elbow-curve · javascript · echarts · anyplot.ai" centered top in dark ink, clearly legible. Y-axis title "Inertia (within-cluster sum of squares)" rotated along the left edge, dark ink, fully visible and not clipped. X-axis title "Number of Clusters (k)" below the axis, dark ink. Tick labels on both axes in a softer gray, all legible. Horizontal-only gridlines are subtle and don't compete with the data. Y-axis line is hidden; x-axis baseline is a thin soft-gray line.
-      Data: Line and 9 of 10 markers are brand green (#009E73); the k=4 point is enlarged and colored blue (Imprint palette position 3) with a light-colored ring border, sitting on a dashed vertical guide line labeled "Elbow · k = 4" in dark ink above the point. The curve shows the expected sharp early drop flattening out — classic elbow shape.
-      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "elbow-curve · javascript · echarts · anyplot.ai" centered top in dark ink, fully legible. "Elbow · k = 4" label beneath it. Axis titles ("Number of Clusters (k)", "Inertia (within-cluster sum of squares)") and tick labels in dark ink / soft gray, all readable, no clipping.
+      Data: Line and 9 of 10 markers are brand green (#009E73); k=4 point enlarged and colored blue/indigo (Imprint position 3) with a dashed vertical guide line. Line now uses a light smoothing curve (smooth: 0.25) per spec suggestion.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels have all flipped to light ink/gray and remain fully legible against the dark background. The dashed elbow guide line and its "Elbow · k = 4" label are now light-colored and stand out against the dark backdrop. Gridlines remain subtle but visible.
-      Data: Line/marker colors are identical to the light render — brand green line and markers, blue elbow-point accent — confirming only chrome adapted to theme, not data colors.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and the elbow annotation remain clearly readable.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, axis titles, and tick labels flipped to light ink/gray, fully legible against the dark background. Dashed elbow guide line and label are light-colored and stand out clearly. No dark-on-dark failures observed.
+      Data: Colors (green line/markers, blue elbow accent) are pixel-identical to the light render - only chrome adapted to theme.
+      Legibility verdict: PASS
+
+    Compared to attempt 1, grid.top was reduced from 130 to 100, tightening the gap between the title/elbow label and the first gridline - the annotation no longer floats alone in empty space.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,48 +58,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, annotation, and data
+        comment: No collisions between text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers prominently sized for sparse 10-point series; elbow point
-          clearly distinguished
+        comment: Markers appropriately sized for sparse 10-point series; elbow point
+          enlarged
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green + blue accent, adequate contrast on both surfaces, no
-          red-green sole signal
+        comment: Good contrast, green + blue accent, not red-green dependent
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing clipped; slightly unbalanced top margin leaves the annotation
-          isolated in empty space
+        comment: grid.top reduced from 130 to 100; elbow annotation no longer floats
+          in empty space; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (k, inertia/within-cluster sum
-          of squares)
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, identical data colors across themes, correct
-          theme backgrounds'
+        comment: 'First series #009E73, correct theme backgrounds, colors identical
+          across themes'
     design_excellence:
       score: 14
       max: 20
@@ -116,7 +106,7 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
+        passed: false
         comment: Clean but fairly standard line-chart treatment beyond the elbow-highlight
           accent
       - id: DE-02
@@ -124,16 +114,16 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Y-axis line removed, subtle horizontal-only grid, generous whitespace
+        comment: Y-axis line removed, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
         comment: Elbow point highlighted with color, size, dashed guide line, and
-          direct label — strong focal point
+          direct label
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,27 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with markers for k-means elbow diagnostic
+        comment: Correct elbow curve (line + markers)
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Markers and elbow highlight present; spec's 'smooth connecting line'
-          suggestion not applied (straight segments)
+        comment: 'Markers at each k, smoothed connecting line (smooth: 0.25), elbow
+          highlighted'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=k (1-10), y=inertia, full range shown
+        comment: x=k, y=inertia, all 10 values shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; no legend needed for single
-          series
+        comment: Title matches required format; no legend needed for single series
     data_quality:
       score: 14
       max: 15
@@ -171,19 +160,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Full k=1..10 sweep with clear elbow shape
+        comment: Full curve with elbow highlighted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible RFM customer-segmentation inertia values, neutral topic
+        comment: RFM-based customer segmentation, realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Inertia magnitude (thousands) sensible for 500-customer dataset
+        comment: Inertia decreasing 18200 to 2120, plausible decay shape
     code_quality:
       score: 10
       max: 10
@@ -205,21 +194,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only uses window.ANYPLOT_TOKENS/echarts globals
+        comment: No extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, no explicit size/dpr
+        comment: 'Correct mount-node contract, animation: false'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -227,20 +216,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Clean options API usage, per-point itemStyle, markLine for annotation
+        comment: setOption, markLine, axis-trigger tooltip with formatter
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: markLine annotation is a modest distinctive touch, but no tooltip
-          config to add hover value in the HTML output
+        comment: Custom tooltip formatter and markLine annotation are good, but no
+          markPoint/dataZoom/graphic for further distinctiveness
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
