@@ -1,0 +1,242 @@
+library: echarts
+language: javascript
+specification_id: scatter-categorical
+created: '2026-09-05T13:27:09Z'
+updated: '2026-09-05T13:40:49Z'
+generated_by: claude-sonnet
+workflow_run: 33968764488
+issue: 2597
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'All attempt-1 weaknesses addressed: theme-adaptive marker borders (itemStyle.borderColor:
+    t.pageBg) now separate overlapping points, emphasis.focus:"series" was added,
+    a markArea "Overlap zone" annotation now visually calls out the Marsh/Alpine overlap
+    band, and marker size/opacity were tuned down (22→18px, 0.8→0.72) to reduce occlusion'
+  - 'First categorical series is exactly #009E73 with canonical Imprint order at positions
+    2-3, identical data colors across both renders'
+  - All text (title, legend, axis names, tick labels) is legible in both themes with
+    no dark-on-dark or light-on-light failures
+  - 'Clean, idiomatic single-setOption ECharts usage with animation: false and correct
+    mount-node contract; deterministic fixed-seed LCG data generation'
+  - The markArea overlap-zone shading and "Overlap zone" label render subtly but legibly
+    in both themes and add genuine data storytelling on top of the correlation pattern
+  weaknesses:
+  - Aesthetic polish is still close to a well-configured default beyond the overlap-zone
+    callout — no additional typography/visual-hierarchy device lifts it further (DE-01
+    has headroom)
+  - markArea + emphasis.focus + a tooltip formatter are nice touches but are fairly
+    common ECharts patterns; a more distinctive feature (e.g. visualMap-driven emphasis
+    or custom graphic elements) would differentiate further (LM-02)
+  - Only two continuous dimensions plus one categorical (color) are encoded; the spec's
+    optional suggestion to vary marker shape by group is not used, which would add
+    a second, color-independent channel for group distinction
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "scatter-categorical · javascript · echarts · anyplot.ai" centered at top in dark ink; legend below lists three swatches (Sepal Iris green, Marsh Iris lavender, Alpine Iris blue-gray) in dark text; axis names "Leaf Length (cm)" / "Leaf Width (cm)" and numeric tick labels are dark/soft-dark ink; subtle light-gray gridlines; a light-gray "Overlap zone" shaded band (leaf length 5.5-6.5cm) with a legible label near the x-axis.
+      Data: Three color-coded clusters (green lower-left, lavender mid-band, blue-gray upper-right) show a clear positive correlation between leaf length and width, with genuine overlap between the lavender and blue-gray clusters in the shaded band. Markers now carry a thin theme-adaptive (page-background-colored) border/halo that visibly separates individual overlapping circles even where several points of the same or different color touch.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, legend text, axis names, and tick labels are rendered in light ink, clearly legible; gridlines are faint but visible; the "Overlap zone" band and label are legible against the dark surface (slightly darker shaded rectangle with light-gray text).
+      Data: Colors are confirmed identical to the light render (same green/lavender/blue-gray hues and point positions) — only chrome flipped. The marker halo border is visible here too (a subtle darker/page-bg-colored ring), separating overlapping points in the dense zone.
+      Legibility verdict: PASS — no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, legend, axis names, and ticks all legible in both themes;
+          explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with other text, data, or the legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Theme-adaptive marker borders (page-bg halo) now separate overlapping
+          points in the dense Marsh/Alpine band; size/opacity tuned down from attempt
+          1
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue-gray palette is CVD-safe; no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; title, legend, axes all well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names with units (cm)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, identical across
+          themes, correct chrome backgrounds'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Improved with borders/markArea, but still close to a well-configured
+          default overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Edge-highlighted markers and subtle markArea shading added; grid
+          subtle, whitespace generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: '"Overlap zone" callout gives a clear visual hierarchy device pointing
+          at the correlation/overlap story'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct categorical scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors per category, legend present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match series
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Correlation, three groups, and genuine overlap all shown; no secondary
+          channel (e.g. marker shape) used
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Neutral, plausible botanical scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible cm-scale values for leaf dimensions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG deterministic across renders
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Single setOption, correct high-level API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: markArea, emphasis.focus, and a tuned tooltip formatter are used
+          but are fairly common ECharts patterns
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
