@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: gantt-basic
 created: '2026-09-05T02:44:45Z'
-updated: '2026-09-05T02:50:08Z'
+updated: '2026-09-05T02:57:35Z'
 generated_by: claude-sonnet
 workflow_run: 33939734047
 issue: 2377
@@ -12,55 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - Clean geom_segment-based Gantt bars with rounded end caps (lineend = "round")
-    read clearly as task bars — a well-chosen idiomatic ggplot2 technique since there
-    is no native Gantt geom.
-  - Correct Imprint palette in canonical order (Design=#009E73 first, then Discovery=lavender,
-    Engineering=blue, Launch=ochre), identical data colors across both light and dark
-    renders.
-  - The dashed 'Today' reference line plus annotation gives the chart real narrative
-    value, immediately separating completed/in-progress work from upcoming phases.
-  - 'Both renders are fully theme-compliant: warm #FAF8F1/#1A1A17 backgrounds, correctly
-    flipped INK/INK_SOFT text and grid tokens, all text legible in both themes.'
-  - Sensible date-formatted x-axis (%b %Y, monthly breaks) and logically ordered tasks
-    (chronological top-to-bottom, grouped visually by workstream color).
-  - 'Clean, KISS single-file R script: dplyr/tibble used appropriately, ragg::agg_png
-    device, deterministic tribble data, no unused imports.'
+  - Progress-to-date shading (full-duration bar at alpha 0.35 overlaid with an alpha-1
+    segment from start to min(end, today)) gives a real dual-state signal for elapsed
+    vs. remaining work — a genuinely distinctive touch beyond a plain Gantt bar
+  - Vertical dashed 'Today' line with a clear label satisfies the spec's optional
+    current-date marker without crowding the chart
+  - 'Workstream color coding via the Imprint palette is correctly mapped, with the
+    first alphabetical category (Design) landing on #009E73 and the rest following
+    canonical order'
+  - Theme tokens (PAGE_BG/INK/INK_SOFT) are threaded consistently through panel, legend,
+    grid, and text elements in both renders — no dark-on-dark or light-on-light failures
+  - Rounded-cap geom_segment bars with generous y-axis expansion give clean, well-spaced
+    rows across 13 tasks, well within the 5-30 task range
+  - Title format matches the mandated pattern with a sensible descriptive prefix ('Product
+    Launch Plan')
   weaknesses:
-  - Vertical grid lines (panel.grid.major.x) use full-opacity INK color at linewidth=0.25
-    instead of a translucent/alpha-blended token — this renders bolder than the style
-    guide's 'subtle, opacity 15-25%' grid guidance. Switch to a faint rgba-equivalent
-    (e.g. INK at ~15-20% alpha, or a fixed light-gray) so the gridlines recede behind
-    the task bars.
-  - Legend key labels sit very close to their color swatches (legend.text only has
-    a right margin, none on the left/internal side) — add a small left margin or bump
-    legend.spacing.x so each swatch and its label have clearer breathing room.
-  - 'Design Excellence reads as a well-configured default rather than a stand-out
-    design: consider a secondary encoding (e.g., subtle alpha for completed vs. planned
-    tasks) or a stronger typographic contrast between title and chrome to push past
-    ''good'' into publication-level polish.'
-  - Library Mastery is generic — the implementation doesn't yet showcase a truly ggplot2-distinctive
-    feature beyond geom_segment (e.g., facet_wrap by workstream as small multiples,
-    or geom_rect with alpha for in-task progress shading) that would be harder to
-    replicate identically in another library.
+  - Legend order (Design, Discovery, Engineering, Launch — alphabetical factor default)
+    doesn't match the top-to-bottom visual flow of the chart (Discovery -> Design
+    -> Engineering -> Launch), which slightly undercuts the narrative read; set explicit
+    factor levels on workstream in project order so the legend mirrors the chart flow
+  - X-axis title 'Timeline' is generic — 'Project Timeline' or 'Schedule' would carry
+    a touch more context without adding length
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Product Launch Plan · gantt-basic · r · ggplot2 · anyplot.ai" in dark ink at top, "Workstream" legend row with 4 color swatches (Design/Discovery/Engineering/Launch) below it, dark tick labels for 13 task names on the y-axis, dark "Timeline" x-axis title, secondary-gray monthly tick labels (Feb 2026 - Jul 2026), thin dark vertical gridlines at each month boundary, a dashed gray vertical "Today" line with a small "Today" text label above the bars.
-      Data: Horizontal rounded bar segments per task, colored by workstream — Design=brand green #009E73, Discovery=lavender, Engineering=blue, Launch=ochre — all bars clearly separated with even vertical spacing.
-      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Dark title "Product Launch Plan · gantt-basic · r · ggplot2 · anyplot.ai" is clearly legible; legend ("Workstream": Design, Discovery, Engineering, Launch) reads cleanly in dark ink against the light background; x-axis month/year tick labels (Feb 2026 - Jul 2026) and y-axis task names (13 tasks, e.g. "Market research", "General availability") are all dark and fully readable; subtle vertical gridlines are visible without competing with data; the dashed "Today" line and its label read clearly in muted ink-soft gray.
+      Data: First categorical series (Design, alphabetically first) renders in brand green #009E73; Discovery is lavender, Engineering is blue, Launch is ochre/tan — consistent with the Imprint palette in canonical order. Elapsed portions of in-progress/past tasks (Market research, Backend architecture, the pre-today slice of API development/Frontend build) render at full opacity; not-yet-started or not-yet-reached portions render as a lighter alpha-0.35 wash, producing a clear "progress to date" read.
+      Legibility verdict: PASS — no light-on-light or illegible text found; no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend layout, now rendered in light ink (#F0EFE8) for primary text and light gray (#B8B7B0) for tick labels and the "Today" annotation; monthly gridlines now light-gray instead of dark, correctly flipped for contrast against the dark surface.
-      Data: Same four bar colors as the light render (brand green, lavender, blue, ochre) — confirmed identical across both themes; only the chrome (background, text, grid) flipped.
-      Legibility verdict: PASS — all text is light-colored and clearly readable against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and legend text render in light off-white/gray and are clearly legible against the dark background; axis tick labels (month/year and task names) render in a soft light gray, fully readable; gridlines are faint but visible; the dashed "Today" line and label are light gray, easily distinguishable from the dark background.
+      Data: Data colors are pixel-identical to the light render — same green/lavender/blue/ochre categorical hues and the same alpha-based progress-shading contrast (solid vs. faded bars for elapsed vs. remaining task duration). Only chrome (background, ink, grid) flipped between renders, as required.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text and data elements are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,79 +58,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable in both themes;
-          title occupies ~55-60% of width, well within range.
+        comment: All titles, axis labels, tick labels, and legend text are explicitly
+          sized and clearly readable in both themes; no dark-on-dark or light-on-light.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No real overlap, but legend labels sit very close to their color
-          swatches with minimal padding.
+        comment: No collisions between text, bars, legend, or the Today annotation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments (linewidth=7) are well-sized for 13 tasks; rounded caps
-          read clearly as Gantt bars.
+        comment: Bar thickness (linewidth=7) and rounded caps are well-suited to 13
+          tasks; alpha-based progress shading is clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4-category Imprint palette is CVD-safe; categories also separated
-          spatially by row, not relying on hue alone.
+        comment: Green/lavender/blue/ochre categorical hues are distinct; no red-green-only
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot area uses a healthy majority of the canvas,
-          legend integrated compactly at top.
+        comment: Canvas gate passed (3200x1800); good proportions, nothing cut off,
+          title well within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Timeline'' x-axis title plus %b %Y date formatting and descriptive
-          task names on the y-axis.'
+        comment: Title is descriptive with the mandated suffix; x-axis dates are clearly
+          formatted.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical color (Design) = #009E73, remaining 3 categories
-          follow canonical Imprint order; identical data colors across both theme-correct
-          renders.'
+        comment: 'First categorical series is #009E73; multi-series follows Imprint
+          canonical order; backgrounds match #FAF8F1/#1A1A17; both renders theme-correct.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Well-configured beyond bare defaults (rounded bar caps, compact top
-          legend), but colors/typography follow the mandated style guide closely rather
-          than showing extra custom flourish.
+        passed: true
+        comment: Progress-to-date alpha shading is a genuinely distinctive, professional
+          touch beyond a default Gantt bar.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, minor grid off, generous whitespace, but the major
-          x-gridlines use full-opacity ink rather than a subtle alpha token, making
-          them more prominent than intended.
+        passed: true
+        comment: Minimal theme, no y-gridlines, subtle x-gridlines, generous row spacing
+          and whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: The 'Today' reference line plus workstream color-coding creates a
-          clear before/after story, but there is no additional emphasis (e.g., progress-within-task)
-          beyond that.
+        passed: true
+        comment: Today line + progress shading create a clear focal point, but legend
+          order (alphabetical) doesn't mirror the chart's top-to-bottom workstream
+          flow, slightly undercutting the narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart via horizontal geom_segment bars.
+        comment: Correct horizontal Gantt bar chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal bars, date-formatted x-axis, category color coding, logical
-          chronological task order, 'Today' vertical line, adequate bar spacing —
-          all present.
+        comment: Category color-coding, current-date line, logical ordering, and clear
+          date formatting all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=start/end dates, y=task correctly assigned; all 13 tasks visible.
+        comment: x=start/end dates, y=task, full date range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          the 4 workstream categories.
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match workstream categories.
     data_quality:
       score: 15
       max: 15
@@ -181,22 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows overlapping tasks within and across workstreams, varying durations,
-          sequential dependencies.
+        comment: Shows durations, overlaps, category grouping, current-date reference,
+          and progress state.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral product-launch project plan (Discovery/Design/Engineering/Launch
-          phases).
+        comment: Plausible, neutral product-launch project plan.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Task durations (2-7 weeks) and chronological sequencing are all logically
-          consistent with a real project plan.
+        comment: 13 tasks over ~6 months, within the 5-30 task spec range and realistic
+          durations.
     code_quality:
       score: 10
       max: 10
@@ -206,34 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Single flat script: imports, theme tokens, data, plot, save.'
+        comment: No functions or classes; flat pipeline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present; data is a deterministic tribble.
+        comment: set.seed(42) present; data is otherwise static/deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, and ragg are all actually used; no unused imports.
+        comment: dplyr, ragg, and scales (via alpha()) are all actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering, no fake interactivity.
+        comment: Appropriate complexity, no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave/ragg::agg_png, current ggplot2
-          API (linewidth, not size).
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct canvas size.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -241,25 +224,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_segment + lineend="round" is the standard idiomatic ggplot2
-          technique for Gantt-style bars; clean scale_x_date/scale_y_discrete usage.
+        comment: Idiomatic geom_segment-as-Gantt-bar pattern, scale_x_date, guide_legend
+          override.aes.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: guide_legend(override.aes=...) is a ggplot2-specific convenience,
-          but overall the approach could be replicated in most grammar-of-graphics-style
-          libraries with minor changes.
-  verdict: REJECTED
+        passed: true
+        comment: Layered geom_segment with alpha overlay for progress-to-date is a
+          creative, non-generic use of the grammar of graphics.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   - custom-legend
-  patterns: []
+  patterns:
+  - data-generation
   dataprep:
   - time-series
   styling:
-  - minimal-chrome
-  - grid-styling
+  - alpha-blending
+  - publication-ready
