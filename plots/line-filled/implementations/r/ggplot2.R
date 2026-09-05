@@ -40,10 +40,10 @@ p <- ggplot(df, aes(x = day, y = page_views)) +
   geom_area(fill = BRAND, alpha = 0.35) +
   geom_hline(yintercept = avg_views, linetype = "dashed", color = INK_SOFT, linewidth = 0.4) +
   geom_line(color = BRAND, linewidth = 1.4) +
-  geom_point(color = BRAND, size = 1.3, alpha = 0.85) +
-  annotate("point", x = peak_day, y = peak_views, size = 3, color = BRAND) +
+  geom_point(color = BRAND, size = 1.8, alpha = 0.85) +
+  annotate("point", x = peak_day, y = peak_views, size = 3.5, color = BRAND) +
   annotate(
-    "text", x = peak_day, y = peak_views, hjust = peak_hjust, vjust = -1,
+    "text", x = peak_day, y = peak_views, hjust = peak_hjust, vjust = -0.8,
     label = sprintf("Peak: %s views (day %d)", scales::label_comma()(round(peak_views)), peak_day),
     color = INK, size = 3
   ) +
@@ -53,7 +53,8 @@ p <- ggplot(df, aes(x = day, y = page_views)) +
     color = INK_SOFT, size = 2.6
   ) +
   scale_x_continuous(breaks = seq(0, 30, by = 5)) +
-  scale_y_continuous(labels = scales::label_comma(), limits = c(0, NA), expand = expansion(mult = c(0, 0.14))) +
+  scale_y_continuous(labels = scales::label_comma(), limits = c(0, NA), expand = expansion(mult = c(0, 0.2))) +
+  coord_cartesian(clip = "off") +
   labs(title = title_text, x = "Day of Month", y = "Page Views") +
   theme_minimal(base_size = 8) +
   theme(
