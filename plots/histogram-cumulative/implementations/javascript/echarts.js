@@ -52,6 +52,35 @@ const cumulativePct = counts.map((c) => {
   return Number(((running / processingTimes.length) * 100).toFixed(1));
 });
 
+// Evenly spaced round-number tick labels (every 10 minutes) instead of the
+// raw, irregular bin-edge values.
+const maxRounded = Math.ceil(maxVal / 10) * 10;
+const tickLabelByIndex = new Map();
+for (let v = 10; v <= maxRounded; v += 10) {
+  const idx = Math.max(
+    0,
+    Math.min(binCount - 1, Math.round((v - minVal) / binWidth) - 1)
+  );
+  tickLabelByIndex.set(idx, String(v));
+}
+
+// Interpolate the median processing time (the 50th-percentile crossing) so
+// it can be called out directly on the curve.
+const half = processingTimes.length / 2;
+let cumBefore = 0;
+let medianBinIndex = binCount - 1;
+let medianTime = maxVal;
+for (let i = 0; i < binCount; i++) {
+  const cumAfter = cumBefore + counts[i];
+  if (cumAfter >= half) {
+    medianBinIndex = i;
+    const fraction = counts[i] === 0 ? 0 : (half - cumBefore) / counts[i];
+    medianTime = minVal + (i + fraction) * binWidth;
+    break;
+  }
+  cumBefore = cumAfter;
+}
+
 // --- Init ---------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -77,7 +106,12 @@ chart.setOption({
     nameLocation: "middle",
     nameGap: 50,
     nameTextStyle: { color: t.ink, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 13, interval: 1 },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 13,
+      interval: (index) => tickLabelByIndex.has(index),
+      formatter: (value, index) => tickLabelByIndex.get(index) ?? "",
+    },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false },
@@ -102,6 +136,33 @@ chart.setOption({
       data: cumulativePct,
       barWidth: "88%",
       itemStyle: { color: t.palette[0], borderRadius: [3, 3, 0, 0] },
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          color: t.inkSoft,
+          fontSize: 12,
+          formatter: "50th percentile",
+          position: "insideStartTop",
+        },
+        data: [{ yAxis: 50 }],
+      },
+      markPoint: {
+        symbol: "circle",
+        symbolSize: 14,
+        itemStyle: { color: t.ink, borderColor: t.pageBg, borderWidth: 2 },
+        label: {
+          show: true,
+          color: t.ink,
+          fontSize: 13,
+          fontWeight: 600,
+          position: "top",
+          distance: 12,
+          formatter: `Median ≈ ${medianTime.toFixed(0)} min`,
+        },
+        data: [{ coord: [medianBinIndex, cumulativePct[medianBinIndex]] }],
+      },
     },
   ],
 });
