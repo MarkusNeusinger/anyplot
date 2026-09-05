@@ -1,0 +1,255 @@
+library: makie
+language: julia
+specification_id: hive-basic
+created: '2026-09-05T05:30:59Z'
+updated: '2026-09-05T05:42:40Z'
+generated_by: claude-sonnet
+workflow_run: 33946809455
+issue: 1879
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Radial position-encodes-degree is now explicitly communicated via the caption
+    "position ∝ degree (center = low, tip = high)", closing the prior review's biggest
+    gap — the hive-plot's defining property is now legible to the viewer
+  - Edge weight (the spec's optional data field) is now visualized through both line
+    width (0.8–2.2) and opacity (0.14–0.48), with weak edges drawn first and strong
+    edges drawn last on top — a deliberate rendering-order choice that reduces clutter
+  - Imprint palette correctly applied (green Core, lavender Utility, blue Interface)
+    with identical data colors across both themes; theme-adaptive PAGE_BG/INK/INK_SOFT
+    chrome tokens are correctly threaded through title, legend, axis-tip labels, and
+    caption
+  - Clean minimal chrome (hidden spines/decorations, DataAspect() radial layout, subtle
+    structural axis reference lines) with idiomatic modern Makie API (size, not deprecated
+    resolution)
+  weaknesses:
+  - Edge density is still visually dense in the base region between the Utility and
+    Interface axes — many overlapping bezier curves converge there; the weight-based
+    width/alpha helps but individual weak connections remain hard to trace visually
+  - Uses only standard Makie primitives (scatter!, lines!, text!) with no library-distinctive
+    features (recipes, Observables, GridLayout composition) — functionally this could
+    be replicated in most plotting libraries with minor syntax changes
+  - No redundant encoding (e.g. size or a subtle radial tick) reinforces the degree-position
+    mapping beyond the caption text — a reader who misses the caption has no other
+    visual cue
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "hive-basic · julia · makie · anyplot.ai" centered at top, ~55-60% of plot width, fully readable against the light background. Legend top-left with three color swatches (Core/Utility/Interface) in dark ink text — readable. Axis tip labels ("Core", "Utility", "Interface") in dark ink, clearly legible. New caption "position ∝ degree (center = low, tip = high)" in soft ink below the plot, clearly readable and correctly explaining the radial encoding. No axis ticks/decorations (intentionally hidden per hive-plot convention).
+      Data: Three radial arms at 90°/210°/330° with 12 nodes each, colored by category — Core=brand green #009E73, Utility=lavender, Interface=blue — matching the Imprint palette with green as the first series. Nodes have a light stroke matching the page background. Bezier-curve edges connecting cross-axis node pairs now visibly vary in width and opacity by weight — faint thin lines for weak dependencies, bolder lines for strong ones. Edge density is still fairly high near the triangle's base (Utility–Interface), causing some visual clutter there, but the weight encoding gives structure to the density.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend text, axis tip labels, and the new caption are all rendered in light ink (near-white), clearly legible against the dark background — no dark-on-dark issues observed. Legend swatches keep the same three colors as the light render.
+      Data: Node and edge colors are visually identical to the light render (green/lavender/blue nodes, muted gray weight-varying edges) — only the chrome (background, text ink) flipped, confirming theme-adaptive tokens were applied correctly. Brand green remains clearly visible on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, legend, axis-tip labels, and the new caption are all clearly
+          readable in both themes with explicitly set font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; edge curves overlap each other near the base
+          but that is edge-density clutter, not text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes clearly visible with stroke outline; weight-scaled edge width/alpha
+          helps but dense edge crossings near the base still make individual weak
+          connections harder to trace
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three hues (green/lavender/blue) are distinct and not reliant on
+          red-green contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas suits the 3-fold radial symmetry; nothing
+          clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct, and the new caption now explicitly communicates that
+          radial position encodes node degree
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; both
+          renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Bezier-curve edges bowed toward origin, weight-driven width/opacity,
+          and muted-gray transparency show deliberate polish beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/decorations hidden, generous whitespace, but the tangled edge
+          mass near the base still reduces overall refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Caption now explains the degree-based ordering and edge-weight encoding
+          adds a second data dimension, giving the viewer real visual hierarchy to
+          read structural comparisons
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implements a hive plot with radial axes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 2-3 axes (3 used), degree-based position encoding now explained,
+          edge weight now visualized, edge transparency for density all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Axis assignment by module type, radial position by degree — correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match axis categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers axes, node degree encoding (now explained), cross-axis edges,
+          and the optional edge weight field is now visualized via width/opacity
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software module dependency network (Core/Utility/Interface) is plausible
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 36 nodes, balanced 12-per-axis, within the spec's 20-100 node guidance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-level script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity for the layout and
+          weight-encoding math
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current Makie API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses current `size` kwarg (not deprecated `resolution`), DataAspect(),
+          hidedecorations!/hidespines!, axislegend
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Solid but standard Makie primitives (scatter!, lines!, text!); no
+          use of more distinctive Makie-specific features (recipes, Observables, GridLayout
+          composition)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

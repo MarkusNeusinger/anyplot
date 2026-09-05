@@ -1,0 +1,240 @@
+library: echarts
+language: javascript
+specification_id: indicator-macd
+created: '2026-09-05T05:40:14Z'
+updated: '2026-09-05T05:52:23Z'
+generated_by: claude-sonnet
+workflow_run: 33947506056
+issue: 3181
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses resolved: Histogram legend swatch now uses t.palette[0]
+    (matches plotted green) instead of the mismatched t.ink, and Library Mastery is
+    strengthened with markPoint crossover annotations plus a custom axisPointer/valueFormatter
+    tooltip'
+  - Crossover triangles (bullish green up, bearish red down) computed from histogram
+    sign flips give the chart a genuine focal point tied directly to the spec's 'identify
+    entry/exit points' application
+  - Semantically correct trading colors (green/red histogram polarity, blue/ochre
+    MACD/signal lines) match the spec's explicit color guidance and the style guide's
+    finance semantic-exception carve-out
+  - Deterministic seeded data generation, theme-adaptive chrome, and correct canvas/mount-node
+    contract are all intact from the previous attempt
+  weaknesses:
+  - Design polish remains functional-but-plain outside the new crossover markers -
+    could still add subtle divergence-zone shading or emphasis states to further strengthen
+    DE-01/DE-02
+  - Data is a synthetic LCG price walk labeled 'MSFT daily close' rather than genuinely
+    sourced data (informational only, consistent with every synthetic-data implementation
+    in this catalog)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec
+      Chrome: Centered bold title "indicator-macd · javascript · echarts · anyplot.ai" with subtitle noting 12/26/9 parameters; legend (MACD, Signal, Histogram) below title; Histogram swatch is now solid green (fixed from attempt-1's mismatched black ink swatch); rotated date labels on X-axis; "MACD value" label on Y-axis. All readable, dark ink on light background.
+      Data: MACD line blue (palette[2]), Signal line ochre/gold (palette[3]), Histogram bars green (positive, palette[0]) / red (negative, palette[4]) straddling a dashed zero line. New crossover triangle markers (green up / red down) at MACD-signal crossover points.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec
+      Chrome: Identical layout to light render; title, subtitle, legend, axis labels, gridlines all flip to light-colored chrome and remain fully legible. No dark-on-dark failures. Legend Histogram swatch matches plotted green in this render too.
+      Data: MACD (blue), Signal (ochre), Histogram (green/red), and crossover triangles are pixel-identical in hue to the light render - only chrome adapted, confirming palette invariance.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axis text, or crossover markers
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars/lines clearly visible for 120 points; crossover triangles appropriately
+          sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Histogram polarity reinforced by position relative to zero line,
+          not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is 3200x1800, nothing clipped, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled MACD value, dates self-explanatory on X
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue/ochre and green/red are a justified finance semantic exception;
+          attempt-1 legend swatch mismatch is now fixed
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean styling, now with a distinctive crossover-annotation touch
+          beyond baseline defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Y-axis line/ticks hidden, subtle grid, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Crossover triangles give a clear focal point tied to the spec's entry/exit
+          application
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct MACD chart: line + line + histogram'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: MACD line, signal line, histogram, zero reference line, 12/26/9 parameters
+          noted, plus bonus crossover markers
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = date, Y = MACD value; full series range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches exactly; legend swatches now all correctly reflect
+          plotted colors
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All three MACD components plus zero line and crossover annotations
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible price walk and MACD magnitudes; synthetic data labeled
+          as MSFT daily close
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MACD/signal range sensible for a ~$182 base price
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions justified by EMA/MACD calculation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only provided globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: markLine, per-value bar itemStyle, axisPointer cross with valueFormatter,
+          emphasis.focus series
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markPoint crossover annotations computed from histogram sign flips
+          is genuinely ECharts-idiomatic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - time-series
+  dataprep:
+  - rolling-window
+  styling:
+  - publication-ready

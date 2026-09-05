@@ -1,0 +1,266 @@
+library: chartjs
+language: javascript
+specification_id: indicator-macd
+created: '2026-09-05T05:32:42Z'
+updated: '2026-09-05T05:46:56Z'
+generated_by: claude-sonnet
+workflow_run: 33947282713
+issue: 3181
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Directly resolves all four attempt-1 weaknesses: the zero reference line now
+    uses t.inkSoft (borderDash [6,4]) instead of the grid token so it reads as an
+    intentional crossover cue, the Y-axis title gained a unit qualifier (''MACD Value
+    ($)''), and a new distinctive-feature/storytelling gap is closed via a native
+    crossover annotation.'
+  - New crossoverPlugin (afterDatasetsDraw hook) computes and marks the single strongest
+    bullish/bearish crossover with a circle + label directly on the MACD line — genuine
+    data storytelling that guides the viewer to the chart's key insight, and a Chart.js-idiomatic
+    technique (native plugin lifecycle, no external annotation dependency).
+  - 'Idiomatic mixed-chart composition preserved: one bar dataset (histogram) plus
+    three line datasets (zero line, MACD, signal) sharing a single canvas/scale.'
+  - 'Both renders remain fully theme-correct: warm off-white/near-black backgrounds,
+    all chrome theme-adaptive, and the four data colors (green/red/blue/ochre) are
+    pixel-identical between light and dark.'
+  - Deterministic reproducibility via fixed-seed LCG (seed=42) plus a real EMA computation
+    chain (emaFast/emaSlow/macdLine/signalLine/histogram).
+  - 'Data shows genuine feature coverage: multiple bullish/bearish crossovers of varying
+    magnitude across choppy and trending regimes, not a repeated pattern.'
+  weaknesses:
+  - Only the single strongest crossover is annotated; the annotation marker itself
+    has no legend entry, so a first-time viewer must infer its meaning from the label
+    text alone rather than a swatch — minor DE-03 polish opportunity, not blocking.
+  - The custom draw plugin is a solid Chart.js-idiomatic technique, but a tooltip
+    callback surfacing all three component values together (histogram/MACD/signal)
+    at one index would have pushed Library Mastery further into 'showcases the library'
+    territory.
+  - Visual refinement is still 'y-grid-only, no frame' rather than a more deliberate
+    spine/border treatment — cosmetic only.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "indicator-macd · javascript · chartjs · anyplot.ai" in dark ink, italic grey subtitle "12-day / 26-day EMA convergence-divergence, 9-day signal EMA" beneath it. Legend row (Histogram / MACD (12, 26) / Signal (9)) in dark text with colored point swatches, correctly omitting the non-data zero line. X-axis "Trading Date" and Y-axis "MACD Value ($)" titles in dark ink; tick labels in a softer grey. Y-axis-only horizontal gridlines are subtle. The dashed zero reference line is now a distinct soft-ink dash, readable against the grid. A circled marker with the bold black label "Strongest bullish crossover" annotates the early-March crossover on the MACD line. All text is clearly readable against the light background — no light-on-light issues.
+      Data: Histogram bars alternate #009E73 green (positive) and matte red #AE3030 (negative); MACD line is blue (#4467A3), Signal line is ochre (#BD8233) — matches the mandated Imprint palette assignment with the finance semantic exception.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, subtitle, legend, and axis titles now rendered in light/off-white and soft-grey tones; all clearly visible against the dark background. The annotation label "Strongest bullish crossover" renders in light ink, fully legible — no dark-on-dark failure. Tick labels, axis titles, and legend text are all light-colored and legible.
+      Data: Histogram green/red, MACD blue, and Signal ochre are pixel-identical to the light render — only the chrome (background, text, gridlines, annotation ink) flipped, as required.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability checklist; no dark-on-dark or light-on-light failures found. The zero reference line and new crossover annotation are both legible and theme-adaptive in both renders.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, subtitle 13, legend/ticks
+          14, axis titles 16); readable in both themes, title fits without clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the new crossover
+          annotation label.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars/lines well-sized for 120 points; zero reference line now uses
+          t.inkSoft and is clearly distinct from the ambient grid (fixes attempt-1
+          gap).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Histogram polarity redundantly encoded by bar position, not color
+          alone; MACD/signal use non-red-green hues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis title now includes a unit qualifier ('MACD Value ($)'), addressing
+          attempt-1 feedback.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint palette with finance semantic exception (green/red
+          bull/bear, blue/ochre MACD/signal per spec's own suggestion); theme-correct
+          chrome in both renders.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color choices, explanatory subtitle, and a hand-drawn crossover
+          marker push this clearly above defaults, though not full publication-level
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Y-axis-only grid, generous whitespace — solid but no additional refinement
+          was added this round.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New crossoverPlugin identifies and annotates the strongest bullish/bearish
+          crossover, giving the chart a clear focal point and directly resolving the
+          attempt-1 storytelling gap.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct MACD indicator composition: histogram + MACD line + signal
+          line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero reference line (now clearly visible), distinct MACD/signal colors,
+          bull/bear histogram coloring, and (12,26,9) parameters all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = trading date, Y = MACD value; all series share the correct axis.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          series and correctly omit the non-data zero line.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows multiple crossovers of varying strength and both choppy and
+          trending regimes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible generic stock-price-derived series; neutral and comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Starting price (~182) and resulting MACD swings (-0.9 to 2.0) are
+          realistic for a mid-cap-priced equity.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small helper functions (LCG, EMA, strongestCrossover) are all necessary
+          for the indicator math and annotation; otherwise linear imports/data/plot
+          flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No stray imports; uses only the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a technical indicator with an annotation
+          plugin; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract correctly; animation: false set.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed bar+line chart in one dataset array is Chart.js's recommended
+          combo-chart pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: New native plugin (afterDatasetsDraw canvas hook) marking the strongest
+          crossover is a genuinely Chart.js-idiomatic distinctive feature, resolving
+          the attempt-1 gap.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - grid-styling
