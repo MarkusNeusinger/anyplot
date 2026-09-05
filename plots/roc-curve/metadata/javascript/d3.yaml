@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: roc-curve
 created: '2026-09-05T12:54:58Z'
-updated: '2026-09-05T12:59:10Z'
+updated: '2026-09-05T13:08:29Z'
 generated_by: claude-sonnet
 workflow_run: 33967135923
 issue: 2273
@@ -12,53 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - Correct equal-aspect square canvas (0-1 on both axes) matching the spec's 'equal
-    aspect ratio preferred' note
-  - Diagonal random-classifier reference line present, dashed and labeled, with its
-    own AUC = 0.50
-  - AUC score displayed in the legend for the model curve (AUC = 0.94), satisfying
-    the spec's core requirement
-  - Data generated via a deterministic LCG and a realistic diseased/healthy score-distribution
-    model, then swept into an ROC curve the same way sklearn.metrics.roc_curve constructs
-    one
-  - Theme tokens correctly threaded through chrome (grid, ink, inkSoft) while the
-    data color (t.palette[0]) stays identical between light and dark renders, per
-    the D3 rule
-  - 'Clean idiomatic D3: scales, axis generators, d3.area/d3.line generators, data-join
-    pattern, all font sizes explicitly set'
-  - Legend placed in the bottom-right where the curve's bow toward the top-left leaves
-    it clear of the data — no overlap in either render
+  - 'The multi-model comparison gap from Attempt 1 is fully resolved: three classifiers
+    of clearly varying skill (Strong/Moderate/Weak, AUC 0.94/0.74/0.65), each in its
+    own Imprint color, plus the dashed diagonal random-classifier reference'
+  - Area fill limited to the strongest curve creates a clean single focal point without
+    cluttering the other two curves
+  - Legend is ordered best-to-worst and doubles as a data label for each AUC value,
+    reinforcing the comparison story
+  - Equal-aspect square canvas (0-1 on both axes) preserved from Attempt 1, matching
+    the spec's "equal aspect ratio preferred" note
+  - Theme tokens correctly threaded through all chrome; data colors (t.palette[0..2])
+    are pixel-identical between light and dark renders
+  - 'Clean idiomatic D3: scales, axis generators, d3.area/d3.line generators, explicit
+    font sizes throughout, deterministic per-model LCG data generation'
   weaknesses:
-  - Only a single model curve is shown. The spec tags this plot with the 'comparison'
-    feature and its Notes call out 'distinct colors/styles when comparing multiple
-    models' — the sibling matplotlib implementation for this same spec plots three
-    differently-performing models (Random Forest / Logistic Regression / Decision
-    Tree) to cover that feature. Add 2-3 curves of varying quality (e.g. vary the
-    separation between the diseased/healthy score distributions) using palette[0],
-    palette[1], palette[2], each with its own AUC in the legend, to bring feature
-    coverage up to the standard set by the other implementations of this spec.
-  - 'Design excellence is solid but not distinctive: the area fill under the curve
-    is a nice touch, but there''s no additional visual hierarchy beyond that (e.g.
-    no highlighting of the optimal threshold point, no annotation calling out the
-    AUC gap vs. random). With only one curve, the plot doesn''t yet build the visual
-    story the spec''s ''comparison'' framing invites.'
-  - Distinctive D3 features are minimal — the implementation is fairly generic scale/axis/line-generator
-    usage. Adding a second/third series would also be a natural place to lean on d3.scaleOrdinal
-    against the Imprint palette for more idiomatic multi-series D3 code.
+  - The diagonal random-classifier reference line uses the muted semantic anchor;
+    per the style guide, a reference/baseline line's canonical role is the neutral
+    anchor (same tone as ink/text) rather than muted (reserved for de-emphasized/disabled
+    elements). Minor nuance, not a hard palette violation.
+  - 'Visual refinement is solid but not exceptional: grid and spine treatment follow
+    sensible defaults without extra polish (e.g. no marker at an AUC-optimal threshold,
+    no secondary annotation calling out the comparison).'
+  - Library Mastery usage (ordinal color scale, manual legend rows, line/area generators)
+    is correct and idiomatic but is standard D3 charting, not a feature uniquely difficult
+    to replicate in another declarative JS charting library.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "roc-curve · javascript · d3 · anyplot.ai" centered at top in dark bold text, clearly legible. "False Positive Rate" / "True Positive Rate" axis titles and 0.0-1.0 tick labels in dark ink, all clearly readable. Subtle light-gray gridlines at 0.2 intervals, visible but not dominant.
-      Data: A single green (#009E73) step-shaped ROC curve rising steeply from the origin then flattening toward (1,1), with a light green area fill (alpha ~0.1) beneath it. A gray dashed diagonal line represents the random classifier. A legend in the bottom-right reads "Diagnostic test (AUC = 0.94)" and "Random classifier (AUC = 0.50)", both clearly legible against the background.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "roc-curve · javascript · d3 · anyplot.ai" in bold dark ink; "False Positive Rate" / "True Positive Rate" axis titles and 0.0-1.0 tick labels in dark ink; subtle light gridlines; bottom-right legend box with dark text for the three model entries and muted-gray text for "Random classifier". All clearly legible.
+      Data: Three step-shaped ROC curves - green (Strong classifier, AUC 0.94, with light-green area fill beneath), lavender/pink (Moderate classifier, AUC 0.74), navy blue (Weak classifier, AUC 0.65) - plus a gray dashed diagonal (Random classifier, AUC 0.50). First series confirmed as #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels render in light/off-white text, clearly legible against the dark background. Gridlines are a subtle dark-green-tinted gray, visible but unobtrusive.
-      Data: Same green (#009E73) curve and area fill as the light render — the hex value did not change, only chrome (background, text, grid) flipped, confirming the theme-adaptive token wiring is correct. The gray dashed diagonal reference line reads clearly against the dark surface. Legend text is fully legible; no dark-on-dark or light-on-light failures observed anywhere in either render.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title and axis titles now in light/off-white ink; tick labels light-colored; gridlines subtle light-on-dark; legend box with light text for model entries and lighter muted-gray for "Random classifier". No dark-on-dark failures observed.
+      Data: Same three curves (green/lavender/navy) and area fill as the light render - colors are pixel-identical, confirming only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -70,75 +61,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit (14/15/18/24px); readable in both themes;
-          title comfortably under 90% width
+        comment: All font sizes explicit (14-24px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits clear of the curve's top-left bow; no text collisions
-          in either render
+        comment: No collisions between curves, legend, and axis text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 4px line stroke with subtle area fill is well-suited to the ~300-point
-          step curve
+        comment: Line widths (4px curves, 2.5px diagonal) well suited to 150-point
+          step curves
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line vs. gray dashed reference is CVD-safe; no red-green pairing
+        comment: Good contrast and CVD-safe spacing across green/lavender/blue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas gate passed; balanced margins; nothing cut off
+        comment: Balanced square canvas, legend nested within plot area
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'False Positive Rate' / 'True Positive Rate' labels
+        comment: Descriptive axis titles (rates are inherently unitless)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; identical between themes; backgrounds are
-          theme-correct Imprint tokens'
+        comment: 'First series #009E73; series 2-3 follow canonical Imprint order;
+          theme-correct chrome in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Rounded line caps, area fill, and custom legend show some polish
-          beyond defaults, but overall treatment is a standard single-curve ROC
+        passed: true
+        comment: Area fill spotlight + ordered legend with AUC clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Subtle gridlines and generous whitespace; no visible chartjunk, but
-          no further refinement beyond the basics
+        comment: Subtle grid and L-shaped axis frame, but no extra polish beyond the
+          basics
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: The area fill against the random-classifier diagonal gives a clear
-          focal point, but a single curve underuses the 'comparison' framing the spec
-          invites
+        passed: true
+        comment: Best-to-worst visual cascade reinforced by an ordered, AUC-labeled
+          legend
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,52 +133,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step-function ROC curve
+        comment: Correct ROC curve with diagonal reference
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Diagonal reference + AUC-in-legend present, but no multi-model comparison
-          despite the spec's 'comparison' feature tag and its multi-model note
+        passed: true
+        comment: Multi-model comparison, diagonal, and per-curve AUC all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: FPR on x, TPR on y, both axes span the full 0-1 domain
+        comment: FPR on x, TPR on y, both 0-1
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai';
-          legend labels are descriptive and match the data
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Covers curve + diagonal + AUC but not the multi-model comparison
-          aspect of this plot type
+        passed: true
+        comment: Three models spanning strong/moderate/weak separability
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible diagnostic-test framing with realistic diseased/healthy
-          score separation; neutral subject matter
+        comment: Neutral diagnostic-test classifier scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150/150 sample sizes and resulting AUC = 0.94 are sensible for a
-          decent diagnostic test
+        comment: AUC values and curve shapes are realistic for the stated skill levels
     code_quality:
       score: 10
       max: 10
@@ -201,31 +183,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script; only small deterministic-RNG helper functions
+        comment: Flat script; small helper functions only for deterministic data generation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Per-model seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used, no extraneous imports
+        comment: No extraneous imports; d3 global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake interactivity
+        comment: Clean, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly follows the #container mount-node contract; no animation'
+        comment: Mount-node contract followed correctly
     library_mastery:
       score: 6
       max: 10
@@ -235,24 +217,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper data-join pattern, scales, axis generators, d3.area/d3.line
-          generators
+        comment: Scales, axis generators, line/area generators, ordinal color scale
+          all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Fairly generic single-series usage; no distinctive D3-only techniques
-          (e.g. ordinal scale over multiple series, curve interpolators)
-  verdict: REJECTED
+        comment: Standard multi-series D3 charting; nothing uniquely D3-only
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
