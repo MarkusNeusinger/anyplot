@@ -1,0 +1,243 @@
+library: ggplot2
+language: r
+specification_id: diagnostic-regression-panel
+created: '2026-09-05T00:07:18Z'
+updated: '2026-09-05T00:23:49Z'
+generated_by: claude-sonnet
+workflow_run: 33931171138
+issue: 5242
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Deliberately misspecified regression (quadratic true relationship + heteroscedastic
+    noise) produces textbook-realistic diagnostic patterns in all four panels rather
+    than a clean/uninteresting fit
+  - Cook's-distance contour math (D=0.5 and D=1.0 curves) is correctly derived and
+    both curves are guaranteed visible via the y-axis floor calculation
+  - Influential-point labels (137, 16, 128) are consistently identified and displayed
+    across all four subplots with collision-avoiding nudge + vjust staggering
+  - Theme-adaptive chrome correctly implemented — light/dark renders are pixel-identical
+    in data colors, only chrome flips
+  - Legible even at the 400px mobile-scaled thumbnail in both themes
+  weaknesses:
+  - Densest region of the residual scatter (around fitted ≈ 1500-2000) still shows
+    moderate marker overlap despite alpha=0.6 — could tighten alpha slightly or reduce
+    point size marginally in that regime
+  - Design Excellence is solid but not exceptional — the four-panel layout is functional
+    and clean but doesn't add extra visual hierarchy beyond the red/green/blue/amber
+    color coding
+  - LOESS smoother is a fairly standard technique available in most plotting libraries;
+    the ggplot2-distinctive element is really the grid-graphics composition (arrangeGrob/textGrob),
+    which could be leaned into further for a stronger Library Mastery showing
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title "diagnostic-regression-panel · r · ggplot2 · anyplot.ai" and all four subplot titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage"), axis titles, and tick labels render in dark ink — all clearly readable
+      Data: green (#009E73) observation points, matte-red (#AE3030) top-3 Cook's-distance outliers (labeled 137, 16, 128), blue (#4467A3) LOESS trend line, amber (#DDCC77) Cook's-distance contours labeled D=0.5/D=1.0 in panel 4
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: title, subplot titles, axis titles, and tick labels flip to light ink (#F0EFE8/#B8B7B0); grid lines flip to faint light lines; caption text flips to light gray — no dark-on-dark failures found
+      Data: colors are identical to the light render (green, matte-red, blue, amber) — confirmed no shift
+      Legibility verdict: PASS
+
+    Both renders additionally checked at the 400px mobile-scaled thumbnail — title, subplot titles, axis labels, tick labels, and the D=0.5/D=1.0 contour labels all remain legible in both themes. No AR-09 edge clipping found in either render; no canvas-dimension gate file present (2400x2400 confirmed).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable at full res and 400px mobile scale
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Prior repair's vjust-staggering + x-nudge eliminated label clustering
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Point size/alpha appropriate for n=150, some overplotting remains
+          in dense mid-range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green outlier distinction reinforced by size and text labels,
+          not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); balanced composition, no cut-off
+          content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint palette usage, theme-correct chrome, identical data
+          colors across themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate color semantics, clean composition, above library-default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/ticks removed, subtle grid, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color/size hierarchy guides reader to outliers, stops short of explicit
+          insight annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 diagnostic panel replicating R's plot(lm)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four subplots with required elements present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned in every panel
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, caption legend matches color roles
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Misspecified fit shows realistic non-linearity, heteroscedasticity,
+          and influential points
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Apartment rent vs floor area is real, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible real-world floor area and rent values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imported packages used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png to plot-{THEME}.png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level API usage including grid-graphics composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Grid-graphics composition is distinctive; loess smoother itself is
+          generic
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - gridextra
+  techniques:
+  - subplots
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - publication-ready
+  - alpha-blending
