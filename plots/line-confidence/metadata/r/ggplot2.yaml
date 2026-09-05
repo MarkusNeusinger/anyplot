@@ -1,0 +1,236 @@
+library: ggplot2
+language: r
+specification_id: line-confidence
+created: '2026-09-05T06:59:44Z'
+updated: '2026-09-05T07:23:07Z'
+generated_by: claude-sonnet
+workflow_run: 33951188386
+issue: 2007
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-confidence/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'The Attempt-2 rendering bug is fully fixed: the "Weekly peak" marker and the
+    "95% CI: ±1,611" arrow/label now render correctly in both themes'
+  - Confidence band alpha (0.25) sits well inside the spec's 0.2-0.4 range and stays
+    readable in both themes
+  - Band width correctly grows with forecast horizon (sqrt-of-horizon uncertainty),
+    giving an honest visual cue of increasing forecast risk
+  - Theme tokens are threaded through consistently - data colors identical between
+    light/dark, only chrome flips
+  - 'Clean, uncluttered layout: spines removed, only a horizontal y-axis grid retained,
+    comma-formatted y-axis ticks'
+  - The two annotations give the chart concrete narrative anchors (a landmark peak,
+    a quantified final interval width) instead of leaving the story purely implicit
+  weaknesses:
+  - 'The "95% CI: ±1,611" annotation text sits directly on top of the translucent
+    confidence band rather than in clear whitespace - still legible in both themes,
+    but move it fully outside the band for cleaner separation from the data-ink'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target
+      Chrome: Title "line-confidence · r · ggplot2 · anyplot.ai" in dark ink top-left; axis titles "Forecast Date" / "Daily Active Users" in dark ink; tick labels in soft gray; two-entry legend ("Forecast mean", "95% prediction interval") on an off-white card above the plot; only horizontal y-axis gridlines shown. Dashed vertical "Weekly peak" reference line and label now render near the left edge; double-headed arrow with "95% CI: ±1,611" label now renders near the right edge. All chrome text confirmed readable.
+      Data: Brand-green (#009E73) forecast line with a translucent light-green confidence band (alpha≈0.25) that widens left-to-right; first (and only) series correctly uses Imprint position 1.
+      Legibility verdict: PASS (minor note: the "95% CI: ±1,611" text overlaps the confidence band polygon but remains legible)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target
+      Chrome: Title and axis titles in light ink; tick labels in softer light gray; legend card uses dark elevated background (#242420) with light text; gridlines in pale ink. Both the "Weekly peak" marker and the "95% CI: ±1,611" arrow/label render correctly here as well, in the same theme-adaptive INK/INK_SOFT tokens. No dark-on-dark failures found anywhere (title, axis labels, ticks, legend, annotations all pass).
+      Data: Confirmed pixel-identical brand-green line and confidence-band shape/width progression to the light render - only chrome flipped.
+      Legibility verdict: PASS (same minor CI-label/band overlap as light render, still legible)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at correct proportions
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: '"95% CI: ±1,611" label overlaps the confidence band; still legible,
+          minor deduction'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line and band clearly distinguishable, appropriate for 90-point series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue series, adequate contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; title ~35% width; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis titles: Forecast Date, Daily Active Users'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; theme-correct backgrounds in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Working narrative annotations add real polish; CI-label/band overlap
+          keeps it from standout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-axis-only grid, generous whitespace, styled
+          legend card
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Weekly-peak landmark and quantified ±1,611 CI-width callout now render
+          and give concrete narrative anchors
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_line + geom_ribbon composition matches spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Prominent line, alpha=0.25 band (within 0.2-0.4), legend, gridlines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=date, y=mean, band=lower/upper, all 90 points shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Trend, weekly seasonality, and sqrt-horizon-growing uncertainty all
+          present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: DAU forecast is a plausible, neutral business metric
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 48k-65k DAU range and SE growth are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, tibble, scales, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Attempt-2 dead-code bug fixed; all annotation layers now render as
+          intended
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Clean geom_ribbon + geom_line with scale_*_manual legend naming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_vline, annotate() callouts, and geom_segment arrow now demonstrate
+          annotation layering beyond baseline idiom
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
