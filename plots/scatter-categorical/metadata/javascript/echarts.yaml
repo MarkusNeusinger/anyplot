@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: scatter-categorical
 created: '2026-09-05T13:27:09Z'
-updated: '2026-09-05T13:30:46Z'
+updated: '2026-09-05T13:40:49Z'
 generated_by: claude-sonnet
 workflow_run: 33968764488
 issue: 2597
@@ -12,132 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/echarts/plot-dark.html
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - 'First categorical series is exactly #009E73 with the next two positions (#C475FD,
-    #4467A3) following canonical Imprint order, identical across both renders'
-  - Explicit font sizes set for title, legend, axis names, and tick labels; all text
-    is clearly readable in both light and dark themes with no dark-on-dark or light-on-light
-    failures
-  - Data shows a realistic, neutral botanical scenario (three plant groups with positive
-    leaf length/width correlation) with genuine cluster overlap between two groups
-    and clear separation of the third — good feature coverage for a categorical scatter
-  - Deterministic fixed-seed LCG generates identical point clouds across both theme
-    renders, correctly following the browser-harness reproducibility pattern for JavaScript
-    libraries
-  - 'Clean idiomatic ECharts usage: single chart.setOption call, animation disabled,
-    no explicit init size/devicePixelRatio, correct mount-node contract'
+  - 'All attempt-1 weaknesses addressed: theme-adaptive marker borders (itemStyle.borderColor:
+    t.pageBg) now separate overlapping points, emphasis.focus:"series" was added,
+    a markArea "Overlap zone" annotation now visually calls out the Marsh/Alpine overlap
+    band, and marker size/opacity were tuned down (22→18px, 0.8→0.72) to reduce occlusion'
+  - 'First categorical series is exactly #009E73 with canonical Imprint order at positions
+    2-3, identical data colors across both renders'
+  - All text (title, legend, axis names, tick labels) is legible in both themes with
+    no dark-on-dark or light-on-light failures
+  - 'Clean, idiomatic single-setOption ECharts usage with animation: false and correct
+    mount-node contract; deterministic fixed-seed LCG data generation'
+  - The markArea overlap-zone shading and "Overlap zone" label render subtly but legibly
+    in both themes and add genuine data storytelling on top of the correlation pattern
   weaknesses:
-  - Scatter markers have no white/theme-adaptive border (itemStyle.borderColor + borderWidth)
-    — the style guide calls for edge highlighting especially where points overlap,
-    and the Marsh Iris / Alpine Iris clusters overlap heavily in the 5.5-6.5cm length
-    range, making individual points hard to distinguish there
-  - 'Design Excellence is at well-configured-default level: no custom typography (font
-    family unchanged from ECharts default), no visual-hierarchy device (e.g. emphasis
-    on the overlap zone, size/opacity variation, or a brief annotation) to guide the
-    viewer toward the correlation story — add a subtle refinement pass (lighter axis
-    line, slightly larger/emphasized markers for one group, or a short annotation
-    calling out the correlation) to lift above generic defaults'
-  - No library-distinctive ECharts feature used (e.g. visualMap-driven emphasis, tooltip
-    formatter tuned for the static PNG story, or emphasis.focus for series highlighting)
-    — usage is generic and would look the same in any charting library
-  - Marker size (symbolSize 22) is on the larger side for 135 total points with three
-    overlapping series; consider trimming slightly and/or lowering opacity further
-    in the dense overlap band to reduce occlusion
+  - Aesthetic polish is still close to a well-configured default beyond the overlap-zone
+    callout — no additional typography/visual-hierarchy device lifts it further (DE-01
+    has headroom)
+  - markArea + emphasis.focus + a tooltip formatter are nice touches but are fairly
+    common ECharts patterns; a more distinctive feature (e.g. visualMap-driven emphasis
+    or custom graphic elements) would differentiate further (LM-02)
+  - Only two continuous dimensions plus one categorical (color) are encoded; the spec's
+    optional suggestion to vary marker shape by group is not used, which would add
+    a second, color-independent channel for group distinction
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-categorical · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable; legend below title with three swatches (Sepal Iris, Marsh Iris, Alpine Iris) in dark text; axis names "Leaf Length (cm)" / "Leaf Width (cm)" and numeric tick labels in dark/soft-dark ink, all legible; subtle light-gray gridlines on both axes.
-      Data: Sepal Iris cluster in brand green (#009E73) at lower-left, Marsh Iris in lavender/purple in the middle band, Alpine Iris in blue at upper-right; markers are semi-transparent (opacity 0.8) circles, ~22px, showing a clear overall positive correlation between leaf length and width with a visible overlap zone between the purple and blue clusters around 5.5–6.5 cm length.
-      Legibility verdict: PASS — no text is unreadable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "scatter-categorical · javascript · echarts · anyplot.ai" centered at top in dark ink; legend below lists three swatches (Sepal Iris green, Marsh Iris lavender, Alpine Iris blue-gray) in dark text; axis names "Leaf Length (cm)" / "Leaf Width (cm)" and numeric tick labels are dark/soft-dark ink; subtle light-gray gridlines; a light-gray "Overlap zone" shaded band (leaf length 5.5-6.5cm) with a legible label near the x-axis.
+      Data: Three color-coded clusters (green lower-left, lavender mid-band, blue-gray upper-right) show a clear positive correlation between leaf length and width, with genuine overlap between the lavender and blue-gray clusters in the shaded band. Markers now carry a thin theme-adaptive (page-background-colored) border/halo that visibly separates individual overlapping circles even where several points of the same or different color touch.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, legend text, axis names, and tick labels rendered in light ink (near-white/soft-light), clearly legible against the dark background; gridlines are faint light lines, subtle but visible; no dark-on-dark text anywhere.
-      Data: Same three colors as the light render — green, lavender/purple, blue — confirmed identical positions and hues; only the chrome (background, text, grid) flipped to the dark theme as expected.
-      Legibility verdict: PASS — all chrome elements are clearly readable against the dark background, no dark-on-dark failures observed.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, legend text, axis names, and tick labels are rendered in light ink, clearly legible; gridlines are faint but visible; the "Overlap zone" band and label are legible against the dark surface (slightly darker shaded rectangle with light-gray text).
+      Data: Colors are confirmed identical to the light render (same green/lavender/blue-gray hues and point positions) — only chrome flipped. The marker halo border is visible here too (a subtle darker/page-bg-colored ring), separating overlapping points in the dense zone.
+      Legibility verdict: PASS — no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, legend/axis-name 16, ticks
-          14), readable in both themes, title comfortably centered at well under 90%
-          width
+        comment: Title, legend, axis names, and ticks all legible in both themes;
+          explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-to-text or text-to-data overlap; legend, title, and axes
-          are all clear of collisions
+        comment: No text collides with other text, data, or the legend
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: symbolSize=22 with opacity 0.8 is reasonable for 135 points across
-          3 series, but the Marsh/Alpine overlap band is hard to parse without a white
-          border on markers
+        comment: Theme-adaptive marker borders (page-bg halo) now separate overlapping
+          points in the dense Marsh/Alpine band; size/opacity tuned down from attempt
+          1
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue combination is CVD-safe by palette design; alpha
-          helps with overlapping points
+        comment: Green/lavender/blue-gray palette is CVD-safe; no red-green as sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the majority of the canvas with balanced margins,
-          legend sits close to the plot
+        comment: Canvas gate passed; title, legend, axes all well-proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Leaf Length (cm)" / "Leaf Width (cm)" are descriptive with units'
+        comment: Descriptive axis names with units (cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, positions 2-3 follow canonical Imprint order,
-          identical across themes, backgrounds theme-correct'
+        comment: 'First series #009E73, canonical Imprint order, identical across
+          themes, correct chrome backgrounds'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured ECharts default with correct Imprint colors, but
-          no custom typography or extra polish beyond sizing
+        comment: Improved with borders/markArea, but still close to a well-configured
+          default overall
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Subtle grid appropriate for scatter, generous whitespace, but no
-          marker border/edge highlighting despite overlapping clusters
+        comment: Edge-highlighted markers and subtle markArea shading added; grid
+          subtle, whitespace generous
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Data naturally shows a correlation + cluster-overlap story via color
-          separation, but no additional visual hierarchy or emphasis device guides
-          the viewer to it
+        comment: '"Overlap zone" callout gives a clear visual hierarchy device pointing
+          at the correlation/overlap story'
     spec_compliance:
       score: 15
       max: 15
@@ -147,27 +135,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Correct categorical scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colorblind-safe colors, legend present, alpha transparency
-          for overlap all present
+        comment: Distinct colors per category, legend present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = leaf length, Y = leaf width, full data range shown on both axes
+        comment: X/Y correctly mapped, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          three species categories
+        comment: Title matches required format exactly; legend labels match series
     data_quality:
       score: 13
       max: 15
@@ -177,22 +163,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows both distinct clusters and a genuine overlap zone between two
-          groups, plus overall correlation trend
+        comment: Correlation, three groups, and genuine overlap all shown; no secondary
+          channel (e.g. marker shape) used
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Plausible, neutral botanical scenario with named (fictional) species;
-          comprehensible but generic naming
+        comment: Neutral, plausible botanical scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Leaf length/width ranges and per-group means/std devs are realistic
-          and internally consistent
+        comment: Sensible cm-scale values for leaf dimensions
     code_quality:
       score: 10
       max: 10
@@ -202,56 +186,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports/data/init/option structure; the tiny LCG helper functions
-          are the expected browser-harness reproducibility pattern
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed seed=42 LCG, fully deterministic
+        comment: Fixed-seed LCG deterministic across renders
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts object
+        comment: No imports beyond the global echarts
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately simple, no fake functionality
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no explicit size/devicePixelRatio
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct high-level setOption usage with series array, standard idiomatic
-          ECharts scatter
+        comment: Single setOption, correct high-level API usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic scatter usage; no ECharts-distinctive feature (visualMap,
-          emphasis.focus, tooltip formatter) leveraged
-  verdict: REJECTED
+        comment: markArea, emphasis.focus, and a tuned tooltip formatter are used
+          but are fairly common ECharts patterns
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
