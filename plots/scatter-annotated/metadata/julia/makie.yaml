@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: scatter-annotated
 created: '2026-09-05T13:11:06Z'
-updated: '2026-09-05T13:45:28Z'
+updated: '2026-09-05T14:03:07Z'
 generated_by: claude-sonnet
 workflow_run: 33967931278
 issue: 2790
@@ -12,101 +12,84 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 69
+quality_score: 88
 review:
   strengths:
-  - 'Correct theme-adaptive chrome: backgrounds, ink tones, spines, and grid all flip
-    correctly between light (#FAF8F1) and dark (#1A1A17) with identical data colors'
-  - 'Thoughtful visual hierarchy: highlighted points use larger, fully-opaque markers
-    with a dark ring while the rest stay smaller and alpha=0.7, making the annotated
-    subset read as an intentional focal point'
-  - Realistic, neutral synthetic dataset (24 named tech companies, R&D spend vs. revenue
-    growth) with a deliberately capped outlier gap so the far-right point doesn't
-    strand the axis
-  - Careful axis-limit padding logic that accounts for label anchor positions so most
-    offset labels stay inside the viewport with room for connector lines
-  - 'Clean, idiomatic Makie usage: Axis kwargs for theme tokens, scatter!/lines!/text!
-    layering, align/valign for label anchoring'
+  - 'Theme-adaptive chrome is correctly wired end-to-end: identical Imprint brand
+    green (#009E73) data color in both renders, only background/text/grid/spine tokens
+    flip between #FAF8F1 and #1A1A17.'
+  - 'Genuinely thoughtful data storytelling: the six highlighted companies are chosen
+    algorithmically as distinct extremes across growth, spend, and trend-residual,
+    giving the annotations real analytical purpose instead of arbitrary picks.'
+  - 'Robust label-collision handling: offset direction is computed from centroid quadrant,
+    axis limits are padded to fit every label anchor, and a same-quadrant/near-neighbor
+    pass pushes overlapping label pairs further apart.'
+  - 'Clear two-tier visual hierarchy: translucent small markers for unlabeled points
+    vs. opaque, larger, dark-ringed markers for the six highlighted/labeled companies.'
+  - Correct canvas (3200x1800), canonical title format, descriptive axis labels with
+    units ('R&D Spend ($M)', 'Revenue Growth (%)').
   weaknesses:
-  - 'CONFIRMED BUG: one of the six highlighted (ringed, alpha=1.0, markersize=24)
-    points near R&D Spend ≈ 10.3-10.7 / Revenue Growth ≈ 14 has NO visible label text
-    or connector line in EITHER render (verified in both plot-light.png and plot-dark.png
-    via pixel-level crops). The ring marker sits there unexplained, overlapping an
-    adjacent unlabeled point, while the other 5 labeled points (VectorFlow, RedShift,
-    PrimeCode, NextWave, and one more) render correctly with text + connector line.
-    Root cause is likely in the label placement logic for points very close to the
-    data centroid (cx, cy): the `rd_spend[i] >= cx` / `revenue_growth[i] >= cy` sign
-    checks that pick label_dx/label_dy direction can put two nearby labels'' anchors
-    on top of each other or on top of the marker cluster itself, and/or two labeled
-    points that are extremely close in data space end up with anchors so close together
-    that one label is effectively drawn under something else. Investigate: print/inspect
-    label_x, label_y, label_dx, label_dy for all 6 entries in labeled_idx, and verify
-    all 6 `lines!`/`text!` calls actually produce visible output distinct from each
-    other and from the marker cluster; consider nudging apart label anchors that would
-    otherwise coincide instead of relying purely on the centroid-relative sign.'
-  - Because one annotation silently fails, the 'annotated scatter' plot's core required
-    feature (a visible text label for every highlighted point of interest) is only
-    partially delivered -- this is the headline feature of the spec, not a cosmetic
-    detail
-  - 'The data-storytelling payoff of the highlight system is undermined: a viewer
-    sees an emphasized ringed dot with no explanation next to correctly-labeled peers,
-    which reads as an unfinished/broken element rather than an intentional design
-    choice'
+  - 'Library Mastery is thin: only baseline primitives (scatter!, lines!, text!) are
+    used — no showcase of a Makie-distinctive feature (e.g. a custom recipe, Legend/Colorbar
+    composition, or layout grid) that would differentiate it from a generic scatter-plus-annotate
+    implementation.'
+  - Visual refinement matches the style-guide baseline (spines removed, subtle grid,
+    generous padding) but doesn't go beyond it with additional polish.
+  - Only 6 of 24 points carry labels; acceptable per the spec's 'annotate a subset
+    for large datasets' guidance, but on the low side — 8-10 labeled points would
+    demonstrate feature coverage more fully without crowding the layout given the
+    padding headroom already reserved.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: title "scatter-annotated · julia · makie · anyplot.ai" in dark ink, bold, centered top; axis labels "R&D Spend ($M)" and "Revenue Growth (%)" with units, dark ink; tick labels in a softer gray-brown; subtle light gridlines; top/right spines removed, left/bottom spines visible in a muted tone.
-      Data: 24 green (#009E73) circular markers, most at alpha≈0.7/markersize≈15, six emphasized markers larger/fully opaque with a dark ring. Four of those six carry a text label (VectorFlow, RedShift, PrimeCode, NextWave) connected to their point via a thin gray line offset outward from the data centroid. A fifth ringed marker sits in a small cluster near R&D≈10.5 / Growth≈14 with NO visible label or connector line — confirmed via pixel-level crop, not a rendering artifact of my viewing.
-      Legibility verdict: PASS for all rendered text (title/axes/ticks/the four visible labels all read cleanly against the light background). The missing label is a completeness/feature bug, not a legibility failure.
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
+      Chrome: Title "scatter-annotated · julia · makie · anyplot.ai" in bold dark ink, top/right spines removed, left/bottom spines and tick labels in soft muted ink, subtle light-gray gridlines. All chrome text is clearly readable against the light background.
+      Data: 24 R&D-spend-vs-revenue-growth points in Imprint brand green (#009E73). 18 unlabeled points are smaller and semi-transparent (alpha 0.7); 6 highlighted points (VectorFlow, EdgeStack, BrightPath, RedShift, PrimeCode, NextWave) are larger, fully opaque, with a dark ring, each connected by a thin gray line to an offset text label. First (and only) series is correctly the brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: same layout and content as light, ink flipped to a light off-white for title/axis labels, softer light gray for ticks; connector lines and label text in the same softened light tone. Grid subtle and visible.
-      Data: identical green (#009E73) marker colors to the light render — confirmed no shift in data hue. Same four labels visible (VectorFlow, RedShift, PrimeCode, NextWave); the same fifth ringed marker near R&D≈10.5 / Growth≈14 again has no label or connector line, reproducing the same defect seen in the light render (theme-independent, confirms it's a data/logic bug rather than a theme-specific rendering issue).
-      Legibility verdict: PASS for all rendered text — no dark-on-dark issues found. Same missing-label defect as the light render.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
+      Chrome: Same title now in light ink, spines/ticks in light-gray-soft ink, gridlines subtle against the dark background. No dark-on-dark or light-on-light failures observed — all title, axis labels, tick labels, and annotation text are clearly legible.
+      Data: Same 24 points in the identical brand green as the light render; the two-tier translucent/opaque+ring marker treatment and label/connector-line layout are unchanged, confirming only chrome (not data color) flips between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All rendered text (title, axis labels, ticks, 4 visible point labels)
-          is legible in both themes with correct ink tokens; docked because one intended
-          annotation never renders, hurting overall communicative legibility of the
-          highlighted subset
+        comment: All text readable in both themes; font sizes explicit and consistent
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: No text-on-text overlap among what IS rendered, but a ringed highlighted
-          marker sits overlapping an adjacent unlabeled marker with no explanatory
-          label, reading as a visual glitch
+        passed: true
+        comment: Collision-avoidance logic keeps all labels, connector lines, and
+          markers clear of each other
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Marker size/alpha hierarchy is well chosen, but the point-of-interest
-          highlighting system fails to communicate for one of six emphasized points
-          since its label never renders
+        passed: true
+        comment: Marker sizing appropriate for sparse (24-point) data; two-tier size/opacity
+          distinguishes highlighted points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, no red/green reliance, adequate contrast
+        comment: Single-hue brand green with ring/alpha distinction, not relying on
+          red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No overflow or clipping observed at any edge; title and labels well
-          within canvas bounds; canvas dimension gate passed
+        comment: 3200x1800 canvas confirmed, no overflow or clipping, balanced title/axis
+          proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -118,58 +101,62 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 throughout; backgrounds correct for both
-          themes; data color identical across themes'
+        comment: 'First series #009E73, correct theme-adaptive backgrounds in both
+          renders'
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Deliberate alpha/size/ring hierarchy to distinguish highlighted points
-          is above generic defaults, but the payoff is undercut by the missing label
+        passed: true
+        comment: Intentional two-tier marker hierarchy and algorithmic highlight selection
+          show real design thought
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Spines removed, subtle grid, generous whitespace, but the unexplained
-          overlapping ring near (10.5, 14) breaks the otherwise-consistent visual
-          language
+        passed: true
+        comment: Spines removed, subtle grid, generous padding — matches style-guide
+          baseline without extra polish
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 5
         max: 6
-        comment: The highlight-and-label concept is a strong idea for guiding the
-          viewer to notable companies, but it fails for one point, leaving an unexplained
-          emphasized dot in the middle of the plot
+        passed: true
+        comment: Highlighted companies chosen as multi-dimensional extremes (growth,
+          spend, trend residual), giving a clear analytical focal point
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct annotated scatter
+        passed: true
+        comment: Correct annotated scatter plot
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        comment: The spec's headline required feature -- a text annotation near points
-          of interest -- silently fails to render for one of the six intended highlighted
-          points, in both themes
+        passed: true
+        comment: Text labels, connector lines for offset labels, moderate point transparency
+          (alpha 0.7) all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X/Y correctly mapped, full data range shown
+        passed: true
+        comment: X/Y correctly mapped, axis limits cover all data plus label anchors
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches required format exactly
+        passed: true
+        comment: Canonical title format; no legend needed for single series
     data_quality:
       score: 14
       max: 15
@@ -178,65 +165,75 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Shows scatter + selective annotation + connector lines + emphasis
-          hierarchy
+        passed: true
+        comment: Covers scatter + labels + connectors; only 6/24 points labeled (spec
+          allows subsetting for larger datasets)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible, neutral tech-company R&D-spend vs. revenue-growth dataset
+        passed: true
+        comment: R&D spend vs. revenue growth for fictional tech companies is plausible
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Sensible $M and % ranges, outlier gap deliberately capped
+        passed: true
+        comment: Spend ($3-25M) and growth (-2% to 35%) values are realistic for the
+          domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
+        passed: true
         comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only CairoMakie, Colors, Random, Statistics -- all used
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        comment: Reasonable complexity for label placement, but the centroid-relative
-          offset logic has an edge-case gap that produces the missing-label bug
+        passed: true
+        comment: Appropriate complexity for label-collision avoidance; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches convention
+        passed: true
+        comment: Saves plot-$(THEME).png via current CairoMakie API
     library_mastery:
-      score: 3
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        comment: Idiomatic Axis/scatter!/lines!/text! usage, but the annotation feature
-          -- the whole point of using text! here -- doesn't reliably work
+        passed: true
+        comment: Correct high-level Axis/scatter!/lines!/text! usage with theme tokens
+          threaded through kwargs
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
-        comment: 'Default: no especially Makie-distinctive feature demonstrated beyond
-          basic text!/align'
-  verdict: REJECTED
+        passed: false
+        comment: No Makie-distinctive feature beyond baseline primitives
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
