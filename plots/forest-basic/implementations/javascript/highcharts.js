@@ -1,7 +1,7 @@
 // anyplot.ai
 // forest-basic: Meta-Analysis Forest Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -24,33 +24,63 @@ const weights = studies.map((s) => s.weight);
 const minWeight = Math.min(...weights);
 const maxWeight = Math.max(...weights);
 const markerRadius = (weight) => 6 + ((weight - minWeight) / (maxWeight - minWeight)) * 10;
+// CI whisker thickness echoes the same weight scale as the marker radius, so a
+// heavy study (e.g. Fischer 2019) reads as "more precise" via both encodings.
+const whiskerLineWidth = (weight) => 1.5 + ((weight - minWeight) / (maxWeight - minWeight)) * 2.5;
 
 const rows = [...studies.map((s) => ({ ...s, pooled: false })), { ...pooledEstimate, pooled: true }];
 const pooledIndex = rows.length - 1;
 
 // --- Chart -------------------------------------------------------------------
+// Each whisker series draws the CI line plus a short perpendicular end-cap at
+// both bounds (classic forest-plot styling), using null points to break the
+// path into three disconnected segments: low cap, main line, high cap.
+const capHalfWidth = 0.12;
 const whiskerSeries = rows.map((row, index) => ({
   type: "line",
   data: [
+    [index - capHalfWidth, row.ciLower],
+    [index + capHalfWidth, row.ciLower],
+    [index, null],
     [index, row.ciLower],
     [index, row.ciUpper],
+    [index, null],
+    [index - capHalfWidth, row.ciUpper],
+    [index + capHalfWidth, row.ciUpper],
   ],
   color: Highcharts.color(row.pooled ? t.ink : t.palette[0])
     .setOpacity(0.55)
     .get(),
-  lineWidth: row.pooled ? 3 : 2.5,
+  lineWidth: row.pooled ? 3 : whiskerLineWidth(row.weight),
   marker: { enabled: false },
   enableMouseTracking: false,
   showInLegend: false,
   animation: false,
 }));
 
+const ciLabelFormatter = function () {
+  return `${this.y.toFixed(2)} (${this.point.low.toFixed(2)}–${this.point.high.toFixed(2)})`;
+};
+
 const studySeries = {
   name: "Study estimate",
   type: "scatter",
   color: t.palette[0],
-  data: studies.map((s, index) => ({ x: index, y: s.effect, marker: { radius: markerRadius(s.weight) } })),
+  data: studies.map((s, index) => ({
+    x: index,
+    y: s.effect,
+    low: s.ciLower,
+    high: s.ciUpper,
+    marker: { radius: markerRadius(s.weight) },
+  })),
   marker: { symbol: "circle", lineWidth: 1, lineColor: t.pageBg },
+  dataLabels: {
+    enabled: true,
+    formatter: ciLabelFormatter,
+    style: { color: t.inkSoft, fontSize: "12px", fontWeight: "400", textOutline: "none" },
+    verticalAlign: "bottom",
+    y: -12,
+  },
   zIndex: 5,
   animation: false,
 };
@@ -59,8 +89,23 @@ const pooledSeries = {
   name: "Pooled estimate",
   type: "scatter",
   color: t.ink,
-  data: [{ x: pooledIndex, y: pooledEstimate.effect, marker: { radius: 14 } }],
+  data: [
+    {
+      x: pooledIndex,
+      y: pooledEstimate.effect,
+      low: pooledEstimate.ciLower,
+      high: pooledEstimate.ciUpper,
+      marker: { radius: 14 },
+    },
+  ],
   marker: { symbol: "diamond", lineWidth: 1, lineColor: t.pageBg },
+  dataLabels: {
+    enabled: true,
+    formatter: ciLabelFormatter,
+    style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+    verticalAlign: "bottom",
+    y: -14,
+  },
   zIndex: 6,
   animation: false,
 };
@@ -75,7 +120,7 @@ Highcharts.chart("container", {
   credits: { enabled: false },
   title: {
     text: "forest-basic · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "25px", fontWeight: "600" },
   },
   xAxis: {
     categories: rows.map((row) => row.label),
