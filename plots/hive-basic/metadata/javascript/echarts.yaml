@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: hive-basic
 created: '2026-09-05T05:18:36Z'
-updated: '2026-09-05T05:23:19Z'
+updated: '2026-09-05T05:31:43Z'
 generated_by: claude-sonnet
 workflow_run: 33946468259
 issue: 1879
@@ -12,48 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Correct hive-plot construction: 3 balanced radial axes (14 nodes each), node
-    radius scaled by degree, and radial rank position encoding degree — reproducible
-    and structurally meaningful, matching the spec''s intent precisely (vs. a hairball
-    force-directed layout).'
-  - Bezier-curved edges bowed toward the shared center, with weight-driven line width
-    and opacity — a proper hive-plot edge convention that keeps dense connections
-    legible.
-  - Correct Imprint palette (green/purple/blue for the 3 axis categories), consistent
-    and theme-correct between light and dark renders, including tooltip and axis-line
-    chrome.
-  - Deterministic, seeded, realistic software-dependency-network data with balanced
-    category sizes, matching the spec's data guidance.
-  - Correct title format, functioning legend, and no edge clipping in either render.
+  - 'Correct hive-plot geometry: axis reach and center are derived from the actual
+    axis angles (topFactor/bottomFactor/leftFactor/rightFactor), not an assumed symmetric
+    circle, so margins stay even for the up + down-left/down-right triangle layout.'
+  - Rank-based (not raw-degree) radial placement guarantees even node spacing along
+    each axis regardless of the underlying degree distribution, avoiding marker overlap.
+  - Edges are bezier-bundled toward the hub with both opacity and stroke width driven
+    by edge weight, and node radius is driven by degree — two extra data dimensions
+    encoded without adding chart junk.
+  - Correct Imprint palette (green/lavender/blue matches canonical order 1/2/3), correct
+    theme-adaptive chrome in both renders, and the square orientation directive matches
+    the actual 2400x2400 output.
+  - Dashed halo ring around the highest-degree node on each axis gives the plot a
+    clear analytical focal point (the axis's 'hub' module).
   weaknesses:
-  - 'Axis category labels ("Core", "Utility", "Interface") are set to fontSize: 22
-    with fontWeight: 600, the same size as the title — this makes them visually compete
-    with, and at a glance outweigh, the title''s hierarchy. Reduce to roughly 16-18px
-    to keep the title as the clear visual anchor.'
-  - 'Design Excellence has room to grow: consider a subtle rank/degree guide (thin
-    concentric tick marks along each axis) or a highlight on the highest-degree "hub"
-    node per axis to sharpen the data storytelling.'
-  - Several helper functions (toXY, circularMean, addEdge) add structure beyond the
-    strict KISS ideal — understandable given ECharts' custom-series requirements,
-    but worth keeping in mind if further simplification is possible.
+  - The bundle of green Core-axis edges converges densely near the apex, partly obscuring
+    individual low-weight edges — sorting edge draw order or endpoint angle offsets
+    by target could reduce visual crossing in that zone.
+  - Several small helper functions (circularMean, nodeRadius, toXY) sit alongside
+    the renderItem callbacks required by echarts' custom-series API — most are necessary
+    for the geometry, but circularMean/nodeRadius could be inlined to shrink the KISS
+    surface slightly.
+  - The hub-highlight dashed ring is subtle at normal zoom (thin 1.5px dashed stroke)
+    — a slightly heavier stroke or brighter accent would sharpen the storytelling
+    focal point.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
-      Chrome: Bold black title "hive-basic · javascript · echarts · anyplot.ai" centered at top; bold axis category labels ("Core", "Utility", "Interface") near each axis tip; three-item legend ("Core modules", "Utility modules", "Interface modules") at the bottom. All chrome text is dark and clearly readable against the light background.
-      Data: Nodes colored by axis category — green (#009E73) for Core, purple/lavender (#C475FD) for Utility, blue (#4467A3) for Interface — first categorical series is confirmed brand green. Node circle size scales with degree; bezier-curved edges bowed toward the shared center are colored by source axis with weight-driven width/opacity.
-      Legibility verdict: PASS
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: title "hive-basic · javascript · echarts · anyplot.ai" is bold dark text, clearly readable near the top; the three axis labels "Core" (top), "Interface" (bottom-left), "Utility" (bottom-right) are dark, bold, and legible; the bottom legend ("Core modules" / "Utility modules" / "Interface modules") uses medium-gray text with color swatches, clearly readable against the light background.
+      Data: three radial axes form an inverted triangle. Along "Core" (top) sit 14 green (#009E73) nodes evenly spaced by rank; along "Interface" (bottom-left) sit 14 dark-blue (#4467A3) nodes; along "Utility" (bottom-right) sit 14 lavender/purple (#C475FD) nodes. Curved bezier edges connect nodes across axes, bowed toward the center hub, with opacity and thickness scaling by edge weight. Each axis's highest-degree node (at the outer tip) has a thin dashed halo ring in its own axis color. First categorical series (Core) is confirmed #009E73.
+      Legibility verdict: PASS — all text (title, axis labels, legend) is clearly readable against the light surface; no light-on-light text.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
-      Chrome: Same title, axis labels, and legend, all flipped to light-colored text against the dark background. No dark-on-dark failures observed for title, axis labels, or legend.
-      Data: Node and edge colors (green/purple/blue) are pixel-identical to the light render — only the chrome (text, axis lines, tooltip styling) flips. Confirms only chrome, not data colors, is theme-adaptive.
-      Legibility verdict: PASS
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title is light/off-white text, clearly readable; axis labels "Core", "Interface", "Utility" are light-colored and legible; legend text at the bottom uses a lighter gray, readable against the dark background.
+      Data: identical geometry and node/edge colors to the light render — green Core nodes, dark-blue Interface nodes, lavender Utility nodes, same bezier edge bundling and hub halo rings. Data colors are unchanged between renders; only chrome (background, text, grid lines) flipped to the dark theme.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, axis-label, and legend text is clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,48 +61,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes; axis labels equal size
-          to title is a minor proportional concern
+        comment: Title, axis labels, and legend text are explicitly sized (title 22px,
+          axis labels 17px, legend 17px) and clearly readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Node circles evenly spaced along each axis, no text or marker collisions
+        comment: Rank-based (not raw-degree) radial placement gives every node on
+          an axis even spacing, so markers never overlap even with a skewed degree
+          distribution.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node sizing scales with degree, edges use weight-driven width/opacity;
-          largest nodes near axis tips could be spaced slightly more generously
+        comment: Node size and edge width/opacity scale with degree/weight; the Core-axis
+          edge bundle is dense near the apex, slightly obscuring the lowest-weight
+          edges.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint hues, no red-green sole signal
+        comment: Categories are color + label redundant via legend and axis position;
+          no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills a good portion of the canvas with balanced margins; axis
-          labels oversized relative to title undercuts hierarchy
+        comment: 'Square 2400x2400 canvas matches the //# anyplot-orientation: square
+          directive; margins are computed from actual axis geometry so nothing clips
+          or overflows.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive category labels (Core/Utility/Interface) plus correct
-          title format
+        comment: Axis labels (Core/Utility/Interface) clearly name the node-category
+          grouping; title matches the mandated format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green, canonical Imprint order, theme-correct
-          backgrounds and chrome in both renders
+        comment: 'First series (Core) is #009E73; Utility/Interface use canonical
+          positions 2/3 (lavender, blue); identical data colors across themes; correct
+          theme backgrounds.'
     design_excellence:
       score: 14
       max: 20
@@ -112,22 +118,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Genuine custom rendering pipeline well above a configured default,
-          but short of top-tier polish
+        comment: Axis-geometry-derived margins, degree-encoded radius, and weight-encoded
+          edges show real design thought beyond a generic template.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Minimal chrome, no competing grid/spines, node stroke matches page
-          background for separation
+        comment: No chart chrome beyond axis lines and labels; generous whitespace;
+          edge alpha keeps the dense bundle from feeling harsh.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Degree, rank position, and edge weight jointly encode structure,
-          creating real hierarchy without an explicit called-out insight
+        comment: Hub-highlight halo rings create a clear focal point per axis, though
+          the dashed stroke is subtle at normal zoom.
     spec_compliance:
       score: 15
       max: 15
@@ -137,52 +143,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Genuine hive plot: radial axes, rank-ordered position, bezier edges
-          bowed toward center'
+        comment: 'Correctly implements a hive plot: radial axes by category, node
+          position encoding a meaningful property (degree).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Axis-attribute assignment, degree-based radial position, edge weight
-          encoding, balanced axis counts
+        comment: 3 axes (within the 2-3 range), degree-based radial position, weight/alpha-based
+          edge de-clutter, and a deterministic LCG for reproducibility.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Node-to-axis/radius and edge-to-curve mapping both correct and fully
-          visible
+        comment: Axis = category (Core/Utility/Interface), radial position = rank
+          by degree; mapping is consistent and correctly labeled.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match the three axis categories
+        comment: Title matches 'hive-basic · javascript · echarts · anyplot.ai' exactly;
+          legend labels ('Core modules', etc.) match the axis categories.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Varying node degree and edge weight, balanced axis counts; cross-axis
-          connection density could vary a bit more
+        comment: Shows nodes, edges, axis grouping, degree-encoded position, weight-encoded
+          edges, and hub highlighting — full hive-plot feature set.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral software module-dependency network
+        comment: Software module dependency network (scheduler/logging/rest-api, etc.)
+          is plausible, neutral, and non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 42 nodes within spec's 20-100 range, plausible degree and weight
-          ranges
+        comment: 42 nodes across 3 balanced axes (14 each), degree values in a sensible
+          1-8ish range for a module-dependency graph.
     code_quality:
       score: 9
       max: 10
@@ -192,35 +200,38 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: No classes, but several helper functions largely necessitated by
-          ECharts' custom-series API
+        comment: Uses several small helper functions (toXY, circularMean, nodeRadius,
+          renderAxis/Edge/Node/Hub); most are required by echarts' custom-series renderItem
+          contract, but a couple could be inlined.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG, fully deterministic
+        comment: Fixed-seed LCG (seed = 20260905) makes the network fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports, browser globals only
+        comment: No imports; only the injected globals (echarts, ANYPLOT_TOKENS, ANYPLOT_SIZE)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: Complexity is proportional to the geometry problem being solved;
+          no fake interactivity or simulated UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, animation: false, current custom-series
-          API'
+        comment: 'echarts.init(#container) with no explicit size/devicePixelRatio,
+          animation: false set, custom series via the current renderItem API.'
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -228,16 +239,18 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Uses ECharts'' type: custom / renderItem escape hatch, the correct
-          approach for a chart type with no native support'
+        comment: 'Uses echarts'' custom series (coordinateSystem: ''none'', renderItem)
+          — the correct idiomatic path for a chart type with no built-in echarts equivalent
+          — plus the graphic API for the legend.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Declarative custom-rendering pipeline with graphic primitives driven
-          by renderItem is genuinely ECharts-distinctive
-  verdict: REJECTED
+        comment: Combines custom renderItem shapes (line/text/bezierCurve/circle)
+          with per-shape tooltip formatters and the graphic component; solid but not
+          maximal use of echarts-unique capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -249,4 +262,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
+  - edge-highlighting
