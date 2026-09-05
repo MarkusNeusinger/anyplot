@@ -1,0 +1,241 @@
+library: ggplot2
+language: r
+specification_id: phase-diagram
+created: '2026-09-05T10:40:44Z'
+updated: '2026-09-05T10:52:32Z'
+generated_by: claude-sonnet
+workflow_run: 33961102565
+issue: 3004
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Both previously-flagged weaknesses from Attempt 1 are now resolved: direction
+    arrows clearly show time evolution along each spiral, and the dark-mode grid is
+    visibly softened toward the background instead of reading bright/prominent.'
+  - Squaring the data domain (half_extent) before coord_fixed produces a better-filled
+    square canvas than the prior asymmetric-range approach.
+  - Physically correct phase portrait (RK2-integrated damped harmonic oscillator)
+    with three initial conditions revealing basin-of-attraction structure, a clearly
+    marked fixed point, and correct canonical Imprint palette with proper theme-adaptive
+    chrome in both renders.
+  weaknesses:
+  - The three spirals still overlap heavily in the densest central region near the
+    fixed point — consider a subtle alpha reduction or linewidth taper as the trajectories
+    approach the origin so individual paths stay distinguishable even in the smallest
+    oscillations.
+  - Design excellence, while improved, is still close to a theme_minimal base — an
+    additional distinctive touch (e.g. a subtle radial guide or annotated basin boundary)
+    could push DE-01/DE-03 further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent across the whole panel and legend area.
+      Chrome: Title "phase-diagram · r · ggplot2 · anyplot.ai" is dark and fully readable at top-left. Axis titles "Displacement x" and "Velocity dx/dt" are dark and clearly legible. Tick labels (-2, 0, 2 on both axes) are a softer dark gray, readable against the light background. Grid lines are thin and subtle. Legend on the right sits on a slightly elevated off-white card with dark title "Initial condition" and readable entries.
+      Data: Three spiral trajectories in Imprint green (#009E73), lavender (#C475FD), and blue (#4467A3), spiraling inward toward a bold black X marking the fixed point at the origin. Small directional arrowheads along the outer loops of each spiral show time-evolution direction (new in this attempt). Each trajectory's start point is marked with a matching hollow circle (page-background fill).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent across panel and legend.
+      Chrome: Title is off-white/cream and fully readable. Axis titles are light-colored and legible. Tick labels are a lighter gray, clearly readable against the dark background — no dark-on-dark issue. Grid lines are now noticeably softer/more subtle than in Attempt 1 (blended toward the background via the new mix_color helper), still faintly visible without competing with the data. Legend sits on a dark elevated card with light text, fully readable.
+      Data: Same three spiral trajectories in the identical green/lavender/blue colors as the light render, with the same directional arrows and hollow start-point markers (dark fill matching the page background), converging to a white X marker at the origin. Data colors are pixel-identical between themes — only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at correct proportional sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions with other text, data, or the legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines/markers visible; three spirals still overlap heavily in the
+          densest central region near the fixed point
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue distinguishable, good contrast, no red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas correct 2400x2400; squared domain fills the panel more evenly
+          than the previous asymmetric coord_fixed margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels, correct mandated title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3); correct theme
+          backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Directional arrows, hollow start markers, and the bold fixed-point
+          X add real design intent beyond a stock theme_minimal look
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dark-mode grid is now visibly softened (blended toward background)
+          resolving the prior weakness; ticks removed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Direction arrows now make time-evolution unambiguous, resolving the
+          previous weakness and strengthening the convergence narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct phase diagram: x vs dx/dt'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Trajectories, multiple initial conditions, fixed point, AND time-direction
+          arrows all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x on x-axis, dx/dt on y-axis, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match initial
+          conditions
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Trajectory, multiple ICs, fixed point, and direction all shown; no
+          closed-loop/limit cycle demonstrated (not required for this system choice)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Damped harmonic oscillator is a standard, neutral, physically plausible
+          example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Displacement/velocity ranges are sensible and dimensionless-appropriate
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (integrate_trajectory, make_direction_arrows, mix_color)
+          are justified by RK2 integration and grid-blending logic
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; integration itself deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, grid, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for an ODE-based phase portrait, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dimensions
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of geom_path/geom_point/geom_segment/geom_hline/geom_vline,
+          scale_color_manual, coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: shape=21 hollow markers, arrow() direction segments, expression()
+          for dx/dt axis label, custom RGB-blend helper for theme-adaptive grid color
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending

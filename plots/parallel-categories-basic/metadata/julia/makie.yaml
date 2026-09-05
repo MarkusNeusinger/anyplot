@@ -1,0 +1,271 @@
+library: makie
+language: julia
+specification_id: parallel-categories-basic
+created: '2026-09-05T10:12:54Z'
+updated: '2026-09-05T10:34:08Z'
+generated_by: claude-sonnet
+workflow_run: 33959677730
+issue: 2501
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Faithful custom parallel-categories/Sankey construction built from Makie primitives,
+    using smoothstep-interpolated ribbon edges rather than naive straight-line segments
+    — a genuinely more polished result than a minimal implementation.
+  - Ribbon widths and node heights are mathematically proportional to observation
+    counts; channel/product/outcome totals correctly sum from the underlying combo
+    data.
+  - 'Correct Imprint palette (first series #009E73, canonical positions 2-3 for the
+    remaining channels) and fully correct theme-adaptive chrome (backgrounds, text,
+    node strokes) in both light and dark renders.'
+  - 'Attempt-1 feedback was concretely addressed: ribbon alpha reduced 0.55→0.45 and
+    ribbons are now drawn widest-first, which measurably lightens the previously muddy
+    blended patches in the dense crossing region.'
+  - Per-edge stacking orders (channel edge by product/outcome, product's incoming
+    edge by channel/outcome, product's outgoing edge by outcome/channel, outcome edge
+    by product/channel) now keep same-outcome ribbons contiguous at each product's
+    outgoing side — a direct, well-reasoned fix for the crossing-minimization gap
+    flagged last review.
+  - Realistic, neutral e-commerce customer-journey dataset with full 3x3x2 combinatorial
+    coverage and direct count labels on every node.
+  - Correct mandated title format and canonical landscape canvas size; both themes
+    fully readable with no clipping or text overlap.
+  weaknesses:
+  - The new per-edge stacking order mainly reorganizes ribbons where they meet each
+    node; the channel→product edge still crosses heavily because each of the three
+    channels feeds all three products, so visual crossing there is essentially unchanged
+    from attempt 1. Fully honoring the spec's 'order categories to minimize crossings'
+    note would need products ordered by aggregate channel dominance (or similar),
+    not just per-node local sorting.
+  - Ribbon color still encodes only the source channel, so purchase-bound vs. abandon-bound
+    ribbons in the product→outcome stage remain indistinguishable by hue — the viewer
+    must track vertical position alone to separate outcomes, which still reads as
+    clutter in the dense middle of the diagram.
+  - Code relies on five helper functions (node_tops, stack_positions, draw_ribbon!,
+    draw_node!, smoothstep) rather than a flatter imports→data→plot→save script —
+    understandable given the layout math this diagram needs, but a notable departure
+    from the project's KISS structure guideline.
+  - 'Library Mastery remains generic: the ribbon/node drawing is built entirely from
+    primitive poly!/band!/text! calls that could be replicated in most plotting libraries
+    with similar effort; no Makie-distinctive capability (e.g. GeometryBasics recipes,
+    Observables) is leveraged.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "parallel-categories-basic · julia · makie · anyplot.ai" in bold dark ink, clearly readable; dimension headers "Acquisition Channel", "Product Category", "Outcome" in dark ink above each column; node labels ("Organic Search (480)", "Electronics (570)", "Purchased (642)", etc.) all in dark ink, fully legible against the light background; node borders in soft dark-gray stroke.
+      Data: Three source-channel colors from the Imprint palette — green (#009E73, Organic Search), lavender/purple (#C475FD, Paid Ads), blue (#4467A3, Referral) — carried through both ribbon segments (channel→product and product→outcome) at ~45% opacity, with the widest ribbons drawn first so thinner ones stay visible on top. Product and Outcome nodes render as plain elevated-background boxes with a thin stroke. All text readable, colors match the Imprint categorical palette in canonical order.
+      Legibility verdict: PASS — no dark-on-light or light-on-light failures observed; some visual clutter remains from overlapping semi-transparent ribbons in the crossing region (reduced vs. attempt 1's higher alpha), but all text stays fully legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, dimension headers, and all node labels render in light ink (near-white), clearly legible against the dark background; no dark-on-dark text found anywhere. Node borders use a light soft-gray stroke, visible against the dark background.
+      Data: Same three channel colors (green/lavender/blue) as the light render — confirmed identical hues, only the surrounding chrome (background, text, node fill, strokes) flips to the dark tokens. Product/Outcome node boxes use the dark elevated background, subtly distinguishable from the page background.
+      Legibility verdict: PASS — all text is light-colored on the dark surface, no dark-on-dark failures; same ribbon-crossing clutter as the light render (same underlying geometry), but no legibility regression specific to the dark theme. Brand green #009E73 remains clearly visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (14/16/20pt), readable in both themes;
+          tight at mobile-thumbnail scale but consistent with catalog norms for text-dense
+          diagrams
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-to-text or text-to-data overlap in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lower ribbon alpha (0.45 vs. attempt 1's 0.55) plus widest-first
+          z-order visibly reduces the muddy blended patches from attempt 1, though
+          the dense crossing zone is still somewhat busy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues, good contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a healthy majority of the canvas with balanced margins,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive dimension headers plus per-node counts
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for channels 2-3, theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom smoothstep-interpolated ribbons and the widest-first draw
+          order show real effort above defaults, but crossing clutter keeps it short
+          of publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, no spines, generous whitespace; product/outcome nodes are
+          plain boxes with minimal visual distinction
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: The reordered stacking keeps same-outcome ribbons locally contiguous,
+          but color still encodes only source channel, so the product→outcome narrative
+          (who abandons vs. purchases) is still hard to read at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel-categories/ribbon-flow chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Count-proportional ribbons, source-dimension coloring, multi-dimension
+          nodes, and an explicit crossing-reduction attempt all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Node/ribbon positions correctly reflect category totals and per-combo
+          counts
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; direct node labeling replaces a traditional legend
+          appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 3x3x2 combinatorial coverage with varied magnitudes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible e-commerce customer-journey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Session counts and totals are internally consistent and plausible
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: Five helper functions (node_tops, stack_positions, draw_ribbon!,
+          draw_node!, smoothstep) depart notably from imports->data->plot->save, though
+          arguably warranted by the layout math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded dataset, no RNG needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the diagram type, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-$(THEME).png save with px_per_unit=2
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Axis/Figure setup and proper use of hidespines!/hidexdecorations!/hideydecorations!,
+          band!, poly!, text!
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Ribbon/node drawing uses generic geometry primitives replicable in
+          most plotting libraries; no Makie-unique capability leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - patches
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - groupby-aggregation
+  styling:
+  - alpha-blending
+  - minimal-chrome
