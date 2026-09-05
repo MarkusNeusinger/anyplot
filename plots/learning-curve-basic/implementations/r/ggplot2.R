@@ -65,15 +65,31 @@ curve_df <- learning_df |>
     labels = c("Training score", "Validation score")
   ))
 
+# Tighten the y-axis to the actual data range (mean ± sd) instead of a fixed
+# 50%-100% span, so the bias-variance gap uses the available vertical space.
+y_lower <- max(0, floor(20 * min(curve_df$mean - curve_df$sd)) / 20 - 0.05)
+
+# Annotate the converging train/validation gap at the largest sample size to
+# give the chart a storytelling focal point beyond the raw curves.
+gap_row <- curve_df |>
+  filter(train_size == max(train_size)) |>
+  summarise(x = max(train_size), gap_mid = mean(mean), .groups = "drop")
+
 # --- Plot ---------------------------------------------------------------------
 p <- ggplot(curve_df, aes(x = train_size, y = mean, color = series, fill = series)) +
   geom_ribbon(aes(ymin = mean - sd, ymax = mean + sd), alpha = 0.15, color = NA) +
   geom_line(linewidth = 1.0) +
   geom_point(size = 2.5) +
+  annotate(
+    "text",
+    x = gap_row$x, y = gap_row$gap_mid,
+    label = "Gap narrows\nwith more data",
+    hjust = 1.05, vjust = 0.5, size = 2.6, color = INK_SOFT, lineheight = 0.9
+  ) +
   scale_color_manual(values = IMPRINT_PALETTE) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
-  scale_x_continuous(labels = scales::comma) +
-  scale_y_continuous(labels = scales::percent, limits = c(0.5, 1.0)) +
+  scale_x_continuous(breaks = train_sizes, labels = scales::comma) +
+  scale_y_continuous(labels = scales::percent, limits = c(y_lower, 1.0)) +
   labs(
     title = "learning-curve-basic · r · ggplot2 · anyplot.ai",
     x = "Training set size",
