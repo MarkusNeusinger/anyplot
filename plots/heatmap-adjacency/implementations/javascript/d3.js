@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-adjacency: Network Adjacency Matrix Heatmap
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
