@@ -160,7 +160,7 @@ new Chart(canvas, {
     maintainAspectRatio: false,
     animation: false,
     layout: {
-      padding: { top: 10, right: 140, bottom: 10, left: 10 },
+      padding: { top: 10, right: 200, bottom: 10, left: 10 },
     },
     plugins: {
       title: {
