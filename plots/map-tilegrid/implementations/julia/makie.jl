@@ -75,6 +75,17 @@ tile_rects = [
 ]
 label_positions = [Point2f(c + 0.5, -(r + 0.5)) for (r, c) in zip(rows, cols)]
 
+# Highlight the highest/lowest performers to give the color gradient an
+# explicit focal point, rather than relying on the gradient alone.
+max_idx = argmax(renewable_pct)
+min_idx = argmin(renewable_pct)
+stroke_colors = fill(PAGE_BG, length(tile_rects))
+stroke_widths = fill(5.0, length(tile_rects))
+stroke_colors[max_idx] = INK
+stroke_colors[min_idx] = INK
+stroke_widths[max_idx] = 6.0
+stroke_widths[min_idx] = 6.0
+
 # --- Plot ----------------------------------------------------------------
 fig = Figure(
     size            = (1200, 1200),
@@ -95,15 +106,22 @@ hidespines!(ax)
 xlims!(ax, -0.3, n_cols + 0.3)
 ylims!(ax, -(n_rows + 0.3), 0.3)
 
-poly!(ax, tile_rects; color = tile_colors, strokecolor = PAGE_BG, strokewidth = 5)
+poly!(ax, tile_rects; color = tile_colors, strokecolor = stroke_colors, strokewidth = stroke_widths)
 text!(
     ax, label_positions;
     text        = codes,
     align       = (:center, :center),
-    fontsize    = 16,
+    fontsize    = 17,
     color       = TILE_LABEL,
     strokecolor = TILE_OUTLINE,
-    strokewidth = 2,
+    strokewidth = 1,
+)
+text!(
+    ax, Point2f(n_cols / 2, 0.15);
+    text     = "Highest: $(codes[max_idx]) ($(renewable_pct[max_idx])%)   ·   Lowest: $(codes[min_idx]) ($(renewable_pct[min_idx])%)",
+    align    = (:center, :center),
+    fontsize = 13,
+    color    = INK_SOFT,
 )
 
 Colorbar(
