@@ -64,7 +64,7 @@ fig = Figure(
 )
 
 title_str = "network-bipartite · julia · makie · anyplot.ai"
-max_y = max(n_genes, n_diseases) / 2 + 2.6
+max_y = (max(n_genes, n_diseases) - 1) / 2 + 1.6
 
 ax = Axis(
     fig[1, 1];
@@ -85,21 +85,28 @@ ax = Axis(
     xautolimitmargin    = (0.0, 0.0),
     yautolimitmargin    = (0.0, 0.0),
 )
-xlims!(ax, -1.0, 2.0)
+xlims!(ax, -0.95, 1.85)
 ylims!(ax, -max_y, max_y)
 
-# Edges drawn first so nodes render on top; opacity + width encode association strength.
+# Edges: one vectorized linesegments! call instead of a per-edge lines! loop —
+# per-segment color/linewidth vectors drive the association-strength encoding.
+edge_points  = Point2f[]
+edge_colors  = RGBAf[]
+edge_widths  = Float64[]
 for (gi, di, w) in edges
     norm_w     = (w - min_w) / (max_w - min_w)
     edge_alpha = 0.12 + 0.55 * norm_w
-    edge_width = 0.8 + 2.4 * norm_w
-    lines!(ax, [gene_x[gi], disease_x[di]], [gene_y[gi], disease_y[di]];
-           color = (INK, edge_alpha), linewidth = edge_width)
+    edge_width = 0.8 + 2.6 * norm_w
+    edge_color = RGBAf(INK.r, INK.g, INK.b, edge_alpha)
+    push!(edge_points, Point2f(gene_x[gi], gene_y[gi]), Point2f(disease_x[di], disease_y[di]))
+    push!(edge_colors, edge_color, edge_color)
+    push!(edge_widths, edge_width, edge_width)
 end
+linesegments!(ax, edge_points; color = edge_colors, linewidth = edge_widths)
 
 # Node size encodes degree (number of connections) — highlights hub genes/diseases.
-gene_sizes    = 15 .+ 3.4 .* gene_degree
-disease_sizes = 15 .+ 3.4 .* disease_degree
+gene_sizes    = 17 .+ 3.8 .* gene_degree
+disease_sizes = 17 .+ 3.8 .* disease_degree
 
 scatter!(ax, gene_x, gene_y;
          color = GENE_COLOR, markersize = gene_sizes,
@@ -110,15 +117,15 @@ scatter!(ax, disease_x, disease_y;
 
 for i in 1:n_genes
     text!(ax, gene_x[i] - 0.05, gene_y[i];
-          text = genes[i], align = (:right, :center), color = INK, fontsize = 15)
+          text = genes[i], align = (:right, :center), color = INK, fontsize = 17)
 end
 for i in 1:n_diseases
     text!(ax, disease_x[i] + 0.05, disease_y[i];
-          text = diseases[i], align = (:left, :center), color = INK, fontsize = 15)
+          text = diseases[i], align = (:left, :center), color = INK, fontsize = 17)
 end
 
 axislegend(ax; position = :ct, orientation = :horizontal,
-           framevisible = false, labelcolor = INK, labelsize = 15,
+           framevisible = false, labelcolor = INK, labelsize = 16,
            padding = (0, 0, 0, 0))
 
 # --- Save -----------------------------------------------------------------
