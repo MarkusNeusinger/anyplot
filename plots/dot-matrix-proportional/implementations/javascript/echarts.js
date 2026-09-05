@@ -17,7 +17,10 @@ const rows = 10;
 const categories = [
   { name: "Satisfied", count: 118, color: t.palette[0] }, // positive sentiment -> Imprint brand green
   { name: "Neutral", count: 52, color: muted }, // neutral sentiment -> Imprint neutral anchor
-  { name: "Dissatisfied", count: 30, color: t.palette[4] }, // negative sentiment -> Imprint semantic red
+  // negative sentiment -> Imprint semantic red; dashed ink border is a non-color
+  // secondary cue so the two sentiment extremes stay distinguishable under
+  // red-green color-vision deficiency, not just by hue.
+  { name: "Dissatisfied", count: 30, color: t.palette[4], accent: true },
 ];
 
 let cursor = 0;
@@ -35,9 +38,37 @@ const series = categories.map((cat) => {
     symbol: "circle",
     symbolSize: 44,
     data: points,
-    itemStyle: { color: cat.color, borderColor: t.pageBg, borderWidth: 1.5 },
+    itemStyle: cat.accent
+      ? { color: cat.color, borderColor: t.ink, borderWidth: 2, borderType: "dashed" }
+      : { color: cat.color, borderColor: t.pageBg, borderWidth: 1.5 },
   };
 });
+
+// Emphasize the majority category (ECharts markArea) to lift plain grid-of-
+// circles into a small "at a glance" callout, and to showcase a native
+// ECharts feature beyond a generic scatter port.
+const majority = categories.reduce((best, cat) => (cat.count > best.count ? cat : best));
+const majorityFullRows = majority === categories[0] ? Math.floor(majority.count / cols) : 0;
+if (majorityFullRows > 0) {
+  series[0].markArea = {
+    silent: true,
+    itemStyle: { color: majority.color, opacity: 0.08 },
+    label: {
+      show: true,
+      position: "insideTopLeft",
+      color: t.inkSoft,
+      fontSize: 13,
+      fontWeight: 500,
+      formatter: `Majority — ${Math.round((majority.count / total) * 100)}%`,
+    },
+    data: [
+      [
+        { xAxis: -0.6, yAxis: -0.6 },
+        { xAxis: cols - 0.4, yAxis: majorityFullRows - 0.4 },
+      ],
+    ],
+  };
+}
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
