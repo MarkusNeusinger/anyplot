@@ -15,7 +15,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-GRID_LINE   <- scales::alpha(INK, 0.15)
+GRID_LINE   <- if (THEME == "light") "#D8D7D0" else "#3A3A36"
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -50,10 +50,10 @@ p <- ggplot(transactions, aes(x = pct_targeted, y = lift)) +
              linetype = "dashed", linewidth = 0.8) +
   geom_line(aes(color = "Model"), linewidth = 1.2) +
   geom_point(data = decile_marks, color = IMPRINT_PALETTE[1], size = 3) +
-  geom_text(
-    data = callouts, aes(label = label),
-    color = INK, size = 3.2, fontface = "bold",
-    nudge_y = 1, hjust = 0
+  annotate(
+    "text",
+    x = callouts$pct_targeted, y = callouts$lift + 1, label = callouts$label,
+    color = INK, size = 3.2, fontface = "bold", hjust = 0
   ) +
   scale_color_manual(
     name   = NULL,
@@ -77,9 +77,10 @@ p <- ggplot(transactions, aes(x = pct_targeted, y = lift)) +
     axis.ticks        = element_blank(),
     plot.title        = element_text(color = INK,      size = 12),
     legend.position   = "inside",
-    legend.position.inside = c(0.98, 0.98),
+    legend.position.inside = c(0.98, 0.94),
     legend.justification = c(1, 1),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
+    legend.margin     = margin(t = 8, r = 8, b = 8, l = 8),
     legend.key        = element_blank(),
     legend.text       = element_text(color = INK_SOFT, size = 8)
   )
