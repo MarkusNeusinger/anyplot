@@ -108,12 +108,14 @@ const apexY = titleClearance + (availableHeight - (topFactor + bottomFactor) * m
 const cy = apexY + topFactor * maxRadius;
 const innerRadius = maxRadius * 0.16;
 
+const hubIndices = [];
 nodesByAxis.forEach((indices) => {
   const ranked = [...indices].sort((a, b) => nodes[a].degree - nodes[b].degree);
   ranked.forEach((globalIdx, rank) => {
     const frac = ranked.length > 1 ? rank / (ranked.length - 1) : 0;
     nodes[globalIdx].radius = innerRadius + frac * (maxRadius - innerRadius);
   });
+  hubIndices.push(ranked[ranked.length - 1]);
 });
 AXES.forEach((axis, axisIdx) => {
   nodesByAxis[axisIdx].forEach((globalIdx) => {
@@ -128,6 +130,9 @@ function circularMean(a, b) {
   const y = (Math.sin(a) + Math.sin(b)) / 2;
   const x = (Math.cos(a) + Math.cos(b)) / 2;
   return Math.atan2(y, x);
+}
+function nodeRadius(node) {
+  return 7 + node.degree * 1.4;
 }
 
 // --- Render: axes, edges (bowed toward center), nodes ------------------------
@@ -153,7 +158,7 @@ function renderAxis(params) {
         style: {
           text: axis.label,
           fill: t.ink,
-          fontSize: 22,
+          fontSize: 17,
           fontWeight: 600,
           align: cosA > 0.3 ? "left" : cosA < -0.3 ? "right" : "center",
           verticalAlign: sinA < -0.3 ? "bottom" : sinA > 0.3 ? "top" : "middle",
@@ -187,11 +192,28 @@ function renderEdge(params) {
 function renderNode(params) {
   const node = nodes[params.dataIndex];
   const [x, y] = toXY(node.radius, node.angle);
-  const r = 7 + node.degree * 1.4;
   return {
     type: "circle",
-    shape: { cx: x, cy: y, r },
+    shape: { cx: x, cy: y, r: nodeRadius(node) },
     style: { fill: t.palette[node.axisIdx], stroke: t.pageBg, lineWidth: 2 },
+  };
+}
+
+// Highlight the busiest ("hub") module on each axis with a thin halo ring —
+// sharpens the story of *which* node drives the axis's highest degree.
+function renderHub(params) {
+  const node = nodes[hubIndices[params.dataIndex]];
+  const [x, y] = toXY(node.radius, node.angle);
+  return {
+    type: "circle",
+    shape: { cx: x, cy: y, r: nodeRadius(node) + 5 },
+    style: {
+      fill: "none",
+      stroke: t.palette[node.axisIdx],
+      lineWidth: 1.5,
+      lineDash: [3, 3],
+      opacity: 0.8,
+    },
   };
 }
 
@@ -267,6 +289,14 @@ chart.setOption({
           return `${node.label}<br/>Category: ${AXES[node.axisIdx].label}<br/>Connections: ${node.degree}`;
         },
       },
+    },
+    {
+      type: "custom",
+      coordinateSystem: "none",
+      renderItem: renderHub,
+      data: hubIndices.map((_, i) => i),
+      z: 4,
+      silent: true,
     },
   ],
 });
