@@ -1,12 +1,8 @@
 // anyplot.ai
 // indicator-macd: MACD Technical Indicator Chart
-// Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
-//# anyplot-orientation: landscape
-// anyplot.ai
-// indicator-macd: MACD Technical Indicator Chart
 // Library: chartjs 4.4.7 | JavaScript 22
 // Quality: pending | Created: 2026-09-05
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -49,6 +45,25 @@ const signalLine = ema(macdLine, 9);
 const histogram = macdLine.map((v, i) => v - signalLine[i]);
 const zeroLine = dates.map(() => 0);
 
+// Find the strongest crossover (largest ensuing histogram swing) to give the
+// chart a focal point instead of pure data display.
+function strongestCrossover(hist) {
+  let best = null;
+  for (let i = 1; i < hist.length; i++) {
+    const bullish = hist[i - 1] <= 0 && hist[i] > 0;
+    const bearish = hist[i - 1] >= 0 && hist[i] < 0;
+    if (!bullish && !bearish) continue;
+    let strength = 0;
+    for (let j = i; j < Math.min(hist.length, i + 15); j++) {
+      if ((bullish && hist[j] < 0) || (bearish && hist[j] > 0)) break;
+      strength = Math.max(strength, Math.abs(hist[j]));
+    }
+    if (!best || strength > best.strength) best = { index: i, bullish, strength };
+  }
+  return best;
+}
+const crossover = strongestCrossover(histogram);
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -58,6 +73,38 @@ const bullColor = t.palette[0]; // #009E73 brand green — positive histogram / 
 const bearColor = t.palette[4]; // #AE3030 matte red — negative histogram / loss (semantic anchor)
 const macdColor = t.palette[2]; // #4467A3 blue — MACD line
 const signalColor = t.palette[3]; // #BD8233 ochre — signal line
+
+// Native Chart.js plugin (no external dependency) marking the strongest
+// bullish/bearish crossover — a distinctive, library-idiomatic way to give
+// the chart a storytelling focal point beyond generic combo-chart usage.
+const crossoverPlugin = {
+  id: "crossoverAnnotation",
+  afterDatasetsDraw(chart) {
+    const meta = chart.getDatasetMeta(2); // MACD line dataset
+    const point = meta.data[crossover.index];
+    if (!point) return;
+    const { ctx, chartArea } = chart;
+    const markerColor = crossover.bullish ? bullColor : bearColor;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 9, 0, Math.PI * 2);
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = markerColor;
+    ctx.stroke();
+
+    const label = crossover.bullish ? "Strongest bullish crossover" : "Strongest bearish crossover";
+    const labelBelow = point.y - 24 < chartArea.top;
+    const labelY = labelBelow ? point.y + 26 : point.y - 16;
+    let align = "center";
+    if (point.x < chartArea.left + 90) align = "left";
+    else if (point.x > chartArea.right - 90) align = "right";
+    ctx.font = "600 15px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textAlign = align;
+    ctx.fillText(label, point.x, labelY);
+    ctx.restore();
+  },
+};
 
 new Chart(canvas, {
   type: "bar",
@@ -77,8 +124,8 @@ new Chart(canvas, {
         type: "line",
         label: "Zero line",
         data: zeroLine,
-        borderColor: t.grid,
-        borderWidth: 1,
+        borderColor: t.inkSoft,
+        borderWidth: 1.5,
         borderDash: [6, 4],
         pointRadius: 0,
         pointHoverRadius: 0,
@@ -107,6 +154,7 @@ new Chart(canvas, {
       },
     ],
   },
+  plugins: [crossoverPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -147,7 +195,7 @@ new Chart(canvas, {
       y: {
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
-        title: { display: true, text: "MACD Value", color: t.ink, font: { size: 16 } },
+        title: { display: true, text: "MACD Value ($)", color: t.ink, font: { size: 16 } },
       },
     },
   },
