@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: indicator-macd
 created: '2026-09-05T05:42:42Z'
-updated: '2026-09-05T05:47:17Z'
+updated: '2026-09-05T05:57:45Z'
 generated_by: claude-sonnet
 workflow_run: 33947728845
 issue: 3181
@@ -12,56 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - 'Correct MACD structure: histogram (green/red), MACD line, signal line, and a
-    dashed zero reference line are all present and clearly distinguishable in both
-    themes.'
-  - Semantic green/red histogram coloring for bullish/bearish momentum directly satisfies
-    the spec's explicit request and reads intuitively without relying on hue alone
-    (position above/below zero reinforces the signal).
-  - Subtitle '12/26/9 EMA parameters' cleanly satisfies the spec's requirement to
-    note the standard parameters on the chart.
-  - 'Deterministic seeded data (LCG + EMA-derived MACD/signal) produces realistic
-    multi-cycle price momentum: a strong bull run, a deep bear run, small oscillations,
-    and several line crossovers — good coverage of the indicator''s behavior space.'
-  - 'Theme-adaptive chrome correctly implemented: both renders pass the light/dark
-    legibility check, backgrounds match #FAF8F1/#1A1A17, and data colors (green histogram,
-    blue MACD line, ochre signal line) are identical across themes.'
-  - 'Idiomatic Highcharts config: plotLines for the zero line, negativeColor for conditional
-    bar coloring, tight pointPadding/groupPadding for a near-continuous histogram
-    look, animation disabled on chart and series.'
+  - 'Directly resolves all three Review 1 weaknesses: a shaded plotBand now marks
+    the deepest bearish stretch, the MACD line is zoned to fade during that stretch,
+    and an explicit ''Bullish Crossover'' diamond + dataLabel marks the exact bar
+    where MACD crosses back above signal — closing the storytelling gap the spec calls
+    out as the key trading signal.'
+  - The zoneAxis/zones + plotBands + plotLines combination is a genuinely Highcharts-idiomatic,
+    declarative way to encode per-segment line emphasis — a stronger Library Mastery
+    showing than the previous negativeColor-only approach, and it is exactly the mechanism
+    Review 1 suggested.
+  - 'Core MACD structure remains correct and complete: green/red histogram (semantic
+    exception, redundantly encoded by bar position relative to zero), MACD/signal
+    lines in distinct blue/ochre, dashed zero reference line, and the 12/26/9 parameters
+    noted in the subtitle.'
+  - 'Deterministic seeded data (LCG + EMA-derived MACD/signal) still produces a realistic
+    full behavior space: a strong bull run, a deep bear run, small oscillations, and
+    several line crossovers — and the newly-labeled crossover lands on a genuine histogram
+    sign-change, not a cherry-picked point.'
+  - Theme-adaptive chrome remains fully correct in both renders; data colors (green/red
+    bars, blue MACD line, ochre signal line, ink diamond marker) are identical across
+    themes, and the new annotation label/marker are legible in both.
   weaknesses:
-  - 'Design Excellence is only modestly above a well-configured library default (DE-01):
-    the visual treatment relies mostly on required tokens (Imprint palette, theme
-    chrome) plus a subtitle, zero line, and negativeColor bars — consider a more distinctive
-    touch (e.g. a subtle shaded band over the deepest bearish stretch, or emphasis
-    on the most recent crossover) to lift it toward publication quality.'
-  - No visual callout marks a specific bullish/bearish crossover even though the spec
-    calls out crossovers as the key trading signal (DE-03) — a small marker or label
-    at one clear MACD/signal crossover would strengthen the storytelling without adding
-    clutter.
-  - negativeColor-based bar coloring (LM-02) is a fairly common cross-library pattern
-    (Chart.js/D3 can replicate it with a per-point color callback) rather than something
-    distinctive to Highcharts — leveraging a more Highcharts-specific mechanism (e.g.
-    zones, or a dataLabels formatter on the latest point) would raise Library Mastery.
-  - MACD line and signal line use blue/ochre (Imprint positions 3-4), skipping position
-    2 (lavender) in the canonical order — the semantic override (green/red for the
-    histogram) justifies deviating from strict ordinal order, but note this explicitly
-    next time so reviewers don't read it as an accidental skip.
+  - The zoned fade on the MACD line during the shaded bear band is a subtle effect
+    with no legend/caption explaining it — a first-time viewer could briefly read
+    the pale segment as missing/uncertain data rather than intentional de-emphasis;
+    a lighter touch or a one-word annotation would remove the ambiguity.
+  - DE-01 still leans mainly on config-level touches (band, zone, marker) rather than
+    deeper typographic or compositional distinctiveness — a solid step up from a bare
+    default, but short of true publication-level polish.
+  - MACD/signal still use Imprint positions 3-4, skipping position 2 (lavender); justified
+    by the spec's own blue/orange suggestion, but a one-line code comment noting the
+    intentional skip would help future reviewers (carried over from Review 1, no score
+    impact).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "indicator-macd · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "12/26/9 EMA parameters" in softer gray beneath it. Y-axis title "MACD Value" and tick labels in dark/soft-gray ink, all clearly legible against the light background. X-axis date ticks (Jun 30 … Oct 27) are legible and evenly spaced. A dashed horizontal zero-reference line crosses the plot in soft gray. Legend at the bottom ("Histogram" green dot, "MACD Line" blue line, "Signal Line" ochre line) is fully readable.
-      Data: Histogram bars alternate green (#009E73) above zero and matte red (#AE3030) below zero; MACD line is blue (Imprint position 3), signal line is ochre/tan (Imprint position 4). First series (histogram positive bars) correctly uses the brand green #009E73.
-      Legibility verdict: PASS — no light-on-light text, no overlapping elements, no clipping at the canvas edges.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "indicator-macd · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "12/26/9 EMA parameters" in softer gray beneath it. Y-axis title "MACD Value" and tick labels in dark/soft-gray ink, all clearly legible. X-axis date ticks (Jun 30 ... Oct 27) are legible and evenly spaced. A dashed horizontal zero-reference line crosses the plot in soft gray. A new pale rose-tinted plotBand shades the deepest bearish stretch (~Jul 21-Aug 28). Legend at the bottom ("Histogram" green dot, "MACD Line" blue line, "Signal Line" ochre line) is fully readable.
+      Data: Histogram bars alternate green (#009E73) above zero and matte red (#AE3030) below zero. MACD line is blue (Imprint position 3) but fades to a pale washed-out blue-gray inside the shaded band (a zones-based de-emphasis), returning to full blue right where a black diamond marker and "Bullish crossover" label call out the point where the histogram turns positive again. Signal line is ochre/tan (Imprint position 4) and stays full-intensity throughout. First series (histogram positive bars) correctly uses the brand green #009E73.
+      Legibility verdict: PASS - no light-on-light text, no overlapping elements, no clipping at the canvas edges; the new annotation label sits in clear space near the marker.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle now render in light ink (near-white/soft-gray) against the dark background. Y-axis title, tick labels, x-axis date ticks, and legend text all switched to light-colored chrome and remain fully legible. The dashed zero-reference line is a light gray dash, clearly visible against the dark surface.
-      Data: Histogram green/red bars, blue MACD line, and ochre signal line are pixel-identical in hue to the light render — only the chrome (background, text, grid, zero-line color) flipped, as required.
-      Legibility verdict: PASS — no dark-on-dark text found; every title/label/tick is clearly readable against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title and subtitle render in light ink (near-white/soft-gray) against the dark background. Y-axis title, tick labels, x-axis date ticks, and legend text all switched to light-colored chrome and remain fully legible. The dashed zero-reference line is a light gray dash, clearly visible. The plotBand over the bearish stretch renders as a dark maroon-tinted overlay, consistent with the same low-opacity red used in light mode.
+      Data: Histogram green/red bars, blue MACD line (with the same zoned fade inside the band), ochre signal line, and the "Bullish crossover" diamond + white-ink label are pixel-identical in hue to the light render - only the chrome (background, text, grid, zero-line, band tint direction) flipped, as required.
+      Legibility verdict: PASS - no dark-on-dark text found; every title/label/tick/annotation is clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,23 +69,24 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22/16/14px), readable in both themes;
-          X-axis has no explicit title but dates are self-evident from tick labels
-          so this is not a deduction.
+        comment: All font sizes explicitly set (22/16/14/13px), readable in both themes
+          including the new dataLabel annotation; X-axis has no explicit title but
+          dates are self-evident from tick labels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No overlapping text or data elements in either render; the new 'Bullish
+          crossover' label sits in clear space near its marker.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tight column padding (pointPadding 0.05, groupPadding 0) gives a
-          near-continuous histogram appropriate for ~125 points; line width 2.5 keeps
-          MACD/signal lines prominent.
+        comment: Tight column padding gives a near-continuous histogram appropriate
+          for ~125 points; line width 2.5 keeps MACD/signal lines prominent; the diamond
+          crossover marker is clearly visible at radius 7.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -102,7 +100,7 @@ review:
         max: 4
         passed: true
         comment: Plot area fills the majority of the canvas with balanced margins;
-          nothing cut off.
+          nothing cut off, including the new annotation and shaded band.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -116,35 +114,37 @@ review:
         max: 2
         passed: true
         comment: 'First series (histogram positive bars) is #009E73; MACD/signal use
-          Imprint positions 3-4; backgrounds and chrome are theme-correct in both
-          renders; data colors identical across themes.'
+          Imprint positions 3-4; the muted zone and band tint are derived from the
+          same Imprint hexes via opacity, not new hues; backgrounds and chrome are
+          theme-correct in both renders.'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default — subtitle, zero line, and negativeColor
-          bars are thoughtful but mostly required by the style guide/library prompt
-          rather than distinctive customization.
+        passed: true
+        comment: The shaded bearish-stretch band, zoned line fade, and crossover marker
+          are genuine bespoke touches that clearly lift the chart above a configured
+          default, though still short of full publication-level typography/composition.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle horizontal-only gridlines, no vertical gridlines, generous
-          whitespace; not maximally refined but clearly above bare defaults.
+        comment: Subtle horizontal-only gridlines, generous whitespace, and a tastefully
+          low-opacity band; the zoned fade is a nice detail though its purpose isn't
+          self-explanatory.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Visual hierarchy via synchronized histogram/lines and the zero reference
-          line guides the reader toward crossover moments, but no explicit annotation
-          calls one out.
+        comment: The band + fade + explicit 'Bullish crossover' marker guide the viewer
+          directly to the spec's key trading signal (a MACD/signal crossover) — the
+          insight is immediate.
     spec_compliance:
       score: 15
       max: 15
@@ -162,7 +162,7 @@ review:
         max: 4
         passed: true
         comment: Green/red histogram, zero reference line, distinct MACD/signal colors,
-          12/26/9 parameters noted in subtitle — all present.
+          12/26/9 parameters noted, and now an explicit crossover callout — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -175,7 +175,8 @@ review:
         max: 3
         passed: true
         comment: Title matches 'indicator-macd · javascript · highcharts · anyplot.ai';
-          legend labels (Histogram, MACD Line, Signal Line) match the data.
+          legend labels (Histogram, MACD Line, Signal Line) match the data; the crossover
+          marker is correctly excluded from the legend.
     data_quality:
       score: 14
       max: 15
@@ -185,7 +186,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bull run, bear run, small oscillations, and multiple crossovers
+        comment: Shows bull run, deep bear run, small oscillations, and multiple crossovers
           — full behavior space of a MACD indicator.
       - id: DQ-02
         name: Realistic Context
@@ -210,8 +211,9 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: data generation, EMA/MACD helper functions (necessary
-          for the calculation, not over-engineering), chart config.'
+        comment: 'Linear flow: data generation, EMA/MACD helper functions and trough/crossover
+          detection (necessary for the calculation and annotation, not over-engineering),
+          chart config.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -230,8 +232,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for computing MACD/signal/histogram; no fake
-          UI or interactivity.
+        comment: Appropriate complexity for computing MACD/signal/histogram plus the
+          trough/crossover detection; no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -240,31 +242,35 @@ review:
         comment: Follows the mount-node contract, animation disabled on chart and
           series, current Highcharts API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Combines column + line + scatter series with plotBands, plotLines,
+          zoneAxis/zones, and a dataLabels-based annotation — a comprehensive, idiomatic
+          use of Highcharts' declarative config surface.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Combines column + line series types with plotLines for the zero reference
-          — solid idiomatic Highcharts usage.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses negativeColor for per-sign bar coloring, a genuine Highcharts
-          feature, though replicable with manual per-point styling in other libraries.
-  verdict: REJECTED
+        comment: zoneAxis/zones for per-segment line coloring, combined with plotBands
+          and negativeColor, leverages several genuinely Highcharts-specific declarative
+          mechanisms rather than the single negativeColor trick from Review 1.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
   - rolling-window
-  styling: []
+  styling:
+  - alpha-blending
