@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: network-directed
 created: '2026-09-05T10:01:19Z'
-updated: '2026-09-05T10:05:09Z'
+updated: '2026-09-05T10:16:56Z'
 generated_by: claude-sonnet
 workflow_run: 33959013123
 issue: 2858
@@ -12,44 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Correctly navigates the "core bundle only" Highcharts constraint by hand-drawing
-    arrowed edges with the SVGRenderer behind node markers instead of faking interactivity
-    or reaching for the unavailable networkgraph module.
-  - Node radius scales with in-degree and marker shape+color both encode tier membership
-    — redundant encoding that reads well and stays colorblind-safe.
-  - Canonical Imprint palette order applied correctly and identically across themes;
-    all chrome (title, subtitle, legend, edge color) is threaded through ANYPLOT_TOKENS
-    for both light and dark.
-  - Title, subtitle, and legend are legible in both renders; backgrounds are correctly
-    warm off-white/near-black with nothing clipped at any canvas edge.
+  - Edge weight now drives arrow line thickness (1 + weight*0.6), adding the spec's
+    optional weight dimension that was missing in attempt 1 and directly answering
+    the prior review's DQ-01 note.
+  - Incoming arrows now fan out around each target node's perimeter (deterministic
+    per-edge angular offset), so hub nodes like "logger" and "database" no longer
+    show arrows converging on a single point — directly fixes the prior VQ-03 weakness.
+  - Slight deterministic quadratic curvature on every edge (hashed per source/target
+    pair) reduces the visual ambiguity of overlapping straight paths through the dense
+    middle tiers, improving traceability per the prior DE-03 note.
+  - Correctly composes arrowed directed edges from the core SVGRenderer (chart.renderer.g/.path)
+    since the core highcharts bundle has no networkgraph module — avoids any forbidden
+    add-on or faked interactivity.
+  - Node radius still scales with in-degree and marker shape+color redundantly encode
+    tier membership, keeping the plot colorblind-safe.
+  - Canonical Imprint palette order (green/lavender/blue/ochre) applied correctly
+    and identically across both themes; all chrome threaded through ANYPLOT_TOKENS.
+  - Title, subtitle, node labels, and legend are legible in both renders; backgrounds
+    are correctly warm off-white/near-black with nothing clipped at any canvas edge.
   weaknesses:
-  - Dense edge crossings in the middle tiers reduce at-a-glance traceability of individual
-    dependency paths — consider a layout tweak (more horizontal/vertical spread, or
-    slight edge curvature) to cut crossings, especially around "database" and "auth"
-    where several edges converge tightly.
-  - Arrowheads can get visually lost where multiple edges converge on one target node
-    (e.g. "logger", "database") — a slightly larger or higher-opacity arrowhead would
-    improve directionality legibility.
-  - The spec's optional edge weight attribute isn't used to vary line thickness/style,
-    which would have added an extra data dimension (minor, since it's optional).
+  - With 27 edges and several weight-5 lines now thicker, the middle-tier crossings
+    are still visually busy even with the new curvature/fan-out — a reader still needs
+    to trace a specific path carefully rather than seeing it at a glance.
+  - Arrow drawing remains generic canvas/trigonometry math layered on top of Highcharts'
+    SVGRenderer rather than a Highcharts-specific feature, so Library Mastery (distinctive
+    features) is only partially raised by this attempt.
+  - Helper functions (edgeHash, drawEdges, drawArrow, nodeRadius) deviate from the
+    strict KISS import->data->plot->save structure — justified by the missing networkgraph
+    module, but still a minor Code Quality deduction.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches spec.
-      Chrome: Title "network-directed · javascript · highcharts · anyplot.ai" bold dark ink; subtitle "Module import graph — arrows point from importer to dependency" soft gray; node labels dark ink; legend (Entry points / Orchestration / Services / Foundation) centered at bottom, soft gray text. All clearly readable.
-      Data: Four tiers colored with Imprint palette in canonical order — green circles (Entry points), lavender diamonds (Orchestration), blue squares (Services), ochre triangles (Foundation). First series is #009E73. Node radius scales with in-degree (e.g. "logger" triangle is largest, matching indeg=7). Gray directed arrows with visible arrowheads connect nodes left to right.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "network-directed · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Module import graph — arrows point from importer to dependency" in soft gray beneath it. 15 node labels (cli, server, worker, router, scheduler, api_gateway, auth, database, cache, queue, logger, config, utils) render in dark text above their nodes. Four-item legend ("Entry points", "Orchestration", "Services", "Foundation") centered at the bottom in soft-gray text. All chrome is clearly readable against the light background.
+      Data: Four tiers colored in canonical Imprint order — green circles (Entry points, #009E73), lavender diamonds (Orchestration), blue squares (Services), ochre triangles (Foundation). Node radius scales with in-degree (the ochre "logger" triangle is visibly the largest hub). Gray directed edges with visible arrowheads connect nodes left-to-right; edges now have slight curvature and fan out around each target's perimeter, and line thickness visibly varies with the edge weight (e.g. the five edges converging on "logger" from router/scheduler/api_gateway/auth/database/cache are noticeably thicker than the lighter "config"/"utils" edges).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches spec.
-      Chrome: Title, subtitle, node labels, and legend all flip to light ink / light gray text. No dark-on-dark issues — every text element is clearly legible against the near-black surface.
-      Data: Colors (green/lavender/blue/ochre nodes, gray edges) are pixel-identical to the light render — only chrome flipped, as required.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and subtitle flip to light ink / soft light-gray text, node labels flip to light text, legend flips to light-gray text — all clearly legible, no dark-on-dark failures anywhere.
+      Data: Data colors (green/lavender/blue/ochre nodes, gray edges) are identical to the light render — only chrome flipped, confirming palette-position stability across themes. Node sizing, edge curvature, fan-out, and weight-based line thickness are all identical to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,69 +65,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/subtitle/labels/legend all readable in both themes at sensible
-          sizes
+        comment: Title 22px, subtitle/labels/legend 14px, all explicitly set and readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text or text-on-node collisions
+        comment: No text-on-text or text-on-node collisions; edges cross densely but
+          never collide with labels.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Arrowheads get crowded where multiple edges converge on one target
-          node
+        comment: Fan-out around target perimeters + larger/higher-opacity arrowheads
+          (14px, opacity 0.9) fix the prior convergence problem at hub nodes; still
+          slightly busy in the dense middle tiers.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Shape + color redundantly encode tier, CVD-safe
+        comment: Shape (circle/diamond/square/triangle) + color redundantly encode
+          tier, CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No overflow, nothing clipped at any canvas edge
+        comment: Good margins, nothing clipped at any canvas edge in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed; title + subtitle fully describe the plot
+        comment: No axes needed for a network graph; title + subtitle fully describe
+          the plot and direction convention.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, identical data colors across themes, correct
-          backgrounds
+        comment: 'Canonical Imprint order, identical data colors across themes, correct
+          #FAF8F1/#1A1A17 backgrounds.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Marker shape + size-by-in-degree encode structure beyond raw color
+        comment: Weight-driven line thickness plus in-degree-driven node size and
+          shape+color redundancy goes well past a configured default.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean chrome, subtle low-opacity curved edges, fanned arrowheads,
+          generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clean chrome, subtle low-opacity edges, generous whitespace
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: In-degree-scaled hub creates a focal point, but dense edge crossings
-          undercut the narrative
+        comment: Thicker weight-5 edges converging on the largest 'logger' hub now
+          visually tell the 'heavily-depended-upon foundation module' story better
+          than attempt 1; dense crossings still require some manual tracing.
     spec_compliance:
       score: 15
       max: 15
@@ -129,49 +144,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine directed network graph with arrowed edges
+        comment: Genuine directed network graph with arrowed edges.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, directed edges with arrowheads, grouped layout, legend
+        comment: Nodes with labels, directed edges with arrowheads, weight now driving
+          edge thickness, curved edges to reduce overlap — all spec notes covered.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source to target direction correctly rendered for all 16 nodes /
-          27 edges
+        comment: Source->target direction correctly rendered; all 15 nodes and 27
+          edges present and visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match tier names
+        comment: Title matches the mandated format; legend labels match the tier names
+          used in the data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes, directed edges, grouping, in-degree sizing; optional weight
-          attribute unused
+        comment: Nodes, directed edges, tier grouping, in-degree-driven sizing, AND
+          now edge-weight-driven thickness are all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software module import graph is realistic and neutral
+        comment: Software module import graph is a textbook, neutral, real-world scenario
+          straight from the spec's own example.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 nodes / 27 edges within the spec's 10-50 node range
+        comment: 15 nodes / 27 edges sits comfortably inside the spec's 10-50 node
+          range.
     code_quality:
       score: 9
       max: 10
@@ -181,32 +200,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions justified by the need to hand-draw arrows (no networkgraph
-          module)
+        comment: Helper functions (edgeHash, drawEdges, drawArrow, nodeRadius) are
+          used, but justified since the core bundle has no networkgraph module.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data
+        comment: Fully deterministic, hard-coded in-memory data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond provided globals
+        comment: No imports beyond the provided Highcharts global and ANYPLOT_TOKENS.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no faked interactivity
+        comment: Appropriately complex for hand-rolled arrow geometry, no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: Highcharts.chart("container", ...) with no explicit width/height,
+          animation:false on chart and series.
     library_mastery:
       score: 7
       max: 10
@@ -216,21 +236,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composes arrows from core SVGRenderer instead of the forbidden networkgraph
-          add-on
+        comment: Composes arrows from the core SVGRenderer (chart.renderer.g/.path)
+          behind point markers -- the most native solution given the core-bundle constraint.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses per-series marker symbol cycling for redundant shape encoding;
-          arrow math itself is generic
+        passed: true
+        comment: Per-series automatic marker symbol cycling plus renderer-level custom
+          edge/arrow composition; the geometry itself is still generic trigonometry
+          rather than a Highcharts-specific API feature.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - annotations
+  - custom-rendering
   patterns:
   - data-generation
   - iteration-over-groups
@@ -238,4 +258,3 @@ impl_tags:
   styling:
   - publication-ready
   - alpha-blending
-  - minimal-chrome
