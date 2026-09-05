@@ -9,6 +9,7 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { axisClasses } from "@mui/x-charts/ChartsAxis";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -55,6 +56,8 @@ const binCenters = binCounts.map((_, i) => dataMin + (i + 0.5) * binWidth);
 // --- Fitted Normal PDF, sampled at the same bin centers ----------------------
 // Sampled at the bin centers (not a finer grid) so it shares the histogram's
 // band-scale x-axis as a genuine MUI X combo chart, no manual SVG positioning.
+// The `curve: "monotoneX"` on the line series interpolates a smooth spline
+// through those points so the fit still reads as a continuous PDF.
 const sampleMean = weights.reduce((s, w) => s + w, 0) / N;
 const sampleSd = Math.sqrt(
   weights.reduce((s, w) => s + (w - sampleMean) ** 2, 0) / (N - 1)
@@ -71,13 +74,15 @@ const BRAND = t.palette[0]; // #009E73
 const CURVE = t.palette[1]; // #C475FD
 
 // Title sizing (scale down for longer-than-67-char titles)
-const TITLE = "histogram-density · javascript · muix · anyplot.ai";
+const TITLE =
+  "Package Weight Distribution · histogram-density · javascript · muix · anyplot.ai";
 const titleSize = Math.max(11, Math.round(22 * (67 / TITLE.length)));
+const SUBTITLE = `Mean ${sampleMean.toFixed(1)} g · SD ${sampleSd.toFixed(1)} g — fitted Normal PDF overlay`;
 
 // --- Main component (default-exported — the harness mounts it) --------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const TITLE_H = 56;
+  const TITLE_H = 76;
 
   return (
     <Box
@@ -104,6 +109,20 @@ export default function Chart() {
       >
         {TITLE}
       </Typography>
+      <Typography
+        sx={{
+          fontSize: 14,
+          fontWeight: 400,
+          color: t.inkSoft,
+          px: "40px",
+          pt: "4px",
+          pb: 0,
+          lineHeight: 1.2,
+          fontFamily: FONT,
+        }}
+      >
+        {SUBTITLE}
+      </Typography>
 
       <ChartContainer
         width={width}
@@ -123,6 +142,7 @@ export default function Chart() {
             label: "Fitted Normal PDF",
             color: CURVE,
             showMark: false,
+            curve: "monotoneX",
           },
         ]}
         xAxis={[
@@ -150,12 +170,26 @@ export default function Chart() {
         skipAnimation
       >
         <ChartsGrid horizontal sx={{ "& line": { stroke: t.grid, strokeWidth: 0.8 } }} />
-        <BarPlot skipAnimation />
+        <BarPlot skipAnimation borderRadius={4} />
         <LinePlot skipAnimation slotProps={{ line: { sx: { strokeWidth: 3.5 } } }} />
-        <ChartsXAxis axisId="weight-axis" />
+        {/* Softened axis lines/ticks (t.grid instead of full-ink) for a less
+            default-MUI-X, more refined chrome — data ink stays untouched. */}
+        <ChartsXAxis
+          axisId="weight-axis"
+          sx={{
+            [`& .${axisClasses.line}`]: { stroke: t.grid },
+            [`& .${axisClasses.tick}`]: { stroke: t.grid },
+          }}
+        />
         {/* Explicit axisLabel x offset — the default offset formula assumes
             short tick labels and clips against our 4-char decimal density values. */}
-        <ChartsYAxis slotProps={{ axisLabel: { x: -72 } }} />
+        <ChartsYAxis
+          slotProps={{ axisLabel: { x: -72 } }}
+          sx={{
+            [`& .${axisClasses.line}`]: { stroke: t.grid },
+            [`& .${axisClasses.tick}`]: { stroke: t.grid },
+          }}
+        />
         <ChartsLegend
           position={{ vertical: "top", horizontal: "right" }}
           slotProps={{
