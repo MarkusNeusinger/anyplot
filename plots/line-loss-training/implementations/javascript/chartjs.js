@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-loss-training: Training Loss Curve
-// Library: chartjs 4.4.7 | JavaScript 22.23.3
-// Quality: pending | Created: 2026-09-05
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-09-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
