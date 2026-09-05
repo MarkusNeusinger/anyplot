@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-cumulative: Cumulative Histogram
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 83/100 | Created: 2026-09-05
+// Quality: 89/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 const theme = window.ANYPLOT_THEME;
