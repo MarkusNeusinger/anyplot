@@ -30,12 +30,16 @@ const countries = [
   [0, 4, 61, "PT", "Portugal"],
   [1, 4, 50, "ES", "Spain"],
   [3, 4, 40, "IT", "Italy"],
-  [5, 5, 45, "GR", "Greece"],
+  [4, 4, 45, "GR", "Greece"],
 ];
 
 const colCount = Math.max(...countries.map((c) => c[0])) + 1;
 const rowCount = Math.max(...countries.map((c) => c[1])) + 1;
 const values = countries.map((c) => c[2]);
+const maxValue = Math.max(...values);
+const minValue = Math.min(...values);
+const maxCountry = countries.find((c) => c[2] === maxValue);
+const minCountry = countries.find((c) => c[2] === minValue);
 
 // --- Title --------------------------------------------------------------
 const title =
@@ -44,6 +48,7 @@ const titleFontSize = Math.max(
   14,
   Math.round(22 * Math.min(1, 67 / title.length)),
 );
+const subtitle = `Bold outline marks the highest (${maxCountry[4]}, ${maxValue}%) and lowest (${minCountry[4]}, ${minValue}%) performers`;
 
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -54,9 +59,11 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: title,
+    subtext: subtitle,
     left: "center",
     top: 20,
     textStyle: { color: t.ink, fontSize: titleFontSize, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
   tooltip: {
     formatter: (params) => {
@@ -64,7 +71,7 @@ chart.setOption({
       return `${c[4]} (${c[3]}): ${c[2]}% renewable`;
     },
   },
-  grid: { left: 60, right: 60, top: 140, bottom: 200, containLabel: false },
+  grid: { left: 60, right: 60, top: 170, bottom: 200, containLabel: false },
   xAxis: {
     type: "category",
     data: Array.from({ length: colCount }, (_, i) => i),
@@ -78,14 +85,14 @@ chart.setOption({
   },
   visualMap: {
     type: "continuous",
-    min: Math.min(...values),
-    max: Math.max(...values),
+    min: minValue,
+    max: maxValue,
     orient: "horizontal",
     left: "center",
     bottom: 70,
     itemWidth: 22,
     itemHeight: 260,
-    text: ["High", "Low"],
+    text: [`High (${maxValue}%)`, `Low (${minValue}%)`],
     textGap: 16,
     textStyle: { color: t.inkSoft, fontSize: 16 },
     inRange: { color: t.seq },
@@ -93,24 +100,53 @@ chart.setOption({
   },
   series: [
     {
-      type: "heatmap",
+      // Custom renderItem series (rather than a plain heatmap) draws each
+      // tile as a hand-built rounded rect, giving direct control over the
+      // per-tile emphasis border used to call out the min/max performers.
+      type: "custom",
+      coordinateSystem: "cartesian2d",
+      encode: { x: 0, y: 1, value: 2 },
       data: countries.map((c) => [c[0], c[1], c[2]]),
-      itemStyle: {
-        borderColor: t.pageBg,
-        borderWidth: 8,
-        borderRadius: 8,
-      },
-      label: {
-        show: true,
-        formatter: (params) => countries[params.dataIndex][3],
-        color: "#FFFFFF",
-        fontSize: 26,
-        fontWeight: 600,
-        textBorderColor: "rgba(0,0,0,0.35)",
-        textBorderWidth: 3,
-      },
-      emphasis: {
-        itemStyle: { borderColor: t.ink, borderWidth: 3 },
+      renderItem: (params, api) => {
+        const col = api.value(0);
+        const row = api.value(1);
+        const value = api.value(2);
+        const center = api.coord([col, row]);
+        const size = api.size([1, 1]);
+        const width = size[0] * 0.86;
+        const height = size[1] * 0.86;
+        const isExtreme = value === maxValue || value === minValue;
+        const country = countries[params.dataIndex];
+        return {
+          type: "rect",
+          shape: {
+            x: center[0] - width / 2,
+            y: center[1] - height / 2,
+            width,
+            height,
+            r: 10,
+          },
+          style: {
+            fill: api.visual("color"),
+            stroke: isExtreme ? t.ink : t.pageBg,
+            lineWidth: isExtreme ? 4 : 8,
+          },
+          textContent: {
+            type: "text",
+            style: {
+              text: country[3],
+              fill: "#FFFFFF",
+              fontSize: 26,
+              fontWeight: 600,
+              textBorderColor: "rgba(0,0,0,0.35)",
+              textBorderWidth: 3,
+            },
+          },
+          textConfig: { position: "inside" },
+          emphasis: {
+            style: { stroke: t.ink, lineWidth: 4 },
+          },
+        };
       },
     },
   ],
