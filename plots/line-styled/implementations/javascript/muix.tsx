@@ -7,6 +7,7 @@ import {
   lineElementClasses,
   getLineElementUtilityClass,
 } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -41,12 +42,23 @@ for (let i = 0; i < MINUTES.length; i += 1) {
   p999.push(Math.round((baseline + tailGap + deepTailGap + spike) * 10) / 10);
 }
 
+// The single largest tail-latency spike is the focal point of the story
+// (called out with a reference line below) — find it once, up front.
+let peakIndex = 0;
+for (let i = 1; i < p999.length; i += 1) {
+  if (p999[i] > p999[peakIndex]) peakIndex = i;
+}
+const peakMinute = MINUTES[peakIndex];
+const peakValue = p999[peakIndex];
+
 // Standard line styles mapped to series, so the chart stays legible when
-// printed in monochrome (spec: solid, dashed, dotted, dash-dot).
+// printed in monochrome (spec: solid, dashed, dotted, dash-dot). p99's dots
+// are a touch denser/thicker than a minimal dotted pattern so they stay
+// visible where p99 and p99.9 cross, and at small (mobile) render scale.
 const SERIES = [
   { id: "p50", label: "p50 latency", dash: "none" },
   { id: "p90", label: "p90 latency", dash: "11 7" },
-  { id: "p99", label: "p99 latency", dash: "2 6" },
+  { id: "p99", label: "p99 latency", dash: "3 5" },
   { id: "p999", label: "p99.9 latency", dash: "13 5 2 5" },
 ];
 
@@ -105,9 +117,8 @@ function LegendRow({ topGap }: { topGap: number }) {
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const titleHeight = 56;
-  const axisCaptionHeight = 26;
   const legendHeight = 48;
-  const chartHeight = height - titleHeight - axisCaptionHeight - legendHeight;
+  const chartHeight = height - titleHeight - legendHeight;
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column" }}>
@@ -124,21 +135,6 @@ export default function Chart() {
         }}
       >
         line-styled · javascript · muix · anyplot.ai
-      </div>
-      {/* Manual y-axis caption: MUI X's rotated axis `label` collides with
-          3-digit tick numbers on this data range, so it is drawn here instead. */}
-      <div
-        style={{
-          height: axisCaptionHeight,
-          display: "flex",
-          alignItems: "flex-end",
-          paddingLeft: 16,
-          fontSize: 16,
-          color: t.ink,
-          fontFamily: "system-ui, sans-serif",
-        }}
-      >
-        Response Latency (ms)
       </div>
       <LineChart
         width={width}
@@ -162,6 +158,16 @@ export default function Chart() {
         ]}
         yAxis={[
           {
+            label: "Response Latency (ms)",
+            // MUI X positions the axis label at a fixed `tickFontSize + tickSize
+            // + 10` offset from the axis line, independent of how wide the tick
+            // numbers actually render — with 3-digit ticks (up to "190") the
+            // real default collides with the label. `tickFontSize` only feeds
+            // that offset math here since `tickLabelStyle.fontSize` below wins
+            // for the rendered numbers, so bumping it clears the collision
+            // without changing the tick numbers' visual size.
+            tickFontSize: 34,
+            labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
@@ -174,14 +180,25 @@ export default function Chart() {
           showMark: false,
         }))}
         grid={{ horizontal: true }}
-        margin={{ top: 20, right: 32, bottom: 64, left: 72 }}
+        margin={{ top: 20, right: 32, bottom: 64, left: 96 }}
         slots={{ legend: () => null }}
         sx={{
           ...lineSx,
           "& .MuiChartsAxisLine": { stroke: t.inkSoft },
           "& .MuiChartsAxisTick": { stroke: t.inkSoft },
         }}
-      />
+      >
+        {/* Focal-point touch: mark the single largest tail-latency spike
+            instead of leaving the p99.9 story purely implicit. */}
+        <ChartsReferenceLine
+          x={peakMinute}
+          label={`peak p99.9 · ${peakValue}ms`}
+          labelAlign="start"
+          spacing={{ x: -150, y: 10 }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4" }}
+          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+        />
+      </LineChart>
       <LegendRow topGap={legendHeight - 14 - 8} />
     </div>
   );
