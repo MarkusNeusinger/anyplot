@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: histogram-density
 created: '2026-09-05T04:38:58Z'
-updated: '2026-09-05T04:42:49Z'
+updated: '2026-09-05T04:52:31Z'
 generated_by: claude-sonnet
 workflow_run: 33944925185
 issue: 2442
@@ -12,127 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Correct density-histogram normalization: bin heights are counts divided by (N
-    × bin width), so bar area sums to 1 as required by the spec.'
-  - Combo bar+line chart overlays a fitted Normal PDF sampled at the bin centers,
-    directly fulfilling the spec's 'consider a theoretical PDF overlay' note and giving
-    the chart a clear statistical story.
-  - Realistic, neutral data context (filling-line package weights, 500g nominal, SD=6g)
-    with an appropriate sample size (N=400) squarely inside the spec's 50-1000 recommendation.
-  - 'Imprint palette used correctly and canonically: bars use palette[0] (#009E73),
-    fitted curve uses palette[1]; colors are identical between light and dark renders,
-    only chrome flips.'
-  - Deterministic, dependency-free data generation via a fixed-seed LCG + Box-Muller
-    transform, appropriate for the browser render harness.
-  - 'Both renders pass the theme-readability check: warm off-white/near-black backgrounds,
-    fully legible ink/inkSoft text, subtle horizontal-only grid.'
+  - Genuine MUI X combo chart built from ChartContainer primitives (BarPlot + LinePlot
+    sharing one band x-axis) rather than a manual overlay hack
+  - Descriptive subtitle with computed sample mean/SD adds real quantitative context
+    and storytelling
+  - Theme-correct, pixel-identical data colors between light and dark renders; all
+    chrome properly theme-adaptive
+  - Realistic, neutral packaging-QC scenario with a plausible process SD
   weaknesses:
-  - Visual design leans heavily on MUI X defaults beyond the palette swap and combo-series
-    choice — no additional refinement such as bar corner rounding, softened axis lines,
-    or a subtitle/annotation calling out the fit quality; limits Design Excellence
-    relative to a genuinely polished statistical chart.
-  - Title occupies only ~44% of canvas width (well under the 50-70% guideline) because
-    the title-scaling formula assumes a fixed 67-char reference length but this title
-    has no descriptive prefix and is only 49 chars — not a hard fault, but a short
-    descriptive prefix (e.g. 'Package Weight Distribution · ...') would fill the band
-    better and add storytelling value.
-  - The fitted Normal PDF line is sampled only at the 18 bin centers rather than a
-    finer x-grid, so the curve looks subtly polygonal/segmented near the peak instead
-    of smooth — a denser sample grid (e.g. 80-100 points) would read as a proper continuous
-    PDF while still sharing the same x-domain.
+  - Axis lines/ticks are recolored to the grid token but not removed - a fully pared-back
+    L-shaped (or spineless) frame would read as more refined per the style guide's
+    top Visual-Refinement tier
+  - Data storytelling relies on the subtitle text and curve overlay alone; an explicit
+    visual callout (e.g. a shaded +/-1 SD band or a goodness-of-fit annotation) would
+    push Design Excellence further
+  - The bar+line combo pattern, while implemented idiomatically for MUI X, is also
+    straightforward in other JS charting libraries - a more MUI-X-distinctive touch
+    (e.g. gradient fills, custom axis highlight) would raise Library Mastery
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matching the required light-theme surface.
-      Chrome: Title "histogram-density · javascript · muix · anyplot.ai" in dark ink, top-left, comfortably sized and fully within canvas bounds. X-axis label "Package Weight (g)" and y-axis label "Density" both in dark ink, legible. Tick labels (every other x-tick shown to avoid crowding, e.g. 484, 488, 492...) in a slightly softer dark grey. Legend top-right with two swatches ("Observed density" green, "Fitted Normal PDF" purple) in dark text. Thin horizontal grid lines, subtle but visible.
-      Data: 18 teal-green (#009E73) bars forming a roughly bell-shaped density histogram peaking around 500g, overlaid with a smooth purple/lilac line tracing the fitted Normal PDF that closely follows the bar peaks. First series is the mandated brand green.
-      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "Package Weight Distribution · histogram-density · javascript · muix · anyplot.ai" in dark ink at top-left; soft-gray subtitle "Mean 500.2 g · SD 6.1 g — fitted Normal PDF overlay" below it; axis labels "Package Weight (g)" and "Density" both clearly visible; tick labels (484-518 on x, 0.000-0.075 on y) readable; legend top-right with "Observed density" / "Fitted Normal PDF" swatches; faint horizontal grid lines.
+      Data: 18 green (#009E73) bars forming a bell-shaped density histogram, overlaid with a smooth lavender (#C475FD) line (fitted Normal PDF) tracking the bar heights closely.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matching the required dark-theme surface.
-      Chrome: Same title, now in light/white ink, fully legible. Axis labels and tick labels rendered in light ink/soft-light grey, clearly visible against the dark background — no dark-on-dark failures observed. Legend text also switches to light ink. Grid lines remain subtle but visible as faint light-grey horizontal lines.
-      Data: Bars remain the identical teal-green (#009E73) and the fitted-PDF line remains the identical purple — confirming data colors are unchanged between themes; only chrome (background, text, grid) flipped as required.
-      Legibility verdict: PASS — all text is clearly legible on the dark surface; brand green and purple both read well against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title/subtitle text now in light ink/gray; axis labels and tick labels in light gray, clearly readable; legend rendered with light text; faint light-colored horizontal grid lines. No dark-on-dark issues observed anywhere.
+      Data: Bar color (#009E73) and line color (#C475FD) are identical to the light render - confirmed unchanged, only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; title auto-scales
-          for length.
+        comment: Explicit font sizes throughout, fully readable in both themes, no
+          overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; every-other tick labeling avoids x-axis
-          crowding.
+        comment: No overlap between any text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 18 bars from N=400 clearly visible; 3.5px line weight makes the fitted
-          PDF prominent.
+        comment: 18 bars for 400 observations read clearly; smooth monotoneX PDF curve
+          is clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing has strong contrast and is not a red-green pairing.
+        comment: Green vs. lavender gives strong hue+lightness contrast; not red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, no clipping or overflow, deliberate y-axis
-          label offset avoids clipping.
+        comment: Chart occupies the large majority of the canvas with balanced margins;
+          legend near the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Units included ('Package Weight (g)', 'Density'); title matches the
-          mandated format.
+        comment: '"Package Weight (g)" has units; "Density" is the correct concept
+          for a normalized histogram'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Bars = palette[0] (#009E73), curve = palette[1], canonical order;
-          backgrounds correct in both themes.
+        comment: 'First series #009E73, second #C475FD (canonical order); theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Combo chart with fitted-curve overlay shows some sophistication,
-          but styling otherwise leans on MUI X defaults.
+        passed: true
+        comment: Dynamic title sizing, computed-stats subtitle, rounded bar corners,
+          softened axis-line color - above-default polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid is subtle and horizontal-only (customized), but axis lines/bars
-          are default MUI X chrome with no further refinement.
+        passed: true
+        comment: Subtle grid and generous whitespace, but axis lines are recolored
+          rather than removed
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Fitted PDF over the histogram creates a clear goodness-of-fit focal
-          point via color contrast.
+        comment: Subtitle + PDF overlay create a clear goodness-of-fit narrative;
+          no explicit visual callout beyond that
     spec_compliance:
       score: 15
       max: 15
@@ -142,49 +130,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram (bar+line combo).
+        comment: Genuine area-normalized density histogram with theoretical PDF overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-under-bars = 1 normalization plus theoretical PDF overlay per
-          spec notes.
+        comment: Density y-axis, consistent bin width, theoretical PDF overlay implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = package weight bins, Y = density; full data range shown.
+        comment: X = weight bin centers, Y = density; full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels are clear and descriptive.
+        comment: Title format correct with descriptive prefix; legend labels match
+          series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Area-normalized density with full distribution tails shown.
+        comment: Clean unimodal distribution with well-fitting Normal overlay; no
+          skewed/multimodal variant shown but not required
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Filling-line package-weight QC scenario is plausible and neutral.
+        comment: Package-filling-line weight variability around 500g nominal - realistic,
+          neutral manufacturing/QC scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500g nominal ± 6g SD, N=400, within spec's recommended sample-size
-          range.
+        comment: SD ~6g (~1.2% CV) on 500g nominal fill is a plausible process variability
+          value
     code_quality:
       score: 10
       max: 10
@@ -194,59 +184,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single default-exported component; helper functions are minimal and
-          necessary (LCG/Box-Muller).
+        comment: Flat imports -> data -> bin -> chart structure; only necessary RNG
+          helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG makes generation deterministic.
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; appropriate complexity for a combo chart.
+        comment: Clean, appropriately complex, no fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No manual mount/save calls; relies correctly on the harness contract.
+        comment: Correct ChartContainer/BarPlot/LinePlot composition, skipAnimation
+          set
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses the ChartContainer composition API with BarPlot+LinePlot, the
-          correct idiomatic pattern for mixed-series combo charts in MUI X.
+        comment: Uses ChartContainer composition API - MUI X's recommended pattern
+          for combo charts
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Exercises tickLabelInterval, custom axisLabel offset, and ChartsGrid
-          customization, but overall feature usage is fairly standard.
+        passed: true
+        comment: Uses MUI-X-specific composition (ChartContainer, axisClasses, slotProps),
+          though combo charts are replicable elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - twin-series-overlay
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
   - publication-ready
+  - grid-styling
