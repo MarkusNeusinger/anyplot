@@ -48,9 +48,56 @@ function toCounts(values) {
   return counts;
 }
 
+const counts = GROUPS.map((group) => toCounts(group.values));
+const stackTotals = binLabels.map((_, binIdx) => counts.reduce((sum, c) => sum + c[binIdx], 0));
+const maxTotal = Math.max(...stackTotals);
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// --- Storytelling annotations (Chart.js inline plugin API) -------------------
+// Calls out the shortest-/longest-commute groups directly on the canvas,
+// anchored to each group's own peak bin, using the plugin's `afterDatasetsDraw`
+// hook rather than a static caption.
+function mean(values) {
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+function peakBinIndex(values) {
+  return Math.min(Math.max(Math.round(mean(values) / BIN_WIDTH), 0), BIN_COUNT - 1);
+}
+
+const insightCallouts = [
+  { datasetIndex: 0, binIndex: peakBinIndex(GROUPS[0].values), text: "Engineering: shortest commutes" },
+  { datasetIndex: 2, binIndex: peakBinIndex(GROUPS[2].values), text: "Support: longest commutes" },
+];
+
+const insightCalloutPlugin = {
+  id: "insightCallouts",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.font = "600 13px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    insightCallouts.forEach(({ datasetIndex, binIndex, text }) => {
+      const bar = chart.getDatasetMeta(datasetIndex).data[binIndex];
+      if (!bar) return;
+      const labelY = chartArea.top + 14;
+      ctx.strokeStyle = t.ink;
+      ctx.fillStyle = t.ink;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(bar.x, bar.y);
+      ctx.lineTo(bar.x, labelY + 8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(bar.x, bar.y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillText(text, bar.x, labelY);
+    });
+    ctx.restore();
+  },
+};
 
 // --- Chart -------------------------------------------------------------------
 new Chart(canvas, {
@@ -59,17 +106,22 @@ new Chart(canvas, {
     labels: binLabels,
     datasets: GROUPS.map((group, i) => ({
       label: group.label,
-      data: toCounts(group.values),
+      data: counts[i],
       backgroundColor: t.palette[i],
-      borderWidth: 0,
+      borderColor: t.ink,
+      borderWidth: 1,
       barPercentage: 1.0,
       categoryPercentage: 1.0,
     })),
   },
+  plugins: [insightCalloutPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: {
+      padding: { top: 28 },
+    },
     plugins: {
       title: {
         display: true,
@@ -93,6 +145,7 @@ new Chart(canvas, {
       y: {
         stacked: true,
         beginAtZero: true,
+        suggestedMax: Math.ceil(maxTotal * 1.25),
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
         title: { display: true, text: "Number of Employees", color: t.ink, font: { size: 16 } },
