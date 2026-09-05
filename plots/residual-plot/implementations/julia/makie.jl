@@ -41,6 +41,23 @@ residuals = revenue .- fitted_revenue
 resid_std = std(residuals)
 is_outlier = abs.(residuals) .> 2 * resid_std
 
+# Quantify the heteroscedasticity story: local spread in the narrow (low
+# fitted-revenue) and wide (high fitted-revenue) quartiles, called out
+# directly on the plot instead of leaving the funnel shape to speak for itself.
+lo_cut = quantile(fitted_revenue, 0.25)
+hi_cut = quantile(fitted_revenue, 0.75)
+lo_mask = fitted_revenue .< lo_cut
+hi_mask = fitted_revenue .> hi_cut
+lo_sigma = std(residuals[lo_mask])
+hi_sigma = std(residuals[hi_mask])
+lo_anchor_x = quantile(fitted_revenue[lo_mask], 0.5)
+hi_anchor_x = quantile(fitted_revenue[hi_mask], 0.5)
+lo_anchor_y = maximum(residuals[lo_mask])
+hi_anchor_y = maximum(residuals[hi_mask])
+
+idx_max = argmax(residuals)
+idx_min = argmin(residuals)
+
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
     resolution      = (1600, 900),
@@ -53,6 +70,9 @@ ax = Axis(
     title              = "residual-plot · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
+    subtitle           = "Residual spread widens with fitted revenue — a classic heteroscedasticity signature",
+    subtitlesize       = 13,
+    subtitlecolor      = INK_SOFT,
     xlabel             = "Fitted Revenue (\$1000s)",
     ylabel             = "Residual (\$1000s)",
     xlabelsize         = 14,
@@ -89,6 +109,33 @@ scatter!(
     ax, fitted_revenue[is_outlier], residuals[is_outlier];
     color = IMPRINT_PALETTE[5], markersize = 14, strokewidth = 1, strokecolor = PAGE_BG,
     label = "Outlier (|residual| > 2σ)",
+)
+
+# Quantified spread callouts anchored directly in data coordinates — makes the
+# heteroscedasticity insight explicit rather than leaving the funnel to speak
+# for itself.
+text!(
+    ax, lo_anchor_x, lo_anchor_y;
+    text = "σ ≈ $(round(lo_sigma, digits = 1))", color = INK_SOFT, fontsize = 12,
+    align = (:center, :bottom), offset = (0, 8),
+)
+text!(
+    ax, hi_anchor_x, hi_anchor_y;
+    text = "σ ≈ $(round(hi_sigma, digits = 1))", color = INK_SOFT, fontsize = 12,
+    align = (:center, :bottom), offset = (0, 8),
+)
+
+# Label the two most extreme outliers to give the outlier cluster a
+# deliberate focal point instead of leaving it as undifferentiated dots.
+text!(
+    ax, fitted_revenue[idx_max], residuals[idx_max];
+    text = "largest overshoot: +$(round(Int, residuals[idx_max]))",
+    color = IMPRINT_PALETTE[5], fontsize = 11, align = (:left, :bottom), offset = (10, 6),
+)
+text!(
+    ax, fitted_revenue[idx_min], residuals[idx_min];
+    text = "largest undershoot: $(round(Int, residuals[idx_min]))",
+    color = IMPRINT_PALETTE[5], fontsize = 11, align = (:left, :top), offset = (10, -6),
 )
 
 axislegend(
