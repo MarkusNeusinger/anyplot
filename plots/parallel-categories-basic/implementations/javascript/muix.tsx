@@ -1,7 +1,7 @@
 // anyplot.ai
 // parallel-categories-basic: Basic Parallel Categories Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-05
+// Quality: 92/100 | Created: 2026-09-05
 import { useState } from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
