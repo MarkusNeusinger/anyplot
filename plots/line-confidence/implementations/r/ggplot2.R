@@ -46,8 +46,12 @@ df <- tibble(
 
 # --- Narrative anchors ------------------------------------------------------
 # Weekly seasonality peak (first cycle) - gives viewers a concrete landmark
-# for the sawtooth pattern instead of leaving it purely implicit.
-peak_row <- df[which.max(df$dau[1:14]), ]
+# for the sawtooth pattern instead of leaving it purely implicit. The label
+# sits just above the peak's own ribbon (not the chart's global max) so it
+# stays visually anchored to the point it describes.
+peak_row  <- df[which.max(df$dau[1:14]), ]
+y_span    <- diff(range(c(df$lower, df$upper)))
+peak_label_y <- peak_row$upper + y_span * 0.035
 
 # Final-horizon interval width - turns "the band widens" into a concrete
 # number, anchoring the growing-uncertainty story at the point it matters most.
@@ -61,8 +65,8 @@ p <- ggplot(df, aes(x = date)) +
   geom_line(aes(y = dau, color = "Forecast mean"), linewidth = 1.1) +
   geom_vline(xintercept = peak_row$date, linetype = "dashed",
              color = INK_SOFT, linewidth = 0.4) +
-  annotate("text", x = peak_row$date, y = max(df$upper), label = "Weekly peak",
-           hjust = -0.1, vjust = 1, size = 2.6, color = INK_SOFT) +
+  annotate("text", x = peak_row$date, y = peak_label_y, label = "Weekly peak",
+           hjust = -0.1, vjust = 0, size = 2.6, color = INK_SOFT) +
   geom_segment(data = last_row,
                aes(x = date, xend = date, y = lower, yend = upper),
                inherit.aes = FALSE, color = INK, linewidth = 0.5,
@@ -74,6 +78,7 @@ p <- ggplot(df, aes(x = date)) +
   scale_color_manual(name = NULL, values = c("Forecast mean" = BRAND)) +
   scale_x_date(expand = expansion(mult = c(0.01, 0.05))) +
   scale_y_continuous(labels = label_comma()) +
+  coord_cartesian(clip = "off") +
   labs(
     title = "line-confidence · r · ggplot2 · anyplot.ai",
     x = "Forecast Date",
