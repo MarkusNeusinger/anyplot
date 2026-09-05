@@ -1,0 +1,242 @@
+library: echarts
+language: javascript
+specification_id: histogram-density
+created: '2026-09-05T04:29:40Z'
+updated: '2026-09-05T04:47:35Z'
+generated_by: claude-sonnet
+workflow_run: 33944465799
+issue: 2442
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Fixed the attempt-1 legend mismatch: the "Normal fit" legend icon now uses itemStyle:
+    { color: t.ink }, correctly matching the ink-colored dashed line in both themes.'
+  - 'Added genuine ECharts-distinctive features: markArea for the ±1σ band and markLine
+    for the mean reference turn a generic bar+line combo into a proper statistical
+    annotation.'
+  - Correct density normalization (bar area sums to 1) with consistent binning, plus
+    a theoretical normal PDF overlay evaluated from the sample mean/std for a genuine
+    goodness-of-fit check.
+  - Theme tokens are threaded through every chrome element; both renders are fully
+    legible with no dark-on-dark or light-on-light failures, and no edge clipping
+    on any element.
+  - Reduced x-axis bin count from 26 to 20, easing the tick-label crowding flagged
+    in attempt 1.
+  weaknesses:
+  - X-axis still carries 20 bin-center tick labels; legible with comfortable spacing
+    now, but a coarser axisLabel.interval would give even more breathing room if revisited.
+  - 'Design Excellence is solid but not exceptional: still a two-tone (green + ink)
+    palette with no gradient fill or typographic hierarchy beyond the mandated title/legend
+    styling.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: title "histogram-density · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend shows a green swatch for "Observed density" and a black line+dot icon for "Normal fit" — the icon color now matches the actual overlay line color (ink), fixing the mismatch from attempt 1. Axis names "Reaction Time (ms)" (x) and "Density" (y) in dark ink; 20 bin-center tick labels (405-904) and y tick labels (0.000-0.006) in soft ink, all readable with comfortable spacing.
+      Data: green (#009E73) bars form a clean unimodal, bell-shaped histogram; a black dashed curve traces the fitted normal PDF closely; a light green ±1σ shaded band and a dotted "Mean" reference line add explicit statistical annotation.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: title, legend text, and axis labels render in light ink and are clearly legible against the dark surface. No dark-on-dark text found.
+      Data: bars remain the identical Imprint green (#009E73), confirmed identical to the light render. The normal-fit overlay curve and its legend icon switch from black to white, preserving contrast. The ±1σ shaded band and mean line remain visible at reduced opacity.
+      Legibility verdict: PASS
+
+    No edge clipping found in either render (title, all four axis-label boundaries, and the rightmost "904" tick label checked specifically).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; 20 bin tick labels
+          less crowded than attempt 1's 26 but still moderately dense
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, dashed PDF curve, mean line, and ±1σ band all clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green bars vs. ink-colored dashed line = strong non-hue contrast,
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Reaction Time (ms)" has units; "Density" is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds theme-correct in both renders,
+          data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: ±1σ shaded markArea and mean markLine lift this above plain defaults,
+          though still just green+ink with no gradient or typographic flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle horizontal-only grid, generous whitespace,
+          low-opacity (0.12) shaded band is a refined touch
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit "Mean" label and ±1σ band now narrate the goodness-of-fit
+          story directly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct density histogram with PDF overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Density normalization (area = 1), consistent binning, theoretical
+          PDF overlay all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction-time bins, Y = density; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match series names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Unimodal distribution + goodness-of-fit overlay covers spec's core
+          ask; no multimodal example, but not spec-required
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cognitive-task reaction times is a plausible, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mean 620ms / std 85ms are realistic reaction-time values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow; small RNG/lookup helper functions justified given no-seeded-RNG
+          browser constraint
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only global echarts/tokens used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract; animation: false set; current API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct declarative setOption usage; markArea/markLine configured
+          idiomatically alongside grid/axis/series
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Showcases ECharts-distinctive markArea (±1σ band) and markLine (mean
+          reference)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending

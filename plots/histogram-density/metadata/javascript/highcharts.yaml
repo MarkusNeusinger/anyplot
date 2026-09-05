@@ -1,0 +1,252 @@
+library: highcharts
+language: javascript
+specification_id: histogram-density
+created: '2026-09-05T04:35:32Z'
+updated: '2026-09-05T04:50:00Z'
+generated_by: claude-sonnet
+workflow_run: 33944689644
+issue: 2442
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Repair loop directly addressed prior weaknesses: a plotLines mean-reference annotation
+    and an areaspline fillOpacity shade under the Normal PDF curve now give the chart
+    real visual hierarchy and a distinctive Highcharts touch'
+  - Correct density normalization (bar area sums to 1) with a theoretical Normal PDF
+    overlay for goodness-of-fit, matching the spec's suggested feature
+  - 'Theme-adaptive colors handled correctly: brand green (#009E73) bars are pixel-identical
+    between light and dark, while the PDF overlay and mean-line use t.ink/t.inkSoft
+    so they flip appropriately for contrast on each background'
+  - Idiomatic column-based histogram workaround (pointRange/pointPadding/groupPadding=0,
+    linear xAxis with bin centers) given the core Highcharts bundle has no native
+    histogram series
+  - 'Mean plotLine label uses a theme-matched background box (backgroundColor: t.pageBg)
+    so it reads cleanly against the fill area instead of floating unstyled'
+  - Deterministic, seeded data generation (mulberry32 PRNG + Box-Muller) with a realistic,
+    neutral manufacturing-tolerance context (bolt diameter)
+  weaknesses:
+  - Design excellence is now good but not exceptional — the shaded PDF area and mean
+    line are the only bespoke touches; there is still no secondary annotation (e.g.
+    a callout box comparing empirical vs. theoretical peak) to sharpen the focal point
+    further
+  - LM-02 remains moderate — plotLines and areaspline fillOpacity are used, but other
+    distinctive Highcharts features (zones, dataLabels, colorAxis) are untouched
+  - SD=0.05mm against a mean of 10mm is a fairly tight manufacturing tolerance — plausible
+    but toward the optimistic end of realistic process variability
+  - Three helper functions (mulberry32, nextNormal, normalPdf) add minor structural
+    overhead versus a flatter script; justified by the lack of a built-in seeded PRNG
+    in the browser, but still worth trimming if a simpler formulation is possible
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white and not dark.
+      Chrome: Title "histogram-density · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; x-axis title "Bolt Diameter (mm)" and y-axis title "Density" in soft dark ink, readable; tick labels dark and legible; subtle light-gray horizontal gridlines only; legend at bottom ("Empirical density" green marker, "Normal PDF (fit)" dashed line) fully readable. A dotted "Mean 10.000 mm" reference line with a small pill-shaped label sits near the peak, clearly readable against the light background.
+      Data: Bars filled in Imprint brand green (#009E73) with thin cream-colored borders separating bins; a light-gray shaded area sits under the black dashed Normal PDF overlay curve, which tracks the histogram shape closely (fit slightly right-of-peak vs. empirical mode, expected for finite-sample data).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black and not light.
+      Chrome: Title in bold white/light text, clearly visible; axis titles and tick labels rendered in light gray, readable against the dark background; gridlines subtle and still visible; legend readable with same layout as light render. The "Mean 10.000 mm" reference-line label uses a dark pill matching the page background, remaining legible against the fill area.
+      Data: Bars are the identical brand green (#009E73) as the light render — confirmed unchanged; the Normal PDF overlay line and its underlying shaded area correctly flip from black/light-gray (light theme) to white/dark-gray (dark theme) via theme tokens, remaining clearly visible against the dark background — no dark-on-dark failures observed anywhere (title, axis labels, ticks, legend, mean-line label, or data curve).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (22/16/14px), fully readable in both themes;
+          mean-line label sits close to the top gridline but does not overlap
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, curve, mean-line label, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly distinguishable; dashed PDF overlay and its shaded area
+          visible in both themes via theme-adaptive ink color
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Bar vs. dashed-line-plus-fill shape differentiation, not reliant
+          on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good proportions, no overflow/clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Bolt Diameter (mm) and Density are descriptive with units where applicable
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds correct per theme; both renders
+          theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Fixed from prior review: now has shaded PDF area and a styled mean-line
+          callout, clearly above a generic default'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Axis lines removed (lineWidth: 0), subtle single-axis gridlines,
+          generous whitespace, area fill adds polish'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean-line annotation plus fit-vs-empirical shading creates a clear
+          focal point and comparison story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Density histogram, correctly normalized
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Density y-axis, theoretical PDF overlay, and a reference (mean) line,
+          all suggested in spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = bin centers, Y = density; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match series
+          names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Density normalization, PDF overlay, and mean reference all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bolt diameter manufacturing tolerance — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: N=600 within recommended range; SD=0.05mm is tight but plausible
+          for precision machining
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three small helper functions (PRNG, normal sampling, PDF) — justified
+          by lack of built-in seeded RNG in browser, per library rules
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32(42) PRNG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only window globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Column-series histogram workaround plus native plotLines annotation
+          is the correct idiom given no native histogram series in the core bundle
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Now uses plotLines with a styled label and areaspline fillOpacity
+          for the fit-curve shading — distinctive Highcharts touches beyond a plain
+          dashed overlay
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
+  - alpha-blending

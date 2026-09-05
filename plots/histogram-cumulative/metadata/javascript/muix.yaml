@@ -1,0 +1,248 @@
+library: muix
+language: javascript
+specification_id: histogram-cumulative
+created: '2026-09-05T04:24:35Z'
+updated: '2026-09-05T04:36:42Z'
+generated_by: claude-sonnet
+workflow_run: 33944253782
+issue: 2549
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/javascript/muix/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses are fixed: x-axis ticks are now pinned to whole-minute
+    values via tickInterval: binEdges (13 labels instead of 25 auto-generated 0.5-min
+    ticks), removing the mobile-crowding risk, and a ChartsReferenceLine now marks
+    the median wait time as a clear focal point.'
+  - Correct cumulative histogram (ogive) as a stepAfter area curve with a monotonically
+    non-decreasing 0-100% scale, matching the spec's ogive convention exactly.
+  - 'Fully theme-adaptive: brand green (#009E73) data color and area fill are identical
+    in both renders; all chrome (title, axis labels, tick labels, grid, reference-line
+    label) reads clearly against both #FAF8F1 and #1A1A17 backgrounds.'
+  - Deterministic, realistic data generation (log-normal call-center wait times via
+    a seeded LCG) with the single-series legend correctly hidden per the style guide.
+  - 'Clean, idiomatic MUI X usage: curve="stepAfter" + area fill, ChartsReferenceLine
+    with dashed styling from inkSoft token, custom margins, sx overrides, and correct
+    skipAnimation + default-export component contract.'
+  weaknesses:
+  - Styling is still fairly close to MUI X defaults beyond the color/opacity tweak
+    and the new reference line — no additional distinctive community-surface feature
+    (e.g. a second reference line for a notable percentile like p90, or a subtle gradient
+    on the area fill) to further elevate aesthetic sophistication.
+  - Only one annotation (the median reference line) is used to build hierarchy; a
+    second callout (e.g. labeling the ~5-minute point where the curve crosses ~97%)
+    would strengthen the data-storytelling focal point further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "histogram-cumulative · javascript · muix · anyplot.ai" in dark ink, centered, clearly legible. Axis labels "Wait Time Before Answer (minutes)" (x) and "Cumulative Calls Answered (%)" (y) in dark, medium-weight text. X-axis now shows whole-minute ticks only (0.0-12.0 in 1.0 steps, 13 labels) — no more crowding from the previous 0.5-min increments. Y-axis ticks 0-100 in 10s. Horizontal grid lines are thin and subtle. A dashed vertical reference line at x≈2.2 with label "Median: 2.2 min" in muted ink is clearly readable and does not overlap the step curve.
+      Data: Single brand-green (#009E73) stepAfter line with a light green area fill beneath (fillOpacity ~0.18), rising steeply between 1-4 minutes then flattening as it approaches 100% by ~9 minutes. No legend shown (correct, single series).
+      Legibility verdict: PASS — all text, including the new reference-line label, is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis labels rendered in light ink (near-white), clearly legible against the dark surface. Tick labels also light-colored and readable, with the same reduced whole-minute tick set as the light render. Grid lines are subtle light-on-dark hairlines. The dashed median reference line and its "Median: 2.2 min" label render in a muted light gray, fully legible against the dark background — no dark-on-dark failure.
+      Data: Same brand-green (#009E73) step line and area fill as the light render — the green line reads as a bright, high-contrast accent against the dark background; the semi-transparent fill takes on a dark teal cast from blending with the near-black background, which is expected and not a defect.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/annotation text remains fully legible.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All text readable in both themes; the previous 25-tick x-axis crowding
+          risk is fixed with whole-minute ticks (tickInterval: binEdges).'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; the new median reference-line label sits clear of
+          the curve and other text.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Step line + area fill clearly visible in both themes; no markers
+          needed for a step/ogive curve.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast brand-green series plus a neutral dashed reference
+          line, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good margins, nothing clipped; reduced tick density removes the prior
+          minor clutter.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (minutes, %).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical in both themes; backgrounds match
+          #FAF8F1/#1A1A17.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Reference line adds polish but overall styling is still close to
+          defaults beyond color/opacity/reference-line tuning.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend correctly omitted, horizontal-only subtle grid, generous margins,
+          dashed reference line styled with inkSoft token.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The new median ChartsReferenceLine gives the chart a clear focal
+          point beyond the plain curve shape, addressing the prior weakness.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ogive/step cumulative histogram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Binned counts, cumulative running total, percentage scale, monotonic
+          step curve.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = wait-time bin edges, Y = cumulative % answered; full data range
+          shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches exactly; legend correctly hidden for single
+          series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the full cumulative curve from 0% to 100%.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Call-center wait-time scenario is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1200 calls, 0-12 minute wait range, sensible log-normal shape.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes; helper functions limited to RNG/data generation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart and ChartsReferenceLine imported.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component contract, skipAnimation set, sizes
+          from ANYPLOT_SIZE.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of series/xAxis/yAxis config, margin, grid, sx overrides.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine now showcases a distinctive community-surface
+          feature beyond basic curve/area/valueFormatter usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - area-fill
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
