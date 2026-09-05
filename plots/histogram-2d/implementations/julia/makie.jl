@@ -30,7 +30,7 @@ equity_returns = z1 .* 1.4
 bond_returns = (correlation .* z1 .+ sqrt(1 - correlation^2) .* z2) .* 0.6 .+ 0.05
 
 # 2D histogram binning (rectangular bins)
-n_bins = 42
+n_bins = 32
 x_edges = range(minimum(equity_returns), maximum(equity_returns), length = n_bins + 1)
 y_edges = range(minimum(bond_returns), maximum(bond_returns), length = n_bins + 1)
 counts = zeros(Int, n_bins, n_bins)
@@ -73,6 +73,10 @@ ax_main = Axis(
     bottomspinecolor = INK_SOFT,
     xgridvisible = false,
     ygridvisible = false,
+    xlabelsize = 14,
+    ylabelsize = 14,
+    xticklabelsize = 14,
+    yticklabelsize = 14,
 )
 
 ax_right = Axis(fig[3, 2]; backgroundcolor = PAGE_BG)
@@ -81,7 +85,16 @@ linkxaxes!(ax_top, ax_main)
 linkyaxes!(ax_right, ax_main)
 
 hist!(ax_top, equity_returns; bins = x_edges, color = IMPRINT_PALETTE[1])
-hm = heatmap!(ax_main, x_centers, y_centers, counts_display; colormap = IMPRINT_SEQ, nan_color = PAGE_BG)
+# Log color scale reveals structure in the sparse outer lobes (counts span ~1 to 170+)
+hm = heatmap!(
+    ax_main,
+    x_centers,
+    y_centers,
+    counts_display;
+    colormap = IMPRINT_SEQ,
+    nan_color = PAGE_BG,
+    colorscale = log10,
+)
 hist!(ax_right, bond_returns; bins = y_edges, direction = :x, color = IMPRINT_PALETTE[1])
 
 hidedecorations!(ax_top)
@@ -89,7 +102,16 @@ hidespines!(ax_top)
 hidedecorations!(ax_right)
 hidespines!(ax_right)
 
-Colorbar(fig[3, 3], hm; label = "Count", labelcolor = INK, ticklabelcolor = INK_SOFT, tickcolor = INK_SOFT)
+Colorbar(
+    fig[3, 3],
+    hm;
+    label = "Count",
+    labelcolor = INK,
+    ticklabelcolor = INK_SOFT,
+    tickcolor = INK_SOFT,
+    labelsize = 14,
+    ticklabelsize = 14,
+)
 
 rowsize!(fig.layout, 2, Relative(0.16))
 colsize!(fig.layout, 2, Relative(0.16))
