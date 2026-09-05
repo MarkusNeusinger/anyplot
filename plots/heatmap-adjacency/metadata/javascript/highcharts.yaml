@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: heatmap-adjacency
 created: '2026-09-05T03:14:13Z'
-updated: '2026-09-05T03:18:29Z'
+updated: '2026-09-05T03:29:40Z'
 generated_by: claude-sonnet
 workflow_run: 33940893448
 issue: 5240
@@ -12,56 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Clever workaround for the missing heatmap module: cells are hand-drawn with the
-    SVG renderer while an invisible matched-axis scatter layer restores genuine native
-    Highcharts tooltips, exactly matching the library''s core-bundle-only constraint'
-  - Nodes are pre-ordered by lab (cluster) so the block-diagonal structure is immediately
-    visible, with thicker divider lines and centered group labels marking the boundaries
-    per the spec's guidance for large networks
-  - Both triangles are filled for the undirected graph and the matrix is visibly symmetric
-    across the diagonal
-  - Absent edges use a distinct background fill (elevatedBg) clearly separated from
-    the sequential color scale, with a dedicated 'No papers' swatch in the legend
-  - Colorbar legend with min/max labels and axis title ('Joint papers') fulfills the
-    spec's requirement, and the continuous scale correctly uses imprint_seq (green→blue)
-    rather than an arbitrary colormap
-  - Deterministic LCG-based data generation with a plausible, neutral co-authorship
-    scenario (4 labs, 32 researchers)
-  - Fixed-geometry layout (single source of truth for margins/grid/colorbar column)
-    keeps everything aligned across both theme renders without drift
+  - Block-diagonal cluster structure is immediately visible thanks to lab-ordered
+    nodes and thick block-boundary dividers
+  - Full symmetric matrix (both triangles filled) correctly represents the undirected
+    graph
+  - Three-way visual distinction (weighted color scale / "No papers" swatch / "Self-pair
+    (n/a)" hatch) cleanly disambiguates all data states per the spec
+  - Correct, theme-consistent imprint_seq colorbar with clear labeling
+  - Clever invisible-scatter-overlay technique restores native tooltip interactivity
+    despite the missing native heatmap module
+  - Title font size scales with title length so the long mandated string never overflows
   weaknesses:
-  - Diagonal self-pair cells are rendered identically to genuine absent-edge cells
-    ('no papers'), which is slightly misleading — self-collaboration is meaningless
-    rather than a zero value; consider a distinct neutral hatch/shade for the diagonal
-    to disambiguate 'not applicable' from 'no edge'
-  - Only group-boundary labels are shown on the axes (no individual node identifiers
-    anywhere, even in the tooltip's diagonal case it just repeats the name once) —
-    acceptable per spec for large networks, but with only 32 nodes there was some
-    room to also show a few sparse tick marks for orientation within a block
-  - 32 nodes sits at the low end of the spec's 20–200 range; a somewhat larger network
-    would better demonstrate why a matrix view beats a node-link diagram for dense
-    graphs
-  - Helper functions (hexToRgb, lerp, weightFill, clearDrawn, drawAll) add structure
-    beyond a minimal script — largely justified by the custom-render workaround, but
-    keep an eye on creeping complexity in future revisions
+  - 'Layout balance: noticeable extra whitespace below the colorbar/legend column
+    compared to the matrix area — tighten the vertical margins or grow the grid slightly
+    to use the canvas more evenly'
+  - No overarching axis label (e.g., "Researcher") beyond the per-block lab names
+    — a small addition would make the row/column semantics fully explicit at a glance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "Co-authorship Network by Lab · heatmap-adjacency · javascript · highcharts · anyplot.ai" is bold dark text, fully visible and not clipped. Subtitle below it in muted gray, readable. Four lab-group labels ("Neuroscience", "Robotics", "Genomics", "Climate Science") appear centered along both the left edge and bottom edge of the matrix in medium-gray text, all legible. Colorbar on the right titled "Joint papers" with "12" at top and "1" at bottom, plus a bordered "No papers" swatch below it with its own label — all text crisp against the light background.
-      Data: A 32x32 grid divided into four labeled blocks by thin/thick divider lines. Cells range from a green (#009E73-ish) at low weights to a blue-teal (#4467A3-ish) at high weights; empty/absent-edge cells use a near-white fill matching the page background, distinguished only by thin grid outlines. The matrix is visibly symmetric across the diagonal, and each lab's diagonal block is visibly denser (more colored cells, more blue) than the off-diagonal blocks, clearly exposing block-diagonal cluster structure.
-      Legibility verdict: PASS — all title, subtitle, axis group labels, colorbar text, and legend text are clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark title "Co-authorship Network by Lab · heatmap-adjacency · javascript · highcharts · anyplot.ai" and gray subtitle, both clearly readable. Lab block labels on x-axis (bottom) and y-axis (left), colorbar titled "Joint papers" with numeric ticks, plus "No papers" and "Self-pair (n/a)" legend swatches — all dark/readable text on the light surface.
+      Data: 40x40 matrix, sequential green (#009E73) to blue (#4467A3) fill for joint-paper counts, off-white/elevated fill for absent edges, X-hatch overlay on diagonal self-pairs. First/low end of scale is the brand green as required.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Same title and subtitle text, now light-colored, fully legible against the dark background. Lab-group labels on both axes remain in a light muted gray, clearly readable. Colorbar title, numeric labels ("12", "1"), and the "No papers" swatch label are all rendered in light text, easily readable against the dark canvas.
-      Data: Identical color mapping to the light render — same green-to-blue sequential scale for edge weight, same near-black/neutral fill for absent edges (now blending closer to the dark background but still distinguishable via grid lines), and the same block-diagonal density pattern. Data colors are confirmed identical between the two renders; only the chrome (background, text, grid lines, dividers) has flipped to the dark theme.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text remains clearly visible against the near-black background, and the grid divider lines remain visible without dominating.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same title/subtitle/labels/colorbar/legend now rendered in light tones (light gray/white), clearly readable against the dark background. No dark-on-dark text found anywhere.
+      Data: Colors identical to the light render (green #009E73 to blue #4467A3 sequential ramp) — confirmed no shift between themes; only chrome (background, text, divider/hatch stroke color) flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -69,74 +53,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/subtitle/axis-group/colorbar text readable in both themes,
-          sized appropriately (title auto-scaled off char count)
+        comment: Explicit font sizes, title scales with length; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, cells, dividers, or legend elements
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells sized generously (~53px) for a 32x32 grid, clearly visible
-          with distinct fills
+        comment: Cell size and dividers well suited to a 40x40 matrix
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential scale, not a red-green pairing, adequate
-          contrast on both surfaces
+        comment: CVD-safe sequential ramp; absent/self-pair states use fill+hatch,
+          not hue alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Fixed-geometry layout keeps grid, dividers, and colorbar column aligned
-          with no cutoff or overflow
+        comment: Good composition but uneven whitespace below the legend column
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with mandated suffix; group labels adequately describe
-          the categorical axes
+        comment: Lab-group labels plus labeled colorbar describe the encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Continuous scale correctly uses imprint_seq (t.seq[0]/t.seq[1]);
-          backgrounds match theme tokens in both renders
+        comment: Correct imprint_seq gradient, identical across themes, theme-correct
+          chrome
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean custom-drawn matrix with thoughtful block dividers, colorbar,
-          and legend swatch; not groundbreaking but clearly deliberate
+        comment: Thoughtful palette and legend system, above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No default axis chrome (axes hidden, custom-drawn frame), subtle
-          divider lines, generous whitespace
+        comment: Minimal chrome, generous whitespace, careful detail work (hatching,
+          divider weight)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Block-diagonal density pattern gives a clear, immediate focal point
-          showing lab-based clustering
+        comment: Lab-ordered nodes make the block-diagonal cluster insight immediately
+          visible
     spec_compliance:
       score: 15
       max: 15
@@ -146,52 +125,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct adjacency matrix heatmap
+        comment: Correct adjacency-matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cluster-ordered nodes, symmetric fill, distinct absent-edge color,
-          colorbar legend all present; dendrogram is explicitly optional
+        comment: Symmetric matrix, distinct absent-edge fill, colorbar, cluster-exposing
+          ordering, group-boundary labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows/columns map to nodes, cell color maps to weight, full N x N
-          matrix shown
+        comment: Rows/columns map correctly to source/target; tooltip confirms per-cell
+          mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · heatmap-adjacency · javascript
-          · highcharts · anyplot.ai' format
+        comment: Title format correct; legend/colorbar labels match encoded data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Weighted edges, absent edges, symmetric structure, and clustering
-          all shown; diagonal handling is slightly ambiguous
+        comment: High/low weights, absent edges, self-pairs, dense and sparse regions
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral academic co-authorship scenario across four labs
+        comment: Co-authorship network across university labs is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 32 nodes and weights 1-12 papers are both within the spec's plausible
-          range
+        comment: Joint-paper counts and intra/inter-lab collaboration rates are domain-plausible
     code_quality:
       score: 9
       max: 10
@@ -201,8 +178,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several small helper functions, mostly justified by the custom-render
-          workaround required for the missing heatmap module
+        comment: Helper functions needed since core Highcharts bundle lacks a heatmap
+          module
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,45 +191,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond browser globals, none unused
+        comment: No unused imports; browser globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the constraint; scatter-overlay tooltip
-          is real interactivity, not faked
+        comment: Clean, well-commented, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled on chart and series
+        comment: Correct mount-node contract, animation disabled, credits disabled
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses renderer API and chart load/redraw events idiomatically given
-          the core-bundle-only restriction
+        comment: Correct chart/event/tooltip API usage, but the matrix itself is low-level
+          SVG drawing (forced by missing heatmap module)
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Invisible matched-axis scatter layer to recover native tooltip interactivity
-          is a distinctive, well-executed technique
+        passed: false
+        comment: Invisible scatter overlay recovering native hover/tooltip on hand-drawn
+          SVG shapes is a clever Highcharts-specific technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - hover-tooltips
   - custom-legend
+  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
@@ -260,3 +236,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
