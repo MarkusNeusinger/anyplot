@@ -1,8 +1,7 @@
 // anyplot.ai
 // line-confidence: Line Plot with Confidence Interval
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-05
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 79/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
