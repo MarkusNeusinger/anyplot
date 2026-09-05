@@ -1,0 +1,267 @@
+library: highcharts
+language: javascript
+specification_id: maze-printable
+created: '2026-09-05T09:28:34Z'
+updated: '2026-09-05T09:40:47Z'
+generated_by: claude-sonnet
+workflow_run: 33957777289
+issue: 3232
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-printable/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Recursive-backtracker (DFS) maze generation guarantees a perfect maze with exactly
+    one solution path, matching the spec's core requirement precisely.
+  - 'The repair directly addresses every prior weakness: a decorative rounded outset
+    frame (chart.renderer.rect at FRAME_PAD/FRAME_RADIUS) now separates the puzzle
+    grid from the canvas edge, a soft drop-shadow lifts the S/G markers off the flat
+    plane, and chart.spacing grew from [10,10,10,10] to [18,18,18,18] for real breathing
+    room.'
+  - 'Three distinct SVG-renderer techniques now combine in one chart: renderer.path()
+    for the wall vector art, renderer.rect() for the decorative frame, and graphic.shadow()
+    on the marker points — a genuinely Highcharts-specific, coordinate-synced rendering
+    approach.'
+  - Clean, print-optimized black-walls-on-cream design in the light render, with a
+    fully theme-adaptive ink flip (near-white walls on near-black) in the dark render;
+    wall stroke width (5px) stays consistent and clearly visible across the full 24x24
+    grid.
+  - Deterministic via a fixed seed (1337) and a documented custom LCG, since no seeded
+    RNG exists in-browser.
+  - Start/Goal markers use brand green (#009E73, always-first rule) and matte red
+    in a defensible traffic-light 'go/stop' semantic pairing, each with a readable
+    letter label (S/G) giving redundant, colorblind-safe encoding beyond color alone.
+  - Both renders are fully theme-correct with no clipping at any canvas edge.
+  weaknesses:
+  - Subtitle remains 14px against a large 2400x2400 canvas — legible now but on the
+    smaller side once scaled down to a ~400px mobile width; a point or two larger
+    would give it more presence relative to the bold 22px title.
+  - Aesthetic sophistication has clearly improved (frame + shadow) but is still closer
+    to 'thoughtful default' than a fully custom design language — e.g. the frame stroke
+    is a single flat inkSoft line with no corner accent or subtle color tie-in to
+    the S/G markers.
+  - The maze walls themselves remain plain uniform black/white segments throughout;
+    a very light refinement (e.g. faint rounding at wall-corner joints) could add
+    one more layer of polish without risking the puzzle's readability.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches the required #FAF8F1 surface — not pure white, not dark.
+      Chrome: Title "maze-printable · javascript · highcharts · anyplot.ai" in bold (700-weight) dark ink at the top, subtitle "24×24 grid · seed 1337 · start (S) to goal (G)" in softer gray beneath it. A thin rounded rectangular frame (inkSoft stroke) now outlines the maze's bounding box with clear padding, separating the puzzle from the canvas edge. Both title and subtitle are clearly legible against the light background.
+      Data: A 24×24 grid maze rendered as consistent-width black wall segments filling nearly the full square canvas, forming a single-solution labyrinth. A green circle marker labeled "S" (white letter) sits at the top-left cell with a subtle soft drop-shadow lifting it off the maze plane; a red circle marker labeled "G" (white letter) sits at the bottom-right cell with the same shadow treatment. First series color is the required brand green #009E73.
+      Legibility verdict: PASS — all text and structural elements are readable, no overlap, no clipping at any edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches the required #1A1A17 surface — not pure black, not light.
+      Chrome: Same title and subtitle, now rendered in light ink / soft-gray tones, clearly legible against the dark background; the decorative frame also flips to the light inkSoft tone. No dark-on-dark failures observed.
+      Data: The maze walls flip to a light (near-white) stroke color — correct theme-adaptive chrome behavior, since the walls are chrome/ink rather than a data series. The S and G markers retain identical colors to the light render (#009E73 green and matte red) with the same drop-shadow, confirming the Imprint data-color rule (data colors constant across themes, only chrome flips).
+      Legibility verdict: PASS — all text and structural elements are readable, no overlap, no clipping at any edge.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (22px/700 title, 14px subtitle), readable in
+          both themes; subtitle is slightly small relative to the overall canvas for
+          optimal mobile scale-down.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, subtitle, frame, walls, or markers.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wall stroke width (5px) is consistent and clearly visible throughout
+          the 24x24 grid; markers are prominent with a distinguishing shadow.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red marker pair is redundantly encoded with letter labels (S/G),
+          avoiding reliance on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Maze plus new decorative frame fills the square canvas with balanced
+          margins after the spacing increase; no cut-off content.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes are intentionally hidden (correct for vector-art maze, not a
+          data-axis chart); title/subtitle are descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (brand green); goal uses matte red in a
+          defensible go/stop semantic pairing; backgrounds are theme-correct in both
+          renders; data colors identical across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: The new decorative frame and marker drop-shadow move this clearly
+          above a bare default, but it is still a single flat accent rather than a
+          fully custom design language.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, no spines, wider spacing (18px), and a subtle framed border
+          give the puzzle deliberate breathing room; not quite maximal polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The shadowed, colored S/G markers create clear, slightly elevated
+          focal points guiding the viewer's eye through the maze's start and end.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct printable maze puzzle type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Single-solution guarantee (recursive backtracker), clear S/G marks,
+          consistent print-friendly wall thickness, black-on-cream in light theme.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Grid coordinates correctly mapped to wall segments and marker positions;
+          full grid visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches 'maze-printable · javascript · highcharts
+          · anyplot.ai'; no legend needed given directly labeled markers.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 24x24 grid within the recommended 15-40 range, showing a fully solvable,
+          non-trivial maze.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, appropriate puzzle content suitable for children's activity
+          sheets.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid size and wall thickness are sensible for a printable puzzle.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (RNG, maze generation, wall segments) are appropriate
+          for the algorithmic nature of maze generation; no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed seed with deterministic LCG RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Highcharts object, as required by the
+          mount-node contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a genuine maze-generation algorithm plus
+          decorative rendering; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node usage, animation disabled on chart and series,
+          credits/tooltip disabled.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines a standard scatter series with the SVG renderer API and
+          axis.toPixels() for coordinate-synced vector drawing plus point.graphic.shadow()
+          — an idiomatic advanced pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Now three separate renderer-based techniques (wall paths, decorative
+          frame rect, marker shadows) tied to the chart's own axis coordinate system
+          — genuinely Highcharts-specific and hard to replicate identically elsewhere.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-rendering
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
