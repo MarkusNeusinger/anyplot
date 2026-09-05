@@ -1,0 +1,242 @@
+library: chartjs
+language: javascript
+specification_id: pyramid-basic
+created: '2026-09-05T12:14:48Z'
+updated: '2026-09-05T12:28:03Z'
+generated_by: claude-sonnet
+workflow_run: 33965287063
+issue: 1000
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Custom Chart.js plugin (afterDraw hook) draws a dashed center axis, a bracket,
+    and a "gap widens" annotation that directly calls out the widening 70-79/80+ gender
+    gap — a genuinely library-distinctive technique that resolves the prior LM-02
+    and DE-03 weaknesses
+  - Accent border highlighting on the two oldest rows reinforces the same insight
+    without breaking Imprint palette compliance
+  - New subtitle ("Female population increasingly exceeds male past age 70") adds
+    narrative context and visual hierarchy above the chart
+  - 'Full spec compliance retained: canonical Imprint palette order (#009E73 Male,
+    #C475FD Female), symmetric -50..50 axis, tooltip callback reporting absolute values,
+    correct mount-node contract with animation: false'
+  - Clean, deterministic, KISS code — hard-coded data arrays, no unused imports, no
+    fake functionality
+  weaknesses:
+  - Visual refinement (spines/grid/whitespace) is largely unchanged from attempt 1
+    — aside from the new plugin, the chart still relies on fairly default Chart.js
+    chrome; further subtle grid/typography polish would raise DE-02
+  - 'Minor: noticeable whitespace gap remains between the legend row and the first
+    data bar (age 0-9) — could be trimmed for a tighter composition'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "pyramid-basic · javascript · chartjs · anyplot.ai" at top, italic dark-gray subtitle "Female population increasingly exceeds male past age 70" beneath it, green/lavender "Male"/"Female" legend swatches below that. X-axis title "Population (thousands)" and Y-axis title "Age Group" both present with units. A new dashed vertical line marks the center axis, and an amber bracket + "gap widens" label sit to the right of the 70-79/80+ rows, which also carry a thin amber accent border on their bars. All text (title, subtitle, legend, axis titles, tick labels, category labels, "gap widens" annotation) is clearly readable against the light background — no clipping at the canvas edges.
+      Data: Male bars extend left in brand green (#009E73), Female bars extend right in lavender (#C475FD) — matches canonical Imprint palette order (position 1 = brand green, position 2 = lavender). Bars widen through middle age groups and narrow at the extremes, with Female visibly and increasingly longer than Male from age 70 onward, exactly the insight called out by the subtitle and the bracket annotation.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout to the light render; title, subtitle, legend text, axis titles, and tick labels all flipped to light/off-white ink for contrast against the dark surface. The dashed center line, amber bracket, and "gap widens" label remain amber and clearly visible against the dark background. No dark-on-dark issues found — every text element is legible.
+      Data: Male in #009E73, Female in #C475FD — identical to the light render, confirming only chrome (not data colors) flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22px, axis titles 18px, legend 16px,
+          ticks 14px); readable in both themes including the new annotation text
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; bracket and annotation sit cleanly in the reserved
+          right-side padding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar thickness well-adapted to 9 categories; accent borders don't
+          obscure data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing plus redundant left/right positional encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills a large, balanced portion of the canvas; right padding
+          correctly reserved for the bracket annotation, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis has units ("Population (thousands)"), Y-axis descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series canonical Imprint position 2
+          (#C475FD); theme-correct chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom plugin (center line, bracket, annotation) and subtitle add
+          deliberate polish and hierarchy beyond library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines/grid/whitespace unchanged from attempt 1 — still fairly default
+          aside from the new plugin
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bracket + "gap widens" annotation + accent borders directly emphasize
+          the widening older-age gender gap called out in the subtitle
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked-bar pyramid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric axis, distinct colors per side, legend, centered category
+          axis all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = population (diverging), Y = age group categories
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match dataset
+          labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full age range with realistic older-age gender divergence
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Population pyramid by age/gender is the canonical neutral demographic
+          example named in the spec
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and the gender gap at older ages are factually plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; the plugin object and small helper arrow functions are
+          idiomatic Chart.js extensibility, not gratuitous abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake functionality — the highlighted rows
+          are computed from an explicit, data-driven set
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, current Chart.js
+          v4 API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Solid use of stacked scales, plugin system, and tick callbacks
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin is a genuinely Chart.js-specific extensibility
+          hook, directly addressing the prior generic-usage weakness
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting

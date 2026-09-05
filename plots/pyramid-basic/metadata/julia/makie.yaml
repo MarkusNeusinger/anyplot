@@ -1,0 +1,241 @@
+library: makie
+language: julia
+specification_id: pyramid-basic
+created: '2026-09-05T12:33:02Z'
+updated: '2026-09-05T12:36:49Z'
+generated_by: claude-sonnet
+workflow_run: 33965876705
+issue: 1000
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct pyramid/butterfly chart structure with shared central axis and symmetric
+    x-axis scale
+  - 'Both renders theme-correct: #FAF8F1 light / #1A1A17 dark backgrounds, chrome
+    tokens (title, ticks, grid) properly flipped while data colors stay identical'
+  - 'Semantic color choice fully within the Imprint palette: Agree=#009E73 (position
+    1, brand green/positive), Disagree=#AE3030 (position 5, matte red/negative)'
+  - Categories sorted from most- to least-agreed, creating a clear visual narrative
+    gradient down the chart
+  - Absolute-value x-axis tick labels avoid a confusing '-80%' display while preserving
+    the symmetric visual scale
+  - 'Clean minimal-chrome styling: top/right/left spines hidden, only a subtle vertical
+    grid remains'
+  - Legend clearly identifies both sides; canvas lands exactly on the canonical 3200x1800
+    landscape target
+  weaknesses:
+  - Title occupies only ~45% of plot width at the computed fontsize — comfortably
+    legible but could be sized closer to the 50-70% guidance for a stronger visual
+    anchor
+  - Design relies on two flat colors with no additional refinement (e.g. value labels
+    at bar ends, net-agreement annotation) that would lift it from good to exceptional
+  - Distinctive-feature usage (custom tick formatter, vlines center axis, colsize!
+    layout) is solid but doesn't showcase deeper Makie-specific capabilities beyond
+    these
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Bold dark title "Employee Policy Survey · pyramid-basic · julia · makie · anyplot.ai" clearly visible at top; y-axis category labels (9 workplace policies, e.g. "Flexible Hours", "Mandatory Overtime") in soft ink, fully legible; x-axis "Respondents" label and %-tick labels (80%...0%...80%) legible; subtle vertical gridlines visible but not dominant; legend ("Disagree"/"Agree") at right with dark ink text on transparent background.
+      Data: Green (#009E73) bars extend right from center for "Agree", matte red (#AE3030) bars extend left for "Disagree"; a thin center vertical line marks the zero axis. Categories sorted top-to-bottom from most-agreed ("Flexible Hours") to least-agreed ("Mandatory Overtime"), creating a clean gradient from green-dominant to red-dominant.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title now rendered in light ink, clearly visible against the dark surface; y-axis category labels and x-axis tick labels rendered in light soft-ink tone, fully legible; no dark-on-dark issues detected; gridlines remain subtle; legend text flips to light ink, still legible.
+      Data: Colors are pixel-identical to the light render — green #009E73 and red #AE3030 unchanged, confirming only chrome (background/text/grid) adapted between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title sized comfortably but on
+          the smaller side (~45% width) relative to the 50-70% guidance
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar widths and spacing appropriate for 9 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green distinguished by position (left/right) and text label,
+          not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800; legend column proportionally sized via
+          colsize!; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Respondents' axis label with % formatting
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Agree=#009E73 (position 1), Disagree=#AE3030 (position 5, semantic
+          anchor); backgrounds correct in both themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color reasoning documented in comments; limited
+          to two flat colors overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, frameless legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sorted most- to least-agreed ordering creates a clear narrative gradient
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pyramid/butterfly chart with shared central axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric scale, distinct colors, category labels, legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Left/right bars correctly mapped to disagree/agree values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows symmetric bidirectional comparison across 9 categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee workplace-policy survey data is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentages 0-100%, sensible survey response magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is fully hardcoded/deterministic, no randomness involved
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current Figure(size=...)
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Modern size= API, direction=:x barplot!, auto-generated Legend from
+          labeled plots
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom tick formatter, vlines center axis, colsize! layout control;
+          solid but not showcasing deeper Makie-specific capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns: []
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling
