@@ -43,9 +43,10 @@ const tempRange = maxTemp - minTemp;
 const Y_MIN = Math.floor(minTemp - tempRange * 0.15);
 const Y_MAX = Math.ceil(maxTemp + tempRange * 0.15);
 
-// Every 6th hour gets a fine "%H:%M" tick — dense enough to read the diurnal
-// shape without crowding the point-scale axis.
-const HOUR_TICK_STEP = 6;
+// Midnight and noon get a fine "%H:%M" tick — enough to anchor the diurnal
+// shape without the row collapsing into an unreadable smear once the PNG is
+// downscaled for mobile/thumbnail previews.
+const HOUR_TICK_STEP = 12;
 
 // Day-boundary indices anchor the coarser weekday row drawn below the axis.
 const dayStartIndices = timestamps.map((_, i) => i).filter((i) => i % 24 === 0);
@@ -105,13 +106,15 @@ function DayBoundaries() {
   );
 }
 
-const TITLE = "Rooftop Sensor Temperature · line-timeseries · javascript · muix · anyplot.ai";
+const TITLE =
+  "Rooftop Sensor Temperature · line-timeseries · javascript · muix · anyplot.ai";
 
 // --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const titleSize = TITLE.length > 67 ? Math.max(14, Math.round((22 * 67) / TITLE.length)) : 22;
+  const titleSize =
+    TITLE.length > 67 ? Math.max(14, Math.round((22 * 67) / TITLE.length)) : 22;
 
   const TITLE_H = 60;
   const chartH = H - TITLE_H;
@@ -128,8 +131,17 @@ export default function Chart() {
         boxSizing: "border-box",
       }}
     >
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>{TITLE}</Typography>
+      <Box
+        sx={{
+          height: TITLE_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>
+          {TITLE}
+        </Typography>
       </Box>
 
       <LineChart
@@ -141,16 +153,23 @@ export default function Chart() {
             id: "temperature",
             data: temperatures,
             showMark: false,
+            area: true,
             color: t.palette[0],
-            valueFormatter: (v: number | null) => (v == null ? "" : `${v.toFixed(1)}°F`),
+            valueFormatter: (v: number | null) =>
+              v == null ? "" : `${v.toFixed(1)}°F`,
           },
         ]}
         xAxis={[
           {
             data: timestamps,
             scaleType: "point",
-            valueFormatter: (d: Date) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
-            tickInterval: (_value: Date, index: number) => index % HOUR_TICK_STEP === 0,
+            valueFormatter: (d: Date) =>
+              d.toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            tickInterval: (_value: Date, index: number) =>
+              index % HOUR_TICK_STEP === 0,
             tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
           },
         ]}
@@ -169,6 +188,7 @@ export default function Chart() {
         margin={{ top: 24, right: 40, bottom: 112, left: 84 }}
         sx={{
           "& .MuiLineElement-root": { strokeWidth: 3 },
+          "& .MuiAreaElement-root": { fill: t.palette[0], fillOpacity: 0.12 },
           "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.25 },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeOpacity: 0.5 },
         }}
