@@ -1,0 +1,271 @@
+library: muix
+language: javascript
+specification_id: roc-curve
+created: '2026-09-05T13:08:04Z'
+updated: '2026-09-05T13:25:55Z'
+generated_by: claude-sonnet
+workflow_run: 33967725414
+issue: 2273
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/roc-curve/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Imprint palette usage: Random Forest uses brand green #009E73 (t.palette[0])
+    and Logistic Regression uses lavender (t.palette[1]); the diagonal reference line
+    correctly uses the neutral inkSoft token instead of a categorical color since
+    it isn''t a fitted model.'
+  - 'Theme chrome is fully correct in both renders: warm off-white background in light,
+    warm near-black in dark, all text and grid lines theme-adaptive, and the two data
+    colors are pixel-identical across themes.'
+  - 'Clever handling of the y=x reference line: its stroke is hidden and only its
+    label is rendered via ChartsReferenceLine, avoiding a redundant legend entry while
+    still crediting the random-guess baseline (AUC = 0.50) directly on the chart.'
+  - Visual hierarchy through line-weight variation (strokeWidth 3.5 for the stronger
+    Random Forest curve vs. 3 for Logistic Regression) reinforces which model is better
+    at a glance, matching the spec's 'compare multiple models' requirement.
+  - Chart area is tuned close to a 1:1 aspect ratio (~1030x1034 CSS px) on the square
+    canvas, honoring the spec's 'equal aspect ratio preferred' note for FPR/TPR axes
+    both spanning 0-1.
+  - Deterministic, from-scratch ROC/AUC computation (seeded LCG + Box-Muller + threshold
+    sweep + trapezoidal AUC) is a reasonable substitute for sklearn.metrics.roc_curve
+    given the browser has no numpy/sklearn, and legend labels surface the AUC per
+    spec.
+  - Realistic, neutral data scenario (malignant vs. benign biopsy score distributions)
+    directly matches the spec's medical-diagnostics application example, with a clear
+    quality gap between the two classifiers (AUC 0.96 vs 0.79) demonstrating real
+    feature coverage.
+  weaknesses:
+  - Title font-size (25px CSS) is on the modest side relative to the square canvas
+    — it reads cleanly but doesn't carry quite the visual weight a 'largest element,
+    first thing readers see' title typically should; a couple of px larger would strengthen
+    the hierarchy without risking overflow given how short this title format is.
+  - 'Design refinement is good but not maximal: the horizontal-only grid and un-boxed
+    legend are solid choices, but there''s no additional polish (e.g. a subtle shaded
+    confidence/reference zone, or emphasis styling on the winning curve beyond stroke
+    width) that would push this from ''strong'' to ''publication-ready''.'
+  - Data generation logic (lcg/randNormal/rocFromScores/onGrid) is necessary given
+    no numpy/sklearn in-browser, but is fairly verbose for a KISS-structured snippet
+    — acceptable given the constraint, not a defect worth repairing.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "roc-curve · javascript · muix · anyplot.ai" top-left, dark axis titles "False Positive Rate" (x) and "True Positive Rate" (y), dark tick labels at 0.05 increments from 0.00 to 1.00 on both axes, subtle horizontal gridlines, legend centered at the bottom with colored square swatches. All text is clearly readable against the light background.
+      Data: Two solid curves — a thick green (#009E73) "Random Forest" curve that rises steeply and hugs the top-left corner (AUC = 0.96), and a slightly thinner lavender/purple "Logistic Regression" curve that rises more gradually (AUC = 0.79). A gray dashed diagonal line runs from (0,0) to (1,1) representing random guessing, labeled "Random guess (AUC = 0.50)" in gray text placed in open space above the diagonal, not overlapping either curve.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light — title, axis titles, tick labels, and legend are all rendered in light/off-white text, clearly visible against the dark background. No dark-on-dark text was found; grid lines remain subtle but visible.
+      Data: The green Random Forest curve and lavender Logistic Regression curve are identical in hue and shape to the light render (only the background and text color inverted, as required), and the dashed gray diagonal reference line with its label reads correctly in the dark theme too.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (25px title, 16px axis labels, 14px
+          ticks); readable in both themes; title is comfortably sized but on the modest
+          side relative to the canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; the reference-line annotation sits in clear space
+          above the diagonal, clear of both curves
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line thicknesses (3.5/3/2) well adapted to the 101-point resampled
+          curves and give clear visual priority to the stronger model
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender vs. dashed-gray diagonal are distinguishable by
+          hue and line style, not relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart area is well-balanced and near-square (~1030x1034 CSS px),
+          matching the spec's equal-aspect-ratio note; no cut-off content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'False Positive Rate' / 'True Positive Rate' labels;
+          both are unitless rates so no unit suffix is needed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second series Imprint position
+          2 (lavender), reference line uses the neutral inkSoft token; theme-correct
+          backgrounds and chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color and line-weight choices clearly above library defaults,
+          though not quite FiveThirtyEight-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, un-boxed legend, generous margins; some
+          refinement visible but not maximal
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Line-weight and color hierarchy make the stronger classifier immediately
+          obvious; the labeled diagonal baseline adds context without clutter
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ROC curve with diagonal baseline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line, AUC in legend, distinct colors for two models,
+          0-1 axes with near-equal aspect ratio — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: FPR on x, TPR on y, both axes show the full 0-1 range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'roc-curve · javascript · muix · anyplot.ai' exactly;
+          legend labels correctly show model name and AUC
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two models with clearly different AUC (0.96 vs 0.79) plus the random
+          baseline demonstrate the full range of classifier quality
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Malignant vs. benign biopsy classification is a real, neutral medical-diagnostics
+          scenario matching the spec's example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: AUC values and curve shapes are realistic and internally consistent
+          (trapezoidal AUC matches the drawn curve)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few helper functions (lcg, randNormal, rocFromScores, onGrid) are
+          needed since the browser has no numpy/sklearn; reasonable but not a flat
+          imports->data->plot script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) makes the data deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart, ChartsReferenceLine, Box, Typography imported and
+          all are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for computing ROC/AUC from scratch; no fake
+          UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-exported component, skipAnimation set; harness owns
+          file output
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of LineChart series/xAxis/yAxis config, margin tuning,
+          and slotProps.legend positioning; comment shows deep understanding of MUI
+          X's label offset internals
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative use of ChartsReferenceLine with a hidden stroke to render
+          a label-only baseline annotation, distinctive to MUI X
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  - cumulative-sum
+  styling:
+  - publication-ready
