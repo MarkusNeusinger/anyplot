@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: lift-curve
 created: '2026-09-05T06:21:34Z'
-updated: '2026-09-05T06:25:27Z'
+updated: '2026-09-05T06:32:58Z'
 generated_by: claude-sonnet
 workflow_run: 33949297727
 issue: 2379
@@ -12,48 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Correct lift-curve shape: realistic decay from ~4.0x at low percentages down
-    to 1.0x at 100%, generated from a plausible logistic-driven synthetic churn model
-    seeded deterministically (lcg(42))'
-  - Reference line at lift=1 (random selection) is present with a dashed stroke and
-    inline label, exactly as the spec requires
-  - Decile markers with direct value labels ('2.9x', '2.3x', '2.0x', '1.7x') and an
-    inline 'Model' label replace a traditional legend cleanly, keeping the single-series
-    chart uncluttered
-  - 'Theme-adaptive chrome is correct: the data color (#009E73) is pixel-identical
-    between light and dark renders, and every chrome element (title, axes, gridlines,
-    reference line, annotations) flips appropriately with full legibility in both
-    themes'
-  - 'Idiomatic, KISS-compliant D3 code: proper scales, .join() pattern, d3.axisBottom/axisLeft,
-    canvas sized from window.ANYPLOT_SIZE, no unused imports, no fake interactivity'
+  - 'Complete feature set: cumulative lift curve, dashed y=1 random-selection reference
+    line with label, and decile markers at every 10% with value labels at 20/40/60/80/100
+    — matches spec''s ''consider showing decile markers or actual values at key percentiles''
+    guidance directly.'
+  - 'Realistic, reproducible synthetic data: logistic-based churn simulation with
+    a latent quality score driving both outcome and a noisy predicted score, seeded
+    via a fixed LCG (seed 42) for determinism.'
+  - 'Correct Imprint palette and theme handling: single #009E73 series identical across
+    light/dark, backgrounds match #FAF8F1/#1A1A17, all chrome (grid, ticks, reference
+    line, labels) correctly threaded through ANYPLOT_TOKENS.'
+  - Direct labeling ('Model', 'Random selection (lift = 1)') instead of a legend box
+    keeps the chart clean and readable in a static PNG while still being self-explanatory.
+  - 'Nice idiomatic D3 touches: d3.bisector for percentile lookup, decile markers
+    stroked with the page background for contrast/pop, y-axis-only gridlines for a
+    subtle, uncluttered look.'
   weaknesses:
-  - Decile labels are shown only at 10/20/30/50% (labeledDeciles = new Set([10,20,30,50]))
-    while unlabeled decile dots still appear at 40/60/70/80/90/100% — the subset feels
-    arbitrary rather than systematic; either label every decile (with a smaller font)
-    or pick an evenly-spaced subset (e.g. every 20%) for a cleaner rationale
-  - 'Library Mastery is generic: the implementation doesn''t showcase any D3-distinctive
-    capability beyond a basic line+scale+axis pipeline (e.g. no d3.quantile/d3.bisector
-    for the decile lookups, which are instead computed with manual index math) — a
-    chance to demonstrate more idiomatic D3 array utilities'
-  - Title occupies only ~24% of canvas width because the spec-id is short ('lift-curve')
-    — not a violation (the format is correct and nothing overflows), but an optional
-    short descriptive prefix (e.g. 'Model Lift Chart · lift-curve · javascript · d3
-    · anyplot.ai') would give the title more visual presence typical of the catalog
+  - Title occupies only ~35% of plot width at 22px — well under the 50-70% guideline;
+    a slightly larger/bolder title would strengthen the visual hierarchy (minor, non-blocking).
+  - Distinctive D3 usage is solid but modest (bisector-based lookup, join pattern)
+    — no library-unique technique (e.g. a custom curve interpolation or brush-free
+    annotation layer) beyond what the skeleton pattern already suggests.
+  - The raw per-customer curve is jagged/noisy near x=0-10%; while realistic, a very
+    light smoothing or slightly thicker stroke there could make the steep decline
+    read a touch more polished without losing authenticity.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like), not pure white and not dark — correct light chrome surface.
-      Chrome: Title "lift-curve · javascript · d3 · anyplot.ai" in bold dark ink, clearly visible and centered at top. X-axis label "Population Targeted (%)" and Y-axis label "Cumulative Lift" in dark ink, both fully legible. Tick labels (0%-100%, 0.0x-4.0x) in a softer gray-ink, readable against the light background. Horizontal gridlines are subtle light-gray, visible but not dominant.
-      Data: Single green (#009E73) lift curve starting near 4.0x and descending to 1.0x at 100%, with 10 small green decile-marker dots (white/light stroke ring) along the curve, 4 of which carry bold value labels ("2.9x", "2.3x", "2.0x", "1.7x") in dark ink. A dashed gray reference line at y=1.0x is labeled "Random selection (lift = 1)" in soft gray text at the right edge. The curve itself is labeled "Model" in green near its start.
-      Legibility verdict: PASS — all text (title, axis labels, tick labels, decile labels, annotations) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Model Lift Chart · lift-curve · javascript · d3 · anyplot.ai" in dark bold text, centered top. X-axis "Population Targeted (%)" and Y-axis "Cumulative Lift" labels in dark ink, similarly sized. Tick labels ("0%"..."100%", "0.0×"..."4.0×") in soft gray, all clearly legible against the light background. Subtle horizontal gridlines only.
+      Data: Single green (#009E73) lift curve starting near 4.05× and descending to 1.0× at 100%, with 10 green decile-marker dots (white/page-background stroke for contrast) and bold black value labels at the 20/40/60/80/100 marks (2.3×, 1.8×, 1.5×, 1.2×, 1.0×). Dashed gray reference line at y=1.0× labeled "Random selection (lift = 1)". Green "Model" label near curve start.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlaps.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black and not light — correct dark chrome surface.
-      Chrome: Title in bold white/light text, clearly visible. Axis labels in light ink, tick labels in a slightly softer light-gray, all fully legible against the dark background. Gridlines are subtle light-gray lines, visible without dominating.
-      Data: The lift curve, decile markers, and "Model"/decile-value labels are rendered in the identical #009E73 green as the light render — confirmed pixel-consistent data color across themes. The dashed reference line and "Random selection (lift = 1)" label are rendered in light gray, clearly visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis labels, ticks, decile labels, reference-line label) uses a light color with clear contrast against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light/off-white and soft light-gray tones, clearly visible against the dark background. Gridlines remain subtle and visible.
+      Data: Curve, decile markers, and decile value labels use the identical #009E73 green and layout as the light render — only chrome (text/gridline/background colors) flips. Decile value labels flip to white bold text for contrast on dark. Dashed reference line remains visible in light gray.
+      Legibility verdict: PASS — no dark-on-dark issues found; all text and data elements are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,50 +61,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized (14-22px) and readable in both themes
+        comment: All text readable in both themes; title runs slightly small relative
+          to width but never a legibility issue
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Decile labels sit clear of the curve and each other, no collisions
+        comment: No collisions between text, curve, markers, or reference line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3.5px line + 7px decile markers are clearly visible against the dense
-          3000-point curve
+        comment: Line and decile markers clearly visible; marker size/stroke appropriate
+          for the density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green has strong contrast on both surfaces; no red-green
-          reliance
+        comment: Single-hue green with sufficient contrast on both backgrounds; no
+          red/green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no overflow or clipping; margins
-          accommodate right-side annotation
+        comment: Canvas gate passed; no clipping or overflow, well-proportioned margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Population Targeted (%)'' and ''Cumulative Lift'' are descriptive
-          with units'
+        comment: Descriptive axis labels with units (%, ×)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series is #009E73, identical across themes; backgrounds match
-          Imprint chrome spec'
+          Imprint spec'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -115,21 +111,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Direct labeling in place of a legend and consistent annotation styling
-          show intentional polish, but no advanced typographic/color hierarchy
+        comment: Custom decile annotations, direct labeling, contrasting marker strokes
+          — above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-only subtle gridlines, no legend box, generous whitespace
+        comment: Minimal chrome (no boxed frame), subtle y-only gridlines, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Decile call-outs and inline 'Model'/'Random selection' labels guide
-          the reader, though the labeled-decile subset (10/20/30/50) feels arbitrary
+        comment: Clear focal curve with decile call-outs and a comparison baseline,
+          though hierarchy is fairly conventional
     spec_compliance:
       score: 15
       max: 15
@@ -145,21 +142,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Reference line at lift=1 present, decile markers shown, curve shape
-          matches spec description
+        comment: x=% targeted, y=cumulative lift, y=1 reference line, decile markers
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = % population targeted (0-100), Y = cumulative lift ratio
+        comment: X/Y mapping correct, full 0-100% range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; inline labels substitute correctly
-          for a legend
+        comment: Title matches required format with descriptive prefix; direct labels
+          substitute for legend clearly
     data_quality:
       score: 15
       max: 15
@@ -169,21 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Curve, reference line, and decile markers all present
+        comment: Curve, deciles, and reference line together cover all plot-type aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral churn-prediction scenario via logistic-driven
-          synthetic data
+        comment: Neutral, plausible churn-prediction scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lift values (4.0x down to 1.0x) are realistic for a model evaluation
-          context
+        comment: n=3000 within recommended range; lift values (1x-4x) realistic for
+          the domain
     code_quality:
       score: 10
       max: 10
@@ -193,57 +189,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only small deterministic-RNG helper functions, no unnecessary abstraction
+        comment: Only minimal RNG helper functions, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42)
+        comment: Fixed-seed LCG (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global d3
+        comment: Only the global d3 is used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Clean, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract followed correctly per D3 harness rules
+        comment: Correct mount-node contract, no animations, standard join() pattern
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of scales, .join(), axis generators
+        comment: Proper scales/axes/line generator/join() idioms
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Decile lookups computed with manual index math rather than d3-array
-          helpers (d3.quantile/bisector); no distinctive D3-only technique showcased
+        passed: true
+        comment: d3.bisector-based percentile lookup is a nice touch, but overall
+          distinctiveness is modest
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - grid-styling
+  - edge-highlighting
