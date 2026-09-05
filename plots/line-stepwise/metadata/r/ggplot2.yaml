@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-stepwise
 created: '2026-09-05T08:03:53Z'
-updated: '2026-09-05T08:08:01Z'
+updated: '2026-09-05T08:17:00Z'
 generated_by: claude-sonnet
 workflow_run: 33953998078
 issue: 2600
@@ -12,54 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-step
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 74
 review:
   strengths:
-  - Correct use of geom_step(direction = "hv") producing genuine horizontal-then-vertical
-    transitions, matching the spec's core requirement
-  - 'Theme-adaptive chrome is implemented correctly: PAGE_BG/INK/INK_SOFT tokens flip
-    properly between light (#FAF8F1) and dark (#1A1A17), all text stays legible in
-    both renders'
-  - 'First (only) series correctly uses Imprint brand green #009E73, identical between
-    light and dark'
-  - Realistic, neutral, comprehensible scenario (elevator floor position over a service
-    run) with plausible floor numbers and wait times
-  - 'Clean KISS structure: seeded reproducible data generation, no functions/classes,
-    correct ragg::agg_png save with theme-suffixed filename'
-  - Custom y-axis breaks via scales::breaks_width(2) and removal of vertical gridlines/axis
-    ticks show some intentional visual refinement beyond raw theme_minimal() defaults
+  - Correct geom_step(direction = "hv") usage produces an unambiguous step shape with
+    clear horizontal-hold / vertical-jump segments
+  - 'Theme-adaptive chrome is implemented correctly: warm off-white / near-black backgrounds,
+    ink tokens flip for text and grid, brand green #009E73 identical in both renders'
+  - Clean KISS script structure with set.seed(42), only used imports (ggplot2, scales,
+    ragg), and no fake interactivity
+  - Y-axis breaks_width(2) keeps tick density sensible for the 1-12 floor range
+  - Elevator floor-position premise is a realistic, neutral, easily understood application
+    of a step function
   weaknesses:
-  - Only 14 data points are generated (n_stops <- 14), but the specification explicitly
-    requires 50-500 points ('depending on temporal frequency'). Increase to roughly
-    60-120 stops so the step pattern reads with the density the spec calls for — this
-    also gives the plot more visual richness for Design Excellence and Data Quality.
-  - 'Design Excellence is generic: a single green step line with no additional visual
-    hierarchy or focal point. Consider one restrained enhancement that doesn''t violate
-    KISS — e.g. a subtle fill/ribbon under the step to reinforce ''value persistence'',
-    or emphasizing the largest jump — to give DE-03 a clear story beyond ''data is
-    displayed''.'
-  - 'Library Mastery is generic (LM-02): only the basic geom_step + geom_point combination
-    is used. With more data points, consider layering a secondary muted reference
-    (e.g. a faint horizontal line at the mean floor) or leveraging another ggplot2-idiomatic
-    touch to distinguish the implementation beyond default usage.'
-  - Visual refinement (DE-02) is still close to theme_minimal() defaults aside from
-    removing vertical gridlines — panel.border/legend chrome untouched (though not
-    used here); a bit more deliberate spacing/typography polish would help.
+  - 'CRITICAL - rendered images appear stale / do not match the current script: the
+    committed code sets n_stops = 90 with wait_min drawn from runif(n_stops, 1, 6)
+    minutes, which mathematically forces elapsed_min to reach at least 89 minutes
+    (89 gaps x >=1 min each) - yet both plot-light.png and plot-dark.png show only
+    ~13 step transitions ending around x=50 minutes, with none of the dashed geom_vline
+    jump marker, the large shape=21 highlighted jump point, or the plot.caption text
+    that the current code also adds. This rendered output matches the OLD n_stops=14
+    pre-fix version (commit bcd3ea365), not the current fix commit (8d24eec98). The
+    pipeline must re-render plot-light.png/plot-dark.png from the current script before
+    this can be scored with confidence - re-running the repair loop on the R code
+    will not fix a stale render.'
+  - Because the visible point count (~13) is below the spec's mandated 50-500 point
+    range, DQ-01/DQ-03/SC-02 are scored against what is actually shown, not what the
+    code claims to produce - re-render and re-review once the correct 90-point output
+    is confirmed.
+  - The intended focal-point annotation (dashed vline + highlighted jump marker +
+    caption calling out the largest single floor change) is completely absent from
+    both renders, removing the data-storytelling element the code was clearly written
+    to add.
+  - geom_point(size = 1.6) markers on top of geom_step are fairly small and low-contrast
+    against the thick linewidth = 1.1 step line for a sparse dataset - once the correct
+    render is available, verify markers remain clearly visible at the true point density.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Elevator Floor Position · line-stepwise · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly readable, spans roughly 65% of canvas width. Axis titles "Elapsed Time (minutes)" (x) and "Floor" (y) in dark ink, both readable. Tick labels in a softer dark gray, readable. Horizontal gridlines are thin dark lines at y = 2,4,6,8,10, subtle but visible; no vertical gridlines (intentional).
-      Data: Single step line in Imprint brand green (#009E73) with circular markers at each stop. 14 distinct floor stops visible, showing both small (1-2 floor) and large (up to 8-9 floor) jumps, holding constant between jumps (horizontal segments) before instantaneous vertical transitions — correctly demonstrates step/stepwise behavior.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 - correct.
+      Chrome: Title "Elevator Floor Position · line-stepwise · r · ggplot2 · anyplot.ai" in dark ink at top-left, x-axis title "Elapsed Time (minutes)" and y-axis title "Floor" in dark ink, tick labels in a softer grey. Horizontal-only major gridlines in a light grey line, no vertical gridlines, no panel border, axis line present. All chrome text is clearly readable against the light background.
+      Data: A single green (#009E73) step line with direction="hv", small green dots at each stop. About 13 visible step transitions spanning x = 0 to ~50 minutes, y = 1 to 10 floors. No dashed vline, no larger highlighted jump marker, and no caption text are visible, even though the current script adds all three (geom_vline, a shape=21 highlighted point, and labs(caption=...)).
+      Legibility verdict: PASS for what is shown, but see weaknesses - this render does not match the current 90-point script (mathematically the code's wait_min >= 1 min per of 89 gaps forces elapsed_min >= 89, not ~50), indicating a stale/pre-fix render.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title text now rendered in light/near-white ink, clearly readable. Axis titles and tick labels also rendered in light tones, clearly legible against the dark background. Horizontal gridlines are thin light-gray lines, subtle but visible.
-      Data: Step line and markers are the identical #009E73 green as the light render — confirmed unchanged data color between themes, only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, and tick text is clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 - correct.
+      Chrome: Same title/axis titles rendered in light ink (#F0EFE8), tick labels in a lighter grey (#B8B7B0), gridlines in a light color subtle against the dark background. All text is clearly legible - no dark-on-dark failures observed.
+      Data: Identical green (#009E73) step line and marker positions/values as the light render - data colors match exactly, confirming only chrome flipped. Same ~13-point, x-max-50 shape and same absence of the vline/highlighted-jump/caption elements described above.
+      Legibility verdict: PASS for what is shown, same staleness caveat as light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -67,76 +69,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes set (axis.title=10, axis.text=8, plot.title=12);
-          all readable in both themes, title ~65% of width, well-balanced axis label
-          sizes
+        comment: Title/axis/tick text clearly readable in both themes, sensible sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Sparse data (14 points) with prominent markers (size=2.5) and linewidth=1.1,
-          clearly visible
+        comment: Markers a bit small/low-contrast against the thick step line at this
+          sparse point count; unverifiable at the intended 90-point density since
+          the render is stale
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast green series against both backgrounds, no red-green
-          reliance
+        comment: Single high-contrast brand color, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills a good portion of the canvas, balanced margins, no cut-off
-          content
+        comment: Good proportions, nothing clipped, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Elapsed Time (minutes)'' has units; ''Floor'' is descriptive'
+        comment: Descriptive title and axis labels with units (minutes)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 in both themes, backgrounds #FAF8F1/#1A1A17,
-          theme-correct chrome'
+        comment: 'Brand green #009E73, correct light/dark backgrounds, identical data
+          color across themes'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library default; single-color step line with minimal
-          customization beyond theme tokens
+        comment: Clean minimal styling but the rendered plot lacks the jump-highlight/caption
+          polish the code adds
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Some refinement: vertical gridlines and axis ticks removed, but
-          otherwise close to theme_minimal() defaults'
+        passed: true
+        comment: Spines/panel border removed, subtle horizontal-only grid, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data is displayed but not interpreted; no visual hierarchy, emphasis,
-          or focal point beyond the raw step shape
+        comment: No visible focal point in the render - the intended largest-jump
+          annotation is missing from the output
     spec_compliance:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -144,53 +143,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct step-line plot via geom_step(direction="hv")
+        comment: Correct step plot via geom_step(direction="hv")
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Spec requires 50-500 data points; implementation only generates 14
-          stops, well below the minimum
+        comment: Rendered point count (~13) is below the spec's 50-500 point range
+          even though the current code targets 90
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: x=elapsed_min, y=floor_num correctly mapped, axes show all data
+        comment: X/Y mapped correctly, but rendered data does not match current code
+          - trust concern
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''{Descriptive Title} · line-stepwise · r
-          · ggplot2 · anyplot.ai''; no legend needed (single series)'
+        comment: Title format matches {Descriptive Title} · {spec-id} · {language}
+          · {library} · anyplot.ai
     data_quality:
-      score: 12
+      score: 8
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Shows both small and large step jumps, but the low point count (14
-          vs spec's 50-500) under-represents the temporal richness the spec calls
-          for
+        comment: Only ~13 points rendered, well under the spec's 50-500 range; jump-highlight
+          feature not visible
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Real, comprehensible, neutral scenario: elevator floor position
-          during a service run'
+        comment: Elevator floor scenario is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Floor numbers (1-12) and wait times (1-6 min) are realistic for the
-          domain
+        passed: false
+        comment: Sparse ~50-minute window undercuts the 'extended service period'
+          premise described in the code comments
     code_quality:
       score: 10
       max: 10
@@ -200,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -218,13 +216,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: No fake UI/functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png and theme-suffixed filename
+        comment: ggsave via ragg::agg_png to plot-{THEME}.png
     library_mastery:
       score: 6
       max: 10
@@ -234,22 +232,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_step + scales::breaks_width, theme_minimal base
+        comment: Proper geom_step + scale_y_continuous(breaks_width) idioms
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Basic geom_step/geom_point usage; no feature distinctive to ggplot2
-          beyond the core step geom
+        comment: geom_vline + shape=21 highlighted point + caption are distinctive
+          but not visible in the render
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - grid-styling
+  - alpha-blending
