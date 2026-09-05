@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-confidence
 created: '2026-09-05T06:59:44Z'
-updated: '2026-09-05T07:03:20Z'
+updated: '2026-09-05T07:14:07Z'
 generated_by: claude-sonnet
 workflow_run: 33951188386
 issue: 2007
@@ -12,35 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-conf
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-confidence/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 70
 review:
   strengths:
-  - Confidence band alpha (0.25) sits well inside the spec's 0.2-0.4 range and stays
-    readable in both themes
-  - Band width correctly grows with forecast horizon (sqrt-of-horizon uncertainty),
-    giving an honest visual cue of increasing forecast risk
-  - Theme tokens are threaded through consistently - data colors identical between
-    light/dark, only chrome flips
-  - 'Clean, uncluttered layout: spines removed, only horizontal gridlines retained,
-    comma-formatted y-axis ticks'
+  - Core geom_ribbon + geom_line composition is clean and correct; confidence-band
+    alpha (0.25) sits well inside the 0.2-0.4 spec range and reads well in both themes
+  - 'Theme tokens threaded correctly throughout - data colors (brand green #009E73
+    line, tinted band) are pixel-identical between light/dark renders, only chrome
+    flips'
+  - Title, axis titles, tick labels, and legend text are all fully legible against
+    both the light (#FAF8F1) and dark (#1A1A17) backgrounds - no dark-on-dark or light-on-light
+    failures
+  - 'Data generation remains realistic and well-scaled: weekly seasonality, sqrt-of-horizon-growing
+    standard error, and a plausible 48k-65k DAU range'
   weaknesses:
-  - Design storytelling is fairly generic - consider a subtle vertical marker or annotation
-    calling out where the forecast begins, or a brief callout on the widening trend,
-    to sharpen the focal point
-  - Library mastery is safe/standard; a more distinctive ggplot2 touch (e.g. geom_smooth
-    for a secondary reference, or annotated seasonality peaks) would raise this further
+  - 'CRITICAL BUG: none of the four narrative-annotation layers added in this repair
+    pass render in either PNG. Pixel-level color analysis of plot-light.png and plot-dark.png
+    (scanning the panel interior for the exact INK/INK_SOFT theme-token colors used
+    by the annotation code) found zero pixels matching the dashed geom_vline color,
+    zero pixels for the ''Weekly peak'' annotate() text, zero pixels for the geom_segment
+    double-headed arrow at the final forecast day, and zero pixels for the ''95% CI:
+    ±...'' annotate() text. The only INK-colored pixels found in the panel interior
+    are the four horizontal gridlines. The rendered chart is visually indistinguishable
+    from the plain line+ribbon shipped in attempt 1 - the entire narrative-anchor
+    addition is dead code.'
+  - 'Likely root causes to check before resubmitting: (a) annotate(''text'', x = peak_row$date,
+    y = max(df$upper), vjust = 1, ...) places the ''Weekly peak'' label at the highest
+    y-value in the whole series (which occurs near the end of the horizon, not near
+    peak_row''s early date) with vjust=1 pushing it further up - this may sit above
+    the expanded y-axis limit and get invisibly clipped by the default coord_cartesian(clip
+    = ''on''); (b) confirm geom_vline(xintercept = peak_row$date, ...) is actually
+    receiving a valid Date and not being silently dropped; (c) after any repair, actually
+    open the two saved PNGs and visually confirm each new layer is present - this
+    is the second attempt in a row where an intended feature does not show up in the
+    render.'
+  - Because the added annotation code doesn't render, the DE-03 (data storytelling)
+    and LM-02 (distinctive library feature) weaknesses flagged in the attempt-1 review
+    remain unresolved - the chart still lacks any visual narrative anchor beyond the
+    widening band itself
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "line-confidence · r · ggplot2 · anyplot.ai" top-left in dark ink; axis titles "Forecast Date" / "Daily Active Users" in dark ink; tick labels in a softer dark gray; legend card (two entries: "Forecast mean", "95% prediction interval") on a light elevated background. All fully readable.
-      Data: Brand-green (#009E73) line for the forecast mean, translucent brand-green band (alpha ~0.25) for the 95% prediction interval, widening with forecast horizon. Weekly seasonality clearly visible as a sawtooth pattern on an upward trend from ~49,000 to ~65,000.
-      Legibility verdict: PASS
+      Chrome: Title "line-confidence · r · ggplot2 · anyplot.ai" top-left in dark ink; axis titles "Forecast Date" / "Daily Active Users" in dark ink; tick labels in a softer dark-gray ink; only horizontal major gridlines shown, subtle against the background; legend ("Forecast mean", "95% prediction interval") centered above the plot on a slightly elevated off-white card. All chrome text is clearly readable.
+      Data: A brand-green (#009E73) line rises with weekly (sawtooth) seasonality from ~49,000 to ~65,000 over ~90 days, surrounded by a translucent light-green confidence band (same hue, alpha≈0.25) that visibly widens left-to-right.
+      Missing elements: No dashed reference line, no "Weekly peak" text callout, no double-headed arrow, and no "95% CI: ±..." text are visible anywhere in the panel, despite these being present in the R source (geom_vline, two annotate() calls, geom_segment). Confirmed via pixel-level scan: zero pixels matching the INK_SOFT (#4A4A44) or INK (#1A1A17) annotation colors exist in the panel interior outside of the four horizontal gridlines.
+      Legibility verdict: PASS for all rendered chrome/data; FAIL for feature completeness - four coded annotation layers do not appear in the output.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, axis titles rendered in light ink; tick labels in a softer light gray; gridlines in a pale, subtle line color; legend card uses a dark elevated background with light text. No dark-on-dark issues found anywhere.
-      Data: Line and band colors are pixel-identical to the light render (same brand green, same alpha, same shape) - only the chrome (background, text, grid, legend frame) flipped as required.
-      Legibility verdict: PASS
+      Chrome: Title and axis titles render in light ink (#F0EFE8), tick labels in a softer light gray (#B8B7B0), gridlines in a pale line color, legend card uses a dark elevated background (#242420) with light text. All chrome is clearly legible - no dark-on-dark failures.
+      Data: Colors are pixel-identical to the light render - same brand-green line, same translucent band shape and progressive widening. Confirms correct theme-adaptive chrome with unchanged data-ink.
+      Missing elements: Same as light render - no dashed peak marker, no "Weekly peak" label, no CI arrow, no "95% CI: ±..." label anywhere in the panel. Pixel scan for the dark-theme INK_SOFT token (#B8B7B0) inside the panel interior returned zero matches.
+      Legibility verdict: PASS for all rendered chrome/data; FAIL for feature completeness - same four annotation layers absent as in the light render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -51,47 +74,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All fonts explicitly sized, readable in both themes, no dark-on-dark/light-on-light
+        comment: Title, axis titles, ticks, legend all readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, axes, or data
+        comment: No collisions between text, line, band, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weight and band alpha well-tuned for 90-point density
+        comment: Line and band clearly distinguishable from background in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; line vs. band distinguishable by shape and legend
-          swatch, not color alone
+        comment: Single hue-family (brand green line + lighter tint band), good contrast,
+          not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed, no cutoff, good proportions
+        comment: Canvas gate passed (3200x1800); good proportions, no overflow/clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Forecast Date, Daily Active Users)
+        comment: Descriptive axis labels with units (Daily Active Users, Forecast
+          Date)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds are #FAF8F1 / #1A1A17; both
-          renders theme-correct'
+        comment: 'First series #009E73; backgrounds match #FAF8F1/#1A1A17; both themes
+          correct'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -99,21 +123,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Clean alpha-tinted brand-green family with styled legend card; not
-          a standout composition
+        comment: Clean but standard alpha-tinted band + legend card; not a standout
+          composition
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, only subtle horizontal gridlines, generous whitespace
+        comment: Spines removed, only horizontal gridlines kept, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 1
         max: 6
         passed: false
-        comment: Widening band tells the uncertainty story, but no annotation anchors
-          the narrative further
+        comment: Narrative-anchor annotations (weekly peak marker, CI-width callout)
+          were added in code specifically to address this but do not render at all
+          - visually unchanged from attempt 1's plain band-widens story, plus now
+          carries dead code
     spec_compliance:
       score: 15
       max: 15
@@ -123,25 +149,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_line + geom_ribbon composition matches spec
+        comment: Correct line + confidence-band composition
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid trend line, alpha=0.25 band, clear legend, gridlines present
+        comment: Prominent trend line, band alpha within 0.2-0.4, clear legend, gridlines
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=date, y=mean, band from lower/upper; all 90 points shown
+        comment: x=date, y=forecast mean, band from lower/upper; all 90 points shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; legend labels match data series
+        comment: Title matches mandated format; legend labels are clear
     data_quality:
       score: 15
       max: 15
@@ -164,17 +191,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 48k-65k user range and SE growth sensible for domain
+        comment: 48k-65k range and SE growth sensible for the domain
     code_quality:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: No functions/classes, flat script
+        passed: false
+        comment: Four extra layers (geom_vline, two annotate() calls, geom_segment)
+          plus their supporting data (peak_row, last_row, half_width) add real complexity
+          for zero rendered effect
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -189,10 +218,12 @@ review:
         comment: ggplot2, tibble, scales, ragg all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: No fake functionality, idiomatic layering
+        passed: false
+        comment: 'Non-functional annotation code: reads as a real feature in the source
+          but produces literally no visible output in either render - confirmed by
+          pixel scan'
       - id: CQ-05
         name: Output & API
         score: 1
@@ -200,7 +231,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -208,23 +239,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Textbook geom_ribbon + geom_line with scale_*_manual legend naming
+        comment: Textbook geom_ribbon + geom_line composition with scale_*_manual
+          legend naming
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Standard ggplot2 idiom; no more distinctive grammar-of-graphics feature
-          showcased
-  verdict: APPROVED
+        comment: Attempted a distinctive annotation/arrow feature to raise this score,
+          but it does not render, so no distinctive capability is actually demonstrated
+  verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scales
+  - ragg
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
