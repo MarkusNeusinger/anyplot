@@ -52,6 +52,13 @@ const baselineGains = [
   [100, 100],
 ];
 
+// Highlight the point where the model first captures 95% of fraud cases —
+// the "diminishing returns" transition called out via a plotLine dropline.
+const PLATEAU_CAPTURE_PCT = 95;
+const [plateauTargetedPct, plateauCapturedPct] =
+  modelGains.find(([, capturedPct]) => capturedPct >= PLATEAU_CAPTURE_PCT) ??
+  modelGains[modelGains.length - 1];
+
 // --- Chart -------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -81,6 +88,24 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     labels: { format: "{value}%", style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      {
+        value: plateauTargetedPct,
+        color: t.inkSoft,
+        width: 1,
+        dashStyle: "ShortDot",
+        zIndex: 4,
+        label: {
+          text: `${PLATEAU_CAPTURE_PCT}% captured at ${plateauTargetedPct.toFixed(0)}% targeted`,
+          style: { color: t.inkSoft, fontSize: "12px" },
+          rotation: 0,
+          align: "left",
+          x: 8,
+          verticalAlign: "bottom",
+          y: -10,
+        },
+      },
+    ],
   },
   yAxis: {
     title: {
@@ -92,28 +117,42 @@ Highcharts.chart("container", {
     tickInterval: 20,
     gridLineColor: t.grid,
     labels: { format: "{value}%", style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      { value: plateauCapturedPct, color: t.inkSoft, width: 1, dashStyle: "ShortDot", zIndex: 4 },
+    ],
   },
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
-  tooltip: { valueDecimals: 1, valueSuffix: "%" },
+  tooltip: {
+    formatter: function () {
+      const lift = this.x > 0 ? (this.y / this.x).toFixed(2) : "—";
+      return `<b>${this.series.name}</b><br/>Targeted: ${this.x.toFixed(1)}%<br/>Captured: ${this.y.toFixed(1)}%<br/>Lift vs. random: ${lift}×`;
+    },
+  },
   plotOptions: {
     series: { animation: false, marker: { enabled: false } },
   },
   series: [
     {
       name: "Fraud Risk Model",
+      type: "area",
       data: modelGains,
       color: t.palette[0],
+      fillOpacity: 0.15,
+      threshold: 0,
       lineWidth: 3,
+      zIndex: 2,
     },
     {
       name: "Random Selection",
+      type: "line",
       data: baselineGains,
       color: t.ink,
       lineWidth: 2,
       dashStyle: "Dash",
+      zIndex: 3,
     },
   ],
 });
