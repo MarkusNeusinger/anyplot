@@ -87,10 +87,12 @@ g.append("rect")
   .attr("opacity", 0.1);
 
 // --- Threshold + centerline lines ---------------------------------------------
+// Labels sit at the left edge (day 14+) where the series has more headroom
+// before its terminal value, avoiding the right-edge collision with the line.
 const thresholds = [
-  { level: 70, label: "Overbought (70)", color: t.palette[4] },
-  { level: 50, label: "Centerline (50)", color: t.grid },
-  { level: 30, label: "Oversold (30)", color: t.palette[2] },
+  { level: 70, label: "Overbought (70)", lineColor: t.palette[4], labelColor: t.palette[4] },
+  { level: 50, label: "Centerline (50)", lineColor: t.grid, labelColor: t.inkSoft },
+  { level: 30, label: "Oversold (30)", lineColor: t.palette[2], labelColor: t.palette[2] },
 ];
 
 for (const th of thresholds) {
@@ -99,16 +101,16 @@ for (const th of thresholds) {
     .attr("x2", iw)
     .attr("y1", y(th.level))
     .attr("y2", y(th.level))
-    .attr("stroke", th.color)
+    .attr("stroke", th.lineColor)
     .attr("stroke-width", th.level === 50 ? 1.5 : 2)
     .attr("stroke-dasharray", th.level === 50 ? "2,4" : "6,4")
     .attr("opacity", th.level === 50 ? 0.6 : 0.85);
 
   g.append("text")
-    .attr("x", iw - 4)
+    .attr("x", 4)
     .attr("y", y(th.level) - 8)
-    .attr("text-anchor", "end")
-    .attr("fill", th.color)
+    .attr("text-anchor", "start")
+    .attr("fill", th.labelColor)
     .style("font-size", "13px")
     .style("font-weight", "600")
     .text(th.label);
