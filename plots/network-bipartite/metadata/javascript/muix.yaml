@@ -1,0 +1,238 @@
+library: muix
+language: javascript
+specification_id: network-bipartite
+created: '2026-09-05T09:57:22Z'
+updated: '2026-09-05T10:16:59Z'
+generated_by: claude-sonnet
+workflow_run: 33959067985
+issue: 5247
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Both prior review-1 weaknesses are fixed: the set-membership legend now reads
+    its colors/labels from a real ChartsLegend component (backed by phantom zero-point
+    series), and the dataset now includes one isolated student and one isolated course,
+    fully covering the spec''s isolated-nodes pattern'
+  - A barycenter-based crossing-minimization pass (beyond pure degree sort) now orders
+    each column, visibly tightening the fan-out and pushing isolated nodes to the
+    bottom of their columns
+  - Node size encodes degree, edge width+opacity jointly encode weight, and dashed/faded
+    styling distinguishes isolated nodes - all explained by a legend with a literal
+    hour scale (2h/4h/6h)
+  - Correct Imprint palette, fully theme-adaptive chrome, exact mandated title format,
+    no edge clipping in either render
+  - Real (non-faked) hover tooltips for the interactive HTML export via a wider invisible
+    hit-path on thin edges
+  weaknesses:
+  - Nodes, edges, and the hover tooltip are still entirely hand-drawn raw SVG; only
+    the legend now uses a native MUI X component - further leaning on MUI X-specific
+    building blocks (e.g. ChartsTooltip for the hover overlay) would push Library
+    Mastery further
+  - With 26 node labels and 39 edges, text and thin edge strokes still shrink to only
+    a few effective pixels at a 400px mobile thumbnail, even after the crossing-minimization
+    pass
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Bold dark title centered at top ("network-bipartite · javascript · muix · anyplot.ai"), 15 student names in dark ink on the left column, 11 course names in dark ink on the right column, native ChartsLegend row below the plot with set-membership swatches/labels, custom weight-scale legend (2h/4h/6h) and isolated-node note below that - all clearly visible
+      Data: Student nodes brand green (#009E73), course nodes lavender (#C475FD), sized by degree ("Statistics" is the largest hub); grey edges vary width/opacity by weight; two isolated nodes (Talia Novak, Advanced Robotics) rendered with dashed outline + faded fill at the bottom of each column
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title and all node/legend labels flip to light ink, remain clearly readable - no dark-on-dark failures anywhere
+      Data: Green/lavender node colors and grey edge colors identical to the light render, confirming only chrome flipped
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes, well-proportioned; 26 node labels get dense at 400px
+          mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels sit outside the edge-drawing zone by construction
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Degree/weight-scaled sizing reads clearly at both extremes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hue families, pageBg strokes for definition
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend directly below plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend documents both encodings with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD, theme-correct chrome both
+          renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hub-sorted layout, multiple joint encodings, native ChartsLegend
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines, generous whitespace; residual edge-crossing density
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hub clustering + dashed/faded isolated nodes make the pattern legible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bipartite layout, clearly separated columns
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color by set, degree/weight encodings, isolated-node pattern now
+          shown
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct column mapping, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format, correct legend labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Hubs, weight variation, AND isolated nodes in both sets now shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible student-course enrollment scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 students / 11 courses / 39 edges / 2-6h weights, within spec guidance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Appropriate shape for React/SVG composition, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic dataset
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only what's used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, real hover interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, default-exported component
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scale-hook composition plus a genuine native ChartsLegend
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Hooks + ChartsLegend are real MUI X features, but core marks remain
+          generic SVG
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
