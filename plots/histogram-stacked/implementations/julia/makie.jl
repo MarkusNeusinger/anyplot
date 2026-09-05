@@ -48,6 +48,15 @@ height_flat = vec(counts)
 stack_flat = repeat(1:length(locations); inner = n_bins)
 color_flat = IMPRINT_PALETTE[stack_flat]
 
+# Focal-point insight: which bin sees the most total traffic, and which
+# location dominates it — turns the raw stack into a story instead of
+# just displaying the composition.
+totals = vec(sum(counts, dims = 2))
+peak_idx = argmax(totals)
+peak_x = bin_centers[peak_idx]
+peak_total = totals[peak_idx]
+peak_group = locations[argmax(counts[peak_idx, :])]
+
 # --- Plot -----------------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
@@ -60,6 +69,9 @@ ax = Axis(
     title             = "histogram-stacked · julia · makie · anyplot.ai",
     titlesize         = 20,
     titlecolor        = INK,
+    subtitle          = "Peak volume at $(round(peak_x, digits = 1)) min ($(peak_total) customers) — $(peak_group) leads this bin",
+    subtitlesize      = 14,
+    subtitlecolor     = INK_SOFT,
     xlabel            = "Wait Time (minutes)",
     ylabel            = "Number of Customers",
     xlabelsize        = 14,
@@ -83,12 +95,21 @@ ax = Axis(
 
 barplot!(ax, x_flat, height_flat;
          stack = stack_flat, color = color_flat,
-         width = bin_width * 0.95, strokewidth = 0)
+         width = bin_width * 0.95, strokewidth = 1.5, strokecolor = PAGE_BG)
+
+# Callout on the busiest bin — a layered `text!` annotation gives the eye a
+# focal point instead of leaving the composition shift to be inferred.
+text!(ax, peak_x, peak_total;
+      text = "▲ $(peak_group) leads",
+      color = INK, fontsize = 13, font = :bold,
+      align = (:center, :bottom), offset = (0, 6))
+ylims!(ax, 0, maximum(totals) * 1.18)
 
 legend_elements = [PolyElement(color = c) for c in IMPRINT_PALETTE[1:length(locations)]]
 Legend(fig[1, 2], legend_elements, locations, "Location";
        labelcolor = INK_SOFT, titlecolor = INK,
-       backgroundcolor = PAGE_BG, framevisible = false)
+       backgroundcolor = PAGE_BG, framevisible = false,
+       patchsize = (18, 18), rowgap = 6)
 
 # --- Save -----------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
