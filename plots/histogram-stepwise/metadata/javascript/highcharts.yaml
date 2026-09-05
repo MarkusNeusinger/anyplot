@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: histogram-stepwise
 created: '2026-09-05T04:59:33Z'
-updated: '2026-09-05T05:03:55Z'
+updated: '2026-09-05T05:13:40Z'
 generated_by: claude-sonnet
 workflow_run: 33945826544
 issue: 2645
@@ -12,42 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stepwise/javascript/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'First two series render pixel-exact Imprint hexes (#009E73 green, #C475FD lavender),
-    verified identical between light and dark renders — only chrome flips'
-  - Deterministic in-memory data generation via a fixed-seed LCG (no external RNG
-    dependency in the browser)
-  - Step outline correctly drops to zero at both ends and uses horizontal/vertical
-    vertices (no fill) — matches the spec's step-histogram definition precisely
-  - 'Theme-adaptive chrome fully wired through ANYPLOT_TOKENS; backgrounds measured
-    exactly #FAF8F1 (light) and #1A1A17 (dark)'
-  - Y-axis-only subtle gridline with x-axis gridline disabled, L-shaped spine feel,
-    generous legend spacing at the bottom — matches style-guide grid/spine guidance
-  - Custom tooltip formatting (`headerFormat`, `pointFormat`) adds a nice touch for
-    the interactive HTML view without hurting the static PNG
+  - 'plotOptions.series.step: "left" now drives the step shape natively - less code,
+    more idiomatic than the prior manual vertex-tripling approach'
+  - Modal-bin callout (circle marker + pixel-positioned label using toPixels()) adds
+    a genuine focal point and directly answers the prior review's design-flourish
+    weakness
+  - 'Palette compliance is pixel-exact and theme-consistent: #009E73 / #C475FD identical
+    between light and dark, only chrome flips'
+  - Deterministic fixed-seed LCG data generation, no external RNG dependency
+  - Canvas confirmed exactly 3200x1800 in both renders; nothing clipped
   weaknesses:
-  - 'Step outline is built by manually tripling each bin into (left, top, right) vertices
-    instead of using Highcharts'' built-in core `plotOptions.line.step: ''left''`
-    (or ''center'') option, which would let Highcharts interpolate the step shape
-    from plain (edge, count) points — functionally equivalent but less idiomatic and
-    more code than necessary'
-  - Design excellence is competent but largely default-level — no distinguishing visual
-    flourish (e.g. a very light alpha fill under the outline, or a callout on the
-    modal peak) to elevate it past a functional, correctly-styled chart
+  - Title occupies only ~35-40% of the plot width at 22px, well under the expected
+    ~50-70% range for a title this length - a couple of points larger would improve
+    visual hierarchy without risking overflow
+  - 'Design excellence is still mid-pack: no additional refinement (e.g. subtle area
+    alpha-fill under one series, or legend/border cleanup) was added beyond the one
+    annotation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, measured exactly RGB(250,248,241) = #FAF8F1. Matches the mandated light-theme plot background.
-      Chrome: Bold dark title "histogram-stepwise · javascript · highcharts · anyplot.ai" centered at top, clearly readable. "Exam Score" x-axis title and "Number of Students" y-axis title in medium-gray ink, both legible. Tick labels along both axes are dark-gray and crisp. Legend ("Morning Class", "Evening Class") sits below the plot with adequate padding, text fully readable. Y-axis-only horizontal gridlines are subtle (light gray) and do not compete with the data.
-      Data: Two step-outline (unfilled) distributions overlap cleanly — first series measured exactly #009E73 (brand green, "Morning Class"), second series measured exactly #C475FD (lavender, "Evening Class"). Both step functions start and end at zero on the x-axis, confirming proper step-histogram construction. Lines are 3px, clearly distinguishable from each other and the background.
-      Legibility verdict: PASS — no light-on-light text, all chrome elements readable.
+      Background: Warm off-white, consistent with #FAF8F1. Matches the mandated light-theme plot background.
+      Chrome: Bold dark title "histogram-stepwise · javascript · highcharts · anyplot.ai" centered at top, clearly readable. "Exam Score" x-axis title and "Number of Students" y-axis title in medium-gray ink, both legible. Tick labels along both axes are dark-gray and crisp. Legend ("Morning Class", "Evening Class") sits below the plot with adequate padding. Y-axis-only horizontal gridlines are subtle and do not compete with the data. A new modal-bin callout (small dot + "Modal bin · Evening Class: 68 students" label) sits cleanly above the tallest step without overlapping anything.
+      Data: Two step-outline (unfilled) distributions overlap cleanly - first series #009E73 (brand green, "Morning Class"), second series #C475FD (lavender, "Evening Class"). Both step functions start and end at zero on the x-axis. Lines are 3px, clearly distinguishable from each other and the background.
+      Legibility verdict: PASS - no light-on-light text, all chrome elements readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, measured exactly RGB(26,26,23) = #1A1A17. Matches the mandated dark-theme plot background (not pure black).
-      Chrome: Title renders in light/off-white ink, fully readable against the dark surface. Axis titles and tick labels use a lighter soft-gray tone, clearly legible with no dark-on-dark issues anywhere (title, axis titles, tick labels, legend text all pass). Gridlines remain subtle but visible.
-      Data: Series colors measured pixel-identical to the light render — #009E73 and #C475FD at the exact same sample coordinates — confirming only chrome (not data) flipped between themes.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text and data elements read clearly.
+      Background: Warm near-black, consistent with #1A1A17. Matches the mandated dark-theme plot background (not pure black).
+      Chrome: Title renders in light/off-white ink, fully readable against the dark surface. Axis titles and tick labels use a lighter soft-gray tone, clearly legible with no dark-on-dark issues anywhere (title, axis titles, tick labels, legend text, and the modal-bin annotation all pass). Gridlines remain subtle but visible.
+      Data: Series colors are pixel-identical to the light render (#009E73 and #C475FD at the same positions), confirming only chrome (not data) flipped between themes.
+      Legibility verdict: PASS - no dark-on-dark failures detected; all text and data elements read clearly.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,8 +60,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; the crossing step lines are the expected
-          shape of overlaid distributions, not a defect
+        comment: No text/data collisions; modal-bin callout sits cleanly above the
+          peak without colliding with anything
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -86,8 +81,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed, title within bounds, generous margins,
-          nothing clipped
+        comment: 3200x1800 canvas confirmed exactly, nothing clipped, margins generous
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -99,33 +93,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Pixel-sampled #009E73 and #C475FD in both renders, identical across
-          themes; backgrounds exactly #FAF8F1/#1A1A17'
+        comment: '#009E73 and #C475FD used identically across themes; backgrounds
+          match #FAF8F1/#1A1A17'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Correct palette and clean lines, but a fairly standard chart with
-          no distinctive design flourish
+        comment: Modal-bin callout via chart.renderer is a real, if modest, design
+          flourish beyond a plain overlay chart
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Y-axis-only subtle grid, x gridlines off, no box frame around legend
-          — modest but real refinement above default
+        comment: Y-axis-only subtle grid, x-gridlines disabled, clean legend spacing;
+          unchanged from attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Overlay comparison is inherent to the spec but no additional hierarchy/focal-point
-          technique applied
+        comment: Peak annotation gives the chart a clear focal point and guides the
+          viewer to the modal bin
     spec_compliance:
       score: 15
       max: 15
@@ -141,8 +135,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: No fill, horizontal bin segments, vertical connectors, drop-to-zero
-          ends, two overlaid distributions
+        comment: No fill, horizontal bin segments, vertical connectors via native
+          step interpolation, drop-to-zero ends, two overlaid distributions
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -189,7 +183,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Plain functions only, no classes
+        comment: Plain helper functions only, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,7 +201,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: No fake UI, elegant use of native step interpolation plus a renderer-based
+          overlay
       - id: CQ-05
         name: Output & API
         score: 1
@@ -215,31 +210,32 @@ review:
         passed: true
         comment: Mount-node contract respected, animation disabled on chart + series
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Now uses core plotOptions.series.step: "left" instead of manually
+          tripling vertices - exactly the fix the attempt-1 review requested'
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Manually triples points per bin instead of using core Highcharts'
-          built-in `step` line option
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Custom tooltip formatting is a nice touch but otherwise generic line-series
+        comment: chart.renderer.circle()/.text() with axis toPixels() for the modal-bin
+          callout is a genuine low-level Highcharts technique beyond generic line-series
           usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - binning
-  styling:
-  - grid-styling
+  styling: []
