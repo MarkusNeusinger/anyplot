@@ -17,6 +17,10 @@ function randNormal() {
   const u2 = rand();
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
+function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
 
 // --- Data: simulated GWAS summary statistics --------------------------------
 // Approximate human chromosome lengths (Mb), 1-22 + X. Points-per-chromosome is
@@ -65,7 +69,7 @@ const oddChromPoints = [];
 const significantPoints = [];
 points.forEach((p) => {
   if (p.y >= GENOME_WIDE) {
-    significantPoints.push({ x: p.x, y: p.y });
+    significantPoints.push({ x: p.x, y: p.y, chromIndex: p.chromIndex });
   } else if (p.chromIndex % 2 === 0) {
     evenChromPoints.push({ x: p.x, y: p.y });
   } else {
@@ -73,11 +77,37 @@ points.forEach((p) => {
   }
 });
 
+// Single strongest association becomes a labeled focal point.
+const topHit = significantPoints.reduce((best, p) => (p.y > best.y ? p : best));
+const topHitLabel = chromRanges[topHit.chromIndex].label;
+const restSignificant = significantPoints.filter((p) => p !== topHit);
+
 const genomeLength = cumOffset;
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// Draws a text callout next to the top-hit marker, clamped inside the plot area.
+const topHitLabelPlugin = {
+  id: "topHitLabel",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const text = `Top hit — Chr ${topHitLabel}`;
+    ctx.save();
+    ctx.font = "bold 13px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const halfWidth = ctx.measureText(text).width / 2 + 4;
+    const rawX = scales.x.getPixelForValue(topHit.x);
+    const px = Math.min(Math.max(rawX, chartArea.left + halfWidth), chartArea.right - halfWidth);
+    const py = scales.y.getPixelForValue(topHit.y);
+    const labelY = py - 18 >= chartArea.top + 10 ? py - 18 : py + 22;
+    ctx.fillText(text, px, labelY);
+    ctx.restore();
+  },
+};
 
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
@@ -87,20 +117,20 @@ new Chart(canvas, {
       {
         label: "Chr (even)",
         data: evenChromPoints,
-        backgroundColor: t.palette[0],
+        backgroundColor: hexToRgba(t.palette[0], 0.65),
         pointRadius: 2.5,
         pointHoverRadius: 2.5,
       },
       {
         label: "Chr (odd)",
         data: oddChromPoints,
-        backgroundColor: t.palette[2],
+        backgroundColor: hexToRgba(t.palette[1], 0.65),
         pointRadius: 2.5,
         pointHoverRadius: 2.5,
       },
       {
         label: "Genome-wide significant",
-        data: significantPoints,
+        data: restSignificant,
         backgroundColor: t.palette[4],
         pointRadius: 3.5,
         pointHoverRadius: 3.5,
@@ -130,6 +160,16 @@ new Chart(canvas, {
         borderDash: [4, 4],
         pointRadius: 0,
         fill: false,
+      },
+      {
+        label: `Top hit (Chr ${topHitLabel})`,
+        data: [{ x: topHit.x, y: topHit.y }],
+        backgroundColor: t.amber,
+        borderColor: t.ink,
+        borderWidth: 1.5,
+        pointRadius: 7,
+        pointHoverRadius: 7,
+        pointStyle: "star",
       },
     ],
   },
@@ -178,4 +218,5 @@ new Chart(canvas, {
       },
     },
   },
+  plugins: [topHitLabelPlugin],
 });
