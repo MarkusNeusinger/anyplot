@@ -179,7 +179,27 @@ jobs:
           # while the metadata on main already pointed at production). Read
           # the files from main in that case, which is where the squash
           # commit put them, so the run reaches promotion, labels and sync.
-          STATE=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" --json state -q .state 2>/dev/null || echo "")
+          # Retried like the other state probes in this workflow: a blip here
+          # read as "not merged" would fall through to the branch fetch and
+          # reproduce the very failure this branch of the logic exists for.
+          # Unknown after three tries is a hard stop — re-dispatching later is
+          # cheap, guessing the ref is not.
+          STATE=""
+          for probe in 1 2 3; do
+            if STATE=$(gh pr view "$PR_NUM" --repo "$REPOSITORY" --json state -q .state 2> /tmp/state.err); then
+              break
+            fi
+            SERR=$(head -c 500 /tmp/state.err | tr '\n' ' ')
+            echo "::warning::gh pr view (state) failed (probe ${probe}/3): ${SERR}"
+            STATE=""
+            if [ "$probe" -lt 3 ]; then
+              sleep $((probe * 5))
+            fi
+          done
+          if [ -z "$STATE" ]; then
+            echo "::error::Could not determine the state of PR #${PR_NUM} after 3 attempts — not guessing which ref to validate; re-dispatch when the API is back"
+            exit 1
+          fi
           if [ "$STATE" = "MERGED" ]; then
             echo "::notice::PR #${PR_NUM} is already merged — validating against origin/main"
             git fetch origin main
