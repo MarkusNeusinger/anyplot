@@ -1,0 +1,254 @@
+library: muix
+language: javascript
+specification_id: contour-filled
+created: '2026-09-04T23:36:26Z'
+updated: '2026-09-05T00:04:06Z'
+generated_by: claude-sonnet
+workflow_run: 33929424173
+issue: 2500
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-filled/javascript/muix/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Correct diverging-colormap math: t.div stops reversed so position 0 lands on
+    blue (cool/low) and position 1 on red (warm/high), with a theme-adaptive pageBg
+    midpoint'
+  - Creative, functioning custom filled-contour renderer (marching-triangles + painter's
+    algorithm) built via ChartContainer's composition API (useXScale/useYScale) since
+    MUI X has no native contour chart type -- an idiomatic use of the library's advanced
+    composition pattern
+  - Correct title format, descriptive axis labels with units, and a ContinuousColorLegend
+    plus rotated axis title for the value scale
+  - 'Both themes render correctly: identical data colors between light/dark, theme-adaptive
+    chrome, no dark-on-dark or light-on-light legibility failures'
+  - Isolines overlaid on top of the filled bands per the spec's suggestion, aiding
+    precise level identification
+  - Deterministic, reproducible data (fixed analytic formula, no RNG)
+  weaknesses:
+  - Visible jagged/stair-step artifacts along filled-contour boundaries, most noticeable
+    on the diagonal zero-crossing boundary in the low-gradient region between the
+    two Gaussian patches, in BOTH light and dark renders. The spec explicitly calls
+    for 'grid resolution sufficient to avoid jagged color boundaries' and a smooth
+    gradient visualization. Root cause is likely the 4-triangles-around-centroid cell
+    split in buildTriangles(), which introduces spurious zig-zag kinks along low-gradient
+    level curves independent of grid density -- try increasing GRID and/or replacing
+    the centroid-quad split with a standard 2-triangle-per-cell (fixed-diagonal) split
+    for smoother boundaries.
+  - Title occupies only ~40-47% of the plot width at the current auto-scaled font
+    size (TITLE_FONT_SIZE formula), a bit small/lost relative to the 50-70% guideline
+    -- consider a slightly larger multiplier or minimum size.
+  - The file leans on many small helper functions (hexToRgb, lerpChannel, imprintDivInterpolator,
+    buildTriangles, triangleFill, polysToPath, segmentsToPath) -- justified by the
+    custom contour engine but on the higher end of complexity for a KISS baseline;
+    consider consolidating the color-interpolation helpers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) -- matches the required light-theme surface, not pure white.
+      Chrome: Title "Sea-Surface Temperature Anomaly · contour-filled · javascript · muix · anyplot.ai" centered at top in dark ink; "Zonal offset (°)" / "Meridional offset (°)" axis titles and numeric tick labels (-3.0..3.0) in dark/soft-dark ink; a vertical ContinuousColorLegend on the right with "-2.0"/"2.0" endpoint labels and a rotated "Temperature anomaly (°C)" label. All text is clearly legible against the light background.
+      Data: A filled contour field with a warm red blob (peak near x=1.3, y=0.9) and a cool blue blob (trough near x=-1.4, y=-1.0), each rendered as 4-5 nested elliptical color bands with thin semi-transparent isolines tracing each level boundary; the surrounding low-gradient area is a very pale pinkish-grey (upper right, mildly positive) vs. pale bluish-grey (lower left, mildly negative), split by a diagonal zero-crossing boundary. Colors run blue (low) -> near-neutral (zero) -> red (high), matching the Imprint diverging palette.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) -- matches the required dark-theme surface, not pure black.
+      Chrome: Same title, axis titles, tick labels, and colorbar layout as the light render, all rendered in light ink/off-white text, clearly readable against the dark background. No dark-on-dark text found.
+      Data: Same red/blue blob positions and same band colors as the light render (data colors are identical between themes; only the neutral background hue shifted from pale grey/beige to a dark warm-grey), confirming chrome-only theme adaptation.
+      Legibility verdict: PASS.
+
+    Shared observation (both renders): the filled-contour band boundaries show a visible jagged/stair-step texture, most noticeable along the diagonal zero-crossing line in the low-gradient area between the two peaks -- flagged as a weakness below.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 3
+        max: 6
+        passed: false
+        comment: Contour band boundaries show visible jagged/stair-step artifacts,
+          most noticeable on the diagonal zero-crossing line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-blue diverging scale has adequate contrast; not red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Nothing cut off; title is a bit small (~40-47% of plot width) relative
+          to the 50-70% guideline
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units, correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_div usage, theme-adaptive midpoint, correct backgrounds
+          in both themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom color math and contour geometry show real design intent, but
+          jagged edges undercut full polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Jagged band boundaries are a direct refinement flaw
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear two-focal-point narrative (warm vs. cool anomaly) with colorbar
+          and isolines guiding the reader
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly a filled contour with color bands
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Colorbar and overlaid contour lines present; grid resolution/algorithm
+          does not fully avoid jagged boundaries per spec note
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, full grid extent shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec exactly; legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows fill bands, isolines, and colorbar mapping
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral sea-surface temperature anomaly scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: -2..2 degC anomaly range is realistic for SST anomalies
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Many small helper functions, justified by the custom contour engine
+          but non-trivial structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic analytic formula, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used @mui/x-charts imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, sized from ANYPLOT_SIZE, harness contract respected
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of ChartContainer composition API and scale hooks for a
+          custom layer
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Continuous zAxis colorMap and ContinuousColorLegend are genuinely
+          distinctive MUI X features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - interpolation
+  styling:
+  - custom-colormap
+  - alpha-blending

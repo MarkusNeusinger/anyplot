@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: dot-matrix-proportional
+created: '2026-09-05T00:21:19Z'
+updated: '2026-09-05T00:35:41Z'
+generated_by: claude-sonnet
+workflow_run: 33932365602
+issue: 5241
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Radial-gradient marker fill plus a subtle drop shadow gives the flat 47/31/22
+    dot grid real depth without breaking uniform dot size — a direct, well-executed
+    answer to attempt 1's 'plain flat circles' feedback.
+  - Bolder subtitle now surfaces the headline takeaway ('Satisfied leads at 47%'),
+    giving the chart an immediate story instead of leaving the viewer to compute it
+    from the grid.
+  - useHTML legend formatter renders category name, an inline proportional mini count-bar,
+    and count+percentage together — a genuinely Highcharts-specific technique (labelFormatter
+    + useHTML) that directly answers the prior 'generic scatter-as-grid' Library Mastery
+    critique.
+  - 'Grid math is exact: 10x10 for total=100, dots filled left-to-right/top-to-bottom
+    sequentially across category boundaries with no gaps, matching the spec''s layout
+    note precisely.'
+  - Semantic color mapping (green=Satisfied, theme-adaptive muted=Neutral, Imprint
+    red=Dissatisfied) is a textbook, correctly-documented application of the sentiment/polarity
+    semantic exception, and stays theme-adaptive by design for the muted anchor while
+    palette[0]/palette[4] stay identical across themes.
+  - Theme-adaptive chrome is fully correct in both renders (title/subtitle/legend/tooltip
+    all threaded through tokens); both PNGs are readable at full size with no clipping.
+  weaknesses:
+  - 'Design Excellence is strong but not top-tier: the glossy radial-gradient sphere
+    look is a tasteful stylistic choice rather than a Nature/Science-caliber refinement
+    — still reads as ''well-executed infographic'' rather than ''exceptional''.'
+  - Data storytelling emphasis is purely textual (subtitle callout) — there's no visual
+    reinforcement in the grid itself (e.g. a subtle outline or label on the majority
+    block) to reinforce the headline stat.
+  - Library Mastery still rests on a scatter series repurposed as a grid at its core;
+    the useHTML legend and gradient fill are nice Highcharts-specific touches, but
+    the fundamental dot-matrix technique remains generic and portable.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "dot-matrix-proportional · javascript · highcharts · anyplot.ai" and a soft-grey subtitle "Customer satisfaction survey · 100 respondents, one dot each — Satisfied leads at 47%" are both clearly readable against the light background. Legend below the grid shows category name, a small proportional count-bar, and "count (pct%)" for each of the three categories, all in legible dark-grey text.
+      Data: 10x10 grid of uniform circular dots with a subtle radial-gradient fill and thin light-colored separation ring: 47 brand-green (#009E73) dots for Satisfied, 31 medium-grey dots for Neutral, 22 matte-red (Imprint palette[4], #AE3030) dots for Dissatisfied, filled sequentially left-to-right/top-to-bottom across category boundaries with even gutters and no overlap.
+      Legibility verdict: PASS — no light-on-light or hard-to-read text anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light ink and soft light-grey respectively, both clearly legible; legend text and count-bars are light-colored and legible against the dark background. No dark-on-dark failures observed anywhere (title, subtitle, legend, tooltip chrome all flipped correctly).
+      Data: Identical dot grid and identical green/red hex values as the light render — only the Neutral category's dot color shifted from medium-grey to light-grey, which matches the style guide's explicitly theme-adaptive "muted" semantic anchor (not a palette violation). Green (#009E73) and red (#AE3030) data colors are pixel-identical to the light render.
+      Legibility verdict: PASS — no dark-on-dark or unreadable elements detected.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, subtitle, legend readable in
+          both themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Uniform gutter spacing (1.12) keeps every dot separated, no text
+          collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dots are large, evenly sized, and clearly distinguishable at 100-count
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/gray/red distinguished by position, legend text, and count-bar
+          length, not hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid fills most of the square canvas, legend sits close beneath it,
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for this chart type; legend and subtitle fully descriptive
+          with units (counts/percentages)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Dissatisfied uses Imprint palette[4] red,
+          Neutral uses the theme-adaptive muted anchor by design; backgrounds theme-correct
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Radial gradient + shadow give the dots real depth, clearly above
+          defaults, but stylistic rather than Nature/Science-caliber
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid/spines to clean up, generous whitespace, polished legend
+          with mini bars
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle callout ('Satisfied leads at 47%') gives an immediate takeaway;
+          hierarchy is textual, not reinforced visually in the grid itself
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dot matrix chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid matches total, uniform dot size/spacing, legend with count+percentage
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Grid position correctly encodes sequential fill order across categories
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match category names with counts
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three categories with varied counts show the core dot-matrix use
+          case well, though only one total size (100) is exercised
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer satisfaction survey is a realistic, neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 47+31+22=100, percentages computed correctly, plausible survey proportions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data-then-chart script, no classes/functions beyond a map/reduce
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the Highcharts global is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity (gradient, useHTML legend) is justified by the visual
+          payoff, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic Highcharts.chart config, labelFormatter, pointFormatter,
+          Highcharts.color().brighten() helper
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useHTML legend with inline count-bars and Color.brighten radial gradient
+          are genuine Highcharts-specific touches, though the core scatter-as-grid
+          technique remains generic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - gradient-fill
+  - edge-highlighting

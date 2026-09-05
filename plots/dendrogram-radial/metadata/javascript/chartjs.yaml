@@ -1,0 +1,255 @@
+library: chartjs
+language: javascript
+specification_id: dendrogram-radial
+created: '2026-09-04T23:57:14Z'
+updated: '2026-09-05T00:02:04Z'
+generated_by: claude-sonnet
+workflow_run: 33930629442
+issue: 5245
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Correct radial dendrogram math: root at center (radius = 1 - height/maxHeight),
+    leaves at the rim with equal angular spacing, and a recursive leaf-ordering traversal
+    that keeps every subtree in a contiguous angular span'
+  - Hand-rolled average-linkage (UPGMA) clustering that produces a genuine scipy-style
+    linkage matrix ([childA, childB, distance, size]), fully deterministic via a seeded
+    LCG
+  - Clever squareAxesPlugin corrects the post-layout aspect ratio in afterLayout so
+    the circle stays a true circle despite the title/legend consuming unequal vertical
+    space
+  - Leaf labels rotated and flipped around the full circumference for readability,
+    with tooltips wired to leaf sample names
+  - Correct Imprint palette usage (canonical order, first series brand green), theme-adaptive
+    chrome verified correct in both light and dark renders, mixed-cluster branches
+    rendered in ink-soft
+  weaknesses:
+  - At the ~400px mobile thumbnail size the 30 rotated leaf labels become illegible
+    (title and legend remain readable) — largely inherent to a 30-leaf radial layout,
+    but consider a slightly bolder/larger label font to help at small sizes
+  - The entire visual (rings, branches, labels) is drawn manually via raw canvas ctx
+    calls in a plugin rather than leaning on more of Chart.js's built-in primitives
+    — the correct extension path given Chart.js has no native dendrogram type, but
+    it leaves little idiomatic-Chart.js surface area
+  - No outer color-coded metadata ring is added (spec lists this as optional) — cluster
+    identity is only encoded via branch/point color, so DE-03 storytelling stays at
+    a conventional baseline rather than adding a second layer of information
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "dendrogram-radial · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. Rotated leaf-name tick labels (T-01..T-06, B-01..B-06, NK-01..NK-06, Mo-01..Mo-06, DC-01..DC-06) ring the circumference in dark ink, all legible. Four subtle concentric reference-distance rings in light gray. Bottom legend with 5 color-swatch entries (T cells, B cells, NK cells, Monocytes, Dendritic cells) in dark ink, clearly readable.
+      Data: Five color-coded radial arms (green/T cells, lavender/B cells, blue/NK cells, ochre/Monocytes, red/Dendritic cells) fan out from a dark root dot at the center to leaf markers at the rim; branch color matches the Imprint palette in canonical order with brand green (#009E73) as the first series.
+      Legibility verdict: PASS — all text (title, tick labels, legend) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title in light/white ink, clearly readable. Rotated leaf-name tick labels in light gray ink around the circumference, all legible. Reference rings and root dot switched to light tones appropriate for the dark surface. Bottom legend text in light ink, clearly readable.
+      Data: Same five branch/marker colors as the light render (green, lavender, blue, ochre, red) — confirmed identical data-color values; only chrome (background, text, grid, root dot) flipped to the dark-theme tokens.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, tick-label, and legend text stands out clearly against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/ticks/legend readable in both themes at full size; 30 rotated
+          leaf labels become illegible at ~400px mobile thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions at full size; label rotation+flip keeps names
+          clear of the rim
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 7px leaf markers and 2.5px branch lines are prominent and appropriate
+          for a sparse 30-leaf tree
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, good contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas gate passed; squareAxesPlugin keeps the circle
+          proportional; nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Cartesian axes intentionally hidden (radial plot); title fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, brand green first series, correct theme
+          backgrounds in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom polar-coordinate rendering, subtle reference rings, coherent
+          cluster coloring — solid but conventional dendrogram treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No cartesian frame/spines shown, subtle grid rings, generous padding
+          and label offset from the rim
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Cluster-colored branches give a clear focal hierarchy; no secondary
+          encoding layer (e.g. optional metadata ring) beyond baseline coloring
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine radial dendrogram: root at center, leaves at rim'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Linkage matrix computed in scipy row format, labels around circumference,
+          cluster-colored branches, leaf tooltips; optional outer metadata ring omitted
+          (spec marks it optional)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Radius = 1 - height/maxHeight correctly places root at center and
+          leaves at rim, branch length proportional to merge distance
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match the 5 cluster names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows hierarchy, branch coloring, leaf labels, root anchor, distance
+          encoding, and legend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral immune-cell marker-gene expression scenario (T/B/NK/Monocyte/Dendritic)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal-dominant marker profiles with Gaussian noise give sensible,
+          well-separated cluster distances
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single top-to-bottom script; small helper functions are justified
+          by the from-scratch clustering + polar-layout math, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity is appropriate to the custom
+          radial layout
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct plugin-based extension path for a type Chart.js lacks natively,
+          but relies heavily on raw canvas ctx calls rather than built-in primitives
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: squareAxesPlugin (afterLayout aspect-ratio correction) and a full
+          custom radialDendrogram draw plugin (beforeDatasetsDraw/afterDatasetsDraw)
+          demonstrate deep mastery of Chart.js's plugin lifecycle
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - minimal-chrome
+  - edge-highlighting

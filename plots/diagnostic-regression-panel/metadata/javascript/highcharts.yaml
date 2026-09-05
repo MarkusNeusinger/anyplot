@@ -1,0 +1,255 @@
+library: highcharts
+language: javascript
+specification_id: diagnostic-regression-panel
+created: '2026-09-05T00:10:22Z'
+updated: '2026-09-05T00:23:32Z'
+generated_by: claude-sonnet
+workflow_run: 33931309956
+issue: 5242
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Data is deliberately generated to violate regression assumptions (diminishing-returns
+    curvature + heteroscedastic noise scaling with x), giving every diagnostic panel
+    something genuine to reveal.
+  - 'Correct statistical machinery implemented from scratch: LOWESS via tricube-weighted
+    local linear regression, Acklam''s inverse-normal-CDF approximation for the Q-Q
+    plot, hat-value leverage, and Cook''s distance.'
+  - 'Thoughtful semantic color use: red (palette[4]) for influential points and amber
+    for the more severe Cook''s-D=1.0 threshold, matching the style guide''s semantic-exception
+    guidance.'
+  - Consistent shared point styling (diamond marker, same size/fill rules) across
+    all four subplots as the spec requests.
+  - 'Both renders are fully theme-correct: identical data-ink colors, correctly flipped
+    chrome, no legibility failures.'
+  weaknesses:
+  - 'In the Normal Q-Q panel all three influential points (#47, #78, #73) are labeled,
+    but panels 1, 3, and 4 only show two red diamonds/labels (#47 and #73) -- #78''s
+    label/marker appears hidden by Highcharts'' default overlap-avoidance since it
+    sits close to another influential point in that panel''s coordinate space. Force
+    all three influential labels visible in every panel (e.g. dataLabels.allowOverlap:
+    true, or per-point y-offset nudges).'
+  - Axis titles (13px) and tick labels (12px) sit slightly below the Highcharts guide's
+    suggested CSS baseline (axis titles ~16px, tick labels ~14px) given each 2x2 quadrant
+    renders at roughly a full single-chart's device-pixel size -- bump axis titles
+    to ~14-15px and tick labels to ~13-14px for better mobile-width legibility.
+  - Contour line labels ("0.5", "1.0") in the Residuals vs Leverage panel sit right
+    at the data's right edge -- add a touch more right-side padding/xAxis.max headroom
+    so they never crowd the panel boundary as data ranges shift.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Shared bold header "diagnostic-regression-panel · javascript · highcharts · anyplot.ai" plus four per-panel dark-ink titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage"). Axis titles and tick labels in soft ink, all readable.
+      Data: Base points are green (#009E73) diamonds; 2-3 most-influential points (by Cook's distance) render as larger red (#AE3030) diamonds with "#NN" index labels. Panels 1 and 3 carry a blue LOWESS smoother; panel 2 a dashed 45-degree reference line; panel 4 carries dashed grey (D=0.5) and amber (D=1.0) Cook's-distance contours with inline labels.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Header, panel titles, axis titles, tick labels, and grid lines all correctly flip to light ink / soft-light tones. No dark-on-dark failures observed anywhere.
+      Data: Colors are identical to the light render -- same green base markers, red influential-point diamonds, blue LOWESS line, and amber D=1.0 contour. Only chrome changed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes, but axis
+          titles/tick labels run slightly below the Highcharts guide's suggested CSS
+          baseline for a full-panel canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap observed in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Diamond markers (radius 4.5) visible and appropriate for n=90, slightly
+          conservative sizing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Influential points redundantly encoded via color, size, and index
+          label, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2x2 grid fills the canvas with balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive statistical axis labels matching R plot(lm) convention
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, semantic red/amber anchors used correctly,
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color use, LOWESS smoothers, halo'd inline contour labels
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle theme-adaptive grid and generous panel gaps, though slightly
+          busy at panel scale
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red diamonds + index labels create a clear focal point on influential/outlier
+          observations
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 four-panel diagnostic layout
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: LOWESS, zero-line, 45-degree line, and Cook's-D contours all present;
+          influential-point labeling inconsistent across panels (#78 missing in 3
+          of 4)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Axes correctly mapped in all four panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec-id / language / library / anyplot.ai
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Data deliberately built with curvature, heteroscedasticity, and influential
+          outliers
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral agricultural fertilizer/yield scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic fertilizer kg/ha and yield tonnes/ha ranges
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions used but justified by the statistical complexity
+          (LOWESS, inverse-normal-CDF, Cook's distance)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG random generator
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global, nothing unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity for the diagnostics
+          required
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart() into the mount contract, animation disabled, credits
+          disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of series, plotLines, dataLabels; four independently-mounted
+          charts is the correct workaround for Highcharts' lack of native subplot
+          grids
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: dataLabels formatting, plotLines, and textOutline halo used well
+          but not deeply distinctive to Highcharts specifically
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - publication-ready
