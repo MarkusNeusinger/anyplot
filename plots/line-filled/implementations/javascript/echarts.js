@@ -44,7 +44,7 @@ chart.setOption({
     text: "Website Traffic · line-filled · javascript · echarts · anyplot.ai",
     left: "center",
     top: 30,
-    textStyle: { color: t.ink, fontSize: 20, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 24, fontWeight: 500 },
   },
   grid: { left: 90, right: 60, top: 110, bottom: 80 },
   xAxis: {
@@ -74,7 +74,18 @@ chart.setOption({
       showSymbol: false,
       smooth: 0.2,
       lineStyle: { width: 3.5, color: t.palette[0] },
-      areaStyle: { color: t.palette[0], opacity: 0.35 },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: "rgba(0, 158, 115, 0.4)" },
+          { offset: 1, color: "rgba(0, 158, 115, 0.02)" },
+        ]),
+      },
+      markPoint: {
+        symbolSize: 50,
+        itemStyle: { color: t.palette[0] },
+        label: { color: "#FFFFFF", fontSize: 12, fontWeight: 600 },
+        data: [{ type: "max", name: "Peak" }],
+      },
     },
   ],
 });
