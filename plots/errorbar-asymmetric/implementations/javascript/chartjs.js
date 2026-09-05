@@ -6,9 +6,9 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ---------------------------------------
-// Mean symptom improvement (%) per treatment group, with asymmetric 95% CI
-// bounds back-transformed from a log-scale model (upper bound stretches
-// further than the lower bound for every group).
+// Mean symptom improvement (%) per treatment group, with asymmetric 90% CI
+// bounds (5th-95th percentile) back-transformed from a log-scale model
+// (upper bound stretches further than the lower bound for every group).
 const treatmentGroups = [
   "Control",
   "Treatment A",
@@ -25,7 +25,8 @@ const ciBounds = meanImprovement.flatMap((mean, i) => [
   mean - errorLower[i],
   mean + errorUpper[i],
 ]);
-const yAxisMax = Math.ceil((Math.max(...ciBounds) * 1.1) / 5) * 5;
+const yAxisMax = Math.ceil((Math.max(...ciBounds) * 1.08) / 2) * 2;
+const bestIndex = meanImprovement.indexOf(Math.max(...meanImprovement));
 
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -58,6 +59,18 @@ const asymmetricErrorBars = {
       ctx.lineTo(xPixel + capHalfWidth, yHighPixel);
       ctx.stroke();
     });
+    ctx.restore();
+
+    // Callout on the standout group to give the chart a point of focus.
+    const bestXPixel = scales.x.getPixelForValue(bestIndex);
+    const bestYPixel = scales.y.getPixelForValue(
+      meanImprovement[bestIndex] + errorUpper[bestIndex]
+    );
+    ctx.save();
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = "italic 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Largest response", bestXPixel, bestYPixel - 16);
     ctx.restore();
   },
 };
@@ -95,7 +108,7 @@ new Chart(canvas, {
       },
       subtitle: {
         display: true,
-        text: "Points show mean improvement; bars show asymmetric 95% CI (5th–95th percentile)",
+        text: "Points show mean improvement; bars show asymmetric 90% CI (5th–95th percentile)",
         color: t.inkSoft,
         font: { size: 14, style: "italic" },
         padding: { bottom: 16 },
