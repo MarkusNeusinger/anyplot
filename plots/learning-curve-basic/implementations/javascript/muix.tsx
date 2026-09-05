@@ -92,8 +92,11 @@ export default function Chart() {
           {
             min: 0.68,
             max: 1.0,
-            label: "Classification Accuracy",
+            label: "Classification Accuracy (%)",
             valueFormatter: (v) => `${Math.round(v * 100)}%`,
+            // tickFontSize drives the label's reserved offset from the tick
+            // text (MUI X sizes that gap off this prop, not tickLabelStyle),
+            // so it must stay wide enough for a 4-char "100%" tick.
             tickFontSize: 34,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
@@ -110,12 +113,13 @@ export default function Chart() {
         sx={{
           "& .MuiLineElement-series-trainMean": { strokeWidth: 3 },
           "& .MuiLineElement-series-valMean": { strokeWidth: 3 },
-          "& .MuiLineElement-series-trainLower, & .MuiLineElement-series-trainBand, & .MuiLineElement-series-valLower, & .MuiLineElement-series-valBand":
-            { stroke: "none" },
+          "& .MuiLineElement-series-trainLower, & .MuiLineElement-series-valLower": { stroke: "none" },
+          "& .MuiLineElement-series-trainBand": { stroke: t.palette[0], strokeWidth: 1, strokeOpacity: 0.5 },
+          "& .MuiLineElement-series-valBand": { stroke: t.palette[1], strokeWidth: 1, strokeOpacity: 0.5 },
           "& .MuiAreaElement-series-trainLower, & .MuiAreaElement-series-valLower": { fillOpacity: 0 },
           "& .MuiAreaElement-series-trainBand, & .MuiAreaElement-series-valBand": { fillOpacity: 0.18 },
           "& .MuiMarkElement-series-trainMean, & .MuiMarkElement-series-valMean": {
-            r: 6,
+            r: 9,
             stroke: t.pageBg,
             strokeWidth: 2,
           },
