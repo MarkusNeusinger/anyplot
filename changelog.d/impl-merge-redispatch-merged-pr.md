@@ -9,4 +9,4 @@
   (2026-09-05): the GCP auth step failed 5 s after the squash, the images stayed in staging
   while the metadata on main already pointed at production, and the re-dispatch could not
   repair it. The check now reads the files from `origin/main` when the PR is merged — where
-  the squash commit put them — and no longer tries to close a merged PR when they are absent.
+  the squash commit put them — and no longer tries to close a merged PR when they are absent. (#11307)
