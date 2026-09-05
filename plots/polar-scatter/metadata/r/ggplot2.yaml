@@ -1,0 +1,245 @@
+library: ggplot2
+language: r
+specification_id: polar-scatter
+created: '2026-09-05T11:31:10Z'
+updated: '2026-09-05T11:43:05Z'
+generated_by: claude-sonnet
+workflow_run: 33963333900
+issue: 2023
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses were fixed: unused dplyr import removed, axis.text.y
+    margin added to separate the "0"/"270° W" tick labels, and a subtitle added for
+    narrative context'
+  - Correct compass-convention angular mapping (0°N, 90°E, 180°S, 270°W, clockwise)
+    matching real-world wind-rose conventions
+  - Radial axis starts at 0 and auto-scales to 1.15x the max speed for proper padding
+  - Realistic, neutral wind-observation dataset where each time-of-day forms a distinct
+    angular/speed cluster
+  - 'Imprint palette applied in canonical order, first series is #009E73, identical
+    data colors across both themes; theme-adaptive chrome correctly threaded through
+    both renders'
+  weaknesses:
+  - Title (with the "Wind Observations · " prefix) now spans nearly the full width
+    of the square 2400x2400 canvas, leaving very little right margin — trim the descriptive
+    prefix or slightly reduce title fontsize for the square format so it isn't crowding
+    the edge.
+  - Within-cluster marker overlap is still noticeable near the Morning and Evening
+    angular centers despite the size/alpha reduction — consider a further alpha reduction
+    (e.g., 0.65) or a slightly smaller marker size (2.5) to improve individual-point
+    separation.
+  - Afternoon (dir_mean=210°) and Evening (dir_mean=170°) clusters overlap substantially
+    in direction (only 40° apart with sd 25-30°), which partially undermines the new
+    subtitle's claim of a "distinct prevailing wind direction" per time of day — consider
+    widening the angular separation between these two group means in the synthetic
+    data.
+  - Library Mastery remains generic beyond coord_polar itself — no other library-distinctive
+    feature is leveraged.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Wind Observations · polar-scatter · r · ggplot2 · anyplot.ai" spans nearly the full canvas width at top, followed by a soft-ink subtitle "Each time of day carries a distinct prevailing wind direction and speed band". Radial axis title "Wind Speed (m/s)" on the left, radial tick labels 0/5/10/15/20/25 now clearly separated (via axis.text.y right margin) from the angular compass tick labels (0° N, 90° E, 180° S, 270° W). Legend box "Time of Day" (Morning/Afternoon/Evening/Night) sits to the right of the plot. All chrome elements readable against the light background.
+      Data: Four color-coded angular clusters — Morning (#009E73 green), Afternoon (#C475FD lavender), Evening (#4467A3 blue), Night (#BD8233 ochre) — hollow-stroke circular markers with fill, positioned by wind direction (angle) and speed (radius). First series is the brand green as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, subtitle, tick labels, and legend, all recolored to light ink — clearly readable against the dark background. No dark-on-dark elements found; grid lines remain subtle but visible.
+      Data: Colors identical to the light render (green/lavender/blue/ochre unchanged) — only chrome (background, text, grid, legend box) flipped as expected.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: axis.text.y right margin now separates the 0 / 270° W tick labels;
+          attempt-1 issue fixed
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size/alpha reduced (3.5->3.0, 0.85->0.75); some within-cluster
+          overlap remains near Morning/Evening centers
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe categorical hues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Title spans nearly full square-canvas width, tight right margin though
+          not clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Wind Speed (m/s) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
+          both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom palette and hollow-stroke markers, above default but not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and no tick marks, still close to theme_minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New subtitle explicitly states the insight, reinforced by clear angular
+          clustering
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines, angular ticks at 0/90/180/270, category color encoding,
+          radius starts at 0
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: theta=direction, radius=speed correctly mapped via coord_polar
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix, legend labels match
+          categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows theta, radius, and categorical color encoding
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral wind-observation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds and directions plausible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused library(dplyr) removed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct plot-{theme}.png naming
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic ggplot2 grammar-of-graphics usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: coord_polar is genuinely ggplot2-idiomatic, but otherwise fairly
+          generic scatter-in-polar-coords
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

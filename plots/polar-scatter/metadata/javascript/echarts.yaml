@@ -1,0 +1,258 @@
+library: echarts
+language: javascript
+specification_id: polar-scatter
+created: '2026-09-05T11:29:12Z'
+updated: '2026-09-05T11:47:23Z'
+generated_by: claude-sonnet
+workflow_run: 33963217805
+issue: 2023
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/echarts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Both major weaknesses from attempt 1 fully addressed: switched to the `//# anyplot-orientation:
+    square` directive so the polar chart now fills ~70% of the 2400×2400 canvas radius
+    (vs. ~39% of the landscape width previously), and increased radiusAxis.nameGap
+    so "Wind speed (m/s)" no longer touches the "0°" tick label in either theme'
+  - 'New distinctive mean-bearing spoke feature: a dashed line series per category
+    from the origin to its circular-mean [radius, angle] (computed via atan2 over
+    unit vectors), capped with a diamond marker — a genuine ECharts-idiomatic technique
+    beyond a stock polar scatter that adds real data storytelling'
+  - 'Imprint palette applied in canonical order and identical across light/dark renders;
+    first series is the mandated #009E73'
+  - Theme-adaptive chrome (ink, inkSoft, grid tokens) correctly threaded through title,
+    subtitle, legend, and both axes — all text legible in both themes with no dark-on-dark
+    or light-on-light failures
+  - Clean, deterministic, KISS code structure with a seeded LCG for reproducibility;
+    splitArea alternating bands add subtle visual refinement to the radial grid
+  - Title format and legend labels match the spec conventions exactly
+  weaknesses:
+  - angleAxis still has no explicit axis name (e.g. "Wind direction (°)") — it relies
+    only on the "{value}°" tick formatter, so it reads less clearly than the labeled
+    radiusAxis (carried over from attempt 1, not addressed)
+  - Morning (prevailing bearing 260°) and evening (prevailing bearing 300°) clusters
+    sit only 40° apart with a ±35° spread each, so their point clouds heavily interleave
+    in the 260–300° sector in both renders, reducing at-a-glance distinguishability
+    between two of the three categories there — widen the prevailing-direction separation
+    or tighten SPREAD slightly
+  - 'Minor: angleAxis uses clockwise:false with startAngle:90, so 0° sits at top and
+    90° at left (mathematical convention) rather than the clockwise "compass rose"
+    convention (0°=N top, 90°=E right) that readers familiar with wind-direction plots
+    would expect — consider clockwise:true for domain-idiomatic readability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: title "Wind Observations · polar-scatter · javascript · echarts · anyplot.ai" in dark ink at top center, with a soft-grey subtitle beneath ("Radius = wind speed (m/s) · Angle = wind direction (°) · dashed spoke = mean bearing"). radiusAxis is labeled "Wind speed (m/s)" running 0-12 vertically from center, with a clear gap now above the "0°" angleAxis tick label (attempt-1 overlap is fixed). angleAxis ticks at 45° intervals ("0°" … "315°") in soft grey. Legend with 3 swatches (morning/afternoon/evening) centered at the bottom with generous margin. Alternating light-grey splitArea rings give subtle radial depth.
+      Data: three color-coded clusters — morning = #009E73 (green), afternoon = lavender/purple, evening = blue — first series is the mandated brand green. Three dashed spokes radiate from the center to a diamond marker at each category's mean [speed, bearing], visually calling out the prevailing wind direction per time of day.
+      Legibility verdict: PASS — all title, subtitle, axis, tick, and legend text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: identical layout to the light render; title, subtitle, axis labels, ticks, and legend text all switch to light grey/off-white — no dark-on-dark text anywhere.
+      Data: colors are identical to the light render (green/lavender/blue unchanged and the diamond mean-markers use the same per-category hues), confirming only chrome flips between themes.
+      Legibility verdict: PASS — all text remains clearly legible against the dark background; the radiusAxis-name/0° overlap from attempt 1 is fixed identically in this render too.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; the prior radiusAxis-name/0°
+          overlap is fixed
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Text overlap from attempt 1 fixed; morning/evening data-point clusters
+          interleave in the 260-300° sector but no text collides with text or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: symbolSize 20 / opacity 0.75 reasonable for ~126 points; some natural
+          crowding where morning/evening clusters interleave
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 3 distinct Imprint hues, CVD-safe, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation directive now used; the polar chart fills the
+          2400×2400 canvas well instead of ~39% of a landscape canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: radiusAxis has a descriptive name with units; angleAxis still has
+          no explicit name, relies only on the degree tick formatter
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct theme-adaptive backgrounds/chrome
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Mean-bearing spokes with diamond end-markers and alternating splitArea
+          bands add real polish beyond attempt 1's plain default
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Alternating splitArea rings add subtle radial depth; still fairly
+          standard chrome otherwise
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed mean-bearing spokes create clear focal points per category,
+          immediately conveying prevailing wind direction; partially undercut by morning/evening
+          cluster overlap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine polar scatter via ECharts native polar coordinateSystem
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Radial gridlines, 45° angular ticks, category color-coding, radius
+          axis starting at 0, plus bonus mean-bearing spokes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'value: [radius, angle] correctly matches ECharts'' polar scatter
+          data order'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches "{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai" format exactly; legend labels match data categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows directional clustering, speed variance, categorical grouping,
+          and a per-category mean-bearing summary
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral meteorological wind-observation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds ~0.5-11.5 m/s and 0-360° directions are realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat Data → Init → Option structure, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; echarts is the pre-loaded global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: chart.setOption with animation:false, correct mount-node contract,
+          no explicit size/devicePixelRatio
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct high-level polar/scatter API usage; the mean spoke is a line
+          series in the same polar coordinate system rather than a more idiomatic
+          markLine/markPoint
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-category dashed mean-bearing spoke with a data-index-conditional
+          custom symbol callback is a genuinely distinctive touch beyond a generic
+          polar scatter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
