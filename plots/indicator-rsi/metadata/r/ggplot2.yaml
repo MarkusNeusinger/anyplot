@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: indicator-rsi
 created: '2026-09-05T06:03:42Z'
-updated: '2026-09-05T06:07:26Z'
+updated: '2026-09-05T06:14:28Z'
 generated_by: claude-sonnet
 workflow_run: 33948569881
 issue: 3229
@@ -12,46 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
+  - 'Peak/trough annotations added since attempt 1: max (74) and min (26) RSI values
+    are called out with points and adaptive-hjust labels that avoid clipping near
+    the plot edges, directly addressing the prior ''no storytelling callout'' weakness'
+  - Overbought/oversold zones now shaded with geom_ribbon instead of annotate("rect"),
+    a more idiomatic ggplot2 layering approach, addressing the prior LM-02 weakness
+  - panel.grid.major.y is now fully blanked, removing the gridline duplication with
+    the 30/50/70 reference lines that attempt 1 flagged
   - Correct 14-period Wilder's smoothing RSI computed from a simulated daily-close
     price series, not a fabricated random walk directly in [0,100]
-  - Overbought (70-100) and oversold (0-30) zones shaded with subtle alpha fills,
-    using the semantic amber warning color for overbought and muted ink for oversold,
-    plus dashed 30/70 threshold lines and an optional dotted 50 centerline exactly
-    as the spec requests
-  - Y-axis correctly fixed to 0-100 via scale_y_continuous(limits), lookback period
-    surfaced directly in the axis label 'RSI (14-period)'
-  - 'Theme-adaptive chrome is correctly threaded through (PAGE_BG/INK/INK_SOFT/INK_MUTED
-    from ANYPLOT_THEME), first series is Imprint brand green #009E73, canvas is the
-    correct 3200x1800 landscape target, title matches the mandated ''indicator-rsi
-    · r · ggplot2 · anyplot.ai'' format exactly'
+  - Y-axis correctly fixed to 0-100, lookback period surfaced directly in the axis
+    label ('RSI (14-period)')
+  - Theme-adaptive chrome correctly threaded through both renders; data color (#009E73)
+    identical between light and dark; correct canvas (3200x1800); title matches mandated
+    format exactly
   weaknesses:
-  - panel.grid.major.y uses breaks c(0,30,50,70,100), which are the exact same y-positions
-    as the dashed 30/70 reference lines and the dotted 50 centerline -- the plain
-    gridline sits directly under each reference line and adds redundant line weight
-    instead of contrast; use different major-grid breaks (or suppress the grid at
-    those three positions) so the intentional dashed/dotted reference lines stand
-    out as the only lines at 30/50/70
-  - No distinctive ggplot2-specific feature beyond standard annotate()/geom_hline()/geom_line()
-    layering -- e.g. geom_ribbon() for the zone shading would be a more idiomatic
-    single-layer alternative to the two annotate('rect') calls
-  - No callout/annotation on the extreme RSI values (the ~72 peak in May, the ~28
-    trough in July) that would sharpen the data storytelling beyond the static zone
-    labels
+  - No ggplot2-distinctive feature beyond standard annotate()/geom_hline()/geom_ribbon()/geom_line()
+    layering (e.g. no facets, coord transforms, or stat layers) — solid idiomatic
+    use but not a showcase of a unique ggplot2 capability
+  - Dotted 50 centerline uses alpha=0.6, making it noticeably fainter than the dashed
+    30/70 lines — a deliberate but minor visual hierarchy choice worth a touch more
+    contrast
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1.
-      Chrome: title "indicator-rsi · r · ggplot2 · anyplot.ai" in dark ink top-left, well within canvas bounds, not overflowing (~35% width). "Date" and "RSI (14-period)" axis titles and tick labels (0/30/50/70/100, monthly date ticks Mar-Jul 2024) render in dark/soft-dark ink, all clearly legible against the light background.
-      Data: single green (#009E73) RSI line oscillating mostly between ~28 and ~74 across ~120 trading days. Overbought zone (70-100) shaded pale amber with "Overbought" label in muted gray; oversold zone (0-30) shaded pale gray with "Oversold" label. Dashed lines at 30/70, faint dotted centerline at 50.
-      Legibility verdict: PASS.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "indicator-rsi · r · ggplot2 · anyplot.ai" in dark ink, top-left, ~35% plot width, no overflow or clipping. "Date" and "RSI (14-period)" axis titles and 0/30/50/70/100 tick labels render in dark/soft-dark ink — all clearly visible against the light background. Dashed reference lines at 30/70 in soft dark gray, a fainter dotted centerline at 50.
+      Data: Single green (#009E73) RSI line oscillating roughly between 26 and 74 across ~120 trading days (Feb-Jul 2024). The 70-100 overbought zone is shaded pale amber with an "Overbought" label (gray, readable); the 0-30 oversold zone is shaded pale gray with an "Oversold" label (gray, readable). Peak (74) and Trough (26) points are marked with green dots and bold black annotation text, positioned to avoid canvas-edge clipping via adaptive hjust.
+      Legibility verdict: PASS — no light-on-light text found anywhere.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17.
-      Chrome: title and axis titles/tick labels render in light ink/off-white, clearly legible against the dark background. No dark-on-dark text found anywhere -- tick labels, axis titles, and the "Overbought"/"Oversold" annotations all show adequate contrast against their respective (dark olive / dark gray) zone backgrounds.
-      Data: RSI line is the identical #009E73 green as the light render, same shape and same 30/50/70 reference lines (dashed/dotted, now light gray).
-      Legibility verdict: PASS.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and axis titles/tick labels render in light ink/off-white — clearly legible against the dark surface. Dashed 30/70 lines and dotted 50 centerline now render in light gray, still clearly visible on the dark background. No dark-on-dark failures: "Overbought"/"Oversold" annotations and Peak/Trough callouts retain adequate contrast against their (now dark-olive / dark-gray) zone backgrounds.
+      Data: RSI line is the identical #009E73 green as the light render, same shape, same peak/trough markers and positions — only chrome (background, zone tints, grid/reference-line colors, text) flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark text found anywhere.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,66 +64,65 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Zone annotation text placed clear of the RSI line's range in that
-          region; no collisions
+        comment: Peak/Trough labels use adaptive hjust to avoid edge clipping and
+          don't collide with the line or zone labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: linewidth=1.1 appropriate for ~120-point dense daily series
+        comment: linewidth 1.1 appropriate for a ~120-point daily series; peak/trough
+          markers stand out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue line against neutral zone fills, adequate contrast, no
-          red-green reliance
+        comment: Adequate contrast throughout, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title ~35% width, no overflow or
-          clipping
+        comment: Canvas gate passed (3200x1800); no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis label includes lookback period unit ('RSI (14-period)')
+        comment: Lookback period surfaced in the y-axis label
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; chrome backgrounds correct per theme; both
-          renders theme-correct'
+        comment: 'First series #009E73, chrome correct per theme, data colors identical
+          across themes'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Zone shading, semantic amber warning color, layered reference lines
-          show intentional hierarchy beyond defaults
+        comment: Zone shading, semantic amber warning color, peak/trough callouts,
+          layered reference lines
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_minimal strips spines, only y-major grid kept, though grid
-          overlaps reference lines at 30/50/70
+        comment: Spines removed, gridline duplication from attempt 1 fixed (panel.grid.major.y
+          now blank); centerline alpha slightly low
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Zone labels and centerline give context, but no callout on the notable
-          peak/trough excursions
+        comment: Peak/trough annotations added since attempt 1, giving the chart a
+          clear focal point beyond raw oscillation
     spec_compliance:
       score: 15
       max: 15
@@ -137,20 +132,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Fixed 0-100 momentum-oscillator line chart
+        comment: RSI line chart, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 30/70 lines, optional 50 centerline, zone shading, lookback noted
-          -- all present
+        comment: 30/70 reference lines, optional 50 centerline, zone shading, lookback
+          period noted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=date, y=rsi, correct
+        comment: Date on x, RSI on y, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -167,22 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 0-100 range, both zones, centerline, and clear RSI line all
-          shown
+        comment: Covers full RSI range with realistic overbought/oversold excursions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RSI derived from a plausible simulated price series via proper Wilder
-          smoothing; generic/neutral, no named ticker
+        comment: Proper Wilder-smoothed RSI from a simulated price series, neutral
+          domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic RSI oscillation pattern (~28-74), not artificially flat
-          or extreme
+        comment: Realistic oscillation (26-74), not artificially flat or extreme
     code_quality:
       score: 10
       max: 10
@@ -192,7 +185,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,48 +197,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg all used
+        comment: Only ggplot2/dplyr/ragg imported, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual Wilder RSI loop is appropriately explicit, no fake UI
+        comment: Explicit Wilder RSI loop, adaptive-hjust label placement, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png to plot-{THEME}.png
+        comment: ggsave + ragg::agg_png to plot-{THEME}.png
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Standard idiomatic annotate/geom_hline/geom_line/scale_y_continuous
-          layering
+        comment: geom_ribbon for zone fills, scale_y_continuous with fixed limits/breaks,
+          annotate() layering — idiomatic ggplot2
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: No ggplot2-distinctive feature used; geom_ribbon would have been
-          a more idiomatic zone-shading choice than annotate('rect')
+        comment: Solid layering but no facets, coord transforms, or stat layers that
+          would showcase a ggplot2-unique capability
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
-  - cumulative-sum
+  - rolling-window
   styling:
-  - publication-ready
   - alpha-blending
