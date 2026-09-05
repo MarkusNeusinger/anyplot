@@ -44,6 +44,40 @@ const paperDegree = papers.map(
   (_, j) => links.filter((l) => l[1] === j).length,
 );
 
+// Crossing minimization: barycenter heuristic, alternating a few sweeps
+// between the two columns so each side settles near the average position
+// of its connected neighbors on the other side.
+const researcherLinks = researchers.map((_, i) =>
+  links.filter((l) => l[0] === i).map((l) => l[1]),
+);
+const paperLinks = papers.map((_, j) =>
+  links.filter((l) => l[1] === j).map((l) => l[0]),
+);
+
+const barycenterSort = (order, neighborLists, otherOrder) => {
+  const otherRank = new Map(otherOrder.map((idx, pos) => [idx, pos]));
+  return order
+    .map((idx, pos) => {
+      const neighbors = neighborLists[idx];
+      const avg = neighbors.length
+        ? neighbors.reduce((sum, n) => sum + otherRank.get(n), 0) /
+          neighbors.length
+        : pos;
+      return { idx, avg };
+    })
+    .sort((a, b) => a.avg - b.avg)
+    .map((e) => e.idx);
+};
+
+let researcherOrder = researchers.map((_, i) => i);
+let paperOrder = papers.map((_, j) => j);
+for (let sweep = 0; sweep < 8; sweep++) {
+  paperOrder = barycenterSort(paperOrder, paperLinks, researcherOrder);
+  researcherOrder = barycenterSort(researcherOrder, researcherLinks, paperOrder);
+}
+const researcherPos = new Map(researcherOrder.map((idx, pos) => [idx, pos]));
+const paperPos = new Map(paperOrder.map((idx, pos) => [idx, pos]));
+
 const yFor = (i, n) => (n === 1 ? 0.5 : i / (n - 1));
 const sizeFor = (degree) => 16 + degree * 6;
 
@@ -53,7 +87,7 @@ const nodes = [
     name,
     category: 0,
     x: 0,
-    y: yFor(i, researchers.length),
+    y: yFor(researcherPos.get(i), researchers.length),
     symbolSize: sizeFor(researcherDegree[i]),
     label: { position: "left" },
   })),
@@ -62,7 +96,7 @@ const nodes = [
     name,
     category: 1,
     x: 1,
-    y: yFor(j, papers.length),
+    y: yFor(paperPos.get(j), papers.length),
     symbolSize: sizeFor(paperDegree[j]),
     label: { position: "right" },
   })),
@@ -72,11 +106,16 @@ const maxWeight = Math.max(...links.map((l) => l[2]));
 const edges = links.map(([r, p, weight]) => ({
   source: `r${r}`,
   target: `p${p}`,
+  value: weight,
   lineStyle: {
-    color: muted,
+    color: weight === maxWeight ? t.amber : muted,
     width: 1 + (weight / maxWeight) * 4,
-    opacity: 0.2 + (weight / maxWeight) * 0.35,
+    opacity: 0.35 + (weight / maxWeight) * 0.3,
     curveness: 0.08,
+  },
+  emphasis: {
+    lineStyle: { opacity: 1, width: 2 + (weight / maxWeight) * 4 },
+    label: { show: true, formatter: "{c}", color: t.ink, fontSize: 12 },
   },
 }));
 
@@ -122,7 +161,8 @@ chart.setOption({
         distance: 10,
       },
       itemStyle: { borderColor: t.pageBg, borderWidth: 2 },
-      emphasis: { disabled: true },
+      emphasis: { focus: "adjacency", scale: false, lineStyle: { opacity: 1 } },
+      blur: { itemStyle: { opacity: 0.25 }, lineStyle: { opacity: 0.1 } },
       data: nodes,
       links: edges,
     },
