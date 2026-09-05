@@ -1,0 +1,262 @@
+library: highcharts
+language: javascript
+specification_id: forest-basic
+created: '2026-09-05T01:47:23Z'
+updated: '2026-09-05T02:02:18Z'
+generated_by: claude-sonnet
+workflow_run: 33936772011
+issue: 2378
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - CI whiskers now have perpendicular end-caps at both bounds (classic forest-plot
+    convention), and lineWidth scales with study weight the same way marker radius
+    does — both prior-review weaknesses are directly addressed
+  - Numeric dataLabels (e.g. "0.72 (0.55–0.94)") now print the exact risk ratio and
+    CI per study and for the pooled estimate, adding real precision and a distinctive
+    use of Highcharts dataLabels formatters
+  - Title fontsize increased to 25px, improving balance against the wide canvas without
+    overflowing
+  - Diamond marker with theme-adaptive ink color clearly distinguishes the pooled
+    estimate, correctly using the neutral/baseline semantic role rather than a categorical
+    color
+  - Marker radius scales correctly with study weight, giving an honest visual read
+    of study precision
+  - Null-effect reference line (RR = 1) rendered as a labeled dashed plotLine, aiding
+    significance assessment at a glance
+  - Theme-adaptive chrome is correct and data colors are identical across light/dark
+    renders
+  - Realistic, neutral RCT drug-vs-placebo meta-analysis scenario with pooled estimate
+    mathematically consistent with the individual study effects
+  weaknesses:
+  - Title still occupies only ~33% of canvas width; a further fontsize increase (~28-30px)
+    would balance it more fully against the 3200px canvas, though this is a minor
+    polish item, not a defect
+  - No shaded confidence band or alternating row background to visually separate studies
+    — would strengthen Design Excellence further
+  - Whisker end-caps and data labels are a real improvement, but overall aesthetic
+    still reads as a well-executed default rather than a highly distinctive custom
+    design
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white cream, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Title "forest-basic · javascript · highcharts · anyplot.ai" in bold dark ink at 25px, fully readable. Y-axis study labels (Chen 2015, Kumar 2016, Silva 2017, Fischer 2019, Tanaka 2020, Okafor 2021, Rossi 2022, Pooled Estimate) rendered in dark/soft ink, all readable. X-axis title "Risk Ratio" and numeric ticks (0.4-1.2) readable. Subtle vertical gridlines every 0.1 units. Dashed vertical reference line at RR=1 labeled "No effect (RR = 1)" in soft ink, positioned near the top-right without overlapping other elements. Legend at the bottom ("Study estimate" green circle, "Pooled estimate" black diamond) is readable and unobstructed.
+      Data: Individual study markers are brand-green (#009E73) circles sized proportionally to study weight (Fischer 2019 largest, Silva 2017 smallest); horizontal whiskers in translucent green now show perpendicular end-caps at both CI bounds, with lineWidth scaling by weight. Numeric dataLabels ("0.72 (0.55–0.94)" etc.) sit above each marker. The pooled-estimate row uses a black diamond with a gray CI whisker and bold "0.78 (0.70–0.87)" label, visually distinct from the individual studies.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same title and axis labels now rendered in light off-white / soft-gray tones, fully readable against the dark surface. Gridlines are subtle light-gray. The dashed reference line and its "No effect (RR = 1)" label are rendered in light gray and remain readable. Legend text is light-colored and legible.
+      Data: Data colors are identical to the light render — the green markers, whiskers, and end-caps are unchanged (#009E73). The pooled-estimate diamond flips from black to off-white (theme-adaptive ink token), keeping it clearly visible against the dark background; its CI whisker and label are light gray/white.
+      Legibility verdict: PASS — no dark-on-dark failures; brand green remains vivid and identical across both themes; no near-black text on the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 25px, axis titles 16px, ticks/legend
+          14px, dataLabels 12-13px); readable in both themes, no overflow. Title still
+          under the ~70-85% expected width for the mandated string, a minor proportion
+          note rather than a defect.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements, including the new dataLabels
+          which sit clear of markers and each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius and whisker lineWidth both now scale with study weight,
+          giving consistent visual encoding of precision
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast green vs. ink diamond, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas, balanced margins, nothing cut off
+          even with the added end-caps and dataLabels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Risk Ratio" is descriptive; the metric is inherently unitless'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds are
+          theme-correct Imprint surfaces; pooled diamond correctly uses the theme-adaptive
+          ink/neutral token for its baseline role'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: CI end-caps and per-study dataLabels add real polish beyond a generic
+          default, but overall still short of a highly distinctive custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: New CI end-caps directly address the prior review's flagged gap;
+          subtle single-axis grid, generous whitespace; no shaded CI band yet
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Numeric dataLabels plus color contrast between individual/pooled
+          estimates and the null-effect line let the viewer read exact values and
+          significance at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct forest plot: point estimates, whiskers with end-caps, pooled
+          diamond'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diamond for pooled estimate, null-effect reference line, weight-proportional
+          markers and whiskers, chronological ordering, clear axis label — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = effect size / CI, Y = study category, correctly inverted for
+          horizontal layout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels ("Study estimate", "Pooled estimate")
+          match the data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Mix of significant and null-crossing CIs, varying weights and CI
+          widths shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible RCT drug-vs-placebo meta-analysis scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pooled estimate (0.78) matches the weight-computed average (~0.784)
+          of the individual studies; CI narrower than individual studies as expected
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data → series → chart structure, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; Highcharts global used directly
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean map-based series construction including the new end-cap/label
+          logic, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart("container", ...) with animation disabled per the
+          mount-node contract
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: chart.inverted, scatter+line combination, plotLines with label, dataLabels
+          formatters — comprehensive idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Now uses dataLabels formatters alongside Highcharts.color().setOpacity()
+          and per-point marker radius overrides, directly addressing the prior review's
+          gap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
