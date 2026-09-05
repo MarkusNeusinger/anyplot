@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: facet-grid
 created: '2026-09-05T01:24:04Z'
-updated: '2026-09-05T01:28:18Z'
+updated: '2026-09-05T01:40:47Z'
 generated_by: claude-sonnet
 workflow_run: 33935749158
 issue: 2696
@@ -15,52 +15,39 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Correct facet_grid(rows = vars(species), cols = vars(soil)) usage with shared
-    axis scales across all nine panels, exactly matching the spec's row/column faceting
-    requirement
-  - 'Theme-adaptive chrome is fully correct: strip backgrounds, ink text, grid lines,
-    and the geom_smooth trend line color all flip between light and dark, while the
-    Imprint green (#009E73) data points stay identical across both renders'
-  - Mandated title format matches exactly ("facet-grid · r · ggplot2 · anyplot.ai");
-    axis labels are descriptive with units ("Light Exposure (hours/day)", "Growth
-    (cm)")
-  - 'Clean, reproducible, KISS-structured code: set.seed(42), no functions/classes,
-    only used imports (ggplot2, dplyr, ragg)'
-  - Data clearly shows the intended interaction effect — slopes visibly steepen from
-    Sandy to Loamy soil, and intercepts differ by species — giving each facet a distinguishable
-    story
+  - Both-dimension faceting (rows AND columns) is used correctly and is the correct
+    plot type for this spec — not degraded to a single facet_wrap.
+  - Canvas, palette, and theme-adaptive chrome are all pixel-verified correct in both
+    themes — no clipping, no dark-on-dark/light-on-light, backgrounds match Imprint
+    tokens exactly.
+  - Data generation gives each of the 9 species/soil combinations a distinct, realistic
+    intercept/slope, so the grid actually demonstrates cross-facet comparison rather
+    than 9 near-identical panels.
   weaknesses:
-  - 'Design Excellence is still close to a well-configured default: theme_minimal
-    + panel.spacing tweaks read as tasteful but not distinctive. Consider a subtle
-    facet-header accent (e.g. a thin colored rule under strip.text) or refined typography
-    hierarchy between title/axis-title/tick sizes to push above ''configured default''.'
-  - Data storytelling relies only on the per-facet trend line to convey the soil/species
-    interaction; there is no explicit callout of the standout facet (e.g. Loamy shows
-    the steepest growth response). A short annotate() label on the most extreme panel,
-    or reordering columns by slope magnitude, would sharpen the insight.
-  - The Fern × Sandy facet has a couple of points sitting at or just below Growth
-    = 0 cm, which is not physically realistic for plant growth. Consider flooring
-    the simulated growth values at a small positive number or reducing the noise sd
-    for low-light_hours rows.
-  - Points overlap noticeably in the denser, steeper facets (Clay, Loamy) where the
-    regression line runs through a tight point cloud; a slightly lower alpha (~0.4)
-    or smaller point size in those panels would reduce overplotting.
-  - 'LM-02: facet_grid + geom_smooth is fairly standard ggplot2 usage for this spec;
-    leveraging a more distinctive feature (e.g. stat_summary for per-facet means,
-    or annotate() highlighting the fastest-growing combination) would raise library
-    mastery beyond the baseline.'
+  - The geom_text callout ('Steepest growth response' in the Basil x Loamy panel)
+    does not render at all in either theme — verified by cropping the exact target
+    pixel coordinates at 3x zoom. Investigate why the annotation layer produces no
+    visible pixels (drawn beneath other layers, dropped by facet matching, or a sizing/alpha
+    issue not apparent from the code) and either fix it or remove the dead code.
+  - The code sets strip.text = element_text(color = IMPRINT_PALETTE[1], ...) (brand
+    green) but the rendered strip labels ('Sandy'/'Clay'/'Loamy'/'Fern'/'Basil'/'Clover')
+    are pixel-confirmed to be plain INK color, not green, in both renders. Not a visual
+    defect (INK is arguably more correct for a structural label), but a code/output
+    mismatch worth confirming against the current script.
+  - Design storytelling is generic once the callout is set aside — consider a redundant
+    visual cue if the annotation route continues to fail to render.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matching the required light-theme surface — not pure white.
-      Chrome: Title "facet-grid · r · ggplot2 · anyplot.ai" top-left in dark ink; a 3x3 grid of panels with column strip labels "Sandy" / "Clay" / "Loamy" on a slightly elevated off-white strip background at top, and row strip labels "Fern" / "Basil" / "Clover" rotated on the right edge. Axis titles "Light Exposure (hours/day)" (bottom, shared) and "Growth (cm)" (left, shared) are dark and legible; tick labels are a softer dark gray. Grid lines are subtle mid-gray, visible but not dominant. All text is clearly readable against the light background.
-      Data: Every panel shows green (#009E73) scattered points with alpha blending plus a solid black linear trend line. Slopes visibly increase from the Sandy column to the Loamy column, and baseline intercepts differ by species row (Basil/Clover start higher than Fern).
-      Legibility verdict: PASS
+      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: Title "facet-grid · r · ggplot2 · anyplot.ai" at top-left (~45% width, no clipping, verified via crop). Axis titles "Light Exposure (hours/day)" and "Growth (cm)" fully visible, no clipping at left/bottom edges. Column strip labels (Sandy/Clay/Loamy) and row strip labels (Fern/Basil/Clover) all legible dark-on-cream; row labels confirmed not clipped at the right canvas edge via pixel crop.
+      Data: First/only series pixel-sampled and confirmed brand green #009E73 (sampled RGB [15,163,123], within tolerance of anti-aliasing). Regression line renders in dark INK color. Points use alpha=0.4, appropriately handling ~150 points/panel.
+      Legibility verdict: PASS — all rendered text is legible; however, one intended annotation ("Steepest growth\nresponse" callout in the Basil x Loamy panel) is present in the source code but is completely absent from the rendered pixels — confirmed by computing its exact panel/data-coordinate pixel location (~x=1746, y=967 in the 2400x2400 canvas) and cropping a 3x-zoomed region: only grid lines and data points appear, no text of any kind.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matching the required dark-theme surface — not pure black.
-      Chrome: Same layout as light — title, strip labels, axis titles/ticks — now rendered in light ink (near-white) against the dark background and dark-gray strip chips. Grid lines are light gray, still subtle. No dark-on-dark or light-on-light failures observed anywhere; every title, axis label, tick label, and strip label is clearly legible.
-      Data: The green (#009E73) data points are visually identical in hue and saturation to the light render; only the trend line switched from black to white/light ink to stay visible against the dark background, which is the expected chrome-only flip — data colors are unchanged.
-      Legibility verdict: PASS
+      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: Title, axis titles, tick labels, and strip labels all render in light INK/INK_SOFT tones (confirmed via pixel sampling of strip text: RGB(240,239,232) = #F0EFE8) and are clearly readable against the dark background. No dark-on-dark failures found anywhere.
+      Data: Confirmed pixel-identical brand green data points to the light render; regression line flips to light INK per theme-adaptive chrome, as expected.
+      Legibility verdict: PASS — same missing-callout issue as the light render, confirmed absent at the identical facet/coordinate via the same pixel-crop method.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -71,77 +58,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (theme() axis.title=10, axis.text=8, strip.text=9,
-          plot.title=12); all readable in both themes, title fits comfortably without
-          clipping.
+        comment: All titles/labels legible in both themes; no dark-on-dark or light-on-light
+          issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-to-text or text-to-data collisions across any of the nine
-          panels.
+        comment: Explicit panel spacing keeps all 9 panels clean, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: size=2.0/alpha=0.5 works well overall, but denser Clay/Loamy panels
-          show some overplotting.
+        comment: size=1.7 alpha=0.4 handles 150 pts/panel well, could be marginally
+          more prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green points against ink trend line and off-white/near-black backgrounds
-          give good contrast; not reliant on hue alone.
+        comment: Single series, strong contrast, no red-green issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400 square); nine-panel grid fills the
-          canvas well with balanced spacing, nothing cut off.
+        comment: 2400x2400 confirmed via file inspection, no clipping at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Light Exposure (hours/day)" and "Growth (cm)" are descriptive with
-          units.'
+        comment: Descriptive axis labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73 in both renders; background is #FAF8F1/#1A1A17;
-          chrome flips correctly, data color identical across themes.'
+        comment: Brand green and theme backgrounds pixel-verified correct
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured theme_minimal with custom panel spacing and Imprint
-          green — reads as a polished default, not yet publication-level distinctive.
+        comment: Clean minimal theme, elevated strips, but not exceptional polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Minor grid removed, axis ticks removed, panel.spacing tuned — some
-          refinement beyond raw defaults.
+        comment: Ticks removed, subtle grid, generous spacing
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Per-facet trend lines create a clear visual hierarchy showing slope
-          differences across soil types, though no explicit annotation calls out the
-          extreme facet.
+        comment: Intended callout focal point is completely absent from the render
     spec_compliance:
       score: 15
       max: 15
@@ -151,31 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: facet_grid(rows=vars(species), cols=vars(soil)) is exactly the required
-          chart type.
+        comment: Correct facet_grid with rows and cols
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Rows and columns faceting, shared scales, and clearly labeled facet
-          strips are all present.
+        comment: All spec fields and point-count range satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=light_hours, y=growth_cm correctly mapped; all data visible within
-          shared axis ranges.
+        comment: x/y correctly mapped, consistent ranges across facets
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; no legend needed for the
-          single data series.
+        comment: Title matches mandated format, legend correctly omitted
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -183,24 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 3x3 grid shows clear variation in both slope (by soil) and intercept
-          (by species) — no two facets look alike.
+        comment: Both row and column faceting used with realistic per-cell variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Greenhouse growth trial (plant species x soil type x light exposure)
-          is a real, neutral, comprehensible scenario.
+        comment: Plausible, neutral greenhouse growth trial
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: A couple of points in the Fern x Sandy facet dip to ~0 cm growth,
-          which is not physically realistic for plant growth measurements.
+        passed: true
+        comment: Sensible growth and light-exposure ranges
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -208,54 +178,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save, no functions/classes.
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg all used.
+        comment: ggplot2, dplyr, ragg all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean and appropriately simple for the visualization; no fake functionality.
+        passed: false
+        comment: geom_text callout block is dead code, produces no visible effect
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves via ggsave/ragg::agg_png as plot-{THEME}.png.
+        comment: Correct ggsave/ragg usage, current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Modern facet_grid(rows=vars(...), cols=vars(...)) formula-free syntax,
-          geom_smooth, theme_minimal — expert idiomatic ggplot2.
+        comment: Modern facet_grid(rows=,cols=) syntax, idiomatic theme layering
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: facet_grid + geom_smooth is solid but fairly standard combination;
-          no more distinctive ggplot2-only feature layered on top.
-  verdict: REJECTED
+        comment: Two-dimensional faceting used correctly but otherwise standard geom
+          composition
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -263,3 +233,4 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
+  - publication-ready
