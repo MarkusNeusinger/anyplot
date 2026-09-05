@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-clustered
 created: '2026-09-05T03:24:35Z'
-updated: '2026-09-05T03:29:28Z'
+updated: '2026-09-05T03:44:25Z'
 generated_by: claude-sonnet
 workflow_run: 33941348948
 issue: 2021
@@ -12,51 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Fully custom overlay (dendrograms, condition strip, heatmap cells) built from
-    low-level MUI X hooks (useXScale, useYScale, useZColorScale, useDrawingArea) since
-    the community edition has no native heatmap/dendrogram component — a genuinely
-    idiomatic use of the community-only surface.
-  - 'Deterministic LCG-seeded synthetic gene-expression data with a biologically coherent
-    structure: inflammatory / fibrosis / proliferation gene groups crossed with Control/Treated
-    samples, matching the stated log2 fold-change comments per cluster.'
-  - Correct diverging Imprint colormap (t.div) with a symmetric [-COLOR_DOMAIN, COLOR_DOMAIN]
-    domain around zero and a labeled 'Log2 fold change' colorbar legend.
-  - Condition annotation strip (Control vs. Treated) uses canonical Imprint palette
-    positions 1-2, with a matching swatch legend.
-  - Both row and column dendrograms correctly reorder the matrix via hierarchical
-    clustering and their branch heights are faithfully rendered.
-  - Theme-adaptive chrome (dendrogram strokes, tick labels, legend text) correctly
-    threaded via t.ink / t.inkSoft — both light and dark renders are fully legible.
+  - Implements Ward's minimum-variance hierarchical clustering entirely from scratch
+    (recursive tree build, leaf ordering, dendrogram segment generation) since MUI
+    X community has no native heatmap/dendrogram component -- correctly fulfills the
+    spec's 'clustermap style' requirement.
+  - 'Thoughtful palette assignment: the gene-cluster annotation strip deliberately
+    uses Imprint positions 3/5/6 (ochre/cyan/rose), explicitly avoiding the red/blue
+    endpoints already used by the diverging heatmap scale and the green/lavender condition
+    strip -- a well-reasoned decision documented in a code comment.'
+  - 'Clean composition: dendrograms (both axes), condition strip, gene-cluster strip,
+    heatmap cells, and legends are all aligned via useDrawingArea/useXScale/useYScale
+    hooks in a single custom SVG overlay, with generous whitespace and no visible
+    overlaps in either theme.'
+  - Deterministic, biologically plausible synthetic data (seeded LCG) shows three
+    distinct gene-cluster response patterns (strong up, strong down, mild rise) across
+    two conditions -- solid feature coverage for a clustered heatmap.
+  - 'Theme adaptation is correct: chrome tokens (t.ink, t.inkSoft) flip between renders
+    while the diverging data colors and categorical strip colors stay identical.'
   weaknesses:
-  - 'Row-side group annotation is missing: geneClusterOf() already computes the inflammatory/fibrosis/proliferation
-    grouping but it is never rendered as a color strip — add a left-hand row annotation
-    bar analogous to the existing column Control/Treated strip to fully realize the
-    spec''s ''row/column color bars for group annotations'' suggestion.'
-  - Clustering uses complete linkage (per the code comment) while the spec names Ward's
-    method with Euclidean distance as the common default — consider switching buildTree's
-    merge criterion to Ward's minimum-variance linkage (or at least average linkage)
-    to align with the spec's stated convention.
-  - Y-axis gene tick labels are legible at 13px with the current 16 rows, but there
-    is little headroom left — worth re-checking spacing if the matrix ever grows toward
-    the spec's stated 100-row upper bound.
+  - 'Header block is duplicated: lines 1-4 contain a stale header (''Quality: 88/100
+    ... Created: 2026-09-05'') followed on line 5 by the ''//# anyplot-orientation:
+    square'' directive, then a SECOND full standard header (lines 6-10, ''Quality:
+    pending''). This violates the header contract requiring the orientation directive
+    on its own line at the very top of the file. Fix: delete the stale first header
+    block entirely so the file starts with the directive line followed by exactly
+    one clean header block.'
+  - 'Possible colorbar direction mismatch: fibrosis genes (COL1A1, COL3A1, FN1, ACTA2,
+    VIM) have a strongly NEGATIVE base log2 fold-change under treatment (CLUSTER_BASE[1][1]
+    = -2.2) yet render as dark RED in the Treated columns, while inflammatory genes
+    (IL6, TNF, IFNG, IL1B, CXCL10, STAT1) have a strongly POSITIVE base value under
+    treatment (CLUSTER_BASE[0][1] = +2.4) yet render as dark BLUE -- consistent with
+    cell fill using t.div = [red, mid, blue] as low->high. However the ContinuousColorLegend
+    colorbar shows ''3'' next to the RED end and ''-3'' next to the BLUE end, the
+    opposite direction from how cells actually encode value. A reader using the colorbar
+    to interpret the heatmap would draw the wrong conclusion about which genes are
+    up- vs down-regulated. Verify the legend''s gradient/tick direction against the
+    actual useZColorScale output and correct whichever side is inverted.'
+  - Dark-theme low-magnitude cells (log2FC near 0, e.g. most Control samples in the
+    Proliferation rows) use a midpoint color equal to the page background (#1A1A17),
+    so those cells nearly disappear into the surrounding canvas in the dark render
+    -- the heatmap grid structure reads noticeably weaker there than in the light
+    render.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white.
-      Chrome: Title "heatmap-clustered · javascript · muix · anyplot.ai" in bold dark ink, clearly readable. Column dendrogram (black strokes) sits above a green/lavender Control/Treated annotation strip; row dendrogram (black strokes) sits left of the gene-name tick labels. X-axis sample labels (Control-04 … Treated-06) are rotated -45° and fully legible; y-axis gene labels (COL1A1 … CXCL10) are horizontal and legible. Colorbar on the right is labeled "Log2 fold change" with "3"/"-3" endpoints, plus a Control/Treated swatch legend top-right.
-      Data: Heatmap cells are red for fibrosis genes under Treated and for inflammatory genes under Control (negative log2FC), blue for inflammatory/proliferation genes under Treated (positive log2FC) — internally consistent with the diverging imprint_div colormap (red=low, blue=high). First categorical use (Control swatch) is Imprint position 1 (#009E73 green), Treated is position 2 (lavender).
-      Legibility verdict: PASS — no light-on-light text observed anywhere.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "heatmap-clustered · javascript · muix · anyplot.ai" centered at top, clearly legible. Column dendrogram (black lines) above a two-color condition strip (green=Control, lavender=Treated). Row dendrogram (black lines) to the left of a three-color gene-cluster strip (ochre=Inflammatory, cyan=Fibrosis, rose=Proliferation). Gene name tick labels on the left, sample name tick labels (rotated -45deg) at the bottom, all in dark gray -- all readable. A vertical diverging colorbar on the far right labeled "Log2 fold change" with "3" near the top (red end) and "-3" near the bottom (blue end). A small swatch legend (Control/Treated, Inflammatory/Fibrosis/Proliferation) sits top-right.
+      Data: 16 gene rows x 12 sample columns of diverging red-to-blue cells. Fibrosis genes are strongly red under Treated columns; inflammatory genes are strongly blue under Treated columns; Proliferation genes show mild blue tones under Treated. Control columns are mostly pale/near-white. Columns/rows are reordered so the two condition blocks and three gene-cluster blocks are visually contiguous.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Same title, axis labels, tick labels, and legend now rendered in light ink (white/near-white) against the dark surface — all clearly legible. Dendrogram strokes flipped from black to white/light, remaining clearly visible against the dark background. Grid/dendrogram lines are not competing with data.
-      Data: Colors are pixel-identical to the light render for every cell (same reds/blues in the same positions) — confirms only chrome flipped, not data colors. Green/lavender Control/Treated strip unchanged.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and dendrogram lines remain visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, tick labels, and legend text all render in light gray/off-white and are clearly legible against the dark background -- no dark-on-dark failures observed. Dendrogram lines flip to white/light gray. Condition and gene-cluster strips keep the identical hues from the light render (green, lavender, ochre, cyan, rose).
+      Data: Data colors (categorical strip hues and the red/blue diverging heatmap cells) are identical to the light render, confirming positions 1-8 stay theme-invariant. One legibility caveat: several near-zero-value cells in the Proliferation/Control block use a color very close to the dark page background, making those specific cell boundaries harder to distinguish from the surrounding canvas than in the light render (the diverging colormap's theme-adaptive midpoint is, by design, the same hex as the page background).
+      Legibility verdict: PASS (with the near-zero-cell visibility caveat noted above; no text is dark-on-dark).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,47 +78,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All titles/labels/ticks readable in both themes; explicit font sizes
-          throughout
+        comment: All font sizes explicitly set (title 22px, ticks/legend 13px, colorbar
+          label 12px); no overflow or clipping in either theme.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between dendrograms, strip, labels, or heatmap cells
+        comment: Dendrograms, annotation strips, cells, ticks, and legends are all
+          cleanly separated with no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Cells, dendrogram strokes, and annotation strip all clearly visible
+        comment: Cells are well-sized for the 16x12 grid, but several near-zero-value
+          cells in the dark render use a color equal to the page background and nearly
+          vanish.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale, no red-green-only signal
+        comment: Diverging red/blue scale plus categorical strips give adequate contrast;
+          not reliant on red-green alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas, nothing clipped, good proportions
+        comment: Balanced margins; dendrograms, strips, heatmap, legends all fit without
+          cut-off; canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Log2 fold change'' colorbar label with units; descriptive title'
+        comment: Colorbar labeled 'Log2 fold change'; category axes are self-descriptive
+          (gene/sample names).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_div for continuous scale, Imprint palette[0]/[1] for Control/Treated
-          strip, correct theme backgrounds
+        comment: First condition series is brand green; diverging cells use imprint_div
+          red/mid/blue stops; backgrounds correct in both themes; data colors identical
+          across themes.
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -112,21 +133,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Fully custom overlay built from low-level hooks since no native heatmap
-          component exists in community MUI X
+        comment: Custom-built clustermap composition with deliberate palette segregation
+          between annotation strips and the diverging scale -- clearly above a configured
+          default.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines/grid clutter, subtle cell gaps, generous margins
+        comment: No spines, generous whitespace, subtle dendrogram strokes; dark-theme
+          near-zero-cell visibility keeps this from a perfect score.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dendrogram ordering plus condition strip create a clear clustering
-          narrative
+        comment: Reordering plus color-coded strips make the two condition clusters
+          and three gene-function clusters immediately visible.
     spec_compliance:
       score: 14
       max: 15
@@ -136,27 +159,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Clustered heatmap with both-axis dendrograms
+        comment: Correct clustered heatmap with dendrograms on both axes.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Reordering, diverging colormap, colorbar, and column annotation strip
-          present; row-side group annotation not rendered; linkage method (complete)
-          differs from spec's named Ward's-method default
+        comment: Row/column reordering, diverging colormap, colorbar, and bonus row/column
+          annotation strips are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=samples, Y=genes, full matrix represented
+        comment: Samples on X, genes on Y, values as color; all data visible after
+          reordering.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match data
+        comment: Title format correct; the swatch legends match the data, but the
+          colorbar's '3'/'-3' tick placement appears to run opposite the direction
+          the cells actually encode -- see weaknesses.
     data_quality:
       score: 15
       max: 15
@@ -166,19 +191,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clustering, dendrograms, colorbar, and group annotation
+        comment: Shows clustering, both up- and down-regulation, and multiple magnitude
+          tiers across three gene groups.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral gene-expression scenario
+        comment: Neutral, plausible gene-expression research scenario (inflammatory/fibrosis/proliferation
+          markers, control vs. treated).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log2 fold-change range (~-3 to 3) is realistic for differential expression
+        comment: Log2 fold-change values in the -3..3 range are realistic for expression
+          studies; matrix size (16x12) is within the spec's 10-100 row / 10-50 column
+          guidance.
     code_quality:
       score: 9
       max: 10
@@ -188,32 +217,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions used, but justified by the inherent complexity of
-          hierarchical clustering + dendrogram layout
+        comment: Helper functions are justified by the from-scratch clustering algorithm,
+          but the duplicated header block is a real cleanliness defect.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG, fully deterministic
+        comment: Deterministic seeded LCG (seed 42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used MUI X imports
+        comment: All imported MUI X components/hooks are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity for the plot type; no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, skipAnimation set, default export
+        comment: 'Harness contract followed: default export, skipAnimation set, no
+          manual mounting.'
     library_mastery:
       score: 7
       max: 10
@@ -223,21 +253,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct low-level hook usage (useZColorScale, band scales) given
-          no native heatmap/dendrogram exists in community MUI X
+        comment: Uses ChartContainer plus the low-level hook API (useXScale/useYScale/useZColorScale/useDrawingArea)
+          to compose a chart type the community package doesn't natively support --
+          the correct idiomatic escape hatch.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Combines zAxis continuous colorMap, ContinuousColorLegend, and a
-          custom SVG overlay — distinctive beyond basic chart usage
+        comment: Leverages zAxis continuous colorMap and ContinuousColorLegend, features
+          distinctive to MUI X's scale system.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
   - custom-legend
   patterns:
   - data-generation
