@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: polar-scatter
 created: '2026-09-05T11:27:44Z'
-updated: '2026-09-05T11:32:02Z'
+updated: '2026-09-05T11:41:12Z'
 generated_by: claude-sonnet
 workflow_run: 33962986878
 issue: 2023
@@ -12,55 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-sca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-scatter/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correctly builds a true polar scatter (continuous theta/radius) that Chart.js
-    has no native chart type for, by projecting to a hidden linear x/y scatter scale
-    and drawing the polar grid/spokes/cardinal labels/legend via Chart.js's own beforeDraw/afterDraw
-    plugin hooks — no external library, no fake functionality.
-  - Radial tick labels ('5 m/s' ... '20 m/s') are deliberately placed along the one
-    spoke (SE, 135°) that stays clear of all three data clusters — a thoughtful, non-obvious
-    layout decision that avoids overlap entirely.
-  - 'Imprint palette applied correctly and consistently: first series (Morning) is
-    #009E73, Afternoon/Evening follow palette positions 2-3 in canonical order, identical
-    hex across both themes.'
-  - 'Both light and dark renders are fully theme-correct: warm off-white / near-black
-    backgrounds, all chrome (title, cardinal labels, tick labels, legend, grid) readable
-    and correctly tokenized, no dark-on-dark or light-on-light failures.'
-  - Realistic, neutral wind-observation dataset with three plausible prevailing directions
-    and speed ranges per time-of-day period, deterministic via a seeded LCG.
+  - Correctly builds a true continuous polar scatter via a hidden linear x/y scale
+    plus custom Chart.js plugin hooks (beforeDraw/afterDraw) — no external library,
+    no fake chart type.
+  - 'Directly addresses every attempt-1 weakness: radial ring stroke weight/opacity
+    now grows with distance, a ''Wind speed (m/s)'' radial-axis caption anchors the
+    tick labels, an explicit subtitle (''Prevailing wind direction rotates clockwise
+    through the day'') surfaces the directional-shift insight, and the Afternoon period
+    is now bimodal (two prevailing directions/spreads) demonstrating a wider range
+    of the plot type.'
+  - 'Imprint palette applied correctly and identically across both themes: Morning
+    = #009E73 (palette[0]), Afternoon = palette[1], Evening = palette[2].'
+  - Both renders are fully theme-correct chrome with no dark-on-dark/light-on-light
+    failures; square 2400x2400 canvas is exactly on target with no clipping.
+  - Deterministic, realistic wind-observation dataset (three period clusters, seeded
+    LCG) with clean, idiomatic use of Chart.js's plugin API and a thoughtfully placed
+    radial tick label spoke (SE, clear of all data).
   weaknesses:
-  - 'Design Excellence is solid but not exceptional: the plot reads as a well-executed
-    default rather than a publication-grade piece — consider a subtle visual touch
-    that pushes it further (e.g. slightly varying ring line weight/opacity by distance,
-    or a one-line radial axis caption like ''Wind speed (m/s)'' near the tick labels
-    instead of relying on the repeated unit suffix alone).'
-  - No explicit data-storytelling cue beyond the color-coded clustering itself — a
-    short annotation or subtitle calling out the pattern (e.g. 'Wind direction rotates
-    clockwise through the day') would lift DE-03 from 'guides the reader' to 'viewer
-    immediately sees the insight'.
-  - Within each time-of-day cluster, points overlap fairly densely in the tightest
-    region (near the cluster core) — pointRadius=7 with backgroundColor alpha=0.8
-    is reasonable for ~43-44 points per series, but a touch more transparency or a
-    hair smaller radius in the densest sub-clusters would improve individual-point
-    separation without losing prominence.
-  - 'DQ-01 feature coverage is good but could be pushed further: all three periods
-    show a fairly similar spread shape (narrow jitter cone); one period with a noticeably
-    wider spread or a bimodal direction (e.g. a squall shifting wind direction) would
-    better demonstrate the plot type''s ability to show varied angular distributions.'
+  - Marker overlap in the densest cluster core (Morning, NE) is still present — a
+    touch more transparency or a slightly smaller radius there would sharpen individual-point
+    separation.
+  - Several small helper functions (lcg, windObservations, toXY, hexToRgba) push CQ-01
+    slightly past pure KISS, though they are a reasonable trade-off for a custom polar-projection
+    plugin architecture.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "polar-scatter · javascript · chartjs · anyplot.ai" centered at top; bold N/E/S/W cardinal labels in dark ink at the four compass points; subtle light-gray radial rings and 8 angular spokes; radial tick labels "5 m/s" / "10 m/s" / "15 m/s" / "20 m/s" placed along the SE spoke, in a clear area away from all data; a bottom legend row with three colored swatches labeled "Morning", "Afternoon", "Evening".
-      Data: Three distinct clusters of circular markers with white/pale borders — green (Morning, NE quadrant, tight to center = lower speeds), lavender/purple (Afternoon, S/SW, extending to ~17-18 m/s), blue (Evening, W/NW, mid-range speeds). First series is the brand green #009E73 as required.
-      Legibility verdict: PASS — all text (title, cardinal labels, radial ticks, legend) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "polar-scatter · javascript · chartjs · anyplot.ai" centered at top, italic-toned dark subtitle "Prevailing wind direction rotates clockwise through the day" beneath it, bold dark N/E/S/W cardinal labels at the compass points, 4 radial gridlines with weight/opacity increasing outward, 8 angular spokes every 45 degrees, radial tick labels "5"-"20" plus an italic "Wind speed (m/s)" caption placed along the empty SE spoke, bottom legend with three swatches (Morning/Afternoon/Evening). All text is dark-on-light and clearly readable; no clipping at any edge.
+      Data: Three clusters of pale-bordered circular markers — green "Morning" (NE, prevailing ~45°), lavender "Afternoon" (bimodal, S and SW-ish, prevailing ~200° and ~258°), blue-grey "Evening" (NW, prevailing ~285°). First series is brand green #009E73, matching the Imprint palette order.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as light — title, cardinal labels (N/E/S/W), radial tick labels, and legend text are all now rendered in light/off-white tones, clearly visible against the dark background. Grid rings and spokes are subtle light-gray at low opacity, still visible but not competing with data.
-      Data: Same three clusters in the same positions with identical hex colors to the light render (green/lavender/blue) — confirms only chrome flipped between themes, not data colors.
-      Legibility verdict: PASS — no dark-on-dark failures found; every text element (title, cardinal labels, tick labels, legend) is legible. Brand green remains clearly visible on the dark surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Identical layout to the light render. Title, subtitle, cardinal labels, radial tick labels/caption, and legend text are all rendered in light/off-white tones and are clearly legible against the dark surface — no dark-on-dark failures found. Grid rings and spokes remain subtle without competing with the data.
+      Data: Marker colors (green/lavender/blue-grey) are pixel-identical to the light render — only chrome flipped, confirming data color consistency across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -71,76 +60,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All chrome text is custom-drawn at explicit font sizes (13-22px CSS);
-          readable in both themes, well-proportioned title, no overflow.
+        comment: All text (title, subtitle, cardinals, ticks, caption, legend) clearly
+          readable in both themes at explicit font sizes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Radial tick labels deliberately placed on the one spoke clear of
-          every data cluster; no text collisions anywhere.
+        comment: Radial tick labels and caption placed on the empty SE spoke; cardinal
+          labels sit beyond the outer ring; legend clear of the plot area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: pointRadius=7 with alpha=0.8 fits the ~130-point medium-density dataset;
-          some overlap in the densest sub-cluster cores.
+        comment: Markers sized appropriately for ~130 points, but the densest cluster
+          core (Morning) still shows some marker overlap.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, white marker borders for definition, no red-green-only
-          encoding.
+        comment: Three distinct hues (green/lavender/blue), good contrast, not reliant
+          on red-green alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Polar circle fills a large, balanced portion of the square canvas;
-          legend integrated near the plot, not floating.
+        comment: Correct 2400x2400 square canvas, symmetric padding, nothing cut off,
+          generous whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial ticks carry explicit units ('m/s'); compass labels make the
-          angular axis self-explanatory.
+        comment: Title matches required format; radial caption gives units; cardinal
+          labels serve as angular axis labels at 0/90/180/270.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, palette positions 2-3 in canonical order,
-          identical across themes, correct theme backgrounds both renders.'
+        comment: 'First series is #009E73; remaining series follow canonical Imprint
+          order; identical hex across themes; correct theme-adaptive backgrounds.'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Fully custom polar chrome (rings, spokes, cardinal labels, tuned
-          label placement) is clearly above Chart.js defaults.
+        comment: Fully custom polar chrome with distance-graded ring styling and a
+          radial-axis caption — a clear step up from attempt 1.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, generous padding, clean typography hierarchy; not every
-          micro-detail polished (e.g. no radial axis caption).
+        comment: Subtle, distance-graded gridlines, generous whitespace, no chart-junk.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color-coded, spatially-separated clusters create clear visual hierarchy
-          showing prevailing-direction shifts across the day, though no explicit annotation
-          calls out the insight.
+        comment: New subtitle explicitly calls out the directional-shift insight,
+          directly addressing the prior review's feedback.
     spec_compliance:
       score: 15
       max: 15
@@ -150,53 +137,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine polar scatter (continuous theta/radius), not a radar/polarArea
+        comment: True polar scatter (continuous theta/radius), not a radar/polarArea
           substitute.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Radial gridlines, angular cardinal ticks, category color encoding,
-          centered layout, radius starting at 0 — all present.
+        comment: Radial gridlines, angular ticks at 45-degree intervals, categorical
+          color encoding, centered with padding, radius axis starts at 0.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta -> compass angle, radius -> speed, correctly projected and
-          fully visible within axis bounds.
+        comment: Theta/radius correctly mapped via compass-to-cartesian projection;
+          all data points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; legend labels match the
-          three category names.
+        comment: Title matches 'polar-scatter · javascript · chartjs · anyplot.ai';
+          legend labels match category names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varied direction and speed per period, but all three periods
-          share a similar narrow-jitter spread shape.
+        comment: Three categories, varying radius/speed, and now a bimodal angular
+          spread for one period — demonstrates the plot type's full range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral wind-observation scenario grouped by time of day.
+        comment: Plausible, neutral wind-observation scenario with realistic prevailing
+          directions/speeds.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds (roughly 0-18 m/s) are realistic for near-surface wind
-          observations.
+        comment: Wind speeds 0-20 m/s and ring scale sized sensibly to the data.
     code_quality:
       score: 9
       max: 10
@@ -206,35 +193,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses several small helper functions (lcg, windObservations, toXY,
-          hexToRgba) — justified by the custom canvas-plugin approach, not over-engineered.
+        comment: A handful of small helper functions (lcg, windObservations, toXY,
+          hexToRgba) — reasonable for a custom polar-projection plugin, but not minimal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG (seed 42).
+        comment: Deterministic seeded LCG (seed 42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals.
+        comment: No imports beyond the global Chart object.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean plugin architecture, no fake UI or simulated interactivity.
+        comment: No fake UI/interactivity; clean plugin structure.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'No savefig-style call; mounts one canvas into #container, animation:false
-          set as required.'
+        comment: Correct mount-node contract, animation:false, no filesystem writes.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -242,27 +228,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct idiomatic use of the scatter type plus Chart.js's own plugin
-          lifecycle hooks (beforeDraw/afterDraw) — no external plugin packages.
+        comment: Correct use of scatter type plus plugin hooks, since Chart.js has
+          no native continuous polar-scatter type.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: The custom beforeDraw/afterDraw plugin technique is fairly distinctive
-          to Chart.js's architecture, though the polar-projection idea itself is portable
-          across canvas-based libraries.
-  verdict: REJECTED
+        comment: beforeDraw/afterDraw plugin hooks drawing a full custom polar grid,
+          cardinal labels, distance-graded rings, and legend — a distinctive, well-executed
+          technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - manual-ticks
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
