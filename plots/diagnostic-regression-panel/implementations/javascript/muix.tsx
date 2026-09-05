@@ -185,26 +185,52 @@ function scatterSeries(id, xs, ys) {
 
 // Labels the top-3 most-influential observations inside a chart's SVG space.
 // Must run as a child of ChartContainer to read the live x/y scales.
+// Two labels whose marker centers are closer than this (Euclidean, px) are
+// considered crowded and get staggered vertically so their index numbers
+// don't visually merge — covers both stacked and side-by-side markers.
+const LABEL_CROWD_PX = 20;
+const LABEL_STAGGER_PX = 13;
+
 function InfluentialLabels({ points }) {
   const xScale = useXScale();
   const yScale = useYScale();
+  const positioned = points
+    .map(({ x, y, text }) => {
+      const px = xScale(x);
+      const py = yScale(y);
+      if (px == null || py == null || Number.isNaN(px) || Number.isNaN(py)) return null;
+      return { px, py, text };
+    })
+    .filter(Boolean);
+
+  // Stagger along the direction away from the colliding neighbor, so a point
+  // below its neighbor moves further down (not toward it).
+  positioned.forEach((point, i) => {
+    let stackOffset = 0;
+    let sign = 1;
+    for (let j = 0; j < i; j++) {
+      const other = positioned[j];
+      const dist = Math.hypot(point.px - other.px, point.py - other.py);
+      if (dist < LABEL_CROWD_PX) {
+        stackOffset += 1;
+        sign = point.py >= other.py ? -1 : 1;
+      }
+    }
+    point.dy = sign * stackOffset * LABEL_STAGGER_PX;
+  });
+
   return (
     <React.Fragment>
-      {points.map(({ x, y, text }) => {
-        const px = xScale(x);
-        const py = yScale(y);
-        if (px == null || py == null || Number.isNaN(px) || Number.isNaN(py)) return null;
-        return (
-          <ChartsText
-            key={text}
-            x={px + 8}
-            y={py - 8}
-            text={text}
-            fill={t.inkSoft}
-            style={{ fontSize: 12, fontFamily: FONT, textAnchor: "start" }}
-          />
-        );
-      })}
+      {positioned.map(({ px, py, text, dy }) => (
+        <ChartsText
+          key={text}
+          x={px + 8}
+          y={py - 8 - dy}
+          text={text}
+          fill={t.inkSoft}
+          style={{ fontSize: 12, fontFamily: FONT, textAnchor: "start" }}
+        />
+      ))}
     </React.Fragment>
   );
 }
