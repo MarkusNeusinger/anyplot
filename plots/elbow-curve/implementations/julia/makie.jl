@@ -75,7 +75,19 @@ scatter!(
     ax, [k_values[elbow_idx]], [inertia[elbow_idx]];
     color = PAGE_BG, markersize = 22, strokewidth = 3, strokecolor = IMPRINT_PALETTE[1],
 )
-vlines!(ax, [k_values[elbow_idx]]; color = RGBAf(INK.r, INK.g, INK.b, 0.25), linewidth = 1.5, linestyle = :dash)
+accent = IMPRINT_PALETTE[3]  # secondary Imprint accent (blue) for the guide line
+vlines!(ax, [k_values[elbow_idx]]; color = RGBAf(accent.r, accent.g, accent.b, 0.55), linewidth = 1.5, linestyle = :dash)
+
+# Label the elbow directly on the chart with a Makie text! annotation.
+text!(
+    ax, k_values[elbow_idx], inertia[elbow_idx];
+    text      = "k=4 (optimal)",
+    align     = (:left, :bottom),
+    offset    = (12, 12),
+    fontsize  = 14,
+    color     = accent,
+    font      = :bold,
+)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
