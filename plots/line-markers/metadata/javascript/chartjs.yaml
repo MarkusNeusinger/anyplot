@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: line-markers
+created: '2026-09-05T07:33:31Z'
+updated: '2026-09-05T07:46:59Z'
+generated_by: claude-sonnet
+workflow_run: 33952688934
+issue: 2599
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'The `fill: "+1"` area between the two lines (with `withAlpha(palette[0], 0.12)`)
+    turns the chart from a bare comparison into a clear visual story about the consistent
+    torque gap between assembly lines — directly resolves the prior attempt''s ''no
+    storytelling'' weakness.'
+  - Filled (solid green circle) vs. unfilled (hollow lavender triangle, pointBackgroundColor
+    = pageBg) markers now give a third redundant encoding dimension on top of color
+    + shape, addressing the spec's explicit note to 'consider filled vs. unfilled
+    markers for distinction'.
+  - The `order` property (A=2, B=1) resolves the messy double-marker clash at the
+    Inspection Number 3 crossing point from Attempt 1 — it now renders as a single
+    clean hollow triangle instead of two overlapping shapes.
+  - Domain-specific legend labels ('Assembly Line A' / 'Assembly Line B') reinforce
+    the quality-control narrative established by the axis titles, instead of the generic
+    'Line A' / 'Line B' from Attempt 1.
+  - Correct Imprint palette order — brand green `#009E73` for Line A, lavender `#C475FD`
+    for Line B — identical data colors in both themes, only chrome flips.
+  - Theme-adaptive chrome (title, axis titles, ticks, grid, marker halos) correctly
+    threaded through tokens in both renders; realistic, neutral bolt-torque QC dataset.
+  weaknesses:
+  - At the Inspection Number 3 crossing point, Line A's circular marker is now fully
+    hidden behind Line B's opaque hollow triangle (pointBackgroundColor = pageBg covers
+    whatever is beneath) — clean-looking, but Line A's actual data point at that x-value
+    has no visible marker of its own.
+  - 'Legend order shows ''Assembly Line B'' before ''Assembly Line A'' even though
+    A is defined first in the data/dataset array — a minor cosmetic inconsistency
+    from the `order: 2` / `order: 1` z-index trick used to fix the marker overlap.'
+  - The gap-highlighting fill is a strong storytelling addition but is not reinforced
+    with a label/annotation stating the actual average gap — a small additional touch
+    (e.g. a callout with the mean delta) would push Design Excellence further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "line-markers · javascript · chartjs · anyplot.ai" in dark ink, centered, comfortably within plot width. Legend below the title reads "Assembly Line B" (hollow triangle swatch) then "Assembly Line A" (filled circle swatch), using matching point styles. Axis titles "Inspection Number" (x) and "Bolt Torque (N·m)" (y) in dark ink; tick labels in a softer dark gray. Y-axis gridlines only, subtle and unobtrusive; x-axis grid hidden with only a bottom border line.
+      Data: Line A rendered in brand green (#009E73) with solid filled circular markers; Line B in lavender (#C475FD) with hollow (page-background-filled) triangular markers, giving a filled-vs-unfilled redundant encoding on top of color and shape. A soft translucent green band (12% alpha) fills the area between the two lines, visually emphasizing the consistent torque gap — a clear storytelling device. At Inspection Number 3, where both series coincide at 24.6 N·m, the z-ordering (order: 2 / order: 1) resolves what was a messy double-marker overlap in the previous attempt into a single clean hollow triangle.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis titles now rendered in light ink, clearly legible against the dark surface. Tick labels in a lighter soft gray. Gridlines remain subtle but visible against the dark background.
+      Data: Line A and Line B retain the exact same hex colors (#009E73 green, #C475FD lavender) as the light render — only chrome (background, text, grid, marker halo fill) flipped, as required. The translucent gap-fill band and the hollow-triangle treatment at the crossing point read identically to the light render, just against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and gridlines remain clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: order property + hollow triangle resolves the Attempt 1 double-marker
+          clash at the crossing point into a single clean shape
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers sized prominently (radius 7-8) appropriate for a sparse 14-point
+          series; gap fill is subtle enough not to compete with lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Triple redundant encoding now: color + shape + filled/unfilled'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), no clipping, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (N·m)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (green then lavender), correct theme backgrounds
+          both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Gap-fill band + hollow-marker treatment are deliberate polish beyond
+          generic defaults, but no custom typography or callouts
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Hidden x-grid, subtle y-grid, translucent fill band add refinement
+          without clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Fill-between area now gives a clear focal point on the torque gap
+          between assembly lines, directly resolving the Attempt 1 weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line-with-markers chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible markers, distinct shapes per series, filled vs. unfilled
+          distinction now explored, marker size proportional to line thickness
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match dataset
+          labels and now carry domain context
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers sparse-data, multi-series, and now filled-vs-unfilled marker
+          distinction from the spec notes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bolt-torque QC data is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Torque values in a plausible tight QC range (23.6-25.6 N·m)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; the one `withAlpha` helper is a trivial pure utility,
+          not a structural class/function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or unnecessary complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Linear x-scale with {x,y} data objects, usePointStyle legend, fill:
+          "+1" area-between-datasets, order for z-index — all idiomatic Chart.js patterns'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: fill-between, distinct pointStyle shapes, filled/unfilled markers,
+          and dataset order/z-index all showcase Chart.js-specific features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - fill-between
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
