@@ -74,7 +74,10 @@ new Chart(canvas, {
         borderColor: t.palette[0],
         backgroundColor: t.palette[0],
         borderWidth: 3.5,
-        pointRadius: 0,
+        pointRadius: 3.5,
+        pointBackgroundColor: t.palette[0],
+        pointBorderColor: t.pageBg,
+        pointBorderWidth: 1.5,
         fill: false,
         tension: 0.3,
       },
@@ -103,7 +106,7 @@ new Chart(canvas, {
     scales: {
       x: {
         ticks: { color: t.inkSoft, font: { size: 14 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 },
-        grid: { display: false },
+        grid: { color: t.grid },
         title: { display: true, text: "Month", color: t.ink, font: { size: 16 } },
       },
       y: {
