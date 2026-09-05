@@ -14,6 +14,7 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID_RULE   <- grDevices::adjustcolor(INK, alpha.f = 0.18)
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -48,7 +49,7 @@ anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major  = element_line(color = GRID_RULE, linewidth = 0.3),
     panel.grid.minor  = element_blank(),
     axis.line         = element_blank(),
     axis.title        = element_text(color = INK, size = 10),
