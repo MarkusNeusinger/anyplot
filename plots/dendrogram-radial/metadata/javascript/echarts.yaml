@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: dendrogram-radial
 created: '2026-09-05T00:10:21Z'
-updated: '2026-09-05T00:15:07Z'
+updated: '2026-09-05T00:24:14Z'
 generated_by: claude-sonnet
 workflow_run: 33931583936
 issue: 5245
@@ -15,42 +15,40 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 quality_score: 89
 review:
   strengths:
-  - 'Quantitatively accurate radial layout: branch length (radius) is proportional
-    to actual merge distance, not just tree depth — required a custom ECharts series
-    since the built-in radial tree layout wouldn''t achieve this.'
-  - From-scratch deterministic average-linkage agglomerative clustering plus leaf-order-preserving
-    traversal to avoid crossing branches.
-  - Correct, canonical-order Imprint palette usage, identical data colors across light/dark,
-    correct theme-adaptive chrome.
-  - Leaf labels rotated radially and flipped upright on the left hemisphere for readability
-    — a thoughtful, non-obvious detail.
-  - Clean, seeded, import-free data generation appropriate for the browser render
-    harness.
-  - Canvas gate passed exactly at 2400x2400 with the correct square orientation directive.
+  - Fully custom radial dendrogram built from ECharts' custom series primitives (arc/line/group/text)
+    — a genuine from-scratch implementation since ECharts has no native dendrogram
+    type
+  - Color-coded outer metadata ring per leaf, exactly matching the spec's optional
+    'additional metadata ring' suggestion
+  - Radially-aligned leaf labels correctly flipped upright on the left hemisphere
+    so text never reads upside-down
+  - Deterministic in-browser data generation (seeded LCG) with a realistic gene-expression-by-tissue
+    scenario and average-linkage clustering that mirrors scipy.cluster.hierarchy.linkage
+  - Theme-adaptive chrome is fully correct in both renders — data colors identical,
+    backgrounds/ink correctly flipped, canonical Imprint palette order preserved
   weaknesses:
-  - The optional metadata ring is implemented as a single larger dot per leaf rather
-    than a true color-coded ring/arc band around the outer edge.
-  - With 30 rotated leaf labels, legibility will degrade noticeably at the ~400px
-    mobile preview size.
-  - Leaf count (30) is at the low end of the spec's 20-500 recommended range; a larger
-    sample would better demonstrate the radial layout's space efficiency advantage.
-  - A couple of sibling merge arcs near the top of the Liver cluster sit close enough
-    together that they may read as a single line at reduced scale.
+  - With 45 leaves crammed onto the circumference, individual leaf labels are difficult
+    to read once the image is scaled down to a ~400px mobile thumbnail (title/legend
+    remain fine) — consider whether a slightly larger leaf font or a reduced default
+    leaf count would help mobile legibility, if practical
+  - Data storytelling stays at 'clear visual hierarchy via color' rather than adding
+    any explicit callout — acceptable since the spec doesn't request annotations,
+    but a small distance-scale reference near the root could push this further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "dendrogram-radial · javascript · echarts · anyplot.ai" in bold dark ink, centered top. Leaf labels rotated radially, flipped upright on the left hemisphere, dark ink text. Legend row below the plot with 5 colored swatches + labels, dark ink text. All readable.
-      Data: 5 clusters (Liver=green #009E73, Heart=lavender, Kidney=blue, Lung=ochre, Brain=matte red) radiating from a gray central hub to 30 leaf nodes around the circumference. First series confirmed as #009E73 (Liver).
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title "dendrogram-radial · javascript · echarts · anyplot.ai" in dark ink at top, radially-aligned leaf labels (45 leaves) flipped upright on the left hemisphere, legend with 5 tissue swatches below the circle — all clearly readable
+      Data: root at center, branches colored by cluster in canonical Imprint order (Liver=#009E73 green, Heart=lavender, Kidney=blue, Lung=ochre, Brain=red), color-coded outer metadata ring per leaf
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title, now in light ink. Leaf labels and legend text switched to light ink. Central hub branches switched from dark gray to light gray. All readable, no dark-on-dark issues found.
-      Data: Same 5 cluster colors as light render, pixel-identical (green/lavender/blue/ochre/red unchanged) — only chrome flipped as expected.
+      Background: warm near-black, matches #1A1A17
+      Chrome: title, leaf labels, and legend render in light ink and are clearly legible; root branch segments (inkSoft token) correctly flip from dark-grey to light-grey — no dark-on-dark failures
+      Data: colors identical to light render (Liver green, Heart lavender, Kidney blue, Lung ochre, Brain red) — only chrome flipped
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,45 +56,48 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Readable in both themes at full size; dense rotated labels may be
-          hard to read at ~400px mobile scale
+        comment: Title/legend/leaf labels explicitly sized and readable in both themes;
+          45 leaf labels get hard to read at ~400px mobile scale (inherent to leaf
+          count, not a chrome bug)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No hard collisions; a few sibling merge arcs sit close together near
-          the Liver cluster
+        comment: No colliding text between labels, ring bands, or branches
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizes and line widths well-suited to 30 leaves
+        comment: 2.5px branch lines and 5px leaf markers well matched to 45-leaf density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues, no red-green-only encoding
+        comment: Good hue separation, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400 canvas, nothing clipped
+        comment: Dendrogram fills ~85% of the square canvas, legend close beneath,
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis needed; title format exact
+        comment: Mandated title format; leaf labels + ring serve as informative labeling
+          for this axis-less plot
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, identical across themes, correct backgrounds
+        comment: 'First series #009E73, canonical Imprint order for remaining clusters,
+          theme-correct backgrounds in both renders'
     design_excellence:
       score: 15
       max: 20
@@ -106,21 +107,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom radial rendering with polished details like upright-flipped
-          labels
+        comment: Fully custom radial layout with metadata ring and upright-flipped
+          labels, clearly above configured defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Minimal chrome, generous whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear cluster convergence story; metadata ring dot could be a stronger
-          visual device
+        comment: Generous whitespace, rounded-cap ring bands, consistent stroke weights
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Cluster coloring plus outer ring gives immediate visual read of cluster
+          separation; no explicit annotations
     spec_compliance:
       score: 15
       max: 15
@@ -130,59 +131,61 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial dendrogram
+        comment: Correct radial dendrogram, root-centered, leaves on circumference
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Root at center, equal angular leaf spacing, distance-proportional
-          branches, cluster coloring
+        comment: Branch length proportional to merge distance, cluster-colored branches,
+          optional metadata ring all implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Radius maps to merge height, no crossing branches
+        comment: Radius encodes merge distance; angle preserves merge-tree leaf order
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact, legend matches clusters
+        comment: Title format correct; legend matches tissue names and swatch colors
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Hierarchy, radial layout, coloring, labeling, legend all present
+        comment: Clear multi-depth hierarchy with varying cluster tightness across
+          five tissues
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Synthetic gene-expression samples across 5 tissue types, plausible
-          and neutral
+        comment: Gene-expression-by-tissue-type is a real, neutral scientific scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 30 leaves valid but at the low end of the 20-500 recommended range
+        comment: Euclidean distances over per-tissue Gaussian-like centers produce
+          plausible merge heights
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat functions, complexity is essential to the plot type
+        comment: No classes, but several small helper functions justified by from-scratch
+          clustering + radial-layout math
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,19 +197,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports, uses global echarts
+        comment: Nothing beyond the echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity
+        comment: No fake UI/interactivity; complexity matches the task
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, no devicePixelRatio
+        comment: animation:false set; mount-node contract respected; current custom
+          series API
     library_mastery:
       score: 8
       max: 10
@@ -216,26 +220,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom series is the correct idiomatic escape hatch for distance-accurate
-          radial layout
+        comment: Uses ECharts' custom series renderItem, the recommended escape hatch
+          for unsupported chart types
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Manual polar arc/segment rendering plus label-flipping goes beyond
-          generic usage
+        comment: Hand-built arc/line/group/text graphics via renderItem is genuinely
+          distinctive to ECharts among the JS libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - custom-legend
-  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - hierarchical-clustering
   styling:
