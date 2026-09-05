@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-timeseries-rolling: Time Series with Rolling Average Overlay
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 84/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
