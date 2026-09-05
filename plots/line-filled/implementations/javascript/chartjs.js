@@ -19,8 +19,12 @@ let level = 2400;
 for (let i = 0; i < days.length; i++) {
   level += 180 + (lcg() - 0.35) * 260;
   level = Math.max(level, 1800);
-  dailyActiveUsers.push(Math.round(level));
+  let value = Math.round(level);
+  // Weekend-style lull around day 20 breaks the otherwise steady climb.
+  if (days[i] === 20) value = Math.round(value * 0.9);
+  dailyActiveUsers.push(value);
 }
+const peakIndex = dailyActiveUsers.length - 1;
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -28,6 +32,17 @@ document.getElementById("container").appendChild(canvas);
 
 // --- Chart ---------------------------------------------------------------------
 const title = "line-filled · javascript · chartjs · anyplot.ai";
+
+// Vertical gradient: brand green at the line fading to transparent at the baseline.
+function fillGradient(context) {
+  const { chart } = context;
+  const { ctx, chartArea } = chart;
+  if (!chartArea) return t.palette[0] + "4D";
+  const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  gradient.addColorStop(0, t.palette[0] + "80");
+  gradient.addColorStop(1, t.palette[0] + "00");
+  return gradient;
+}
 
 new Chart(canvas, {
   type: "line",
@@ -38,11 +53,16 @@ new Chart(canvas, {
         label: "Daily active users",
         data: dailyActiveUsers,
         borderColor: t.palette[0],
-        backgroundColor: t.palette[0] + "4D", // ~30% alpha fill
+        backgroundColor: fillGradient,
         borderWidth: 3.5,
+        borderCapStyle: "round",
+        borderJoinStyle: "round",
         fill: "origin",
-        pointRadius: 0,
+        pointRadius: (context) => (context.dataIndex === peakIndex ? 6 : 0),
         pointHoverRadius: 0,
+        pointBackgroundColor: t.palette[0],
+        pointBorderColor: t.pageBg,
+        pointBorderWidth: 2,
         tension: 0.25,
       },
     ],
@@ -51,7 +71,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 8, right: 24, bottom: 0, left: 0 } },
+    layout: { padding: { top: 8, right: 28, bottom: 4, left: 4 } },
     plugins: {
       title: { display: true, text: title, color: t.ink, font: { size: 22, weight: "500" } },
       legend: { display: false },
