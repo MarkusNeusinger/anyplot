@@ -2,6 +2,7 @@
 // parallel-categories-basic: Basic Parallel Categories Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 85/100 | Created: 2026-09-05
+import { useState } from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 
@@ -31,38 +32,50 @@ const ROWS = [
 const TOTAL = ROWS.reduce((sum, r) => sum + r.n, 0);
 const GAP = 34; // px between stacked node segments within a column
 const NODE_HALF = 13; // half-width of a node rectangle
+const MIN_SEG = 8; // px floor per ribbon segment so near-zero counts (e.g. n=3) stay a visible sliver
 
 // Outcome carries the semantic color: Survived -> brand green, Did not survive -> matte red.
 const outcomeColor = (outcome) => (outcome === "Survived" ? t.palette[0] : t.palette[4]);
 
-// Sum row counts grouped by the given key ("cls" | "sex" | "outcome").
+// Sum row counts grouped by the given key ("cls" | "sex" | "outcome") - real totals, used for node labels.
 function nodeTotals(key) {
   const totals = new Map();
   ROWS.forEach((r) => totals.set(r[key], (totals.get(r[key]) || 0) + r.n));
   return totals;
 }
 
+// Floor-applied stacking height per node: sums each row's max(count*k, MIN_SEG), so a node's
+// rectangle exactly matches the space its (possibly floor-boosted) row segments occupy.
+function effectiveHeights(key, k) {
+  const heights = new Map();
+  ROWS.forEach((r) => {
+    const h = Math.max(r.n * k, MIN_SEG);
+    heights.set(r[key], (heights.get(r[key]) || 0) + h);
+  });
+  return heights;
+}
+
 // Stack a column's nodes top-to-bottom in `order`, vertically centered in the drawing area.
-function layoutColumn(order, totals, k, area) {
-  const contentHeight = order.reduce((s, name) => s + totals.get(name) * k, 0) + GAP * (order.length - 1);
+function layoutColumn(order, totals, heights, area) {
+  const contentHeight = order.reduce((s, name) => s + heights.get(name), 0) + GAP * (order.length - 1);
   let y = area.top + (area.height - contentHeight) / 2;
   const nodes = {};
   order.forEach((name) => {
-    const h = totals.get(name) * k;
+    const h = heights.get(name);
     nodes[name] = { y0: y, y1: y + h, total: totals.get(name) };
     y += h + GAP;
   });
   return nodes;
 }
 
-// For every row, find its stacked sub-segment [y0, y1] within its column's node.
+// For every row, find its stacked sub-segment [y0, y1] within its column's node (floor-applied height).
 function rowSegments(key, nodes, k) {
   const cursor = {};
   return ROWS.map((r) => {
     const name = r[key];
     if (cursor[name] === undefined) cursor[name] = nodes[name].y0;
     const y0 = cursor[name];
-    const y1 = y0 + r.n * k;
+    const y1 = y0 + Math.max(r.n * k, MIN_SEG);
     cursor[name] = y1;
     return { ...r, y0, y1 };
   });
@@ -76,6 +89,7 @@ function ribbonPath(x0, y0a, y1a, x1, y0b, y1b) {
 
 function ParallelCategories() {
   const area = useDrawingArea();
+  const [hoveredRow, setHoveredRow] = useState(null);
   const maxNodes = Math.max(CLASS_ORDER.length, SEX_ORDER.length, OUTCOME_ORDER.length);
   const k = (area.height - GAP * (maxNodes - 1)) / TOTAL;
 
@@ -83,16 +97,39 @@ function ParallelCategories() {
   const clsTotals = nodeTotals("cls");
   const sexTotals = nodeTotals("sex");
   const outcomeTotals = nodeTotals("outcome");
-  const clsNodes = layoutColumn(CLASS_ORDER, clsTotals, k, area);
-  const sexNodes = layoutColumn(SEX_ORDER, sexTotals, k, area);
-  const outcomeNodes = layoutColumn(OUTCOME_ORDER, outcomeTotals, k, area);
+  const clsHeights = effectiveHeights("cls", k);
+  const sexHeights = effectiveHeights("sex", k);
+  const outcomeHeights = effectiveHeights("outcome", k);
+  const clsNodes = layoutColumn(CLASS_ORDER, clsTotals, clsHeights, area);
+  const sexNodes = layoutColumn(SEX_ORDER, sexTotals, sexHeights, area);
+  const outcomeNodes = layoutColumn(OUTCOME_ORDER, outcomeTotals, outcomeHeights, area);
 
   const clsSegs = rowSegments("cls", clsNodes, k);
   const sexSegs = rowSegments("sex", sexNodes, k);
   const outcomeSegs = rowSegments("outcome", outcomeNodes, k);
 
+  // Ribbon fill/stroke by hover state: the hovered row's full class->sex->outcome path
+  // brightens while every other ribbon dims, tracing one flow across all three columns.
+  function ribbonStyle(i) {
+    const isHovered = hoveredRow === i;
+    const isDimmed = hoveredRow !== null && !isHovered;
+    return {
+      fillOpacity: isDimmed ? 0.12 : isHovered ? 0.92 : 0.78,
+      strokeOpacity: isDimmed ? 0.06 : isHovered ? 0.35 : 0.12,
+      strokeWidth: isHovered ? 1.5 : 1,
+    };
+  }
+
   return (
     <g>
+      <defs>
+        {/* Secondary, color-independent cue for "Did not survive" ribbons (diagonal hatch),
+            so red/green stay distinguishable for deuteranope/protanope viewers. */}
+        <pattern id="outcome-hatch" patternUnits="userSpaceOnUse" width={6} height={6} patternTransform="rotate(45)">
+          <line x1={0} y1={0} x2={0} y2={6} stroke={t.ink} strokeOpacity={0.45} strokeWidth={1.5} />
+        </pattern>
+      </defs>
+
       {["Class", "Sex", "Outcome"].map((label, i) => (
         <text
           key={label}
@@ -107,42 +144,60 @@ function ParallelCategories() {
         </text>
       ))}
 
-      {ROWS.map((r, i) => (
-        <path
-          key={`link1-${i}`}
-          d={ribbonPath(
-            colX[0] + NODE_HALF,
-            clsSegs[i].y0,
-            clsSegs[i].y1,
-            colX[1] - NODE_HALF,
-            sexSegs[i].y0,
-            sexSegs[i].y1
-          )}
-          fill={outcomeColor(r.outcome)}
-          fillOpacity={0.78}
-          stroke={t.ink}
-          strokeOpacity={0.12}
-          strokeWidth={1}
-        />
-      ))}
-      {ROWS.map((r, i) => (
-        <path
-          key={`link2-${i}`}
-          d={ribbonPath(
-            colX[1] + NODE_HALF,
-            sexSegs[i].y0,
-            sexSegs[i].y1,
-            colX[2] - NODE_HALF,
-            outcomeSegs[i].y0,
-            outcomeSegs[i].y1
-          )}
-          fill={outcomeColor(r.outcome)}
-          fillOpacity={0.78}
-          stroke={t.ink}
-          strokeOpacity={0.12}
-          strokeWidth={1}
-        />
-      ))}
+      {ROWS.map((r, i) => {
+        const d = ribbonPath(
+          colX[0] + NODE_HALF,
+          clsSegs[i].y0,
+          clsSegs[i].y1,
+          colX[1] - NODE_HALF,
+          sexSegs[i].y0,
+          sexSegs[i].y1
+        );
+        const style = ribbonStyle(i);
+        return (
+          <g key={`link1-${i}`}>
+            <path
+              d={d}
+              fill={outcomeColor(r.outcome)}
+              stroke={t.ink}
+              cursor="pointer"
+              {...style}
+              onMouseEnter={() => setHoveredRow(i)}
+              onMouseLeave={() => setHoveredRow(null)}
+            />
+            {r.outcome === "Did not survive" && (
+              <path d={d} fill="url(#outcome-hatch)" fillOpacity={style.fillOpacity} pointerEvents="none" />
+            )}
+          </g>
+        );
+      })}
+      {ROWS.map((r, i) => {
+        const d = ribbonPath(
+          colX[1] + NODE_HALF,
+          sexSegs[i].y0,
+          sexSegs[i].y1,
+          colX[2] - NODE_HALF,
+          outcomeSegs[i].y0,
+          outcomeSegs[i].y1
+        );
+        const style = ribbonStyle(i);
+        return (
+          <g key={`link2-${i}`}>
+            <path
+              d={d}
+              fill={outcomeColor(r.outcome)}
+              stroke={t.ink}
+              cursor="pointer"
+              {...style}
+              onMouseEnter={() => setHoveredRow(i)}
+              onMouseLeave={() => setHoveredRow(null)}
+            />
+            {r.outcome === "Did not survive" && (
+              <path d={d} fill="url(#outcome-hatch)" fillOpacity={style.fillOpacity} pointerEvents="none" />
+            )}
+          </g>
+        );
+      })}
 
       {[clsNodes, sexNodes, outcomeNodes].map((nodes, ci) =>
         Object.entries(nodes).map(([name, node]) => (
@@ -234,6 +289,12 @@ export default function Chart() {
                   height: 14,
                   borderRadius: 3,
                   backgroundColor: outcomeColor(name),
+                  // "Did not survive" repeats the ribbons' diagonal-hatch cue, so the two
+                  // outcomes stay distinguishable by texture alone, not just green vs. red.
+                  backgroundImage:
+                    name === "Did not survive"
+                      ? "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 3px)"
+                      : undefined,
                   display: "inline-block",
                 }}
               />
