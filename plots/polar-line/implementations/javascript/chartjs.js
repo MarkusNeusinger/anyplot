@@ -1,7 +1,7 @@
 // anyplot.ai
 // polar-line: Polar Line Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Quality: 87/100 | Created: 2026-09-05
 
 //# anyplot-orientation: square
 
