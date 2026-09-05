@@ -1,0 +1,251 @@
+library: ggplot2
+language: r
+specification_id: line-loss-training
+created: '2026-09-05T07:21:48Z'
+updated: '2026-09-05T07:34:24Z'
+generated_by: claude-sonnet
+workflow_run: 33952167688
+issue: 2860
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Correct dual-curve training/validation loss plot built from idiomatic ggplot2
+    layering (geom_ribbon, geom_vline, annotate, geom_line)
+  - 'Strong data storytelling: generalization-gap ribbon + dashed vline + hollow-circle
+    marker + text annotation pinpoint the optimal-stopping epoch (48), directly fulfilling
+    the spec''s optional ''mark the epoch with minimum validation loss'' note'
+  - 'Correct Imprint palette (green #009E73 training, lavender #C475FD validation),
+    identical across themes; chrome (background, text, grid, legend) properly flips
+    theme-adaptive tokens with no dark-on-dark or light-on-light failures'
+  - Legend moved to top-left, clear of data and the annotation text — fixes the inside-legend
+    placement (c(0.86, 0.86)) from attempt 1 that risked colliding with the climbing
+    validation curve
+  - Differentiated line widths (0.95 training vs 1.3 validation) reinforce visual
+    hierarchy without adding legend complexity
+  - 'Clean, reproducible, KISS script: set.seed(42), only used imports, correct ragg
+    PNG save with plot-{THEME}.png naming'
+  weaknesses:
+  - Annotation text 'Optimal stopping · epoch 48' sits close to the topmost gridline/legend
+    zone — a touch more vertical offset would give it cleaner breathing room
+  - Element visibility is default-line-only for the noisy per-epoch curves; the synthetic
+    per-epoch jitter is realistic but a very slightly higher alpha or thinner training
+    line could reduce visual clutter around epochs 50-80 where curves run close together
+  - Design excellence is competent but incremental — a secondary annotation or subtitle
+    quantifying the final generalization-gap magnitude would push the storytelling
+    further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "line-loss-training · r · ggplot2 · anyplot.ai" in dark ink, fully visible and not clipped at the top edge. Legend ("Training" / "Validation") sits top-left below the title in dark/soft-grey text. Axis titles "Epoch" and "Cross-Entropy Loss" in dark ink; tick labels in soft grey. Horizontal-only gridlines are subtle and visible against the cream background. Dashed vertical rule marks epoch 48 in soft grey. Annotation "Optimal stopping · epoch 48" is dark-grey text, clearly legible against the cream background.
+      Data: Training curve is brand green (#009E73), Validation curve is lavender/purple (#C475FD) — matches Imprint palette positions 1 and 2. A light lavender ribbon shades the generalization gap between the curves from epoch 48 onward. A hollow purple-ringed marker sits at the minimum validation loss point. Both curves decay from ~2.5 toward near-zero, with validation loss diverging upward past epoch ~48 — the classic overfitting signature.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, legend, axis titles rendered in light/off-white ink, fully legible against the dark background. Tick labels and the "Optimal stopping · epoch 48" annotation are light-grey and clearly readable — no dark-on-dark failures observed. Gridlines are light and subtle, visible without competing with the data.
+      Data: Training (green #009E73) and Validation (lavender #C475FD) curves are pixel-identical in hue to the light render — only the chrome (background, text, grid, ribbon opacity blending with dark bg) flipped. The generalization-gap ribbon reads as a muted dark-purple wash against the near-black background, still visible.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; brand green and lavender both remain distinguishable and vivid on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text (title, axis labels, ticks, legend, annotation) legible
+          in both themes; explicit sizes set via theme()
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend moved to top-left, clear of the dashed-line annotation and
+          climbing validation curve — fixes attempt-1 inside-legend risk
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line widths (0.95/1.3) appropriate for 80-epoch density; curves run
+          close together in the 50-80 epoch range but remain distinguishable by color
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pair is CVD-safe per Imprint palette design; no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (no gate file); good proportions, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels descriptive with units (Cross-Entropy Loss, Epoch)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD (canonical positions 1-2);
+          backgrounds correct #FAF8F1/#1A1A17; identical data colors across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, intentional hierarchy via line-width differentiation
+          and ribbon shading; solid polish, not groundbreaking
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_minimal with axis.line instead of spines, y-axis-only subtle
+          grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point (optimal-stopping epoch), ribbon visualizes the
+          generalization gap — strong narrative for an overfitting chart
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-line plot of loss over epochs
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, legend, x-axis 1-80, y-axis names the loss function,
+          optimal-stopping epoch marked
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=epoch, Y=loss; full 1-80 epoch range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels 'Training'/'Validation'
+          match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows decay, divergence/overfitting signature, and optimal-stopping
+          point — full feature coverage for this plot type
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic training history
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cross-entropy values and epoch range are realistic for an image-classifier
+          training run
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; annotation is a real static callout
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png and correct plot-{THEME}.png naming
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic grammar-of-graphics layering: geom_ribbon, geom_vline,
+          geom_line, annotate, scale_*_manual'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: linewidth aesthetic mapping and generalization-gap ribbon go beyond
+          basic API usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
