@@ -1,0 +1,248 @@
+library: chartjs
+language: javascript
+specification_id: line-styled
+created: '2026-09-05T08:11:11Z'
+updated: '2026-09-05T08:26:59Z'
+generated_by: claude-sonnet
+workflow_run: 33954377336
+issue: 2598
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Repair fully addresses the attempt-1 weaknesses: per-series pointStyle (circle/rect/triangle/rectRot),
+    a round cap on the dotted line, and enlarged dash-dot gaps keep all four line
+    styles distinguishable even at the 400px mobile thumbnail scale (verified against
+    plot-light_400.png)'
+  - The new peakAnnotation plugin (afterDatasetsDraw) labels the hottest core's final
+    reading directly on the canvas, creating a deliberate focal point and data story
+    instead of four equal-weight lines
+  - Correct Imprint palette order across all four series (green, lavender, blue, ochre),
+    byte-identical data colors between light (#FAF8F1) and dark (#1A1A17) renders
+    with only chrome flipping
+  - All four standard line styles (solid, dashed, dotted, dash-dot) implemented via
+    borderDash/borderCapStyle, consistent 3.5px line width across all styles as the
+    spec requires, with legend swatches matching
+  - Plausible, neutral domain (CPU core temperatures during a stress test) with sensible
+    value range and a clear converge/diverge trend; deterministic LCG-seeded data
+    generation, no unused imports, no fake interactivity
+  - 'No AR-09 edge clipping: annotation text ends at x=3022 of 3200px canvas (verified
+    by pixel scan), bottom axis title ends 12px from the bottom edge, y-axis labels
+    start 13px from the left edge — comfortable margins on all sides'
+  weaknesses:
+  - Data storytelling still relies on a single annotation callout; a more elaborate
+    technique (e.g. a subtle secondary emphasis on the annotation's supporting line
+    weight, or a shaded plateau band) would push Design Excellence further
+  - Library Mastery showcases a custom plugin and scriptable pointRadius, but still
+    stops short of more advanced Chart.js-specific capabilities (e.g. segment-level
+    styling, gradient fills) that would fully max out that category
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, verified #FAF8F1 by pixel sample — matches the required light surface exactly.
+      Chrome: title "line-styled · javascript · chartjs · anyplot.ai" in dark ink, fully legible; axis titles "Stress Test Duration (minutes)" and "Core Temperature (°C)" include units and are readable; tick labels in a softer dark gray, readable; legend at top shows four swatches (solid green, dashed lavender, dotted blue, dash-dot ochre) labeled Core 1-4; subtle horizontal gridlines on the y-axis only, x-axis grid disabled.
+      Data: first series is brand green #009E73 (Core 1), followed by lavender, blue, and ochre in canonical Imprint order. Each series has a distinct dash pattern (solid/dashed/dotted/dash-dot) plus a distinct marker shape (circle/rect/triangle/rotated-rect) sampled every 15 minutes, reinforcing style differentiation. A green annotation "Core 1 hottest · 82.1°C" labels the final point of the hottest series without overlapping any other element; text ends at pixel x=3022 of the 3200px canvas, comfortably inside the frame.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, verified #1A1A17 by pixel sample — matches the required dark surface exactly.
+      Chrome: same title, axis titles, and tick labels now render in light/off-white ink, fully legible; legend and gridlines flip to light-on-dark equivalents with no contrast loss.
+      Data: data colors (brand green, lavender, blue, ochre) and dash/marker patterns are pixel-identical to the light render, confirming only chrome flipped between themes. The peak annotation remains legible in brand green against the near-black background — no dark-on-dark failures anywhere (title, axis labels, ticks, legend, annotation all checked).
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
+          14-16px); readable in both themes; balanced X/Y axis label and tick sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, legend, or the new peak annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Repair added per-series pointStyle + round cap on dotted + wider
+          dash-dot gaps; verified distinguishable at the 400px mobile thumbnail, fixing
+          attempt-1's weakness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; not red-green only, dash patterns provide
+          a non-color redundant channel
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; no clipping at any edge (annotation
+          ends at x=3022/3200, bottom text 12px from edge, left text 13px from edge)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles descriptive with units (minutes, °C)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (green/lavender/blue/ochre), backgrounds
+          exactly #FAF8F1/#1A1A17, both themes theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Peak annotation plugin and per-series marker shapes add intentional
+          polish beyond generic defaults; still a fairly simple execution overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chart border/spines, y-axis-only subtle grid, generous whitespace,
+          restrained marker use (only every 15th point)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak annotation creates a clear focal point on the hottest core,
+          directly addressing attempt-1's 'no visual hierarchy' weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four standard styles present with legend mapping and consistent
+          line width
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=minutes, Y=temperature, all series shown across full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels (Core 1-4) match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers all four required line styles plus marker-shape redundancy
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CPU core temperature stress test — plausible, neutral, non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 44-85°C range is sensible for CPU core temps under load
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small helper functions only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed/used beyond the browser globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom plugin is a legitimate canvas annotation, not fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set; mount-node contract followed correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of the plugins array and afterDatasetsDraw hook, on top
+          of standard high-level line config
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom canvas-drawing plugin, scriptable pointRadius function, per-series
+          pointStyle/borderCapStyle — goes clearly beyond the spec's baseline borderDash
+          requirement
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

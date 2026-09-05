@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: line-styled
+created: '2026-09-05T08:16:04Z'
+updated: '2026-09-05T08:28:30Z'
+generated_by: claude-sonnet
+workflow_run: 33954604829
+issue: 2598
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - All four standard line styles (solid, dashed, dotted, dash-dot) are correctly
+    demonstrated, with a custom dash-array for dash-dot beyond ECharts' built-in named
+    types
+  - Line width is now consistent across all four series (fixed from attempt 1's 3.5
+    vs 3 inconsistency)
+  - 'X-axis line no longer sits at the y=0 crossing — onZero: false correctly anchors
+    it to the plot bottom (fixed from attempt 1)'
+  - Data density increased from 12 monthly points to 365 daily points per series,
+    comfortably within the spec's recommended 50-500 range and still keeping every
+    line style clearly distinguishable
+  - 'Correct theme-adaptive chrome: identical data colors between light and dark renders,
+    first series is Imprint brand green (#009E73), backgrounds match the warm off-white/near-black
+    tokens'
+  - 'Clean, idiomatic ECharts usage: category axis with a custom interval/formatter
+    callback compresses 365 daily points into clean Jan-Dec tick labels, deterministic
+    in-memory data, animation disabled, correct mount-node contract'
+  weaknesses:
+  - Data Excellence storytelling is still generic — no deliberate emphasis (annotation,
+    callout, or highlight) on peak/trough months as flagged in attempt 1; the visual
+    hierarchy relies only on the natural climate-zone ordering
+  - The added weekly/sub-monthly 'wobble' is a perfectly regular double-cosine ripple
+    rather than natural-looking daily variability, which slightly undercuts the realism
+    of the synthetic dataset even though it usefully keeps the dash/dot patterns visible
+    at 365 points
+  - Aesthetic polish is competent but not exceptional — consider subtle season-band
+    shading or a highlighted focal series to strengthen Design Excellence further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Daily Temperature by City · line-styled · javascript · echarts · anyplot.ai" is centered near the top in dark ink and fully legible. Legend (Berlin, Madrid, Oslo, Cairo) sits below the title with line-style swatches matching each series' dash pattern. Y-axis label "Avg. Temperature (°C)" includes units. X-axis shows Jan-Dec month labels derived from 365 daily data points via a custom interval/formatter. Horizontal gridlines are subtle but visible; the x-axis line now sits at the plot bottom (fixed from attempt 1's onZero issue) instead of crossing at y=0.
+      Data: Four lines with distinct styles — solid green (Berlin), dashed lavender (Madrid), dotted blue (Oslo), dash-dot orange/brown (Cairo) — all rendered at a consistent line width. First series is Imprint brand green (#009E73). Daily wobble keeps the dash/dot patterns visibly distinguishable across all 365 points instead of collapsing into a solid-looking line.
+      Legibility verdict: PASS — no light-on-light or illegible text observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend text, and axis labels render in light gray/off-white tones and are clearly legible against the dark background. No dark-on-dark failures — every tick label, the y-axis name, and the legend entries stand out clearly from the background.
+      Data: Line colors (green, lavender, blue, orange) are identical to the light render; only the background, text, and gridline colors flip between themes, as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; sizes are proportional and consistent
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axes, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All four line styles remain clearly distinguishable even at 365 points/series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Line style differentiation plus Imprint palette avoids color-only
+          signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; x-axis line correctly anchored to plot bottom
+          after onZero fix; title well-proportioned, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units; x-axis month labels are self-descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds match theme tokens in both
+          renders, data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom dash-dot pattern and consistent line width show deliberate
+          polish, but no exceptional flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis line/ticks hidden, subtle horizontal-only gridlines, generous
+          whitespace; onZero fix removed the stray axis line
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Still relies only on natural climate-zone ordering; attempt 1's suggestion
+          to add deliberate emphasis (e.g. peak/trough annotation) was not implemented
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four standard styles present, legend mapping styles to series,
+          line width now consistent (fixed)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = day-of-year (shown as month), Y = per-city temperature, all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; legend labels
+          match city names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four line styles exercised across a full year of dense data
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral cities with plausible seasonal temperature ranges
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: 365 points/series is within the recommended 50-500 range (fixed from
+          12); the periodic double-cosine wobble looks somewhat mechanical rather
+          than naturally noisy
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes; one small deterministic helper function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no explicit size/devicePixelRatio'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic option-based config with category axis interval/formatter
+          callback
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom dash-array for dash-dot and month-compressing tick formatter
+          go beyond basic API usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
