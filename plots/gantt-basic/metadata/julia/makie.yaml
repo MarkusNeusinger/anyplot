@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: gantt-basic
+created: '2026-09-05T02:57:46Z'
+updated: '2026-09-05T03:14:32Z'
+generated_by: claude-sonnet
+workflow_run: 33939972668
+issue: 2377
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Idiomatic use of barplot!(direction=:x, fillto=start_nums) to build the Gantt
+    bars per category — a clean way to express a chart type Makie has no dedicated
+    recipe for
+  - 'Correct Imprint palette application: first unique category ("Planning") gets
+    brand green #009E73, and colors stay identical between light/dark renders'
+  - 'Effective data storytelling: dashed "Today" vline plus a star + "In Progress"
+    annotation on the currently active task gives the chart a clear focal point beyond
+    a static timeline'
+  - Duration labels ("11d", "32d", ...) add useful context without cluttering the
+    bars
+  - Clean theme-adaptive chrome throughout (title/axis/tick/legend colors, grid alpha)
+    with L-shaped spines and a subtle x-only grid appropriate for a Gantt layout
+  - Tasks ordered top-to-bottom by start date, matching the spec's request for logical
+    ordering
+  weaknesses:
+  - Duration annotation text (fontsize=10) is noticeably smaller than the tick labels
+    (12-13) — fine at full resolution but the first element to disappear when scaled
+    to mobile width; could bump to ~11-12
+  - '`using Random; Random.seed!(42)` is vestigial since all data (tasks/categories/dates)
+    is hardcoded rather than randomly generated — harmless but not doing any work'
+  - Legend swatches/labels are a touch small relative to the rest of the chrome; could
+    grow slightly for better mobile legibility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Software Launch Plan · gantt-basic · julia · makie · anyplot.ai" is bold dark text, comfortably sized and fully within the canvas (confirmed via a top-edge crop — no clipping). Y-axis task labels (10 tasks, e.g. "Requirements Gathering", "Production Deployment") and x-axis month ticks (Jan-May) are dark/soft-dark and clearly legible. "Today" label and dashed vertical line are visible near March. Legend ("Category": Planning/Development/Testing/Deployment) sits at the right edge with generous margin (confirmed via a right-edge crop — swatches and text fully inside the canvas, not clipped).
+      Data: Horizontal bars colored by category — Planning is brand green (#009E73, first unique category), Development is lavender, Testing is blue, Deployment is ochre. A star marker + "In Progress" label highlights the currently active task (Frontend Development). Small duration labels ("11d", "18d", "32d", etc.) sit to the right of each bar.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, tick labels, and legend text all flip to light tones (white title, light-gray secondary text) and remain clearly legible. The "Today" dashed line and label render in light gray against the dark background. No dark-on-dark failures observed anywhere (title, ticks, legend, duration labels, "In Progress" annotation all readable).
+      Data: Bar colors are pixel-identical to the light render (green/lavender/blue/ochre) — only chrome (background, text, grid, spines) changed between themes, as required.
+      Legibility verdict: PASS — all text reads clearly against the dark background, confirmed no dark-on-dark text.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; duration labels (fontsize=10) are
+          the smallest element and slightly undersized relative to tick labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between bars, labels, star/annotation, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 sparse tasks with wide (width=0.6), clearly visible bars; appropriate
+          density handling
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint categorical hues are distinct and CVD-safe at n=4
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title and legend confirmed within canvas bounds via edge crops; good
+          proportions, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels ("Project Timeline (2026)", "Task")
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First category is brand green #009E73; backgrounds correct in both
+          themes; data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Star/annotation for active task and duration labels show intentional
+          polish beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle x-only grid, generous whitespace via xlims/ylims
+          padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: '"Today" line plus active-task highlight creates a clear focal point
+          on project status'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Gantt chart via horizontal barplot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Category color-coding, logical ordering, today vline, adequate spacing
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=task, correct and complete
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match category names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Durations, categories, current-date marker, and active-task highlight
+          all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible software launch project plan
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 11-32 day task durations across a ~4.5 month project are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data plus explicit seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports; Random is a minor vestige (see weaknesses) but
+          not harmful
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the chart, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: barplot! with direction=:x/fillto, Legend, text!, vlines! all used
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Star marker for active task, RGBAf grid alpha, category Dict color
+          mapping — solid but not groundbreaking
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
+  - publication-ready
