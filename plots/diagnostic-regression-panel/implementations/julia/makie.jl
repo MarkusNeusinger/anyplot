@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Statistics
 using LinearAlgebra
 
 Random.seed!(42)
@@ -122,25 +121,27 @@ ax1 = Axis(
     ylabelsize         = 12,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 10,
-    yticklabelsize     = 10,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
+    xticksize          = 0,
+    yticksize          = 0,
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
 )
 hlines!(ax1, [0.0]; color = INK_SOFT, linewidth = 1.2, linestyle = :dash)
 scatter!(ax1, fitted, residuals;
-    color = (BRAND, 0.75), markersize = 11, strokewidth = 0.8, strokecolor = PAGE_BG)
+    color = (BRAND, 0.75), markersize = 13, strokewidth = 0.8, strokecolor = PAGE_BG)
 lines!(ax1, fitted_eval, resid_smooth; color = OCHRE, linewidth = 2.8)
 scatter!(ax1, fitted[top_idx], residuals[top_idx];
     color = :transparent, markersize = 17, strokewidth = 1.6, strokecolor = MATTE_RED)
@@ -161,18 +162,20 @@ ax2 = Axis(
     ylabelsize         = 12,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 10,
-    yticklabelsize     = 10,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
+    xticksize          = 0,
+    yticksize          = 0,
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
@@ -181,7 +184,7 @@ qq_lo = min(minimum(theoretical_q), minimum(sorted_std_resid))
 qq_hi = max(maximum(theoretical_q), maximum(sorted_std_resid))
 lines!(ax2, [qq_lo, qq_hi], [qq_lo, qq_hi]; color = INK_SOFT, linewidth = 1.2, linestyle = :dash)
 scatter!(ax2, theoretical_q, sorted_std_resid;
-    color = (BRAND, 0.75), markersize = 11, strokewidth = 0.8, strokecolor = PAGE_BG)
+    color = (BRAND, 0.75), markersize = 13, strokewidth = 0.8, strokecolor = PAGE_BG)
 scatter!(ax2, theoretical_q[ranks[top_idx]], std_residuals[top_idx];
     color = :transparent, markersize = 17, strokewidth = 1.6, strokecolor = MATTE_RED)
 for i in top_idx
@@ -201,30 +204,33 @@ ax3 = Axis(
     ylabelsize         = 12,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 10,
-    yticklabelsize     = 10,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
+    xticksize          = 0,
+    yticksize          = 0,
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
 )
 scatter!(ax3, fitted, sqrt_abs_std_resid;
-    color = (BRAND, 0.75), markersize = 11, strokewidth = 0.8, strokecolor = PAGE_BG)
+    color = (BRAND, 0.75), markersize = 13, strokewidth = 0.8, strokecolor = PAGE_BG)
 lines!(ax3, fitted_eval, scale_smooth; color = OCHRE, linewidth = 2.8)
 scatter!(ax3, fitted[top_idx], sqrt_abs_std_resid[top_idx];
     color = :transparent, markersize = 17, strokewidth = 1.6, strokecolor = MATTE_RED)
-for i in top_idx
+for (k, i) in enumerate(top_idx)
+    dy = isodd(k) ? 4 : -14
     text!(ax3, fitted[i], sqrt_abs_std_resid[i]; text = string(i), fontsize = 11,
-        color = MATTE_RED, align = (:left, :bottom), offset = (6, 4))
+        color = MATTE_RED, align = (:left, :bottom), offset = (6, dy))
 end
 
 # --- Panel 4: Residuals vs Leverage, with Cook's distance contours ------------
@@ -239,18 +245,20 @@ ax4 = Axis(
     ylabelsize         = 12,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 10,
-    yticklabelsize     = 10,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
+    xticksize          = 0,
+    yticksize          = 0,
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
@@ -267,12 +275,13 @@ for cooks_level in (0.5, 1.0)
         color = AMBER, align = (:right, :bottom), offset = (-2, 3))
 end
 scatter!(ax4, leverage, std_residuals;
-    color = (BRAND, 0.75), markersize = 11, strokewidth = 0.8, strokecolor = PAGE_BG)
+    color = (BRAND, 0.75), markersize = 13, strokewidth = 0.8, strokecolor = PAGE_BG)
 scatter!(ax4, leverage[top_idx], std_residuals[top_idx];
     color = :transparent, markersize = 17, strokewidth = 1.6, strokecolor = MATTE_RED)
-for i in top_idx
+for (k, i) in enumerate(top_idx)
+    dy = isodd(k) ? 4 : -14
     text!(ax4, leverage[i], std_residuals[i]; text = string(i), fontsize = 11,
-        color = MATTE_RED, align = (:left, :bottom), offset = (6, 4))
+        color = MATTE_RED, align = (:left, :bottom), offset = (6, dy))
 end
 xlims!(ax4, 0.0, lev_max)
 ylims!(ax4, -resid_max, resid_max)
