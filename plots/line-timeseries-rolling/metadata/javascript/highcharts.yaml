@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-timeseries-rolling
 created: '2026-09-05T08:45:23Z'
-updated: '2026-09-05T08:49:27Z'
+updated: '2026-09-05T08:57:03Z'
 generated_by: claude-sonnet
 workflow_run: 33955958642
 issue: 2786
@@ -12,63 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-time
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries-rolling/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
   - 'Raw data rendered as a thin (lineWidth 1.5), semi-transparent (opacity 0.35)
     line in brand green #009E73 (palette[0]), exactly matching the spec''s request
     for ''a lighter, semi-transparent style for raw data'''
-  - Rolling average rendered as a bold, prominent lineWidth 3.5 line clearly distinguishable
-    from the noisy raw signal, creating an immediate visual focal point on the smoothed
-    trend
-  - All font sizes explicitly set (title 22px, subtitle 14px, axis titles 16px, tick/legend
-    labels 14px) and legible in both themes
-  - 'Theme-adaptive chrome correctly implemented: transparent chart background over
-    the page token, ink/inkSoft/grid tokens mapped to title, axis labels, ticks and
-    legend for both light (#FAF8F1) and dark (#1A1A17) renders — no dark-on-dark or
-    light-on-light failures'
-  - Rolling average series correctly starts later than raw data (at index WINDOW-1)
-    reflecting the window requirement the spec calls out
-  - Legend clearly distinguishes 'Raw Data' from 'Rolling Average (24-Hour)', matching
-    the spec's request to show the window size in the legend
-  - Deterministic fixed-seed LCG data generation, no external RNG dependency
-  - Title format exactly matches the required '{spec-id} · {language} · {library}
-    · anyplot.ai' pattern
+  - Rolling average rendered in the canonical palette[1] lavender (#C475FD) with lineWidth
+    3.5 — the prior attempt's deviation to palette[2] (blue, wrong ordinal position)
+    is fixed, restoring correct Imprint canonical order
+  - 'Grid lines now render on BOTH axes (xAxis gridLineWidth: 1 added) — fixes the
+    prior attempt''s missing vertical gridlines and satisfies the spec''s explicit
+    ''Grid lines on both axes'' requirement'
+  - 'Theme-adaptive chrome verified pixel-exact: light background (250,248,241) =
+    #FAF8F1, dark background (26,26,23) = #1A1A17; title/axis/tick text legible in
+    both themes with no dark-on-dark or light-on-light failures'
+  - Canvas saved at the exact canonical landscape size (3200x1800), no cropping or
+    clipping of title, axes, or legend
+  - Rolling average series correctly starts at index WINDOW-1 (24-hour offset), visually
+    shorter than the raw series, matching the spec's note about window-length truncation
+  - Legend clearly distinguishes 'Raw Data' from 'Rolling Average (24-Hour)', surfacing
+    the window size as the spec suggests
+  - Deterministic fixed-seed LCG data generation with no external RNG dependency
   - Realistic, neutral hourly sensor-temperature scenario with plausible diurnal amplitude,
-    drift, and noise magnitudes
+    multi-day drift, and noise magnitudes
   weaknesses:
-  - 'Spec explicitly requests ''Grid lines on both axes'' but only horizontal (y-axis)
-    gridlines render in both PNGs — no vertical gridlines are visible at any date
-    tick. Root cause: xAxis sets gridLineColor but never sets gridLineWidth, and Highcharts''
-    xAxis gridLineWidth defaults to 0, so the line color is set on a zero-width line
-    and never draws. Fix: add `gridLineWidth: 1` (or similar) to the xAxis block alongside
-    the existing gridLineColor.'
-  - Second series (Rolling Average) uses palette[2] (#4467A3, blue) instead of the
-    canonical second position palette[1] (#C475FD, purple), with no semantic cue in
-    the data justifying the skip — a minor deviation from the Imprint canonical color
-    order.
-  - 'Visual refinement is close to a well-configured default rather than exceptional:
-    no additional polish beyond the token-driven chrome (e.g., x-axis line still drawn
-    via lineColor, no extra whitespace tuning) — DE-02 capped at ''good'' rather than
-    ''perfect''.'
-  - No annotation or emphasis calls out the specific insight (e.g., the multi-day
-    warm/cool drift cycle) beyond the raw-vs-rolling-average contrast itself — storytelling
-    relies solely on line-weight/opacity contrast.
+  - 'Visual refinement remains close to a well-configured default: the x-axis line
+    is still drawn via lineColor and there is no extra whitespace/margin tuning beyond
+    the token-driven chrome (DE-02).'
+  - No distinctive Highcharts-only feature (e.g. plotBands/plotLines to call out the
+    multi-day warm/cool drift cycle) or annotation is used; storytelling and library
+    mastery rely solely on the line-weight/opacity contrast between the two series
+    (DE-03, LM-02).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "line-timeseries-rolling · javascript · highcharts · anyplot.ai" in bold dark ink at top-center (~60% width, well clear of overflow); subtitle "Hourly sensor temperature with 24-hour rolling average" in soft gray beneath it. Y-axis title "Temperature (°C)" and x-axis title "Date" in soft gray, both legible. Tick labels (temperature values 6-28, date/time labels Jun 1 - Jun 11 with 12:00 PM sub-ticks) all dark-enough-on-light and clearly readable. Only horizontal gridlines are visible — no vertical gridlines appear at the date ticks despite the spec requesting grid lines on both axes. Legend ("Raw Data", "Rolling Average (24-Hour)") sits centered below the x-axis title, fully legible.
-      Data: Raw Data renders as a thin, pale green, noisy zig-zagging line (diurnal up-down cycles every ~24h) — the brand green #009E73 at low opacity. Rolling Average (24-Hour) renders as a bold, smooth navy-blue line tracing a slow multi-day rise-and-fall drift beneath the noise. All text is readable against the light background.
+      Background: Warm off-white, pixel-verified RGB(250,248,241) = #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-timeseries-rolling · javascript · highcharts · anyplot.ai" in bold dark ink at top-center, well within canvas bounds. Subtitle "Hourly sensor temperature with 24-hour rolling average" in soft gray beneath it. Y-axis title "Temperature (°C)" and x-axis title "Date" both legible in soft gray. Tick labels (6-28°C, Jun 1 - Jun 11 with 12:00 PM sub-ticks) are dark-enough-on-light and clearly readable. Both horizontal AND vertical gridlines are now visible at every major tick (fixed from the prior attempt, which was missing vertical gridlines). Legend ("Raw Data", "Rolling Average (24-Hour)") sits centered below the x-axis title, fully legible.
+      Data: Raw Data renders as a thin, pale, semi-transparent green zig-zag line showing the ~24h diurnal cycle plus noise. Rolling Average (24-Hour) renders as a bold, smooth lavender/purple line tracing a slow multi-day rise-and-fall drift beneath the noise — correct canonical palette[1] color, fixed from the prior attempt's off-order blue.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle render in light/off-white text, clearly legible against the dark background. Axis titles and tick labels also render in a light gray tone, fully legible — no dark-on-dark failures observed. Only horizontal gridlines are visible, same gap as in the light render (no vertical gridlines at date ticks).
-      Data: Raw Data line and Rolling Average line use the identical colors as the light render (pale green raw signal, bold navy-blue rolling average) — data colors are unchanged between themes, only chrome (background/text/grid) flipped as expected.
+      Background: Warm near-black, pixel-verified RGB(26,26,23) = #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light/off-white text, clearly legible against the dark background. Axis titles and tick labels also render in a light gray tone, fully legible — no dark-on-dark failures observed. Both horizontal and vertical gridlines are visible, matching the light render's fix.
+      Data: Raw Data line and Rolling Average line use identical colors to the light render (pale green raw signal, lavender/purple rolling average) — only chrome (background/text/grid) flipped between themes, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -96,15 +86,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Faint green vs. solid blue give strong luminance/alpha contrast,
+        comment: Faint green vs. solid lavender give strong luminance/weight contrast,
           not reliant on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses the large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: Canvas exactly 3200x1800; balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -113,12 +102,12 @@ review:
         comment: Temperature (°C) includes units; Date is sufficiently descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73 and chrome is theme-correct in both
-          renders, but second series uses palette[2] (#4467A3) instead of the canonical
-          palette[1] (#C475FD) with no semantic justification'
+        passed: true
+        comment: 'First series #009E73, second series now correctly palette[1] #C475FD
+          (fixed from prior palette[2] deviation); backgrounds pixel-verified theme-correct
+          in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -135,8 +124,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid and minimal chrome, but x-axis line still
-          drawn and no extra polish beyond the token defaults
+        comment: Grid now on both axes, but x-axis line still drawn and no extra polish
+          beyond token defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -145,7 +134,7 @@ review:
         comment: Line-weight/opacity contrast creates a clear focal point on the trend
           without needing annotations
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -156,11 +145,11 @@ review:
         comment: Correct dual-layer line chart (raw + rolling average overlay)
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Spec requests grid lines on both axes; only horizontal gridlines
-          render (xAxis gridLineWidth missing)
+        passed: true
+        comment: Grid lines now render on both axes (xAxis gridLineWidth fixed); all
+          other required features present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -208,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> chart flow, no unnecessary functions/classes
+        comment: Linear data -> chart flow, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -235,24 +224,24 @@ review:
         comment: Highcharts.chart("container", ...) with animation disabled and credits
           off, per harness contract
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct high-level Highcharts.chart/series API, datetime axis; loses
-          a point to the gridLineWidth oversight
+        comment: Correct high-level Highcharts.chart/series API, datetime axis, tokens,
+          animation/credits handled; prior gridLineWidth oversight is fixed
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
         comment: Generic line-series usage; no distinctive Highcharts-only feature
-          leveraged
-  verdict: REJECTED
+          (e.g. plotBands/plotLines) leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
