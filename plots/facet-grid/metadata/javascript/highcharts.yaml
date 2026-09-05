@@ -1,0 +1,266 @@
+library: highcharts
+language: javascript
+specification_id: facet-grid
+created: '2026-09-05T01:32:32Z'
+updated: '2026-09-05T01:49:23Z'
+generated_by: claude-sonnet
+workflow_run: 33935877860
+issue: 2696
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/facet-grid/javascript/highcharts/plot-dark.html
+quality_score: 81
+review:
+  strengths:
+  - Manually engineered facet-grid layout (percentage-positioned axis pairs + custom
+    SVG-rendered strip labels) faithfully replicates ggplot2's facet_grid within Highcharts'
+    core-only bundle constraint — a genuinely distinctive, hard-to-replicate technique.
+  - All 6 facets share identical X/Y axis scales (global min/max), satisfying the
+    spec's 'shared axes scales by default' requirement.
+  - Per-facet least-squares trend line gives each panel a clear analytical focal point,
+    turning six raw scatters into a visible rainfall-to-yield relationship comparison
+    across soil x fertilizer combinations.
+  - Realistic, neutral agricultural dataset (crop yield vs. rainfall by soil type
+    and fertilizer) with sensible ranges and visibly different slopes/intercepts across
+    facets.
+  - Deterministic seeded PRNG (mulberry32 + Box-Muller) — fully reproducible.
+  - Theme-adaptive chrome correctly threaded through every axis, label, and strip;
+    brand green (#009E73) held identical across both light and dark renders.
+  weaknesses:
+  - 'Shared ''Rainfall (mm)'' x-axis title (drawn once via chart.renderer.text at
+    the horizontal center of the whole grid) lands directly on top of the Organic
+    x Sandy-Soil facet''s own axis line and tick marks in BOTH themes. Fix: increase
+    the vertical offset (''chart.plotTop + chart.plotHeight + 55'' -> larger value,
+    e.g. +75) so the shared title clears all bottom-row tick labels, or give each
+    bottom-row facet its own xAxis.title instead of one shared renderer.text label.'
+  - 'Header block is missing the mandatory ''// License: Highcharts — commercial license,
+    free for non-commercial use (highcharts.com/license)'' line required by prompts/library/highcharts.md
+    — restore it so the commercial-license notice ships with the snippet.'
+  - Title 'facet-grid · javascript · highcharts · anyplot.ai' fills only ~30% of canvas
+    width at the current fontsize, below the typical 50-70% target for a title this
+    length — could grow slightly for stronger visual presence (minor, not a legibility
+    fault).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "facet-grid · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible top-center. Column strip labels ("No Fertilizer", "Organic", "Synthetic") sit above the top row in bold dark text; row strip labels ("Clay Soil", "Sandy Soil") are rotated -90° on the right edge, fully visible with comfortable margin (no clipping). Shared axis titles "Rainfall (mm)" (bottom-center) and "Yield (tons/hectare)" (left, rotated) are readable dark-ink text on the light background. Tick labels (0/2/4/6/8 on Y; 0/400/800/1200 on X, bottom row only) are legible medium-gray text. Horizontal gridlines are subtle.
+      Data: 2x3 grid of scatter panels, all points in brand green (#009E73), each panel also has a dashed gray least-squares trend line. All 6 panels share the same X (0-1200mm) and Y (2-8 t/ha) scale, so slopes/intercepts are directly comparable across panels — yield clearly rises with rainfall in every facet, and rises further moving left-to-right (more fertilizer) and top-to-bottom (sandier soil, in this dataset).
+      Legibility verdict: PASS overall, with one flagged defect — the shared "Rainfall (mm)" title text visually overlaps the axis line and tick marks of the middle-bottom (Organic x Sandy Soil) facet; the tick marks are partly hidden behind the title text, though all numeric tick labels below remain fully legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, strip labels, and axis titles are all rendered in light cream/off-white text, clearly readable against the dark background — no dark-on-dark failures observed. Tick labels are a lighter muted gray, still legible. Gridlines are subtle and appropriately dimmed.
+      Data: Identical brand green (#009E73) scatter points and dashed trend lines as the light render — confirmed data colors are unchanged between themes; only chrome (background, text, grid) flips.
+      Legibility verdict: PASS overall, with the same overlap defect as light — the shared "Rainfall (mm)" title crosses the Organic x Sandy-Soil facet's axis line/tick marks identically in this theme.
+  criteria_checklist:
+    visual_quality:
+      score: 22
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title occupies
+          a modest ~30% of width (below the 50-70% target) and the shared axis-title
+          overlap slightly muddies the crossed tick marks.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Shared 'Rainfall (mm)' title text overlaps the Organic x Sandy-Soil
+          facet's own axis line and tick marks in both themes; numeric labels remain
+          readable so main content isn't lost.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Scatter markers (radius 4.5) well-sized for ~50 points/cell; trend
+          line adds clarity without crowding the points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue green data against gray dashed reference line; good contrast,
+          CVD-safe, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Grid fills most of the canvas with balanced margins, but the axis-title/tick
+          collision is a real layout defect keeping this from a perfect score.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Rainfall (mm)'' and ''Yield (tons/hectare)'' both descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) data series is #009E73, identical across light/dark;
+          reference trend line correctly uses the theme-adaptive ink-soft neutral
+          rather than a categorical color; backgrounds are theme-correct #FAF8F1/#1A1A17.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom small-multiples layout with consistent scales and strip labels
+          reads well above a library default, though the axis-title overlap dents
+          the polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Interior-row axis lines suppressed, subtle gridlines, generous gutters
+          between facets; the axis-title collision is the main refinement flaw.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Per-facet trend lines create a clear visual hierarchy — the viewer
+          immediately sees yield increasing with rainfall, fertilizer, and soil type
+          across the shared-scale grid.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct faceted grid of scatter subplots.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Row facet (soil type) and column facet (fertilizer), shared axis
+          scales, and category labels all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=rainfall, Y=yield, all data visible within shared axis bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated pattern; legend correctly
+          omitted since facet strips already identify each group (single series).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Visible variation in slope/intercept across all 6 soil x fertilizer
+          combinations; could add slightly more noise/outlier variety for full marks.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible agricultural scenario (crop yield vs. rainfall
+          by soil and fertilizer).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Rainfall (250-950mm) and yield (2.8-7.6 t/ha) ranges are agronomically
+          plausible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no classes; loops are the minimum needed
+          to build a manual facet grid.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32 PRNG (seed=42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity given the core-bundle constraint; no fake
+          UI or interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Header block is missing the mandatory Highcharts commercial-license
+          notice line required by prompts/library/highcharts.md.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Given the core-only bundle constraint (no grid module), the percentage-positioned
+          multi-axis technique mirrors Highcharts' own small-multiples pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Direct use of chart.renderer for custom strip/axis-title text and
+          pinned per-axis rects is a Highcharts-specific technique not easily replicated
+          in another library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  styling:
+  - publication-ready
+  - alpha-blending
