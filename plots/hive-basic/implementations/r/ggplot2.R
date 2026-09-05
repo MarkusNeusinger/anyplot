@@ -86,8 +86,8 @@ axis_labels <- axis_lines %>%
 # straight chords) is the classic hive-plot device for keeping dense
 # cross-axis connections legible.
 bezier_points <- function(x0, y0, x1, y1, n = 30) {
-  cx <- (x0 + x1) / 4
-  cy <- (y0 + y1) / 4
+  cx <- (x0 + x1) / 2.5
+  cy <- (y0 + y1) / 2.5
   t <- seq(0, 1, length.out = n)
   tibble(
     x = (1 - t)^2 * x0 + 2 * (1 - t) * t * cx + t^2 * x1,
@@ -120,6 +120,10 @@ p <- ggplot() +
     color = INK_MUTED, linewidth = 0.5
   ) +
   scale_alpha_continuous(range = c(0.12, 0.55), guide = "none") +
+  annotate(
+    "point", x = 0, y = 0, shape = 21,
+    size = 3.4, stroke = 0.7, color = INK_SOFT, fill = PAGE_BG
+  ) +
   geom_point(
     data = nodes,
     aes(x = x, y = y, color = type),
@@ -127,7 +131,7 @@ p <- ggplot() +
   ) +
   scale_color_manual(
     values = setNames(IMPRINT_PALETTE[1:3], module_types),
-    labels = tools::toTitleCase(module_types),
+    labels = setNames(tools::toTitleCase(module_types), module_types),
     name   = "Module type"
   ) +
   geom_text(
@@ -136,7 +140,7 @@ p <- ggplot() +
     color = INK, size = 3.5, fontface = "bold"
   ) +
   labs(title = "hive-basic · r · ggplot2 · anyplot.ai") +
-  coord_equal(xlim = c(-1.05, 1.05), ylim = c(-0.72, 1.3), clip = "off") +
+  coord_equal(xlim = c(-1.05, 1.05), ylim = c(-0.62, 1.18), clip = "off") +
   theme_void(base_size = 8) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
