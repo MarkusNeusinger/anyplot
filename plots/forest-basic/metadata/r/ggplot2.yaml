@@ -1,0 +1,239 @@
+library: ggplot2
+language: r
+specification_id: forest-basic
+created: '2026-09-05T01:39:52Z'
+updated: '2026-09-05T01:44:10Z'
+generated_by: claude-sonnet
+workflow_run: 33936649053
+issue: 2378
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/forest-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/forest-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Correct forest-plot grammar: point estimates, whiskers with end caps, diamond
+    for the pooled effect, and a dashed null-effect reference line at OR = 1'
+  - Marker size accurately scaled to inverse-variance study weight, giving a real
+    visual weighting cue
+  - Clean log10 x-scale with well-chosen breaks (0.25/0.5/1/2/4) and 2-decimal label
+    formatting
+  - Exact canonical canvas (3200x1800), compliant title format, and theme tokens correctly
+    threaded through both light and dark renders with identical data color
+  - Realistic, neutral RCT meta-analysis dataset (antihypertensive vs. placebo, stroke
+    risk) with plausible sample sizes, odds ratios, and CIs
+  weaknesses:
+  - The panel.grid.major.x line at OR=0.5 sits close in visual weight to the intentional
+    dashed null-effect line at OR=1, which could read as a second reference line rather
+    than an incidental grid tick — consider a fainter/thinner major-x grid or removing
+    it where it collides with a highlighted break
+  - Studies are ordered chronologically rather than by effect size; sorting by effect
+    size (an option the spec explicitly allows) would make cross-study heterogeneity
+    easier to scan at a glance
+  - The weight-driven marker size range (3-9pt covering a narrow 4-14% weight spread)
+    makes the smallest and largest markers only modestly different in the render —
+    a slightly wider size range would make the weighting cue more visible
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "forest-basic · r · ggplot2 · anyplot.ai" in dark ink, clearly legible. Y-axis study labels (Bergstrom (2010) through Kim (2023), plus "Pooled estimate") in soft dark gray, all legible. X-axis title "Odds ratio (stroke, log scale)" and tick labels ("0.50", "1.00") legible in dark ink/soft ink. Legend "Weight (%)" with size-scaled green square swatches (4-14) fully visible, not clipped by the right canvas edge.
+      Data: All CI whiskers, point/square markers, and the pooled diamond are brand green (#009E73). A dashed vertical line marks the null effect at OR=1; a thin solid vertical grid line appears at OR=0.5. The pooled diamond has a dark outline for contrast against its own green fill.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, y-axis study labels, x-axis title/tick labels, and the "Weight (%)" legend all render in light ink / soft light-gray, clearly legible against the dark background. No dark-on-dark text anywhere.
+      Data: Identical brand green (#009E73) markers, whiskers, and diamond as the light render — confirmed data colors are unchanged between themes; only chrome (background, text, grid, diamond outline color) flipped to light-on-dark.
+      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, fully legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions found
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Weight-scaled squares visible but narrow size range slightly limits
+          the weighting cue
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast single-hue design, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas confirmed, nothing cut off, well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label includes measure and scale
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green as sole data color, correct backgrounds in both themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Diamond + weight-scaled squares + null-line show real polish beyond
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/box removed, minimal grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Null-line and distinct diamond styling create a focal point; chronological
+          order (vs. effect-size order) leaves some heterogeneity storytelling on
+          the table
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct forest plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diamond, null reference line, weight-scaled markers, chronological
+          order all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=effect size/CI, Y=study identity, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match weight
+          data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All forest-plot elements present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral RCT meta-analysis
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample sizes and OR/CI values are domain-plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom forest-plot composition, no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg device
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar-of-graphics composition, scale/theme system used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_polygon diamond, layered geom_segment whiskers, and scale_x_log10
+          build a native forest plot ggplot2 has no dedicated geom for
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
