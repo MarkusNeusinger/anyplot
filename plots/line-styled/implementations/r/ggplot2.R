@@ -4,8 +4,6 @@
 #' Quality: 84/100 | Created: 2026-09-05
 
 library(ggplot2)
-library(dplyr)
-library(tidyr)
 library(ragg)
 
 set.seed(42)
@@ -38,20 +36,46 @@ df <- tibble::tibble(
   )
 )
 
+# Custom dash patterns (rather than the stock "dotted"/"dotdash") so the two
+# dot-based styles don't share a leading sub-pattern — the stock codes ("13"
+# and "1343") start identically and blur together at small/mobile scale.
 line_styles <- c(
   "Hardware"    = "solid",
   "Software"    = "dashed",
-  "Services"    = "dotted",
-  "Accessories" = "dotdash"
+  "Services"    = "15",
+  "Accessories" = "6215"
 )
 
+# Grid lines rendered as flat INK read as high-contrast rather than a subtle
+# guide; element_line() has no alpha in this ggplot2 version, so blend the
+# alpha into the hex color itself.
+GRID_COLOR <- grDevices::adjustcolor(INK, alpha.f = 0.2)
+
 title_str <- "line-styled · r · ggplot2 · anyplot.ai"
+
+# Highlight the focal series (Hardware) with an endpoint marker + annotation
+# instead of a heavier linewidth, since the spec calls for consistent line
+# width across all styles.
+hardware_data <- df[df$product == "Hardware", ]
+hardware_end   <- hardware_data[which.max(hardware_data$quarter), ]
 
 # --- Plot ---------------------------------------------------------------------
 p <- ggplot(df, aes(x = quarter, y = revenue, color = product, linetype = product)) +
   geom_line(linewidth = 1.1) +
+  geom_point(data = hardware_end, size = 2.4, show.legend = FALSE) +
+  annotate(
+    "text",
+    x        = hardware_end$quarter,
+    y        = hardware_end$revenue,
+    label    = sprintf("%+.0f%%", hardware_end$revenue - 100),
+    color    = IMPRINT_PALETTE[1],
+    hjust    = -0.15,
+    size     = 2.8,
+    fontface = "bold"
+  ) +
   scale_color_manual(values = IMPRINT_PALETTE[1:4]) +
   scale_linetype_manual(values = line_styles) +
+  scale_x_continuous(expand = expansion(mult = c(0.02, 0.12))) +
   labs(
     title    = title_str,
     x        = "Quarter",
@@ -63,7 +87,7 @@ p <- ggplot(df, aes(x = quarter, y = revenue, color = product, linetype = produc
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor   = element_blank(),
     panel.grid.major.x = element_blank(),
     axis.title         = element_text(color = INK, size = 10),
