@@ -49,9 +49,9 @@ product_probs_by_device <- list(
 )
 
 outcome_probs_by_product <- list(
-  Electronics     = c(Purchased = 0.62, Abandoned = 0.38),
-  Apparel         = c(Purchased = 0.50, Abandoned = 0.50),
-  "Home & Garden" = c(Purchased = 0.58, Abandoned = 0.42)
+  Electronics     = c(Purchased = 0.38, Abandoned = 0.62),
+  Apparel         = c(Purchased = 0.30, Abandoned = 0.70),
+  "Home & Garden" = c(Purchased = 0.35, Abandoned = 0.65)
 )
 
 n_customers <- 2000
@@ -95,7 +95,10 @@ df <- tibble::tibble(
 )
 
 # --- Node totals & stacked y-ranges per stage (crossing-minimized order) ----
-GAP <- n_customers * 0.03
+# GAP is deliberately generous (5% of n, vs. a typical 2-3%) to open up
+# breathing room between stacked nodes at each stage, since the Device->Product
+# and Product->Outcome hops carry many crossing ribbons.
+GAP <- n_customers * 0.05
 
 node_totals_for <- function(values, stage_x) {
   tibble::tibble(category = values) %>%
@@ -159,12 +162,16 @@ build_hop_bands <- function(edges, stage_from, stage_to, node_from, node_to, n_s
     reframe(
       edge_id = edge_id,
       origin  = origin,
+      value   = value,
       x       = stage_from + t * (stage_to - stage_from),
       ymin    = y0_from + w * (y0_to - y0_from),
       ymax    = y1_from + w * (y1_to - y1_from)
     )
 }
 
+# Largest flows are drawn first (so they sit behind), thinner flows drawn last
+# (on top) -- this keeps small paths from getting visually buried under the
+# bulk of the crossing traffic in the dense middle hops.
 bands <- bind_rows(
   build_hop_bands(edges_channel_device,  1, 2, node_channel, node_device)  %>% mutate(hop = "h1"),
   build_hop_bands(edges_device_product,  2, 3, node_device,  node_product) %>% mutate(hop = "h2"),
@@ -173,14 +180,15 @@ bands <- bind_rows(
   mutate(
     group_id = paste(hop, edge_id, sep = "_"),
     origin   = factor(origin, levels = channel_levels)
-  )
+  ) %>%
+  arrange(desc(value))
 
 # --- Plot ------------------------------------------------------------------
 p <- ggplot() +
   geom_ribbon(
     data = bands,
     aes(x = x, ymin = ymin, ymax = ymax, group = group_id, fill = origin),
-    color = INK, linewidth = 0.12, alpha = 0.35
+    color = INK, linewidth = 0.12, alpha = 0.28
   ) +
   geom_rect(
     data = node_all,
@@ -190,7 +198,7 @@ p <- ggplot() +
   geom_text(
     data = node_all,
     aes(x = stage, y = (ymin + ymax) / 2, label = category),
-    angle = 90, size = 2.6, color = INK
+    angle = 90, size = 3.4, color = INK
   ) +
   scale_fill_manual(
     values = setNames(IMPRINT_PALETTE[seq_along(channel_levels)], channel_levels),
@@ -215,7 +223,7 @@ p <- ggplot() +
     axis.text.y       = element_blank(),
     axis.ticks        = element_blank(),
     axis.text.x       = element_text(color = INK_SOFT, size = 10),
-    plot.title        = element_text(color = INK, size = 12),
+    plot.title        = element_text(color = INK, size = 15),
     legend.position    = "top",
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
     legend.text       = element_text(color = INK_SOFT, size = 8),
