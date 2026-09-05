@@ -27,7 +27,7 @@ const chromLengthsMb = {
   "19": 58.6, "20": 64.4, "21": 46.7, "22": 50.8, "X": 156.0,
 };
 const chromosomes = Object.keys(chromLengthsMb);
-const pointsPerMb = 2;
+const pointsPerMb = 10;
 
 // Localized association peaks (linkage-disequilibrium-like bumps above the null background)
 const peaks = [
@@ -146,14 +146,63 @@ thresholdLine(suggestiveThreshold, "Suggestive (p = 1×10⁻⁵)", t.muted);
 thresholdLine(genomeWideThreshold, "Genome-wide significant (p = 5×10⁻⁸)", t.palette[4]);
 
 // --- Points: alternating chromosome color, sized down for overplotting ------
-g.selectAll("circle")
+g.selectAll("circle.point")
   .data(data)
   .join("circle")
+  .attr("class", "point")
   .attr("cx", (d) => x(d.cumPos))
   .attr("cy", (d) => y(d.negLogP))
-  .attr("r", 2.2)
+  .attr("r", 1.7)
   .attr("fill", (d) => color(d.chrom))
-  .attr("opacity", 0.85);
+  .attr("opacity", 0.55);
+
+// Genome-wide-significant SNPs get a bigger, outlined, fully opaque marker so
+// they stand out from the null-distribution band instead of sharing its color only.
+const significant = data.filter((d) => d.negLogP >= genomeWideThreshold);
+g.selectAll("circle.significant")
+  .data(significant)
+  .join("circle")
+  .attr("class", "significant")
+  .attr("cx", (d) => x(d.cumPos))
+  .attr("cy", (d) => y(d.negLogP))
+  .attr("r", 3.2)
+  .attr("fill", (d) => color(d.chrom))
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 0.8)
+  .attr("opacity", 1);
+
+// --- Lead-signal callout: d3-quadtree nearest-neighbor lookup pinpoints the
+// actual rendered point closest to the tallest peak's theoretical apex, so the
+// annotation anchors to a real datum rather than an idealized coordinate -----
+const pointIndex = d3.quadtree()
+  .x((d) => x(d.cumPos))
+  .y((d) => y(d.negLogP))
+  .addAll(data);
+const strongestPeak = peaks.reduce((a, b) => (b.height > a.height ? b : a));
+const targetX = x(chromOffsetMb[strongestPeak.chrom] + strongestPeak.posMb);
+const targetY = y(strongestPeak.height);
+const leadSnp = pointIndex.find(targetX, targetY, 40);
+if (leadSnp) {
+  const ax = x(leadSnp.cumPos);
+  const ay = y(leadSnp.negLogP);
+  const labelX = ax + 16;
+  const labelY = ay - 24;
+  g.append("line")
+    .attr("x1", ax)
+    .attr("y1", ay - 5)
+    .attr("x2", labelX - 2)
+    .attr("y2", labelY + 5)
+    .attr("stroke", t.ink)
+    .attr("stroke-width", 1);
+  g.append("text")
+    .attr("x", labelX)
+    .attr("y", labelY)
+    .attr("text-anchor", "start")
+    .attr("fill", t.ink)
+    .style("font-size", "14px")
+    .style("font-weight", "600")
+    .text(`chr${leadSnp.chrom} lead signal`);
+}
 
 // --- Title --------------------------------------------------------------------
 svg
