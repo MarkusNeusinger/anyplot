@@ -1,0 +1,262 @@
+library: chartjs
+language: javascript
+specification_id: histogram-2d
+created: '2026-09-05T03:44:59Z'
+updated: '2026-09-05T03:49:20Z'
+generated_by: claude-sonnet
+workflow_run: 33942427223
+issue: 2012
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Chart.js has no native 2D-histogram/heatmap chart type, and the implementation
+    solves this cleanly via the public plugin API (afterDatasetsDraw + afterDraw hooks
+    on a near-invisible scatter chart) instead of reaching for an unpinned community
+    plugin like chartjs-chart-matrix — exactly the intended 'no workarounds' pattern
+    from the library rules.
+  - Custom hand-rolled colorbar (linear gradient + min/max labels + rotated axis title)
+    is well integrated into the layout via reserved right-side padding, so it never
+    collides with the plot area.
+  - 'Density coloring correctly uses imprint_seq (#009E73 -> #4467A3) with a log1p
+    scale, appropriate for the widely-varying bin counts, and the palette is pixel-identical
+    between light and dark renders — only chrome (background, ink, grid) adapts.'
+  - Deterministic LCG-seeded data generation (seed 42) produces a realistic correlated
+    bivariate return distribution (rho=0.65) with plausible daily-return magnitudes.
+  - Theme-adaptive chrome is threaded consistently through title, axis labels, ticks,
+    and the custom-drawn colorbar text/border (t.ink / t.inkSoft / t.grid), and both
+    renders pass the light/dark legibility check with no dark-on-dark or light-on-light
+    failures.
+  - Title matches the mandated format exactly, and the single-series legend is correctly
+    omitted since the colorbar already encodes the data dimension.
+  weaknesses:
+  - Title fontsize (22px) leaves the mandated title occupying only ~30% of canvas
+    width instead of the ~70-85% that's typical/expected for this title length — not
+    a legibility problem, but a slightly under-scaled visual anchor; consider bumping
+    title font-size a few px for better hierarchy.
+  - Binning with N_BINS=26 over a correlated elliptical distribution leaves several
+    isolated empty (white) cells inside the occupied density region, giving a mild
+    'swiss cheese' look rather than a smooth density field — a slightly coarser or
+    finer bin count, or a minimum-count threshold merge, would read cleaner.
+  - The colorbar only labels its two endpoints (0 and max count); one or two intermediate
+    tick labels would make the density scale easier to read at a glance.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "histogram-2d · javascript · chartjs · anyplot.ai" is bold dark text, fully visible and not clipped. Axis titles "Asset A Daily Return (%)" and "Asset B Daily Return (%)" are dark ink, clearly readable. Tick labels are soft gray, legible against the light background. No axis grid is drawn (grid disabled), which reads clean for this dense heatmap.
+      Data: A diagonal elliptical density cloud of colored square bins running from bottom-left to top-right, consistent with positively correlated returns. Colors run from brand green (#009E73, low density) to blue (#4467A3, high density), concentrated in the center of the cloud. A custom-drawn colorbar sits to the right of the plot with a green-to-blue gradient, "0" and "114" endpoint labels, and a rotated "Point count" axis title.
+      Legibility verdict: PASS — all text (title, axis titles, tick labels, colorbar labels) is clearly readable against the light background with no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels have flipped to light-colored text (ink/ink-soft tokens), still clearly legible. The colorbar border and text also flipped to light tones against the dark background.
+      Data: The same diagonal elliptical cloud of green-to-blue bins, colors visually identical to the light render (brand green low density, blue high density) — confirming only chrome flipped, not data colors. The gradient bar's green-to-blue fill is unchanged from the light render.
+      Legibility verdict: PASS — no dark-on-dark failures; title, axis labels, tick labels, and colorbar text are all clearly visible light-colored text against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; title runs
+          conservatively small (~30% width) relative to the mandated-title expectation
+          but is not clipped or squeezed.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions; colorbar sits clear of the plot area
+          via reserved padding.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bin sizes are well matched to canvas size, but several isolated empty
+          cells inside the density cloud give a minor 'swiss cheese' look.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green-to-blue gradient is CVD-safe with good luminance
+          range.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area plus colorbar fill the canvas well, balanced margins, nothing
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles are descriptive and include units (%).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used correctly for continuous density; backgrounds and
+          chrome are theme-correct in both renders; data colors identical across themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built heatmap and colorbar from Chart.js primitives is a strong,
+          intentional design solution well above a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, generous whitespace, clean colorbar; slightly rough due
+          to internal empty bins and sparse colorbar tick labels.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient creates a clear focal point on the high-density center
+          of the correlated cloud, guiding the viewer without annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implements a 2D histogram heatmap using core Chart.js APIs,
+          honoring the 'no community plugin' rule.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar present, perceptually uniform (imprint_seq) coloring, configurable
+          bin resolution via N_BINS; optional marginal histograms correctly omitted.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Asset A on X, Asset B on Y, full data range shown via scale min/max.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches exactly; single-series legend correctly omitted.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full density range from sparse edges to dense center, appropriate
+          for a bivariate normal example.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Correlated daily asset returns is a neutral, real-world-plausible
+          finance scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Return magnitudes and correlation are plausible for volatile assets.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions (LCG, normal sampling, hex-to-rgb, plugin
+          hooks) are used, but each is necessary given the custom-plugin approach,
+          not over-structured.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with fixed seed 42.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for building a heatmap from Chart.js primitives;
+          no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container correctly, animation disabled, no deprecated
+          calls.'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Chart.js's public plugin lifecycle hooks and scale
+          pixel-mapping API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Leverages Chart.js's plugin architecture to build a chart type the
+          library doesn't natively support — genuinely distinctive, hard to replicate
+          as trivially in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - gradient-fill
