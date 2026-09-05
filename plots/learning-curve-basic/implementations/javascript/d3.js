@@ -112,20 +112,20 @@ g.selectAll(".train-dot")
   .join("circle")
   .attr("cx", (d, i) => x(trainSizes[i]))
   .attr("cy", (d) => y(d.mean))
-  .attr("r", 6)
+  .attr("r", 8.5)
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 1.5);
+  .attr("stroke-width", 2);
 
 g.selectAll(".val-dot")
   .data(valStats)
   .join("circle")
   .attr("cx", (d, i) => x(trainSizes[i]))
   .attr("cy", (d) => y(d.mean))
-  .attr("r", 6)
+  .attr("r", 8.5)
   .attr("fill", t.palette[1])
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 1.5);
+  .attr("stroke-width", 2);
 
 // --- Axes ---------------------------------------------------------------------
 const xAxis = g
@@ -160,6 +160,15 @@ g.append("text")
 
 // --- Legend (free space: top-right, above the converging curves) ---------------
 const legend = g.append("g").attr("transform", `translate(${iw - 300},10)`);
+legend
+  .append("rect")
+  .attr("x", -16)
+  .attr("y", -14)
+  .attr("width", 250)
+  .attr("height", 82)
+  .attr("rx", 10)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid);
 const legendItems = [
   { label: "Training score", color: t.palette[0] },
   { label: "Validation score", color: t.palette[1] },
@@ -176,13 +185,38 @@ legendItems.forEach((item, i) => {
     .text(item.label);
 });
 
+// --- Annotation: call out the narrowing train/validation gap --------------------
+// Placed in the empty lower-middle whitespace, well clear of the legend and
+// the axis labels, with a dashed leader pointing at the converged tail.
+const lastIdx = trainSizes.length - 1;
+const gapX = x(trainSizes[lastIdx]);
+const gapMidY = (y(trainStats[lastIdx].mean) + y(valStats[lastIdx].mean)) / 2;
+const labelX = iw * 0.5;
+const labelY = ih * 0.6;
+g.append("line")
+  .attr("x1", labelX + 8)
+  .attr("y1", labelY - 8)
+  .attr("x2", gapX - 16)
+  .attr("y2", gapMidY + 6)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "3,3");
+g.append("text")
+  .attr("x", labelX)
+  .attr("y", labelY)
+  .attr("text-anchor", "start")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-style", "italic")
+  .text("Gap narrows as training data grows");
+
 // --- Title -----------------------------------------------------------------------
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 60)
+  .attr("y", 62)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
+  .style("font-size", "27px")
   .style("font-weight", "600")
   .text("learning-curve-basic · javascript · d3 · anyplot.ai");
