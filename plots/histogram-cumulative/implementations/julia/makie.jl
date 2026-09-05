@@ -79,10 +79,31 @@ ax = Axis(
 )
 
 band!(ax, step_x, zeros(length(step_x)), step_y; color = (BRAND, 0.12))
-lines!(ax, step_x, step_y; color = BRAND, linewidth = 3.5)
+
+# The step LINE itself uses Makie's native `stairs!` recipe (step = :pre)
+# rather than a hand-drawn polyline — `:pre` jumps to each bin's cumulative
+# level right at its left edge, reproducing the same ogive shape as step_x/
+# step_y above while showcasing a Makie-distinctive step-plot primitive.
+stairs!(ax, edges, vcat(0.0, cum_proportion); step = :pre, color = BRAND, linewidth = 3.5)
 
 xlims!(ax, edges[1], edges[end])
 ylims!(ax, 0.0, 1.02)
+
+# --- Median reference guide ------------------------------------------------
+# The spec calls out percentile-reading as a primary application; a dashed
+# median guide with an inline label lets the viewer read a concrete value
+# off the curve instead of eyeballing the shape alone.
+median_hours = quantile(delivery_hours, 0.5)
+lines!(ax, [median_hours, median_hours], [0.0, 0.5]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
+lines!(ax, [edges[1], median_hours], [0.5, 0.5]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
+text!(
+    ax, median_hours, 0.5;
+    text = "Median: $(round(median_hours, digits = 1))h",
+    align = (:left, :bottom),
+    offset = (8, 6),
+    color = INK,
+    fontsize = 13,
+)
 
 # --- Save ----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
