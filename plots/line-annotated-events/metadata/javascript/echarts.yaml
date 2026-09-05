@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: line-annotated-events
+created: '2026-09-05T06:36:49Z'
+updated: '2026-09-05T06:54:18Z'
+generated_by: claude-sonnet
+workflow_run: 33949992967
+issue: 2997
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Referral Program and Premium Tier labels now clear the rising data line and their
+    own dashed markLine with real breathing room — the steep-event offset fix (forward-in-time
+    shift, magnitude 40) resolves the prior VQ-02 crowding
+  - New markArea layer shades a 10-business-day post-event window in the same purple
+    accent as the markLine/markPoint, visually tying each event to its growth-acceleration
+    period without adding clutter
+  - Y-axis title now reads "Daily Active Users (thousands)" — explicit units close
+    the prior VQ-06 gap
+  - First series correctly uses Imprint brand green (#009E73); all event accents (markLine,
+    markPoint, markArea) consistently reuse palette[1] in both themes
+  - Idiomatic layering of markLine + markArea + markPoint is the textbook ECharts
+    pattern for annotated time-series events, and combining all three for one narrative
+    purpose is a genuinely distinctive touch
+  - Deterministic in-memory LCG data generation with a plausible SaaS DAU-growth narrative
+    directly tied to the five annotated events
+  weaknesses:
+  - markArea shading opacity (0.06) is quite subtle — a viewer skimming the chart
+    may not register the post-event window as a distinct visual layer versus the plain
+    background
+  - No minimal legend/key naming the event type (e.g. "Product Events") — not required
+    per spec since there is only one event type, but would help a first-time viewer
+    distinguish the purple accents from the main series
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "line-annotated-events · javascript · echarts · anyplot.ai" is centered in dark ink and fully legible. Y-axis title "Daily Active Users (thousands)" and both axis tick labels (Feb-Dec, 0k-30k) render in soft dark gray, clearly readable. Horizontal gridlines are subtle; vertical gridlines are disabled so only the 5 dashed violet event lines interrupt the plot area.
+      Data: The DAU line is Imprint brand green (#009E73), 3px wide, with per-point symbols hidden (correct for the dense 252-point series). Five violet circle markers sit on the dashed event lines, each paired with a dark-ink text label ("v2.0 Launch", "Referral Program", "Mobile App Release", "Premium Tier", "Holiday Campaign") alternating above/below the marker with enough offset to clear both the data line and its own dashed markLine — confirmed via pixel crop around "Referral Program" and "Premium Tier", both previously flagged as too close in Attempt 1. A subtle violet-tinted markArea band follows each event, shading the ~10-business-day post-event window.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, y-axis title, and tick labels flip to light/off-white ink and remain clearly legible — no dark-on-dark failures. Gridlines stay subtle but visible.
+      Data: Line and marker colors are pixel-identical to the light render (same green trend line, same violet event accents, same markArea band), confirming only chrome adapted to theme.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check; no AR-09 edge clipping observed in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable at full size in both themes; no
+          overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Referral Program and Premium Tier labels now clear the data line
+          and their own markLine — Attempt 1's overlap issue is resolved
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dense series hides per-point symbols; 5 event points get prominent
+          12px markers
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/violet pairing has good contrast and is not a red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas with balanced margins; nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis now reads "Daily Active Users (thousands)" with explicit units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, event accents use palette[1] consistently
+          in both themes; backgrounds theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful green/violet pairing, consistent accent reuse across markLine/markPoint/markArea,
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Vertical gridlines and y-axis line removed, subtle horizontal splitlines;
+          some refinement beyond defaults but not maximal whitespace polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: markArea highlights the post-event growth window, guiding the viewer
+          toward event-to-effect causality, though the 0.06 opacity keeps this subtle
+          rather than immediately obvious
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertical event lines, markers, text labels, distinct dashed color,
+          non-overlapping placement — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis, DAU value on y-axis, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; no legend needed for single
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows steady growth, noise, and both steep and gradual event-driven
+          boosts
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible SaaS DAU-growth scenario tied to real product
+          events
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12k-25k DAU growth over a year with plausible event-driven bumps
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes beyond the tiny LCG helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or interactivity simulation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: markLine + markArea + markPoint layering is the recommended ECharts
+          pattern for annotated events
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Adding markArea in response to review feedback pushes past the generic
+          markLine+markPoint combo used in Attempt 1
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
