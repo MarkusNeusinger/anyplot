@@ -38,13 +38,27 @@ df <- tibble(
   production_line = factor(rep(c("Line A", "Line B"), each = n_shifts))
 )
 
+# Lines converge around shift 6 (diameters within 0.004mm) before diverging —
+# call out the crossover as the chart's focal point.
+cross_shift <- 6
+cross_y <- mean(c(line_a[cross_shift], line_b[cross_shift]))
+
 # --- Plot -----------------------------------------------------------------
 title_text <- "line-markers · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = shift, y = diameter, color = production_line, shape = production_line)) +
+p <- ggplot(df, aes(x = shift, y = diameter, color = production_line, shape = production_line, fill = production_line)) +
   geom_line(linewidth = 1.0) +
-  geom_point(size = 3.2, stroke = 1.1, fill = PAGE_BG) +
+  geom_point(size = 3.2, stroke = 1.1) +
+  annotate(
+    "point", x = cross_shift, y = cross_y,
+    shape = 1, size = 7, stroke = 0.8, color = INK_SOFT
+  ) +
+  annotate(
+    "text", x = cross_shift, y = cross_y - 0.05,
+    label = "Lines converge", color = INK_SOFT, size = 2.6, vjust = 1
+  ) +
   scale_color_manual(values = IMPRINT_PALETTE) +
+  scale_fill_manual(values = c(IMPRINT_PALETTE[1], PAGE_BG)) +
   scale_shape_manual(values = c(21, 24)) +
   scale_x_continuous(breaks = shift) +
   labs(
@@ -52,7 +66,8 @@ p <- ggplot(df, aes(x = shift, y = diameter, color = production_line, shape = pr
     x = "Inspection Shift",
     y = "Part Diameter (mm)",
     color = "Production Line",
-    shape = "Production Line"
+    shape = "Production Line",
+    fill = "Production Line"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -64,8 +79,11 @@ p <- ggplot(df, aes(x = shift, y = diameter, color = production_line, shape = pr
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK, size = 12, face = "plain"),
+    plot.title        = element_text(color = INK, size = 12, face = "plain", margin = margin(b = 4)),
+    plot.margin       = margin(t = 6, r = 10, b = 6, l = 6),
     legend.position   = "top",
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.spacing = unit(2, "pt"),
     legend.title      = element_blank(),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.background = element_rect(fill = PAGE_BG, color = NA),
