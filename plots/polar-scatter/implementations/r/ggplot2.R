@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-09-05
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -55,7 +54,9 @@ anyplot_theme <- theme_minimal(base_size = 8) +
     axis.title.x      = element_blank(),
     axis.title.y      = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
+    axis.text.y       = element_text(color = INK_SOFT, size = 8, margin = margin(r = 8)),
     plot.title        = element_text(color = INK, size = 12, face = "bold"),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 9),
     legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK, size = 10)
@@ -63,7 +64,7 @@ anyplot_theme <- theme_minimal(base_size = 8) +
 
 # --- Plot ---------------------------------------------------------------------
 p <- ggplot(wind_obs, aes(x = theta, y = wind_speed, fill = period)) +
-  geom_point(shape = 21, size = 3.5, stroke = 0.4, color = PAGE_BG, alpha = 0.85) +
+  geom_point(shape = 21, size = 3.0, stroke = 0.4, color = PAGE_BG, alpha = 0.75) +
   scale_x_continuous(
     limits = c(0, 360),
     breaks = c(0, 90, 180, 270),
@@ -78,6 +79,7 @@ p <- ggplot(wind_obs, aes(x = theta, y = wind_speed, fill = period)) +
   coord_polar(theta = "x", start = 0, direction = 1) +
   labs(
     title = "Wind Observations · polar-scatter · r · ggplot2 · anyplot.ai",
+    subtitle = "Each time of day carries a distinct prevailing wind direction and speed band",
     y = "Wind Speed (m/s)"
   ) +
   anyplot_theme
