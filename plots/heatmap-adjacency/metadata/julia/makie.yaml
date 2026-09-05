@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-adjacency
 created: '2026-09-05T03:13:33Z'
-updated: '2026-09-05T03:16:58Z'
+updated: '2026-09-05T03:30:42Z'
 generated_by: claude-sonnet
 workflow_run: 33941011108
 issue: 5240
@@ -12,39 +12,66 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-adjacency/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Clean, theme-correct use of the Imprint sequential colormap for weighted edges,
-    identical across both renders
-  - Team-based pre-ordering plus group-boundary divider lines make the block-diagonal
-    community structure immediately visible
-  - Absent edges/self-loops correctly rendered as page-background, keeping 'no connection'
-    visually distinct from 'weak connection'
-  - Correct square canvas choice for a symmetric grid-based plot
+  - 'Correct use of the Imprint sequential colormap (#009E73 → #4467A3) for the continuous
+    edge-weight encoding, matching the style guide exactly.'
+  - Symmetric adjacency matrix properly filled in both triangles; absent edges (and
+    the diagonal) are NaN and render as the page-background color, giving a clear
+    distinct-background cue per the spec.
+  - Nodes pre-ordered by team so the block-diagonal structure is immediately visible,
+    with boundary lines drawn between team blocks — strong, spec-aligned data storytelling.
+  - 'Full theme-adaptive chrome: title, subtitle, axis labels, tick labels, spines,
+    and colorbar all flip correctly between light and dark while data colors stay
+    identical.'
+  - Unlabeled per-node minor ticks correctly hint at the true 30x30 node density underneath
+    the 4 labeled team group ticks, addressing the spec's 'large network, show group
+    boundaries' note.
+  - Canvas lands exactly on the 2400x2400 square target with no clipped text in either
+    render.
   weaknesses:
-  - Individual node names are never shown on either axis (only 4 group labels) - no
-    way to identify which node a cell refers to
-  - using ColorSchemes appears to be an unused import - cgrad with a hex-color list
-    doesn't require it
-  - Design Excellence is solid but short of full marks - consider strengthening visual
-    hierarchy further (e.g. within-block ordering by degree, or the spec's optional
-    dendrogram strip)
+  - Title occupies only ~45% of the plot width at titlesize=20 on this square canvas,
+    below the 50-70% target proportion — a slightly larger titlesize (~22-24) would
+    improve visual balance without risking overflow.
+  - Design excellence is solid (theme tokens, sequential palette, boundary lines)
+    but not exceptional — consider a subtle secondary visual cue (e.g. slightly bolder
+    boundary lines or a light block-background tint) to push the cluster storytelling
+    further.
+  - The optional dendrogram along the axes (mentioned in the spec as a nice-to-have)
+    is not included; not required, but would have added extra feature coverage.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like), not pure white.
-      Chrome: Bold dark title, dark axis labels ("Target"/"Source"), soft-dark tick labels showing 4 team names centered per block; colorbar labeled "Collaboration Strength" with soft-dark ticks. All clearly readable.
-      Data: 30x30 grid pre-ordered by team (Engineering/Design/Sales/Marketing), sequential green (#009E73) to blue (#4467A3) colormap for weight; group boundary divider lines visible; absent edges/self-loops match page background (distinct from data colors).
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-adjacency · julia · makie · anyplot.ai" in bold dark ink, clearly
+        readable; subtitle "30 nodes, ordered by team" in soft gray beneath it. Axis titles
+        "Target" (x) and "Source" (y) in dark ink. Team-name tick labels (Engineering, Design,
+        Sales, Marketing) in soft gray at both axes' block centers, plus fine unlabeled minor
+        ticks at every node position. Colorbar on the right labeled "Collaboration Strength"
+        with 0.0/0.5/1.0 ticks, all legible.
+      Data: Cell colors run from the anyplot brand green (#009E73, weak collaboration) to blue
+        (#4467A3, strong collaboration) via the Imprint sequential gradient. Absent edges and
+        the diagonal render as the same off-white background, cleanly distinguishing "no data"
+        from "weak edge". Four team blocks are outlined with thin dark boundary lines; each
+        block is visibly denser (more blue/teal cells) along its own diagonal block than in the
+        sparser green cross-team regions, exposing the intended block-diagonal structure.
+      Legibility verdict: PASS — all text is clearly readable against the light background,
+        no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black.
-      Chrome: Title and axis labels flip to light/off-white ink, tick labels to soft light gray - all legible, no dark-on-dark issues. Boundary lines remain visible in ink-soft tone.
-      Data: Cell colors and colorbar gradient identical to light render (green-to-blue), confirming only chrome flipped. Absent-edge cells correctly flip to near-black background.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/axis-label/tick-label layout as the light render, now
+        rendered in light ink (near-white title, light-gray subtitle and tick labels) against
+        the dark background. Colorbar label and ticks are equally legible in light gray/white.
+      Data: Data colors (green-to-blue gradient) are identical to the light render — only the
+        page background, ink, and grid/spine colors flipped. Absent edges render as the same
+        near-black background as the page, again cleanly distinct from the data-colored cells.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no
+        dark-on-dark failures observed (title, axis labels, tick labels, and colorbar text all
+        use the light INK/INK_SOFT tokens, not the dark defaults).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -52,67 +79,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text crisp and correctly sized in both themes
+        comment: All text readable in both themes; explicit font sizes and theme-token
+          colors throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between ticks, boundary lines, colorbar, or title
+        comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cell grid, divider lines, and colorbar all clearly distinguishable
+        comment: 30x30 cells are clearly distinguishable at 2400x2400; boundary lines
+          make blocks obvious
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-blue sequential map is CVD-safe
+        comment: Green-blue sequential gradient is CVD-safe; no red-green as sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square canvas is the right call, clean colorbar placement
+        comment: Canvas gate passed (2400x2400); title proportion (~45% width) is
+          slightly below the 50-70% target
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels, colorbar labeled with units
+        comment: Descriptive Target/Source labels, informative subtitle with node
+          count
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq correctly used, both theme backgrounds correct
+        comment: 'Correct imprint_seq-equivalent gradient (#009E73 -> #4467A3); backgrounds
+          match FAF8F1/1A1A17 exactly'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Deliberate colormap choice, team pre-ordering, boundary overlay
+        comment: Custom sequential palette and typographic hierarchy (title/subtitle)
+          show clear design intent, though not groundbreaking
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Grid disabled, only required spines kept, sensible colorbar gap
+        comment: Grid removed, spines kept intentionally per the enclosed-heatmap
+          style-guide exception, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Block-diagonal pattern makes the clustering story immediately legible
+        comment: Team-block ordering plus boundary lines create an immediate, clear
+          focal point on cluster structure
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -120,52 +153,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct network-adjacency heatmap
+        comment: Correct adjacency matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Weighted color intensity, symmetric fill, distinct absent-edge background,
-          colorbar, exposed block-diagonal structure
+        comment: Reorderable-by-cluster ordering, symmetric fill, distinct absent-edge
+          background, colorbar, group-boundary tick labels all present
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Axes correctly mapped but individual node identity never shown, only
-          group labels
+        comment: Source/Target axes map correctly and cover all 30 nodes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format, colorbar labeled
+        comment: Title matches the exact mandated format; colorbar clearly labeled
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Covers weighted edges, symmetry, absent-edge distinction, group structure;
-          omits individual node labels and optional dendrogram
+        comment: Covers weighted symmetric edges, clustering, absent-edge distinction,
+          colorbar; optional dendrogram omitted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cross-team collaboration network is plausible and neutral
+        comment: Cross-team collaboration-frequency scenario is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 nodes within spec range, realistic weight values
+        comment: Weight ranges (0.55-1.0 within-team, 0.05-0.35 cross-team) are sensible
+          and produce a realistic block-diagonal density
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,7 +205,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -182,22 +214,22 @@ review:
         comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: using ColorSchemes appears unused
+        passed: true
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake UI
+        comment: No fake UI/interactivity; appropriate complexity for the matrix construction
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current CairoMakie API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
     library_mastery:
       score: 7
       max: 10
@@ -206,16 +238,13 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of heatmap!, Colorbar bound to plot object, DataAspect(),
-          tuple-based ticks
+        comment: Idiomatic Axis/heatmap!/Colorbar/vlines!/hlines!, DataAspect(), yreversed
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: nan_color and vlines!/hlines! for boundaries are nice touches; could
-          exploit grid layout further
+        comment: nan_color for absent-edge background and per-node minor ticks are
+          nice Makie-specific touches
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -225,7 +254,6 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
