@@ -8,7 +8,7 @@ const t = window.ANYPLOT_TOKENS;
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Average test-score improvement (points) attributed to eight tutoring
 // programs, each with a 95% confidence interval from a randomized evaluation.
-const programs = [
+const rawPrograms = [
   "Test Prep Course",
   "Group Workshops",
   "Homework Support",
@@ -18,9 +18,16 @@ const programs = [
   "Summer Intensive",
   "1-on-1 Coaching",
 ];
-const estimate = [6.0, 3.1, 2.4, 1.5, 4.2, 5.8, 7.2, 8.6];
-const lowerBound = [4.8, 1.2, 0.6, -0.3, 2.8, 4.5, 5.9, 7.1];
-const upperBound = [7.2, 5.0, 4.2, 3.3, 5.6, 7.1, 8.5, 10.1];
+const rawEstimate = [6.0, 3.1, 2.4, 1.5, 4.2, 5.8, 7.2, 8.6];
+const rawLowerBound = [4.8, 1.2, 0.6, -0.3, 2.8, 4.5, 5.9, 7.1];
+const rawUpperBound = [7.2, 5.0, 4.2, 3.3, 5.6, 7.1, 8.5, 10.1];
+
+// Rank by estimate (descending) so the strongest program reads first from the top.
+const order = rawPrograms.map((_, i) => i).sort((a, b) => rawEstimate[b] - rawEstimate[a]);
+const programs = order.map((i) => rawPrograms[i]);
+const estimate = order.map((i) => rawEstimate[i]);
+const lowerBound = order.map((i) => rawLowerBound[i]);
+const upperBound = order.map((i) => rawUpperBound[i]);
 
 const rows = programs.map((_, i) => [i, lowerBound[i], upperBound[i]]);
 const points = programs.map((_, i) => [estimate[i], i]);
@@ -69,8 +76,14 @@ chart.setOption({
     type: "category",
     data: programs,
     inverse: true,
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      // Emphasize the top-ranked program to give the sorted list a clear focal point.
+      formatter: (value, index) => (index === 0 ? `{focal|${value}}` : value),
+      rich: { focal: { color: t.ink, fontWeight: 700 } },
+    },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false },
   },
