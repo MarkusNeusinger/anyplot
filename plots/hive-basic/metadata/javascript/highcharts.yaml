@@ -1,0 +1,271 @@
+library: highcharts
+language: javascript
+specification_id: hive-basic
+created: '2026-09-05T05:22:00Z'
+updated: '2026-09-05T05:39:38Z'
+generated_by: claude-sonnet
+workflow_run: 33946693940
+issue: 1879
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hive-basic/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Fixes the vertical whitespace imbalance flagged in the previous review: recentering
+    the axis fan on the vertical bounding-box midpoint (instead of the raw geometric
+    plot center) now fills the square canvas evenly, with much more balanced top/bottom
+    margins around the hive shape.'
+  - 'First categorical series is the mandated #009E73 green, and the Utility/Interface
+    hues carry through identically between light and dark renders — only chrome flips,
+    as required.'
+  - 'Dual encoding of node degree: radial position (rank-sorted along the axis, so
+    ties never collapse onto the same point) AND marker size both scale with degree,
+    giving genuine information density instead of decorative placement.'
+  - Axis labels are colored to match their node color, functioning as an implicit
+    legend instead of a redundant legend box.
+  - Edges are bowed toward the center as quadratic Bezier-style curves at low opacity,
+    directly addressing the spec's 'edge bundling or transparency helps with dense
+    connections' guidance despite 53 edges.
+  - 'Realistic, neutral synthetic data: a layered software-dependency network (Interface
+    -> Utility -> Core, plus some direct Interface -> Core calls) with a deterministic
+    seeded LCG for full reproducibility.'
+  - Correctly solves the 'Highcharts has no native hive-plot type' problem via the
+    SVG renderer API (chart.events.load + renderer.path/circle/text) rather than faking
+    it or reaching for a forbidden add-on module.
+  weaknesses:
+  - 'Duplicate/stale header block: lines 1-4 are a leftover header from a prior commit
+    (including a now-wrong ''Quality: 87/100'' line), followed by the ''//# anyplot-orientation:
+    square'' directive, followed by a SECOND full header block (lines 6-10, ''Quality:
+    pending''). Collapse this to a single header block before the directive line so
+    the file doesn''t ship with two conflicting Quality values.'
+  - The busiest region between the Interface and Utility axes still gets visually
+    dense with near-parallel low-opacity curves (53 edges total); consider lowering
+    opacity further or thinning stroke-width for the highest-degree axis-pair to keep
+    that band legible.
+  - Top/bottom whitespace balance is much improved but not yet perfect — the gap above
+    the shape (below the title) is still noticeably larger than the gap below the
+    axis labels (canvas bottom); a small further adjustment to the vertical recenter
+    would perfect it.
+  - Beyond the renderer-based custom drawing, the implementation doesn't leverage
+    any other distinctive Highcharts-specific capability for the interactive HTML
+    output (e.g. a lightweight custom hover tooltip) — tooltip.enabled=false is a
+    reasonable static-plot choice, but a hover tooltip would add real value in plot-*.html
+    without affecting the PNG.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "hive-basic · javascript · highcharts · anyplot.ai" in bold dark ink, centered at top, clearly legible (~39% of canvas width, well within bounds, no clipping). Three axis labels ("Core" in green, "Interface" in blue, "Utility" in purple) positioned at the tip of each radial spoke, colored to match their node color and doubling as a legend. No numeric axis ticks (none needed — axes are categorical spokes). No legend box, no grid lines (by design — this is a custom radial diagram, not a Cartesian chart).
+      Data: Three radial axes fan out from a shared, vertically-recentered hub (Core pointing straight up, Interface to the lower-left, Utility to the lower-right) at 120-degree intervals. The recentering fix compared to the prior attempt is visible: the shape now occupies a well-balanced vertical band of the canvas rather than being pushed toward the top half. Nodes are small-to-large circles along each axis (10 per axis, 30 total), colored by axis (green/blue/purple, first series = #009E73 as required), with circle radius growing toward the tip of each axis to encode higher node degree. Thin, low-opacity gray bezier-style curves connect nodes across axes (53 edges total), bowed toward the center to reduce hairballing; the region between Interface and Utility is still the densest area but remains legible at low opacity.
+      Legibility verdict: PASS — title and all three axis labels are clearly readable against the light background; no light-on-light text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, now in light/cream ink, clearly legible against the dark background. Same three colored axis labels ("Core"/"Interface"/"Utility"), still legible and matching their node colors.
+      Data: Identical structure and identical node/edge colors to the light render — same green/blue/purple palette, same curve opacity, same size-by-degree encoding and same recentered layout, confirming data colors are unchanged between themes (only chrome flipped as required).
+      Legibility verdict: PASS — no dark-on-dark failures observed; title, axis labels, and all data marks remain clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and axis labels use explicit font sizes (22px/16px), readable
+          in both themes; no tick labels needed for the radial spokes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes and edges sized/opacity-tuned appropriately for the density;
+          the Interface-Utility band is still the densest region
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue/purple triad, no red-green sole signal, adequate contrast
+          on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Recentering fix resolved the prior empty-bottom-quarter issue; shape
+          now fills ~55%+ of the square canvas with reasonably balanced margins, though
+          top gap is still slightly larger than bottom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels (Core/Interface/Utility), correct mandated
+          title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73, Imprint palette used, backgrounds correct,
+          both themes correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom SVG renderer drawing, axis-colored labels as implicit legend,
+          bezier edge bundling — above generic default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid/spines (clean), and the recentering fix meaningfully improved
+          whitespace balance since the last review
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dual position+size encoding of degree, layered-architecture edge
+          direction gives a clear structural narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct hive plot: radial axes by category, node property (degree)
+          encoded along each axis'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 axes, balanced node counts, edge transparency for dense connections,
+          fully reproducible layout
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 30 nodes and 53 edges rendered; axis assignment and degree both
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title; colored axis labels substitute for a legend
+          appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Covers all spec notes: 2-3 axes, meaningful position encoding, edge
+          bundling/transparency'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral software-dependency network
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 30 nodes / 53 edges within spec's 20-100 node range, balanced 10-per-axis
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Logic is small helper functions only, no unnecessary classes, but
+          the file ships with a duplicated/stale header block (see weaknesses) that
+          clutters the top of the file
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded deterministic LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the global Highcharts is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real custom rendering, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container via Highcharts.chart, animation disabled everywhere'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly falls back to the SVG renderer API since no native/add-on
+          hive-plot type is available, respecting the no-add-on-module rule
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Direct chart.renderer usage (path/circle/text) is a genuine Highcharts-specific
+          capability, but nothing further (e.g. an interactive HTML tooltip) leverages
+          the library beyond that
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
