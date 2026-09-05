@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: manhattan-gwas
 created: '2026-09-05T09:00:41Z'
-updated: '2026-09-05T09:06:06Z'
+updated: '2026-09-05T09:13:44Z'
 generated_by: claude-sonnet
 workflow_run: 33956528928
 issue: 2925
@@ -12,52 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - 'Correct Manhattan-plot structure: cumulative genomic position on the x-axis,
-    alternating brand-green/blue chromosome colors, and dual dashed threshold lines
-    (genome-wide p<5e-8 and suggestive p<1e-5) with inline labels via markLine'
-  - Deterministic LCG-based synthetic GWAS data with realistic Gaussian LD-decay peaks
-    across six chromosomes (including one suggestive-only peak on chr12) rather than
-    uniform noise everywhere
-  - 'Density-appropriate marker sizing: 6px @ 0.75 alpha for the background SNP cloud
-    vs. 8px @ 0.95 alpha for genome-wide-significant hits, correctly combating overplotting
-    on a large point count'
-  - Theme-adaptive chrome (title, axis labels, ticks, grid) correctly threaded through
-    window.ANYPLOT_TOKENS; data colors are pixel-identical between light and dark
-    renders, only chrome flips
-  - 'Idiomatic ECharts usage: customValues + formatter render chromosome-name ticks
-    on a continuous value axis, and markLine implements both threshold lines with
-    inline labels in the pattern used throughout the catalog'
+  - 'Correct Imprint palette application: brand green and lavender alternate by chromosome,
+    matte red is used semantically for genome-wide significant SNPs, and both renders
+    keep data colors identical across themes'
+  - Density-adaptive marker sizing (symbolSize 6 / opacity 0.75 for the ~500k background
+    SNPs vs. symbolSize 8 / opacity 0.95 for significant hits) creates immediate visual
+    hierarchy that highlights the peaks
+  - Idiomatic use of ECharts' markLine to draw and label both the genome-wide (7.3)
+    and suggestive (5) threshold lines directly on the chart
+  - Clever use of customValues + formatter on a value-type xAxis to center chromosome
+    tick labels over their cumulative-position region without a category axis
+  - Realistic, factually grounded simulated GWAS data (approximate GRCh38 chromosome
+    lengths, varied peak heights/widths including a suggestive-only peak) covering
+    the full feature set the spec asks for
+  - Theme-adaptive chrome (ink/inkSoft/grid tokens) correctly threaded through title,
+    axes, and markLine labels in both themes
   weaknesses:
-  - Second alternating-chromosome color uses t.palette[2] (blue, canonical position
-    3) instead of t.palette[1] (lavender, position 2) with no semantic justification
-    for skipping a position — contradicts the style guide's 'use positions 1→N in
-    order by default' rule
-  - Total simulated variant count is roughly 7,000 (lengthMb * 2.3 per chromosome),
-    well short of the spec's noted '100,000 - 1,000,000+ variants typical' — the scatter
-    reads visibly sparser than a real GWAS skyline; consider raising per-Mb density
-  - No legend distinguishes the three series (odd chromosome / even chromosome / genome-wide
-    significant) — acceptable under Manhattan-plot convention since colors are inferable
-    from the x-axis chromosome ticks and the adjacent threshold-line label, but a
-    first-time viewer must infer the red = 'significant' mapping solely from proximity
-    to the genome-wide line
+  - No legend ties the red 'Genome-wide significant' points or the two alternating
+    chromosome colors to a label; the meaning is inferable from convention and the
+    markLine labels, but an unfamiliar reader has no explicit key for the point colors
+  - markLine threshold labels use fontSize 13, slightly under the ~14px tick-label
+    baseline used elsewhere in the chart — legible but could be bumped for consistency
+  - Visual design is strong but stays close to a standard textbook Manhattan-plot
+    layout without extra distinguishing polish (e.g. no labeling of the top SNP per
+    peak, which the spec lists as optional)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "manhattan-gwas · javascript · echarts · anyplot.ai" centered top in dark ink, clearly legible. Y-axis unit label "-log10(p)" sits above the axis top-left, legible. X-axis label "Chromosome" centered below the tick row, legible. Chromosome tick labels (1-22, X) all legible along the x-axis. Horizontal grid lines are thin, light gray, subtle but visible. Two dashed threshold lines (matte red "Genome-wide (p<5x10^-8)" and amber "Suggestive (p<1x10^-5)") have inline labels that are fully readable and don't collide with data points.
-      Data: First series (odd chromosomes) is brand green #009E73; second series (even chromosomes) is blue (palette position 3); genome-wide-significant SNPs above the red threshold line are matte red and rendered slightly larger/more opaque. All three data colors are clearly distinguishable from the cream background and from each other.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "manhattan-gwas · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Y-axis name "-log10(p)" top-left, x-axis name "Chromosome" centered below tick labels. Tick labels (0-18 on y, chromosome numbers 1-22/X on x) all legible in soft dark-gray ink. Two dashed threshold lines labeled "Genome-wide (p<5×10⁻⁸)" and "Suggestive (p<1×10⁻⁵)" are readable and do not collide with tick labels or data.
+      Data: Dense scatter of SNPs alternating brand green (#009E73) and lavender (#C475FD) by chromosome, with matte red (#AE3030) points marking genome-wide-significant hits above the 7.3 threshold line — six visible peaks of varying height/width, one suggestive-only peak on chr12 that stays below the genome-wide line.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, "-log10(p)" unit label, "Chromosome" axis label, and all chromosome tick labels render in light ink/soft-ink tones and are clearly visible against the dark background. Grid lines are thin and subtle. Threshold-line labels (genome-wide in red, suggestive in amber) remain fully legible with no dark-on-dark issues anywhere.
-      Data: Green, blue, and red data colors are visually identical to the light render (only the chrome — background, text, grid — flips), confirming the Imprint categorical colors are theme-independent as required.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis names, and tick labels now rendered in light ink/soft-gray, clearly readable against the dark background. No dark-on-dark text anywhere. Threshold-line labels remain legible.
+      Data: Data point colors (green, lavender, matte red) are identical to the light render — only the chrome (background, text, grid, threshold-line hue readability) adapted to the dark theme.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,51 +61,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, and ticks are explicitly sized and fully readable
-          in both themes; no legend to verify but none is needed for this convention
+        comment: All font sizes explicitly set (title 22, axis name 16, ticks 14);
+          readable in both themes; markLine labels at 13 are slightly below the tick
+          baseline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; threshold-line labels sit cleanly above
-          their lines
+        comment: Threshold-line labels sit clear of tick labels and dense data; no
+          collisions found
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size/opacity correctly adapted to the dense point cloud vs.
-          the sparse significant-hit highlight
+        comment: symbolSize 6/alpha 0.75 for dense background SNPs, symbolSize 8/alpha
+          0.95 for significant hits — well matched to the >500k-point density heuristic
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/red combination is distinguishable; no red-green-only
-          signal
+        comment: Green/lavender/red combination is CVD-safe per the Imprint palette
+          design; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no clipping or overflow observed
+        comment: Plot fills the canvas with balanced margins; nothing cut off at any
+          edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Chromosome' and '-log10(p)' axis labels
+        comment: '''-log10(p)'' and ''Chromosome'' are descriptive scientific labels'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series correctly brand green, but second alternating series
-          skips palette[1] for palette[2] with no semantic reason; backgrounds correct
-          on both themes
+        passed: true
+        comment: 'First series is #009E73; matte red used semantically for significant
+          hits; backgrounds theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -117,21 +114,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette usage, clean threshold-line annotations, restrained
-          composition
+        comment: Thoughtful semantic color use (red tied consistently to both significant
+          points and the genome-wide threshold line); above a well-configured default
+          but not quite publication-exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: L-shaped axis lines only, subtle single-axis grid, generous whitespace
+        comment: Subtle horizontal-only grid, no boxed spines, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Threshold lines and red highlighting create a clear focal point guiding
-          the viewer to significant hits
+        comment: Color and size contrast between background SNPs and significant hits
+          creates an immediate focal point on each peak
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +139,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Manhattan plot
+        comment: Correct Manhattan/scatter plot with chromosome banding
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative position, centered chromosome labels, alternating colors,
-          both threshold lines, significant-SNP highlighting
+        comment: Cumulative position, alternating colors, centered chromosome labels,
+          genome-wide + suggestive threshold lines, density-adapted point size all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct, full data range shown
+        comment: X = cumulative genomic position, Y = -log10(p), correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format
+        comment: Title format exactly matches the mandated pattern; no legend is needed
+          given the self-evident Manhattan-plot color convention plus labeled threshold
+          lines
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -170,22 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple peak widths/heights, one suggestive-only peak, background
-          noise across all chromosomes
+        comment: Multiple peaks of varying height/width, plus a suggestive-only (non-genome-wide)
+          peak on chr12
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Approximate GRCh38 chromosome lengths, plausible p-value distribution
-          and LD-decay peak shapes, neutral subject
+        comment: Neutral, real scientific GWAS scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: ~7,000 total variants is well below the spec's noted 100k-1M+ typical
-          scale, though the resulting plot still reads as a convincing Manhattan skyline
+        comment: Chromosome lengths approximate GRCh38 Mb values; p-value/threshold
+          scale is factually correct
     code_quality:
       score: 10
       max: 10
@@ -195,60 +195,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no classes
+        comment: Linear imports/data/plot structure; the one rand() helper is a necessary
+          deterministic PRNG, not app logic
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG PRNG
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses provided globals only
+        comment: No imports; echarts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity
+        comment: Appropriately complex for cumulative chromosome layout; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false, no explicit size/devicePixelRatio, correct __anyplotReady
-          signal
+        comment: chart.setOption + 'finished' event ready-flag, matches the mount-node
+          contract
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic setOption/series/markLine/axisLabel.formatter usage
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: markLine for thresholds and customValues+formatter for chromosome
-          ticks are idiomatic, catalog-consistent ECharts patterns
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Solid but modest use of ECharts-specific features; no showcase of
-          more distinctive capabilities (e.g. visualMap, dataZoom, brush)
+        comment: markLine with per-line labels and customValues-driven tick centering
+          are ECharts-distinctive techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
