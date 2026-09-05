@@ -1,0 +1,267 @@
+library: ggplot2
+language: r
+specification_id: polar-line
+created: '2026-09-05T11:17:25Z'
+updated: '2026-09-05T11:31:27Z'
+generated_by: claude-sonnet
+workflow_run: 33962753551
+issue: 2692
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - 'Correct polar-line construction: geom_path/geom_point in coord_polar(theta =
+    "x"), with the bearing-0 point duplicated at 360 so each station''s loop closes
+    cleanly instead of leaving a gap.'
+  - 'Realistic, neutral dataset: three monitoring stations with distinct prevailing
+    wind bearings and speeds, plus Gaussian noise, producing three visibly different
+    rose shapes that tell a clear directional story.'
+  - 'Imprint palette applied in canonical order (#009E73, #C475FD, #4467A3) and identical
+    across both themes; both plot backgrounds are correctly theme-adaptive (#FAF8F1
+    / #1A1A17), and all chrome text is legible in both renders.'
+  - 'Clean, idiomatic single-file ggplot2 script: explicit font sizes throughout,
+    seeded RNG, ragg PNG device, no functions/classes.'
+  weaknesses:
+  - 'The attempt-1 fix for grid-line opacity did NOT take visual effect: the code
+    now sets panel.grid.major color to grDevices::adjustcolor(INK, alpha.f = 0.18),
+    but pixel-sampling the rendered PNGs shows the grid lines at the EXACT opaque
+    INK color with zero blending toward the background (light: sampled (26,26,23)
+    at the N-circle crossing vs. expected ~(210,208,202) if 18% alpha had been applied;
+    dark: sampled (240,239,232), exactly opaque INK for that theme, expected ~(60,60,55)
+    if blended). Every compass tick label (N, NE, E, SE, S, SW, W, NW) is still cut
+    through by a fully opaque radial-spoke or outer-circle grid line in BOTH themes,
+    identical in appearance to the previous rejected attempt. Root cause: the alpha
+    channel embedded in adjustcolor()''s ''#RRGGBBAA'' hex output is being dropped
+    somewhere in the ggplot2/coord_polar/ragg rendering path for this element. Fix
+    approach: do NOT rely on an alpha-channel hex string for panel.grid.major here
+    — pre-blend the grid color into a fully OPAQUE hex value by manually mixing INK
+    with PAGE_BG at the desired ratio (e.g. compute a solid hex like ''#D2D0C8'' for
+    light / ''#3C3C39'' for dark at roughly 18% mix) so the line is genuinely subtle
+    regardless of how the device handles alpha. Verify by re-sampling pixel values
+    after the next render, not just by reading the source code. Docked in VQ-02 (No
+    Overlap) and DE-02 (Visual Refinement) — unchanged from the prior review since
+    the rendered output is effectively unchanged.'
+  - Design is functionally correct but still reads as a well-configured default rather
+    than a polished, distinctive wind-rose (uniform line weight for all three series,
+    no radial-axis emphasis or per-station peak callouts) — raise DE-01/DE-03 with
+    a bit more visual hierarchy (e.g. slightly bolder or annotated leading station)
+    in addition to fixing the grid-line issue above.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white. Sampled corner pixel (250,248,241).
+      Chrome: Title "polar-line · r · ggplot2 · anyplot.ai" top-left in dark ink, fully visible, not clipped. Radial tick labels (0/10/20/30) and axis title "Wind speed (km/h)" in dark/soft-dark ink, clearly readable. Compass direction labels (N, NE, E, SE, S, SW, W, NW) ring the outer circle in soft-dark gray — legible, but each one still has a fully opaque dark grid line (radial spoke and/or outer circle) crossing directly through its letters; pixel-sampling confirms the line color is exact opaque INK (26,26,23) with no alpha blending toward the background, despite the code now setting an 18%-alpha grid color — the fix did not take visual effect. Legend at bottom ("Station: Station A / B / C") with matching color swatches, fully visible.
+      Data: Three closed loops in Imprint green (#009E73, Station A, largest radius, peak toward N), lavender (#C475FD, Station B, smallest radius, peak toward SE/E), and blue (#4467A3, Station C, mid radius, peak toward SW). Lines and points are clearly distinguishable from each other and from the background.
+      Legibility verdict: PASS (all text remains fully readable; the grid-line-through-label crossing is a cosmetic overlap issue, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black. Sampled corner pixel (26,26,23).
+      Chrome: Same title, axis title, and radial tick labels rendered in light ink (#F0EFE8) / soft-light gray (#B8B7B0), clearly legible against the dark background — no dark-on-dark failures observed. Grid lines flipped to light, again crossing directly through each compass label's letters; pixel-sampling confirms the line color is exact opaque light INK (240,239,232), again with no alpha blending applied — same unresolved issue as the light render.
+      Data: Green, lavender, and blue lines/points are pixel-identical in hue to the light render — only the chrome (background, text, grid) flipped as required.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; same unresolved grid-crossing-label issue as light render).
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, axis title 10pt, tick/legend
+          8pt); readable in both themes; title well within canvas bounds.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: All 8 compass tick labels are still crossed by a fully opaque radial-spoke
+          or outer-circle grid line in both themes; the attempted alpha=0.18 grid-color
+          fix measurably did not change the rendered pixel values (verified by pixel-sampling).
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 1.1pt lines and 1.8pt points are visible and distinguishable for
+          3 overlapping series at this density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue are CVD-safe and mutually distinguishable, no
+          red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); polar chart occupies a well-balanced
+          majority of the canvas; legend close to plot; nothing cut off (no AR-09).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Wind speed (km/h)" is descriptive with units; compass labels self-explanatory
+          for bearing.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3), identical across
+          themes; both backgrounds theme-correct.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: 'Well-configured default: custom palette and polar form, but no distinctive
+          polish beyond that.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid was intended to become translucent (18% alpha) per prior feedback
+          but renders at full opacity — still more prominent than the style guide's
+          'subtle 15-25% opacity' target.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three stations with visibly different prevailing-wind rose shapes
+          create a clear at-a-glance insight, even without annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar line plot via coord_polar + geom_path/geom_point.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Theta (bearing) and radius (wind speed) both present; lines connect
+          points in theta order and close into loops; multiple colored series.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: bearing -> x/theta, wind_speed -> y/radius, correctly mapped and
+          fully visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels (Station A/B/C)
+          match the data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows cyclical variation, multiple series, and noise; could push
+          station differentiation slightly further.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Wind speed by compass bearing for monitoring stations is a real,
+          neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2-30 km/h wind speeds with plausible gust amplitude are realistic
+          for near-surface wind measurements.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; tibble referenced via namespace.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current linewidth= API
+          (no deprecated size=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct grammar-of-graphics composition: dplyr pipeline, scale_x_continuous
+          breaks/labels, scale_color_manual, coord_polar layered on theme_minimal.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: coord_polar as a coordinate-transform layer applied on top of standard
+          geoms is a distinctive grammar-of-graphics feature, not just generic plotting.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling

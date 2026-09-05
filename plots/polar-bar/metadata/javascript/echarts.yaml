@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: polar-bar
+created: '2026-09-05T11:11:43Z'
+updated: '2026-09-05T11:36:20Z'
+generated_by: claude-sonnet
+workflow_run: 33962467145
+issue: 2693
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Imprint palette in canonical order (green, lavender, blue, ochre, red)
+    for the five wind-speed bins, first series is brand green #009E73, and both renders
+    are fully theme-correct chrome (backgrounds, text, grid all flip correctly).'
+  - The custom `renderItem` series draws an amber focal-highlight wedge behind the
+    SW-WSW-W sector using `api.coord()` to sample the polar transform, correctly aligning
+    with the prevailing-wind bars — a genuine ECharts-specific technique that also
+    creates real data storytelling (viewer's eye goes straight to the dominant wind
+    direction).
+  - 'Full 16-point compass with correct clockwise N-at-top orientation, 5 stacked
+    wind-speed bins, and `barMinHeight: 5` keeps the thin calm-direction segments
+    visible instead of collapsing to invisible slivers.'
+  - 'Deterministic, realistic meteorological dataset: prevailing westerlies with a
+    secondary southerly lobe, monotonically plausible speed-bin tapering per direction.'
+  - Title format, legend labels, and axis naming all match spec requirements exactly;
+    KISS code structure with no unnecessary abstraction.
+  weaknesses:
+  - DE-02 sits at library-default refinement — the concentric grid rings and angle
+    spokes use the token grid color as-is with no additional opacity tuning or ring-count
+    reduction to declutter the sparse-data (E/ESE/NE) side of the chart.
+  - In the calm easterly directions (E, ESE, NE, ENE) the stacked segments are so
+    thin that individual speed-bin boundaries are hard to distinguish even with barMinHeight
+    enforced — consider a slightly larger barMinHeight or a subtle per-segment border
+    stroke to keep the bins legible at that scale.
+  - The amber highlight sector is a strong storytelling device but carries no label
+    — a small 'Prevailing wind' annotation near the wedge would push data storytelling
+    from good to excellent.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "polar-bar · javascript · echarts · anyplot.ai" centered at top in dark ink, fully legible. Radial axis name "Hours observed" and tick labels (20/30/40/50/60) in soft gray-brown, readable. 16 compass-point angle labels (N, NNE, NE, ... NNW) around the circle perimeter, all clearly legible against the light background. Legend at bottom with 5 wind-speed-bin swatches and labels, dark text, fully readable.
+      Data: Stacked polar bars for all 16 directions. First (innermost) segment is brand green #009E73 (0-5 kt), followed by lavender (5-10 kt), blue (10-15 kt), ochre (15-20 kt), and matte red (20+ kt) outermost — matches Imprint canonical order. A subtle amber-tinted wedge sits behind the SW-WSW-W bars, highlighting the prevailing wind sector, clearly distinguishable from the cream background at low opacity.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink (near-white), fully legible on the dark background. Radial tick labels and 16 compass labels rendered in light gray, all readable, no dark-on-dark issues anywhere. Legend text is light-colored and legible against the dark background.
+      Data: Identical stacked-bar colors to the light render (green, lavender, blue, ochre, red in the same order) — confirms data colors are constant across themes. The amber highlight wedge is still visible as a subtly lighter patch against the dark background, correctly positioned behind SW-WSW-W.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; title fits
+          without clipping at the mandated ~67-char format
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between compass labels, radial ticks, legend, or bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: barMinHeight keeps calm-direction segments visible, but the thinnest
+          bins (E/ESE/NE) are hard to individually distinguish
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe by design, no red-green-only signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Polar plot fills a well-balanced portion of the square canvas, title/legend
+          margins generous, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Hours observed" radial axis name is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for remaining 4 series,
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom amber focal-highlight sector goes clearly beyond library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle token-driven grid, no spines to remove in polar coords, but
+          no extra decluttering on the sparse side
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Highlight wedge creates a clear focal point on the prevailing wind
+          sector; an annotation label would push this to 6
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct wind-rose polar bar chart with stacking
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 16 compass directions, stacked wind-speed ranges, bars radiate outward
+          from center
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Direction on angle axis, frequency (hours observed) on radius axis,
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match speed-bin
+          data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows full range from calm to strong-wind directions and all 5 speed
+          bins; near-zero bins for calm directions demonstrate correct edge behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world meteorological scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Hour counts and directional distribution are physically plausible
+          for a prevailing-westerly climate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> init -> option flow, no classes; map/renderItem callbacks
+          are idiomatic, not over-structured
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global, nothing unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity of the custom renderItem is justified by the highlight
+          feature it enables, well commented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract, animation disabled, current setOption
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic polar coordinateSystem, stack, category angleAxis usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom series with renderItem + api.coord() sampling the polar transform
+          is a genuinely ECharts-specific technique, not trivially replicable elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - patches
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
