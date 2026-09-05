@@ -3,10 +3,6 @@
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-05
 //# anyplot-orientation: square
-// anyplot.ai
-// heatmap-adjacency: Network Adjacency Matrix Heatmap
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -194,6 +190,13 @@ new Chart(canvas, {
         text: "heatmap-adjacency · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22 },
+        padding: { bottom: 4 },
+      },
+      subtitle: {
+        display: true,
+        text: "Groups: D = Design · E = Engineering · M = Marketing",
+        color: t.inkSoft,
+        font: { size: 14 },
         padding: { bottom: 16 },
       },
       legend: { display: false },
@@ -208,6 +211,7 @@ new Chart(canvas, {
         grid: { display: false },
         border: { display: false },
         ticks: { color: t.inkSoft, font: { size: 11 }, autoSkip: false, maxRotation: 90, minRotation: 90 },
+        title: { display: true, text: "Target node", color: t.ink, font: { size: 14 } },
       },
       y: {
         type: "category",
@@ -216,6 +220,7 @@ new Chart(canvas, {
         grid: { display: false },
         border: { display: false },
         ticks: { color: t.inkSoft, font: { size: 11 }, autoSkip: false },
+        title: { display: true, text: "Source node", color: t.ink, font: { size: 14 } },
       },
     },
   },
