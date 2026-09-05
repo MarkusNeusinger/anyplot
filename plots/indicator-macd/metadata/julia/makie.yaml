@@ -1,0 +1,235 @@
+library: makie
+language: julia
+specification_id: indicator-macd
+created: '2026-09-05T05:46:11Z'
+updated: '2026-09-05T05:59:12Z'
+generated_by: claude-sonnet
+workflow_run: 33947838549
+issue: 3181
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - 'Color-clash issue from Attempt 1 fully resolved: MACD line is now Imprint blue
+    (#4467A3), fully distinguishable from the green/red histogram in both themes'
+  - New crossover markers (green/red triangles) at MACD/signal crossings directly
+    address the prior review's data-storytelling feedback and reinforce the spec's
+    buy/sell-signal narrative
+  - 'All three MACD elements present and clearly rendered: MACD line, signal line,
+    green/red histogram, plus a dashed zero reference line'
+  - Standard parameters (12, 26, 9) explicitly noted in the legend labels
+  - Theme-adaptive chrome correctly implemented -- both renders pass the light/dark
+    legibility check with identical data colors
+  weaknesses:
+  - 'X-axis still uses a plain 1:120 ''Trading Day'' integer index rather than the
+    spec''s date (datetime) field. Minor/optional: consider generating an actual date
+    range for closer schema alignment.'
+  - Library Mastery remains generic -- only basic barplot!/lines!/hlines!/scatter!
+    primitives are used; no Makie-distinctive feature (e.g. band! for a shaded MACD-signal
+    spread) is demonstrated.
+  - Design Excellence is still at 'clean default' level -- no custom typography or
+    additional visual polish beyond spine removal and the new crossover markers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1, not pure white
+      Chrome: bold dark title "indicator-macd · julia · makie · anyplot.ai" top-center; "Trading Day"/"MACD Value" axis labels and tick labels dark/soft-dark; frameless top-left legend ("MACD (12, 26)", "Signal (9)"); subtle horizontal-only gridlines; top/right spines hidden -- all readable
+      Data: MACD line is Imprint blue (#4467A3), signal line lavender (#C475FD), histogram bars green (#009E73, gain) / red (#AE3030, loss), dashed zero reference line, and new green/red triangle markers at crossover points
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17, not pure black
+      Chrome: title, axis labels, tick labels, and legend text render in near-white/light-gray ink, clearly legible against the dark surface; no dark-on-dark failures found
+      Data: colors are pixel-identical to the light render (blue MACD line, lavender signal line, green/red histogram, green/red crossover triangles) -- only chrome flipped
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, lines, bars, or markers
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: MACD line is now blue, fully distinct from green/red histogram; crossover
+          triangles clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, gain/loss also redundantly encoded by bar
+          direction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend near plot, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels (Trading Day, MACD Value)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette (blue/lavender) plus finance semantic green/red for
+          gain/loss; theme-correct chrome in both renders
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean but still default-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid, frameless legend -- modest but real
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: New crossover triangle markers create clear visual hierarchy reinforcing
+          the buy/sell narrative
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct MACD chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: MACD line, signal line, histogram, zero line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses plain trading-day integer index rather than spec's date datetime
+          field
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels correct with parameters noted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows bullish and bearish cycles, crossovers, varying histogram magnitude
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible stock-price-derived MACD scenario, neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price levels and oscillator magnitudes are realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> minimal ema helper -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic use of Axis/barplot!/lines!/scatter!/axislegend
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic primitives only, no Makie-distinctive feature such as band!
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - cumulative-sum
+  styling:
+  - publication-ready
