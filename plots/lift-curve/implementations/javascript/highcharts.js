@@ -2,13 +2,8 @@
 // lift-curve: Model Lift Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-05
-//# anyplot-orientation: landscape
-// anyplot.ai
-// lift-curve: Model Lift Chart
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-09-05
 
+//# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data: simulate a retention-campaign response model on 2000 customers --
@@ -56,6 +51,7 @@ for (let pct = 1; pct <= 100; pct++) {
     y: Number(lift.toFixed(3)),
     marker: { enabled: isDecile, radius: isDecile ? 6 : 0 },
     dataLabels: { enabled: isDecile },
+    custom: { responders: cumResponders, customers: cumCustomers },
   });
 }
 
@@ -76,7 +72,7 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "lift-curve · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "24px", fontWeight: "700" },
   },
   subtitle: {
     text: `Retention offer targeting · baseline response rate ${(baselineRate * 100).toFixed(1)}%`,
@@ -102,24 +98,37 @@ Highcharts.chart("container", {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
-  tooltip: {
-    valueSuffix: "x lift",
-  },
   plotOptions: {
     series: { animation: false },
     line: { lineWidth: 3, marker: { enabled: false } },
+    area: { lineWidth: 3, marker: { enabled: false } },
   },
   series: [
     {
       name: "Model",
+      type: "area",
       data: liftData,
       color: t.palette[0],
+      // Fill only the wedge between the curve and the y=1 baseline, not down to 0,
+      // to visually emphasize the lift magnitude being captured.
+      threshold: 1,
+      fillOpacity: 0.18,
+      fillColor: Highcharts.color(t.palette[0]).setOpacity(0.18).get("rgba"),
       zIndex: 2,
       dataLabels: {
         enabled: false,
         format: "{y:.1f}x",
-        style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+        style: { color: t.ink, fontSize: "14px", fontWeight: "600", textOutline: "none" },
         y: -14,
+      },
+      tooltip: {
+        pointFormatter: function () {
+          const c = this.custom || {};
+          return (
+            `<span style="color:${this.color}">●</span> ${this.series.name}: <b>${this.y}x</b> lift<br/>` +
+            `Captured ${c.responders} of ${totalResponders} responders (${c.customers} customers targeted)<br/>`
+          );
+        },
       },
     },
     {
