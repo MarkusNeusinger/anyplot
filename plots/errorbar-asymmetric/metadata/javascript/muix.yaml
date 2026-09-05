@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: errorbar-asymmetric
 created: '2026-09-05T01:18:03Z'
-updated: '2026-09-05T01:22:57Z'
+updated: '2026-09-05T01:30:39Z'
 generated_by: claude-sonnet
 workflow_run: 33935482030
 issue: 2781
@@ -12,50 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Custom SVG error-bar overlay via useXScale/useYScale correctly fills a gap where
-    MUI X community has no native error-bar chart type — an idiomatic use of the library's
-    scale-context extension point rather than a hack.
-  - Marker halo-stroke (circle stroke = page background) gives clean figure-ground
-    separation against both the cream and near-black surfaces; cap half-width is derived
-    from band scale (min(18, bandwidth*0.28)) instead of a fixed pixel value.
-  - 'Palette and theme chrome are fully compliant: brand green #009E73 identical across
-    light/dark, correct #FAF8F1/#1A1A17 backgrounds, all text theme-adaptive via ANYPLOT_TOKENS.'
-  - Realistic, neutral agronomic dataset (nitrogen dose vs. yield increase) that shows
-    a full range of the plot type's defining feature — every point has a distinct,
-    non-symmetric error_lower/error_upper, and the spread widens plausibly with dose.
-  - Subtitle ('whiskers span the 10th-90th percentile range') satisfies the spec's
-    requirement to explain the asymmetric bounds without needing a redundant single-series
-    legend.
-  - Axis labels are descriptive with units (Nitrogen Dose (kg/ha), Yield Increase
-    (%)); grid is a single subtle horizontal layer at 50% opacity, not competing with
-    data.
+  - Plateau shading + annotation deliver real data storytelling tied directly to the
+    diminishing-returns / widening-spread pattern in the data
+  - Subtitle explicitly names the percentile range, satisfying the spec's asymmetric-bounds
+    explanation requirement
+  - Marker halo (stroke={t.pageBg}) gives clean figure-ground separation without extra
+    colors
+  - Correctly falls back to a custom SVG overlay (via useXScale/useYScale) for a chart
+    type the MUI X community surface doesn't natively support, rather than reaching
+    for Pro/Premium or a different library
+  - Theme-adaptive chrome and identical data color confirmed correct in both renders
   weaknesses:
-  - Title reads visually small relative to canvas width (~30%, vs. the ~50-70% guideline
-    for a title this length) because no optional descriptive prefix was used — add
-    a short prefix like 'Nitrogen Response Curve · errorbar-asymmetric · javascript
-    · muix · anyplot.ai' to give the title more hierarchy and presence.
-  - No explicit visual emphasis on the plot's actual insight (diminishing returns
-    above ~120-160 kg/ha combined with widening uncertainty) — the subtitle names
-    the whisker meaning but nothing calls out where the curve flattens; consider a
-    light annotation or highlighted point at the plateau.
-  - Grid/axis chrome is left at MUI X's structural default rather than intentionally
-    refined (e.g., lightening or removing the axis tick marks) — a small additional
-    refinement pass would push Design Excellence from 'above default' to 'strong design'.
+  - Tick labels and plateau annotation at 13px CSS are slightly below the 14-16px
+    guidance for axis/legend text in the mount's CSS coordinate space
+  - Custom SVG error-bar elements aren't wired into MUI X's tooltip system, so the
+    interactive HTML output has no hover detail on the error bars themselves
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "errorbar-asymmetric · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible; subtitle "Median yield increase · whiskers span the 10th-90th percentile range" in softer gray beneath it, also legible; x-axis label "Nitrogen Dose (kg/ha)" and y-axis label "Yield Increase (%)" both dark and readable; tick labels (0-240 on x, 0-50 on y) in a slightly lighter gray, all readable; a single subtle horizontal gridline layer at low opacity.
-      Data: Seven points (doses 0-240) in brand green (#009E73) — circular markers with a light halo stroke, vertical error-bar stems with horizontal caps at top and bottom, asymmetric span clearly visible (upper arm longer than lower arm at most doses, e.g. dose 0: caps at ~-1 and ~3 around the point at 1). Curve rises steeply then plateaus/dips slightly at the highest doses, and the whisker span visibly widens with dose.
-      Legibility verdict: PASS — no text is unreadable, no overlap, no clipping at the canvas edges.
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Title and subtitle centered in dark ink / soft gray; axis labels and tick labels in ink/ink-soft tones; all clearly readable.
+      Data: Brand green (#009E73) markers with cream/pageBg halo stroke, error bars with visible caps; plateau region (doses 160-240) tinted pale green with italic annotation "Diminishing returns, widening spread".
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/axis-label/tick-label layout, now rendered in light ink/soft-gray tones against the dark background; fully legible, no dark-on-dark failures observed. Gridline is a faint light-colored horizontal line, subtle as in the light render.
-      Data: Same seven green (#009E73) markers and error-bar stems/caps, pixel-identical in color and position to the light render — only the chrome (background, text, grid) has flipped, confirming theme-adaptive tokens were threaded through correctly and data colors were not.
-      Legibility verdict: PASS — all text readable in the dark theme, brand green remains highly visible against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Title and axis labels in light ink, tick labels/subtitle in softer light gray; annotation text legible light-gray-on-near-black italic; no dark-on-dark failures.
+      Data: Same brand green (#009E73) markers and error bars as light render - confirmed identical data color, only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,71 +52,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; title occupies
-          a smaller-than-ideal ~30% of width since no descriptive prefix was used
+        comment: All text explicitly sized and readable in both themes; 13px annotation/tick
+          labels slightly small for mobile
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No collisions between error bars, markers, plateau shading, or text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 7-point series with prominent markers (r=10) and thick (3px)
-          error-bar strokes, well matched to data density
+        comment: Sparse data (7 points) with prominent r=10 markers and 3px error-bar
+          strokes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green with theme-matched halo stroke for contrast;
-          no red-green reliance
+        comment: White/cream marker halo provides figure-ground separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (no drift file present); plot area well proportioned,
-          generous balanced margins, nothing cut off
+        comment: Clean proportions, generous margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive with units
+        comment: Descriptive axis labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, identical across themes; backgrounds #FAF8F1/#1A1A17;
-          all chrome theme-correct'
+        comment: Brand green first series, correct theme backgrounds in both renders
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Above a bare default thanks to the halo-stroke markers and band-relative
-          cap sizing, but not yet 'strong design' — title lacks visual weight/hierarchy
+        passed: true
+        comment: Title fontsize scaling formula, marker halo, tinted plateau region
+          show deliberate polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Subtle single-layer horizontal grid and generous margins, but axis/tick
-          chrome left at MUI X structural defaults rather than intentionally refined
+        passed: true
+        comment: L-shaped implicit frame, subtle horizontal grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        comment: Data choice (diminishing returns + widening spread) implicitly tells
-          a story and the subtitle names the whisker meaning, but there is no explicit
-          visual emphasis (annotation, highlight) on the insight
+        passed: true
+        comment: Plateau shading + annotation is genuine, well-placed storytelling
+          tied to the data pattern
     spec_compliance:
       score: 15
       max: 15
@@ -146,21 +130,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Visible caps, and subtitle explains the asymmetric bound meaning
+        comment: Visible caps; subtitle explains the 10th-90th percentile bounds
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=dose category, y=median with correct lower/upper error mapping,
-          axis range covers all whiskers
+        comment: X/Y mapped correctly, all 7 points shown with correct asymmetric
+          spans
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single-series legend correctly omitted per
-          style guide
+        comment: Title matches required format exactly; single series correctly omits
+          legend
     data_quality:
       score: 15
       max: 15
@@ -170,21 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Every point has a distinct, non-symmetric lower/upper error; spread
-          visibly varies across the series
+        comment: Median + independent upper/lower error magnitudes shown for every
+          category
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible agronomic scenario (nitrogen dose vs. yield increase)
+        comment: Nitrogen fertilizer dose-response with diminishing returns is plausible
+          and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and diminishing-returns pattern are consistent with real fertilizer-response
-          curves
+        comment: Sensible agronomic dose and yield-increase values; 7 points within
+          spec range
     code_quality:
       score: 10
       max: 10
@@ -194,14 +179,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Minimal structure: data arrays, one small overlay component required
-          by the hooks pattern, default-exported Chart'
+        comment: Helper component required by hook-access pattern, not incidental
+          complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded arrays
+        comment: Fully deterministic, hard-coded arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,39 +198,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a chart type not natively supported; no
-          fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, current MUI X hooks API, harness owns output files
+        comment: skipAnimation set, default export, current API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correctly uses the ChartContainer + useXScale/useYScale extension
-          pattern for a feature the community chart components don't expose directly
+        passed: true
+        comment: Scale-hook overlay is the documented pattern when no built-in series
+          covers asymmetric error bars
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Scale-context hooks are a distinctive MUI X mechanism not trivially
-          replicated by swapping libraries
-  verdict: REJECTED
+        passed: true
+        comment: Distinctive scale-driven SVG composition; custom marks aren't wired
+          into MUI X tooltip system
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  - annotations
+  patterns: []
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
