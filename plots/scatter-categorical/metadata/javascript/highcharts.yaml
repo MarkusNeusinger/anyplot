@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-categorical
 created: '2026-09-05T13:32:51Z'
-updated: '2026-09-05T13:36:31Z'
+updated: '2026-09-05T13:52:42Z'
 generated_by: claude-sonnet
 workflow_run: 33969002272
 issue: 2597
@@ -12,49 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
+  - 'Repair directly and precisely addressed every weakness from the prior review:
+    marker radius reduced 6→5 and opacity 0.75→0.65 (less overplotting clutter), x-axis
+    gridlines removed leaving a cleaner y-only grid, and a genuine per-tier OLS regression
+    trend overlay added'
+  - The new dashed trend-line series (one per tier, color-matched, enableMouseTracking/showInLegend
+    disabled) is a real analytical feature, not decoration — it visibly tracks each
+    cluster's slope and directly answers the LM-02/DE-03 gap from the previous round
   - 'First series correctly uses Imprint #009E73 green; palette order matches canonical
-    Imprint categorical sequence across all three tiers'
+    Imprint categorical sequence across all three tiers, identical between light/dark
+    renders'
   - Marker shape varies by category (circle/diamond/triangle) in addition to color
-    — a genuine CVD-safe redundant encoding, not just a color-only signal
-  - 'Clear three-tier visual story: Basic/Pro/Enterprise bands are cleanly separated
-    and show a believable positive engagement-spend correlation that strengthens with
-    tier'
-  - Theme-adaptive chrome is fully correct in both renders — data colors identical,
-    background/text/grid flip correctly with no dark-on-dark or light-on-light failures
-  - Explicit font sizing throughout (title 22px, axis titles 16px, ticks/legend 14px),
-    title fits without overflow, all axis labels carry appropriate units on Y
+    — CVD-safe redundant encoding
+  - Theme-adaptive chrome fully correct in both renders — background/text/grid flip
+    correctly with no dark-on-dark or light-on-light failures
+  - Explicit font sizing throughout (title 22px, axis titles 16px, ticks/legend 14px);
+    title fits comfortably without overflow
   weaknesses:
-  - Visual refinement is minimal — gridlines are default full-strength on both axes
-    and the plot area has no spine/border removal, giving it a 'library default' look
-    rather than a polished chart (DE-02)
-  - In the densest clusters (e.g., Enterprise ~175-200 spend band, mid-range Pro cluster)
-    markers overlap noticeably; radius 6 with opacity 0.75 is workable but could drop
-    slightly (radius ~5, opacity ~0.65) to reduce clutter without losing density signal
-    (VQ-03)
-  - Design is correct but generic beyond the shape-per-category touch — no distinctive
-    typographic hierarchy or subtle background/grid treatment that would elevate it
-    past a well-configured default (DE-01)
-  - Library usage is correct but doesn't reach for a distinctive Highcharts feature
-    beyond marker symbols (e.g., jitter, connector/regression overlay, or bubble-style
-    sizing) that would set it apart from a generic scatter implementation (LM-02)
+  - 'PIPELINE NOTE (not a code defect): the plot-light.png/plot-dark.png staged for
+    this review in GCS (gs://anyplot-images/staging/scatter-categorical/javascript/highcharts/)
+    were STALE — they embedded the pre-repair snippet (marker radius 6, opacity 0.75,
+    xAxis gridLineWidth 1, no trend-line series), i.e. exactly the implementation
+    already rejected at 87/100, not the current committed .js (radius 5, opacity 0.65,
+    xAxis grid off, per-tier regression overlay). Confirmed by diffing the embedded
+    <script> source in plot-light.html against plots/scatter-categorical/implementations/javascript/highcharts.js.
+    This review was completed by re-rendering the current commit locally with `ANYPLOT_THEME=light|dark
+    node automation/js-render/render.mjs highcharts.js` — whatever step is supposed
+    to refresh GCS staging after a repair commit did not run before this review was
+    dispatched; worth checking impl-repair.yml / impl-generate.yml''s upload step
+    so future re-reviews aren''t silently scored against a stale render.'
+  - 'DE-01 still short of publication-ready: beyond the trend overlay and shape variation,
+    the chart relies on standard Highcharts chrome (no custom background treatment,
+    no bespoke typographic hierarchy)'
+  - No annotation or callout calls out the actual insight (e.g., the widening/narrowing
+    gap between tier trend lines) — visual hierarchy carries the story but nothing
+    makes it explicit
   image_description: |-
-    Light render (plot-light.png):
+    NOTE: The plot-light.png/plot-dark.png staged in GCS for this review were stale (embedded the pre-repair snippet — see weaknesses). The descriptions below are of a fresh render of the CURRENT committed highcharts.js, produced locally via `node automation/js-render/render.mjs highcharts.js` for both themes, to ensure the review reflects the actual code in this PR.
+
+    Light render (plot-light.png, freshly re-rendered):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-categorical · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible. X-axis "Engagement Score" and Y-axis "Monthly Spend ($)" both dark, readable. Tick labels dark gray, subtle light-gray gridlines visible but not dominant. Legend "Subscription Tier" with Basic/Pro/Enterprise entries centered below the plot, fully legible.
-      Data: Three series — green circles (Basic, #009E73), purple/violet diamonds (Pro), slate-blue triangles (Enterprise). Clear diagonal positive-correlation bands per tier, tiers well separated with only minor overlap at cluster edges.
+      Chrome: Title "scatter-categorical · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible, comfortably sized (no overflow). X-axis "Engagement Score" and Y-axis "Monthly Spend ($)" both dark, readable, balanced sizes. Tick labels dark gray. Only y-axis gridlines are drawn (subtle, light gray) — x-axis grid removed, a cleaner look than the prior attempt. Legend "Subscription Tier" with Basic/Pro/Enterprise entries centered below the plot, fully legible.
+      Data: Three series — green circles (Basic, #009E73), lavender diamonds (Pro), slate-blue triangles (Enterprise), each with a dashed regression trend line in the same color threading through its cluster. Clear diagonal positive-correlation bands per tier, tiers well separated with only minor overlap at cluster edges. Markers are slightly smaller/more transparent than the prior attempt, reducing clutter in dense areas.
       Legibility verdict: PASS
 
-    Dark render (plot-dark.png):
+    Dark render (plot-dark.png, freshly re-rendered):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis titles rendered in light/white text, clearly legible against the dark background. Tick labels light gray, gridlines subtle dark-gray, visible but unobtrusive. Legend text is light-colored and fully readable — no dark-on-dark failures anywhere.
-      Data: Same green/purple/slate-blue colors as the light render — confirmed identical, only chrome (background, text, grid) flipped.
+      Chrome: Title and axis titles rendered in light/white text, clearly legible against the dark background. Tick labels light gray, y-axis gridlines subtle dark-gray-on-dark equivalent (light, low-opacity), visible but unobtrusive. Legend text is light-colored and fully readable — no dark-on-dark failures anywhere.
+      Data: Same green/lavender/slate-blue colors and trend lines as the light render — confirmed identical, only chrome (background, text, grid) flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,7 +74,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit, readable in both themes, no overflow
+        comment: All font sizes explicit, readable in both themes, title fits without
+          overflow
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -71,11 +84,11 @@ review:
         comment: No text overlap; legend clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Visible but dense clusters overlap noticeably; radius/opacity could
-          be tuned further
+        comment: Marker radius/opacity tuned down from prior attempt (6→5, 0.75→0.65)
+          exactly as requested; dense clusters now read cleanly
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -87,7 +100,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, legend near plot, balanced margins
+        comment: Good canvas utilization, legend near plot, balanced margins, correct
+          3200x1800 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -102,7 +116,7 @@ review:
         comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
           in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -110,21 +124,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Shape variation per category is a thoughtful touch, but otherwise
-          fairly standard styling
+        comment: Per-tier regression overlay + shape variation is a real design/analytical
+          improvement over the prior default look, but still short of a bespoke, publication-ready
+          treatment
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Default-strength gridlines on both axes, no spine/border refinement
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: three cleanly separated tier bands show
-          progression'
+        comment: x-axis gridlines removed (was full-strength on both axes), leaving
+          a subtle y-only grid; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Per-tier trend lines make the engagement-spend relationship and its
+          slope explicit for each tier, strengthening the three-tier progression story
     spec_compliance:
       score: 15
       max: 15
@@ -185,7 +201,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat structure, small deterministic helpers only
+        comment: Flat structure, small deterministic helpers only (LCG, gaussian,
+          OLS fit)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,15 +220,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI
+        comment: Clean, no fake UI, trend-line calc is straightforward OLS
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct Highcharts.chart API, animation disabled
+        comment: Correct Highcharts.chart API, animation disabled, mount-node contract
+          respected
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -219,22 +237,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level Highcharts.chart usage with proper options structure
+        comment: Correct high-level Highcharts.chart usage; combining scatter+line
+          series with mouse-tracking/legend disabled is the idiomatic way to fake
+          a regression overlay in the core-only bundle
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Marker symbol variation per series is a nice touch but not a deeply
-          distinctive Highcharts feature
-  verdict: REJECTED
+        passed: true
+        comment: Per-tier regression trend overlay (dashStyle, disabled legend/tracking)
+          directly answers the prior review's ask for a distinctive feature beyond
+          marker symbols
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
