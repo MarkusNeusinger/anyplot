@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: polar-line
 created: '2026-09-05T11:26:27Z'
-updated: '2026-09-05T11:31:27Z'
+updated: '2026-09-05T11:47:33Z'
 generated_by: claude-sonnet
 workflow_run: 33962868833
 issue: 2692
@@ -12,85 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
   - Highcharts core has no polar module (highcharts-more not loaded); instead of returning
     NOT_FEASIBLE, the implementation converts (hour, kWh) to Cartesian (x, y) and
     hand-draws the concentric-circle radius rings and radial hour spokes with the
     renderer API — a genuine polar coordinate system, not a picture of one.
-  - Weekday's double-peak (morning commute + evening cooking) versus weekend's single
-    broad midday-to-evening bump is immediately legible from shape alone — the story
-    reads at a glance.
+  - 'Correctly addressed both prior review weaknesses: radial tick labels now show
+    units ("0.3 kWh", "0.6 kWh", ...) and were moved from the crowded 01:00 spoke
+    to the clear 15:00 spoke, eliminating the previous label/line overlap.'
   - 'Full Imprint palette compliance: Weekday is #009E73 (brand green, position 1),
     Weekend is #C475FD (position 2, canonical order); data colors are pixel-identical
     between light and dark renders, only chrome flips.'
   - 'Both renders pass the theme-readability check: warm off-white / warm near-black
     backgrounds, all title/subtitle/legend/tick text uses theme-adaptive ink tokens
     with no dark-on-dark or light-on-light failures.'
+  - Weekday's double-peak (morning commute + evening cooking) versus weekend's single
+    broad midday-to-evening bump is immediately legible from shape alone — the story
+    reads at a glance.
   - Title format is correct ("Hourly Energy Demand · polar-line · javascript · highcharts
-    · anyplot.ai") and comfortably sized for the square canvas; subtitle and legend
-    give clear real-world context (U.S. household electricity demand).
-  - Tooltip formatter surfaces exact hour + kWh per point — a nice interactive touch
-    that adds value in the HTML detail view without harming the static PNG.
+    · anyplot.ai") and comfortably sized for the square canvas; tooltip formatter
+    surfaces exact hour + kWh per point.
   weaknesses:
-  - Radial axis tick labels (0.3, 0.6, 0.9, 1.2) show bare numbers with no unit —
-    append "kWh" (e.g. "0.3 kWh") or add a small radial axis title so the scale is
-    self-explanatory without relying on the tooltip/subtitle.
-  - The "0.3" radial tick label is placed along the hour-1 spoke, which is exactly
-    where both the Weekday and Weekend lines sit at that time of night (values ~0.28-0.36
-    kWh) — the label crowds/overlaps the lines there. Move the tick labels to a sparser
-    spoke (e.g. hour 2 or hour 23, where all series sit further from that radius)
-    or nudge them further outward along the same spoke.
-  - Only 24 points per series (sparse, well under the <50-point threshold) — the style
-    guide calls for larger, more prominent markers at this density; current marker.radius=4
-    (CSS px) reads a little small relative to the 2.5px line weight. Bumping to ~5-6
-    would make individual hourly readings pop more.
+  - 'Point markers do not render at all, in either theme. plotOptions.series.marker
+    sets `radius: 6, lineWidth: 0` but never sets `enabled: true`. Highcharts'' marker.enabled
+    default is `null` (auto), which auto-hides markers whenever the pixel spacing
+    between adjacent points is below an internal threshold — which this compact 24-point
+    polar plot triggers regardless of the configured radius. Verified by zooming into
+    multiple data-point vertices (e.g. the weekday morning ramp corner and the weekday
+    evening peak) in both plot-light.png and plot-dark.png: every vertex is a plain
+    sharp line corner with no filled circle, and the rendered HTML has no highcharts-markers
+    group. This makes the previous round''s fix (bumping marker radius from 4 to 6
+    in response to the sparse-data marker-prominence weakness) completely invisible
+    — a regression, not a fix. Set `plotOptions.series.marker = { enabled: true, radius:
+    6, lineWidth: 0 }` so the 24 discrete hourly readings are visible as required
+    for sparse (<50-point) data.'
   - 'Data storytelling is good via shape alone but could go further: a light callout
     or emphasis at the weekday morning/evening peaks (e.g. hour 8 and hour 19) would
-    sharpen the focal point beyond just the line shape.'
+    sharpen the focal point beyond just the line shape (minor, carried over from the
+    previous review, not required).'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Hourly Energy Demand · polar-line · javascript · highcharts · anyplot.ai" in bold dark ink at top-center, comfortably within plot width (no clipping/overflow). Subtitle in softer grey directly below. Hour labels (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) ring the outer edge of the polar plot in soft grey, evenly spaced every 3 hours. Radial tick labels (0.3, 0.6, 0.9, 1.2) sit along the ~01:00 spoke in soft grey. Concentric circular grid rings and radial spokes are thin and subtle, clearly visible but not competing with data. Legend ("Weekday", "Weekend") centered at the bottom in soft grey text with color swatches. All text is clearly readable against the light background — no light-on-light issues.
-      Data: Weekday line is brand green (#009E73) with circular markers, tracing a double-peak shape (morning ramp around 06:00-08:00, higher evening peak around 18:00-20:00). Weekend line is lavender (#C475FD, Imprint position 2), tracing a smoother single broad bump spanning midday into evening, with a lower overnight trough than weekday. Lines are clearly distinguishable from each other and from the background.
-      Legibility verdict: PASS (one minor overlap: the "0.3" radial tick label sits close to both data lines near the 00:00–01:00 sector — a legibility nuisance, not a failure, since text stays independently readable).
+      Chrome: Title "Hourly Energy Demand · polar-line · javascript · highcharts · anyplot.ai" in bold dark ink at top-center, comfortably within plot width, no clipping/overflow. Subtitle in softer grey directly below. Hour labels (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00) ring the outer edge in soft grey, evenly spaced every 3 hours. Radial tick labels now read "0.3 kWh", "0.6 kWh", "0.9 kWh", "1.2 kWh" (units added since the previous review) and sit along the 15:00 spoke, in a clear gap between the two data lines — the previous overlap with the lines near hour 00:00-01:00 is resolved. Concentric circular grid rings and radial spokes are thin and subtle. Legend ("Weekday", "Weekend") centered at the bottom in soft grey text with color swatches. All text is clearly readable against the light background — no light-on-light issues.
+      Data: Weekday line is brand green (#009E73), tracing a double-peak shape (morning ramp around 06:00-08:00, higher evening peak around 18:00-20:00). Weekend line is lavender (#C475FD, Imprint position 2), tracing a smoother single broad bump spanning midday into evening. Lines are clearly distinguishable from each other and the background. However, zooming into multiple vertices (e.g. the morning-ramp corner and the evening peak) shows NO marker circles at any data point in either series — despite plotOptions.series.marker being configured with radius 6 — only plain sharp line corners. The rendered HTML also has no highcharts-markers group. This is a genuine defect, not a legibility nuance.
+      Legibility verdict: PASS for text; the missing markers are an Element Visibility (VQ-03) defect, not a text-legibility failure.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black, not light.
       Chrome: Same layout as light — title now rendered in light/white ink, subtitle and axis/tick/legend labels in light grey. Grid rings and spokes remain subtle. No dark-on-dark failures observed; every chrome element (title, subtitle, hour labels, radial tick labels, legend) is clearly legible against the dark background.
-      Data: Weekday (#009E73) and Weekend (#C475FD) lines are pixel-identical in hue and shape to the light render — only the chrome (background, text, grid) flipped as required. Both lines remain clearly distinguishable against the dark surface.
-      Legibility verdict: PASS (same minor "0.3" label proximity-to-line issue as light render, not a legibility failure).
+      Data: Weekday (#009E73) and Weekend (#C475FD) lines are pixel-identical in hue and shape to the light render — only the chrome (background, text, grid) flipped as required. The same missing-marker defect is confirmed at the identical vertex (weekday morning-ramp corner): a sharp line corner with no filled circle, matching the light render exactly — this is a reproducible rendering bug, not a one-off artifact.
+      Legibility verdict: PASS for text; same missing-marker VQ-03 defect as the light render.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 20px, subtitle 14px, ticks 12-14px).
-          Title fits comfortably within plot width on the square canvas at ~58% width,
-          well below overflow. Readable in both themes. Small deduction for the tick-label/line
-          proximity near the 00:00-01:00 sector (see VQ-02).
+          Title fits comfortably within plot width on the square canvas, well below
+          overflow. Readable in both themes. The prior tick-label/line proximity issue
+          is fixed.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'No text-on-text overlap. Minor overlap: the ''0.3'' radial tick
-          label crowds the Weekday/Weekend lines near hour 00:00-01:00, where both
-          series sit right around that radius.'
+        comment: No text-on-text or text-on-line overlap. The radial tick labels were
+          moved to the 15:00 spoke, resolving the previous overlap with the lines
+          near hour 00:00-01:00.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Lines (2.5px) and markers (radius 4) are visible and appropriate,
-          but at only 24 points/series (sparse, <50 threshold) markers could be a
-          touch more prominent per the data-density heuristic.
+        passed: false
+        comment: Point markers do not render at all in either theme despite plotOptions.series.marker
+          being configured with radius 6 — verified by zooming into multiple vertices
+          in both renders and by the absence of a highcharts-markers group in the
+          rendered HTML. For sparse 24-point data, discrete markers are expected per
+          the style guide; lines alone remain clear and distinguishable, which keeps
+          this from a 0, but the defect is real and reproducible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -108,11 +114,11 @@ review:
           legend sits close to the plot, nothing is cut off.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Hour labels are self-descriptive, but the radial (kWh) tick labels
-          show bare numbers with no unit shown on the axis itself.
+        passed: true
+        comment: Radial tick labels now include units ("0.3 kWh" etc.), fixing the
+          previous bare-number weakness. Hour labels are self-descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -130,25 +136,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Genuinely sophisticated: a hand-built polar coordinate renderer
-          with custom grid, thoughtful color use and typography — clearly above a
-          configured default, though the tick-label placement keeps it just short
-          of flawless.'
+        comment: A hand-built polar coordinate renderer with custom grid, thoughtful
+          color use and typography — clearly above a configured default.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle circular grid and radial spokes, no visible spines/frame (custom-drawn),
-          generous whitespace around the polar area and between legend and plot.
+        comment: Subtle circular grid and radial spokes, no visible frame, generous
+          whitespace around the polar area and between legend and plot.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
         comment: 'Shape alone tells the story clearly: weekday''s double commute-driven
-          peak vs. weekend''s single broad midday-to-evening bump. Could go slightly
-          further with an explicit peak callout, but not required for this spec.'
+          peak vs. weekend''s single broad midday-to-evening bump. Could go further
+          with an explicit peak callout, not required for this spec.'
     spec_compliance:
       score: 15
       max: 15
@@ -219,9 +223,8 @@ review:
         max: 3
         passed: true
         comment: Two small helper functions (polarPoint, seriesData) plus a render-event
-          handler are used, but they're the minimum necessary to do the polar->Cartesian
-          math once instead of duplicating it inline 48 times — a justified deviation,
-          not over-structuring.
+          handler are the minimum necessary to do the polar->Cartesian math once instead
+          of duplicating it inline — a justified deviation.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -257,9 +260,10 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly leverages the renderer API (an intended Highcharts extension
-          point) plus standard series/tooltip/legend config to build the polar geometry
-          the core bundle doesn't natively support.
+        comment: Correctly leverages the renderer API plus standard series/tooltip/legend
+          config to build the polar geometry the core bundle doesn't natively support,
+          though the marker-visibility gap shows an incomplete grasp of Highcharts'
+          auto-marker-hiding behavior.
       - id: LM-02
         name: Distinctive Features
         score: 4
@@ -267,7 +271,7 @@ review:
         passed: true
         comment: The hand-rolled polar grid via chart.renderer.circle/path/text synced
           to axis.toPixels() is a distinctive, non-trivial use of Highcharts' low-level
-          drawing API that wouldn't translate directly to another library.
+          drawing API.
   verdict: REJECTED
 impl_tags:
   dependencies: []
