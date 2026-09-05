@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: lift-curve
 created: '2026-09-05T06:29:06Z'
-updated: '2026-09-05T06:46:17Z'
+updated: '2026-09-05T07:08:16Z'
 generated_by: claude-sonnet
 workflow_run: 33949758331
 issue: 2379
@@ -12,59 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 70
+quality_score: 87
 review:
   strengths:
-  - 'Correct lift-curve mechanics: cumulative fraud rate divided by baseline is computed
-    correctly, producing a curve that starts high (~13x) and monotonically decays
-    toward 1.0 as targeted population grows'
-  - Reference line at y=1 (random selection) is present, dashed, and clearly labeled
-    in the legend
-  - Decile markers are plotted along the curve, giving concrete reference points as
-    suggested by the spec
-  - 'Theme-adaptive chrome is correctly implemented: identical brand-green data color
-    in both renders, only background/ink/grid tokens flip between light and dark'
-  - Canvas is exactly 3200x1800 (landscape target), title format and axis labels are
-    correct and fully legible in both themes
+  - 'Correct lift-curve construction: cumulative lift decays from a high early value
+    toward the y=1 baseline exactly as the spec describes, with a dashed ''Random
+    selection'' reference line at y=1'
+  - Decile markers overlaid on the curve satisfy the spec's optional 'show decile
+    markers or actual values at key percentiles' guidance
+  - Shaded band between the curve and the y=1 baseline (band! with low alpha) gives
+    a tasteful, low-effort visual emphasis of the lift magnitude without cluttering
+    the chart
+  - Theme-adaptive chrome (INK/INK_SOFT/PAGE_BG tokens) is threaded through every
+    chrome element consistently; both renders are legible with no dark-on-dark or
+    light-on-light failures
+  - 'Imprint palette compliance is perfect: brand green #009E73 for the model line,
+    correct light/dark backgrounds, frameless legend with theme-correct text color'
+  - Clean KISS script structure with Random.seed!(42), only the imports actually used,
+    and idiomatic CairoMakie Axis/band!/hlines!/lines!/scatter!/axislegend usage
   weaknesses:
-  - 'The callout annotation is completely invisible in BOTH renders. Verified by pixel-sampling:
-    the code computes callout_pos around (18, 10.5) in data coordinates (roughly pixel
-    region x=500-900, y=300-650 on the 3200x1800 canvas) and calls arrows!(...) then
-    text!(ax, ...; text="Top 10% -> Xx lift", color=INK, fontsize=15, font=:bold),
-    but scanning that entire pixel region in plot-light.png and plot-dark.png finds
-    zero pixels matching INK or INK_SOFT — no arrow, no text glyph exists anywhere
-    in the saved PNG. The intended focal-point annotation is silently dropped.'
-  - 'The band!(ax, population_pct, fill(1.0, n_transactions), lift; color=(BRAND,
-    0.12)) shaded region between the reference line and the lift curve also does not
-    render: sampling a vertical slice through the band area (e.g. x=1635px at population=50%,
-    between y=1 and the curve) returns the exact flat background color (250,248,241
-    light / 26,26,23 dark) with no green tint blended in at any sampled row.'
-  - 'Because two of the five plotting calls (band!, arrows!+text!) produce no visible
-    output, the code carries dead/non-functional complexity — it reads as if it draws
-    a shaded lift region and a highlighted decile callout, but neither actually appears,
-    which is misleading and adds unjustified LOC. Fix: verify the exact CairoMakie
-    0.21.9 API for band! (argument order/types for x, ylower, yupper and the color
-    tuple syntax) and for arrows!/text! positioning (check whether `align`, `font=:bold`,
-    or the position argument form is causing them to fail silently), then confirm
-    visually that pixels of the expected color actually appear before considering
-    it done. If these features cannot be made to render reliably, remove them rather
-    than shipping invisible calls.'
-  - The composition leaves a large, unbalanced empty area in the upper-middle/right
-    of the chart (roughly x 15-95%, y above the curve) that was clearly intended to
-    host the callout annotation and now reads as unused whitespace rather than an
-    intentional design choice.
+  - 'The ''Top 10% -> Nx lift'' callout (arrows! + text! block) renders nothing in
+    either theme: pixel-level inspection of both plot-light.png and plot-dark.png
+    around the intended data position (population%=42, lift=9.5, which maps to roughly
+    px (1400,540) on the 3200x1800 canvas) shows only bare background/gridline, no
+    arrow and no bold text. The code executes without error and the rest of the figure
+    renders correctly, so this is dead/non-functional code, not a crash -- verify
+    the arrows!/text! calls actually draw (Makie API/arg-order/keyword issue) or remove
+    the block entirely.'
+  - Because the callout never renders, the wide-open canvas area to the right of the
+    curve (roughly x=40-100%, y=2-10 lift) stays empty whitespace with no focal point,
+    which is exactly the gap the code comment claims to be filling -- this costs Layout
+    (VQ-05) and Data Storytelling (DE-03) points versus what the code intended to
+    deliver
+  - 'Library Mastery is only moderate: band! for the shaded lift area is a nice touch
+    but is conceptually equivalent to fill_between in other plotting libraries, so
+    it doesn''t showcase a feature unique to Makie'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 exactly (sampled corner pixel = (250,248,241)).
-      Chrome: Title "lift-curve · julia · makie · anyplot.ai" centered top in bold dark ink, clearly readable. X-axis label "Population Targeted (%)" and Y-axis label "Cumulative Lift" both dark ink, readable. Tick labels (0, 50, 100 on x; 0, 5, 10 on y) in softer gray ink, readable. Top/right spines removed, left/bottom spines subtle gray. Horizontal gridlines at y=5 and y=10 are faint and unobtrusive.
-      Data: Single teal-green (#009E73) line starting near y≈13.5 at x=0, decaying smoothly and monotonically down toward y≈1 as x approaches 100. Ten small green-filled decile markers (with light-background-colored stroke) are placed along the curve at each 10% population interval. A dashed gray horizontal reference line sits at y=1, labeled "Random selection (no lift)" in the top-right legend alongside "Fraud model" for the solid line. NOTE: the code also draws a translucent green band between y=1 and the curve, and a callout annotation ("Top 10% → ~8.3x lift" with an arrow) near x=18%, y=10.5 — pixel-level sampling confirms NEITHER of these renders; that region and the band area show only the flat background color.
-      Legibility verdict: PASS for all visible chrome/text; the annotation intended to appear is simply absent from the canvas, not illegible.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "lift-curve · julia · makie · anyplot.ai" is bold, dark, centered at top, comfortably sized (~30% of plot width, no clipping). Axis labels "Population Targeted (%)" (x) and "Cumulative Lift" (y, rotated) are dark and legible. Tick labels (0/50/100 on x; 0/5/10 on y) use a slightly softer ink tone, clearly readable. A single subtle horizontal gridline is visible per labeled y-tick; no vertical gridlines. Top/right spines removed, left/bottom spines present in a soft ink tone.
+      Data: First series renders in Imprint brand green (#009E73): a smooth curve starting near ~13x lift at population=0%, decaying steadily toward 1x lift as population approaches 100%. A light green shaded band fills the area between the curve and the y=1 reference line. Ten small green decile markers (with light-background strokes) sit on the curve at 10%, 20%, ... 100%. A dark dashed horizontal reference line marks y=1 ("Random selection"). Legend top-right lists "Fraud model" (solid green) and "Random selection (no lift)" (dashed), no frame, text in the dark ink color. No callout text or arrow is visible anywhere on the canvas despite the source code containing an arrows!/text! block intended to place a "Top 10% -> Nx lift" annotation near population=42%/lift=9.5 -- a targeted pixel crop of that exact region shows only background and one gridline.
+      Legibility verdict: PASS (all rendered chrome is readable; the only issue is that the callout text itself never renders at all, which is a missing-content defect, not a legibility/contrast defect).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 exactly (sampled corner pixel = (26,26,23)).
-      Chrome: Title, axis labels, and tick labels all flip to light ink/gray tones and remain clearly readable against the dark background — no dark-on-dark failures observed. Spines and gridlines are appropriately dim.
-      Data: Identical teal-green (#009E73) line, decile markers, and dashed reference line as the light render — data colors confirmed identical between themes, only chrome inverted. Same missing-annotation and missing-band issue reproduces identically in this render (pixel sampling in the same region returns only the flat #1A1A17 background).
-      Legibility verdict: PASS for all rendered chrome/text; same missing-element defect as the light render.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same layout as the light render with all ink tokens flipped to light colors -- title, axis labels, and tick labels are all light-colored and clearly readable against the dark background. Spines/gridline in a light-toned soft ink, subtle and correctly visible.
+      Data: Data colors are pixel-identical to the light render -- brand green curve, band, and decile markers unchanged; only the dashed reference line and legend text/background flipped to dark-theme tokens. Same targeted-crop check at the intended callout location (population=42%/lift=9.5) confirms no arrow or text renders here either -- purely background plus the y=10 gridline.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; every chrome element that does render is legible). The missing callout is a content-completeness defect identical to the light render, not a theme-specific legibility failure.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -75,72 +69,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All chrome text readable in both themes at explicit font sizes
+        comment: All font sizes explicit (titlesize=20, xlabelsize/ylabelsize=14,
+          ticklabelsize=12); readable in both themes with good proportions.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line/markers well sized, but the intended band shading never renders,
-          reducing overall visual depth
+        comment: Line width, decile marker size, and band alpha are well matched to
+          a 5000-point aggregated curve.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line vs. gray dashed reference, not red-green reliant
+        comment: Brand green vs. neutral dashed reference line gives strong, CVD-safe
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Correct 3200x1800 canvas, but large unused whitespace where the callout
-          was meant to sit
+        passed: false
+        comment: Broken callout leaves the right/upper-right area of the plot as unaddressed
+          empty whitespace instead of the intended focal point.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (%), correct title format
+        comment: Descriptive axis labels with units (%, ratio implied by 'Cumulative
+          Lift').
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, correct theme backgrounds, identical data
-          colors across themes
+        comment: 'First series is #009E73; theme-correct chrome in both renders; identical
+          data colors across themes.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clear intent toward a polished, annotated composition, but the annotation/band
-          fail to render
+        comment: Shaded band, dashed reference line, frameless legend -- clearly above
+          library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle gridlines, dashed reference line refinement
+        comment: Spines removed, subtle single-axis grid, generous whitespace -- refined
+          but for the unused right-side area.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Intended focal-point callout highlighting top-decile lift is completely
-          absent from the render
+        comment: Decile markers and shaded band provide modest hierarchy, but the
+          intended callout ('Top 10% -> Nx lift') that would create a clear focal
+          point never renders.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,51 +147,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift-curve construction
+        comment: Correct lift curve.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Reference line and decile markers present; the 'actual values at
-          key percentiles' callout is coded but invisible
+        comment: y=1 reference line present, decile markers shown, curve shape matches
+          spec description.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = population %, Y = cumulative lift, full 0-100% range shown
+        comment: X = population % (0-100), Y = cumulative lift, correctly assigned.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match series
+        comment: Title format correct; legend labels ('Fraud model', 'Random selection
+          (no lift)') match the data series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Curve, reference line, decile markers all present; annotation coverage
-          missing
+        comment: Full curve, all ten deciles, and baseline reference shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fraud-detection scenario is plausible and neutral
+        comment: Neutral fraud-detection scenario, plausible and non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: n=5000, 8% fraud rate, realistic lift magnitudes (13x to 1x)
+        comment: 8% base fraud rate and ~13x top-percentile lift are plausible for
+          a well-separated fraud model.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -200,60 +200,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no functions/classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used
+        comment: CairoMakie, Colors, Random all used.
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: band!, arrows!, and text! calls execute but produce zero visible
-          pixels in either render -- dead/non-functional code shipped as if it worked
+        comment: The arrows!/text! callout block executes but produces no visible
+          output in either render -- dead code whose comment ('turning otherwise-empty
+          canvas into a focal point') doesn't match reality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+        comment: Saves plot-$(THEME).png via current save(...; px_per_unit=2) API.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/band!/hlines!/lines!/scatter!/axislegend usage; the
+          broken arrows!/text! call is the one non-idiomatic blemish.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of Axis/lines!/scatter!/hlines!/axislegend; band!/arrows!/text!
-          usage is not actually functioning
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Attempted band+annotation to showcase distinctive Makie features,
-          but neither renders so no credit beyond default
-  verdict: REJECTED
+        comment: band! shaded-area fill is a nice touch but conceptually equivalent
+          to fill_between in other libraries, not uniquely Makie.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
