@@ -1,0 +1,251 @@
+library: makie
+language: julia
+specification_id: scatter-color-mapped
+created: '2026-09-05T14:07:02Z'
+updated: '2026-09-05T14:40:09Z'
+generated_by: claude-sonnet
+workflow_run: 33970269271
+issue: 2004
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Marker alpha (0.85) added exactly as the spec's own note suggests ("consider transparency
+    if points overlap significantly"), softening the previously flagged overlapping
+    clusters
+  - New translucent heatmap backdrop of the noise-free spatial trend gives the plot
+    an immediate, at-a-glance sense of the eastward concentration gradient, directly
+    resolving the prior review's DE-03 (no visual hierarchy) weakness
+  - Colorbar bound directly to the scatter plot object (`Colorbar(fig[1,2], sc; ...)`),
+    the idiomatic Makie pattern
+  - Theme-adaptive chrome (title, axis labels, ticks, spines, grid, colorbar, marker
+    halo) correctly threaded through every element in both renders, confirmed by an
+    independent re-render of the exact commit
+  - Clean KISS structure, reproducible via `Random.seed!(42)`, correct canonical title,
+    exact 3200x1800 canvas
+  - Realistic, neutral geoscience scenario (mineral concentration over a survey grid)
+    with sensible units and ranges
+  weaknesses:
+  - The new heatmap backdrop uses colorrange = extrema(trend_zs) while the scatter/colorbar
+    use a fixed colorrange = (5.0, 100.0) -- both layers share the same IMPRINT_SEQ
+    colormap and the figure exposes only one Colorbar (bound to the scatter), so identical-looking
+    backdrop and marker hues do not necessarily represent the same Mineral Concentration
+    (ppm) value. A careful viewer could misread the backdrop as being calibrated to
+    the visible colorbar.
+  - A handful of marker pairs still visually touch in the densest clusters even with
+    alpha=0.85; a slightly smaller markersize (~14) in those regions would fully resolve
+    it
+  image_description: |-
+    NOTE ON ARTIFACTS: The plot_images/plot-light.png and plot_images/plot-dark.png supplied for this review attempt were verified (via pixel diffing) to be stale -- they match the attempt-1 code (commit 118de8ec1, pre-fix: no heatmap backdrop, no marker alpha) rather than the current attempt-2 code (commit 4d119e156). To review the actual PR content, the implementation was independently re-executed with Julia 1.11.9 against the repo's own Project.toml/Manifest.toml (which pins julia_version = "1.11.9" and Makie 0.21.9, matching the file header), producing byte-for-byte-consistent renders for both themes. The description and scoring below are based on that verified, correct rendering of the current code -- NOT the stale plot_images/ files. This is a workflow/CI artifact-refresh issue (impl-review.yml did not regenerate plot_images after the impl-repair commit), not an implementation defect -- no code change is warranted for this in the .jl file.
+
+    Light render (verified plot-light.png, current code):
+      Background: Warm off-white (#FAF8F1) page background, now overlaid by a subtle (alpha=0.18) translucent heatmap of the noise-free spatial trend, tinting the surface from pale green (low easting, low concentration) toward a pale blue-lavender (high easting, high concentration).
+      Chrome: Bold dark-ink title "scatter-color-mapped · julia · makie · anyplot.ai" at top; "Easting (m)" / "Northing (m)" axis labels in dark ink; tick labels and colorbar ticks in softer dark-gray ink; subtle gridlines; top/right spines removed. All chrome remains clearly legible over the tinted backdrop.
+      Data: 250 scatter points colored on the Imprint sequential scale (brand green #009E73 -> blue #4467A3), semi-transparent (alpha=0.85) with a thin off-white halo stroke separating touching points. Colorbar on the right labeled "Mineral Concentration (ppm)" with ticks 20-100.
+      Legibility verdict: PASS -- all text readable against the light, now gently gradient-tinted background; no light-on-light issues.
+
+    Dark render (verified plot-dark.png, current code):
+      Background: Warm near-black (#1A1A17) page background, tinted by the same heatmap layer at reduced opacity into dark teal (west) to dark blue-gray (east).
+      Chrome: Same title, axis labels, and colorbar label now in light ink (~#F0EFE8); tick labels in a softer light-gray; gridlines flip to a light, subtle style; spine pattern unchanged.
+      Data: Marker colors identical to the light render (green->blue), halo stroke now drawn in the dark page color -- confirming only chrome (and the backdrop's base tone) flips between themes, not the data colors.
+      Legibility verdict: PASS -- no dark-on-dark failures; all text remains clearly visible against the tinted dark backdrop.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, including over the new tinted heatmap
+          backdrop
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker alpha=0.85 added this attempt resolves the prior overlap-visibility
+          weakness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-blue sequential scale, adequate contrast, no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas, balanced proportions, no overflow or cutoff
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (Easting/Northing in m, ppm colorbar)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the Imprint-derived sequential cgrad used for both heatmap and
+          scatter; correct theme backgrounds
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Layered heatmap-trend + scatter with a shared color language reads
+          as an intentional, more distinctive design than a bare scatter+colorbar
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle theme-adaptive grid, refined marker halo,
+          smooth backdrop blending
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The spatial concentration gradient now reads at a glance via the
+          backdrop, not just via the colorbar; docked slightly because the backdrop's
+          colorrange isn't calibrated to the shared colorbar
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct color-mapped scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Perceptually-uniform colormap, labeled colorbar, moderate point size,
+          transparency for overlap -- all spec notes satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y/color mapped correctly, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Canonical title format; colorbar label matches the mapped variable
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers the plot type well; docked slightly because the auxiliary
+          heatmap layer isn't on the same colorrange as the shared colorbar it visually
+          implies
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible geoscience survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 5-100 ppm concentration range is sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes beyond the one-line trend() helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random -- all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Colorbar bound directly to the plot object, the idiomatic Makie pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layering heatmap! under scatter! with a shared colormap is a nice
+          compositional touch, though not something unique to Makie specifically
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
