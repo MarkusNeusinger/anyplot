@@ -1,0 +1,240 @@
+library: echarts
+language: javascript
+specification_id: learning-curve-basic
+created: '2026-09-05T06:18:54Z'
+updated: '2026-09-05T06:32:31Z'
+generated_by: claude-sonnet
+workflow_run: 33949242995
+issue: 2275
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Mandated title format, legend labels, and axis labels all correct and descriptive
+  - 'Imprint palette correctly applied: brand green (#009E73) for training, lavender
+    for validation, identical across both themes'
+  - Confidence bands correctly implemented with the canonical ECharts stacked-area
+    trick (invisible lower-bound line + stacked fill), tooltip/silent disabled on
+    synthetic helper series
+  - 'New markLine annotation calling out the final train/validation gap ("Gap: 0.015")
+    sharpens the data storytelling and is a distinctive, arbitrary-coordinate use
+    of ECharts beyond the common band trick'
+  - Deterministic, seeded LCG-based data generation with honest per-fold mean/std
+    aggregation across 10 folds
+  - Realistic, neutral churn-classifier scenario with a plausible converging bias/variance
+    pattern
+  - Both renders are theme-correct, legible, and free of edge clipping (verified the
+    gap label has ample right-margin clearance)
+  weaknesses:
+  - 'The Attempt-1 request to fix the asymmetric axis-line treatment was not visually
+    resolved: pixel inspection of both renders shows the yAxis still has no rendered
+    vertical line (only the xAxis bottom line is visible) even though yAxis.axisLine
+    styling now matches xAxis in code — likely an ECharts onZero/category-axis interaction
+    suppressing the line. Try `axisLine: { show: true, onZero: false, lineStyle: {
+    color: t.inkSoft } }` on the yAxis, or simply hide both axisLines for a consistent
+    frameless look.'
+  - Design Excellence is solid but still leans on a well-configured default beyond
+    the confidence bands and new gap markLine; further polish (e.g. subtle endpoint
+    markPoint, refined typography) would push it higher.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), correct light-theme surface.
+      Chrome: Title "learning-curve-basic · javascript · echarts · anyplot.ai" is bold, centered, dark ink, fully readable. Legend ("Training score" / "Validation score") sits directly below in dark text. Y-axis name "Accuracy" top-left; x-axis name "Training Set Size (samples)" centered below. Tick labels on both axes are legible dark-gray text. A dashed vertical markLine with rotated label "Gap: 0.015" connects the two rightmost points, fully inside the canvas margin (verified via pixel crop — no clipping).
+      Data: Training score in brand green #009E73 with a narrowing translucent green ±1 std band; Validation score in lavender (palette position 2) with a wider translucent purple band that narrows as sample size grows. Circular markers (~10px) at each of the 9 training-size points on both curves.
+      Legibility verdict: PASS — no light-on-light issues anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), correct dark-theme surface.
+      Chrome: Title, legend, axis names, tick labels, and the "Gap: 0.015" markLine label all flip to light ink and remain clearly legible; gridlines stay subtle but visible.
+      Data: Training (green) and Validation (lavender) curves and bands are pixel-identical in hue to the light render — confirmed only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures found.
+
+    Note: pixel-level inspection of both renders (columns x=190-214, the yAxis grid-left boundary) shows the yAxis has NO visible vertical axis line — only the 5 horizontal splitLines cross that region and the xAxis's bottom axisLine is visible. Despite the repair adding matching `axisLine` styling to yAxis, the rendered output is still asymmetric (bottom line only). This does not hurt legibility but the Attempt-1 DE-02 request for a consistent L-shaped-or-none frame was not visually achieved.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions, gap label clear of curves and canvas edge
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Prominent markers/lines appropriate for sparse 9-point data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe green/lavender pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; gap label fully inside margin
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Units present, self-describing
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes, theme-correct chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Gap markLine annotation adds polish beyond required bands
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis-line asymmetry from Attempt 1 persists visually despite code
+          change (see weaknesses)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Gap annotation creates a clear focal point on the residual generalization
+          gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct learning curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shaded bands, labeled metric axis, legend, real sample sizes, distinct
+          colors
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format, correct legend labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Converging bias/variance shown; residual gap now explicitly annotated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible churn-classifier scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible sample sizes and accuracy range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions, justified by JS lacking numpy
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical stacked-area confidence-band trick
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markLine with arbitrary coordinates and computed label is a distinctive
+          touch
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
