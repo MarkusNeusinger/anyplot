@@ -1,0 +1,232 @@
+library: d3
+language: javascript
+specification_id: scatter-color-mapped
+created: '2026-09-05T13:50:15Z'
+updated: '2026-09-05T14:02:49Z'
+generated_by: claude-sonnet
+workflow_run: 33969785983
+issue: 2004
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct imprint_seq (brand green → blue) sequential colormap for the single-polarity
+    temperature variable, with identical data colors across light and dark renders
+  - 'Clear data storytelling: dashed ''Urban core'' reference ellipse plus larger/more-opaque
+    markers for the top-quartile-hot stations create an immediate focal point that
+    surfaces the heat-island pattern'
+  - Fully theme-adaptive chrome in both renders — title, axis labels, tick labels,
+    gridlines, and colorbar axis all readable with no dark-on-dark or light-on-light
+    failures
+  - 'Clean idiomatic D3: scaleSequential + interpolateRgbBasis for the color scale,
+    manual linearGradient colorbar, L-shaped gridlines (domain-extreme ticks skipped)
+    to avoid a boxed frame'
+  - 'Realistic, physically plausible urban heat-island scenario: ~24 km city extent,
+    0.55°C/km radial temperature decay plus noise, deterministic LCG-seeded data'
+  - Axis and colorbar labels are descriptive with units (km, °C)
+  weaknesses:
+  - Title occupies only ~35% of canvas width — noticeably below the 50-70% guideline;
+    a slightly larger title fontsize would give it more visual weight without risking
+    overflow
+  - Hot-vs-normal marker size distinction (r=12 vs r=8) is subtle at full canvas resolution
+    — a larger delta would sharpen the visual hierarchy already established by the
+    annotation
+  - The manually-built linear-gradient colorbar and dashed annotation ellipse are
+    solid D3 techniques but not deeply distinctive to D3 specifically — could be pushed
+    further with e.g. a d3-contour density overlay or brush-driven annotation for
+    stronger library-mastery signal
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white.
+      Chrome: Bold dark title "scatter-color-mapped · javascript · d3 · anyplot.ai" centered at top; dark axis labels "Distance East of City Center (km)" / "Distance North of City Center (km)"; dark-gray tick labels on both axes; subtle light-gray gridlines on both axes (L-shaped, no boxed frame); a dashed gray ellipse annotation labeled "Urban core" in italic gray text near the plot center.
+      Data: ~180 scatter points colored via the Imprint sequential colormap (brand green #009E73 for cooler ~23-25°C stations, transitioning to blue #4467A3 for the hottest ~33-34°C stations near the city core); a vertical colorbar on the right labeled "Surface Temperature (°C)" with tick labels 24°-34°; top-quartile-hot stations render larger (r=12) and more opaque (0.95) than cooler stations (r=8, 0.75), creating a clear focal cluster inside the "Urban core" ellipse.
+      Legibility verdict: PASS — all text (title, axis labels, tick labels, colorbar labels, annotation) is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light color, fully readable against the dark background; gridlines are subtle light-gray at low opacity; the "Urban core" annotation text and dashed ellipse remain visible in a soft light-gray tone — no dark-on-dark failures observed.
+      Data: Marker colors are identical to the light render (same green-to-blue gradient, same size/opacity emphasis on hot stations), confirming only chrome flipped between themes.
+      Legibility verdict: PASS — no unreadable text in either theme.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; title runs smaller
+          (~35% width) than the 50-70% guideline, though not clipped or squeezed
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker sizing/opacity appropriate for ~180 points; hot-vs-normal
+          size delta (r=12 vs 8) is a bit subtle
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential scale is CVD-safe, not reliant on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills most of the canvas, balanced margins, colorbar close
+          to plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels and colorbar label with units (km, °C)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq colormap for single-polarity data; identical
+          data colors across themes; theme-correct backgrounds and chrome in both
+          renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Custom gradient colorbar, thoughtful annotation, clearly above library
+          defaults but short of full publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: L-shaped gridlines (domain-extreme ticks skipped to avoid a boxed
+          frame), spines removed, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Dashed 'Urban core' annotation plus size/opacity emphasis on hot
+          stations creates a clear visual focal point guiding the reader to the heat-island
+          effect
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct color-mapped scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Perceptually uniform colormap, labeled colorbar with units, moderate
+          point size, transparency for overlap — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X/Y correctly mapped, axes show full data range via .nice()
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format correct; colorbar serves as the legend and is correctly
+          labeled
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Full temperature range shown with radial decay plus noise variation
+          across the whole spatial extent
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Urban heat island monitoring study — realistic, neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Plausible city extent, temperature range, and radial decay rate for
+          an urban heat-island scenario
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only the d3 global used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Correct mount-node contract, no animation, current D3 v7 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Idiomatic scales, axes, and data joins throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Manual linearGradient colorbar and data-driven size/opacity encoding
+          use D3's low-level flexibility, though not uniquely D3-only techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
