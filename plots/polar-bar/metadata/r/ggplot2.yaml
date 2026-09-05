@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: polar-bar
+created: '2026-09-05T11:29:16Z'
+updated: '2026-09-05T11:47:10Z'
+generated_by: claude-sonnet
+workflow_run: 33962580505
+issue: 2693
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Canvas utilization is fixed from attempt 1: the wind-rose wedges now extend most
+    of the way to the outer gridline, filling the square canvas convincingly instead
+    of floating as a small disconnected shape.'
+  - position_stack(reverse = TRUE) is a smart, well-commented fix that keeps the thin
+    high-speed bins (15-20 kt, 20+ kt) visible at every direction by giving them the
+    larger outer radius instead of collapsing them near the center.
+  - Faint theme-adaptive radial grid (panel.grid.major using INK_SOFT) now gives the
+    0%/5%/10% labels a visual reference circle in both renders.
+  - 'Correct plot type: true polar stacked bar / wind rose via coord_polar(theta =
+    "x") + geom_col, covering all 16 compass directions and 5 stacked wind-speed bins
+    per the spec.'
+  - 'Palette compliance: first (and largest) series is exactly #009E73, remaining
+    series follow canonical Imprint order, identical across both renders.'
+  - Theme-adaptive chrome works correctly in both renders — no dark-on-dark or light-on-light
+    failures; PAGE_BG-colored bar strokes correctly flip between light and dark.
+  - Realistic, neutral meteorological scenario (prevailing westerlies) with a clear,
+    plausible directional and speed distribution.
+  - Clean, reproducible, idiomatic KISS-structured R script with only the libraries
+    it actually uses.
+  weaknesses:
+  - The 0%/5%/10% radial axis labels cluster together right along the W spoke (a ggplot2
+    coord_polar quirk where the y-axis text follows the pre-transform vertical), sitting
+    close to the 'W' compass label itself — slightly crowds that corner even though
+    no text actually overlaps.
+  - The lightest-frequency directions (NE, ENE, E) still render very thin wedges where
+    the individual speed-bin segments are only a few pixels tall; readable when zoomed
+    but easy to miss at a glance.
+  - Design excellence is solid but not yet distinctive beyond the reverse-stack trick
+    — no additional polish (e.g. subtle radial fade, annotated compass rose convention)
+    that would push it further above a well-executed default.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "polar-bar · r · ggplot2 · anyplot.ai" is dark ink, centered, fully legible. All 16 compass-direction labels (N, NNE, NE, ... NNW) render in medium-grey ink and are readable. A faint radial grid (0%/5%/10% rings) is now visible, anchoring the axis labels which sit along the W spoke. The "Wind speed" legend at the bottom is correct with 5 labeled swatches.
+      Data: Stacked wedges (green/lavender/blue/ochre/red, in that Imprint order) radiate from the center and now extend most of the way to the outer ring — a clear improvement over attempt 1's under-filled rose. The prevailing-westerly weighting (large SW/WSW/W wedges, small N/NE/ENE) is obvious. Thanks to reverse stacking, the higher-speed bins (ochre, red) sit on the outside and remain visible even for small directions. First series is #009E73.
+      Legibility verdict: PASS — all text is readable against the light background, no clipping at any canvas edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, compass labels, radial grid, tick labels, and legend all flip to light ink/grey and remain fully readable. No dark-on-dark failures observed anywhere, including the small-direction wedge outlines.
+      Data: Wedge colors are identical to the light render (only chrome flipped) — confirmed same Imprint hex values, same stacking order, same relative proportions.
+      Legibility verdict: PASS — all text is readable against the dark background, brand green remains clearly visible on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, compass labels, tick labels, and legend all readable in both
+          themes at explicit sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Reverse stacking keeps all 5 speed bins visible even on small-frequency
+          directions; thinnest wedges (NE/ENE/E) are still tight
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Five distinct hues from the Imprint palette, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas utilization fixed from attempt 1 (rose now fills most of the
+          square canvas); minor crowding where 0%/5%/10% labels sit next to the W
+          compass label
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Percent ticks self-describe units; compass directions are self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Imprint palette plus a deliberate reverse-stacking technique
+          to solve a real visibility problem
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Radial grid restored, no panel border, clean bottom legend, but still
+          fairly close to theme_minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point on SW/W prevailing wind with strong visual hierarchy
+          through wedge length
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: True polar stacked bar / wind rose via coord_polar(theta="x")
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bars radiate from center, 16 compass directions, stacked speed bins,
+          color encodes speed
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=direction, y=frequency, all 16 directions shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match speed
+          bins
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All 5 speed bins now visible at every direction thanks to reverse
+          stacking; extreme low-frequency directions still thin
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Prevailing-westerlies pattern is realistic, neutral, non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-14% frequency range is sensible for a directional distribution
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: dplyr, tidyr, scales, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, well-commented tradeoff
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave to plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_col + coord_polar + position_stack + scale_y_continuous(label_percent)
+          is idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: position_stack(reverse = TRUE) combined with clip = "off" is a genuinely
+          distinctive, well-reasoned technique for this chart type
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
