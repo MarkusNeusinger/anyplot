@@ -49,6 +49,8 @@ end
 # Agglomerative clustering (UPGMA / average linkage) via the Lance-Williams
 # update — produces a scipy-style merge sequence (id1, id2, distance, new_id)
 # without needing an external clustering package.
+distkey(a, b) = a < b ? (a, b) : (b, a)
+
 dist = Dict{Tuple{Int,Int},Float64}()
 for i in 1:n, j in (i + 1):n
     dist[(i, j)] = sqrt(sum((features[i, :] .- features[j, :]) .^ 2))
@@ -65,8 +67,7 @@ while length(active) > 1
     best_j = 0
     for a in 1:(length(active) - 1), b in (a + 1):length(active)
         p, q = active[a], active[b]
-        key = p < q ? (p, q) : (q, p)
-        d = dist[key]
+        d = dist[distkey(p, q)]
         if d < best_d
             best_d = d
             best_i = p
@@ -79,10 +80,9 @@ while length(active) > 1
         if k == best_i || k == best_j
             continue
         end
-        key_ik = best_i < k ? (best_i, k) : (k, best_i)
-        key_jk = best_j < k ? (best_j, k) : (k, best_j)
-        key_nk = nid < k ? (nid, k) : (k, nid)
-        dist[key_nk] = (ni * dist[key_ik] + nj * dist[key_jk]) / (ni + nj)
+        d_ik = dist[distkey(best_i, k)]
+        d_jk = dist[distkey(best_j, k)]
+        dist[distkey(nid, k)] = (ni * d_ik + nj * d_jk) / (ni + nj)
     end
     sizes[nid] = ni + nj
     push!(merges, (best_i, best_j, best_d, nid))
