@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: scatter-categorical
+created: '2026-09-05T13:41:14Z'
+updated: '2026-09-05T14:02:30Z'
+generated_by: claude-sonnet
+workflow_run: 33969125139
+issue: 2597
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Imprint palette in canonical order (Cropland=#009E73, Grassland=#C475FD,
+    Forest=#4467A3), with theme-correct chrome verified pixel-exact on both renders
+    (#FAF8F1 light / #1A1A17 dark background)'
+  - Triple-redundant group encoding (color + marker shape + direct on-cluster text
+    labels) makes each land-use group instantly identifiable without relying on the
+    legend alone
+  - Alpha-blended marker fills (0.85) plus background-colored strokes keep overlapping
+    points readable in both themes without an awkward white halo on dark backgrounds
+  - Clean KISS structure with explicit font sizes throughout and reproducible via
+    Random.seed!(42)
+  - Realistic, neutral data story (soil nutrient survey across land-use types) with
+    plausible mg/kg magnitudes and a believable nitrogen-phosphorus correlation gradient
+    across groups
+  weaknesses:
+  - Within-group marker density causes some same-category points to overlap in the
+    densest region (Forest cluster around Nitrogen 8-12, Phosphorus 5-10) — reduce
+    markersize from 16 to ~12-13 or lower alpha slightly further to improve individual-point
+    separation there
+  - Design Excellence is solid but stops short of publication-ready polish — no additional
+    refinement layer (e.g. a subtle trend indication or source note) beyond the direct
+    labels to further elevate the storytelling
+  - 'Library Mastery is moderate: mostly standard Axis/scatter!/text! calls; the glowcolor/glowwidth
+    trick on text! is a nice Makie-specific touch but is the only distinctive feature
+    leveraged'
+  - The bottom-right legend is largely redundant given the direct on-cluster labels
+    already identify each group by name — consider omitting it or shrinking further
+    to reduce duplication
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, confirmed pixel-exact #FAF8F1 (sampled RGB 250,248,241) — not pure white.
+      Chrome: Title "scatter-categorical · julia · makie · anyplot.ai" in bold dark ink, fully visible and centered near the top, not clipped. Axis titles "Soil Nitrogen (mg/kg)" / "Soil Phosphorus (mg/kg)" in dark ink with units. Tick labels in a softer dark gray, all legible. Thin light gridlines on both axes, subtle (~15% opacity). Top/right spines removed, left/bottom spines kept. Legend bottom-right, frameless, labels dark and legible.
+      Data: Three groups — green circles (Cropland), lavender triangles (Grassland), blue diamonds (Forest) — first series is the brand green #009E73 as required. Direct bold labels ("Cropland", "Grassland", "Forest") sit in open space above each cluster's centroid with a background-matched glow; verified via pixel crop that no label overlaps a marker in either theme.
+      Legibility verdict: PASS — all text (title, axis labels, tick labels, legend, direct group labels) is clearly readable against the light background; no light-on-light or clipping issues found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, confirmed pixel-exact #1A1A17 (sampled RGB 26,26,23) — not pure black.
+      Chrome: Title, axis titles, and direct group labels flip to light ink (near-white), tick labels to a softer light gray, gridlines to faint light-on-dark, legend text light and legible. Spines/legend frame treatment identical to light render (top/right spines removed, frameless legend).
+      Data: Same three group colors as light render (green #009E73, lavender, blue) — confirmed identical data-color positions, only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures found; all title, axis, tick, legend, and direct-label text is clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 20, axis labels 14, ticks 12,
+          legend 13, direct labels 15); readable in both themes with no overflow or
+          clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Verified via pixel crops that direct group labels do not overlap
+          any marker in either theme
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers (size 16, alpha 0.85) visible and shape-differentiated, but
+          some same-category points overlap in the densest Forest cluster region
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant encoding via marker shape + color, alpha-blended fills,
+          background-matched strokes for contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, plot fills most of the frame, balanced
+          margins, legend near plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels descriptive with units (mg/kg)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order for the 3 categories,
+          both backgrounds pixel-verified theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful triple-redundant encoding (color + shape + direct labels),
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, L-shaped spines, frameless legend, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Direct on-cluster labels create clear visual hierarchy and focal
+          points per group, guiding the reader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct categorical scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colorblind-safe colors, legend, varying marker shapes, and
+          alpha transparency for overlap all present per spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = nitrogen, Y = phosphorus, correctly mapped, axes show full data
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match the three land-use categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows distinct means and spreads per group plus a cross-group correlation
+          gradient
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral scientific scenario (soil nutrient survey across land-use
+          types)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Nitrogen/phosphorus mg/kg magnitudes and cropland>grassland>forest
+          ordering are factually plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current save() API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/scatter!/text!/axislegend usage via the high-level
+          Makie API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Makie's glowcolor/glowwidth text halo, a feature not easily
+          replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
