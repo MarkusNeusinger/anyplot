@@ -36,6 +36,12 @@ new Chart(canvas, {
         cubicInterpolationMode: "monotone",
         tension: 0.3,
         fill: false,
+        segment: {
+          // De-emphasize the post-elbow segments (dashed + muted) to visually
+          // reinforce the "diminishing returns" story beyond the highlighted marker.
+          borderDash: (ctx) => (ctx.p0DataIndex >= optimalK - 1 ? [8, 4] : undefined),
+          borderColor: (ctx) => (ctx.p0DataIndex >= optimalK - 1 ? `${t.palette[0]}80` : t.palette[0]),
+        },
       },
       {
         label: `Optimal k = ${optimalK}`,
@@ -69,7 +75,7 @@ new Chart(canvas, {
       x: {
         title: { display: true, text: "Number of Clusters (k)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { display: false },
       },
       y: {
         title: { display: true, text: "Inertia (Within-Cluster Sum of Squares)", color: t.ink, font: { size: 16 } },
