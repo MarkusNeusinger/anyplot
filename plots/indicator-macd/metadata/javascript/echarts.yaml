@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: indicator-macd
 created: '2026-09-05T05:40:14Z'
-updated: '2026-09-05T05:44:02Z'
+updated: '2026-09-05T05:52:23Z'
 generated_by: claude-sonnet
 workflow_run: 33947506056
 issue: 3181
@@ -12,47 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/echarts/plot-dark.html
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - All three required MACD components (MACD line, signal line, histogram) are present
-    with a dashed zero-reference line, directly supporting the spec's crossover/momentum-signal
-    use case.
-  - Uses semantically correct trading colors (green/red histogram polarity, blue/orange
-    MACD/signal lines) drawn from Imprint tokens, matching the spec's explicit color
-    guidance.
-  - Standard 12/26/9 parameters are called out in the subtitle, deterministic seeded
-    data generation, and theme-adaptive chrome (title/axis/tick colors) correctly
-    threaded through both renders.
-  - Canvas dimensions and mount-node contract (animation disabled, no explicit width/height
-    on init) are correct.
+  - 'Both attempt-1 weaknesses resolved: Histogram legend swatch now uses t.palette[0]
+    (matches plotted green) instead of the mismatched t.ink, and Library Mastery is
+    strengthened with markPoint crossover annotations plus a custom axisPointer/valueFormatter
+    tooltip'
+  - Crossover triangles (bullish green up, bearish red down) computed from histogram
+    sign flips give the chart a genuine focal point tied directly to the spec's 'identify
+    entry/exit points' application
+  - Semantically correct trading colors (green/red histogram polarity, blue/ochre
+    MACD/signal lines) match the spec's explicit color guidance and the style guide's
+    finance semantic-exception carve-out
+  - Deterministic seeded data generation, theme-adaptive chrome, and correct canvas/mount-node
+    contract are all intact from the previous attempt
   weaknesses:
-  - 'The "Histogram" legend swatch is colored with the ink token (black in light theme,
-    near-white in dark theme) instead of either of the two colors actually used for
-    the bars (green/red) — the legend icon fails to represent what''s plotted. Fix:
-    drop the itemStyle override on the legend entry, or set it to one of the semantic
-    bar colors.'
-  - Library mastery is fairly generic beyond the single markLine — no distinctive
-    ECharts features (e.g., visualMap, custom tooltip formatting, emphasis/highlight
-    states) that would differentiate this from a minimal reference implementation.
-  - Design polish is functional but plain — appropriate for a technical-indicator
-    chart, but there's room to visually emphasize crossover points or shade divergence
-    zones to strengthen the storytelling further.
+  - Design polish remains functional-but-plain outside the new crossover markers -
+    could still add subtle divergence-zone shading or emphasis states to further strengthen
+    DE-01/DE-02
+  - Data is a synthetic LCG price walk labeled 'MSFT daily close' rather than genuinely
+    sourced data (informational only, consistent with every synthetic-data implementation
+    in this catalog)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Centered bold title "indicator-macd · javascript · echarts · anyplot.ai" with subtitle noting 12/26/9 parameters and "MSFT daily close" context; legend (MACD, Signal, Histogram) below title; dark ink text throughout; rotated x-axis date labels; y-axis labeled "MACD value". All text clearly readable against the light background.
-      Data: MACD line in blue (palette[2]), Signal line in orange (palette[3]), Histogram bars in green (positive, palette[0]) / red (negative, palette[4]), dashed zero-reference line. First categorical series is not the brand green because the spec explicitly requests conventional trading colors (green/red polarity, blue/orange lines) — a semantic-exception case.
+      Background: Warm off-white (#FAF8F1), matches spec
+      Chrome: Centered bold title "indicator-macd · javascript · echarts · anyplot.ai" with subtitle noting 12/26/9 parameters; legend (MACD, Signal, Histogram) below title; Histogram swatch is now solid green (fixed from attempt-1's mismatched black ink swatch); rotated date labels on X-axis; "MACD value" label on Y-axis. All readable, dark ink on light background.
+      Data: MACD line blue (palette[2]), Signal line ochre/gold (palette[3]), Histogram bars green (positive, palette[0]) / red (negative, palette[4]) straddling a dashed zero line. New crossover triangle markers (green up / red down) at MACD-signal crossover points.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same layout as light render; title/subtitle/legend/axis text flip to light-colored ink and remain fully legible. No dark-on-dark issues detected.
-      Data: MACD (blue), Signal (orange), Histogram (green/red) colors are pixel-identical to the light render — only chrome adapted. One inconsistency observed in both renders: the "Histogram" legend swatch uses the ink token (black in light, near-white in dark) rather than a data color, so it doesn't visually match the plotted green/red bars.
+      Background: Warm near-black (#1A1A17), matches spec
+      Chrome: Identical layout to light render; title, subtitle, legend, axis labels, gridlines all flip to light-colored chrome and remain fully legible. No dark-on-dark failures. Legend Histogram swatch matches plotted green in this render too.
+      Data: MACD (blue), Signal (ochre), Histogram (green/red), and crossover triangles are pixel-identical in hue to the light render - only chrome adapted, confirming palette invariance.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,25 +56,26 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes, explicit font sizes throughout
+        comment: Explicit font sizes throughout, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data
+        comment: No collisions between title, legend, axis text, or crossover markers
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars and lines clearly visible for 120-point series
+        comment: Bars/lines clearly visible for 120 points; crossover triangles appropriately
+          sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Histogram polarity also reinforced by position relative to zero line,
+        comment: Histogram polarity reinforced by position relative to zero line,
           not color alone
       - id: VQ-05
         name: Layout & Canvas
@@ -91,24 +88,25 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled MACD value; dates self-explanatory on X
+        comment: Y-axis labeled MACD value, dates self-explanatory on X
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Semantic color exception is defensible, but Histogram legend swatch
-          uses ink token instead of a data color
+        passed: true
+        comment: Blue/ochre and green/red are a justified finance semantic exception;
+          attempt-1 legend swatch mismatch is now fixed
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Clean but generic financial-indicator styling
+        comment: Clean styling, now with a distinctive crossover-annotation touch
+          beyond baseline defaults
       - id: DE-02
         name: Visual Refinement
         score: 3
@@ -117,13 +115,13 @@ review:
         comment: Y-axis line/ticks hidden, subtle grid, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Zero-line and color-coded histogram support crossover narrative;
-          legend mismatch undercuts clarity slightly
+        comment: Crossover triangles give a clear focal point tied to the spec's entry/exit
+          application
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,19 +135,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: MACD, signal, histogram, zero line, 12/26/9 noted in subtitle
+        comment: MACD line, signal line, histogram, zero reference line, 12/26/9 parameters
+          noted, plus bonus crossover markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=MACD value, full range shown
+        comment: X = date, Y = MACD value; full series range shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct; Histogram legend swatch color mismatch
+        passed: true
+        comment: Title format matches exactly; legend swatches now all correctly reflect
+          plotted colors
     data_quality:
       score: 14
       max: 15
@@ -159,19 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three MACD components plus zero line present
+        comment: All three MACD components plus zero line and crossover annotations
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Plausible price walk; labeled MSFT daily close while synthetic
+        comment: Plausible price walk and MACD magnitudes; synthetic data labeled
+          as MSFT daily close
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MACD/signal range sensible for ~$182 base price
+        comment: MACD/signal range sensible for a ~$182 base price
     code_quality:
       score: 9
       max: 10
@@ -181,19 +182,19 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few helper functions justified by EMA/MACD calculation
+        comment: Helper functions justified by EMA/MACD calculation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, deterministic
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond provided globals
+        comment: No imports; only provided globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -205,27 +206,31 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation false
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: markLine, per-value bar itemStyle, axisPointer cross with valueFormatter,
+          emphasis.focus series
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct axes, markLine, per-value itemStyle callback
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Only markLine; no visualMap, tooltip formatting, or emphasis states
+        comment: markPoint crossover annotations computed from histogram sign flips
+          is genuinely ECharts-idiomatic
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - time-series
