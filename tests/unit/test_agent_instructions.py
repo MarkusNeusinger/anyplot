@@ -8,14 +8,16 @@ moves, a link rots, a rule gets tightened in one file and not the other, and
 the guide keeps reading as authoritative while it sends the next agent
 somewhere that no longer exists.
 
-Four cheap pins, none of which needs the database, the network or a checkout of
+Five cheap pins, none of which needs the database, the network or a checkout of
 anything but this repository:
 
 1. every backtick-quoted repo path in the agent-facing files resolves;
 2. every relative Markdown link resolves, and every same-page anchor points at
    a heading that is there;
 3. every skill the routing table names exists as `.claude/skills/<name>/SKILL.md`;
-4. the rules that are supposed to be mirrored are present on BOTH sides.
+4. the rules that are supposed to be mirrored are present on BOTH sides;
+5. `.claude/guardrails.md` stays a companion — every section it carries maps to
+   a binding one-liner in CLAUDE.md, and the file says so about itself.
 
 (4) is deliberately a keyword pin, not a text diff: the two files address
 different audiences and paraphrase each other, so requiring byte equality would
@@ -38,10 +40,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 COPILOT_MD = REPO_ROOT / ".github" / "copilot-instructions.md"
+GUARDRAILS_MD = REPO_ROOT / ".claude" / "guardrails.md"
 
 AGENT_FILES = [
     CLAUDE_MD,
     COPILOT_MD,
+    GUARDRAILS_MD,
     REPO_ROOT / "agentic" / "docs" / "project-guide.md",
     REPO_ROOT / "agentic" / "commands" / "prime.md",
 ]
@@ -329,3 +333,62 @@ def test_each_guide_names_the_other_as_its_companion() -> None:
     assert "companion guide `claude.md`" in copilot
     for name, text in (("CLAUDE.md", claude), ("copilot-instructions.md", copilot)):
         assert "both files must stay in sync" in text, f"{name} dropped the sync claim"
+
+
+def test_guardrails_split_stays_subordinate() -> None:
+    """The rationale file must stay a companion, never become the rule.
+
+    Two ways this split rots: CLAUDE.md loses the pointer, so nobody finds the
+    rationale; or `.claude/guardrails.md` starts reading like the authority, so
+    a rule ends up living only there — where no session loads it.
+    """
+    claude = _flat(CLAUDE_MD.read_text(encoding="utf-8"))
+    guardrails = _flat(GUARDRAILS_MD.read_text(encoding="utf-8"))
+
+    assert ".claude/guardrails.md" in claude, "CLAUDE.md no longer points at the rationale file"
+    assert "is the rule and this is the commentary" in guardrails, (
+        "`.claude/guardrails.md` must state that CLAUDE.md wins — without it the "
+        "companion file starts reading like the authority"
+    )
+
+
+# Every `##` section of `.claude/guardrails.md` → a phrase that must appear in
+# CLAUDE.md, where the binding one-liner lives. The map is explicit on purpose:
+# adding a section to the companion file fails the test until its rule is
+# registered here, and registering it forces you to name the CLAUDE.md line it
+# belongs to. A disclaimer sentence alone would not have caught that.
+#
+# The phrases are searched in the whole of CLAUDE.md rather than in one
+# section, because this repository states its rules across "Important Rules"
+# and "Development Workflow"; each anchor therefore carries the rule's
+# OBLIGATION and not just its subject, so it cannot match some other mention.
+GUARDRAIL_SECTION_ANCHORS = {
+    "Delegated agents run on Opus by default": "opus by default",
+    "External-system writes need explicit, named authorization": "explicit, named authorization",
+    "Modify repo files only with the Edit/Write tools": "heredocs/sed",
+}
+
+
+def _guardrail_sections() -> list[str]:
+    return re.findall(r"^## (.+)$", GUARDRAILS_MD.read_text(encoding="utf-8"), re.M)
+
+
+def test_every_companion_section_is_registered() -> None:
+    """A new section in the companion file must be registered, both ways.
+
+    Unregistered section → a rule could live only where no session loads it.
+    Registered but absent section → the map grants cover to nothing and rots.
+    """
+    sections = set(_guardrail_sections())
+    registered = set(GUARDRAIL_SECTION_ANCHORS)
+    assert not sections - registered, f"unregistered sections in guardrails.md: {sorted(sections - registered)}"
+    assert not registered - sections, f"registered but missing from guardrails.md: {sorted(registered - sections)}"
+
+
+@pytest.mark.parametrize("section", sorted(GUARDRAIL_SECTION_ANCHORS), ids=lambda s: s[:40])
+def test_companion_section_has_a_binding_rule(section: str) -> None:
+    """Each rationale section maps to a rule CLAUDE.md states in its own right."""
+    anchor = GUARDRAIL_SECTION_ANCHORS[section]
+    assert anchor.lower() in _flat(CLAUDE_MD.read_text(encoding="utf-8")), (
+        f"guardrails.md § {section!r} has no binding counterpart in CLAUDE.md"
+    )
