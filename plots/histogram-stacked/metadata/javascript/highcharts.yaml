@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: histogram-stacked
 created: '2026-09-05T04:35:38Z'
-updated: '2026-09-05T04:39:01Z'
+updated: '2026-09-05T04:46:49Z'
 generated_by: claude-sonnet
 workflow_run: 33944775410
 issue: 2601
@@ -12,42 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 90
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order — Car (first series) is brand green
-    #009E73, Bus is lavender, Train is blue; identical data colors across both themes'
-  - Theme-adaptive chrome fully threaded through tokens — warm off-white background
-    in light, warm near-black in dark, all text legible in both
-  - Shared bin boundaries computed once (minValue/maxValue/binWidth) and applied identically
-    to all three groups, satisfying the spec's core requirement
-  - 'Idiomatic Highcharts stacking via plotOptions.series.stacking: ''normal'' with
-    pointPadding/groupPadding tuned to 0.05/0 for a continuous histogram look'
-  - Deterministic in-memory data generation via a fixed-seed LCG with Box-Muller normal
-    sampling — fully reproducible, no external dependencies
-  - Canvas renders at the exact canonical landscape size (3200×1800) with no clipped
-    or cut-off elements in either render
+  - Stack total labels above each bar (Highcharts stackLabels) surface the combined
+    frequency at a glance, adding a real data-storytelling layer beyond the raw stacked
+    segments
+  - Tight point/group padding with borderRadius scope:'stack' gives the bars a true
+    touching-bin histogram look with a polished rounded outer edge, distinct from
+    a generic grouped column chart
+  - 'First categorical series is #009E73 with the remaining Imprint palette colors
+    in canonical order, and both themes keep data colors identical while chrome (background,
+    grid, text) flips correctly'
+  - Synthetic data shows three genuinely different per-group distributions (Car peaks
+    early ~20-25min, Train peaks ~25-30min, Bus skews later ~30-40min) which is exactly
+    the kind of composition variation the spec asks for
+  - Deterministic seeded LCG (seed=42) keeps the browser-side data generation fully
+    reproducible
   weaknesses:
-  - Groups are stacked in a fixed order (Car, Bus, Train) rather than ordered by size
-    within each bin as the spec's notes suggest considering — minor, since this is
-    a 'consider' not a hard requirement
-  - 'Design excellence is at baseline: only y-axis gridlines and token-driven chrome
-    are present, no additional visual hierarchy or refinement beyond the style-guide
-    defaults (e.g. no subtle bar corner treatment, no emphasis on the modal bin)'
-  - No distinctive Highcharts-specific feature beyond stacking + padding tuning (e.g.
-    no data labels, no stacked-total labels on top of bars) to showcase library mastery
+  - Design still reads as a well-configured Highcharts default rather than a fully
+    bespoke publication-ready chart — consider a subtler y-axis-only grid treatment
+    or a stronger visual focal point (e.g. highlighting the peak bin) to push Design
+    Excellence further
+  - Stack order (Car/Bus/Train) is fixed across every bin rather than reordered by
+    per-bin size as the spec's 'consider ordering groups by size within bins' note
+    suggests — a minor, optional refinement, not a compliance failure since a fixed
+    legend-consistent order is also a valid and common choice
+  - Stack label font (13px) is noticeably smaller than the surrounding tick labels
+    (14px) despite carrying important total-count information — bumping it to ~14-15px
+    would improve visual balance without harming legibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), no pure white anywhere.
-      Chrome: Title "histogram-stacked · javascript · highcharts · anyplot.ai" in bold dark ink, centered at top. X-axis title "Commute Time (minutes)" and Y-axis title "Number of Commuters" in medium-gray ink, both fully legible. Tick labels (bin ranges 5-10 through 60-65 on x, 0-160 on y) all crisp and readable. Subtle horizontal gridlines only. Legend (Car / Bus / Train with colored dot swatches) sits below the x-axis, fully legible.
-      Data: 12 stacked column bins forming a right-skewed, roughly bell-shaped distribution peaking at 20-25 minutes (~149 total). Bottom segment (Train) is blue (#4467A3), middle segment (Bus) is lavender/violet (#C475FD), top segment (Car) is brand green (#009E73) — confirmed the first series (Car) is #009E73. Stacking correctly sums to total bar height per bin; several bins with zero count for a given group render as an absent segment for that bin.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-stacked · javascript · highcharts · anyplot.ai" in bold dark ink, centered at top, fully visible with no clipping. X-axis title "Commute Time (minutes)" and Y-axis title "Number of Commuters" in medium-gray ink, both descriptive with units where applicable. Tick labels (bin ranges "5-10" through "60-65", and Y values 0-160) render in the same medium-gray, clearly legible. Horizontal gridlines are subtle light-gray, no vertical gridlines. Legend (Car/Bus/Train swatches) sits centered below the plot, readable. Bold black stack-total labels ("149", "130", etc.) sit just above each bar.
+      Data: 12 stacked columns (5-minute bins from 5-10 to 60-65 minutes). Segments bottom-to-top within touching bins: Train (slate blue), Bus (light purple/violet), Car (green #009E73) on top. Colors clearly distinguishable from each other and from the background.
+      Legibility verdict: PASS — all text (title, axis titles, tick labels, legend, stack-total labels) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), no pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, fully legible against the dark background. Gridlines remain subtle but visible. Legend swatches and labels are legible in light gray text.
-      Data: Identical bar heights, bin boundaries, and stacking order as the light render. Segment colors are pixel-identical to the light render (green, lavender, blue) — only the chrome (background, text, gridlines) flipped as required.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick text is clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels have flipped to light/white-ish text, all clearly legible against the dark background. Gridlines remain subtle, now a faint light-gray on dark. Legend text is light-colored and readable. Stack-total labels are light/white and legible above each bar.
+      Data: Same 12 stacked columns with identical segment colors as the light render — green (Car), purple (Bus), slate blue (Train) — confirming the data palette is unchanged between themes; only the chrome (background, text, grid) adapted.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (title, axis labels, ticks, legend, stack totals) remains clearly visible on the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,68 +63,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (22/16/14px) per style-guide values, readable
-          in both themes
+        comment: All font sizes explicitly set via tokens, readable in both themes;
+          stack-label font (13px) slightly smaller than tick labels (14px)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or bars
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and segments clearly distinguishable at this data density (12
-          bins, 3 groups)
+        comment: Bar widths and stack segments well-sized for a 12-bin histogram
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue are mutually distinct, no red-green-only signal
+        comment: Green/purple/blue combination has good contrast, not reliant on red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no cut-off elements; good proportions
+        comment: Plot area, legend, and titles use the canvas well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (minutes, count)
+        comment: Both axis titles descriptive with units (minutes, commuters)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Car), canonical Imprint order, correct theme
-          backgrounds'
+        comment: 'First series #009E73, canonical Imprint order, identical data colors
+          across themes, correct #FAF8F1/#1A1A17 backgrounds'
     design_excellence:
-      score: 8
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Baseline style-guide compliance, no extra polish beyond token application
+        passed: true
+        comment: Thoughtful details (rounded stack corners, stack totals, tight bin
+          padding) clearly above a raw default, short of full publication polish
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Default grid/whitespace treatment, nothing beyond guide defaults
+        passed: true
+        comment: Subtle horizontal-only grid, no bar borders, generous whitespace,
+          rounded stack edges
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No additional hierarchy or emphasis beyond the inherent stacking
+        passed: true
+        comment: Stack-total labels plus visibly different per-group distributions
+          across bins create real visual hierarchy without explicit annotations
     spec_compliance:
       score: 15
       max: 15
@@ -129,49 +136,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked histogram via column + stacking:normal
+        comment: 'Correct stacked column histogram (stacking: normal)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shared bins, distinct colors, legend, correct total height
+        comment: Shared bin boundaries, distinct group colors, legend, and stack totals
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=binned commute time, Y=count, full data range shown
+        comment: X = commute-time bins, Y = commuter count, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match group
-          names
+        comment: Title matches mandated format exactly; legend labels (Car, Bus, Train)
+          match data groups
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All required aspects of a stacked histogram present
+        comment: Three genuinely different per-group distributions with overlap in
+          shared bins and pure-single-group tails
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Commute time by transport mode is plausible and neutral
+        comment: Commute time by transport mode is a real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5-minute bins, 2-65 min range, counts up to ~150 — sensible domain
-          values
+        comment: Means/std-devs and clipped minimum (2 min) yield realistic, non-negative
+          commute times
     code_quality:
       score: 10
       max: 10
@@ -181,33 +191,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes, minimal helper functions for RNG only
+        comment: Linear imports/data/plot flow; small RNG helpers are required by
+          the no-seeded-Math.random constraint
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; uses global Highcharts/tokens only
+        comment: No unused imports; only the Highcharts global is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: No fake UI, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled on chart and series
+        comment: Correct mount-node contract, animation disabled, current Highcharts
+          API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -215,23 +227,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of stacking:'normal' plus pointPadding/groupPadding tuning
-          for a histogram look
+        comment: Idiomatic plotOptions.column/series stacking configuration
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No stacked data labels or other Highcharts-distinctive feature beyond
-          stacking
+        passed: true
+        comment: Uses stackLabels and borderRadius scope:'stack', both Highcharts-specific
+          features not trivially replicated elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
-  styling:
-  - publication-ready
+  styling: []

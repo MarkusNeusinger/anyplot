@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-stacked: Stacked Histogram
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 82/100 | Created: 2026-09-05
+// Quality: 90/100 | Created: 2026-09-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
