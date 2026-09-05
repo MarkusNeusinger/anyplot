@@ -59,8 +59,32 @@ for (const l of links) {
   degree.set(l.target, degree.get(l.target) + 1);
 }
 
+// --- Reduce edge crossings: barycenter reordering within each column --------
+// Alternately sort each column by the mean position of its neighbors in the
+// opposite column, converging toward fewer crossing edges.
+function barycenterOrder(names, neighbors, oppositeIndex) {
+  return [...names].sort((a, b) => {
+    const na = neighbors.get(a);
+    const nb = neighbors.get(b);
+    const ba = na.length ? d3.mean(na, (n) => oppositeIndex.get(n)) : Infinity;
+    const bb = nb.length ? d3.mean(nb, (n) => oppositeIndex.get(n)) : Infinity;
+    return ba - bb;
+  });
+}
+const geneNeighbors = new Map(genes.map((g) => [g, links.filter((l) => l.source === g).map((l) => l.target)]));
+const diseaseNeighbors = new Map(diseases.map((d) => [d, links.filter((l) => l.target === d).map((l) => l.source)]));
+
+let orderedGenes = genes;
+let orderedDiseases = diseases;
+for (let i = 0; i < 4; i++) {
+  const diseaseIndex = new Map(orderedDiseases.map((name, idx) => [name, idx]));
+  orderedGenes = barycenterOrder(orderedGenes, geneNeighbors, diseaseIndex);
+  const geneIndex = new Map(orderedGenes.map((name, idx) => [name, idx]));
+  orderedDiseases = barycenterOrder(orderedDiseases, diseaseNeighbors, geneIndex);
+}
+
 // --- Layout ------------------------------------------------------------------
-const margin = { top: 150, right: 360, bottom: 60, left: 200 };
+const margin = { top: 135, right: 230, bottom: 140, left: 130 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 const leftX = 0;
@@ -70,8 +94,8 @@ function columnPositions(names) {
   const step = ih / (names.length + 1);
   return new Map(names.map((name, i) => [name, (i + 1) * step]));
 }
-const genesY = columnPositions(genes);
-const diseasesY = columnPositions(diseases);
+const genesY = columnPositions(orderedGenes);
+const diseasesY = columnPositions(orderedDiseases);
 
 const maxDegree = d3.max([...degree.values()]);
 const radius = d3.scaleSqrt().domain([1, maxDegree]).range([9, 26]);
@@ -83,19 +107,16 @@ const edgeOpacity = d3.scaleLinear().domain(weightExtent).range([0.22, 0.8]);
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-// --- Edges: gentle S-curves between the two columns -----------------------
-const linkPath = (l) => {
-  const y1 = genesY.get(l.source);
-  const y2 = diseasesY.get(l.target);
-  const mx = (leftX + rightX) / 2;
-  return `M${leftX},${y1} C${mx},${y1} ${mx},${y2} ${rightX},${y2}`;
-};
+// --- Edges: d3-shape horizontal links between the two columns ---------------
+const linkGenerator = d3.linkHorizontal()
+  .source((d) => [leftX, genesY.get(d.source)])
+  .target((d) => [rightX, diseasesY.get(d.target)]);
 
 g.append("g")
   .selectAll("path")
   .data(links)
   .join("path")
-  .attr("d", linkPath)
+  .attr("d", linkGenerator)
   .attr("fill", "none")
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", (d) => edgeWidth(d.weight))
@@ -104,7 +125,7 @@ g.append("g")
 // --- Nodes: genes (left column) --------------------------------------------
 g.append("g")
   .selectAll("circle")
-  .data(genes)
+  .data(orderedGenes)
   .join("circle")
   .attr("cx", leftX)
   .attr("cy", (d) => genesY.get(d))
@@ -115,7 +136,7 @@ g.append("g")
 
 g.append("g")
   .selectAll("text")
-  .data(genes)
+  .data(orderedGenes)
   .join("text")
   .attr("x", (d) => leftX - radius(degree.get(d)) - 12)
   .attr("y", (d) => genesY.get(d))
@@ -128,7 +149,7 @@ g.append("g")
 // --- Nodes: diseases (right column) -----------------------------------------
 g.append("g")
   .selectAll("circle")
-  .data(diseases)
+  .data(orderedDiseases)
   .join("circle")
   .attr("cx", rightX)
   .attr("cy", (d) => diseasesY.get(d))
@@ -139,7 +160,7 @@ g.append("g")
 
 g.append("g")
   .selectAll("text")
-  .data(diseases)
+  .data(orderedDiseases)
   .join("text")
   .attr("x", (d) => rightX + radius(degree.get(d)) + 12)
   .attr("y", (d) => diseasesY.get(d))
@@ -152,7 +173,7 @@ g.append("g")
 // --- Column headers double as the set-membership legend ---------------------
 g.append("text")
   .attr("x", leftX)
-  .attr("y", -35)
+  .attr("y", -30)
   .attr("text-anchor", "middle")
   .attr("fill", t.palette[0])
   .style("font-size", "18px")
@@ -161,12 +182,72 @@ g.append("text")
 
 g.append("text")
   .attr("x", rightX)
-  .attr("y", -35)
+  .attr("y", -30)
   .attr("text-anchor", "middle")
   .attr("fill", t.palette[1])
   .style("font-size", "18px")
   .style("font-weight", "600")
   .text("Diseases");
+
+// --- Legend: degree -> radius and weight -> width/opacity keys --------------
+const legend = g.append("g").attr("transform", `translate(0,${ih + 55})`);
+
+legend.append("text")
+  .attr("x", 0)
+  .attr("y", -16)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-weight", "600")
+  .text("Node size = degree");
+
+let sx = 0;
+for (const d of [1, maxDegree]) {
+  const r = radius(d);
+  legend.append("circle")
+    .attr("cx", sx + r)
+    .attr("cy", 10)
+    .attr("r", r)
+    .attr("fill", "none")
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1.5);
+  legend.append("text")
+    .attr("x", sx + 2 * r + 10)
+    .attr("y", 10)
+    .attr("dy", "0.35em")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "12px")
+    .text(`degree ${d}`);
+  sx += 2 * r + 10 + 85;
+}
+
+const weightX = sx + 55;
+legend.append("text")
+  .attr("x", weightX)
+  .attr("y", -16)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-weight", "600")
+  .text("Edge width/opacity = strength");
+
+let wx = weightX;
+for (const w of weightExtent) {
+  legend.append("line")
+    .attr("x1", wx)
+    .attr("x2", wx + 40)
+    .attr("y1", 10)
+    .attr("y2", 10)
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", edgeWidth(w))
+    .attr("stroke-opacity", edgeOpacity(w));
+  legend.append("text")
+    .attr("x", wx + 50)
+    .attr("y", 10)
+    .attr("dy", "0.35em")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "12px")
+    .text(w.toFixed(2));
+  wx += 110;
+}
 
 // --- Title + subtitle --------------------------------------------------------
 svg.append("text")
