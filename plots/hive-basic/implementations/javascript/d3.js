@@ -1,7 +1,7 @@
 // anyplot.ai
 // hive-basic: Basic Hive Plot
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-05
+// Quality: 85/100 | Created: 2026-09-05
 
 //# anyplot-orientation: square
 
