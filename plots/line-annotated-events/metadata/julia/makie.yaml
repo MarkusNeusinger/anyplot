@@ -1,0 +1,241 @@
+library: makie
+language: julia
+specification_id: line-annotated-events
+created: '2026-09-05T06:43:02Z'
+updated: '2026-09-05T07:04:40Z'
+generated_by: claude-sonnet
+workflow_run: 33950344773
+issue: 2997
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-annotated-events/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Sentiment-coded event markers (amber/red) plus leader ticks visually tether each
+    label to its marker without relying on text alone
+  - Hand-composed inset Legend cleanly explains both the price line and the two event
+    categories in one place
+  - Theme-adaptive chrome is threaded consistently through every element (title, axes,
+    ticks, spines, grid, legend) in both renders
+  - Canvas lands exactly on the 3200x1800 target with comfortable margins and no clipping
+  weaknesses:
+  - Amber used for "positive event" contradicts its defined semantic role (warning/caution)
+    in the style guide - consider IMPRINT_PALETTE[8] (lime, "growth") or another categorical
+    slot instead, reserving amber for an actual caution/warning use
+  - 'Amber dashed event rules and markers are low-contrast against the light #FAF8F1
+    background (amber is one of the palette members that fails WCAG 3:1 on cream)
+    - the current strokecolor = PAGE_BG stroke is a background-matching separation
+    halo, not a contrast-boosting ink stroke; consider a thin ink-colored stroke on
+    the amber elements per the style guide''s "Optional outline pattern"'
+  - Five full-height dashed vertical rules add more visual clutter than needed - consider
+    shortening them to only span from the axis baseline up to the event's data point
+    (a drop line rather than a full-axis rule) to reduce competition with the price
+    series
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Bold dark-ink title "line-annotated-events · julia · makie · anyplot.ai", ink-colored axis labels ("Date (2024)", "Share Price (USD)"), soft-ink tick labels, subtle gridlines, L-shaped spines. All clearly readable against the light background.
+      Data: Green (#009E73) share-price line; 5 event markers with dashed vertical rules and text labels - amber for positive events (Q4 Earnings Beat, Product Launch), matte red (#AE3030) for negative events (Q1 Earnings Miss, Analyst Downgrade) and Q3 Earnings Beat mislabeled check - colors confirmed correct per code (amber = positive, red = negative). Boxed inset legend top-left.
+      Legibility verdict: PASS (amber dashed lines are low-contrast against the cream background, a visibility/accessibility concern, but all TEXT remains legible)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Title, axis labels, and tick labels correctly flip to light ink tokens (INK / INK_SOFT), fully legible against the dark background. No dark-on-dark failures observed. Grid and legend box background flip to dark chrome tokens correctly.
+      Data: Green price line, amber and matte-red event colors are pixel-identical to the light render, confirming data colors stay constant across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All title/axis/tick/annotation text fully legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Alternating label offsets keep event callouts clear of the line and
+          each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Amber dashed event rules are low-contrast against the light background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Amber below WCAG 3:1 on cream bg; stroke is background-colored, not
+          ink, so it doesn't mitigate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, nothing clipped, comfortable margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Amber assigned to 'positive event' contradicts its warning/caution
+          semantic role
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Composite legend, sentiment-coded markers, leader ticks show real
+          design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace; but full-height
+          rules add clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sentiment coding creates a readable narrative, slightly diluted by
+          rule clutter
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct annotated line plot with event markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Vertical event lines, distinct styling, non-overlapping labels, legend
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=price; events correctly derived from same series
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match plotted series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Continuous series, 5 events, sentiment split, labels all covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible stock-price series with realistic event types
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range and daily granularity are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via px_per_unit=2
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct vlines!/scatter!/lines!/text! and composed Legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Composite legend/leader-tick pattern is a nice touch but doesn't
+          reach further Makie-distinctive territory
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - edge-highlighting
