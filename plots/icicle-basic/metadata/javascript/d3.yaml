@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: icicle-basic
 created: '2026-09-05T05:21:07Z'
-updated: '2026-09-05T05:25:31Z'
+updated: '2026-09-05T05:36:36Z'
 generated_by: claude-sonnet
 workflow_run: 33946656928
 issue: 2497
@@ -12,50 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - Correct top-to-bottom icicle orientation with the root at top and children stacked
-    below, matching the spec's layout note exactly
-  - 'Category-based coloring: the first top-level category (assets, the largest by
-    value) correctly uses Imprint palette[0] #009E73, and sibling top-level categories
-    use the subsequent Imprint colors consistently down through all descendant depths'
-  - Adaptive label-contrast algorithm computes WCAG relative luminance per cell fill
-    to pick dark or light label text, keeping every label readable regardless of which
-    category color it sits on
-  - Labels are intelligently hidden on cells below a width/height threshold instead
-    of overflowing, with ellipsis truncation for constrained cells
-  - Clean, idiomatic D3 hierarchy usage (d3.stratify, d3.partition, scaleOrdinal)
-    with concise, dependency-free code
+  - Correct, idiomatic icicle layout via d3.stratify + d3.partition (padding, .sum/.sort)
+    with x-extent = value and y-extent = depth, matching the spec's top-to-bottom
+    orientation
+  - 'Dynamic per-cell text contrast: relative-luminance calculation picks dark or
+    light label ink from each cell''s own fill, so every label stays readable across
+    all 8 palette hues in both themes'
+  - Highlight ring around the largest top-level branch gives the chart a clear focal
+    point and data-storytelling hook
+  - Categories colored by descending value with the largest branch getting Imprint
+    position 1 (#009E73), consistent with the canonical-order rule; data colors identical
+    between light/dark, only chrome (root fill, stroke, title) adapts
+  - Labels are hidden for cells too small to hold them, avoiding overlap/clutter while
+    still labeling every cell with sufficient room
+  - Root node uses a muted inkSoft fill instead of stark black/white, avoiding a jarring
+    full-black/full-white block on either theme
   weaknesses:
-  - Root 'project' cell is filled with t.ink directly, so it renders as a stark full-width
-    black block in light mode and a white block in dark mode — a much larger theme-driven
-    color flip than the rest of the chrome. Consider a more muted neutral (e.g. t.elevatedBg)
-    so the root doesn't dominate the composition so differently between themes.
-  - Several leaf labels are truncated so aggressively ('styles.c…', 'validate…', 'button.t…')
-    that they lose identifying information — widen the minimum labeled-cell width
-    or loosen the truncation formula so file names stay recognizable.
-  - Value magnitudes (1-8) are unitless/abstract for a file-size narrative — scale
-    them to read more like plausible real file sizes (e.g. KB) or note the implied
-    unit for stronger data realism.
-  - No visual hierarchy beyond flat category coloring — e.g. no size-based emphasis
-    or highlight on the largest branch — the chart reads correctly but doesn't guide
-    the eye to a specific insight.
+  - Node count (25) sits at the low end of the spec's 10-100 recommended range; a
+    bit more breadth or an extra nesting level would better showcase the layout's
+    hierarchy-scaling story
+  - A few deep-leaf labels truncate with an ellipsis at this data density (e.g. 'format…',
+    'button.te…') — consider a slightly smaller font size or wider truncation allowance
+    for depth >= 2 cells
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching the required #FAF8F1 surface.
-      Chrome: Title "icicle-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered at top, clearly legible. No axes/grid (none needed for an icicle layout). Cell borders are thin off-white strokes matching the page background, cleanly separating rectangles.
-      Data: Root "project" cell is a solid near-black block (t.ink) spanning the full width, with a bold off-white "project" label. Below it, four top-level categories are colored with the Imprint palette in descending-value order: assets = green (#009E73, first series as required), src = purple, tests = blue, docs = amber. Each descendant cell inherits its top-level ancestor's color. Per-cell labels automatically switch between dark and light ink based on the cell's own fill luminance, and remain readable on every color. Small cells (e.g. a thin sliver next to "utils") correctly have no label rather than overflowing.
-      Legibility verdict: PASS — all title, labels, and cell text are clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "icicle-basic · javascript · d3 · anyplot.ai" in bold dark ink, clearly legible. No axes/legend (not needed — categories are labeled directly in cells). Root cell "project" uses a muted dark-taupe fill with white label text, clearly legible. White strokes (matching page background) separate all cells cleanly.
+      Data: Four top-level branches colored by descending value in Imprint canonical order — assets=green #009E73 (largest, ringed in green as the highlighted branch), src=lavender, tests=blue, docs=ochre. Each cell's label uses dark or light ink chosen for contrast against its own fill (verified: white text sits correctly on green/lavender/blue/ochre/dark-root; all pass). Row 1 = root, row 2 = top-level categories, row 3 = subfolders/files, row 4 = deepest leaf files — depth reads top-to-bottom, value reads via width, exactly as an icicle chart should.
+      Legibility verdict: PASS — all title, root label, and cell labels are readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching the required #1A1A17 surface.
-      Chrome: Same title, now in bold light ink, clearly legible against the dark background. Cell border strokes now match the dark page background, still cleanly separating rectangles.
-      Data: All four category colors (green, purple, blue, amber) are pixel-identical to the light render — confirmed no shift in data hue between themes. The one chrome-like exception is the root "project" cell, which flips from black (light theme) to a light off-white block (dark theme) since it uses the theme-adaptive t.ink token directly rather than a fixed data color; the "project" label flips to dark text on that block and stays readable.
-      Legibility verdict: PASS — no dark-on-dark failures; all tick-free chart text is legible, though the root cell's large theme flip is noted as a design weakness rather than a legibility failure.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title in light ink (#F0EFE8-ish), clearly legible against the dark background. Root cell "project" fill flips to a light warm-gray (theme-adaptive inkSoft), and its label correctly flips to dark ink since the luminance calculation is per-cell dynamic — no dark-on-dark or light-on-light failure here. Cell borders (stroke = page background) read as thin dark seams between the colored cells, still distinguishable.
+      Data: Identical hex values to the light render for all four category colors (green/lavender/blue/ochre) and the same highlight ring around the "assets" branch — confirms the Imprint data-color-constancy rule (only chrome flips, not data colors).
+      Legibility verdict: PASS — all title, root label, and cell labels remain readable; no dark-on-dark or light-on-light failures spotted in either theme.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,78 +59,69 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Adaptive luminance-based label contrast keeps all text readable in
-          both themes, but several leaf labels are truncated to the point of losing
-          meaning ('styles.c…', 'validate…', 'button.t…')
+        comment: Explicit font sizes, readable in both themes via per-cell luminance
+          contrast; a few deep-leaf labels truncate with ellipsis at this density
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or cell collisions in either render
+        comment: No text/data collisions; small cells simply omit labels
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels correctly hidden below a size threshold instead of overflowing;
-          a few very thin unlabeled slivers have minimal visual identity
+        comment: Cell sizing follows the value/depth encoding cleanly, nothing invisible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast throughout; categorical distinction does not rely on
-          red-green as the sole signal
+        comment: Imprint palette, dynamic contrast label ink, no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced proportions, no cutoff or overflow,
-          sensible margins
+        comment: Good proportions, nothing clipped, canvas correctly 3200x1800
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for an icicle layout; title correctly formatted
+        comment: No axes needed for icicle; title descriptive and correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series (assets, the largest) is #009E73; remaining
-          categories follow Imprint order; backgrounds are theme-correct and data
-          colors identical across themes'
+        comment: 'Largest branch gets #009E73 first; canonical order for remaining
+          categories; backgrounds correct in both themes; data colors identical across
+          themes'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Luminance-based adaptive label contrast and consistent category coloring
-          show real design thought, but the root cell's stark black/white block treatment
-          is a blunt choice
+        comment: Dynamic luminance-based label contrast and muted root fill show real
+          design thought beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean minimal chrome and consistent stroke separators, but overall
-          layout is fairly utilitarian with no extra whitespace refinement beyond
-          d3.partition defaults
+        comment: Clean chrome, subtle theme-matched cell strokes, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Category coloring aids grouping and proportional widths communicate
-          value, but there is no additional emphasis (e.g. highlighting the largest
-          branch) to guide the viewer to an insight
+        comment: Highlight ring around the largest branch creates a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -144,53 +131,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct icicle chart with top-to-bottom orientation as recommended
-          for deep hierarchies
+        comment: Genuine icicle layout (adjacent rows, not nested rectangles like
+          a treemap)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color by category, labels shown only where space allows, root at
-          top — all spec notes satisfied
+        comment: Horizontal top-to-bottom orientation, color by category, labels hidden
+          for small nodes, root at top
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Width encodes value, height/row encodes depth, via d3.partition;
-          sums aggregate correctly through d3.stratify
+        comment: x = value (width), y = depth, correctly encoded via d3.partition
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no separate legend needed
-          since categories are self-labeled
+        comment: Title format exact; no separate legend needed since categories are
+          labeled in-place
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Four-level-deep hierarchy with proportional value widths; 25 nodes
-          is at the low end of the 10-100 recommended range
+        comment: 4-level hierarchy exercises width-by-value and depth-by-row fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral project file-tree with realistic folder/file names
+        comment: Plausible, neutral project-file-tree with believable KB sizes
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: Values (1-8) are sensible relative magnitudes but unitless/abstract
-          for a 'file size' narrative
+        comment: Values (6-41KB) are internally consistent though narrower than a
+          real file tree's byte-to-MB range
     code_quality:
       score: 10
       max: 10
@@ -200,56 +185,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward imperative script
+        comment: Small one-line arrow-function helpers only, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded in-memory data
+        comment: Hardcoded deterministic data array
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, no extraneous imports
+        comment: Only the global d3, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the chart type, no fake interactivity
+        comment: No fake interactivity, appropriate complexity for the technique
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts to #container per the harness contract; current
-          D3 v7 API throughout'
+        comment: Correct mount-node contract, single svg, no animation
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.stratify/d3.partition/hierarchy sum+sort used exactly as intended
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Solid idiomatic use of d3.stratify, d3.partition, and scaleOrdinal
-          for hierarchical data
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: The custom relative-luminance label-contrast function is a distinctive
-          touch beyond basic API usage
+        comment: Relative-luminance label contrast and highlight-ring emphasis go
+          beyond a generic layout
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - edge-highlighting
+  - publication-ready
