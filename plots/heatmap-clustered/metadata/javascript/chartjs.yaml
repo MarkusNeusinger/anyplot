@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: heatmap-clustered
 created: '2026-09-05T03:13:19Z'
-updated: '2026-09-05T03:18:49Z'
+updated: '2026-09-05T03:28:40Z'
 generated_by: claude-sonnet
 workflow_run: 33940637617
 issue: 2021
@@ -12,51 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
+  - 'Both attempt-1 weaknesses are resolved: rows are now genuinely z-score standardized
+    before clustering/plotting (matches the colorbar label), and the top-left group
+    legend is now a polished elevated panel with aligned swatch/label columns.'
   - Fully hand-rolled hierarchical clustering (average-linkage/UPGMA, Euclidean) and
     dendrogram line-segment generation, producing genuine clustermap-style row/column
-    reordering — a technically sophisticated solution given Chart.js has no native
-    heatmap/dendrogram type and community matrix plugins are off-limits.
+    reordering — technically sophisticated given Chart.js has no native heatmap/dendrogram
+    type and community matrix plugins are off-limits.
   - Clean plugin architecture (afterDatasetsDraw) layers heatmap cells, gene/sample
-    annotation strips, rotated column labels, a diverging colorbar, and a custom group
-    legend, all correctly positioned in data-unit coordinate space with no overlaps.
-  - 'Correct Imprint theming: identical data colors between light/dark renders via
-    imprint_div, first categorical series is brand green (#009E73), theme-correct
-    backgrounds (#FAF8F1/#1A1A17), and fully legible chrome in both themes.'
-  - Deterministic, seeded (fixed-seed LCG) data generation with a plausible gene-expression
-    control-vs-treatment scenario that produces genuinely separable, visually coherent
-    clusters.
-  - Canvas dimension gate passed; no edge clipping of title, labels, colorbar, or
-    legend in either render.
+    annotation strips, rotated column labels, a diverging colorbar, and the custom
+    legend, all correctly positioned with no overlaps or edge clipping.
+  - 'Correct Imprint theming: identical categorical/endpoint colors between light/dark
+    renders, brand-green first series, theme-correct backgrounds, fully legible chrome
+    in both themes.'
+  - Deviation from the spec's suggested Ward's-method default is explicitly documented
+    in a code comment with a clear rationale.
   weaknesses:
-  - The colorbar/values are labeled 'z-score' but the underlying matrix is never actually
-    standardized (no per-row mean-subtraction / division by std) — it's the raw synthetic
-    pattern plus noise. Either compute real per-row z-scores before clustering/plotting,
-    or relabel the axis (e.g. 'value') so the label matches what's actually computed.
-  - Spec notes 'Ward's method with Euclidean distance is a common default' for clustering;
-    the implementation uses average-linkage (UPGMA) instead. Not incorrect, but consider
-    aligning with the suggested default or documenting the deviation in a comment.
   - At the ~400px thumbnail scale, row/column labels, dendrograms, and legend chips
-    become hard to read given the inherent density of a 12x10 clustered heatmap with
-    dual dendrograms — consider nudging font sizes up slightly or simplifying the
-    legend for small-scale contexts.
-  - The top-left group legend (Gene cluster / Sample group stacked) is functional
-    but visually basic (plain colored squares) — a bit more refinement (aligned columns,
-    subtle background panel) would match the polish of the rest of the chart.
+    remain hard to read given the inherent density of a 12x10 clustered heatmap with
+    dual dendrograms — a structural tradeoff of the plot type at small sizes rather
+    than a fixable styling issue.
+  - Core rendering still relies entirely on a custom canvas plugin rather than native
+    Chart.js dataset types (unavoidable given library constraints, but keeps LM-01
+    capped).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), no pure-white areas.
-      Chrome: Bold dark title "heatmap-clustered · javascript · chartjs · anyplot.ai" centered at top, clearly readable. Top-left legend ("Gene cluster": A/B/C in green/purple/blue; "Sample group": Control/Treatment in brown/cyan) in dark text on light background, fully legible. Column dendrogram sits above a brown/cyan sample-group annotation strip; row dendrogram sits left of a green/purple/blue gene-group annotation strip. Rotated (-45°) column labels ("Control 2", "Treatment 5", etc.) and horizontal row labels ("Gene B3", "Gene A1", etc.) render in a soft dark ink, clearly legible against the light background. Colorbar on the right labeled "z-score" with "+2.1 / 0 / -2.1" ticks, all readable.
-      Data: 12x10 grid of cells colored on a red-to-blue diverging scale, red = negative z-score, blue = positive, white/near-white near zero. Rows and columns are visibly reordered so that same-colored blocks (gene groups A/B/C, Control/Treatment) cluster together, revealing clear checkerboard-like structure. First categorical series (Gene cluster A) uses the brand green #009E73.
-      Legibility verdict: PASS — no light-on-light text found anywhere in the render.
+      Background: warm off-white, consistent with #FAF8F1, not pure white and not dark.
+      Chrome: bold dark title "heatmap-clustered · javascript · chartjs · anyplot.ai" centered at top; refined top-left legend panel (elevated background, rounded corners, aligned swatch/label columns) for "Gene cluster" (A/B/C) and "Sample group" (Control/Treatment); rotated column labels and horizontal row labels in soft dark ink; colorbar labeled "z-score" with +2.5/0/-2.5 ticks. All confirmed readable; verified no clipping at bottom or right edge via pixel crops.
+      Data: 12x10 grid using red<->blue diverging scale (imprint_div), first categorical series #009E73 (brand green) used for gene-cluster annotation; row/column order reflects hierarchical clustering.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), no pure-black flatness.
-      Chrome: Title, legend text, row/column labels, and colorbar labels all render in light/white ink, clearly visible against the dark background. Dendrogram lines render in a light gray, clearly visible against the dark background. No dark-on-dark text was observed anywhere (title, tick labels, legend, colorbar ticks, annotation labels all pass).
-      Data: Cell colors are identical to the light render — same red/blue diverging mapping, same z-score-to-color assignment, same reordering. Gene-group and sample-group annotation strip colors (green/purple/blue, brown/cyan) are unchanged from the light render — confirming only chrome flipped between themes, as required.
-      Legibility verdict: PASS — all chrome elements readable, no dark-on-dark failures.
+      Background: warm near-black, consistent with #1A1A17, not pure black and not light.
+      Chrome: title, legend text, row/column labels, and colorbar labels all render in light ink, clearly visible; legend panel's elevated background is a lighter charcoal than the page for visible separation; dendrogram lines in light gray, legible against dark surface. No dark-on-dark text found anywhere.
+      Data: categorical annotation swatches (gene-cluster, sample-group) are identical hex values to the light render. Diverging heatmap cells share the same red/blue endpoint hues as the light render; only near-zero cells shift toward the theme-adaptive midpoint (near-black vs near-white on light), which is the documented correct behavior for imprint_div, not a bug.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -67,79 +60,69 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, fully readable in both themes at
-          full size; legibility strains at the ~400px thumbnail scale given the dense
-          12x10 grid with dual dendrograms and stacked legend.
+        comment: Fully readable in both themes at full size; strains at ~400px thumbnail
+          given the dense 12x10 grid with dual dendrograms + stacked legend
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, legend, colorbar, dendrograms, or data
-          cells in either render.
+        comment: No collisions between text, data, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cell size and dendrogram line weight are appropriate for a 12x10
-          matrix; page-background cell separators keep cells distinguishable without
-          dominating.
+        comment: Cells, annotation strips, dendrograms, colorbar all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale (not red-green) plus green/purple/blue and
-          brown/cyan group colors avoid red-green-only signaling.
+        comment: Diverging red/blue scale, adequate contrast, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; proportions balanced; nothing clipped
-          or overflowing the canvas.
+        comment: 2400x2400 square canvas, no clipping at any edge (verified via crops)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; colorbar labeled with units (z-score,
-          though see DQ-03 weakness on accuracy of that label).
+        comment: Descriptive row/column labels and colorbar label with units (z-score)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series is #009E73; diverging scale uses imprint_div;
-          backgrounds are theme-correct #FAF8F1/#1A1A17; data colors identical across
-          themes.'
+        comment: 'First series #009E73, imprint_div diverging scale with theme-adaptive
+          midpoint only, theme-correct backgrounds'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Professional, intentional layout with custom drawing for cells/annotations/colorbar/legend;
-          the stacked legend block is functional but visually basic.
+        comment: Legend rebuilt as elevated panel with aligned columns, directly fixing
+          attempt 1's feedback
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No default Chart.js chrome (scales hidden), subtle background-colored
-          cell separators, generous whitespace via deliberate layout constants.
+        comment: No default Chart.js chrome, subtle cell separators, deliberate whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dendrograms plus color-coded group strips create a clear focal point
-          showing cluster structure, though the legend/annotation styling itself doesn't
-          add extra narrative polish.
+        comment: Dendrograms + group strips create a clear focal point revealing cluster
+          structure
     spec_compliance:
       score: 15
       max: 15
@@ -149,30 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered heatmap / clustermap style.
+        comment: Correct clustered heatmap / clustermap style
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Dendrograms on both axes, row/column reordering, diverging colormap,
-          colorbar, and row/column group annotation bars are all present.
+        comment: Dendrograms on both axes, reordering, diverging colormap, colorbar,
+          row/column group annotation bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Matrix values, row_labels, and column_labels are all correctly mapped
-          and fully shown.
+        comment: Rows/columns correctly mapped, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai';
-          legend labels match the annotated groups.
+        comment: Title matches required format; legend labels match data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -180,22 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers matrix values, row/column labels, clustering, and group annotations
-          end-to-end.
+        comment: 'Shows all aspects: matrix, dendrograms, annotations, colorbar'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral gene-expression control-vs-treatment scenario.
+        comment: Plausible, neutral gene-expression control-vs-treatment scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Value range (-2.1 to +2.1) is sensible for the domain, but the 'z-score'
-          label implies a standardization step that the code never performs on the
-          raw synthetic values.
+        comment: 'Fixed from attempt 1: rows genuinely z-score standardized before
+          clustering/plotting'
     code_quality:
       score: 9
       max: 10
@@ -205,35 +184,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Multiple helper functions (clustering, dendrogram walk, color mixing)
-          are used, but this is essentially unavoidable to implement hierarchical
-          clustering from scratch in-browser.
+        comment: Multiple helpers, largely unavoidable for from-scratch clustering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG produces fully deterministic data.
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Chart.js instance.
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the algorithmic requirements; no fake/simulated
-          UI.
+        comment: No fake UI/interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current Chart.js
-          API.
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
       score: 7
       max: 10
@@ -243,29 +218,31 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Respects the 'no community plugin' rule by using Chart.js's own plugin/canvas
-          API, but the core visualization is manually drawn rather than expressed
-          through native chart-type/dataset options.
+        comment: Correct plugin/canvas workaround given no native heatmap/dendrogram
+          type, but not native dataset options
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Creative, well-executed use of a custom afterDatasetsDraw plugin
-          plus an invisible scatter dataset for tooltips to build a chart type Chart.js
-          has no native support for.
+        comment: Creative afterDatasetsDraw plugin + invisible scatter dataset for
+          tooltips
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
+  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep:
   - hierarchical-clustering
+  - normalization
   styling:
+  - publication-ready
   - custom-colormap
-  - gradient-fill
+  - grid-styling
