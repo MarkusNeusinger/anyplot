@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: pdp-basic
 created: '2026-09-05T10:25:59Z'
-updated: '2026-09-05T10:31:19Z'
+updated: '2026-09-05T10:41:57Z'
 generated_by: claude-sonnet
 workflow_run: 33960310874
 issue: 2922
@@ -12,51 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pdp-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Correct, idiomatic Chart.js multi-dataset technique for the confidence band (fill:
-    "-1" between adjacent datasets) with brand-green alpha fill, and cleanly hides
-    the internal "Upper bound" helper dataset from the legend via a filter function'
-  - 'Full feature coverage of the spec''s optional elements: continuous PD curve,
-    a 95% confidence band that widens away from the bulk of the training data, and
-    a rug plot (via a hidden secondary linear axis + rotated scatter point-line trick)
-    showing the training-data distribution'
-  - Deterministic, reproducible data generation (fixed-seed LCG for the rug sample,
-    log-shaped diminishing-returns curve explicitly centered at the median per the
-    spec's centering recommendation)
-  - 'Theme-adaptive chrome and explicit font sizing throughout; Imprint palette correctly
-    applied (first series #009E73), data colors identical across light/dark themes,
-    both renders fully legible with no dark-on-dark or light-on-light failures'
-  - 'Correct mandated title format with descriptive prefix, units on both axis labels,
-    clean KISS code structure, and animation: false set correctly for the harness'
+  - 'Zero-crossing callout (dashed reference line + dot + "Median: 1,500 sq ft → $0"
+    label) added via a custom afterDatasetsDraw plugin, directly resolving the attempt-1
+    feedback for a stronger visual focal point and explicit data storytelling'
+  - Title weight/size bumped (700 weight, 21px) and grid switched to Y-axis-only per
+    the style guide's line-chart default, both matching the attempt-1 repair instructions
+    precisely
+  - 'Full spec feature coverage: continuous PD curve, 95% confidence band via relative
+    dataset fill (`fill: "-1"`), and a rug plot (hidden secondary axis + rotated scatter
+    trick) showing training-data density'
+  - Deterministic fixed-seed LCG data generation with a realistic log-shaped diminishing-returns
+    curve, explicitly centered at the median per the spec's centering recommendation
+  - 'Theme-adaptive chrome throughout with data colors identical across light/dark;
+    correct mandated title format, units on both axes, clean KISS structure, `animation:
+    false` set correctly for the harness'
   weaknesses:
-  - Design Excellence is competent but not exceptional -- the plot reads as a well-executed
-    but fairly standard PDP chart; to push toward publication quality, add a stronger
-    visual focal point (e.g. a subtle marker/annotation at the zero-crossing or a
-    reference callout) and a bolder title weight to sharpen the typography hierarchy
-  - Title occupies only roughly 40-45% of the plot width, smaller than the ~70-85%
-    range typical for this mandated title length -- nudging the title fontsize up
-    slightly (e.g. 19 to 21) would still avoid overflow while giving the title more
-    visual prominence as 'the first thing readers see'
-  - Visual refinement sits at a good-but-default level -- consider enabling grid on
-    the Y-axis only (style-guide default for line charts) instead of the current X-axis-only
-    grid, and add a touch more breathing room around the legend row
-  - Data storytelling could be strengthened -- a small annotation labeling the median
-    reference point (x=1500 sq ft, where partial dependence = 0) would make the 'centered
-    at zero' design choice legible to the viewer instead of only inferable from context
+  - 'Title still occupies only ~47% of plot width (measured: x=823-2336 of 3200px)
+    — up from ~40-45% at attempt 1 but still below the 50-70% guideline; a further
+    fontsize nudge (21 -> ~23-24) would give it more visual prominence without risking
+    overflow'
+  - Design Excellence, while much improved, is still shy of publication-level polish
+    — the callout label font could take a touch more hierarchy (e.g. slightly larger
+    or a subtle background chip) to stand out more clearly from tick labels at the
+    same weight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "House Price vs. Square Footage · pdp-basic · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. Legend row below title with two swatches, "95% confidence band" (pale green) and "Partial dependence" (solid brand green), both readable. X-axis title "Living Area (sq ft)" and Y-axis title "Partial Dependence ($k, centered)" in dark ink, both legible with units. Tick labels in a softer dark gray, legible. Subtle light vertical gridlines at each X tick.
-      Data: A solid #009E73 brand-green line rises in a log-shaped diminishing-returns curve from about -70 at 500 sq ft, crosses zero near 1500 sq ft (the median), and flattens out toward +60 near 4000 sq ft. A pale green confidence band surrounds the line, narrow near the median and widening toward both tails. A dense row of thin vertical rug ticks sits along the bottom of the plot area, clustered most densely between ~1000-2500 sq ft with a sparser long tail to the right, showing the training-data distribution.
-      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "House Price vs. Square Footage · pdp-basic · javascript · chartjs · anyplot.ai" in bold dark ink (measured x-extent 823-2336px of 3200px, ~47% width), clearly readable. Axis titles "Living Area (sq ft)" and "Partial Dependence ($k, centered)" in dark ink with units; tick labels in softer dark gray. Legend below title shows "95% confidence band" (pale-green swatch) and "Partial dependence" (brand-green swatch) — helper datasets ("Upper bound", "Training data (rug)") correctly filtered out of the legend. Y-axis grid only (horizontal lines), subtle. A dashed vertical reference line at x=1500 sq ft with a brand-green dot and bold label "Median: 1,500 sq ft → $0" marks the zero-crossing.
+      Data: Solid #009E73 line traces a log-shaped diminishing-returns curve from about -70 at 500 sq ft, crossing zero near the 1500 sq ft median, flattening toward +60 near 4000 sq ft, surrounded by a pale-green alpha-blended confidence band widening toward both tails. A dense row of thin vertical rug ticks along the bottom shows the training-data distribution, clustered between ~1000-2500 sq ft.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Same title, legend, and axis titles now rendered in light ink/off-white, clearly readable against the dark background. Tick labels in a softer light gray, legible. Subtle light-toned vertical gridlines at each X tick, faint but visible.
-      Data: The partial-dependence line is the identical #009E73 brand green as the light render -- confirmed unchanged. The confidence band renders as a darker desaturated green fill (same brand-green alpha-blended over the dark background, so it reads correctly darker without being a different hue). Rug ticks are light gray/white, same distribution and density as the light render.
-      Legibility verdict: PASS -- all text is clearly readable against the dark background; no dark-on-dark failures observed for title, axis labels, ticks, or legend text.
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title, legend, axis titles, and the zero-crossing callout now rendered in light ink/off-white, clearly readable; tick labels in a softer light gray. Y-axis grid only, subtle white-on-dark lines.
+      Data: The partial-dependence line and callout dot use the identical #009E73 brand green — confirmed unchanged from the light render. The confidence band is the same brand-green alpha-blended fill, appearing darker/desaturated against the dark background (same hue, not a different color). Rug ticks are light gray/white with the same distribution and density.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures on title, axis labels, ticks, legend, or the callout label.
+
+    Both renders confirmed: data colors identical, only chrome (background/text/grid) flips between themes. Canvas verified at exact 3200x1800 landscape target for both PNGs.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -67,77 +62,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; title
-          fontsize was appropriately scaled down for the descriptive-prefix length
-          but ended up occupying only ~40-45% of plot width, a bit smaller than the
-          ideal ~70-85% band for this title length
+        comment: Bold 21px title now clearly prominent and fully readable in both
+          themes; title still occupies only ~47% of plot width (below the 50-70% guideline),
+          a minor residual issue from attempt 1
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, legend, axis labels, ticks, rug ticks,
+        comment: No collisions between title, legend, axis labels, callout label,
           or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weight (4px), band opacity, and rug tick size/count are well
-          matched to the sparse (60-point) curve and 90-point rug sample
+        comment: Line, band, rug-tick, and callout-dot sizes well matched to sparse
+          data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue line + band + neutral rug ticks give good contrast without
-          relying on hue-only distinctions
+        comment: Single-hue data encoding with strong contrast; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; legend sits directly
-          under the title, close to the plot
+        comment: 3200x1800 canvas confirmed exactly; nothing cut off; balanced axis
+          label sizing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive and include units ('sq ft', '$k,
-          centered')
+        comment: Both axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is exactly #009E73, identical across themes; backgrounds
-          match #FAF8F1/#1A1A17; chrome is theme-correct in both renders'
+        comment: 'First series exactly #009E73, identical across themes; correct theme
+          backgrounds and chrome'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured, above-default composition (alpha-blended band, filtered
-          legend) but not yet publication-level typography/hierarchy
+        passed: true
+        comment: Bolder title and the custom zero-crossing callout (dashed line +
+          dot + label) add real typographic and visual hierarchy over attempt 1's
+          bare defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Some refinement visible (subtle grid, generous padding) but still
-          close to library defaults overall
+        passed: true
+        comment: Switched to Y-axis-only grid per the style-guide line-chart default,
+          replacing the previous X-axis-only grid; generous legend/plot spacing
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Centering-at-zero and the rug distribution create some hierarchy,
-          but no explicit callout communicates the insight directly
+        passed: true
+        comment: The zero-crossing annotation now makes the "centered at zero" framing
+          explicit to the viewer instead of only inferable from the curve shape
     spec_compliance:
       score: 15
       max: 15
@@ -153,22 +146,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Feature curve, confidence band, and rug plot all present and functioning
+        comment: PD curve, confidence band, and rug plot all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = feature_values (sq ft), Y = partial_dependence ($k, centered);
-          full range shown
+        comment: Correct X/Y mapping, full feature range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          ('Partial dependence', '95% confidence band') match the data, with the internal
-          helper dataset correctly filtered out
+        comment: Mandated title format with descriptive prefix; legend correctly filters
+          out helper datasets
     data_quality:
       score: 15
       max: 15
@@ -178,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows the PD curve, widening confidence band, and training-data rug
-          -- all key PDP aspects
+        comment: Curve, widening band, rug, and now the zero-crossing annotation together
+          cover all key PDP aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: House price vs. square footage is a realistic, neutral, comprehensible
-          ML-interpretability scenario
+        comment: House price vs. square footage is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Diminishing-returns shape and $k-scale swing across 500-4000 sq ft
-          are consistent with real housing-price behavior
+        comment: Diminishing-returns shape and $k-scale swing are consistent with
+          real housing-price behavior
     code_quality:
       score: 10
       max: 10
@@ -203,27 +193,25 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> mount -> chart, no functions/classes
+        comment: Flat script, single idiomatic plugin object
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) for the rug sample, deterministic formulas
-          elsewhere
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses only browser globals
+        comment: No unused imports; globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no over-engineering, appropriate complexity for the confidence-band
-          + rug construction
+        comment: No fake UI; complexity matches the technique
       - id: CQ-05
         name: Output & API
         score: 1
@@ -231,7 +219,7 @@ review:
         passed: true
         comment: 'Correct mount-node contract, animation: false set'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -239,22 +227,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Chart.js''s dataset-fill (fill: "-1"), mixed line/scatter
-          datasets, secondary hidden axis, and legend filter callback'
+        comment: Expert use of relative dataset-fill, mixed line/scatter datasets,
+          hidden secondary axis, legend filter callback
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Chart.js-specific relative dataset fill and hidden secondary-axis
-          rug trick are library-specific patterns, though the overall visual result
-          is replicable in other libraries
-  verdict: REJECTED
+        passed: true
+        comment: Custom afterDatasetsDraw plugin drawing directly on the canvas context
+          is a genuinely Chart.js-specific mechanic, beyond the already-strong dataset-fill/hidden-axis
+          tricks
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - confidence-band
-  - rug-plot
+  - annotations
+  - layer-composition
   - custom-legend
   patterns:
   - data-generation
