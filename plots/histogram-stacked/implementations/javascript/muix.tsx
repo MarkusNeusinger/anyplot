@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-stacked: Stacked Histogram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 83/100 | Created: 2026-09-05
+// Quality: pending | Created: 2026-09-05
 import { BarChart } from "@mui/x-charts/BarChart";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -61,7 +61,24 @@ const dataset = binLabels.map((bin, i) => {
   return row;
 });
 
+// Dominant mode at the near and far ends of the commute-distance range, used
+// to surface the underlying mode-shift story in the subtitle.
+const dominantGroupAt = (binIndex) => {
+  let bestGroup = GROUPS[0].label;
+  let bestCount = -1;
+  GROUPS.forEach((group, g) => {
+    if (groupCounts[g][binIndex] > bestCount) {
+      bestCount = groupCounts[g][binIndex];
+      bestGroup = group.label;
+    }
+  });
+  return bestGroup;
+};
+const nearMode = dominantGroupAt(0);
+const farMode = dominantGroupAt(BIN_COUNT - 1);
+
 const TITLE_HEIGHT = 60;
+const SUBTITLE_HEIGHT = 30;
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
@@ -70,22 +87,42 @@ export default function Chart() {
   return (
     <Box sx={{ width, height, display: "flex", flexDirection: "column", paddingTop: "20px" }}>
       <Typography
-        sx={{ color: t.ink, fontSize: 22, fontWeight: 500, textAlign: "center", lineHeight: 1.2 }}
+        sx={{ color: t.ink, fontSize: 22, fontWeight: 600, textAlign: "center", lineHeight: 1.2 }}
       >
         histogram-stacked · javascript · muix · anyplot.ai
       </Typography>
+      <Typography
+        sx={{
+          color: t.inkSoft,
+          fontSize: 14,
+          fontWeight: 400,
+          textAlign: "center",
+          lineHeight: 1.2,
+          marginTop: "4px",
+        }}
+      >
+        {`${nearMode} dominates short commutes, ${farMode} takes over as distance grows`}
+      </Typography>
       <BarChart
         width={width}
-        height={height - TITLE_HEIGHT}
+        height={height - TITLE_HEIGHT - SUBTITLE_HEIGHT}
         dataset={dataset}
         colors={GROUPS.map((group) => group.color)}
         skipAnimation
-        xAxis={[{ scaleType: "band", dataKey: "bin", label: "Commute Distance (km)" }]}
+        xAxis={[
+          {
+            scaleType: "band",
+            dataKey: "bin",
+            label: "Commute Distance (km)",
+            categoryGapRatio: 0.06,
+          },
+        ]}
         yAxis={[{ label: "Number of Commuters" }]}
         series={GROUPS.map((group) => ({
           dataKey: group.label,
           label: group.label,
           stack: "total",
+          highlightScope: { highlight: "series", fade: "global" },
         }))}
         grid={{ horizontal: true }}
         margin={{ top: 40, right: 40, bottom: 130, left: 100 }}
