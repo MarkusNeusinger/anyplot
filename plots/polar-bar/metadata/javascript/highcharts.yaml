@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: polar-bar
 created: '2026-09-05T11:23:22Z'
-updated: '2026-09-05T11:28:47Z'
+updated: '2026-09-05T11:44:19Z'
 generated_by: claude-sonnet
 workflow_run: 33962697998
 issue: 2693
@@ -12,100 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Creative, honest workaround for the core-only Highcharts bundle: wedges are drawn
-    with the actual renderer.symbols.arc primitive (the same one Highcharts itself
-    uses for pie/donut slices), and a hidden scatter series is bound at each wedge''s
-    true centroid so hover tooltips report real data over the exact rendered geometry,
-    not a simulation.'
-  - 'Correct Imprint palette usage: first series (0-5 kt) is #009E73, remaining speed
-    bins follow canonical order, and both light/dark renders keep identical data colors
-    while chrome (background, text, grid) flips correctly.'
-  - Clean concentric grid rings and well-placed compass/radial-scale labels with generous
-    clearance from the wedges - no text overlap in either render.
-  - The bimodal wind regime (dominant onshore SW gusty flow vs. lighter secondary
-    NE land breeze) is a deliberate, documented data narrative rather than arbitrary
-    numbers.
+  - 'Correct angular/radial data mapping verified pixel-by-pixel: all 16 compass directions
+    and 4 stacked speed bins render at the expected angle and radius, including the
+    smaller ESE/SE/SSE/S wedges that are easy to mistake for missing at a glance next
+    to the small-margin gaps'
+  - Frequency data sums to ~99.9% across all 16 directions x 4 bins, a strong realism
+    detail for a synthetic meteorological dataset, with a plausible bimodal SW-dominant
+    / NE-secondary pattern called out in the code comments
+  - Genuine polar geometry built from the core SVG renderer (`symbols.arc`, the same
+    primitive Highcharts itself uses for pie/donut slices) rather than faking a polar
+    chart, correctly avoiding the unavailable highcharts-more module per the library
+    rules
+  - 'Real interactivity: hidden scatter points are data-bound at each wedge centroid
+    so the HTML export gets genuine hover tooltips over the actual rendered geometry,
+    not a simulated overlay'
+  - 'Clean theme adaptation: chrome (background, ink, grid, tooltip) correctly flips
+    between light and dark while all 4 categorical data colors stay identical, and
+    first-series green (#009E73) is correctly used for the 0-5kt innermost ring'
+  - Legend is well-spaced and centered with no overlap; direction labels and outer
+    scale rings are all clear of the largest wedges (SW/WSW)
   weaknesses:
-  - 'DQ-03: The FREQUENCY table sums to only ~73% across all 16 directions x 4 speed
-    bins, but this is framed as ''% of hourly observations by direction x speed bin'',
-    which should sum to ~100%. Rescale/nudge the values (especially the light-wind
-    directions) so the full distribution adds up to roughly 100%.'
-  - 'VQ-03: Several stacked segments use values as low as 0.1 against SCALE_MAX=13
-    (e.g. the 15+ kt bin for N, E, ESE, SE, SSE, NNW), which render as near-invisible
-    sub-pixel slivers. Raise the floor on these tiny bins (or the innermost SCALE_MAX)
-    so all four speed bins stay visually distinguishable in every direction.'
-  - 'VQ-05: The visible wedges are concentrated almost entirely in the N-through-SW
-    arc, leaving the ENE-to-S sector of the polar canvas nearly empty. Since this
-    mirrors real, intentional wind data it''s a minor deduction rather than a hard
-    fail, but consider a slightly less extreme skew or a callout that explicitly frames
-    the empty sector as the calm side of the rose.'
+  - The '3%' radial scale label (and to a lesser extent, the ring-label gap generally)
+    is placed exactly halfway between the N and NNE wedges, but N (3.4%) and NNE (4.6%)
+    both extend past 3% radius, so the '%' glyph crowds against / nearly touches the
+    neighboring wedge fills in both themes at that radius. Anchor ring labels at whichever
+    direction slot currently has the smallest cumulative total (or place them on a
+    dedicated blank spoke) instead of a fixed N/NNE gap so they never compete with
+    data ink.
+  - Stacked speed bins (0-5, 5-10, 10-15, 15+ kt) use the general categorical Imprint
+    order (green/lavender/blue/ochre) for what is really an ordinal variable; a sequential
+    ramp would communicate 'low to high speed' more intuitively, though this is a
+    stylistic nice-to-have, not a violation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "polar-bar · javascript · highcharts · anyplot.ai" in bold dark ink at top-center; 16 compass-point labels (N, NNE, NE, ... NNW) in bold dark ink ringing the outer edge of the polar plot; four radial scale labels (3%, 6%, 9%, 12%) in soft grey placed in the gap between N and NNE; a 4-item legend (0-5 kt, 5-10 kt, 10-15 kt, 15+ kt) with colored swatches centered below the plot. All chrome text is clearly readable against the light background.
-      Data: 16 stacked polar wedges, one per compass direction, each divided into 4 concentric speed-bin segments colored green (#009E73, 0-5 kt), lavender (5-10 kt), blue (10-15 kt), and ochre (15+ kt) with thin cream-colored strokes separating segments. The largest wedges cluster in the N-through-SW arc (SW being tallest, reaching near the 12% ring), while E/SE/S-facing wedges are short stubs near the center.
-      Legibility verdict: PASS - all title, compass, tick, and legend text is legible with no dark-on-light failures.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "polar-bar · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly readable. 16 dark bold compass-direction labels (N, NNE, NE, ... NNW) ring the perimeter, all legible against the light background. Four faint concentric scale rings labeled 3%/6%/9%/12% in soft gray ink are visible; three of the four (12%, 9%, 6%) sit in genuinely empty space, but the "3%" label sits in the narrow gap between the N and NNE wedges and visibly crowds/nearly touches the wedge fill at that radius in a tight zoomed crop (both themes). Legend below the chart (0–5 kt, 5–10 kt, 10–15 kt, 15+ kt) is clean and well spaced.
+      Data: A stacked wind rose — 16 direction wedges, each split into 4 concentric colored segments (green innermost → lavender → blue → ochre outermost) proportional to frequency per speed bin. Pixel sampling confirms all 16 direction wedges are present and correctly positioned (the smaller ESE/SE/SSE/S wedges are real, just visually easy to undercount against the larger SW/WSW/W cluster). The dominant lobe points toward SW/WSW/SSW/W (largest wedges, reaching toward the 9–12% rings), with a smaller secondary lobe toward NE, matching the bimodal wind pattern described in the code comments. First (innermost) series is the brand green #009E73 as required.
+      Legibility verdict: PASS (with one localized crowding issue on the "3%" ring label noted in weaknesses; no text is unreadable).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title, compass labels, radial scale labels, and legend as the light render, all re-colored to light ink/off-white so they stand out against the dark background. Grid rings are a subtle light grey, visible but unobtrusive.
-      Data: Identical wedge geometry and colors to the light render - green, lavender, blue, and ochre segments are pixel-identical in hue, confirming only chrome (not data color) changed between themes.
-      Legibility verdict: PASS - no dark-on-dark failures observed; every title/label/tick is clearly visible against the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and all compass-direction labels render in light ink, clearly legible against the dark background — no dark-on-dark failures observed. Scale rings and their percentage labels use a soft light-gray tone, readable, with the same "3%" label crowding the N/NNE wedge boundary as in the light render (confirmed via tight crop — same underlying layout issue, not theme-specific). Legend text and swatches are legible in light ink.
+      Data: Identical wedge geometry and identical data colors to the light render (verified — the 4 categorical hues are unchanged), confirming only chrome flipped between themes as required.
+      Legibility verdict: PASS (same isolated "3%" label crowding as the light render; no dark-on-dark or unreadable text found).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title, compass labels, radial ticks,
-          legend); readable in both themes at full size.
+        comment: All text readable in both themes; the '3%' ring label crowds the
+          N/NNE wedge boundary in both renders, a minor legibility risk where the
+          glyph nearly touches colored fill
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text-on-text or text-on-data collisions in either render.
-      - id: VQ-03
-        name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Several stacked segments (value=0.1 against SCALE_MAX=13) render
-          as near-invisible slivers.
+        comment: The '3%' scale label sits in a fixed N/NNE gap that is too narrow
+          once both wedges reach past 3% radius, causing the label to crowd/nearly
+          touch data fill in both themes; not severe overlap, but a real design flaw
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 direction wedges and 4 stacked bins are distinguishable; verified
+          via pixel sampling that even the smallest wedges (ESE/SE/SSE/S) render correctly
+          and are not actually missing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues across segments, no red-green-only signal.
+        comment: 4 categorical hues with white/pageBg stroke separators between segments
+          aid discrimination; well within the 3-4 series color-alone guidance
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization overall, but visible wedges are lopsided
-          into the N-SW arc leaving the opposite side sparse.
+        comment: Square canvas correctly sized, title/legend/labels well proportioned
+          and none clipped at the canvas edge; docked slightly for the same ring-label
+          crowding issue
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial scale labeled in % with compass directions as categorical
-          axis.
+        comment: Title matches the exact mandated format; radial scale is labeled
+          with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, theme-correct chrome in both
-          renders.'
+        comment: 'First (innermost) series is #009E73; remaining 3 bins use the next
+          Imprint canonical slots; backgrounds are correctly #FAF8F1/#1A1A17 in each
+          theme'
     design_excellence:
       score: 16
       max: 20
@@ -115,22 +126,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Hand-built polar geometry with concentric rings and clean labeling
-          goes well beyond a library default.
+        comment: Custom-drawn polar geometry, subtle concentric scale rings, and a
+          deliberate stroke separator between stacked segments show real design intent
+          beyond defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle grid rings, stroke-separated wedges, generous label clearance;
-          minor deduction for the empty sector.
+        comment: No chart chrome/spines (polar layout), grid rings are subtle and
+          low-contrast, generous whitespace around the rose and legend
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Dominant SW regime vs. lighter NE breeze is immediately visible through
-          color/size contrast.
+        comment: The dominant SW/WSW lobe versus the smaller NE secondary lobe reads
+          immediately as a clear bimodal focal point
     spec_compliance:
       score: 15
       max: 15
@@ -140,90 +152,93 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked polar bar / wind rose.
+        comment: Genuine polar/wind-rose bar chart, bars radiate outward from center
+          by compass direction
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars radiate from center, angle=direction, length=magnitude, stacked
-          speed bins.
+        comment: 16 compass directions, stacked speed-bin segments, radial frequency
+          scale all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 16 directions mapped correctly, radial axis shows full range.
+        comment: Angle=direction, radius=cumulative frequency, verified correct by
+          direct pixel sampling against the source data array
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match speed
-          bins.
+        comment: Title exactly matches 'polar-bar · javascript · highcharts · anyplot.ai';
+          legend labels match the speed-bin data
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows directional spread and stacked speed bins across a realistic
-          bimodal regime.
+        comment: Full 16-direction x 4-speed-bin matrix populated with varied, non-uniform
+          values
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral meteorological wind-rose scenario.
+        comment: Frequencies sum to ~99.9% across all direction/bin combinations,
+          a strong realism signal for a meteorological frequency distribution; plausible
+          onshore SW regime with a secondary NE land-breeze pattern
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Total frequency across all direction/speed-bin cells sums to only
-          ~73%, not the ~100% expected of a full observational distribution.
+        comment: Per-bin values (0.4-3.8%) and direction totals (2.5-13.5%) are realistic
+          magnitudes for a wind-rose frequency dataset
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: A few small helper functions (angleFor/radiusFor/project) are used
-          for the polar-projection math.
+        comment: Flat top-level script with small, purpose-specific helper functions
+          (angleFor/radiusFor/project) for the required polar-projection math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded, deterministic data.
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Highcharts.
+        comment: No imports beyond the provided Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a core-bundle polar workaround; no fake
-          UI.
+        comment: Real SVG geometry, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly uses Highcharts.chart + renderer API, harness owns file
-          output.
+        comment: Uses Highcharts.chart('container', ...) with no explicit width/height
+          and animation disabled, per the mount-node contract
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,29 +246,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Best achievable idiomatic usage given the core-only bundle constraint
-          (no highcharts-more polar composition available).
+        comment: Correctly avoids the unavailable highcharts-more polar composition
+          and instead uses the renderer's own arc symbol primitive, matching the library-rules
+          guidance exactly
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Reuses Highcharts' own arc symbol primitive and binds a hidden real
-          scatter series to rendered geometry for genuine tooltips - not easily replicated
-          in another library.
-  verdict: REJECTED
+        comment: Hidden scatter-point tooltip binding over hand-drawn geometry is
+          a distinctive, non-trivial technique for getting real interactivity out
+          of a manually-composed chart
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - custom-legend
   - hover-tooltips
+  - manual-ticks
+  - annotations
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - cumulative-sum
   styling:
-  - minimal-chrome
+  - publication-ready
   - edge-highlighting
