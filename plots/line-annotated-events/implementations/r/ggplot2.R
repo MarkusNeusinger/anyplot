@@ -12,6 +12,7 @@ set.seed(42)
 # --- Theme tokens ------------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
@@ -40,7 +41,11 @@ span          <- diff(price_range)
 label_row_gap <- span * 0.09
 label_base_y  <- price_range[2] + span * 0.04
 events_df <- events_df |>
-  mutate(label_y = label_base_y + (label_step - 1) * label_row_gap)
+  mutate(
+    label_y = label_base_y + (label_step - 1) * label_row_gap,
+    dot_y   = approx(stock_df$date, stock_df$value, event_date)$y,
+    leader_y = label_y - span * 0.02
+  )
 
 # --- Plot -----------------------------------------------------------------
 title_text <- "line-annotated-events · r · ggplot2 · anyplot.ai"
@@ -54,16 +59,23 @@ p <- ggplot() +
     data = stock_df, aes(x = date, y = value),
     color = BRAND, linewidth = 1.0
   ) +
+  geom_segment(
+    data = events_df,
+    aes(x = event_date, xend = event_date, y = dot_y, yend = leader_y),
+    color = IMPRINT_PALETTE[5], linewidth = 0.5, alpha = 0.55
+  ) +
   geom_point(
     data = events_df,
-    aes(x = event_date, y = approx(stock_df$date, stock_df$value, event_date)$y),
+    aes(x = event_date, y = dot_y),
     color = IMPRINT_PALETTE[5], size = 2.8
   ) +
-  geom_text(
+  geom_label(
     data = events_df,
     aes(x = event_date, y = label_y, label = event_label),
-    color = INK_SOFT, size = 3.0, hjust = 0.5, vjust = 0,
-    lineheight = 0.9
+    color = INK_SOFT, fill = ELEVATED_BG, size = 3.0,
+    hjust = 0.5, vjust = 0, lineheight = 0.9,
+    label.size = 0.2, label.padding = unit(0.18, "lines"),
+    label.r = unit(0.08, "lines")
   ) +
   scale_y_continuous(
     labels = scales::dollar_format(),
