@@ -11,7 +11,7 @@
   and why a one-token substitution is not an exemption from the Edit/Write rule.
   `tests/unit/test_agent_instructions.py` pins the split: every section maps to a
   binding one-liner in `CLAUDE.md`, and the companion file has to say that
-  `CLAUDE.md` outranks it.
+  `CLAUDE.md` outranks it. (#11605)
 
 ### Changed
 
@@ -23,7 +23,7 @@
   number into a changelog fragment. `CLAUDE.md` now states the precedence
   explicitly, and the delegation rule adds the second line a brief has to carry:
   all `git` stays inside the agent's own worktree, because a `git checkout -b` in
-  the shared checkout moves a ref the owner's working tree is sitting on.
+  the shared checkout moves a ref the owner's working tree is sitting on. (#11605)
 - **`/open-pr` knows what "ready to merge" means since the review ruleset
   changed.** `review_on_push` is `false` in the "Automated Copilot Code Review"
   ruleset since 2026-09-03, so a fix push starts no Copilot run and the absence
@@ -36,22 +36,22 @@
   conclusion `cancelled` and delivers nothing — and zero unresolved threads.
   `mergeable=UNKNOWN` is GitHub still computing; a conflict (`CONFLICTING`,
   `mergeStateStatus` `DIRTY`) gets no CI at all and is reported, not waited out.
-  Merging stays the owner's call.
+  Merging stays the owner's call. (#11605)
 - **Commit-message and PR-body files are named after the branch.** The scratchpad
   is shared by every agent of one session, so a generic `commitmsg.txt` or
   `prbody.md` gets overwritten by a parallel agent and a later re-read commits
   someone else's text. `/open-pr` now derives the name from the branch and says
   the part that makes it safe: write and consume the file in the same step — it
-  is scratch input to one command, not a record.
+  is scratch input to one command, not a record. (#11605)
 - **A numeric UI rule is verified against the measured result.**
   `/verify-frontend` gains § 3b: a floor, a minimum size or a cap is read off the
   element in the browser, never off the code that computed it. The case is a
   14 px x-height floor whose planner sized lines from an average advance — the
   plan met the floor and the rendered page came out at 13.9 px, because the
-  frame's own padding was never in the budget.
+  frame's own padding was never in the budget. (#11605)
 - **Shortening a text that carries claims is now a checklist.** `/write-docs`
   gains the claim-by-claim diff duty: shortening drops qualifiers before it drops
   sentences, which is how a privacy section lost an overstated retention period,
   a condition on the right to object and part of a list of rights inside an
   otherwise good edit. The owner's own sentences stay verbatim, and a claim that
-  cannot be supported is removed rather than softened.
+  cannot be supported is removed rather than softened. (#11605)
