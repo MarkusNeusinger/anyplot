@@ -1,0 +1,241 @@
+library: muix
+language: javascript
+specification_id: learning-curve-basic
+created: '2026-09-05T06:33:06Z'
+updated: '2026-09-05T06:47:31Z'
+generated_by: claude-sonnet
+workflow_run: 33949700795
+issue: 2275
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Imprint palette order: brand green #009E73 for training, lavender #C475FD
+    for validation, identical between light and dark renders'
+  - Confidence bands (±1 std) implemented via a clever stacked-area trick (transparent
+    lower series + width series), matching the spec's requirement for shaded variability
+    bands
+  - 'White-halo markers (stroke: t.pageBg) keep the sparse 10-point series visible
+    against both the band fill and the page background in both themes'
+  - Axis labels are fully descriptive with units ("Training Set Size (labeled emails)",
+    "Classification Accuracy (%)"), and the title matches the mandated format exactly
+  - Realistic, neutral spam-filter classifier scenario with plausible accuracy values
+    and a persistent-but-narrowing train/validation gap that correctly demonstrates
+    the bias-variance diagnosis the spec calls for
+  - 'Clean single-component code: only used imports, deterministic hard-coded data,
+    skipAnimation set for the static screenshot'
+  weaknesses:
+  - 'Design Excellence is solid but not exceptional: beyond the confidence bands and
+    marker halos, the chart relies on MUI X defaults (no annotation or callout emphasizing
+    the persistent train/validation gap that is the core diagnostic story)'
+  - The stacked-area confidence-band technique is a workaround for MUI X lacking a
+    native band-between-two-lines primitive, not a distinctive library feature — LM-02
+    scored accordingly
+  - X-axis carries 35 tick labels (every 100 units from 200-3600); still readable
+    at full resolution but could be thinned (e.g. every 200-400) for a slightly cleaner
+    look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "learning-curve-basic · javascript · muix · anyplot.ai" is bold dark text, clearly legible. X-axis label "Training Set Size (labeled emails)" and y-axis label "Classification Accuracy (%)" are dark and readable. Tick labels (percent on y, sample-size counts by 100 on x) are dark gray and legible. Horizontal grid lines are subtle, not dominant. Legend at bottom center shows a green swatch for "Training score" and a lavender swatch for "Validation score", both readable.
+      Data: Training-score line is brand green (#009E73) with a light green ±1 std confidence band; validation-score line is lavender (#C475FD) with a matching light lavender confidence band. White-stroked circular markers sit at each of the 10 training-set-size points on both mean lines, giving good visibility against the fills. First series is correctly the brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all render in light/white text, clearly legible against the dark background. Grid lines are subtle but visible. No dark-on-dark or unreadable text observed anywhere.
+      Data: Training line remains the same brand green (#009E73) and validation line the same lavender (#C475FD) as the light render — chrome flipped, data colors unchanged. Confidence bands and white-halo markers remain visible and distinguishable from the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all text legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, markers, or bands despite 35 x-axis ticks
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: White-halo markers and appropriately opaque bands keep the sparse
+          10-point series clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing has good contrast and is not a red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas, no clipping or overflow, well-proportioned
+          title
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units; title matches mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Series 1 = #009E73 brand green, series 2 = #C475FD lavender, canonical
+          order; identical across themes; backgrounds theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Marker halos, subtle band outline strokes, and refined alpha choices
+          go beyond generic MUI defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only grid, subtle band alpha, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Convergence/gap story is visible but relies on the viewer noticing
+          it — no annotation or emphasis calls it out
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct learning-curve chart: two mean lines with confidence bands'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: ±1 std bands, legend distinguishing train/validation, actual sample
+          sizes on x-axis, distinct colors
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = training set size, Y = accuracy; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches spec format exactly; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 sizes, 8-fold-style std bands, both train and validation curves
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Spam-filter classifier scenario is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible accuracy values and sample-size range for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single component, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart, Box, Typography imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Stacked-area band trick is appropriately clever, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-mounted component with skipAnimation; no manual save calls
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of series stacking, xAxis/yAxis config, slotProps.legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Band technique is a workaround for a missing native primitive rather
+          than a showcase of a distinctive MUI X feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - confidence-bands
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
