@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-loss-training
 created: '2026-09-05T07:21:48Z'
-updated: '2026-09-05T07:26:06Z'
+updated: '2026-09-05T07:34:24Z'
 generated_by: claude-sonnet
 workflow_run: 33952167688
 issue: 2860
@@ -12,57 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette usage: Training = #009E73 (brand green, position 1) and
-    Validation = #C475FD (position 2), identical hex values across both light and
-    dark renders.'
-  - 'Theme-adaptive chrome flips correctly: light background reads warm off-white
-    (~#FAF8F1) with dark ink text, dark background reads warm near-black (~#1A1A17)
-    with light text; no dark-on-dark or light-on-light failures in either render.'
-  - 'Data tells the classic overfitting story: training loss decays smoothly while
-    validation loss diverges upward past ~epoch 34, and the optimal-stopping epoch
-    is explicitly marked with a dashed vline, hollow point marker, and annotation
-    label, matching the spec''s optional ''mark the epoch with minimum validation
-    loss'' note.'
-  - 'Clean, reproducible, KISS-structured code: single set.seed(42), linear imports
-    -> data -> plot -> save flow, correct ragg::agg_png device, and canvas saved at
-    width=8/height=4.5in @ 400dpi (3200x1800, matches the landscape canvas requirement).'
-  - Y-axis label explicitly names the loss function ('Cross-Entropy Loss') as required
-    by the spec, and the title exactly matches the mandated 'line-loss-training ·
-    r · ggplot2 · anyplot.ai' format.
+  - Correct dual-curve training/validation loss plot built from idiomatic ggplot2
+    layering (geom_ribbon, geom_vline, annotate, geom_line)
+  - 'Strong data storytelling: generalization-gap ribbon + dashed vline + hollow-circle
+    marker + text annotation pinpoint the optimal-stopping epoch (48), directly fulfilling
+    the spec''s optional ''mark the epoch with minimum validation loss'' note'
+  - 'Correct Imprint palette (green #009E73 training, lavender #C475FD validation),
+    identical across themes; chrome (background, text, grid, legend) properly flips
+    theme-adaptive tokens with no dark-on-dark or light-on-light failures'
+  - Legend moved to top-left, clear of data and the annotation text — fixes the inside-legend
+    placement (c(0.86, 0.86)) from attempt 1 that risked colliding with the climbing
+    validation curve
+  - Differentiated line widths (0.95 training vs 1.3 validation) reinforce visual
+    hierarchy without adding legend complexity
+  - 'Clean, reproducible, KISS script: set.seed(42), only used imports, correct ragg
+    PNG save with plot-{THEME}.png naming'
   weaknesses:
-  - The 'Optimal stopping · epoch 48' annotation sits very close to the inside legend
-    in the top-right region of the plot in both renders — increase vertical/horizontal
-    separation (e.g. nudge the annotation down, or move the legend to top-left / outside)
-    to reduce visual crowding.
-  - 'Design Excellence is close to a well-configured theme_minimal() default: the
-    annotation is a nice touch, but grid/spine/typography refinement doesn''t go much
-    further than the baseline. Consider a more deliberate visual hierarchy — e.g.
-    shading the divergence gap between train/val curves with geom_ribbon, or subtly
-    de-emphasizing the pre-divergence region — to create a stronger focal point.'
-  - Library Mastery is idiomatic but generic — the same chart could be produced with
-    only minor syntax changes in another plotting library. Consider leveraging a ggplot2-distinctive
-    feature (e.g. geom_ribbon for the overfitting gap, or a secondary annotation layer
-    with ggrepel-style placement) to showcase the grammar-of-graphics layering more
-    distinctively.
-  - Early-epoch region (roughly epoch 1-15) has the two lines crossing/overlapping
-    frequently as they decay steeply — a touch more line-width contrast or slight
-    alpha could keep both curves easily distinguishable there without affecting the
-    rest of the chart.
+  - Annotation text 'Optimal stopping · epoch 48' sits close to the topmost gridline/legend
+    zone — a touch more vertical offset would give it cleaner breathing room
+  - Element visibility is default-line-only for the noisy per-epoch curves; the synthetic
+    per-epoch jitter is realistic but a very slightly higher alpha or thinner training
+    line could reduce visual clutter around epochs 50-80 where curves run close together
+  - Design excellence is competent but incremental — a secondary annotation or subtitle
+    quantifying the final generalization-gap magnitude would push the storytelling
+    further
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "line-loss-training · r · ggplot2 · anyplot.ai" top-left in dark ink, clearly readable. "Epoch" x-axis label and "Cross-Entropy Loss" y-axis label in dark ink, both legible. Tick labels (0.0-2.5 on y, 20/40/60/80 on x) in a softer dark gray, legible. Horizontal-only major gridlines are thin and subtle. A dashed vertical guide line marks epoch 48 with an "Optimal stopping · epoch 48" text annotation next to it, and an inline legend (top-right, inside the panel, no box) labels "Training" and "Validation".
-      Data: Two lines — brand green (#009E73) "Training" loss decaying smoothly from ~2.3 to near 0.03 by epoch 80; lavender/purple (#C475FD) "Validation" loss decaying similarly but bottoming out around epoch 34-48 (~0.15-0.2) then climbing back up to ~0.55 by epoch 80, the classic overfitting signature. A hollow purple-ringed marker sits on the validation curve at the minimum (epoch 48).
-      Legibility verdict: PASS. All text is clearly readable against the light background; no light-on-light issues. Minor crowding: the "Optimal stopping" annotation text sits close to the inline legend but does not overlap it.
+      Chrome: Title "line-loss-training · r · ggplot2 · anyplot.ai" in dark ink, fully visible and not clipped at the top edge. Legend ("Training" / "Validation") sits top-left below the title in dark/soft-grey text. Axis titles "Epoch" and "Cross-Entropy Loss" in dark ink; tick labels in soft grey. Horizontal-only gridlines are subtle and visible against the cream background. Dashed vertical rule marks epoch 48 in soft grey. Annotation "Optimal stopping · epoch 48" is dark-grey text, clearly legible against the cream background.
+      Data: Training curve is brand green (#009E73), Validation curve is lavender/purple (#C475FD) — matches Imprint palette positions 1 and 2. A light lavender ribbon shades the generalization gap between the curves from epoch 48 onward. A hollow purple-ringed marker sits at the minimum validation loss point. Both curves decay from ~2.5 toward near-zero, with validation loss diverging upward past epoch ~48 — the classic overfitting signature.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, tick labels, gridlines, dashed guide line, and legend as the light render, but rendered in light ink (near-white for primary text, light gray for secondary/tick text). All chrome elements are clearly visible against the dark background — no dark-on-dark failures observed.
-      Data: Identical data colors to the light render — brand green (#009E73) Training curve and lavender (#C475FD) Validation curve, same shapes, same overfitting divergence and optimal-stopping marker at epoch 48. Only the chrome (background, text, gridlines, dashed line, legend) flipped to the dark-theme tokens; the two data series hues are unchanged.
-      Legibility verdict: PASS. Title, axis labels, tick labels, and legend text are all light-colored and clearly legible on the near-black background; no dark-on-dark text found. Same minor annotation/legend crowding as the light render, but not a legibility failure.
+      Chrome: Title, legend, axis titles rendered in light/off-white ink, fully legible against the dark background. Tick labels and the "Optimal stopping · epoch 48" annotation are light-grey and clearly readable — no dark-on-dark failures observed. Gridlines are light and subtle, visible without competing with the data.
+      Data: Training (green #009E73) and Validation (lavender #C475FD) curves are pixel-identical in hue to the light render — only the chrome (background, text, grid, ribbon opacity blending with dark bg) flipped. The generalization-gap ribbon reads as a muted dark-purple wash against the near-black background, still visible.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; brand green and lavender both remain distinguishable and vivid on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -73,73 +61,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 12pt, axis.title 10pt, axis.text
-          8pt, legend 8/10pt) and readable in both themes; minor crowding between
-          the annotation and the inside legend costs a point.
+        comment: All text (title, axis labels, ticks, legend, annotation) legible
+          in both themes; explicit sizes set via theme()
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No actual text overlap; annotation sits close to the legend but remains
-          fully readable in both renders.
+        comment: Legend moved to top-left, clear of the dashed-line annotation and
+          climbing validation curve — fixes attempt-1 inside-legend risk
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line width (1.1) is appropriate for 80-point medium-density data;
-          early-epoch crossing lines could use slightly more contrast.
+        comment: Line widths (0.95/1.3) appropriate for 80-epoch density; curves run
+          close together in the 50-80 epoch range but remain distinguishable by color
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender is CVD-safe and high-contrast; no red-green sole
-          signal.
+        comment: Green/lavender pair is CVD-safe per Imprint palette design; no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a healthy majority of the 3200x1800 canvas with balanced
-          margins; canvas dimension gate passed.
+        comment: Canvas dimension gate passed (no gate file); good proportions, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis explicitly names the loss function (Cross-Entropy Loss); x-axis
-          is 'Epoch'.
+        comment: Axis labels descriptive with units (Cross-Entropy Loss, Epoch)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series #C475FD (Imprint position 2),
-          identical across themes; backgrounds theme-correct in both renders.'
+        comment: 'First series #009E73, second #C475FD (canonical positions 1-2);
+          backgrounds correct #FAF8F1/#1A1A17; identical data colors across themes'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Thoughtful optimal-stopping annotation and marker go above a bare
-          default, but overall polish stays close to theme_minimal().
+        passed: true
+        comment: Custom palette, intentional hierarchy via line-width differentiation
+          and ribbon shading; solid polish, not groundbreaking
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Horizontal-only subtle grid, no vertical grid, boxless inline legend
-          — good refinement but not maximally polished.
+        passed: true
+        comment: theme_minimal with axis.line instead of spines, y-axis-only subtle
+          grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: The overfitting divergence and optimal-stopping marker create a clear
-          focal point and visual hierarchy guiding the reader to the insight.
+        passed: true
+        comment: Clear focal point (optimal-stopping epoch), ribbon visualizes the
+          generalization gap — strong narrative for an overfitting chart
     spec_compliance:
       score: 15
       max: 15
@@ -149,27 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-line loss-curve plot.
+        comment: Correct dual-line plot of loss over epochs
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, x-axis spanning epoch 1-80, y-axis names
-          the loss function, and the optional minimum-val-loss marker are all present.
+        comment: Distinct colors, legend, x-axis 1-80, y-axis names the loss function,
+          optimal-stopping epoch marked
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=epoch, y=loss, color=split — correctly mapped, full range shown.
+        comment: X=epoch, Y=loss; full 1-80 epoch range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; legend labels 'Training'/'Validation'
-          correctly match the data.
+        comment: Title matches mandated format exactly; legend labels 'Training'/'Validation'
+          match data
     data_quality:
       score: 15
       max: 15
@@ -179,21 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows smooth decay, noise, convergence, and the overfitting divergence
-          — the full feature set of a training/validation loss curve.
+        comment: Shows decay, divergence/overfitting signature, and optimal-stopping
+          point — full feature coverage for this plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world ML training scenario.
+        comment: Plausible, neutral synthetic training history
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Loss values (start ~2.4, converge near 0.03-0.55) are realistic magnitudes
-          for cross-entropy training/validation curves.
+        comment: Cross-entropy values and epoch range are realistic for an image-classifier
+          training run
     code_quality:
       score: 10
       max: 10
@@ -203,32 +192,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear imports -> data -> plot -> save.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, tidyr, ragg all used.
+        comment: ggplot2, dplyr, tidyr, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake functionality.
+        comment: No fake UI/interactivity; annotation is a real static callout
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png, plot-{theme}.png naming, current API (linewidth,
-          not size).
+        comment: ggsave with ragg::agg_png and correct plot-{THEME}.png naming
     library_mastery:
       score: 7
       max: 10
@@ -237,17 +225,17 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct, idiomatic ggplot2 layering (geom_vline + geom_line + annotate
-          + scale_color_manual) but doesn't push into the library's more advanced
-          patterns.
+        passed: true
+        comment: 'Idiomatic grammar-of-graphics layering: geom_ribbon, geom_vline,
+          geom_line, annotate, scale_*_manual'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: Uses annotate() with shape=21 hollow marker and legend.position.inside
-          — some ggplot2-specific touches, but no feature that couldn't easily be
-          replicated elsewhere.
-  verdict: REJECTED
+        passed: true
+        comment: linewidth aesthetic mapping and generalization-gap ribbon go beyond
+          basic API usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -257,4 +245,7 @@ impl_tags:
   - data-generation
   - wide-to-long
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
