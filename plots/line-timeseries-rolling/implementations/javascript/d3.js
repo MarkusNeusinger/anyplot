@@ -58,13 +58,21 @@ const y = d3
   .nice()
   .range([ih, 0]);
 
-// --- Gridlines (y-axis only) -------------------------------------------------
+// --- Gridlines (both axes) ---------------------------------------------------
 g.append("g")
-  .attr("class", "grid")
+  .attr("class", "grid grid-y")
   .call(d3.axisLeft(y).tickSize(-iw).tickFormat(""))
   .selectAll("line")
   .attr("stroke", t.grid);
-g.select(".grid .domain").remove();
+g.select(".grid-y .domain").remove();
+
+g.append("g")
+  .attr("class", "grid grid-x")
+  .attr("transform", `translate(0,${ih})`)
+  .call(d3.axisBottom(x).tickSize(-ih).tickFormat(""))
+  .selectAll("line")
+  .attr("stroke", t.grid);
+g.select(".grid-x .domain").remove();
 
 // --- Axes -------------------------------------------------------------------
 const xAxis = g
@@ -100,21 +108,39 @@ const rollingLine = d3
   .y((d) => y(d.value))
   .curve(d3.curveMonotoneX);
 
+// Subtle halo behind the rolling-average line to lift it further above the noisy raw data.
 g.append("path")
   .datum(rollingSeries)
   .attr("fill", "none")
-  .attr("stroke", t.palette[2])
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 7)
+  .attr("stroke-opacity", 0.6)
+  .attr("d", rollingLine);
+
+g.append("path")
+  .datum(rollingSeries)
+  .attr("fill", "none")
+  .attr("stroke", t.palette[1])
   .attr("stroke-width", 4)
   .attr("d", rollingLine);
 
 // --- Legend -------------------------------------------------------------------
 const legendData = [
   { label: "Raw Data", color: t.palette[0], opacity: 0.35, width: 3 },
-  { label: `Rolling Average (${windowSize}-Day)`, color: t.palette[2], opacity: 1, width: 5 },
+  { label: `Rolling Average (${windowSize}-Day)`, color: t.palette[1], opacity: 1, width: 5 },
 ];
-const legend = g.append("g").attr("transform", `translate(${iw - 320}, -50)`);
+const legendBoxWidth = 300;
+const legendBoxHeight = 66;
+const legend = g.append("g").attr("transform", `translate(${iw - legendBoxWidth - 14}, 14)`);
+legend
+  .append("rect")
+  .attr("width", legendBoxWidth)
+  .attr("height", legendBoxHeight)
+  .attr("rx", 8)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid);
 legendData.forEach((d, i) => {
-  const row = legend.append("g").attr("transform", `translate(0, ${i * 30})`);
+  const row = legend.append("g").attr("transform", `translate(18, ${20 + i * 28})`);
   row
     .append("line")
     .attr("x1", 0)
