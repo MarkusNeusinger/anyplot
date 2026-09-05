@@ -1,7 +1,7 @@
 // anyplot.ai
 // map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-05
+// Quality: 90/100 | Created: 2026-09-05
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
