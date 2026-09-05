@@ -34,8 +34,8 @@ nodes <- tribble(
   "database",           1,   -1,
   "cache",              1,    0,
   "auth",               1,    1,
-  "validators",         2, -0.5,
-  "api_client",         2,  0.5,
+  "validators",         2, -0.7,
+  "api_client",         2,  0.7,
   "orders_svc",         3,   -1,
   "users_svc",          3,    0,
   "payments_svc",       3,    1,
@@ -86,18 +86,45 @@ edge_coords <- edges %>%
     xs = x0 + trim_frac * (x1 - x0),
     ys = y0 + trim_frac * (y1 - y0),
     xe = x1 - trim_frac * (x1 - x0),
-    ye = y1 - trim_frac * (y1 - y0)
+    ye = y1 - trim_frac * (y1 - y0),
+    # Long edges that skip the layer-2 column (validators/api_client) and
+    # travel diagonally cut straight through those nodes' positions. Bow
+    # just those three edges out of the way; everything else stays a
+    # straight segment so the layout itself is untouched.
+    curvature = case_when(
+      from == "users_svc"    & to == "auth"     ~ -0.35,
+      from == "users_svc"    & to == "database" ~  0.35,
+      from == "payments_svc" & to == "database" ~  0.35,
+      TRUE ~ 0
+    )
   )
+
+straight_edges <- filter(edge_coords, curvature == 0)
+curved_pos     <- filter(edge_coords, curvature > 0)
+curved_neg     <- filter(edge_coords, curvature < 0)
+
+edge_arrow <- arrow(length = unit(3, "mm"), type = "closed", angle = 25)
 
 # --- Plot ----------------------------------------------------------------
 p <- ggplot() +
   geom_segment(
-    data = edge_coords,
+    data = straight_edges,
     aes(x = xs, y = ys, xend = xe, yend = ye, linewidth = calls_per_day),
-    color = INK_SOFT, alpha = 0.55, lineend = "round",
-    arrow = arrow(length = unit(3, "mm"), type = "closed", angle = 25)
+    color = INK_SOFT, alpha = 0.6, lineend = "round", arrow = edge_arrow
   ) +
-  scale_linewidth(range = c(0.6, 2.4), guide = "none") +
+  geom_curve(
+    data = curved_pos,
+    aes(x = xs, y = ys, xend = xe, yend = ye, linewidth = calls_per_day),
+    color = INK_SOFT, alpha = 0.6, lineend = "round", arrow = edge_arrow,
+    curvature = 0.35
+  ) +
+  geom_curve(
+    data = curved_neg,
+    aes(x = xs, y = ys, xend = xe, yend = ye, linewidth = calls_per_day),
+    color = INK_SOFT, alpha = 0.6, lineend = "round", arrow = edge_arrow,
+    curvature = -0.35
+  ) +
+  scale_linewidth(range = c(0.5, 2.2), guide = "none") +
   geom_point(
     data = nodes, aes(x = x, y = y, color = group),
     size = 16
