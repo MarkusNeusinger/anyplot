@@ -14,13 +14,13 @@ const elbowK = 4;
 
 const seriesData = kValues.map((k, i) =>
   k === elbowK
-    ? { x: k, y: inertia[i], marker: { radius: 9, lineWidth: 3, lineColor: t.ink } }
+    ? { x: k, y: inertia[i], marker: { radius: 11, lineWidth: 3, lineColor: t.ink } }
     : [k, inertia[i]]
 );
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
-  chart: { type: "line", backgroundColor: "transparent", animation: false,
+  chart: { type: "areaspline", backgroundColor: "transparent", animation: false,
            style: { fontFamily: "inherit" } },
   credits: { enabled: false },
   colors: t.palette,
@@ -41,8 +41,13 @@ Highcharts.chart("container", {
            gridLineColor: t.grid,
            labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
   legend: { enabled: false },
-  tooltip: { enabled: false },
-  plotOptions: { series: { animation: false, lineWidth: 2.5,
-                            marker: { radius: 5, fillColor: t.palette[0], lineWidth: 0 } } },
+  tooltip: { enabled: true, backgroundColor: t.elevatedBg, borderColor: t.grid,
+             style: { color: t.ink, fontSize: "13px" },
+             formatter() {
+               return `k = ${this.x}<br/>Inertia: ${this.y.toLocaleString()}`;
+             } },
+  plotOptions: { series: { animation: false, lineWidth: 3,
+                            fillOpacity: 0.12,
+                            marker: { radius: 7, fillColor: t.palette[0], lineWidth: 0 } } },
   series: [{ name: "Inertia", data: seriesData, color: t.palette[0] }],
 });
