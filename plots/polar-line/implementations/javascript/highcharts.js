@@ -68,16 +68,19 @@ Highcharts.chart("container", {
         const cx = xAxis.toPixels(0);
         const cy = yAxis.toPixels(0);
 
-        // Concentric radius rings, labeled along the 01:00 spoke.
+        // Concentric radius rings, labeled along the 15:00 spoke — at that hour
+        // both series sit comfortably clear of every ring, unlike the 01:00
+        // spoke where the 0.3 ring used to crowd the lines (values ~0.28-0.36
+        // kWh at hour 1, right on top of the ring).
         RADIUS_TICKS.forEach((r) => {
           const rPix = Math.abs(xAxis.toPixels(r) - cx);
           chart.renderer
             .circle(cx, cy, rPix)
             .attr({ fill: "none", stroke: t.grid, "stroke-width": 1 })
             .add(group);
-          const labelAt = polarPoint(r, 1);
+          const labelAt = polarPoint(r, 15);
           chart.renderer
-            .text(r.toFixed(1), xAxis.toPixels(labelAt.x) + 4, yAxis.toPixels(labelAt.y) - 4)
+            .text(`${r.toFixed(1)} kWh`, xAxis.toPixels(labelAt.x) + 4, yAxis.toPixels(labelAt.y) - 4)
             .css({ color: t.inkSoft, fontSize: "12px" })
             .add(group);
         });
@@ -130,7 +133,7 @@ Highcharts.chart("container", {
     series: {
       animation: false,
       lineWidth: 2.5,
-      marker: { radius: 4, lineWidth: 0 },
+      marker: { radius: 6, lineWidth: 0 },
     },
   },
   series: [weekday, weekend],
