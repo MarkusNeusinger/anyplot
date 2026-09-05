@@ -1,0 +1,230 @@
+library: chartjs
+language: javascript
+specification_id: scatter-color-mapped
+created: '2026-09-05T13:47:03Z'
+updated: '2026-09-05T14:10:01Z'
+generated_by: claude-sonnet
+workflow_run: 33969667745
+issue: 2004
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Hand-built colorbar plugin (afterDraw) with measureText-based right-padding calculation
+    avoids guessed dead space and keeps min/max tick labels + rotated axis title fully
+    on-canvas
+  - 'Continuous color mapping uses the correct imprint_seq (#009E73 -> #4467A3) tokens,
+    min-max normalized, identical between light and dark renders'
+  - 'Data is realistic and tells a coherent spatial story: temperature rises to the
+    east and falls to the north, visibly readable in the color gradient across the
+    scatter'
+  - Theme-adaptive chrome (ink / inkSoft / grid tokens) applied consistently to title,
+    axis titles, ticks, borders, and the custom colorbar text/border
+  - Deterministic LCG-seeded data generation, no imports beyond the Chart.js global,
+    animation disabled per harness contract
+  weaknesses:
+  - Colorbar tick/axis-label font is 14px at the 3200px canvas width; at the 400px
+    gallery thumbnail scale this shrinks to near-illegible size — consider bumping
+    colorbar font a couple points relative to the main axis fonts
+  - Design storytelling is limited to the raw spatial gradient; no annotation or emphasis
+    calls out the north-cool/east-warm trend explicitly for a viewer skimming the
+    thumbnail
+  - Legend is disabled (correct, since a single continuous series doesn't need one),
+    but there is no title-adjacent caption reinforcing what the color encodes beyond
+    the colorbar label
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "scatter-color-mapped · javascript · chartjs · anyplot.ai" centered at top, clearly legible. Axis titles "Distance East (km)" / "Distance North (km)" in dark ink, tick labels in a softer gray-brown, both fully readable. Grid lines are light and subtle, visible without dominating. Vertical colorbar on the right with "27.3°C" / "15.1°C" tick labels and a rotated "Temperature (°C)" axis label, all fully inside the canvas with comfortable margin (verified via a cropped close-up of the right edge — no clipping).
+      Data: ~180 circular markers colored on a continuous green-to-blue gradient (imprint_seq: #009E73 -> #4467A3), consistent with a temperature encoding. Markers cluster warmer (blue) toward low-north/high-east and cooler (green) toward high-north, a visible and plausible spatial trend. Point size (~7.5px radius) and alpha (~0.78) are appropriate for a moderately dense 180-point scatter, no severe overplotting.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and axis titles render in light/white ink, clearly legible against the dark background. Tick labels use a lighter soft-gray tone, also legible — no dark-on-dark text anywhere. Grid lines are subtly visible. The colorbar's tick labels and rotated axis title also flip to light ink and remain fully on-canvas (confirmed via the same right-edge crop as the light render).
+      Data: Same green-to-blue gradient and same point positions/colors as the light render — the data-color mapping is unchanged between themes, only chrome (background, text, grid) flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full size; colorbar font (14px)
+          risks shrinking too small at the 400px thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; only minor incidental marker-on-marker touches
+          from random data placement
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size (7.5px radius) and alpha (0.78) well-suited to 180 points,
+          no severe overplotting
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-blue sequential scale is CVD-safe, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; colorbar padding computed from measured tick-label
+          width, no overflow or clipping (verified via right-edge crop)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (km, °C)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq for continuous data; correct light/dark chrome
+          backgrounds; data colors identical across themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Custom afterDraw colorbar plugin with measured padding is above-default
+          polish, though overall styling stays close to the library defaults elsewhere
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle grid, clean ink-token chrome, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        comment: Spatial temperature gradient is visible and plausible but not reinforced
+          with any annotation or emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct color-mapped scatter
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Colorbar with labeled scale, moderate marker size, transparency for
+          overlap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X/Y correctly mapped, axes cover full 0-100 range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches mandated format exactly; legend correctly disabled
+          in favor of the colorbar for a single continuous series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Continuous third variable, colorbar, moderate point size, transparency
+          all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Plausible, neutral sensor/temperature-grid scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Temperature range (15-27°C) and distances (0-100km) are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Only small necessary helper functions (LCG, hex conversion, color
+          interpolation, plugin), no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No imports beyond the Chart.js global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: No fake UI; the custom colorbar plugin is a legitimate workaround
+          for Chart.js's lack of a native colorbar
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Mount-node contract respected, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Correct scatter config, scales, and theme-token mapping per the mount-node
+          contract
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Custom afterDraw plugin is a genuine use of Chart.js's distinctive
+          plugin architecture to work around a missing native colorbar
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
