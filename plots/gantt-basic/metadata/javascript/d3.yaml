@@ -1,0 +1,253 @@
+library: d3
+language: javascript
+specification_id: gantt-basic
+created: '2026-09-05T02:39:38Z'
+updated: '2026-09-05T02:44:53Z'
+generated_by: claude-sonnet
+workflow_run: 33939492357
+issue: 2377
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Correct Imprint palette applied in canonical order (Planning=#009E73 brand green,
+    Design=lavender, Development=blue, Testing=ochre), identical data colors across
+    both light and dark renders.
+  - 'Clean theme-adaptive chrome throughout: title, tick labels, legend text, axis
+    domain/grid all correctly flip between light and dark — no dark-on-dark or light-on-light
+    failures.'
+  - 'Strong visual refinement: rounded bar corners, alternating row banding for scanability
+    across 13 tasks, subtle month-aligned vertical gridlines, y-axis spine and tick
+    marks removed for a clean look.'
+  - The dashed 'Today' reference line gives the chart a clear narrative focal point
+    — the reader immediately sees which phases are complete vs. upcoming relative
+    to the current date.
+  - 'Idiomatic modern D3: scaleTime + scaleBand + scaleOrdinal, the .join() data-binding
+    pattern (not legacy enter/update/exit), axisBottom/axisLeft with tickSizeOuter/tickSize
+    tuning.'
+  - Realistic, well-scaled project-schedule dataset covering short milestones (4-day
+    Design Review), long overlapping phases (Frontend/Backend Development run in parallel),
+    and sequential dependencies across four project categories.
+  weaknesses:
+  - 'LM-02: the time-scale + band-scale combination is a fairly generic bar-chart-adjacent
+    pattern — no D3-distinctive feature (custom shape generator, brush, hierarchical
+    layout) is used beyond the basics.'
+  - X-axis tick format '%b %d' renders '01' on every month-boundary tick (e.g. 'Jan
+    01', 'Feb 01') — since ticks always land on the first of the month, a plain month
+    name ('Jan') would read cleaner without losing information.
+  - The legend row and the 'Today' annotation sit fairly close together vertically
+    — comfortable at the current title/spec-id length, but worth re-checking if a
+    longer title is ever introduced.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
+      Chrome: Title "gantt-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered top. Legend (Planning/Design/Development/Testing swatches + labels) sits just below the title, right-aligned. X-axis shows month-boundary date ticks ("Jan 01" ... "Jul 01") in soft dark gray. Y-axis shows all 13 task names as tick labels, no axis line/ticks. Dashed "Today" reference line with small label crosses the chart around mid-March. All text is clearly readable against the light background — no light-on-light issues.
+      Data: 13 horizontal task bars colored by category — green (Planning), lavender (Design), blue (Development), ochre (Testing). Alternating subtle row banding aids scanning. First categorical series is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec — not pure black.
+      Chrome: Same title, legend, axis ticks, and "Today" line as the light render, all re-colored to light ink/gray tones (white title, light-gray tick labels and legend text) — fully readable against the dark background. No dark-on-dark failures observed anywhere (title, axis ticks, legend, task-name labels, "Today" label all read clearly).
+      Data: The four category colors (green, lavender, blue, ochre) are pixel-identical to the light render — only the chrome (background, text, grid) flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (24px title, 15px legend, 14px ticks,
+          13px 'Today' label), well-proportioned, readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions between title, legend, ticks, task labels, or
+          the 'Today' annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars sized to bandwidth with sensible padding, clearly visible and
+          distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four visually distinct hues, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area is ~78% of canvas, margins are content-justified (wide
+          left margin for task names), nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Dates and task names are self-descriptive tick labels; explicit axis
+          titles would be redundant
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (green/lavender/blue/ochre), identical across
+          themes, correct theme-adaptive backgrounds
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded bars, row banding, subtle grid, weight hierarchy — clearly
+          above a bare-bones baseline
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/ticks removed where appropriate, subtle month-aligned grid,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: '''Today'' reference line creates a clear focal point for project
+          status; category color grouping adds hierarchy'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal Gantt chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Category color coding, date axis, reference line, logical (category-then-date)
+          ordering, adequate row spacing all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time span (start/end), Y=task name, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match the four categories used
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Short milestones, long phases, full and partial overlaps, sequential
+          dependencies, four categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website-redesign project schedule — neutral, realistic, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Phase durations and sequencing are plausible for a real software
+          project
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports; d3 is the single global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly, animations not used
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Modern .join() data binding, scaleTime/scaleBand/scaleOrdinal, tick
+          sizing tuned per axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Time+band scale combo is a fairly generic pattern; no more distinctive
+          D3-only feature used
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - publication-ready
+  - grid-styling
