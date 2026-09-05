@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: lift-curve
 created: '2026-09-05T06:34:13Z'
-updated: '2026-09-05T06:38:15Z'
+updated: '2026-09-05T06:51:56Z'
 generated_by: claude-sonnet
 workflow_run: 33949874990
 issue: 2379
@@ -12,48 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Correct lift-curve semantics: monotonic decreasing curve from ~11.5x down to
-    1.0x with a dashed y=1 reference line clearly labeled "Random targeting (no lift)"'
-  - Title exactly matches the mandated format with a fitting descriptive prefix ("Fraud
-    Detection Lift · lift-curve · javascript · muix · anyplot.ai")
-  - 'Both themes render correctly: identical brand-green (#009E73) data line, correct
-    page backgrounds, fully legible chrome in both light and dark'
-  - Deterministic LCG-based synthetic data generation makes the plot fully reproducible
-  - Good idiomatic use of MUI X's ChartsReferenceLine plus percentage/×-suffixed valueFormatter
-    on both axes
+  - Idiomatic, advanced use of MUI X's hook-based extensibility (useXScale, useYScale,
+    useDrawingArea) to build custom, axis-aware annotations — a genuinely library-distinctive
+    technique
+  - ChartsReferenceLine clearly labeled for the random-targeting baseline, directly
+    fulfilling the spec's 'always include a horizontal reference line at y=1' requirement
+  - Key-percentile value callouts (10%, 25%, 50%) fulfill the spec's suggestion to
+    surface actual values at key percentiles, with label-flip logic near the curve's
+    peak to avoid clipping
+  - Realistic, neutral fraud-detection scenario with a plausible base rate and imperfect-classifier
+    noise model
+  - 'Theme-correct in both renders: identical brand-green data color, fully legible
+    chrome in light and dark'
   weaknesses:
-  - 'yAxis `tickFontSize: 48` combined with an `sx` override down to 14px is a confusing
-    hack (setting a large nominal font size purely to reserve left-margin space, then
-    visually overriding it) — use `tickLabelStyle`/`slotProps` margin controls or
-    a fixed axis width instead of fighting the auto-margin via an unrelated prop'
-  - 'Design excellence sits near baseline: no shading under the curve and no direct
-    value/percentile annotations despite the spec''s suggestion to "consider showing
-    actual values at key percentiles" — a lift-value label at a couple of key deciles
-    (e.g., top 10%/20%) would sharpen the storytelling'
-  - 8% fraud rate is on the high side for a realistic fraud-detection base rate (real-world
-    fraud incidence is typically well under 1-2%) — consider lowering it or reframing
-    the narrative toward a churn/response scenario
-  - The series `label` ("Model (ranked by predicted fraud score)") is defined but
-    never shown since the legend is hidden — harmless for a single-series chart, but
-    it's dead metadata; either drop it or surface it minimally
+  - Data markers are on the smaller side for a sparse 20-point series — enlarging
+    them slightly would strengthen VQ-03 element visibility
+  - X-axis starts at 5% rather than the spec's literal '0-100%' range; consider a
+    brief note/annotation clarifying that 0% is excluded because lift is undefined
+    there, or starting at a smaller first percentile
+  - The rotated y-axis title uses a fixed pixel offset (left - 78) from the axis rather
+    than measuring actual tick-label width — works here but is a fragile pattern if
+    tick label width changes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Fraud Detection Lift · lift-curve · javascript · muix · anyplot.ai" is centered, dark ink text, fully legible. X-axis label "Population targeted (%)" and rotated Y-axis label "Cumulative lift" are dark and readable. Tick labels (5%-100% on x, 0.0×-12.0× on y) are dark and clearly legible. Horizontal grid lines are subtle light-gray, visible but not dominant.
-      Data: Single line series in brand green (#009E73) with unfilled circular markers at each 5% percentile, monotonically decreasing from ~11.5x at 5% to 1.0x at 100%. A dashed gray horizontal reference line at y=1.0 is labeled "Random targeting (no lift)" in soft ink, positioned just above the line.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Dark-ink title "Fraud Detection Lift · lift-curve · javascript · muix · anyplot.ai" centered at top; dark axis titles "Population targeted (%)" / "Cumulative lift"; dark tick labels with "%" and "×" suffixes; subtle horizontal-only gridlines. All clearly readable against the light background.
+      Data: Single brand-green (#009E73) line with hollow-green markers tracing lift from ~12.0x at 5% down to 1.0x at 100%. Bold dark callouts "6.6x", "3.6x", "2.0x" at the 10%/25%/50% key percentiles. Dashed grey reference line at y=1.0x labeled "Random targeting (no lift)".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels are all rendered in light/white text, clearly legible against the dark background — no dark-on-dark issues found. Grid lines are subtle light-gray, visible but unobtrusive.
-      Data: Line color and marker style are pixel-identical to the light render (same brand green #009E73, same curve shape and marker positions) — only the chrome (background, text, grid, reference-line color) flipped as expected. Reference line and its label remain legible in the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels flipped to light-colored text against the dark surface, fully legible. Gridlines are subtle light-on-dark. No dark-on-dark failures found.
+      Data: Same #009E73 green line, markers, and callout positions as the light render — data colors identical between themes, confirming only chrome flipped. Key-percentile callouts render in light text and remain readable; reference-line label stays muted grey but legible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,49 +58,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, axis label 16px, tick 14px) match
-          the muix style-guide recommendation; fully readable in both themes
+        comment: All font sizes explicitly set (title 22px, axis 16px, ticks 14px),
+          no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data/legend collisions in either render
+        comment: Key-percentile labels flip below the point near the curve's peak
+          to avoid clipping; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 20 data points with prominent unfilled circle markers, appropriate
-          for sparse decile-style data
+        comment: Line and markers visible for the 20-point series, but markers slightly
+          small for a sparse dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue line against neutral chrome, good contrast, no red/green
-          reliance
+        comment: High-contrast single-series green against both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced margins, nothing clipped or overflowing
+        comment: Plot fills the canvas well with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (%, cumulative lift as ×)
+        comment: Descriptive axis titles; tick labels carry % and x units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds correct
-          in both light/dark'
+        comment: 'First series is #009E73, identical across themes; theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,24 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom title placement, dashed labeled reference line, unfilled marker
-          style — modest polish above generic defaults
+        comment: Custom key-percentile callouts and hand-positioned y-axis title show
+          above-default design thought
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Horizontal-only grid, generous margins; no area shading or additional
-          refinement beyond that
+        comment: Horizontal-only subtle grid, no boxed legend, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Reference line frames the 'no lift' baseline clearly, but spec's
-          suggested percentile-value annotations were not added
+        comment: Value callouts plus the no-lift reference line create clear focal
+          points
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,28 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lift curve line chart
+        comment: Correct lift-curve line chart
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: y=1 reference line present; percentile markers shown at every 5%
+        comment: Reference line and key-percentile values present; x-axis starts at
+          5% instead of literal 0%
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = % population targeted, Y = cumulative lift, full range shown
+        comment: X = population targeted %, Y = cumulative lift, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend appropriately
-          hidden for single series
+        comment: Title format correct; single series needs no legend
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -165,24 +161,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers full 5%-100% range with 20 percentile points and reference
-          line
+        comment: Shows full decay shape, decile callouts, and no-lift baseline
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Fraud-detection framing is plausible and neutral, though the 8% fraud
-          rate is higher than typical real-world incidence
+        comment: Fraud-detection scenario with realistic 3% base rate, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lift values (1.0x-11.5x) are sensible for an imperfect classifier
-          over an 8% base rate
+        comment: Lift values consistent with a realistic imperfect classifier at this
+          base rate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -190,35 +184,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single Chart component plus a tiny LCG helper, no unnecessary abstraction
+        comment: Straightforward data generation to chart; helper components are idiomatic
+          for MUI X hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42)
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart and ChartsReferenceLine imported, both used
+        comment: Only what's used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: tickFontSize:48 + sx override to 14px is a confusing double-set of
-          the same visual property
+        passed: true
+        comment: Clean, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, sizes from window.ANYPLOT_SIZE, harness contract
-          respected
+        comment: Harness contract respected, skipAnimation set
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -226,15 +219,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of xAxis/yAxis config, valueFormatter, sx-based typography
-          overrides
+        comment: Correct use of LineChart, ChartsReferenceLine, and the theme token
+          contract
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine and monotoneX curve are genuine MUI X-specific
-          touches
+        comment: useXScale/useYScale/useDrawingArea hooks for custom axis-aware annotations
+          are MUI X-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -245,4 +238,4 @@ impl_tags:
   dataprep:
   - cumulative-sum
   styling:
-  - alpha-blending
+  - grid-styling
