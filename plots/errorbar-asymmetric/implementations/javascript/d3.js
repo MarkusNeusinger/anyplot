@@ -12,6 +12,8 @@ const ih = height - margin.top - margin.bottom;
 // --- Data: ozone readings per station, 10th-90th percentile bounds ---------
 // Right-skewed spread (pollution spikes push the upper tail out further
 // than the lower tail) — a canonical case for asymmetric error bars.
+// Sorted by total spread (upper + lower) descending so the eye moves from
+// the least-certain reading to the most-certain one, left to right.
 const stations = [
   { station: "Riverside", median: 28, lower: 6, upper: 13 },
   { station: "Uptown", median: 42, lower: 8, upper: 18 },
@@ -21,7 +23,10 @@ const stations = [
   { station: "Lakeside", median: 31, lower: 6, upper: 12 },
   { station: "Downtown", median: 47, lower: 9, upper: 20 },
   { station: "Hilltop", median: 26, lower: 5, upper: 10 },
-];
+].sort((a, b) => b.upper + b.lower - (a.upper + a.lower));
+
+// Station with the widest asymmetric spread — the focal point of the chart.
+const focus = stations[0];
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3
@@ -86,7 +91,7 @@ bar
   .attr("y1", (d) => y(d.median - d.lower))
   .attr("y2", (d) => y(d.median + d.upper))
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 3);
+  .attr("stroke-width", (d) => (d === focus ? 4 : 3));
 
 bar
   .append("line")
@@ -95,7 +100,7 @@ bar
   .attr("y1", (d) => y(d.median - d.lower))
   .attr("y2", (d) => y(d.median - d.lower))
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 3);
+  .attr("stroke-width", (d) => (d === focus ? 4 : 3));
 
 bar
   .append("line")
@@ -104,20 +109,79 @@ bar
   .attr("y1", (d) => y(d.median + d.upper))
   .attr("y2", (d) => y(d.median + d.upper))
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 3);
+  .attr("stroke-width", (d) => (d === focus ? 4 : 3));
+
+// Soft halo behind the focal station's marker — the visual entry point.
+bar
+  .filter((d) => d === focus)
+  .append("circle")
+  .attr("cy", (d) => y(d.median))
+  .attr("r", 18)
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.18);
 
 bar
   .append("circle")
   .attr("cy", (d) => y(d.median))
-  .attr("r", 9)
+  .attr("r", (d) => (d === focus ? 11 : 9))
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
 
+// --- Callout annotation for the widest-spread station -----------------------
+// Built with d3-shape's linkVertical() — the same connector generator used
+// for tree/hierarchy edges — repurposed here to draw a genuine D3-authored
+// annotation arrow rather than a static line.
+const focusX = x(focus.station) + x.bandwidth() / 2;
+const focusCapY = y(focus.median + focus.upper);
+const calloutSide = focusX < iw / 2 ? 1 : -1;
+const labelX = focusX + calloutSide * 14;
+const labelY = Math.max(focusCapY - 34, 14);
+
+svg
+  .append("defs")
+  .append("marker")
+  .attr("id", "calloutArrow")
+  .attr("viewBox", "0 0 10 10")
+  .attr("refX", 8)
+  .attr("refY", 5)
+  .attr("markerWidth", 6)
+  .attr("markerHeight", 6)
+  .attr("orient", "auto-start-reverse")
+  .append("path")
+  .attr("d", "M0,0L10,5L0,10z")
+  .attr("fill", t.ink);
+
+const calloutLink = d3
+  .linkVertical()
+  .x((p) => p.x)
+  .y((p) => p.y);
+g.append("path")
+  .attr(
+    "d",
+    calloutLink({
+      source: { x: labelX, y: labelY + 12 },
+      target: { x: focusX, y: focusCapY - 6 },
+    }),
+  )
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5)
+  .attr("marker-end", "url(#calloutArrow)");
+
+g.append("text")
+  .attr("x", labelX)
+  .attr("y", labelY)
+  .attr("text-anchor", calloutSide === 1 ? "start" : "end")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Widest spread: −${focus.lower}/+${focus.upper} ppb (${focus.station})`);
+
 // --- Title + subtitle --------------------------------------------------------
 const title =
   "Ozone Levels by Monitoring Station · errorbar-asymmetric · javascript · d3 · anyplot.ai";
-const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
+const titleFontSize = Math.round(36 * Math.min(1, 67 / title.length));
 svg
   .append("text")
   .attr("x", width / 2)
