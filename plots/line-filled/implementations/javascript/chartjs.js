@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-filled: Filled Line Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
+// Quality: 92/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 

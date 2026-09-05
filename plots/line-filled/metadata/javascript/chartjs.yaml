@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-filled
 created: '2026-09-05T07:12:41Z'
-updated: '2026-09-05T07:16:31Z'
+updated: '2026-09-05T07:24:36Z'
 generated_by: claude-sonnet
 workflow_run: 33951740841
 issue: 2643
@@ -12,129 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'First (and only) series uses brand green #009E73, identical between light and
-    dark renders, exactly per the Imprint palette rule'
-  - 'Both plot backgrounds are theme-correct (#FAF8F1 light / #1A1A17 dark), and all
-    text (title, axis titles, ticks) is fully legible in both themes with no dark-on-dark
-    or light-on-light failures'
-  - 'Fill baseline is anchored at y=0 via fill: ''origin'' + beginAtZero: true, the
-    line (borderWidth 3.5) stays crisply visible on top of the ~30% alpha fill, and
-    fill color matches the line color exactly as the spec requests'
-  - 'Single-series legend correctly omitted (legend.display: false), reducing clutter
-    per the style guide''s decoration-removal checklist'
-  - X-axis grid removed, Y-axis grid kept subtle via the theme grid token — clean
-    L-shaped feel without a bespoke spine API
-  - Deterministic data via a fixed-seed LCG (seed = 42), clean KISS structure with
-    explicit font sizes for title/axis/tick text
-  - 'animation: false set correctly and the mount-node contract (single canvas appended
-    to #container) is followed exactly'
+  - 'Repair addressed every attempt-1 weakness directly: flat alpha fill replaced
+    with a vertical CanvasGradient (brand green at the line fading to transparent
+    at baseline), a highlighted endpoint marker with a page-background halo gives
+    the chart a clear focal point, and a day-20 dip adds realistic volatility to the
+    DAU trend'
+  - Gradient fill is a genuinely Chart.js-idiomatic technique (scriptable `backgroundColor`
+    context callback via `chart.ctx.createLinearGradient`), not just a generic flat-alpha
+    fill any library could replicate
+  - 'First (and only) series uses brand green #009E73, byte-identical between light
+    and dark renders; both backgrounds are theme-correct (#FAF8F1 light / #1A1A17
+    dark) with all chrome legible in both themes'
+  - 'Fill baseline anchored at y=0 via `fill: ''origin''` + `beginAtZero: true`; line
+    (3.5px, round cap/join) stays crisp on top of the fill exactly per spec'
+  - Single-series legend correctly omitted; deterministic data via fixed-seed LCG;
+    clean, explicit font sizes throughout (title 22px, axis labels 16px, ticks 14px)
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level: the fill is a flat
-    single-alpha color with no depth. Chart.js supports canvas gradients in backgroundColor
-    (a context callback returning a CanvasGradient) — a vertical gradient fading from
-    the brand green at the line down to near-transparent at the baseline would add
-    real polish and also demonstrates a distinctive Chart.js feature (currently LM-02
-    scores generic-usage low).'
-  - 'No storytelling focal point beyond the fill itself: consider a subtle callout
-    or a slightly heavier segment/marker at the peak (day 30, ~9,030 DAU) so the reader''s
-    eye lands somewhere specific, per DE-03''s ''visual hierarchy guides the reader''
-    bar.'
-  - Data trend is almost purely monotonically increasing with only minor plateaus
-    (days 7-8, 16-17) — a touch more volatility (e.g. one small dip) would better
-    showcase that this is real DAU data (which naturally has down-days) rather than
-    a smoothed synthetic curve, improving DQ-01 feature coverage.
-  - 'Overall visual refinement (DE-02) is solid but generic-plus: consider tightening
-    the layout.padding or adding a very subtle drop-shadow/line-cap refinement so
-    the chart reads as more deliberately designed rather than a lightly-tweaked default.'
+  - 'Design Excellence is solid-plus but not top-tier: the composition is still a
+    single gradient-filled area line with one accent marker — genuinely polished,
+    but not an exceptionally bespoke layout'
+  - '`peakIndex` is computed as simply the last data index (assumes the series always
+    ends at its maximum) rather than an actual max() over the data — happens to coincide
+    with the true peak here, but the variable name overstates what the code guarantees'
+  - The day-20 dip is a nice touch for realism but is subtle in the render; a small
+    direct label or annotation at the dip could reinforce the 'weekend lull' narrative
+    mentioned in the code comment, though this is optional polish, not a defect
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "line-filled · javascript · chartjs · anyplot.ai" is centered at the top in dark ink, clearly legible. X-axis title "Day since launch" and Y-axis title "Daily active users" are dark and legible. Tick labels (comma-formatted Y values 0-10,000, X values 1-28) are in a softer gray, fully legible. Horizontal gridlines are faint and evenly spaced; no vertical gridlines.
-      Data: Single series rendered as a brand-green (#009E73) line with a semi-transparent green fill down to the x-axis baseline. The curve rises from ~2,550 DAU on day 1 to ~9,030 DAU on day 30, with a few brief plateaus (around days 7-8 and 16-17) breaking up an otherwise steady climb.
-      Legibility verdict: PASS — every text element reads clearly against the light background.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-filled · javascript · chartjs · anyplot.ai" centered at top in dark ink (#1A1A17); axis titles "Day since launch" (x) and "Daily active users" (y) and all tick labels (1-30 on x, 0-10,000 on y) are dark/soft-gray and clearly legible. Subtle horizontal-only gridlines at y ticks; x-axis gridlines hidden.
+      Data: Single brand-green (#009E73) line, 3.5px, round cap/join, rising from ~2,560 on day 1 to ~9,030 on day 30 with a visible dip around day 20-21 before recovering. Area beneath the line is filled with a vertical gradient — solid green near the line fading to fully transparent at the y=0 baseline. A single highlighted marker (green fill, page-background-colored halo ring) sits on the final data point (day 30, peak value), giving the chart a clear focal point.
+      Legibility verdict: PASS — no light-on-light text, all chrome and data clearly distinguishable from the background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels have all flipped to light tones (white/light-gray) and remain fully legible against the dark surface. Gridlines are faint light lines, still subtle and non-competing with the data.
-      Data: The line and fill use the identical brand-green #009E73 as the light render — confirmed unchanged data colors, only the chrome (background, text, grid) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures; all text is clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, both axis titles, and all tick labels have flipped to light tones (ink → light, tick labels → soft light gray) and remain fully legible against the dark surface. Gridlines are subtle, same horizontal-only placement as the light render.
+      Data: Line and gradient fill use the identical #009E73 green as the light render — confirmed unchanged data color, only chrome flipped. Same highlighted endpoint marker with halo ring, still clearly visible against the dark fill.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements read clearly.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis 16px, ticks 14px);
-          fully readable in both themes, no overflow
+        comment: Explicit font sizes (title 22px, axis labels 16px, ticks 14px), all
+          readable in both themes, no overlap
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No collisions between text, marker halo, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (3.5px) is crisp on top of the ~30% alpha fill, appropriate
-          for 30 data points
+        comment: Line clearly visible on top of the fill; single accent marker appropriately
+          sized for a 30-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green has strong contrast against both surfaces
+        comment: Single-series green reads with sufficient contrast on both surfaces;
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the great majority of the canvas with balanced margins
+        comment: Canvas gate passed; nothing clipped; endpoint marker padding (right:28)
+          keeps it fully on-canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles: ''Day since launch'', ''Daily active users'''
+        comment: Descriptive axis titles ('Day since launch', 'Daily active users'),
+          title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          theme-correct #FAF8F1/#1A1A17'
+        comment: 'First series #009E73; identical data color across themes; both backgrounds
+          theme-correct'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: flat alpha fill, no gradient or extra polish'
+        passed: true
+        comment: Vertical CanvasGradient fill and haloed endpoint marker are genuine
+          polish over a flat default, though the overall composition remains a single-series
+          area chart
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: X-grid removed and Y-grid kept subtle, but overall still reads as
-          a lightly-tweaked default
+        passed: true
+        comment: Round line cap/join, x-grid removed, y-grid subtle, sensible padding;
+          solid but not exceptional refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: The fill itself emphasizes magnitude (the spec's intent), but there
-          is no additional focal point or callout
+        passed: true
+        comment: Highlighted endpoint gives a clear focal point; the day-20 dip adds
+          narrative realism though it reads subtly in the static render
     spec_compliance:
       score: 15
       max: 15
@@ -150,79 +146,81 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (~30% alpha), line matches fill color, baseline
-          at y=0
+        comment: Semi-transparent fill (gradient 50%→0%), line visible atop fill,
+          fill color matches line, baseline at y=0
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = day, Y = DAU, all data visible
+        comment: X = day since launch, Y = daily active users, axes show full data
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend correctly omitted for a single series
+        comment: Title format correct; single-series legend correctly omitted
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows overall growth with some plateaus, but almost no down-days
+        comment: Shows all aspects of a filled single-series line chart
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic product-launch DAU scenario
+        comment: Daily active users over a product launch window — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Value range (2,400-9,000) is plausible for an early-stage product
-          launch
+        comment: 2,400-9,000 DAU range is sensible for an early-stage product launch
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, linear structure
+        comment: Two small helper functions (lcg, fillGradient) are present; both
+          are necessary for the LCG data generator and the scriptable gradient callback
+          rather than unwarranted abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed = 42)
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses the global Chart
+        comment: No unused imports; browser globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately simple, no fake UI
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mount-node contract followed, animation: false set'
+        comment: Correct mount-node contract, animation:false, current Chart.js API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -230,16 +228,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'fill: ''origin'', tension, pointRadius: 0 are the idiomatic Chart.js
-          area-chart pattern'
+        comment: fill:'origin', tension, scriptable pointRadius/backgroundColor are
+          the idiomatic Chart.js area-chart pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: 'Uses fill: ''origin'' but no Chart.js-distinctive touches like a
-          canvas gradient fill'
-  verdict: REJECTED
+        passed: true
+        comment: Canvas gradient fill via scriptable backgroundColor context callback
+          is a genuinely Chart.js-distinctive technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
@@ -247,4 +245,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
+  - gradient-fill
+  - publication-ready
