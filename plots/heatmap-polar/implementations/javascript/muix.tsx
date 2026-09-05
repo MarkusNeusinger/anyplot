@@ -43,7 +43,11 @@ function cyclicDist(hour, center) {
 function visits(dayIdx, hour) {
   const isWeekend = dayIdx >= 5; // Sat, Sun
   const isNightlifeDay = dayIdx === 4 || dayIdx === 5; // Fri, Sat late-night crowd
-  const base = 14;
+  // Baseline traffic climbs through the work week toward the weekend, then
+  // eases off Sunday -- a realistic trend that also sharpens the ring-to-ring
+  // (radial) contrast at a fixed hour, since each day now carries a distinct
+  // floor on top of its hourly shape.
+  const base = [14, 18, 22, 26, 31, 27, 19][dayIdx];
   const morning = isWeekend ? 55 * gauss(hour, 10, 3.2) : 92 * gauss(hour, 8.5, 2.1);
   const evening = isWeekend ? 85 * gauss(hour, 15.5, 4.2) : 68 * gauss(hour, 19, 2.6);
   // Peaks exactly at midnight — the case a rectangular heatmap would split
@@ -85,14 +89,18 @@ function seqColor(frac) {
 const TITLE = "Website Traffic by Hour & Day · heatmap-polar · javascript · muix · anyplot.ai";
 const TITLE_FONT_SIZE = Math.max(15, Math.round(22 * Math.min(1, 67 / TITLE.length)));
 
-// Angular axis: a small gap at the top (12am boundary) holds the radial-axis
-// day labels so they never sit on top of a colored wedge.
-const GAP_DEG = 10;
-const START_ANGLE = GAP_DEG / 2;
-const SWEEP_DEG = 360 - GAP_DEG;
-const ANGLE_PER_HOUR = SWEEP_DEG / HOURS;
+// Angular axis tiles the full 360 degrees with no gap -- hour 23 and hour 0
+// are adjacent wedges, preserving the cyclic-continuity guarantee the spec
+// calls out as the reason to use a polar layout over a rectangular one.
+const START_ANGLE = 0;
+const ANGLE_PER_HOUR = 360 / HOURS;
 const RING_HOLE_RATIO = 0.16;
 const LABEL_PAD = 40;
+// Day-of-week labels run along a single radial spoke at the bottom (the
+// noon boundary) rather than inside an angular gap, so they never interrupt
+// the continuous wrap around midnight. A text halo (paint-order: stroke)
+// keeps them legible over whichever wedge color they land on.
+const DAY_LABEL_ANGLE = 180;
 
 // --- Polar heatmap layer: rendered as children inside MUI X's ChartsSurface ---
 function PolarHeatmapLayer() {
@@ -103,7 +111,7 @@ function PolarHeatmapLayer() {
   const innerR = outerR * RING_HOLE_RATIO;
   const ringThickness = (outerR - innerR) / DAYS.length;
 
-  // angle 0 = straight up (12am gap), increasing clockwise — matches a clock face.
+  // angle 0 = straight up (12am), increasing clockwise — matches a clock face.
   const polarPoint = (angleDeg, r) => {
     const rad = (angleDeg * Math.PI) / 180;
     return [cx + r * Math.sin(rad), cy - r * Math.cos(rad)];
@@ -138,7 +146,7 @@ function PolarHeatmapLayer() {
             d={wedgePath(r0, r1, a0, a1)}
             fill={seqColor(frac)}
             stroke={t.pageBg}
-            strokeWidth={1.5}
+            strokeWidth={2.5}
           />
         );
       })}
@@ -165,9 +173,18 @@ function PolarHeatmapLayer() {
         );
       })}
 
+      <line
+        x1={polarPoint(DAY_LABEL_ANGLE, innerR)[0]}
+        y1={polarPoint(DAY_LABEL_ANGLE, innerR)[1]}
+        x2={polarPoint(DAY_LABEL_ANGLE, outerR)[0]}
+        y2={polarPoint(DAY_LABEL_ANGLE, outerR)[1]}
+        stroke={t.ink}
+        strokeWidth={1}
+        strokeOpacity={0.35}
+      />
       {DAYS.map((day, i) => {
         const r = innerR + (i + 0.5) * ringThickness;
-        const [lx, ly] = polarPoint(0, r);
+        const [lx, ly] = polarPoint(DAY_LABEL_ANGLE, r);
         return (
           <text
             key={`day-${day}`}
@@ -175,9 +192,13 @@ function PolarHeatmapLayer() {
             y={ly}
             fill={t.ink}
             fontSize={14}
-            fontWeight={600}
+            fontWeight={700}
             textAnchor="middle"
             dominantBaseline="central"
+            stroke={t.pageBg}
+            strokeWidth={4}
+            strokeLinejoin="round"
+            paintOrder="stroke"
           >
             {day}
           </text>
@@ -210,7 +231,7 @@ export default function Chart() {
           colorMap: { type: "continuous", min: minValue, max: maxValue, color: seqColor },
         },
       ]}
-      margin={{ top: 130, bottom: 130, left: 70, right: 70 }}
+      margin={{ top: 130, bottom: 185, left: 70, right: 70 }}
       skipAnimation
     >
       <Title />
