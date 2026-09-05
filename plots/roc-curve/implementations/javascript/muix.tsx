@@ -9,12 +9,17 @@
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
+// The ROC pipeline: lcg/randNormal synthesize classifier scores,
+// rocFromScores sweeps every threshold into an empirical (fpr, tpr, auc)
+// curve, and onGrid resamples that step function onto a shared FPR grid so
+// both models plot against one xAxis.
 
 // Tiny fixed-seed LCG — the browser has no seeded RNG
 function lcg(seed: number) {
@@ -138,7 +143,7 @@ export default function Chart() {
         width={width}
         height={height - TITLE_H}
         skipAnimation
-        grid={{ horizontal: true, vertical: true }}
+        grid={{ horizontal: true }}
         xAxis={[
           {
             data: GRID,
@@ -182,10 +187,12 @@ export default function Chart() {
             curve: "linear",
           },
           {
+            // No `label`: this is the y=x reference, not a fitted model, so
+            // it's excluded from the legend (see ChartsReferenceLine below,
+            // which annotates it directly on the chart instead).
             id: "baseline",
             data: GRID,
-            label: "Random guess (AUC = 0.50)",
-            color: t.ink,
+            color: t.inkSoft,
             showMark: false,
             curve: "linear",
           },
@@ -207,7 +214,19 @@ export default function Chart() {
             position: { vertical: "bottom", horizontal: "middle" },
           },
         }}
-      />
+      >
+        {/* Annotates the dashed "baseline" series in place of a legend
+            entry — the reference line's own stroke is hidden (it would
+            otherwise duplicate the horizontal gridline); only its label
+            renders, horizontally centered above (FPR=0.5, TPR=0.5) where the
+            diagonal data series crosses, clear of the line itself. */}
+        <ChartsReferenceLine
+          y={0.6}
+          label="Random guess (AUC = 0.50)"
+          lineStyle={{ stroke: "none" }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
+        />
+      </LineChart>
     </Box>
   );
 }
