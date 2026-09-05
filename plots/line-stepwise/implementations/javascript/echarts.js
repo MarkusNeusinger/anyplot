@@ -42,7 +42,18 @@ chart.setOption({
     left: "center",
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
   },
-  tooltip: { trigger: "axis" },
+  tooltip: {
+    trigger: "axis",
+    formatter: (params) => {
+      const p = params[0];
+      const h = p.value[0];
+      const day = Math.floor(h / 24) + 1;
+      const hourOfDay = h % 24;
+      const hh = String(Math.floor(hourOfDay)).padStart(2, "0");
+      const mm = String(Math.round((hourOfDay % 1) * 60)).padStart(2, "0");
+      return `Day ${day}, ${hh}:${mm} → ${p.value[1]}°C`;
+    },
+  },
   grid: { left: 90, right: 60, top: 100, bottom: 80 },
   xAxis: {
     type: "value",
@@ -75,10 +86,22 @@ chart.setOption({
       data: data,
       step: "end",
       symbol: "circle",
-      symbolSize: 8,
+      symbolSize: 6,
       lineStyle: { color: t.palette[0], width: 3.5 },
       itemStyle: { color: t.palette[0] },
       areaStyle: { color: t.palette[0], opacity: 0.12 },
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          color: t.inkSoft,
+          fontSize: 12,
+          position: "insideEndTop",
+          formatter: "Peak setpoint: 22°C",
+        },
+        data: [{ yAxis: 22 }],
+      },
     },
   ],
 });
