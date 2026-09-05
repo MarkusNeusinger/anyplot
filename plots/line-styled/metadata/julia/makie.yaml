@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-styled
 created: '2026-09-05T08:33:14Z'
-updated: '2026-09-05T08:37:11Z'
+updated: '2026-09-05T08:49:11Z'
 generated_by: claude-sonnet
 workflow_run: 33955378392
 issue: 2598
@@ -12,60 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - All four required line styles (solid, dashed, dotted, dash-dot) are used correctly
-    and are clearly distinguishable in both themes, directly satisfying the spec's
-    black-and-white/accessibility goal
-  - 'Redundant color+style coding: each series gets both a distinct Imprint color
-    (first series is brand green #009E73, in canonical palette order) and a distinct
-    linestyle, which is exactly the accessibility pattern this spec calls for'
-  - Line width is held constant (2.75) across all four styles per spec note ('Line
-    width should be consistent across styles')
-  - 'Realistic, neutral dataset: hourly p50/p90/p99/p99.9 web latency percentiles
-    over a week with a clear diurnal cycle plus noise — plausible engineering telemetry,
-    good use of 168 points (within the 50-500 recommended range)'
-  - Theme tokens (PAGE_BG, INK, INK_SOFT) are threaded consistently through title,
-    axis labels, ticks, spines and gridlines; both renders are legible and correctly
-    themed
-  - 'Clean, idiomatic Makie code: single Axis, theme-adaptive chrome block, axislegend
-    with matching label colors, top/right spines removed, subtle single-axis gridlines'
-  - Canvas is exactly 3200x1800 (verified, no gate failure), reproducible via Random.seed!(42),
-    no unused imports, no fake interactivity
+  - 'The repair loop directly addressed every attempt-1 weakness: the legend is now
+    at :rb clear of the p99.9 peak, a descriptive title prefix (''API Latency Percentiles'')
+    was added, a translucent band! between p99 and p99.9 gives a genuine Makie-distinctive
+    touch, and a subtitle (''p99.9 tail latency runs ~6× the p50 baseline'') gives
+    the chart an explicit data-storytelling focal point'
+  - All four required line styles (solid, dashed, dotted, dash-dot) remain correctly
+    mapped to p50/p90/p99/p99.9 and stay clearly distinguishable in both themes, satisfying
+    the spec's B&W/accessibility goal
+  - 'Redundant color+style coding preserved: each series keeps a distinct Imprint
+    color (first series brand green #009E73, canonical palette order) plus a distinct
+    linestyle'
+  - 'Verified pixel-level: legend swatches (solid/dashed/dotted/dash-dot) are all
+    individually legible, and the p50 line''s rightmost point sits with a clear gap
+    before the p99 legend swatch — no actual overlap'
+  - Line width held constant (2.75) across all four styles per the spec's explicit
+    note
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) threaded consistently through title, subtitle,
+    axis labels, ticks, spines, and gridlines; both renders legible and correctly
+    themed, band fill reads well on both light and dark backgrounds
+  - Canvas verified exactly 3200×1800 via direct pixel measurement, reproducible via
+    Random.seed!(42), no unused imports, no fake interactivity
+  - 'Realistic, neutral dataset: hourly p50/p90/p99/p99.9 web-latency percentiles
+    over a week with a plausible diurnal cycle, 168 points'
   weaknesses:
-  - The p99.9 (orange dash-dot) curve's first peak near hour ~12 rises very close
-    to the top-left legend box in both renders — not clipped or overlapping text,
-    but tight enough to be visually crowded; consider moving the legend to :rt (top-right,
-    where the p50 band leaves more headroom) or nudging it inward.
-  - 'Library Mastery is generic: the implementation only uses the basic `lines!` +
-    `linestyle=` argument and doesn''t showcase any Makie-distinctive feature (e.g.
-    `band!`/`fillrange` for percentile spread, `text!` annotations calling out the
-    tail-latency gap, or a Makie-specific legend/layout trick) — LM-02 scored low
-    as a result.'
-  - 'Design Excellence is competent but not exceptional: the four percentile bands
-    read clearly, but there''s no explicit visual emphasis (annotation, highlight,
-    or callout) drawing the eye to the story (e.g. ''p99.9 is >6x p50'') — a small
-    annotation or subtitle would elevate DE-03 (Data Storytelling).'
-  - The title uses the bare mandated format without an optional descriptive prefix
-    (e.g. 'API Latency Percentiles · line-styled · julia · makie · anyplot.ai'), so
-    it occupies noticeably less than the ~50-70% width guideline — not a violation,
-    but a descriptive prefix would use the available title space more effectively.
+  - Title (with descriptive prefix) measures ~36% of canvas width (pixel-measured),
+    below the 50-70% guideline — not a violation (no overflow or squeezed look), but
+    there is headroom to size the title a bit larger for better visual weight given
+    the extra whitespace above the plot
+  - p99 (dotted) remains moderately dense/busy across 168 points — still clearly readable
+    but the driest of the four styles to scan at a glance; a very slightly thicker
+    dash-cap or fewer dot repeats per unit length could help
+  - Design Excellence is solid but not exceptional — the four stacked oscillating
+    bands plus the translucent fill make for a moderately busy canvas; an explicit
+    annotation pointing at the single highest p99.9 spike (rather than only the subtitle's
+    aggregate '~6x' claim) would push Data Storytelling further
+  - Library Mastery has improved with band! but still relies on standard Axis/lines!/axislegend
+    patterns overall — a further distinctive touch (e.g. a text! callout on the peak,
+    or vlines! marking a specific incident) would round it out
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "line-styled · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center. Axis labels "Time (hours)" and "Response Time (ms)" in dark ink, fully readable. Tick labels (0/50/100/150 on x; 200/400/600 on y) in softer dark gray, readable against the light background. Legend (top-left) lists p50/p90/p99/p99.9 with matching color+linestyle swatches, dark-ink text, no frame. Top and right spines are hidden; left/bottom spines are a soft gray. Only horizontal gridlines are shown, subtle light gray.
-      Data: Four series stacked by percentile — p50 (solid, brand green #009E73, lowest band), p90 (dashed, lavender), p99 (dotted, blue), p99.9 (dash-dot, ochre, highest band). All four linestyles are clearly distinguishable from each other and readable against the light background. Diurnal (24h) oscillation is visible across all four series over the 7-day span.
-      Legibility verdict: PASS — all text and all four line styles are clearly readable; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "API Latency Percentiles · line-styled · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center (pixel-measured ~36% of canvas width). Subtitle "p99.9 tail latency runs ~6× the p50 baseline" in soft dark gray directly below, fully readable. Axis labels "Time (hours)" / "Response Time (ms)" in dark ink. Tick labels in softer dark gray, readable against the light background. Legend now sits bottom-right, listing p50/p90/p99/p99.9 with matching color+linestyle swatches (verified via pixel crop: solid, dashed, dotted, dash-dot are all individually distinguishable), no frame, and clear of any data collision (checked the p50 line's rightmost point against the p99 swatch -- there is a visible gap, no overlap). Top/right spines hidden; left/bottom spines soft gray; only a subtle horizontal grid is shown.
+      Data: Four stacked percentile bands -- p50 (solid, brand green #009E73, lowest), p90 (dashed, lavender), p99 (dotted, blue), p99.9 (dash-dot, ochre, highest) -- plus a new translucent ochre band! fill between the p99 and p99.9 curves that visually foregrounds the tail-latency spread called out in the subtitle. All four linestyles are clearly distinguishable; the 24h diurnal cycle is visible across the 7-day span in all series.
+      Legibility verdict: PASS -- all text and all four line styles are clearly readable; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title in light/off-white ink, clearly visible. Axis labels and tick labels rendered in light ink / soft light-gray respectively, both clearly legible against the dark background — no dark-on-dark failure observed. Legend text is soft light gray, fully readable, no frame. Spines and gridlines are appropriately dim but still visible.
-      Data: Same four series in the same colors and linestyles as the light render (p50 green solid, p90 lavender dashed, p99 blue dotted, p99.9 ochre dash-dot) — confirmed identical data colors between themes, only chrome (background/text/grid) flipped. Brand green p50 line and ochre p99.9 line both remain clearly visible against the dark background.
-      Legibility verdict: PASS — all text is clearly legible on the dark background, no dark-on-dark or light-on-light failures found.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and subtitle rendered in light ink / soft light-gray respectively, both clearly legible against the dark background -- no dark-on-dark failure observed. Axis/tick labels and legend text are equally legible, no frame. Spines and the single horizontal grid are appropriately dim but still visible.
+      Data: Same four series in the same colors and linestyles as the light render (p50 green solid, p90 lavender dashed, p99 blue dotted, p99.9 ochre dash-dot) -- confirmed identical data colors between themes, only chrome (background/text/grid) flipped. The band! fill (translucent ochre) reads well against the dark background too, without washing out the p99/p999 lines it sits between.
+      Legibility verdict: PASS -- all text is clearly legible on the dark background, no dark-on-dark or light-on-light failures found.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -73,36 +75,39 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick text explicitly sized and colored via theme tokens;
-          fully readable in both themes
+        comment: Title/subtitle/axis/tick text explicitly sized and colored via theme
+          tokens; fully readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text/data collisions, but the p99.9 peak near hour 12 rises close
-          to the top-left legend box in both renders
+        comment: Legend relocated to :rb; pixel-verified the p50 line's endpoint stays
+          clear of the p99 legend swatch -- the attempt-1 legend/peak collision is
+          resolved
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Consistent linewidth (2.75) across all four styles; dotted p99 is
-          slightly busy given 168 points but still clearly readable
+        comment: Consistent linewidth (2.75); dotted p99 still moderately dense over
+          168 points but clearly readable, band! fill doesn't obscure the p99/p99.9
+          lines it sits between
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Color+linestyle redundant coding is CVD-safe by design and directly
-          serves the spec's B&W/accessibility goal
+        comment: Color+linestyle redundant coding is CVD-safe by design; band fill
+          alpha low enough not to reduce contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas verified 3200x1800; no clipping, no overflow; proportions
-          clean
+        comment: Canvas pixel-verified 3200x1800; no clipping or overflow; title measures
+          ~36% width (under the 50-70% guideline but not squeezed or overflowing,
+          so no deduction per style-guide rule)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -115,33 +120,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; series 2-4 follow canonical Imprint order;
+        comment: 'First series #009E73; series 2-4 follow canonical Imprint order;
           backgrounds correct in both themes; data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean and professional but follows the standard theme-token recipe
-          without extra polish
+        passed: true
+        comment: The band! fill between p99 and p99.9 adds real polish and a layered,
+          intentional composition beyond the standard theme-token recipe
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed, single-axis subtle grid, decent whitespace; four
-          overlapping oscillating bands make the canvas fairly busy
+        passed: true
+        comment: Spines removed, subtle single-axis grid, refined legend; four overlapping
+          oscillating bands plus fill still make for a moderately busy canvas
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Percentile ordering gives some natural hierarchy but there is no
-          explicit annotation/callout drawing the eye to the tail-latency story
+        passed: true
+        comment: Subtitle ('p99.9 tail latency runs ~6x the p50 baseline') plus the
+          band! shading now give the chart an explicit focal point and narrative,
+          directly addressing the attempt-1 gap
     spec_compliance:
       score: 15
       max: 15
@@ -170,8 +176,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels (p50/p90/p99/p99.9)
-          match series
+        comment: Title matches mandated format with an appropriate descriptive prefix;
+          legend labels (p50/p90/p99/p99.9) match series
     data_quality:
       score: 15
       max: 15
@@ -188,7 +194,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Web latency percentiles with a plausible diurnal cycle — realistic
+        comment: Web latency percentiles with a plausible diurnal cycle -- realistic
           and neutral
       - id: DQ-03
         name: Appropriate Scale
@@ -232,7 +238,7 @@ review:
         passed: true
         comment: save("plot-$(THEME).png", fig; px_per_unit=2)
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -240,20 +246,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Clean theme-adaptive Axis/Figure config, axislegend usage is idiomatic
+        comment: Clean theme-adaptive Axis/Figure config with subtitle, idiomatic
+          axislegend and band! usage
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Only uses basic lines!/linestyle= — no Makie-distinctive technique
-          (band!, text! annotation, custom legend layout)
+        passed: true
+        comment: band! for the percentile-spread fill is a genuine Makie-distinctive
+          technique, addressing the attempt-1 gap; a further touch (text! callout,
+          vlines!) would round it out
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - grid-styling
