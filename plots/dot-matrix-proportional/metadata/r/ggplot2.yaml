@@ -1,0 +1,246 @@
+library: ggplot2
+language: r
+specification_id: dot-matrix-proportional
+created: '2026-09-05T00:21:20Z'
+updated: '2026-09-05T00:25:17Z'
+generated_by: claude-sonnet
+workflow_run: 33932222948
+issue: 5241
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Thoughtful semantic color mapping (green=Agree, matte red=Disagree, muted gray=Undecided)
+    following the style guide's sentiment/polarity exception
+  - Manual legend construction elegantly sidesteps the coord_fixed()-vs-automatic-legend
+    width conflict, documented inline with a clear rationale comment
+  - Clean theme_void() minimal chrome with generous margins and no unnecessary grid,
+    appropriate for a dot-matrix layout
+  - 'Correct theme-adaptive chrome: title, legend text, and background flip correctly
+    between themes while data colors stay stable (Undecided''s muted gray is intentionally
+    theme-adaptive per the semantic-anchor rules)'
+  - Both renders hit the exact 3200x1800 landscape canvas target
+  weaknesses:
+  - No percentage annotations alongside the raw counts in the legend, though the spec
+    only lists this as a 'consider adding' suggestion, not a hard requirement
+  - A fair band of unused whitespace sits below the grid and legend on both renders;
+    slightly larger dots/spacing or a footnote could better balance the vertical canvas
+    usage
+  - Legend swatch dots reuse the same size=8 as the grid dots rather than a distinct
+    legend-key size, which is fine but is a missed small opportunity for typographic/visual
+    hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "Customer Satisfaction Survey · dot-matrix-proportional · r · ggplot2 · anyplot.ai" is centered at top in dark ink, clearly legible. Legend header "Responses (n = 100)" is bold dark text; legend category labels ("Agree — 47", "Disagree — 33", "Undecided — 20") are medium-gray (INK_SOFT), clearly readable against the light background.
+      Data: A 10x10 grid of 100 uniform dots, filled left-to-right/top-to-bottom, colored by category — green (#009E73) for Agree (47), matte red (#AE3030) for Disagree (33), muted gray for Undecided (20). Legend swatches to the right match grid dot colors and sizes exactly.
+      Legibility verdict: PASS — no light-on-light text, all elements clearly distinguishable from the background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title and legend header render in light ink/near-white, clearly legible. Legend category labels render in a lighter gray (INK_SOFT dark variant), clearly readable against the dark background.
+      Data: Same 100-dot grid with identical green/red data colors as the light render (confirming positions 1 and the semantic-red anchor are theme-stable). The "Undecided" gray dot uses a lighter gray in dark mode than in light mode — this is the muted semantic anchor, which the style guide explicitly defines as theme-adaptive, not a violation of the "data colors stay constant" rule (that rule applies to the 8 canonical Imprint categorical positions, not to the muted/neutral/amber anchors).
+      Legibility verdict: PASS — no dark-on-dark text; all title, legend header, and legend label text is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title fontsize scales with title length; all text clearly readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between grid dots, legend swatches, labels, or title
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dot size (8pt) appropriate for a 100-dot grid; sparse/medium density
+          well handled
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red categories disambiguated by adjacent legend text labels,
+          not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 exact); generous margins, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a dot matrix; title is descriptive and correctly
+          formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Agree=#009E73 (position 1), Disagree=#AE3030 (semantic red anchor),
+          Undecided=theme-adaptive muted anchor; backgrounds correct in both themes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate semantic color choice and a custom-built legend show above-default
+          design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void() removes all chrome; generous whitespace; no unnecessary
+          grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend entries are vertically aligned with their color group's position
+          in the grid, reinforcing the visual read
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dot-matrix chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 10x10 grid matches total=100, filled left-to-right/top-to-bottom,
+          color-coded, legend with counts, uniform dot size/spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Counts (47/33/20) sum exactly to total=100, verified in code via
+          stopifnot
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match category names and counts
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows counts and total via legend/header; no percentage annotation
+          (optional per spec)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral customer-satisfaction survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Total=100 is a sensible, common survey scale within spec's 50-1000
+          range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is otherwise deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used; tibble accessed via namespace
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; manual-legend workaround is justified and
+          documented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of coord_fixed(), theme_void(), scale_color_manual()
+          for a grid-based chart
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Manual legend layer built with annotate()/geom_text() to work around
+          coord_fixed()'s width conflict with ggplot2's automatic legend
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - tibble
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
