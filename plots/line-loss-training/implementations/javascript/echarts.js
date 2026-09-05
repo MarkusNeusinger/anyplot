@@ -41,6 +41,12 @@ for (let i = 0; i < epochCount; i++) {
   }
 }
 
+const stopIdx = epochs.indexOf(minValLossEpoch);
+const gapBase = epochs.map((e, i) => [e, i >= stopIdx ? trainLoss[i] : null]);
+const gapFill = epochs.map((e, i) =>
+  i >= stopIdx ? [e, Number((valLoss[i] - trainLoss[i]).toFixed(4))] : [e, null],
+);
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -71,7 +77,7 @@ chart.setOption({
     min: 1,
     max: epochCount,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     splitLine: { show: false },
   },
   yAxis: {
@@ -85,6 +91,30 @@ chart.setOption({
     splitLine: { lineStyle: { color: t.grid } },
   },
   series: [
+    {
+      name: "__gap_base",
+      type: "line",
+      data: gapBase,
+      stack: "gap",
+      showSymbol: false,
+      silent: true,
+      tooltip: { show: false },
+      lineStyle: { opacity: 0 },
+      areaStyle: { opacity: 0 },
+      z: 1,
+    },
+    {
+      name: "__gap_fill",
+      type: "line",
+      data: gapFill,
+      stack: "gap",
+      showSymbol: false,
+      silent: true,
+      tooltip: { show: false },
+      lineStyle: { opacity: 0 },
+      areaStyle: { color: t.palette[1], opacity: 0.14 },
+      z: 1,
+    },
     {
       name: "Training loss",
       type: "line",
