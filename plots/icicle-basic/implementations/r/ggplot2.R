@@ -55,7 +55,9 @@ nodes <- tibble::tribble(
   "hero.png",            "images",       48,
   "Inter.woff2",         "fonts",        36,
   "ci.yml",              "config",        4,
-  "build.config.js",     "config",        6
+  "build.config.js",     "config",        6,
+  "eslint.config.js",    "config",       20,
+  "tsconfig.json",       "config",       15
 )
 
 # Depth of each node from the root (iterative — resolves one generation per pass)
@@ -133,13 +135,24 @@ nodes <- nodes %>%
     width = x1 - x0,
     # A label only fits if the rect is wider than its own text at render size —
     # avoids the classic icicle/treemap failure mode of text spilling past narrow cells.
-    char_px = if_else(depth <= 1, 30, 20.8),
+    char_px = if_else(depth <= 1, 30, 24.3),
     required_width = (nchar(id) * char_px * 1.15) / px_per_unit,
     show_label = width >= required_width
   )
 
 headers <- filter(nodes, show_label, depth <= 1)
 leaves  <- filter(nodes, show_label, depth > 1)
+
+# Focal point: the single largest terminal file gets an ink outline + bolder
+# label so the viewer has one clear "biggest thing" to anchor on.
+largest_id <- nodes %>%
+  filter(!(id %in% nodes$parent)) %>%
+  slice_max(value, n = 1) %>%
+  pull(id)
+
+highlight      <- filter(nodes, id == largest_id)
+leaves_plain   <- filter(leaves, id != largest_id)
+leaves_focal   <- filter(leaves, id == largest_id)
 
 # --- Plot --------------------------------------------------------------------
 title_text <- "icicle-basic · r · ggplot2 · anyplot.ai"
@@ -150,15 +163,25 @@ p <- ggplot(nodes) +
         fill = fill_color, alpha = depth_alpha),
     color = PAGE_BG, linewidth = 0.4
   ) +
+  geom_rect(
+    data = highlight,
+    aes(xmin = x0, xmax = x1, ymin = y0, ymax = y1),
+    color = INK, fill = NA, linewidth = 1.1
+  ) +
   geom_text(
     data = headers,
     aes(x = (x0 + x1) / 2, y = (y0 + y1) / 2, label = id, color = label_color),
     size = 3.2, fontface = "bold"
   ) +
   geom_text(
-    data = leaves,
+    data = leaves_plain,
     aes(x = (x0 + x1) / 2, y = (y0 + y1) / 2, label = id, color = label_color),
-    size = 2.4
+    size = 2.8
+  ) +
+  geom_text(
+    data = leaves_focal,
+    aes(x = (x0 + x1) / 2, y = (y0 + y1) / 2, label = id, color = label_color),
+    size = 3.4, fontface = "bold"
   ) +
   scale_fill_identity() +
   scale_alpha_identity() +
