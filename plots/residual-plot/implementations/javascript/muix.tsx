@@ -1,7 +1,7 @@
 // anyplot.ai
 // residual-plot: Residual Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-05
+// Quality: 87/100 | Created: 2026-09-05
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import Box from "@mui/material/Box";
