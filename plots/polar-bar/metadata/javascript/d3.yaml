@@ -1,0 +1,242 @@
+library: d3
+language: javascript
+specification_id: polar-bar
+created: '2026-09-05T11:12:01Z'
+updated: '2026-09-05T11:26:52Z'
+generated_by: claude-sonnet
+workflow_run: 33962352805
+issue: 2693
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Fixed the previously-flagged issue: the innermost "25 obs" grid tick label is
+    now drawn after the bars with a page-background halo stroke, so it stays fully
+    legible even where the angular gap at small radius is narrower than the label
+    text'
+  - Correct, standard-convention compass orientation with N at top and clockwise winding
+    via toPoint(theta, r)
+  - 'Idiomatic, distinctive D3 usage: d3.scaleRadial for equal-area stacked wedges
+    plus d3.stack/d3.arc for radial stacking, with cornerRadius rounding'
+  - 'Realistic synthetic data: Gaussian falloff around a coded prevailing SW direction,
+    with speed-bin weights skewing toward higher speeds in the prevailing direction'
+  - Correctly identifies the 5 ordered speed bins as sequential data and maps them
+    through imprint_seq (d3.interpolateRgbBasis) rather than the categorical palette
+  - 'Clean theme handling: all chrome pulls from tokens, data colors identical across
+    light/dark renders'
+  - No AR-09 clipping anywhere; legend, title, and compass labels are all comfortably
+    clear of the canvas edges
+  weaknesses:
+  - Design excellence, while polished, still follows the well-known idiomatic D3 wind-rose
+    recipe (scaleRadial + stack + arc) rather than introducing a distinctive custom
+    treatment beyond that pattern
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme.
+      Chrome: Bold dark title "Wind Rose · polar-bar · javascript · d3 · anyplot.ai" is centered near the top and fully legible. 16 compass-direction labels ring the plot, cardinal points (N/E/S/W) bold in ink, others in ink-soft — all readable. All four radial gridline labels ("25 obs", "50 obs", "75 obs", "100 obs") are now clearly legible against the bars thanks to the page-background halo stroke and the grid-label group being drawn after the bars — this fixes the attempt-1 weakness where the innermost "25 obs" label was hidden.
+      Data: Stacked radial bars use a green (#009E73) → blue sequential ramp (imprint_seq) across 5 speed bins, tallest around SW/SSW (the coded prevailing direction), giving a realistic wind-rose shape. Legend (5 swatches) sits comfortably clear of the bottom edge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme.
+      Chrome: Title, compass labels, and all four grid-ring labels render in light ink against the dark surface — clearly legible, no dark-on-dark issues.
+      Data: Data colors (the green→blue ramp) are identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text, including the previously-hidden innermost grid label, is
+          now legible in both themes via halo stroke and z-order fix
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid labels drawn after bars with a page-background halo; no genuine
+          collisions between text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar segments and gridlines clearly distinguishable, appropriate for
+          16-direction x 5-bin density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue ramp is CVD-safe, no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing clipped, square canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Radial axis labeled in obs units, descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correctly uses imprint_seq for the ordered speed bins, theme-correct
+          backgrounds in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Equal-area radial scale, rounded arc corners, segment strokes are
+          polished but follow the well-known idiomatic D3 wind-rose recipe
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, clean wedge gaps, halo-protected
+          labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Prevailing-direction focal point and speed gradient read clearly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct polar/wind-rose bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 16 compass directions, stacked speed bins, radial magnitude encoding
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle maps direction, radius maps stacked frequency correctly via
+          scaleRadial
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; legend labels
+          match speed bins
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 16 directions and 5 speed bins with realistic distribution
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral meteorological wind-rose data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Observation counts and speed bins are sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes, flat top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG for deterministic in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses global d3 as required
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container per harness contract, animation-free'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of d3.stack, d3.arc, d3.scaleBand, d3.scaleRadial
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Equal-area scaleRadial + cornerRadius arcs are genuine D3 touches,
+          though this is the established idiomatic pattern for this chart type
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - custom-colormap
+  - edge-highlighting
