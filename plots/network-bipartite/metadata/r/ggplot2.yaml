@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: network-bipartite
 created: '2026-09-05T09:47:26Z'
-updated: '2026-09-05T09:51:38Z'
+updated: '2026-09-05T09:57:39Z'
 generated_by: claude-sonnet
 workflow_run: 33958734950
 issue: 5247
@@ -12,54 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Clean, readable two-column bipartite layout with clear left/right set separation
-    (Students vs. Courses)
-  - Nodes ordered by descending degree within each column so hubs cluster near the
-    top, giving the layout a built-in visual hierarchy
+  - 'Palette fixed to canonical Imprint order: Students = position 1 (#009E73 green),
+    Courses = position 2 (#C475FD lavender), with no unjustified skip to position
+    3'
+  - Edges now rendered with geom_curve (curvature = 0.25) instead of straight segments,
+    visibly reducing the crossing 'hairball' in the plot center while keeping the
+    two-column bipartite structure obvious
   - Node size correctly encodes degree and edge alpha correctly encodes attendance-rate
-    weight, exactly as the spec requests
-  - theme_void with generous plot.margin and coord_cartesian(clip = "off") keeps labels
-    from clipping while avoiding any spines or grid clutter
-  - Theme-adaptive chrome (background, ink, legend) correctly flips between light
-    and dark renders while data colors stay identical
+    weight, giving the layout a built-in visual hierarchy (hub students/courses read
+    larger at a glance)
+  - theme_void with generous plot.margin and coord_cartesian(clip = 'off') keeps all
+    16 student labels and 10 course labels fully legible with no clipping or overlap
+  - Title now occupies a larger, better-balanced share of the plot width than the
+    prior attempt, adding visual weight to match the rest of the composition
+  - Theme-adaptive chrome (background, ink, legend, caption) flips correctly between
+    light and dark renders while data colors (green/lavender) stay identical
   - 'Deterministic, KISS-structured code: single seed, no functions/classes, clear
     imports -> data -> plot -> save flow'
   weaknesses:
-  - 'VQ-07: scale_color_manual assigns Courses = IMPRINT_PALETTE[3] (blue), skipping
-    position 2 (lavender #C475FD) with no semantic justification for the skip — use
-    canonical order (Students = position 1 green, Courses = position 2 lavender) unless
-    a real semantic-color case applies.'
-  - 'VQ-03/DE-03: with ~60-70 edges rendered as thin straight segments (linewidth
-    = 0.4) between 16 students and 10 courses, the middle of the plot becomes a dense
-    crossing ''hairball'' that makes individual connections hard to trace — consider
-    slightly curved edges (geom_curve / bezier via a custom path), thinner alpha range
-    at the low end, or bundling to reduce visual noise.'
-  - 'LM-02: the implementation is solid but fairly generic ggplot2 usage (geom_segment
-    + geom_point + geom_text) — consider a more distinctive touch such as highlighting
-    one hub node/edge-set with a stronger color or curved edges to leverage ggplot2''s
-    layered grammar more distinctively.'
-  - 'DE-01/DE-02: design is clean but still close to a well-configured default — e.g.,
-    the title occupies only ~44% of the plot width, leaving it visually light relative
-    to the rest of the composition; slightly larger title or added visual weight on
-    the legend/caption area would elevate polish further.'
+  - 'VQ-03/DE-03: even with curved edges, the middle of the plot still has a moderately
+    dense crossing region for the ~48-80 student-course edges, making a handful of
+    specific connections slightly harder to trace at a glance — acceptable but not
+    fully resolved.'
+  - 'DQ-01: student degree variation is fairly narrow because every student samples
+    3-5 courses uniformly; a slightly wider sampling range (e.g. 2-6) would make the
+    hub-vs-peripheral node-size contrast more pronounced on the student side.'
+  - 'LM-02: usage is now more distinctive than the previous straight-segment version
+    thanks to geom_curve, but the overall approach (curve + point + text layers) is
+    still a fairly standard layered-geom composition rather than a technique unique
+    to ggplot2.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "network-bipartite · r · ggplot2 · anyplot.ai" centered at top in dark ink, fully legible. A top-centered legend shows "Courses" (blue swatch) and "Students" (green swatch). Bottom caption "Node size encodes number of connections; edge opacity encodes attendance rate" is rendered in muted gray, fully legible. Sixteen "Student NN" labels run down the left column in dark ink; ten course-name labels run down the right column in dark ink. All chrome text is clearly readable against the light background.
-      Data: Green nodes (#009E73) represent students, blue nodes (blue palette position 3) represent courses; node size scales with degree (larger for hub students/courses, e.g. "Student 07", "Cell Biology"). Gray edges connect only across the two sets, with edge opacity varying by attendance-rate weight (faint to dark gray). No red-green-only encoding; size and color both carry information.
-      Legibility verdict: PASS — no light-on-light text observed, no clipped labels.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "network-bipartite · r · ggplot2 · anyplot.ai" is bold, centered near the top in dark ink, spanning a comfortable share of the plot width, fully legible. A top-centered legend shows "Courses" (lavender swatch, Imprint position 2) and "Students" (green swatch, Imprint position 1). Bottom caption "Node size encodes number of connections; edge opacity encodes attendance rate" renders in muted gray, fully legible. Sixteen "Student NN" labels run down the left column in dark ink; ten course-name labels (Cell Biology, Organic Chemistry, Calculus I, Linear Algebra, Physics I, Statistics, Macroeconomics, Art History, Data Structures, World History) run down the right column in dark ink. All chrome text is clearly readable against the light background, no light-on-light issues, no clipped labels at the canvas edges.
+      Data: Green nodes (#009E73) represent students, lavender nodes (#C475FD, Imprint position 2) represent courses — canonical palette order, no skipped positions. Node size scales with degree: Student 07/14/02/03/05/06 and Cell Biology/Organic Chemistry render visibly larger as hubs; World History is the smallest course node. Gently curved gray edges connect only across the two sets (never within a set), with opacity varying by attendance-rate weight (faint to darker gray). The curvature noticeably reduces the straight-line crossing clutter seen in the prior attempt, though the middle of the plot is still moderately dense. No red-green-only encoding; size, color, and opacity all carry redundant information.
+      Legibility verdict: PASS — no light-on-light text observed, no clipped labels, no overlap between text/nodes/edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, caption and node-label layout as the light render, but rendered in light ink (near-white/off-white) against the dark background. Legend swatches and text remain fully legible. Caption text at the bottom is a lighter muted gray, still clearly readable.
-      Data: The same green (#009E73) student nodes and blue course nodes appear, confirming the data-color palette is identical to the light render — only the chrome (background, text, edge gray) flipped tone. Edge lines are a light gray, still distinguishable against the dark background at all opacity levels.
-      Legibility verdict: PASS — no dark-on-dark text observed; all titles, labels, legend text and caption are clearly readable against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, caption, and node-label layout as the light render, rendered in light ink (near-white/off-white) against the dark background. Legend swatches and text remain fully legible. Caption text at the bottom is a lighter muted gray, still clearly readable.
+      Data: The same green (#009E73) student nodes and lavender (#C475FD) course nodes appear, confirming the data-color palette is identical to the light render — only the chrome (background, text, edge gray) flips tone. Curved edge lines are a light gray, still distinguishable against the dark background across the full opacity range.
+      Legibility verdict: PASS — no dark-on-dark text observed; all titles, labels, legend text, and caption are clearly readable against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,37 +66,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; title sits
-          on the smaller side (~44% of plot width) but well within bounds, no overflow
-          or squeeze
+        comment: Explicit font sizes throughout, readable in both themes; title now
+          occupies a larger, well-balanced width with no overflow or squeeze
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
         comment: Node labels, legend, title and caption never collide with each other
-          or with edges
+          or with edges in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node sizing by degree reads well; the ~60-70 crossing edges create
-          a dense hairball in the middle that makes single connections harder to trace
+        comment: Node sizing by degree reads well; curved edges reduce the prior hairball
+          but the crossing region in the middle is still moderately dense
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Only two hues used (green/blue), high contrast, size and opacity
+        comment: Only two hues used (green/lavender), high contrast, size and opacity
           provide redundant encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, well-balanced portion of the canvas with generous,
-          even margins
+        comment: Canvas gate passed (3200x1800); plot fills a large, well-balanced
+          portion of the canvas with generous, even margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -107,24 +105,23 @@ review:
           the encoding
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Uses Imprint positions 1 and 3 (green, blue) for the two categories
-          instead of canonical positions 1 and 2 (green, lavender) with no semantic
-          justification for skipping position 2; theme chrome itself is fully correct
-          in both renders
+        passed: true
+        comment: 'Fixed: canonical Imprint order used — Students = position 1 (green),
+          Courses = position 2 (lavender); theme chrome correct in both renders'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Degree-based node ordering, size and opacity encoding show clear
-          design intent above a plain default network plot
+        comment: Degree-based node ordering, curved edges, size and opacity encoding,
+          and a stronger title show clear design intent above a plain default network
+          plot
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -138,7 +135,8 @@ review:
         max: 6
         passed: true
         comment: Ordering nodes by degree surfaces hub students/courses at a glance;
-          edge hairball slightly dilutes the story in the plot's center
+          curved edges slightly ease the visual read of the crossing middle versus
+          straight segments
     spec_compliance:
       score: 15
       max: 15
@@ -162,8 +160,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: All 16 students and 10 courses are shown with correct source/target
-          mapping
+        comment: All 16 students and 10 courses shown with correct source/target mapping
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -181,8 +178,8 @@ review:
         max: 6
         passed: true
         comment: Shows hub and low-degree nodes on both sides and a spread of edge
-          weights, though the 3-5 courses/student sampling keeps student-degree variation
-          fairly narrow
+          weights, though the uniform 3-5 courses/student sampling keeps student-degree
+          variation fairly narrow
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -196,7 +193,7 @@ review:
         max: 4
         passed: true
         comment: 16 students, 10 courses, 3-5 enrollments each, attendance 0.5-1.0
-          — all plausible real-world values
+          — all plausible real-world values within spec bounds
     code_quality:
       score: 10
       max: 10
@@ -232,7 +229,7 @@ review:
         passed: true
         comment: ggsave via ragg::agg_png to plot-{theme}.png
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -240,16 +237,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics composition (segment + point + text layers,
+        comment: Good grammar-of-graphics composition (curve + point + text layers,
           scale_* mappings) for a plot type ggplot2 has no native geom for
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses continuous aes mapping for size/alpha and guide override, but
-          overall still a fairly generic layered-geom approach
-  verdict: REJECTED
+        passed: true
+        comment: geom_curve for curved edges is a more distinctive touch than plain
+          segments, plus continuous aes mapping for size/alpha and a guide override
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
