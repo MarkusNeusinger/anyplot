@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-filled
 created: '2026-09-05T07:29:11Z'
-updated: '2026-09-05T07:33:00Z'
+updated: '2026-09-05T07:42:37Z'
 generated_by: claude-sonnet
 workflow_run: 33952442494
 issue: 2643
@@ -15,44 +15,52 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-fill
 quality_score: 84
 review:
   strengths:
-  - Correct use of MUI X LineChart `area` prop with matching line/fill color and 0.35
-    fill opacity, exactly matching the spec's semi-transparent-fill / line-visible-on-top
-    / fill-matches-line-color requirements.
-  - Baseline correctly anchored at y=0 and the y-axis starts at 0, so the filled area
-    accurately represents magnitude rather than being visually truncated.
-  - Time-series data layers realistic weekly seasonality (weekend dips) on top of
-    a sustained growth trend, giving the area chart genuine shape variation instead
-    of a flat wedge.
-  - Theme-adaptive tokens are threaded through title, axis labels, tick labels, axis
-    lines, and grid — both renders are legible and the data color is identical (#009E73)
-    between light and dark.
-  - Title fontsize correctly scales down for the long mandated string, and the legend
-    is correctly omitted for the single series.
+  - Semi-transparent area fill (measured alpha ~0.35 via pixel sampling) sits squarely
+    in the spec's 0.3-0.5 range, with the line rendered crisply on top of the fill
+  - 'Realistic, neutral synthetic dataset: 60 days of daily unique visitors with a
+    sustained growth trend, weekly weekend dip, and bounded noise from a deterministic
+    seeded LCG'
+  - 'Exact Imprint theme compliance: light background measured at #FAF8F1, dark background
+    at #1A1A17, line color exactly #009E73 in both themes'
+  - Clever, documented workaround for MUI X's y-axis label collision with 4-digit
+    ticks — a hand-rotated label in its own flex column instead of the built-in axis
+    `label` prop
+  - 'Correct harness contract usage: default export, `skipAnimation`, sizes to `window.ANYPLOT_SIZE`,
+    subtle theme-adaptive axis line/tick opacity, horizontal-only grid'
+  - Title follows the mandated format with a fitting descriptive prefix, and shrinks
+    its font size responsively for the long title string
   weaknesses:
-  - 'Design Excellence is generic: the area fill is a single flat color with no gradient
-    fade or highlight — a subtle vertical gradient (opaque near the line, fading toward
-    the baseline) would elevate this from ''correct'' to ''polished''.'
-  - No visual hierarchy/storytelling device calls out the growth inflection point
-    mentioned in the data-generation comments ('sustained lift from a content-marketing
-    push') — it never surfaces visually; consider a reference line or callout there.
-  - 'Library Mastery is generic (LM-02): nothing here couldn''t be replicated in Chart.js/D3
-    with equal effort — leverage a MUI X-specific feature (e.g. `ChartsReferenceLine`,
-    an SVG gradient fill via `sx`, or `highlightScope`) to distinguish the implementation.'
+  - 'The `visitorsFillGradient` linearGradient (defs, stop-opacity 0.75 -> 0.05) never
+    actually renders: pixel sampling of plot-light.png and plot-dark.png at many x/y
+    positions inside the fill returns the exact same flat RGB in every case (e.g.
+    light: (163,216,197) from just under the line all the way to the baseline; dark:
+    (16,71,55) identically) — zero vertical variation. The `.MuiAreaElement-series-visitors
+    { fill: url(#visitorsFillGradient) }` sx selector is almost certainly not matching
+    the runtime class MUI X assigns to the area path, so the gradient is dead code
+    and a flat default-looking fill is shown instead. Either fix the selector so the
+    gradient actually applies, or remove the unused gradient/defs.'
+  - The `ChartsReferenceLine` average-value label ('Avg 4,036') is completely invisible
+    in both renders — only the faint dashed guide line itself shows (confirmed via
+    pixel scan across the full chart width at the line's y-position and a zoomed crop
+    of the right edge near `labelAlign="end"`); no glyph pixels for the label text
+    exist anywhere on the canvas. The feature is non-functional as shipped — increase
+    the right margin / check `labelStyle` and clipping, or drop the label if it can't
+    be made to render.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white — correct.
-      Chrome: Bold dark title "Website Traffic Growth · line-filled · javascript · muix · anyplot.ai" centered at top, dark tick labels on both axes, rotated "Unique Visitors" y-axis label at far left, "Date" x-axis label at bottom, subtle horizontal gridlines, thin axis lines. All text is clearly readable against the light background.
-      Data: Single filled area series in Imprint brand green (#009E73), semi-transparent fill (~0.35 opacity) with a solid 3px stroke line visible on top of the fill, baseline at y=0. Line shows an upward-trending, noisy daily time series (Jan 5 – Mar 5) with visible weekly dips (weekends) and an overall growth trend from ~3,200 to ~5,700 visitors.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 exactly (pixel-sampled).
+      Chrome: Title "Website Traffic Growth · line-filled · javascript · muix · anyplot.ai" is centered, bold, dark ink, fully within canvas bounds. X-axis shows date ticks (Jan 5 .. Mar 5) every other day, Y-axis shows visitor counts (0 - 6,000) with a rotated "Unique Visitors" label in its own column at the left; "Date" label centered below the x-axis. Horizontal grid lines are subtle gray. A faint gray dashed average-reference line crosses the chart around y=4,036, but its "Avg 4,036" text label does not render anywhere (verified by pixel scan) — this is a missing/broken feature.
+      Data: Single mint-green area (Imprint brand green #009E73 line, ~35% alpha fill) tracing 60 days of daily unique visitors with a clear upward trend and repeating weekly dips (weekends). The fill is a completely flat, uniform opacity from line to baseline — the linearGradient defined in code (meant to fade from opaque near the line to transparent at the baseline) does not actually apply; pixel sampling shows identical RGB values throughout the fill's vertical extent at every x tested.
+      Legibility verdict: PASS (title, axis labels, and tick labels are all clearly readable against the light background; no light-on-light text).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — correct.
-      Chrome: Same layout as light render; title, axis labels, and tick labels rendered in light/off-white text, clearly visible against the dark background. Gridlines are subtle but visible. No dark-on-dark text found.
-      Data: Same brand-green (#009E73) line and area fill, identical shape and values to the light render — confirms data colors are held constant across themes while only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 exactly (pixel-sampled).
+      Chrome: Same layout as the light render — title, axis labels, and tick labels all rendered in light ink, clearly visible against the dark background. Grid lines remain subtle. The same faint dashed average line is present with the same missing label.
+      Data: Data colors are identical to the light render (line #009E73, fill ~35% alpha over the dark background instead of light) — only the chrome (background/text) flips as expected. The fill is likewise completely flat/non-gradiented, mirroring the light render's issue.
+      Legibility verdict: PASS (no dark-on-dark failures; all text stays light-colored and legible against the near-black surface).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -60,72 +68,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title scales with length, 13px ticks,
-          15px labels); all readable in both themes with balanced proportions.
+        comment: Title/axis/tick labels legible in both themes; font sizes explicit
+          and responsive to title length
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axis labels, ticks, or data.
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Line (3px) and fill clearly visible; markers appropriately hidden
-          for a 60-point continuous daily series.
+        comment: Line and fill clearly visible, but the reference-line's average label
+          is entirely invisible in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single high-contrast series, no red-green reliance.
+        comment: Single-series brand green with strong contrast on both surfaces;
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the vast majority of the canvas with balanced margins,
-          nothing cut off.
+        comment: Canvas gate passed (3200x1800); good proportions, no cutoff, title
+          well within bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Unique Visitors' and 'Date' axis labels.
+        comment: Descriptive labels with units (Unique Visitors, Date)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          theme-correct #FAF8F1 / #1A1A17.'
+        comment: 'Backgrounds pixel-match #FAF8F1/#1A1A17, line pixel-matches #009E73
+          in both themes'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured but generic single-color flat fill; no gradient or
-          distinctive color treatment.
+        comment: Attempted gradient fill and an average-reference line for polish,
+          but both fail to render as intended (flat fill, invisible label), undercutting
+          the intended sophistication
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle horizontal-only grid and reduced-opacity axis lines show some
-          refinement, but no further polish.
+        passed: true
+        comment: Subtle axis-line/tick opacity, horizontal-only grid, generous whitespace,
+          thoughtful hand-rotated y-label workaround
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data is displayed but not interpreted — no reference line, callout,
-          or emphasis on the growth inflection referenced in code comments.
+        comment: Growth trend + weekly seasonality read clearly, but the average-line
+          storytelling device is broken since its label never appears
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled line/area chart for a single series.
+        comment: Correct filled line/area chart for a single series
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (0.35), line visible on top, fill matches line
-          color, baseline at y=0 — all present.
+        comment: Semi-transparent fill (~0.35 alpha), line visible above fill, baseline
+          at y=0
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = date, Y = unique visitors, axes show the full data range.
+        comment: X=date (time scale), Y=unique visitors, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend correctly omitted
-          for single series.
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          hidden for single series
     data_quality:
       score: 14
       max: 15
@@ -165,22 +175,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows sustained growth trend plus weekly seasonality and noise.
+        comment: Covers magnitude emphasis and trend well; the average-reference feature
+          is present in intent but not visually delivered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Website traffic growth is a realistic, neutral business scenario.
+        comment: Plausible, neutral website-traffic scenario with growth and weekend
+          seasonality
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Growth from ~3,200 to ~5,700 daily visitors over 60 days via a 1.3%/day
-          compounding trend is a plausible content-marketing lift.
+        comment: Visitor counts (~2,400-5,800) are sensible for the domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -188,33 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple data-generation loop then a single component; no unnecessary
-          abstraction.
+        comment: No unnecessary functions/classes, single component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG PRNG.
+        comment: Deterministic seeded LCG PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, Box, Typography imported and used.
+        comment: Only imports actually used (LineChart, ChartsReferenceLine, Box,
+          Typography)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, appropriate complexity, no fake UI.
+        passed: false
+        comment: 'Dead code: the gradient defs/sx selector and the reference-line
+          label add complexity but produce no visible effect'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly default-exports the component per the harness contract;
-          skipAnimation set; current MUI X API.
+        comment: 'Follows harness contract: default export, skipAnimation, sized to
+          window.ANYPLOT_SIZE'
     library_mastery:
       score: 6
       max: 10
@@ -224,22 +236,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of LineChart's `area` prop, valueFormatter, time scaleType,
-          and grid config.
+        comment: Correct use of area/curve/valueFormatter/scaleType time/grid config,
+          minus the broken class-selector targeting
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Curve interpolation and sx overrides are a modest touch, but nothing
-          here is unique to MUI X versus other charting libraries.
-  verdict: REJECTED
+        comment: Gradient fill and reference-line label were meant to be distinctive
+          touches but neither renders visibly; only the y-label layout workaround
+          pays off
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - alpha-blending
+  - gradient-fill
