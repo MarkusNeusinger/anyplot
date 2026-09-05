@@ -70,6 +70,33 @@ for (_, dst) in edges
     indegree[dst] += 1
 end
 
+# Barycenter crossing-minimization: repeatedly reorder each layer by the mean
+# position of its neighbors, alternating downward/upward sweeps (Sugiyama-style).
+# This is what pulls "auth"/"renderer" and their fan-out into straighter columns
+# instead of the crossing tangle the review flagged.
+neighbors = Dict(n => String[] for n in nodes)
+for (src, dst) in edges
+    push!(neighbors[src], dst)
+    push!(neighbors[dst], src)
+end
+
+order_x = Dict{String,Float64}(n => Float64(j) for ns in layer_nodes for (j, n) in enumerate(ns))
+for iter in 1:6
+    layer_order = isodd(iter) ? (1:n_layers) : reverse(1:n_layers)
+    for li in layer_order
+        ns = layer_nodes[li]
+        length(ns) <= 1 && continue
+        bary = Dict(n => begin
+            xs = [order_x[m] for m in neighbors[n]]
+            isempty(xs) ? order_x[n] : sum(xs) / length(xs)
+        end for n in ns)
+        sort!(ns, by=n -> bary[n])
+        for (j, n) in enumerate(ns)
+            order_x[n] = Float64(j)
+        end
+    end
+end
+
 layer_spacing = 2.4
 node_spacing = 2.2
 pos = Dict{String,Point2f}()
@@ -105,7 +132,7 @@ ax = Axis(
 )
 hidedecorations!(ax)
 hidespines!(ax)
-limits!(ax, -5.6, 5.6, -1.4, 11.0)
+limits!(ax, -5.2, 5.2, -1.0, 10.2)
 
 # Move `from` toward `to` by clearance `r` (data units) — keeps arrow shafts
 # and heads from disappearing under the node markers they connect.
@@ -155,7 +182,8 @@ end
 legend_elements = [MarkerElement(color=IMPRINT_PALETTE[i], marker=:circle, markersize=14) for i in 1:n_layers]
 Legend(fig[2, 1], legend_elements, tier_labels[1:n_layers];
     orientation=:horizontal, framevisible=false, labelcolor=INK, nbanks=2)
-rowsize!(fig.layout, 2, Auto(0.12))
+rowgap!(fig.layout, 0)
+rowsize!(fig.layout, 2, Auto(0.05))
 
 # --- Save ------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit=2)
