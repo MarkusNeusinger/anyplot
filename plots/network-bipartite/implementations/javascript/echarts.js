@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-bipartite: Bipartite Network Graph
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 83/100 | Created: 2026-09-05
+// Quality: 92/100 | Created: 2026-09-05
 
 const theme = window.ANYPLOT_THEME;
 const t = window.ANYPLOT_TOKENS;
