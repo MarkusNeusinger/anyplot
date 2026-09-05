@@ -26,10 +26,60 @@ for (let day = 0; day < daysInYear; day++) {
   temperatures.push([startDate + day * dayMs, value]);
 }
 
+// Annual mean plus the seasonal peak/trough — called out below as a
+// dashed reference line and two flagged points, so the shape isn't just
+// implied by the curve.
+let sum = 0;
+let peak = temperatures[0];
+let trough = temperatures[0];
+for (const point of temperatures) {
+  sum += point[1];
+  if (point[1] > peak[1]) peak = point;
+  if (point[1] < trough[1]) trough = point;
+}
+const average = Math.round((sum / temperatures.length) * 10) / 10;
+
+const calloutMarker = {
+  enabled: true,
+  radius: 6,
+  fillColor: t.palette[0],
+  lineWidth: 2,
+  lineColor: t.ink,
+};
+const data = temperatures.map((point) => {
+  if (point === peak) {
+    return {
+      x: point[0],
+      y: point[1],
+      marker: calloutMarker,
+      dataLabels: {
+        enabled: true,
+        format: "Peak: {y}°C",
+        y: -16,
+        style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+      },
+    };
+  }
+  if (point === trough) {
+    return {
+      x: point[0],
+      y: point[1],
+      marker: calloutMarker,
+      dataLabels: {
+        enabled: true,
+        format: "Low: {y}°C",
+        y: -16,
+        style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+      },
+    };
+  }
+  return point;
+});
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
-    type: "line",
+    type: "area",
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
@@ -57,16 +107,43 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     gridLineWidth: 1,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      {
+        value: average,
+        color: t.inkSoft,
+        dashStyle: "Dash",
+        width: 1.5,
+        zIndex: 5,
+        label: {
+          text: `Annual avg: ${average}°C`,
+          align: "right",
+          x: -10,
+          y: -6,
+          style: { color: t.inkSoft, fontSize: "13px" },
+        },
+      },
+    ],
   },
   legend: { enabled: false },
   plotOptions: {
-    series: { animation: false, marker: { enabled: false } },
-    line: { lineWidth: 2.5 },
+    series: { animation: false },
+    area: {
+      lineWidth: 2.5,
+      marker: { enabled: false },
+      dataLabels: { enabled: false },
+      fillColor: {
+        linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+        stops: [
+          [0, Highcharts.color(t.palette[0]).setOpacity(0.35).get("rgba")],
+          [1, Highcharts.color(t.palette[0]).setOpacity(0).get("rgba")],
+        ],
+      },
+    },
   },
   series: [
     {
       name: "Avg. Temperature",
-      data: temperatures,
+      data,
     },
   ],
 });
