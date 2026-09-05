@@ -41,35 +41,45 @@ roc_points <- function(scores, labels) {
   tibble::tibble(fpr = fpr, tpr = tpr)
 }
 
-trapezoid_auc <- function(fpr, tpr) {
-  ord <- order(fpr)
-  fpr_sorted <- fpr[ord]
-  tpr_sorted <- tpr[ord]
-  sum(diff(fpr_sorted) * (head(tpr_sorted, -1) + tail(tpr_sorted, -1)) / 2)
-}
-
-roc_logistic <- roc_points(score_logistic, disease)
-roc_forest <- roc_points(score_forest, disease)
-
-auc_logistic <- trapezoid_auc(roc_logistic$fpr, roc_logistic$tpr)
-auc_forest <- trapezoid_auc(roc_forest$fpr, roc_forest$tpr)
-
-label_logistic <- sprintf("Logistic Regression (AUC = %.2f)", auc_logistic)
-label_forest <- sprintf("Random Forest (AUC = %.2f)", auc_forest)
+model_names <- c("Logistic Regression", "Random Forest")
 
 roc_df <- bind_rows(
-  roc_logistic %>% mutate(model = label_logistic),
-  roc_forest %>% mutate(model = label_forest)
+  roc_points(score_logistic, disease) %>% mutate(model = model_names[1]),
+  roc_points(score_forest, disease) %>% mutate(model = model_names[2])
 ) %>%
-  mutate(model = factor(model, levels = c(label_logistic, label_forest)))
+  mutate(model = factor(model, levels = model_names))
+
+# Trapezoidal-rule AUC as a single vectorized expression per model (fpr is
+# already monotonic non-decreasing within each model from roc_points()).
+auc_df <- roc_df %>%
+  group_by(model) %>%
+  summarise(auc = sum(diff(fpr) * (head(tpr, -1) + tail(tpr, -1)) / 2), .groups = "drop") %>%
+  mutate(label = sprintf("%s (AUC = %.2f)", model, auc))
+
+roc_df <- roc_df %>%
+  left_join(select(auc_df, model, label), by = "model") %>%
+  mutate(label = factor(label, levels = auc_df$label))
+
+# Youden's J optimal threshold on the stronger (logistic) curve, for the
+# storytelling marker on the plot.
+optimal_point <- roc_df %>%
+  filter(model == model_names[1]) %>%
+  mutate(youden = tpr - fpr) %>%
+  slice_max(youden, n = 1, with_ties = FALSE)
 
 # --- Plot -------------------------------------------------------------------
-p <- ggplot(roc_df, aes(x = fpr, y = tpr, color = model)) +
+p <- ggplot(roc_df, aes(x = fpr, y = tpr, color = label)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed",
               linewidth = 0.6, color = INK_SOFT) +
   geom_line(linewidth = 1.2) +
+  geom_point(data = optimal_point, aes(x = fpr, y = tpr),
+             shape = 21, size = 3, stroke = 1.2,
+             color = IMPRINT_PALETTE[1], fill = PAGE_BG, inherit.aes = FALSE) +
+  annotate("text", x = pmin(optimal_point$fpr + 0.10, 0.97),
+           y = optimal_point$tpr - 0.05, label = "Optimal threshold",
+           hjust = 0, size = 3, color = INK_SOFT) +
   annotate("text", x = 0.98, y = 0.90, label = "Random classifier",
-           hjust = 1, size = 3, color = INK_SOFT, angle = 41) +
+           hjust = 1, size = 3.5, color = INK_SOFT, angle = 41) +
   scale_color_manual(values = IMPRINT_PALETTE[1:2]) +
   scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25),
                       expand = expansion(mult = c(0.01, 0.03))) +
@@ -95,7 +105,7 @@ p <- ggplot(roc_df, aes(x = fpr, y = tpr, color = model)) +
     plot.title              = element_text(color = INK, size = 12),
     legend.position        = "inside",
     legend.position.inside = c(0.68, 0.14),
-    legend.background      = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
+    legend.background      = element_rect(fill = ELEVATED_BG, color = NA),
     legend.text            = element_text(color = INK_SOFT, size = 8),
     legend.title            = element_blank()
   )
