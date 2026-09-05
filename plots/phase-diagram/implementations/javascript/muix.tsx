@@ -78,10 +78,35 @@ const TITLE_FONT_SIZE = Math.max(
 
 const MARGIN = { top: 30, bottom: 150, left: 130, right: 60 };
 
-// --- Custom overlay: the shared equilibrium and each trajectory's starting
-// point. Community `@mui/x-charts/hooks` (useXScale/useYScale) map data
-// coordinates to pixels so the markers stay aligned with the lines at any
-// size. Hooks are called unconditionally, once per (fixed) trajectory. -----
+// --- Time-direction arrowheads: small triangles dropped at fixed points
+// along each trajectory's arc (as fractions of its 0..STEPS_PER_TRAJECTORY
+// index range), oriented along the local tangent. The spec explicitly
+// suggests a direction cue since motion along a spiral is otherwise
+// ambiguous in a static render. -------------------------------------------
+const ARROW_FRACTIONS = [0.08, 0.24, 0.44, 0.68];
+const ARROW_TANGENT_STEP = 2;
+const ARROW_SIZE = 9;
+const ARROW_SPREAD = 0.5; // radians between each back corner and the tip
+
+function arrowPoints(cx, cy, angle, size) {
+  const backAngle = angle + Math.PI;
+  const tip = [cx + Math.cos(angle) * size, cy + Math.sin(angle) * size];
+  const left = [
+    cx + Math.cos(backAngle - ARROW_SPREAD) * size,
+    cy + Math.sin(backAngle - ARROW_SPREAD) * size,
+  ];
+  const right = [
+    cx + Math.cos(backAngle + ARROW_SPREAD) * size,
+    cy + Math.sin(backAngle + ARROW_SPREAD) * size,
+  ];
+  return `${tip.join(",")} ${left.join(",")} ${right.join(",")}`;
+}
+
+// --- Custom overlay: the shared equilibrium, each trajectory's starting
+// point, and direction-of-travel arrowheads. Community `@mui/x-charts/hooks`
+// (useXScale/useYScale) map data coordinates to pixels so the markers stay
+// aligned with the lines at any size. Hooks are called unconditionally, once
+// per (fixed) trajectory. ---------------------------------------------------
 function PhaseMarkers() {
   const yScale = useYScale();
   const xScale0 = useXScale(trajectories[0].axisId);
@@ -95,17 +120,37 @@ function PhaseMarkers() {
   return (
     <g>
       {trajectories.map((traj, i) => {
-        const start = { x: xScales[i](traj.x[0]), y: yScale(traj.v[0]) };
+        const xScale = xScales[i];
+        const start = { x: xScale(traj.x[0]), y: yScale(traj.v[0]) };
         return (
-          <circle
-            key={traj.axisId}
-            cx={start.x}
-            cy={start.y}
-            r={10}
-            fill={traj.color}
-            stroke={t.pageBg}
-            strokeWidth={2.5}
-          />
+          <g key={traj.axisId}>
+            {ARROW_FRACTIONS.map((frac) => {
+              const idx = Math.round(frac * STEPS_PER_TRAJECTORY);
+              const p0 = { x: xScale(traj.x[idx]), y: yScale(traj.v[idx]) };
+              const p1 = {
+                x: xScale(traj.x[idx + ARROW_TANGENT_STEP]),
+                y: yScale(traj.v[idx + ARROW_TANGENT_STEP]),
+              };
+              const angle = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+              return (
+                <polygon
+                  key={`${traj.axisId}-arrow-${frac}`}
+                  points={arrowPoints(p0.x, p0.y, angle, ARROW_SIZE)}
+                  fill={traj.color}
+                  stroke={t.pageBg}
+                  strokeWidth={1}
+                />
+              );
+            })}
+            <circle
+              cx={start.x}
+              cy={start.y}
+              r={10}
+              fill={traj.color}
+              stroke={t.pageBg}
+              strokeWidth={2.5}
+            />
+          </g>
         );
       })}
       <circle
