@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-filled
 created: '2026-09-05T07:24:06Z'
-updated: '2026-09-05T07:28:21Z'
+updated: '2026-09-05T07:35:56Z'
 generated_by: claude-sonnet
 workflow_run: 33952204557
 issue: 2643
@@ -12,46 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-fill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-filled/javascript/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 84
 review:
   strengths:
-  - Fill alpha (~30%, hex suffix 4D) sits correctly within the spec's 0.3-0.5 range,
-    and the fill color matches the line color as required
-  - 'Baseline correctly pinned to y=0 via threshold: 0 and yAxis.min: 0'
-  - Deterministic, seeded data generation (LCG, seed=42) producing a realistic reservoir
-    water-level trend
-  - Clean theme-adaptive chrome - both renders pass every legibility and palette check
-    with identical data colors
-  - Title format correctly follows the {Descriptive Title} · spec-id · language ·
-    library · anyplot.ai convention
+  - Idiomatic Highcharts gradient fillColor (linearGradient with two alpha stops)
+    instead of a flat fill — a distinctive, polished touch for a filled-line chart
+  - Baseline correctly anchored at y=0 via yAxis.min:0 and plotOptions.area.threshold:0,
+    matching the spec's baseline requirement
+  - 'Theme-adaptive chrome fully correct: t.ink/t.inkSoft/t.grid tokens applied to
+    title, axis titles, tick labels, and gridlines; chart.backgroundColor transparent
+    so the page surface shows through in both themes'
+  - Realistic, deterministic data via a seeded LCG random walk with a physically sensible
+    floor (min 20m), producing a plausible 30-day reservoir trend
+  - Descriptive axis titles with units ("Water Level (m)", "Day") and correct anyplot
+    title format with a relevant descriptive prefix
+  - animation:false set correctly at both chart and series level, respecting the mount-node/harness
+    contract; no explicit chart.width/height
   weaknesses:
-  - 'Tooltip is fully disabled (tooltip: { enabled: false }) - re-enable it with theme-aware
-    styling so the interactive HTML output retains value (hover to inspect exact water
-    levels), instead of throwing away a core Highcharts feature'
-  - 'No distinctive Highcharts feature is used beyond the basic area type - consider
-    a linear gradient fill (fillColor: { linearGradient, stops }), an idiomatic and
-    visually richer pattern for filled-line/area charts in Highcharts'
-  - 'Markers are disabled on a sparse 30-point series (marker: { enabled: false })
-    - per density guidance, sparse data benefits from visible markers (e.g. radius
-    3) to make individual data points identifiable'
-  - Title occupies only ~40% of plot width at 20px fontSize, below the comfortable
-    50-70% guidance - a couple more px (e.g. 22px) would give it more visual presence
-    without risking overflow
+  - Markers (radius 3) are barely visible against the line and fill in both renders;
+    with only 30 sparse data points, per the style guide's proportional-sizing check,
+    sparse series should have prominent markers — increase radius to ~4-5 (optionally
+    with a light contrasting stroke) so vertices read clearly.
+  - The fill gradient's top stop uses alpha 0x8C (~55%), slightly above the spec's
+    suggested 0.3-0.5 semi-transparent range at the top of the area; soften the top
+    stop toward ~0x70-0x80 (~0.44-0.5 alpha) so the semi-transparent effect reads
+    consistently across the whole fill.
+  - Data storytelling is fairly flat — no annotation or emphasis calls out the notable
+    dip (day 7, lowest point) or peak (day 27), leaving the overall upward trend as
+    the only visual focal point.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 target.
-      Chrome: Title "Reservoir Water Level · line-filled · javascript · highcharts · anyplot.ai" in dark ink, bold, centered; X-axis "Day" (0-29, ticks every 5); Y-axis "Water Level (m)" (0-60, ticks every 5). All clearly readable.
-      Data: Single area series in Imprint green (#009E73) - solid ~2.5px stroke with ~30% alpha fill down to y=0 baseline. Dips to ~37m around day 7, rises to ~54m by day 27-28.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Reservoir Water Level · line-filled · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible; x-axis title "Day" and y-axis title "Water Level (m)" in a softer dark gray, both readable; tick labels (0-60 in steps of 5 on y, 0/5/10/.../25 on x) legible; subtle horizontal gridlines visible without dominating.
+      Data: Single mint-green area (first series = brand green #009E73) with a gradient fill that fades from more opaque near the line to lighter near the baseline; the line itself is a solid, slightly darker green and clearly visible on top of the fill; baseline sits at y=0. Individual point markers are present but very subtle/hard to distinguish from the line at this data density.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 target.
-      Chrome: Same layout; title, axis titles, and tick labels rendered in light ink/soft-ink tones, clearly readable against the dark background. No dark-on-dark failures observed.
-      Data: Identical #009E73 green line/fill as light render - confirms data colors unchanged across themes, only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white text, clearly legible against the dark background; gridlines are subtle light horizontal lines, visible but not overpowering.
+      Data: The line and fill use the identical green (#009E73) as the light render — only the chrome (background, text, grid) flipped to the dark theme, which is correct. The fill still fades from a moderately opaque green near the line down to a darker, more transparent green near the baseline, blending into the near-black background at the bottom, which is expected and reads well.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text is clearly visible against the dark surface, and the green data remains distinguishable from the near-black background throughout.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,70 +62,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title occupies only ~40% of plot
-          width, on the low side of the 50-70% guidance
+        comment: Explicit font sizes (title 22px, axis titles 16px, ticks 14px); all
+          readable in both themes via t.ink/t.inkSoft tokens
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or chrome
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Line + fill clearly visible, but markers disabled on a sparse 30-point
-          series
+        comment: Markers (radius 3) too subtle for 30 sparse points — barely distinguishable
+          from the line/fill
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue series, good contrast on both surfaces
+        comment: Single-series brand green has strong contrast on both surfaces; no
+          red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no overflow or clipping
+        comment: Title ~68% width as expected for the mandated title; balanced axis
+          labels; nothing cut off or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units
+        comment: '"Day" and "Water Level (m)" are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match theme targets; both renders
-          theme-correct'
+        comment: 'First series is #009E73 (palette[0]); backgrounds match #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correct but generic area-fill styling; no gradient fill or other
-          distinctive polish
+        comment: Idiomatic gradient fillColor is a genuine polish touch above generic
+          defaults
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Clean chrome, subtle grid, generous whitespace, sensible zero baseline
+        comment: Subtle gridlines and clean axis lines, but no further refinement
+          beyond library defaults
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Fill emphasizes the recovery trend after the day-7 low, but no additional
-          emphasis beyond default chart type behavior
+        comment: Upward trend is a natural focal point, but no annotation/emphasis
+          on the notable dip or peak
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled/area line chart
+        comment: Highcharts "area" type correctly implements a filled line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (~30% alpha), line visible on top, fill matches
-          line color, baseline at y=0
+        comment: Semi-transparent gradient fill, visible line on top, baseline at
+          y=0 — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = day, Y = water level; axes show full data range
+        comment: X=Day, Y=Water Level (m), full 30-day range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend correctly omitted for single
-          series
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          disabled for single series
     data_quality:
       score: 15
       max: 15
@@ -162,19 +165,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates fill, baseline, and single-series emphasis
+        comment: Shows line + fill + baseline, all line-filled aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reservoir water level (20-55m) over 30 days is plausible and neutral
+        comment: Plausible reservoir-level trend, neutral subject matter
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and axis range sensible for the domain
+        comment: Values in 37-54m range are sensible for a reservoir metric
     code_quality:
       score: 10
       max: 10
@@ -184,56 +187,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions/classes beyond a tiny deterministic RNG
-          helper
+        comment: Only a small LCG generator function, no classes; flat script structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42)
+        comment: Fixed-seed LCG (seed=42) makes data deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only global Highcharts/ANYPLOT_TOKENS
+        comment: No imports; only window.ANYPLOT_TOKENS and Highcharts global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Highcharts.chart with no explicit width/height; animation: false
-          set correctly'
+        comment: Correct mount-node contract; animation disabled at chart and series
+          level; no explicit width/height
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper use of area type, threshold, and fillColor alpha suffix
+        comment: Correct use of area type, threshold, categories, and tokens per library
+          conventions
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        passed: false
-        comment: Tooltip disabled entirely; no gradient fill or other Highcharts-specific
-          flourish used
+        comment: Gradient fillColor is a nice Highcharts-specific touch but usage
+          is otherwise standard
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - gradient-fill
   - alpha-blending
