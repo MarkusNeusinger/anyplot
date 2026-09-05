@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: polar-bar
 created: '2026-09-05T11:29:16Z'
-updated: '2026-09-05T11:34:12Z'
+updated: '2026-09-05T11:47:10Z'
 generated_by: claude-sonnet
 workflow_run: 33962580505
 issue: 2693
@@ -12,138 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-bar/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 90
 review:
   strengths:
-  - 'Correct plot type: a true polar stacked bar / wind rose using coord_polar(theta
-    = "x") with geom_col, covering all 16 compass directions and 5 stacked wind-speed
-    bins as called for in the spec notes.'
+  - 'Canvas utilization is fixed from attempt 1: the wind-rose wedges now extend most
+    of the way to the outer gridline, filling the square canvas convincingly instead
+    of floating as a small disconnected shape.'
+  - position_stack(reverse = TRUE) is a smart, well-commented fix that keeps the thin
+    high-speed bins (15-20 kt, 20+ kt) visible at every direction by giving them the
+    larger outer radius instead of collapsing them near the center.
+  - Faint theme-adaptive radial grid (panel.grid.major using INK_SOFT) now gives the
+    0%/5%/10% labels a visual reference circle in both renders.
+  - 'Correct plot type: true polar stacked bar / wind rose via coord_polar(theta =
+    "x") + geom_col, covering all 16 compass directions and 5 stacked wind-speed bins
+    per the spec.'
   - 'Palette compliance: first (and largest) series is exactly #009E73, remaining
-    series follow the canonical Imprint order, and data colors are identical between
-    the light and dark renders.'
-  - 'Theme-adaptive chrome works correctly in both renders: warm off-white / near-black
-    backgrounds, correct ink tokens for title, tick labels, and legend, no dark-on-dark
-    or light-on-light failures.'
-  - Title format matches exactly (`polar-bar · r · ggplot2 · anyplot.ai`), and the
-    legend ("Wind speed", 5 correctly-labeled speed bins) is accurate.
-  - Realistic, neutral meteorological scenario (prevailing westerlies weighted toward
-    SW/W) that is factually plausible and clearly visible in the data.
-  - 'Clean, reproducible, idiomatic KISS-structured R script: set.seed(42), no functions/classes,
-    correct ragg::agg_png save target.'
+    series follow canonical Imprint order, identical across both renders.'
+  - Theme-adaptive chrome works correctly in both renders — no dark-on-dark or light-on-light
+    failures; PAGE_BG-colored bar strokes correctly flip between light and dark.
+  - Realistic, neutral meteorological scenario (prevailing westerlies) with a clear,
+    plausible directional and speed distribution.
+  - Clean, reproducible, idiomatic KISS-structured R script with only the libraries
+    it actually uses.
   weaknesses:
-  - 'Severe canvas under-utilization: the colored wind-rose wedges only span roughly
-    30-35% of the plot''s diameter (~8-10% of canvas area), while the compass-direction
-    labels (N, NNE, NE, ...) sit on a much larger implied ring far outside the actual
-    bars. This leaves a large disconnected band of empty space between the data and
-    its own axis labels, making the chart look tiny and adrift inside the square canvas.
-    Fix by reducing scale_y_continuous''s expansion / axis.text.x margin so the direction
-    labels sit closer to the bars, and/or increasing geom_col width or figure scale
-    so the rose itself occupies 50-80% of the canvas per the style guide.'
-  - No radial grid rings are drawn (panel.grid.major/minor are element_blank()), so
-    the '0%/5%/10%' frequency labels float without any visual reference circle to
-    read bar length against — for a polar/radial chart the concentric gridlines are
-    the primary way readers gauge magnitude. Add faint theme-adaptive panel.grid.major
-    (e.g. INK at low alpha via a light color, since ggplot2 grid lines don't support
-    alpha directly) so the percentage rings are visible in both themes.
-  - The two highest wind-speed categories (15-20 kt, 20+ kt) are stacked innermost
-    and are reduced to razor-thin or near-invisible slivers near the center in both
-    renders, hurting readability of the least-common-but-notable categories.
-  - 'Design excellence is capped by the layout problem above: the plot currently reads
-    as a well-configured default rather than a polished, publication-ready wind rose
-    despite the correct technique choice (coord_polar) and correct palette.'
+  - The 0%/5%/10% radial axis labels cluster together right along the W spoke (a ggplot2
+    coord_polar quirk where the y-axis text follows the pre-transform vertical), sitting
+    close to the 'W' compass label itself — slightly crowds that corner even though
+    no text actually overlaps.
+  - The lightest-frequency directions (NE, ENE, E) still render very thin wedges where
+    the individual speed-bin segments are only a few pixels tall; readable when zoomed
+    but easy to miss at a glance.
+  - Design excellence is solid but not yet distinctive beyond the reverse-stack trick
+    — no additional polish (e.g. subtle radial fade, annotated compass rose convention)
+    that would push it further above a well-executed default.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "polar-bar · r · ggplot2 · anyplot.ai" is dark and clearly legible at top center. The 16 compass-direction labels (N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW) are rendered in medium-grey ink around a large implied circle, all readable. Radial "0%/5%/10%" labels appear as a small stacked column near the upper-left, disconnected from any visible grid ring since panel gridlines are turned off. The "Wind speed" legend sits centered at the bottom with 5 correctly labeled color swatches.
-      Data: The colored wind-rose wedges (green #009E73 = 0-5kt, lavender = 5-10kt, blue = 10-15kt, ochre = 15-20kt, red = 20+kt, stacked outward per direction) occupy only a small circle roughly a third of the available radius, off-set toward the lower-middle of the canvas, clearly showing the intended prevailing-westerly pattern (largest wedges toward SW/WSW/W, smallest toward N/NE). The innermost ochre and red segments are extremely thin, close to invisible at this scale.
-      Legibility verdict: PASS for all text (title, compass labels, legend); the radial % labels are technically legible but functionally confusing because there is no grid ring to anchor them to.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "polar-bar · r · ggplot2 · anyplot.ai" is dark ink, centered, fully legible. All 16 compass-direction labels (N, NNE, NE, ... NNW) render in medium-grey ink and are readable. A faint radial grid (0%/5%/10% rings) is now visible, anchoring the axis labels which sit along the W spoke. The "Wind speed" legend at the bottom is correct with 5 labeled swatches.
+      Data: Stacked wedges (green/lavender/blue/ochre/red, in that Imprint order) radiate from the center and now extend most of the way to the outer ring — a clear improvement over attempt 1's under-filled rose. The prevailing-westerly weighting (large SW/WSW/W wedges, small N/NE/ENE) is obvious. Thanks to reverse stacking, the higher-speed bins (ochre, red) sit on the outside and remain visible even for small directions. First series is #009E73.
+      Legibility verdict: PASS — all text is readable against the light background, no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and all compass-direction labels flip to light ink/grey and remain fully readable against the dark background. Legend text and swatches also read correctly with light text. No dark-on-dark failures observed anywhere.
-      Data: Same wedge colors and same small off-center rose as the light render — data hues (#009E73, lavender, blue, ochre, red) are identical between the two renders, confirming only chrome changed with theme. Same thin, near-invisible innermost ochre/red segments.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light text failures; same layout/proportion weakness as the light render (tiny rose disconnected from its own compass-label ring).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, compass labels, radial grid, tick labels, and legend all flip to light ink/grey and remain fully readable. No dark-on-dark failures observed anywhere, including the small-direction wedge outlines.
+      Data: Wedge colors are identical to the light render (only chrome flipped) — confirmed same Imprint hex values, same stacking order, same relative proportions.
+      Legibility verdict: PASS — all text is readable against the dark background, brand green remains clearly visible on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, compass labels, and legend are all explicitly sized and readable
-          in both themes; the radial % labels are readable but ambiguous without a
-          grid reference.
+        comment: Title, compass labels, tick labels, and legend all readable in both
+          themes at explicit sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data elements in either render.
+        comment: No text-on-text or text-on-data collisions
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Green/lavender/blue segments are visible; the 15-20kt and 20+kt innermost
-          stacked segments are near-invisible slivers.
+        comment: Reverse stacking keeps all 5 speed bins visible even on small-frequency
+          directions; thinnest wedges (NE/ENE/E) are still tight
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette provides adequate contrast and is CVD-safe; no red-green-only
-          signal.
+        comment: Five distinct hues from the Imprint palette, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 3
         max: 4
-        passed: false
-        comment: The colored wind-rose wedges fill well under 30% of the canvas, with
-          a large disconnected empty band between the bars and the outer compass-label
-          ring — severe canvas under-utilization.
+        passed: true
+        comment: Canvas utilization fixed from attempt 1 (rose now fills most of the
+          square canvas); minor crowding where 0%/5%/10% labels sit next to the W
+          compass label
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Percentage frequency axis and directional categories are self-explanatory
-          (wind-rose convention); legend clarifies units (kt).
+        comment: Percent ticks self-describe units; compass directions are self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order for the remaining
-          bins, correct theme-adaptive backgrounds in both renders.'
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
     design_excellence:
-      score: 8
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 6
         max: 8
-        passed: false
-        comment: Correct palette and coord_polar technique choice, but the severe
-          layout/proportion problem makes the overall result look unpolished rather
-          than publication-ready.
+        passed: true
+        comment: Custom Imprint palette plus a deliberate reverse-stacking technique
+          to solve a real visibility problem
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Grid entirely removed with no substitute radial reference rings,
-          leaving the % scale unanchored; default-level refinement.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: dominant SW/WSW/W wedges immediately communicate
-          the prevailing-wind story even with the layout issue.'
+        comment: Radial grid restored, no panel border, clean bottom legend, but still
+          fairly close to theme_minimal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point on SW/W prevailing wind with strong visual hierarchy
+          through wedge length
     spec_compliance:
       score: 15
       max: 15
@@ -153,51 +143,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine polar stacked bar / wind rose via coord_polar + geom_col.
+        comment: True polar stacked bar / wind rose via coord_polar(theta="x")
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 16 compass directions, stacked speed bins, bars radiating from center
-          — all spec notes satisfied.
+        comment: Bars radiate from center, 16 compass directions, stacked speed bins,
+          color encodes speed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: direction -> angle (x), frequency -> radius (y), speed -> fill; all
-          data visible.
+        comment: x=direction, y=frequency, all 16 directions shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match the speed bins.
+        comment: Title matches mandated format exactly; legend labels match speed
+          bins
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows directional variation and stacking, but the top two speed bins
-          are so thin they barely register visually.
+        comment: All 5 speed bins now visible at every direction thanks to reverse
+          stacking; extreme low-frequency directions still thin
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral meteorological wind-rose scenario.
+        comment: Prevailing-westerlies pattern is realistic, neutral, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency percentages and speed-bin distribution are plausible for
-          a real wind-rose dataset.
+        comment: 0-14% frequency range is sensible for a directional distribution
     code_quality:
       score: 10
       max: 10
@@ -207,57 +196,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save, no functions/classes.
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: dplyr/tidyr/scales/ragg all used.
+        comment: dplyr, tidyr, scales, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity.
+        comment: Appropriate complexity, no fake UI, well-commented tradeoff
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png.
+        comment: ggsave to plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_col + coord_polar + position_stack + scale_y_continuous(label_percent)
+          is idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Standard idiomatic ggplot2 wind-rose pattern (geom_col + coord_polar),
-          though missing the usual manual radial-grid annotation refinement.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: coord_polar(theta="x") with a custom start angle is a distinctive
-          ggplot2 grammar feature not trivially replicated elsewhere.
-  verdict: REJECTED
+        comment: position_stack(reverse = TRUE) combined with clip = "off" is a genuinely
+          distinctive, well-reasoned technique for this chart type
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   patterns:
   - data-generation
-  - groupby-aggregation
   dataprep: []
   styling:
-  - minimal-chrome
+  - publication-ready
+  - edge-highlighting
