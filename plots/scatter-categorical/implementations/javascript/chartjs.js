@@ -18,12 +18,18 @@ function gauss(mean, spread) {
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
   return mean + z * spread;
 }
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 const segments = [
-  { name: "Budget", spend: 35, spendSpread: 12, visits: 2.2, visitSpread: 0.9 },
-  { name: "Regular", spend: 85, spendSpread: 18, visits: 4.5, visitSpread: 1.2 },
-  { name: "Premium", spend: 160, spendSpread: 25, visits: 6.8, visitSpread: 1.4 },
-  { name: "VIP", spend: 260, spendSpread: 30, visits: 9.5, visitSpread: 1.6 },
+  { name: "Budget", spend: 35, spendSpread: 12, visits: 2.2, visitSpread: 0.9, pointStyle: "circle" },
+  { name: "Regular", spend: 85, spendSpread: 18, visits: 4.5, visitSpread: 1.2, pointStyle: "triangle" },
+  { name: "Premium", spend: 160, spendSpread: 25, visits: 6.8, visitSpread: 1.4, pointStyle: "rect" },
+  { name: "VIP", spend: 260, spendSpread: 30, visits: 9.5, visitSpread: 1.6, pointStyle: "rectRot" },
 ];
 
 const nPerSegment = 35;
@@ -38,9 +44,10 @@ const datasets = segments.map((seg, i) => {
   return {
     label: seg.name,
     data: points,
-    backgroundColor: t.palette[i % t.palette.length],
+    backgroundColor: hexToRgba(t.palette[i % t.palette.length], 0.8),
     borderColor: "#FFFFFF",
     borderWidth: 1,
+    pointStyle: seg.pointStyle,
     pointRadius: 9,
     pointHoverRadius: 11,
   };
@@ -68,7 +75,7 @@ new Chart(canvas, {
       },
       legend: {
         position: "top",
-        labels: { color: t.ink, font: { size: 16 }, usePointStyle: true, pointStyle: "circle" },
+        labels: { color: t.ink, font: { size: 16 }, usePointStyle: true },
       },
     },
     scales: {
