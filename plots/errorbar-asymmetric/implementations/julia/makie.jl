@@ -37,10 +37,6 @@ error_upper = median_conc .* (exp.(log_sigma) .- 1)
 # Station with the widest asymmetric spread gets a callout accent below.
 spread = error_upper .- error_lower
 widest = argmax(spread)
-marker_colors = fill(BRAND, n)
-marker_colors[widest] = ANYPLOT_AMBER
-marker_sizes = fill(20, n)
-marker_sizes[widest] = 26
 
 # --- Plot ---------------------------------------------------------------
 fig = Figure(
@@ -80,8 +76,13 @@ ax = Axis(
 
 errorbars!(ax, positions, median_conc, error_lower, error_upper;
            color = BRAND, whiskerwidth = 18, linewidth = 2.5)
-scatter!(ax, positions, median_conc; color = marker_colors, markersize = marker_sizes,
+scatter!(ax, positions, median_conc; color = BRAND, markersize = 20,
          strokewidth = 1.4, strokecolor = PAGE_BG)
+# Redrawing just the widest-spread point on top (own scatter! call, not a
+# per-point color/size vector) avoids relying on Makie's Colorant-vector
+# color path, which is why the earlier attempt's callout failed to render.
+scatter!(ax, [positions[widest]], [median_conc[widest]]; color = ANYPLOT_AMBER,
+         markersize = 26, strokewidth = 1.4, strokecolor = PAGE_BG)
 
 halign = widest <= 2 ? :left : widest >= n - 1 ? :right : :center
 text!(ax, positions[widest], median_conc[widest] + error_upper[widest];
