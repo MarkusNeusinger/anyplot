@@ -8,6 +8,13 @@
 const t = window.ANYPLOT_TOKENS;
 const INK_MUTED = t.theme === "light" ? "#6B6A63" : "#A8A79F";
 
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // --- Data: simulated marketing-campaign response model --------------------
 // Fixed-seed LCG (no seeded Math.random in the browser)
 let seed = 42;
@@ -32,7 +39,7 @@ const positiveRatePct = (totalPositives / nCustomers) * 100;
 
 // Model curve: cumulative % of positives captured vs. % of population targeted
 const modelCurve = [{ x: 0, y: 0 }];
-const stride = Math.ceil(nCustomers / 100);
+const stride = Math.ceil(nCustomers / 200); // finer stride than population/100 keeps the curve smooth, not stair-stepped
 let cumulativePositives = 0;
 for (let i = 0; i < nCustomers; i++) {
   cumulativePositives += customers[i].responded;
@@ -68,19 +75,21 @@ new Chart(canvas, {
         label: "Model",
         data: modelCurve,
         borderColor: t.palette[0], // Imprint pos 1 — brand green
-        backgroundColor: t.palette[0],
+        backgroundColor: hexToRgba(t.palette[0], 0.15), // low-alpha fill reinforces the "gain" area under the curve
         borderWidth: 3.5,
         pointRadius: 0,
-        tension: 0.15,
-        fill: false,
+        tension: 0.2,
+        fill: "origin",
       },
       {
         label: "Perfect model",
         data: perfectModel,
         borderColor: INK_MUTED,
+        backgroundColor: INK_MUTED, // legend swatch fill; line itself has no area fill
         borderWidth: 2,
         borderDash: [3, 3],
         pointRadius: 0,
+        pointStyle: "line", // legend swatch reads as a dashed line, matching the on-chart style
         tension: 0,
         fill: false,
       },
@@ -88,9 +97,11 @@ new Chart(canvas, {
         label: "Random selection",
         data: randomBaseline,
         borderColor: t.ink,
+        backgroundColor: t.ink, // legend swatch fill; line itself has no area fill
         borderWidth: 2,
         borderDash: [8, 6],
         pointRadius: 0,
+        pointStyle: "line", // legend swatch reads as a dashed line, matching the on-chart style
         tension: 0,
         fill: false,
       },
