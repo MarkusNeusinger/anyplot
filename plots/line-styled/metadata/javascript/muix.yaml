@@ -1,0 +1,234 @@
+library: muix
+language: javascript
+specification_id: line-styled
+created: '2026-09-05T08:33:11Z'
+updated: '2026-09-05T08:48:20Z'
+generated_by: claude-sonnet
+workflow_run: 33955059471
+issue: 2598
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-styled/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Directly resolves both attempt-1 weaknesses: p99 dash pattern is now denser and
+    stays legible through the p99/p99.9 crossing zones, and the peak p99.9 spike now
+    has a deliberate reference-line callout'
+  - Correctly implements all four required line styles via a MUI X-specific utility-class
+    technique, with consistent line width across styles
+  - Custom legend renders an actual dashed-line swatch per series, correctly mapping
+    style to name per the spec
+  - Realistic, well-chosen latency-percentile dataset with a periodic tail-spike pattern
+    isolated to p99.9
+  - Correct Imprint palette usage and theme-adaptive chrome in both renders; no clipping
+    at any canvas edge
+  weaknesses:
+  - The native legend and y-axis label positioning are still handled via manual HTML
+    / a tickFontSize offset hack rather than tuned slotProps, keeping Library Mastery
+    capped on idiomatic usage
+  - Design excellence, while improved by the reference-line focal point, still reads
+    closer to a refined default than a fully bespoke publication design
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark
+      Chrome: Dark title top-left ("line-styled · javascript · muix · anyplot.ai"), dark axis captions with units, soft dark tick labels, subtle horizontal-only gridlines. New reference-line label ("peak p99.9 · 191.1ms") renders cleanly with no overlap. All readable.
+      Data: Brand-green solid (p50), lavender dashed (p90), blue dotted (p99, now denser than attempt 1), ochre dash-dot (p99.9). First series is #009E73. Vertical grey reference line marks the single largest p99.9 spike.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light
+      Chrome: Title, axis captions, tick labels, and reference-line label all render in light ink, clearly legible; gridlines remain subtle but visible. No dark-on-dark text found anywhere.
+      Data: Confirmed identical hex colors to light render for all four series and the reference line — only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; reference-line
+          label at 13px is smallest but legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions, including the new reference-line label
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: p99 dash density fix resolves attempt-1 congestion at crossings with
+          p99.9
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct hues + distinct dash patterns give redundant encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; nothing clipped at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, theme-correct backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: New ChartsReferenceLine peak annotation is a genuine deliberate touch,
+          still reads closer to refined default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace, minimal axis chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit reference line on the largest tail-latency spike creates
+          a clear guided focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct styled multi-series line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 4 standard line styles present, consistent width, legend maps
+          style to name
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = minute, Y = each percentile series, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches mandate exactly; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Baseline fluctuation plus periodic tail spikes isolated to p99.9
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible SRE/monitoring latency scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentile ordering/magnitudes realistic for API/service latency
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded mulberry32(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export contract, skipAnimation set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Native legend and axis-label positioning still bypassed with manual
+          workarounds
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine plus getLineElementUtilityClass + per-series
+          sx dasharray technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - publication-ready
