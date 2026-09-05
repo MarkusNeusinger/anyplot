@@ -1,8 +1,7 @@
 // anyplot.ai
 // line-annotated-events: Annotated Line Plot with Event Markers
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-09-05
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 83/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
