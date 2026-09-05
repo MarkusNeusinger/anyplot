@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: network-bipartite
 created: '2026-09-05T09:43:36Z'
-updated: '2026-09-05T09:48:29Z'
+updated: '2026-09-05T09:56:19Z'
 generated_by: claude-sonnet
 workflow_run: 33958399906
 issue: 5247
@@ -12,106 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette: authors in brand green #009E73, papers in lavender #C475FD
-    (palette position 2), with theme-correct #FAF8F1/#1A1A17 backgrounds and adaptive
-    chrome in both renders.'
-  - Degree-encoded node sizing effectively surfaces hub authors/papers (Costa, Silva,
-    Chen, Novak, Tanaka; Paper 3, Paper 7) and exposes an isolated node (Ahmed) with
-    zero edges.
-  - Edge weight is encoded through both line width and opacity simultaneously, a genuinely
-    idiomatic per-edge visual encoding.
-  - Uses Chart.js's native plugin hooks (beforeDatasetsDraw / afterDatasetsDraw) tied
-    to the chart's own scale coordinate system to draw edges and labels, instead of
-    reaching for an external network-layout library — a clean, idiomatic solution
-    to a chart type Chart.js has no core support for.
-  - 'Clean minimal chrome: axes/grid fully hidden, unboxed top legend using usePointStyle
-    swatches that match the node shape.'
-  - Deterministic fixed-seed LCG for reproducible data generation; concise KISS-structured
-    single-file script.
+  - Native Chart.js plugin architecture (beforeDatasetsDraw/afterDatasetsDraw) draws
+    edges behind the node datasets and labels above them, so the bipartite structure
+    is built entirely from core Chart.js hooks with no unpinned network-chart plugin.
+  - 'All spec-required encodings are present: node color = set membership, node radius
+    (scriptable pointRadius) = degree, and edge width + opacity jointly encode weight.'
+  - Deterministic fixed-seed LCG generates the author-paper affiliation data in-memory
+    with no external RNG dependency, satisfying CQ-02 cleanly.
+  - 'Theme-adaptive chrome is correct: first series is brand green #009E73, second
+    is Imprint lavender #C475FD in canonical order, identical across light/dark; edge
+    and label colors derive from the theme-adaptive inkSoft token.'
+  - Per-column degree-based sorting (crossing-reduction heuristic) clusters hub nodes
+    near the top on both sides, turning raw insertion order into a noticeably more
+    readable layout.
   weaknesses:
-  - High edge-crossing density produces a visually cluttered 'hairball' — node ordering
-    on both sides is arbitrary (alphabetical/insertion order) rather than sorted to
-    minimize crossings, undercutting the spec's 'keep the layout clean ... reduce
-    visual clutter' requirement.
-  - Node/paper name labels (14px CSS text in the 1600px mount) become very hard to
-    read once the PNG is downscaled to the ~400px mobile thumbnail — increase label
-    font size slightly or shorten labels for small-screen legibility.
-  - Faint low-weight edges (alpha as low as ~0.195) from low-degree authors (Diaz,
-    Kumar, Petrov, Ahmed) are difficult to trace individually against the dense crossing
-    pattern from hub nodes.
+  - Edge crossings still form a fairly dense hairball despite the per-column degree
+    sort — that heuristic only orders each side independently and doesn't minimize
+    cross-column crossings; a barycenter/median-heuristic pass (even one iteration,
+    alternating sides) would visibly declutter the middle of the chart.
+  - There is no visual key for the weight encoding — line width and opacity vary with
+    edge weight, but nothing in the chart (subtitle, small legend note, or annotation)
+    tells the viewer what the thickness/opacity gradient means, so the encoding is
+    only inferable from the spec, not the plot itself.
+  - No node is visually called out as the focal point — with hub sizing already computed,
+    a subtle stroke or bolder label on the top 1-2 hub nodes per side would give the
+    chart a clearer narrative focus for DE-03.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "network-bipartite · javascript · chartjs · anyplot.ai" in bold dark ink, top-center legend "Authors" (green dot) / "Papers" (purple dot), all clearly visible against the light background. Author names (Chen, Diaz, Kumar, ...) are right-aligned left of the left column; paper names (Paper 1..16) are left-aligned right of the right column. All chrome text reads in dark ink on the cream background.
-      Data: Left column = author nodes in brand green #009E73, sized by degree (Costa, Silva, Chen, Novak, Tanaka, Osei visibly larger hubs; Ahmed a tiny isolated node with no edges). Right column = paper nodes in lavender #C475FD, also degree-sized. Edges are gray lines of varying width/opacity encoding weight, connecting only across the two columns (never within a column), producing a busy but readable bipartite crossing pattern.
-      Legibility verdict: PASS (all title/legend/label text is clearly readable against the light background; individual line-tracing in the densest crossing region is harder but that is a density/clutter issue, not a legibility failure).
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "network-bipartite · javascript · chartjs · anyplot.ai" in bold dark ink, clearly legible. Legend ("Authors" green dot, "Papers" lavender dot) below the title, also dark and legible. Twelve author names (Silva, Tanaka, Costa, Chen, Novak, Osei, Petrov, Brooks, Diaz, Kumar, Duran, Ahmed) run down the left in dark gray text; sixteen paper labels (Paper 1-16, reordered by degree) run down the right, also dark gray and legible against the cream background.
+      Data: Left-column nodes are brand green (#009E73), right-column nodes are Imprint lavender (#C475FD) — correct canonical palette order. Node radius visibly scales with degree (Costa, Chen, Silva, Tanaka are noticeably larger than Ahmed/Duran). Gray edges of varying width and opacity connect the two columns, brighter/thicker lines for higher-weight edges, in a dense but non-overlapping crossing pattern.
+      Legibility verdict: PASS — title, legend, and all node labels are clearly readable against the light background; no light-on-light text.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend now rendered in light ink/white text, clearly visible against the dark background. Axis-less layout unchanged. No dark-on-dark text anywhere — labels, title, and legend text are all light-colored and legible.
-      Data: Author (green #009E73) and paper (lavender #C475FD) node colors are identical to the light render — only the background and text/chrome flipped, confirming palette-position colors are theme-independent. Edge colors/opacities (drawn from t.inkSoft) correctly flipped to a light-gray tone visible against the dark background.
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; data colors match the light render exactly).
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title and legend, now rendered in light/white text, clearly legible against the dark background. Author and paper labels are light gray, fully readable with no dark-on-dark issues anywhere.
+      Data: Node colors are identical to the light render — same brand green and lavender hexes, confirming positions 1-8 of the Imprint palette stay constant across themes. Edge lines are a lighter gray (derived from the theme-adaptive inkSoft token) so they remain visible against the dark background at the same relative width/opacity as the light render.
+      Legibility verdict: PASS — all text and edges are clearly distinguishable from the near-black background; brand green and lavender nodes stand out well on dark.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, legend 16px, labels 14px
-          CSS); fully readable at native 3200x1800 in both themes, but node/paper
-          labels become very hard to read once downscaled to the ~400px mobile thumbnail.
+        comment: Title, legend, author/paper labels all clearly readable in both themes
+          at 17-22px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels are offset outside node radius and never collide with other
-          text or with edge lines.
+        comment: Labels sit outside node radius + 8px gap, edges terminate at node
+          centers behind the node circles, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node sizes scale well with degree; low-weight edges (alpha ~0.2)
-          from low-degree nodes are visible but hard to trace individually in the
-          dense crossing region.
+        comment: Nodes and edges visible, but dense crossing pattern in the middle
+          reduces at-a-glance clarity
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pairing is CVD-safe; weight is redundantly encoded
-          via width+opacity, not color alone.
+        comment: Green vs lavender is CVD-safe and redundantly encoded by left/right
+          column position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins top/bottom, plot area uses a healthy majority of
-          the canvas, legend sits near the plot.
+        comment: 3200x1800 canvas, title/legend well proportioned, no overflow or
+          clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No cartesian axes needed for a network layout; title is descriptive
-          and correctly formatted.
+        comment: No numeric axes needed for a network layout; title is descriptive
+          and correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (authors) is #009E73, second (papers) is palette position
-          2 (#C475FD); backgrounds and chrome are theme-correct in both renders.'
+        comment: 'First series #009E73, second #C475FD in canonical order; backgrounds
+          correct per theme'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -119,24 +115,21 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Custom plugin-driven edge/label rendering and dual weight encoding
-          go beyond a plain library default, but the unsorted node ordering produces
-          a visually noisy hairball rather than a fully polished composition.
+        comment: Degree-based node sizing and weight-based edge styling show real
+          design thought, but overall palette/typography stays fairly plain
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/grid fully removed, unboxed legend with matching point-style
-          swatches, generous whitespace around the two columns.
+        comment: No axes/spines/grid clutter, generous whitespace, subtle edge coloring
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Degree-based sizing creates a clear visual hierarchy highlighting
-          hub authors/papers and the isolated node, though the crossing density partially
-          competes with that story.
+        passed: false
+        comment: Hub clustering gives some hierarchy but no explicit focal-point callout
+          on the top hub node(s)
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bipartite layout: two node sets in separate columns, edges
-          only cross between sets.'
+        comment: Correctly built as a bipartite network via scatter + custom edge/label
+          plugin
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Column separation, set-membership color, degree-based sizing, weight-encoded
-          edges, and straight (non-curved) edges are all present.
+        comment: Two columns, color by set, degree-sized nodes, weight-encoded edges,
+          legible labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=0/1 columns and y-positions correctly map author/paper identity;
-          all nodes and edges are shown.
+        comment: source/target correctly mapped to left/right columns; all nodes and
+          edges shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels 'Authors'/'Papers'
-          correctly match the two node sets.
+        comment: Title matches mandated format exactly; legend labels 'Authors'/'Papers'
+          match the datasets
     data_quality:
       score: 15
       max: 15
@@ -178,22 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows hubs, low-degree nodes, an isolated node, and varying edge
-          weights — covers the plot type's main aspects.
+        comment: Shows node sets, degree, weight, and labels — all facets of a bipartite
+          network
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Author-paper affiliation network in bibliometrics — real, neutral,
-          comprehensible scenario.
+        comment: Author-paper affiliation network with plausible names and contribution
+          shares
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 authors, 16 papers, 1-3 co-authors per paper, weight 0.3-1.0 —
-          all plausible for the domain.
+        comment: 12 authors x 16 papers, ~1-3 authors/paper — within the spec's 10-50
+          nodes / 20-200 edges range
     code_quality:
       score: 10
       max: 10
@@ -203,56 +196,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with small, purpose-built helper functions; no classes.
+        comment: Small focused helper functions only where the Chart.js plugin API
+          and LCG require them
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG produces deterministic data.
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No external dependencies beyond the global Chart.js instance.
+        comment: No imports; uses only browser/Chart.js globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a chart type without native library support;
-          no fake UI/functionality.
+        comment: Appropriate complexity for a hand-built network layout, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract; animation disabled; single canvas appended.
+        comment: 'Canvas mounted into #container, animation: false, current Chart.js
+          4.x API'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses per-point callback styling and the chart's own scale API inside
-          a registered plugin — an expert, idiomatic Chart.js pattern.
+        comment: Correct use of scriptable options (pointRadius as function) and the
+          plugin lifecycle hooks
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: The beforeDatasetsDraw/afterDatasetsDraw plugin hooks synced to chart
-          scales are a Chart.js-specific mechanism not trivially replicated in another
-          library.
-  verdict: REJECTED
+        passed: false
+        comment: Custom plugin-based edge/label rendering is a legitimate Chart.js-native
+          workaround, but it's a common pattern for network-style charts rather than
+          a truly unique feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
