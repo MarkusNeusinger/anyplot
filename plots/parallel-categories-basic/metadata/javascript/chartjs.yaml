@@ -1,0 +1,277 @@
+library: chartjs
+language: javascript
+specification_id: parallel-categories-basic
+created: '2026-09-05T10:06:14Z'
+updated: '2026-09-05T10:24:30Z'
+generated_by: claude-sonnet
+workflow_run: 33959244851
+issue: 2501
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parallel-categories-basic/javascript/chartjs/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Interactivity gap from attempt 1 is fixed: tooltips now surface `flowLabel`/`nodeLabel`
+    text (e.g. "High → Technical: 22 tickets", "Resolved: 84 tickets") on hover, giving
+    the HTML detail view real path-tracing value as the spec''s ''interactive highlighting''
+    note calls for.'
+  - 'Data storytelling improved with an evidence-based highlight: the High-priority
+    → Escalated ribbons get bumped opacity/stroke (0.75/1.5 vs 0.55/1) with a comment
+    documenting the 71%/19%/3% escalation-rate finding that motivates the emphasis,
+    giving the diagram a clear focal point instead of uniform treatment of every flow.'
+  - Correctly hand-rolls a parallel-categories/alluvial diagram in Chart.js's core
+    'line' type despite the library having no native chart type for it — thick vertical
+    strokes for nodes, smoothstep-eased filled ribbons for flows, sized by a careful
+    segment-splitting algorithm that keeps a source category's color as a contiguous
+    block across both transitions. No external plugin or sibling library used, exactly
+    per the library's no-workarounds rule.
+  - 'Color-by-first-dimension (Priority) uses the Imprint palette in canonical order
+    (#009E73 High, #C475FD Medium, #4467A3 Low), identical across light/dark renders;
+    theme-adaptive chrome (backgrounds, ink, grid) is correct in both.'
+  - Realistic, neutral scenario (support-ticket routing by priority → department →
+    outcome) matches one of the specification's listed applications, with plausible
+    ticket-count magnitudes.
+  - No text/data overlap or edge clipping in either render; title format matches the
+    required pattern exactly; dimension labels (Priority/Department/Outcome) and per-node
+    category labels are all legible in both themes.
+  weaknesses:
+  - 'Code still departs substantially from the catalog''s usual KISS ''Imports → Data
+    → Plot → Save'' structure: 4 helper functions (hexToRgba, splitSegments, curvePoints,
+    addRibbon) plus multiple nested forEach loops building transition matrices (t0,
+    t1). Some complexity is inherent to hand-rolling a chart type Chart.js doesn''t
+    support natively, and attempt 2 added clarifying comments on t0/t1, but the structure
+    itself is unchanged from attempt 1.'
+  - Overlapping semi-transparent ribbons (alpha 0.55) still blend into muddied intermediate
+    colors where multiple priority flows cross between Department and Outcome, slightly
+    reducing at-a-glance color distinction in the busiest part of the diagram — carried
+    over from attempt 1, not addressed.
+  - The thinnest flow (Low priority → Account → Escalated, count=2 of ~195 total)
+    still renders as a barely-visible sliver ribbon — a minimum ribbon thickness or
+    small direct label for very low-count paths would help; carried over from attempt
+    1.
+  - Only 3 categorical dimensions with 2-3 values each, which is the low end of the
+    specification's stated range (3-6 dimensions, 2-8 values each) — a fourth dimension
+    or more values per dimension would better showcase the plot type's feature space.
+  - Categories are ordered by input order (High/Medium/Low, Technical/Billing/Account)
+    rather than reordered to minimize ribbon crossings, which the specification notes
+    as a way to improve readability — the diagram has more crossing ribbons than necessary
+    given the data.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "parallel-categories-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top. Below it a "Ticket priority" legend with three circular swatches (green/High, lavender/Medium, blue/Low). Three dimension labels "Priority", "Department", "Outcome" in dark text at the bottom edge, well clear of the canvas border. Category node labels ("High", "Medium", "Low", "Technical", "Billing", "Account", "Resolved", "Escalated") in bold dark ink sit directly above each vertical node block. All chrome text is clearly readable against the light background — no light-on-light issues found.
+      Data: Three columns of thick dark-grey ("inkSoft") node blocks connected by smooth, width-proportional ribbons colored by priority: green (#009E73) for High, lavender (#C475FD) for Medium, blue (#4467A3) for Low, all semi-transparent (alpha ~0.55) so overlapping flows blend into muted intermediate tones where paths cross. The two High-priority → Escalated ribbons are visibly bolder/more saturated (alpha 0.75, thicker stroke) than the rest, correctly calling out the escalation-rate insight. The thinnest flow (Low → Account → Escalated, count=2) is a faint sliver but not literally invisible.
+      Legibility verdict: PASS — all text readable, no overlap, no edge clipping (verified via right/left/top/bottom crops).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title, legend, dimension labels, and node labels, all re-colored to light ink tones (t.ink) and clearly legible against the dark background — no dark-on-dark failures found. Grid is not used (y-axis hidden per design), so no grid-contrast issue applies.
+      Data: Identical ribbon and node colors to the light render (green/lavender/blue for High/Medium/Low) — confirmed only chrome flipped, data-color hues unchanged. The highlighted High → Escalated ribbons remain visibly bolder here too.
+      Legibility verdict: PASS — all text readable, colors match the light render exactly, no dark-on-dark or clipping issues.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 22px, ticks 16px, node labels
+          15px, legend 13-14px); readable in both themes with no overlap.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data/legend collisions found in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ribbon width scales with count, but the count=2 flow is a barely-visible
+          sliver.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Overlapping semi-transparent ribbons blend into muddied intermediate
+          colors in the busiest crossing region, reducing at-a-glance distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off at any canvas edge, comfortable
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive dimension labels (Priority/Department/Outcome) plus per-node
+          category labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order (#009E73/#C475FD/#4467A3), correct theme-adaptive
+          backgrounds both renders.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Genuinely sophisticated: hand-built alluvial diagram from primitives,
+          careful segment-splitting to keep color blocks contiguous.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis spines/grid, y-axis hidden, generous whitespace, clean node
+          blocks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Evidence-based highlight on High→Escalated paths now gives a clear
+          focal point (fixed from attempt 1).
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parallel-categories/alluvial structure with width-proportional
+          ribbons.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Color-by-source, proportional ribbons, and interactive tooltips all
+          present; category ordering not optimized to minimize crossings.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All flows correctly sum to per-category totals across all three dimensions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required pattern exactly; legend labels correct.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: Only 3 dimensions / 2-3 values each, the low end of the spec's 3-6
+          dimension, 2-8 value range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral support-ticket routing scenario matching a listed
+          application.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ticket counts (2-30 per path, ~195 total) are sensible for the domain.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 1
+        max: 3
+        passed: false
+        comment: 4 helper functions plus nested transition-matrix construction; complexity
+          is largely inherent to the chart type but still far from the catalog's usual
+          simplicity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate (if elaborate) complexity for hand-rolling
+          an unsupported chart type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses core 'line' type creatively per the library's no-workarounds
+          rule, exactly as prescribed for unsupported chart types.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Reimplements an alluvial/Sankey-style diagram from line+fill primitives
+          with custom tooltip/legend filtering and a canvas text plugin — well beyond
+          generic usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

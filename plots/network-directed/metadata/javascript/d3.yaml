@@ -1,0 +1,270 @@
+library: d3
+language: javascript
+specification_id: network-directed
+created: '2026-09-05T09:48:38Z'
+updated: '2026-09-05T10:07:06Z'
+generated_by: claude-sonnet
+workflow_run: 33958677230
+issue: 2858
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Fixed the prior review's vertical-whitespace gap — every tier's node row now spans
+    the same normalized 0.08-0.92 fraction of plot height regardless of node count,
+    so the 4-node Foundation tier no longer leaves slack above/below the 3-node tiers
+  - 'Edge weight is now genuinely data-driven: d3.rollup computes each target''s in-degree
+    and a scaleLinear maps it to stroke-width (2-3.2px), so heavily-depended packages
+    like ''db'' and ''config'' visibly read thicker incoming arrows — this was an
+    explicit weakness in the prior review and is now resolved'
+  - 'Correct Imprint palette used in canonical order across all four tiers (#009E73,
+    #C475FD, #4467A3, #BD8233), with identical data colors and theme-correct chrome
+    in both light and dark renders'
+  - Custom SVG arrowhead marker precisely trimmed to the node circle boundary (both
+    source and target offsets computed from the curve tangent), so arrowheads land
+    exactly at the edge in every case
+  - Tier color-coding doubles smartly as the legend (headers colored to match node
+    fill), avoiding a separate legend box while keeping the mapping obvious
+  - Idiomatic D3 data-join pattern (selection.data(...).join(...)) for both nodes
+    and edges, plus quadratic-curve bowing that only activates for tier-skipping edges
+    to route them around intermediate nodes
+  weaknesses:
+  - Layout is still hand-placed fixed coordinates rather than one of D3's own layout
+    modules (d3-hierarchy tree/cluster, or d3.forceSimulation) — leaning on an idiomatic
+    D3 layout API would better showcase the library-specific strengths the spec explicitly
+    calls out (force-directed or hierarchical layout)
+  - With 18 edges routed through only 4 x-positions, many lines still cross without
+    visual differentiation beyond the new weight-based thickness — a touch more curve
+    separation or reduced opacity on non-adjacent-tier edges would further sharpen
+    the tier-to-tier flow story
+  - Node ID labels at 13px are on the smaller side relative to the 14px tick-label
+    baseline in the style guide — bump to ~14-15px for a bit more mobile-scale legibility
+    headroom
+  - Arrowhead marker (markerWidth/markerHeight=8) is only modestly sized relative
+    to the 26px node radius — a slightly larger marker would make direction read even
+    more clearly at a glance, per the spec's note on arrows being 'appropriately sized
+    relative to node size'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "network-directed · javascript · d3 · anyplot.ai" centered at top, clearly readable. Four tier headers ("ENTRY POINTS", "SERVICES", "MIDDLEWARE", "FOUNDATION") rendered in bold colored text matching each tier's node fill, acting as an implicit legend. Node ID labels beneath each circle are small but crisp dark text. Edge lines are a muted dark gray with visible triangular arrowheads pointing left-to-right, with visibly varying stroke widths (thicker into "db" and "config").
+      Data: 13 nodes across 4 left-to-right tiers colored with the Imprint palette in canonical order — Entry Points green (#009E73), Services lavender (#C475FD), Middleware blue (#4467A3), Foundation ochre (#BD8233). 18 directed edges, several curved to bow around intermediate nodes when skipping a tier, converge with visible fan-in on "db" and "config". Node rows now use the full vertical extent evenly across all four tiers.
+      Legibility verdict: PASS — all title, tier-header, and node-label text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and node labels flip to light/off-white text, fully legible against the dark surface. Tier headers keep their same colored text (green/lavender/blue/ochre) and remain clearly visible on dark. Edge lines flip to a light gray, providing good contrast against the dark background.
+      Data: Node fill colors are identical to the light render (#009E73 / #C475FD / #4467A3 / #BD8233) — confirms only chrome, not data color, flips between themes. Same 18-edge topology, fan-in pattern into "db"/"config", and weight-scaled stroke widths.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, tier headers, node labels) reads clearly against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, tier headers 14px, node
+          labels 13px); readable in both themes with no overlap. Node labels are slightly
+          on the small side for mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Nodes clearly visible at radius 26; arrowheads slightly enlarged
+          since prior review and read clearly; edge stroke-width now varies with in-degree
+          weight, adding visibility hierarchy.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4-hue CVD-safe categorical palette, good contrast against both backgrounds,
+          no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Prior review's uneven vertical whitespace is fixed — all four tiers
+          now use the same normalized vertical range, filling the canvas evenly with
+          no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a network graph; tier headers and node IDs are
+          descriptive and title is fully formed.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order across 4 tiers, identical data colors between
+          themes, theme-correct backgrounds and chrome.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color-as-legend design, data-driven edge weight, and clean
+          typography, clearly above a configured default, short of full publication
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle page-bg node strokes for separation, generous and now-even
+          whitespace usage, curved bows for tier-skip edges; some crossing-line noise
+          remains.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Left-to-right tiered flow, fan-in convergence into 'db'/'config',
+          and weight-scaled arrow thickness create a visible importance hierarchy,
+          though dense crossing edges still partly dilute the story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network graph with clear arrowheads showing direction.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Arrows clear and consistent, curved routing applied to tier-skipping
+          edges, and optional edge-weight now demonstrated via in-degree-scaled stroke
+          width.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 13 nodes and 18 edges are shown; layered x/y mapping is correct
+          and complete.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches exactly; tier-colored headers serve as an accurate,
+          matching legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows fan-in/fan-out, tier-skipping edges, and now weighted edges
+          (in-degree-scaled stroke width).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral software package dependency scenario matching
+          the spec's own example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Node/edge count and layered architecture are logically consistent
+          with a real software system.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: data, layout, one small geometry helper, render — no
+          unnecessary structure.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data and fixed layout.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the provided d3 global and ANYPLOT tokens are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately-scoped code; no fake UI or interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly mounts one svg to #container per the harness contract;
+          no animations.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper selection.data().join() pattern for nodes and edges, but layout
+          is still manual rather than via d3-hierarchy or d3-force.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG marker arrowhead trimmed to node boundary, tier-skip curve
+          bowing, and d3.rollup-based in-degree weighting are distinctive D3-level
+          techniques.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  patterns:
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - edge-highlighting
