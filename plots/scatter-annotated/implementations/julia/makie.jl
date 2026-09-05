@@ -26,18 +26,40 @@ company_names = [
 ]
 n = length(company_names)
 
-rd_spend = round.(exp.(randn(n) .* 0.5 .+ 2.5); digits=1)                 # R&D spend ($M)
+rd_spend = round.(exp.(randn(n) .* 0.4 .+ 2.5); digits=1)                 # R&D spend ($M)
+
+# Log-normal spend naturally throws a far-right tail; cap the single biggest
+# spender's gap above the rest to 20% of the remaining cluster's range so the
+# outlier still reads as notable without stranding the right side of the canvas.
+sorted_spend = sort(rd_spend)
+gap_cap = 0.2 * (sorted_spend[end-1] - sorted_spend[1])
+if maximum(rd_spend) - sorted_spend[end-1] > gap_cap
+    rd_spend[argmax(rd_spend)] = round(sorted_spend[end-1] + gap_cap; digits=1)
+end
+
 revenue_growth = round.(0.9 .* rd_spend .+ randn(n) .* 6 .+ 5; digits=1)  # Revenue growth (%)
 
 # Highlight a handful of notable points instead of labeling all 24: the
 # biggest / leanest spenders, the top / bottom growers, and the two
-# companies whose growth deviates most from the spend-growth trend.
+# companies whose growth deviates most from the spend-growth trend. Some
+# extremes coincide (e.g. the same company is both min-growth and
+# min-spend), so backfill with the next-most-extreme distinct index until
+# six distinct companies are highlighted.
 trend_residual = revenue_growth .- 0.9 .* rd_spend
-labeled_idx = unique([
-    argmax(revenue_growth), argmin(revenue_growth),
-    argmax(rd_spend), argmin(rd_spend),
-    argmax(trend_residual), argmin(trend_residual),
-])
+slot_rankings = [
+    sortperm(revenue_growth; rev=true), sortperm(revenue_growth),
+    sortperm(rd_spend; rev=true), sortperm(rd_spend),
+    sortperm(trend_residual; rev=true), sortperm(trend_residual),
+]
+labeled_idx = Int[]
+for ranking in slot_rankings
+    for idx in ranking
+        if idx ∉ labeled_idx
+            push!(labeled_idx, idx)
+            break
+        end
+    end
+end
 
 cx, cy = mean(rd_spend), mean(revenue_growth)
 x_range = maximum(rd_spend) - minimum(rd_spend)
@@ -76,8 +98,14 @@ ax = Axis(
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-scatter!(ax, rd_spend, revenue_growth;
+unlabeled_idx = setdiff(1:n, labeled_idx)
+scatter!(ax, rd_spend[unlabeled_idx], revenue_growth[unlabeled_idx];
     color = BRAND, alpha = 0.7, markersize = 16, strokewidth = 1, strokecolor = PAGE_BG)
+
+# Highlighted points get a larger, fully-opaque marker so the labeled
+# subset reads as a focal point even without the text/connector lines.
+scatter!(ax, rd_spend[labeled_idx], revenue_growth[labeled_idx];
+    color = BRAND, alpha = 1.0, markersize = 22, strokewidth = 1.5, strokecolor = PAGE_BG)
 
 # Push each label away from the data centroid so it lands in open space,
 # with a thin connector line back to its point.
