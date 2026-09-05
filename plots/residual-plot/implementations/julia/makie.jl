@@ -1,7 +1,7 @@
 # anyplot.ai
 # residual-plot: Residual Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 70/100 | Created: 2026-09-05
+# Quality: 94/100 | Created: 2026-09-05
 
 using CairoMakie
 using Colors
