@@ -5,7 +5,6 @@
 
 using CairoMakie
 using Colors
-using ColorSchemes
 using Random
 
 Random.seed!(42)
@@ -59,6 +58,9 @@ ax = Axis(
     title              = "heatmap-adjacency · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
+    subtitle           = "$(n_nodes) nodes, ordered by team",
+    subtitlesize       = 13,
+    subtitlecolor      = INK_SOFT,
     xlabel             = "Target",
     ylabel             = "Source",
     xlabelsize         = 14,
@@ -73,6 +75,18 @@ ax = Axis(
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
+    # Unlabeled per-node minor ticks confirm the true 30x30 node density
+    # underneath the 4 labeled team blocks.
+    xminorticksvisible = true,
+    yminorticksvisible = true,
+    xminorticks        = 0.5:1:(n_nodes + 0.5),
+    yminorticks        = 0.5:1:(n_nodes + 0.5),
+    xminortickalign    = 1,
+    yminortickalign    = 1,
+    xminortickcolor    = INK_SOFT,
+    yminortickcolor    = INK_SOFT,
+    xminorticksize     = 3,
+    yminorticksize     = 3,
     backgroundcolor    = PAGE_BG,
     aspect             = DataAspect(),
     # Enclosed heatmap grid — style-guide spine exception keeps all 4 sides.
