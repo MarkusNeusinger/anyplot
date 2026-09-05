@@ -1,0 +1,249 @@
+library: ggplot2
+language: r
+specification_id: histogram-cumulative
+created: '2026-09-05T04:17:11Z'
+updated: '2026-09-05T04:28:36Z'
+generated_by: claude-sonnet
+workflow_run: 33943920596
+issue: 2549
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-cumulative/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - geom_step(direction = "hv") plus geom_point() at each bin's right edge gives a
+    crisp, correctly-shaped ogive with clear bin-boundary markers
+  - Theme tokens (PAGE_BG, INK, INK_SOFT) are threaded through plot.background, panel.background,
+    axis.title, axis.text, and plot.title, so both renders are fully legible with
+    identical brand-green data color
+  - Realistic, neutral data story (cereal box packaging line targeting 500 g, n =
+    600, bin width 3 g) matches the spec's quality-control application example
+  - 'Minimal, refined chrome: only major horizontal gridlines, ticks removed, generous
+    whitespace, correct 3200x1800 canvas'
+  weaknesses:
+  - The 'Total (n = 600)' annotate() label is completely invisible in BOTH renders.
+    The y-axis panel has no headroom above 600 (the y=600 gridline sits flush against
+    the top panel border), and vjust = -0.7 pushes the text block entirely above that
+    line, so coord_cartesian's default clip = "on" clips 100% of the glyph pixels
+    — nothing renders. Fix by either giving the scale headroom (scale_y_continuous(expand
+    = expansion(mult = c(0, 0.08)))) or repositioning the label inside the panel (e.g.
+    vjust = 1.4, or hjust = 1, vjust = 1 with y slightly below n_total) so it is verifiably
+    visible.
+  - Because the total label never renders, the dashed reference geom_hline at y =
+    600 has no caption and just duplicates the '600' axis tick with an unexplained
+    dashed line — the intended storytelling payoff (labeling the plateau as the full
+    sample size) is lost.
+  - annotate() call is dead code in its current position (zero visible pixels in either
+    theme) — this is the kind of ineffective styling code that should either work
+    or be removed.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Title "histogram-cumulative · r · ggplot2 · anyplot.ai" in dark ink, ~48% of panel width, comfortably sized, not overflowing. Axis titles "Box fill weight (g)" (x) and "Cumulative count" (y) in dark ink, tick labels (480, 500, 520 / 0, 200, 400, 600) in soft dark gray. Only major horizontal gridlines shown, subtle and visible against the background. All text confirmed readable against the light background via pixel-level crop inspection.
+      Data: Single brand-green (#009E73) step line (direction="hv") with matching green point markers at each bin's right edge, monotonically increasing from 0 to 600. A dashed green horizontal reference line sits at y=600 but its accompanying "Total (n = 600)" text label is NOT visible anywhere in the render (confirmed by cropping the top-right quadrant and the full top strip at pixel level — no text pixels found near the line).
+      Legibility verdict: PASS for all rendered chrome/data text, but the annotate() label is a rendering FAILURE (renders zero pixels, effectively invisible) — flagged as a weakness, not a legibility contrast problem.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Same title and axis text, now in light ink (#F0EFE8) / soft light gray (#B8B7B0), fully legible against the dark background — no dark-on-dark failures observed. Gridlines are a light, subtle color, visible but not dominant.
+      Data: Identical brand-green (#009E73) step line and point markers as the light render — confirmed data colors do not shift between themes. Same dashed reference line at y=600 with the same missing "Total (n = 600)" annotation (confirmed via the same top-right/top-strip crops).
+      Legibility verdict: PASS for chrome and data; same annotate() rendering failure as the light render (theme-independent bug, not a dark-mode-specific contrast issue).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All rendered chrome/data text is readable and correctly sized in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step line and point markers clearly visible and appropriately sized
+          for ~20 bins
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast brand green, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Correct 3200x1800 canvas, no clipping at edges, but the annotate()
+          total label is fully clipped by the panel's zero headroom above y=600
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (g)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73, correct theme-adaptive backgrounds, identical
+          data color across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean step+point combination is a nice touch beyond a bare geom_step,
+          but overall fairly conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal grid (major-y only), no panel border, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Intended focal-point label (Total n) never renders, leaving an unexplained
+          dashed line and a weaker narrative than designed
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct step-based cumulative histogram (ogive)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Binned numeric variable, monotonic non-decreasing cumulative count,
+          step display all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = weight, y = cumulative count, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed for single
+          series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows full monotonic accumulation to n=600; only the count variant
+          is shown (proportion variant is optional per spec)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral QC packaging scenario matching the spec's application
+          list
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=600, bin width 3g sensible for sd=9g
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 + ragg, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: annotate() call renders zero visible pixels in both themes - dead
+          code as currently positioned
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_step/geom_point/geom_hline/annotate layering, proper
+          theme_minimal overrides
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: direction="hv" step control and per-step points are a nice touch
+          but overall usage is fairly standard
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  - cumulative-sum
+  styling:
+  - alpha-blending
