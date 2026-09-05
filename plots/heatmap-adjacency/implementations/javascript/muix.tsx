@@ -84,14 +84,27 @@ function AdjacencyCell(props) {
         const x0 = xScale(point.x) ?? 0;
         const y0 = yScale(point.y) ?? 0;
         const fill = point.z > 0 ? (colorGetter ? colorGetter(i) : color) : tokens.pageBg;
-        return <rect key={point.id} x={x0} y={y0} width={cellWidth} height={cellHeight} fill={fill} />;
+        const isTopLink = point.z === maxWeight;
+        return (
+          <rect
+            key={point.id}
+            x={x0}
+            y={y0}
+            width={cellWidth}
+            height={cellHeight}
+            fill={fill}
+            stroke={isTopLink ? tokens.ink : "none"}
+            strokeWidth={isTopLink ? 2 : 0}
+          />
+        );
       })}
     </g>
   );
 }
 
-// Thin page-background dividers at team boundaries so the block-diagonal
-// cluster structure reads at a glance, without relying on axis labels alone.
+// Ink-soft dividers at team boundaries (drawn at low opacity, distinct from
+// both the colored edges and the blank/absent-edge background) so the
+// block-diagonal cluster structure reads at a glance.
 function ClusterBoundaries() {
   const xScale = useXScale("col");
   const yScale = useYScale("row");
@@ -107,8 +120,9 @@ function ClusterBoundaries() {
         y1={drawingArea.top}
         x2={bx}
         y2={drawingArea.top + drawingArea.height}
-        stroke={tokens.pageBg}
-        strokeWidth={3}
+        stroke={tokens.inkSoft}
+        strokeOpacity={0.4}
+        strokeWidth={2}
       />,
       <line
         key={`h-${k}`}
@@ -116,8 +130,9 @@ function ClusterBoundaries() {
         y1={by}
         x2={drawingArea.left + drawingArea.width}
         y2={by}
-        stroke={tokens.pageBg}
-        strokeWidth={3}
+        stroke={tokens.inkSoft}
+        strokeOpacity={0.4}
+        strokeWidth={2}
       />,
     );
   }
@@ -129,10 +144,11 @@ export default function Chart() {
   const TITLE_HEIGHT = 76;
   const MARGIN_TOP = 50;
   const MARGIN_LEFT = 70;
-  const MARGIN_RIGHT = 90;
+  const MARGIN_RIGHT = 130;
   const MARGIN_BOTTOM = 40;
 
-  const chartWidth = width;
+  const LEGEND_EDGE_PADDING = 14;
+  const chartWidth = width - LEGEND_EDGE_PADDING;
   const chartHeight = height - TITLE_HEIGHT;
 
   return (
@@ -208,6 +224,8 @@ export default function Chart() {
             direction="column"
             length="55%"
             thickness={14}
+            minLabel={({ formattedValue }) => `${formattedValue} threads`}
+            maxLabel={({ formattedValue }) => `${formattedValue} threads`}
             labelStyle={{ fontSize: 12, fill: tokens.inkSoft, fontFamily: "inherit" }}
           />
         </ScatterChart>
