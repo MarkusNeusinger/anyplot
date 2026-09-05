@@ -12,8 +12,10 @@ set.seed(42)
 # --- Theme tokens -----------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID_LINE   <- scales::alpha(INK, 0.15)
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
@@ -38,12 +40,21 @@ transactions <- tibble::tibble(is_fraud = is_fraud, model_score = model_score) %
 decile_marks <- transactions %>%
   filter(rank %in% round(n() * seq(0.1, 1.0, by = 0.1)))
 
+callouts <- decile_marks %>%
+  filter(rank %in% round(n_transactions * c(0.1, 0.5))) %>%
+  mutate(label = sprintf("%.1fx @ %d%%", lift, round(pct_targeted)))
+
 # --- Plot ---------------------------------------------------------------
 p <- ggplot(transactions, aes(x = pct_targeted, y = lift)) +
   geom_hline(aes(yintercept = 1, color = "Random baseline"),
              linetype = "dashed", linewidth = 0.8) +
   geom_line(aes(color = "Model"), linewidth = 1.2) +
   geom_point(data = decile_marks, color = IMPRINT_PALETTE[1], size = 3) +
+  geom_text(
+    data = callouts, aes(label = label),
+    color = INK, size = 3.2, fontface = "bold",
+    nudge_y = 1, hjust = 0
+  ) +
   scale_color_manual(
     name   = NULL,
     values = c("Model" = IMPRINT_PALETTE[1], "Random baseline" = INK_SOFT)
@@ -58,7 +69,7 @@ p <- ggplot(transactions, aes(x = pct_targeted, y = lift)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major.y = element_line(color = GRID_LINE, linewidth = 0.3),
     panel.grid.major.x = element_blank(),
     panel.grid.minor  = element_blank(),
     axis.title        = element_text(color = INK,      size = 10),
@@ -68,7 +79,7 @@ p <- ggplot(transactions, aes(x = pct_targeted, y = lift)) +
     legend.position   = "inside",
     legend.position.inside = c(0.98, 0.98),
     legend.justification = c(1, 1),
-    legend.background = element_blank(),
+    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.key        = element_blank(),
     legend.text       = element_text(color = INK_SOFT, size = 8)
   )
