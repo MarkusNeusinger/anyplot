@@ -16,7 +16,7 @@ INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
-GRID_COLOR <- scales::alpha(INK, 0.08)
+GRID_COLOR <- scales::alpha(INK, 0.05)
 ANYPLOT_NEUTRAL <- INK
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
@@ -70,7 +70,7 @@ p <- ggplot(
   scale_linetype_manual(values = c("Churn model" = "solid", "Random targeting" = "dashed")) +
   scale_linewidth_manual(values = c("Churn model" = 1.8, "Random targeting" = 1.0)) +
   scale_x_continuous(
-    limits = c(0, 100), expand = expansion(mult = c(0, 0.02)),
+    limits = c(0, 100), expand = expansion(mult = c(0, 0.02), add = c(0, 6)),
     labels = scales::label_number(suffix = "%")
   ) +
   scale_y_continuous(
@@ -97,7 +97,8 @@ p <- ggplot(
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.background = element_rect(fill = ELEVATED_BG, color = NA),
     legend.position        = "inside",
-    legend.position.inside = c(0.80, 0.18)
+    legend.position.inside = c(0.80, 0.18),
+    plot.margin            = margin(t = 8, r = 22, b = 8, l = 8)
   )
 
 # --- Save -------------------------------------------------------------------
