@@ -1,3 +1,7 @@
+// anyplot.ai
+// point-basic: Point Estimate Plot
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-05
 //# anyplot-orientation: landscape
 // anyplot.ai
 // point-basic: Point Estimate Plot
