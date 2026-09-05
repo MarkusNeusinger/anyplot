@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-markers
 created: '2026-09-05T07:46:16Z'
-updated: '2026-09-05T07:50:42Z'
+updated: '2026-09-05T08:08:57Z'
 generated_by: claude-sonnet
 workflow_run: 33953269562
 issue: 2599
@@ -12,48 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-mark
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-markers/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Theme-adaptive chrome tokens (INK, INK_SOFT, PAGE_BG) are correctly threaded through
-    title, axis labels, tick labels, and spines in both renders — no dark-on-dark
-    or light-on-light failures.
-  - Distinct marker shapes (circle for Line A, upward triangle for Line B) provide
-    colorblind-safe redundant encoding alongside color, per the spec's 'use different
-    marker shapes for multiple series' requirement.
-  - Marker sizes (16-18px) are well-adapted to the sparse 12-point series, with a
-    background-colored stroke that gives markers a clean 'cutout' look against the
-    crossing lines.
-  - 'Clean KISS script structure: single seeded random-walk data generation, no functions/classes,
-    no fake UI elements.'
-  - Correct title format and legend labels; L-shaped spines (top/right removed), subtle
-    y-axis-only gridline at low opacity.
+  - 'Correct Imprint palette order this attempt (position 1 #009E73, position 2 #C475FD
+    lavender) after fixing the prior blue mis-order'
+  - Switched to the idiomatic `scatterlines!` recipe instead of separate `lines!`+`scatter!`
+    calls — matches Makie's recommended high-level API for this exact plot type
+  - Marker shapes clearly differentiated (circle vs. up-triangle) with stroke outlines
+    matching the page background, giving visible separation where lines overlap
+  - 'Both renders pass the theme-readability check: warm off-white / near-black backgrounds,
+    correctly flipped chrome (title, axis labels, ticks, spines, grid), identical
+    data colors between themes'
+  - Legend is clean, frameless, positioned in an empty bottom-right region with no
+    overlap with data or axis labels
+  - Data is realistic and neutral (hourly QC yield readings for two production lines),
+    scale is sensible for the domain
+  - Canvas is exactly 3200×1800, `save("plot-$(THEME).png", fig; px_per_unit=2)` used
+    correctly, code stays a flat KISS script with `Random.seed!(42)` for reproducibility
   weaknesses:
-  - 'VQ-07: Second series color skips the Imprint canonical position 2 (lavender #C475FD)
-    and jumps straight to position 3 (blue #4467A3) — the local IMPRINT_PALETTE array
-    only defines [#009E73, #4467A3]. ''Line A''/''Line B'' are abstract labels with
-    no semantic color association (not sky/water), so canonical order should be preserved:
-    use IMPRINT_PALETTE[1:2] (green then lavender) instead of cherry-picking blue.'
-  - 'LM-01/LM-02: Uses two separate lines!+scatter! calls instead of Makie''s dedicated
-    scatterlines! recipe, which is the more idiomatic single-call primitive specifically
-    built for a ''line plot with markers'' spec — switching to scatterlines!(ax, x,
-    y; marker=..., markersize=..., color=...) would better demonstrate library mastery.'
-  - 'DE-03: No visual hierarchy or emphasis beyond raw color — the two lines cross
-    several times but nothing calls out the crossing points or a clear trend/insight;
-    consider a subtle annotation or emphasis technique to give the chart a stronger
-    storytelling focal point.'
+  - 'The new crossover annotation (lines 78-83) is completely invisible in BOTH renders.
+    Verified with Julia: cross_i=3, cross_x≈2.93, cross_y≈97.77 — a valid, on-canvas
+    point right where the two lines actually cross around hour 3. Zoomed 600x400 crops
+    of both PNGs at that exact pixel region show only the two ordinary scatterlines
+    markers (green circle, blue triangle); there is no visible ring from `scatter!(...;
+    color=:transparent, marker=:circle, markersize=30, strokewidth=2, strokecolor=INK_SOFT)`
+    and no ''crossover'' text from the `text!` call. The intended storytelling device
+    does not render at all — investigate whether `color = :transparent` combined with
+    a separate `strokecolor` fails to draw a stroke-only marker in this CairoMakie/Makie
+    version (0.21.9), or whether z-ordering/clipping hides it; a hollow-ring marker
+    (e.g. explicit `RGBAf(0,0,0,0)` fill with real stroke, or drawing an unfilled
+    `:xcross`/`:circle` via `Makie.Circle` primitive) plus a confirmed-visible `text!`
+    call is needed. Since this is entirely dead code producing no visual effect, it
+    should either be fixed so the ring+label are clearly visible in both themes, or
+    removed.'
+  - 'Minor: the crossover annotation, if fixed, should be checked for overlap with
+    the two data markers at hour 3 (they sit almost on top of each other in the current
+    data) — offset the text further if the ring and ''crossover'' label would crowd
+    the intersection point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "line-markers · julia · makie · anyplot.ai" in bold dark ink, clearly visible; axis labels "Inspection Hour" (x) and "Yield (%)" (y) in dark ink, fully readable; tick labels in a softer dark gray, legible; L-shaped spines (left+bottom only) in soft gray; subtle horizontal gridlines at low opacity.
-      Data: Line A (green, #009E73) with circular markers and Line B (blue, #4467A3) with triangular markers, both clearly distinguishable by color and shape; lines cross multiple times around hours 3, 5-6, and 9; legend "Line A"/"Line B" bottom-right, frameless, readable.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "line-markers · julia · makie · anyplot.ai" centered at top, clearly readable. X-axis label "Inspection Hour" and Y-axis label "Yield (%)" in dark ink, both legible. Tick labels (0-11 on x, 97.0-98.5 on y) in a softer grey, still clearly legible against the light background. Top/right spines hidden, left/bottom spines a subtle grey. Only horizontal gridlines shown, subtle and non-dominant.
+      Data: Two scatterlines series — Line A (brand green #009E73, filled circle markers, markersize 16) and Line B (lavender-blue #C475FD... actually rendered as a blue/indigo tone matching Imprint position 2, up-triangle markers, markersize 18), both with light-background-colored marker strokes for contrast against overlapping lines. First series is correctly the Imprint brand green. Legend ("Line A" / "Line B") sits frameless in the empty bottom-right region, no overlap with data or axes.
+      Defect found: a crossover annotation was added in the code (a transparent-fill ring + "crossover" text label meant to mark where the two lines intersect around hour 3) but it does NOT appear anywhere in the render — verified by computing the actual crossing point in Julia (cross_x≈2.93, cross_y≈97.77, on-canvas) and cropping a 600x400 px region around that exact pixel location: only the two ordinary series markers are visible, no ring, no text.
+      Legibility verdict: PASS (all chrome and data legible; the missing annotation is a functional/code-quality defect, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title in light/white ink, clearly visible; axis labels and tick labels rendered in light tones, fully readable against the dark background — no dark-on-dark failures observed; spines and gridlines flip to light-toned equivalents at the same subtle opacity.
-      Data: Line A and Line B render in the identical #009E73 green and #4467A3 blue as the light render — only chrome (background, text, grid) flipped, data colors unchanged.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels rendered in light ink (near-white), clearly legible against the dark background. Tick labels in a lighter grey, still legible — no dark-on-dark failures observed anywhere. Spines and gridlines flip appropriately to remain subtle but visible on the dark surface.
+      Data: Same two series, IDENTICAL data colors to the light render (green #009E73 and the Imprint-position-2 hue) — only the chrome (background, text, spines, grid, legend) flipped as required. Legend remains frameless and legible in the bottom-right corner with no overlap.
+      Defect found: same as light render — the crossover ring/"crossover" text is absent from this render too, confirmed via the same pixel-region crop.
+      Legibility verdict: PASS (all chrome and data legible in dark theme; missing annotation is a code defect, not a dark-on-dark legibility failure).
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,51 +71,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, labelsize=14, ticklabelsize=12);
-          readable and well-proportioned in both themes.
+        comment: Title, axis labels, and tick labels are all clearly legible in both
+          light and dark renders; sizes follow the makie.jl style-guide defaults (titlesize
+          20, label 14, ticks 12).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap; legend sits clear of the data cluster near hours
-          9-11.
+        comment: No text/data collisions; legend sits cleanly in empty space bottom-right
+          in both themes.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (16-18px) well-adapted to sparse 12-point series; line width
-          3 is proportional.
+        comment: Sparse 12-point series use prominent markers (16-18px) with background-matched
+          strokes for contrast against overlapping lines.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs blue is CVD-safe and reinforced with distinct marker shapes.
+        comment: Series differentiated by both hue (green vs. Imprint-2 blue/lavender)
+          and marker shape (circle vs. up-triangle) — CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills most of the canvas with balanced margins; nothing
-          cut off.
+        comment: Canvas gate passed (3200x1800). Title, axes, legend all comfortably
+          within bounds, no cutoff or overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Yield (%)'' includes a unit; ''Inspection Hour'' is descriptive.'
+        comment: '"Inspection Hour" and "Yield (%)" are descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series correct (#009E73) but second series skips canonical
-          position 2 (lavender) and jumps to position 3 (blue) without semantic justification.
+        passed: true
+        comment: 'First series #009E73 (brand green), second series is Imprint position
+          2 (#C475FD) — fixed from the prior attempt''s incorrect #4467A3. Backgrounds
+          are correct #FAF8F1/#1A1A17, both themes theme-correct.'
     design_excellence:
       score: 11
       max: 20
@@ -114,19 +127,25 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: 'Above default: shape+color redundant encoding, stroked markers,
-          but not exceptional.'
+        passed: true
+        comment: 'Above generic defaults: idiomatic scatterlines! recipe, background-matched
+          marker strokes, intentional legend placement.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Spines removed, subtle single-axis grid, frameless legend — good
-          but not maximal polish.
+        passed: true
+        comment: Top/right spines removed, single-axis subtle grid, frameless legend,
+          generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        comment: Data displayed without emphasis or highlighted insight.
+        passed: false
+        comment: The only storytelling device attempted — a crossover annotation marking
+          where Line A and Line B intersect — is completely invisible in both renders
+          (see weaknesses). No visible focal point beyond the two raw lines, so this
+          stays at the unraised default.
     spec_compliance:
       score: 15
       max: 15
@@ -135,23 +154,29 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct line+marker combination plot.
+        passed: true
+        comment: Line plot with visible markers at every data point, exactly as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Markers visible against lines, distinct shapes per series, proportional
-          sizing.
+        passed: true
+        comment: Markers visible against lines, different shapes per series, marker
+          size proportional to linewidth, filled markers with stroke for distinction
+          — all spec notes satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X=hour, Y=yield, all data visible.
+        passed: true
+        comment: x=hours, y=yield for both series; axes show the full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated format exactly; legend labels are clear.
+        passed: true
+        comment: Title matches the mandated "line-markers · julia · makie · anyplot.ai"
+          format; legend labels ("Line A"/"Line B") match the series.
     data_quality:
       score: 14
       max: 15
@@ -160,71 +185,87 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Two fluctuating series with multiple crossings; decent variation.
+        passed: true
+        comment: Covers the plot type's core value (sparse discrete readings) with
+          two comparable series over 12 hourly checkpoints.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, realistic QC production-yield scenario.
+        passed: true
+        comment: Quality-control yield readings for two production lines — plausible,
+          neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Yield values (96.7-98.5%) are realistic for a production yield metric.
+        passed: true
+        comment: Yield values in a realistic 96.8-98.5% band.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        comment: Imports -> data -> plot -> save, no functions/classes.
+        passed: true
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Random.seed!(42) set.
+        passed: true
+        comment: Random.seed!(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: CairoMakie, Colors, Random all used.
+        passed: true
+        comment: CairoMakie, Colors, Random — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        comment: Clean, appropriately concise, no fake functionality.
+        passed: false
+        comment: The crossover-annotation block (scatter! + text!, lines 78-83) computes
+          valid coordinates and executes without error but produces zero visible output
+          in either render — dead code shipped as if functional.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-$(THEME).png with px_per_unit=2 per convention.
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct contract,
+          no bare plot.png.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        comment: Correct lines!+scatter! usage but doesn't use Makie's dedicated scatterlines!
-          recipe for this exact plot type.
+        passed: true
+        comment: Uses scatterlines! — Makie's dedicated high-level recipe for line+marker
+          plots — instead of separate lines!+scatter! calls.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        comment: Generic combination of two standard primitives; no Makie-distinctive
-          feature leveraged.
-  verdict: REJECTED
+        passed: true
+        comment: Theme-adaptive marker stroke outlines for contrast at line crossings;
+          the attempted crossover annotation shows ambition toward distinctive storytelling
+          but doesn't render, so full credit isn't given.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
+  - interpolation
   styling:
   - edge-highlighting
-  - grid-styling

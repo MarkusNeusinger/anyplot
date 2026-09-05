@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-markers: Line Plot with Markers
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 83/100 | Created: 2026-09-05
+# Quality: 85/100 | Created: 2026-09-05
 
 using CairoMakie
 using Colors
