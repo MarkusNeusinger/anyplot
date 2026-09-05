@@ -182,11 +182,11 @@ export default function Chart() {
           <ContinuousColorLegend
             axisId="count"
             axisDirection="z"
-            position={{ horizontal: "right", vertical: "bottom" }}
+            position={{ horizontal: "middle", vertical: "bottom" }}
             direction="row"
-            length="42%"
-            thickness={14}
-            minLabel={({ formattedValue }) => formattedValue}
+            length="62%"
+            thickness={12}
+            minLabel={({ formattedValue }) => `${formattedValue} points`}
             maxLabel={({ formattedValue }) => `${formattedValue} points`}
             labelStyle={{ fontSize: 14, fill: tokens.inkSoft, fontFamily: "inherit" }}
           />
