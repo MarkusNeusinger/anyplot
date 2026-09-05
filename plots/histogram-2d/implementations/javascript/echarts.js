@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-2d: 2D Histogram Heatmap
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
