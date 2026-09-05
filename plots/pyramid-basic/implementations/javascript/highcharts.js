@@ -20,6 +20,7 @@ const ageGroups = [
 ];
 const malePopulation = [2450, 2510, 2680, 2920, 3050, 3280, 2870, 1950, 980];
 const femalePopulation = [2340, 2400, 2550, 2810, 2990, 3210, 2950, 2180, 1420];
+const peakAgeGroup = "50-59"; // widest bulge on both sides, called out below
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -64,7 +65,7 @@ Highcharts.chart("container", {
     tickInterval: 1000,
     gridLineColor: t.grid,
     title: {
-      text: "Population (thousands)",
+      text: "Population",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
     labels: {
@@ -90,6 +91,19 @@ Highcharts.chart("container", {
       borderWidth: 0,
       pointPadding: 0.1,
       groupPadding: 0,
+      dataLabels: {
+        enabled: true,
+        style: {
+          color: t.ink,
+          fontSize: "13px",
+          fontWeight: "700",
+          textOutline: "none",
+        },
+        formatter() {
+          if (this.point.category !== peakAgeGroup) return null;
+          return `${Math.abs(this.y)}k peak`;
+        },
+      },
     },
   },
   series: [
