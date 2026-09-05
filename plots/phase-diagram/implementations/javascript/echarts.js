@@ -7,9 +7,11 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// Damped pendulum, small-angle approximation: theta'' + 2*zeta*omega*theta' + omega^2*theta = 0.
-// Three initial conditions all spiral into the same fixed point (theta=0, dtheta/dt=0),
-// revealing the shared basin of attraction of the damped system.
+// Linear damped oscillator: theta'' + 2*zeta*omega*theta' + omega^2*theta = 0.
+// This linearized model captures the phase-plane structure common to many damped
+// systems (spring-mass-damper, RLC circuit, weakly-driven pendulum). Three initial
+// conditions all spiral into the same fixed point (theta=0, dtheta/dt=0), revealing
+// the shared basin of attraction of the damped system.
 const OMEGA = 2.2; // natural frequency (rad/s)
 const ZETA = 0.12; // damping ratio (underdamped -> spiral, not overdamped decay)
 const DT = 0.02;
@@ -44,6 +46,19 @@ const trajectories = [
 const allPoints = trajectories.flatMap((traj) => traj.points);
 const thetaBound = Math.ceil(Math.max(...allPoints.map((p) => Math.abs(p[0]))) * 1.15 * 10) / 10;
 const omegaBound = Math.ceil(Math.max(...allPoints.map((p) => Math.abs(p[1]))) * 1.15 * 10) / 10;
+
+// Pick the quadrant corner farthest from every trajectory point, so the
+// "Equilibrium" callout label never lands on top of the converging spirals.
+const labelCandidates = [
+  [0.62 * thetaBound, 0.62 * omegaBound],
+  [-0.62 * thetaBound, 0.62 * omegaBound],
+  [-0.62 * thetaBound, -0.62 * omegaBound],
+  [0.62 * thetaBound, -0.62 * omegaBound],
+];
+const [labelX, labelY] = labelCandidates.reduce((best, candidate) => {
+  const minDist = (pt) => Math.min(...allPoints.map((p) => Math.hypot(p[0] - pt[0], p[1] - pt[1])));
+  return minDist(candidate) > minDist(best) ? candidate : best;
+});
 
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -119,15 +134,38 @@ chart.setOption({
       type: "scatter",
       data: [[0, 0]],
       symbol: "diamond",
-      symbolSize: 26,
+      symbolSize: 18,
       itemStyle: { color: t.ink, borderColor: t.pageBg, borderWidth: 2 },
+      label: { show: false },
+      z: 10,
+    },
+    // Leader line from the true fixed point to the callout label, placed in
+    // whichever corner sits farthest from the converging trajectories.
+    {
+      type: "line",
+      data: [
+        [0, 0],
+        [labelX, labelY],
+      ],
+      showSymbol: false,
+      silent: true,
+      lineStyle: { type: "dashed", width: 1.5, color: t.inkSoft, opacity: 0.6 },
+      z: 9,
+    },
+    {
+      type: "scatter",
+      data: [[labelX, labelY]],
+      symbol: "circle",
+      symbolSize: 6,
+      itemStyle: { color: t.ink },
       label: {
         show: true,
-        formatter: "Equilibrium",
-        position: "top",
+        formatter: "Equilibrium\n(θ=0, dθ/dt=0)",
+        position: [labelX >= 0 ? 10 : -10, labelY >= 0 ? -10 : 10],
+        align: labelX >= 0 ? "left" : "right",
+        verticalAlign: labelY >= 0 ? "bottom" : "top",
         color: t.ink,
         fontSize: 14,
-        distance: 12,
       },
       z: 10,
     },
