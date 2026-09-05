@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: lift-curve
 created: '2026-09-05T06:17:14Z'
-updated: '2026-09-05T06:21:53Z'
+updated: '2026-09-05T06:31:59Z'
 generated_by: claude-sonnet
 workflow_run: 33949186126
 issue: 2379
@@ -12,51 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Correct Imprint palette usage: brand green #009E73 for the model-lift line, identical
-    across light and dark renders'
-  - 'Theme-adaptive chrome is fully correct: warm cream/near-black backgrounds, ink-toned
-    text, subtle y-axis-only grid'
-  - Decile markers (every 10%) directly satisfy the spec's suggestion to highlight
-    key percentiles
-  - Dashed neutral reference line at y=1 clearly represents the 'no lift' random-selection
-    baseline required by the spec
-  - Deterministic, seeded LCG used for in-browser data generation since the browser
-    has no seeded Math.random()
-  - Axis tick callbacks format values with units directly ('%' on x, 'x' ratio suffix
-    on y)
-  - Realistic, neutral fraud-detection scenario with a plausible lift curve shape
-    (noisy near the top decile, converging smoothly to 1x)
+  - 'Baseline legend swatch is now an explicit hollow ring (pointBackgroundColor:
+    t.pageBg, pointBorderColor: t.ink) that reads clearly on both the cream light
+    background and the near-black dark background - the prior low-contrast issue is
+    fully resolved'
+  - New decileCallout plugin draws explicit '3.1x at 10%' and '2.4x at 30%' numeric
+    labels, directly satisfying the spec's suggestion to show actual values at key
+    percentiles
+  - The 10% decile marker is enlarged to radius 8 versus 6 for other deciles, creating
+    a clear single focal point that the callout labels reinforce - a legitimate visual-hierarchy
+    improvement over the prior attempt
+  - 'Correct Imprint palette: brand green #009E73 for the model-lift line, identical
+    across both themes'
+  - 'Theme-adaptive chrome fully correct: warm cream/near-black backgrounds, ink-toned
+    text, subtle y-axis-only grid, no dark-on-dark or light-on-light failures'
+  - Deterministic, seeded LCG for reproducible in-browser data generation; realistic,
+    neutral fraud-detection scenario with a plausible converging lift curve shape
+  - Axis tick callbacks format values with units directly ('%' on x, 'x' ratio on
+    y)
+  - Custom Chart.js plugin using the afterDatasetsDraw lifecycle hook to draw canvas-native
+    callout text is a genuinely library-specific technique, not something trivially
+    ported from another charting library
   weaknesses:
-  - The 'Random baseline (no lift)' legend swatch renders as a low-contrast, near-invisible
-    pale circle in the light theme because pointBackgroundColor is never set for that
-    dataset, so Chart.js falls back to its own default fill — set an explicit background
-    (e.g. t.pageBg or t.ink) so the swatch reads clearly on both themes
-  - 'Design excellence sits close to a well-configured default: the treatment doesn''t
-    go far beyond the spec''s baseline ask (dashed reference + decile markers) — consider
-    one added storytelling touch, e.g. annotating the lift value at a key decile,
-    or varying marker emphasis to create a stronger single focal point'
-  - Spec explicitly suggests 'showing decile markers or actual values at key percentiles'
-    but only marker positions hint at deciles — adding a small numeric callout (e.g.
-    '3.1x at 10%') on one or two key points would strengthen both feature coverage
-    and data storytelling
+  - Aesthetic sophistication still reads as a well-configured default plus two targeted
+    fixes rather than a fully bespoke composition - e.g. no subtle background band
+    or secondary visual cue distinguishing the 'good' zone (lift > 1) from the 'no
+    better than random' zone
+  - Only 2 of 9 decile markers (10%, 30%) carry explicit callouts - a third callout
+    further along the curve (e.g. 50% or 70%) would make the diminishing-returns story
+    even clearer without crowding the chart
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "lift-curve · javascript · chartjs · anyplot.ai" centered at top; dark "Population Targeted (%)" and "Cumulative Lift Ratio" axis titles; soft dark-gray tick labels formatted with "%" and "x" suffixes; subtle horizontal gridlines only (no vertical gridlines); legend top-right with two entries.
-      Data: Single green (#009E73) line falling from ~3.75x at 1% down to 1.0x at 100%, with filled green decile markers every 10%; a dark dashed horizontal reference line at y=1x labeled "Random baseline (no lift)" in the legend.
-      Legibility verdict: PASS — all title/axis/tick text is clearly readable against the light background. Minor note: the "Random baseline" legend swatch (a hollow circle) renders with low fill contrast against the cream background, though it remains discernible.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "lift-curve · javascript · chartjs · anyplot.ai" centered at top; dark axis titles "Population Targeted (%)" / "Cumulative Lift Ratio"; soft dark-gray tick labels formatted with "%" and "x" suffixes; subtle horizontal-only gridlines. All title/axis/tick text is clearly readable against the light background - no light-on-light issues.
+      Data: A single green (#009E73) line falls from ~3.75x at 1% to 1.0x at 100%, with filled green decile markers every 10% (larger radius-8 marker at the 10% focus point). Two bold callout labels read "3.1x at 10%" and "2.4x at 30%" directly above their markers, clearly legible and non-overlapping with the curve. A dark dashed horizontal reference line at y=1x ("Random baseline (no lift)") runs the full width. Legend top-right shows a solid green dot for "Model lift" and a hollow ring (light fill, dark ink border) for "Random baseline (no lift)" - the ring is now clearly visible against the cream background, resolving the prior low-contrast issue.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render with all text flipped to light tones (white/light-gray title, axis titles, and tick labels); gridlines are light and subtle; legend top-right with the same two entries, now in light text.
-      Data: The model-lift line and decile markers are the identical #009E73 green as the light render; the dashed baseline reference line is now light-colored to match the ink-on-dark chrome, still positioned at y=1x.
-      Legibility verdict: PASS — no dark-on-dark text found; all title, axis, and tick labels are clearly legible against the near-black background. The baseline legend swatch is a light hollow circle, readable here (better contrast than in light theme).
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Identical layout with all text flipped to light tones (white/light-gray title, axis titles, tick labels); gridlines are light and subtle; legend unchanged in position. All text is clearly legible against the near-black background - no dark-on-dark failures found.
+      Data: The model-lift line, decile markers, and callout labels ("3.1x at 10%", "2.4x at 30%") use the exact same #009E73 green and ink-toned label color as the light render - confirmed identical data colors, only chrome flipped. The dashed baseline line is light-colored to match dark-theme chrome. The legend's hollow ring for "Random baseline" now has a light-colored border and reads with strong contrast against the near-black background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -64,74 +66,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit (title 22, axis titles 18, ticks 14, legend
-          16); readable in both themes; no overflow or clipping
+        comment: All font sizes explicitly set; readable and well-proportioned in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlap; new callout labels sit clear of the curve and other markers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line and decile markers well-sized for ~100 plotted points; markers
-          only on deciles avoids clutter
+        comment: Decile markers and enlarged focus marker (radius 8) are well-adapted
+          to the line density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '''Random baseline'' legend swatch has low fill contrast against
-          the light-theme background due to unset pointBackgroundColor'
+        passed: true
+        comment: 'Fixed: baseline legend swatch now uses explicit pointBackgroundColor/pointBorderColor
+          and reads clearly as a hollow ring on both themes'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; legend integrated
-          near the plot area
+        comment: Balanced margins, plot fills a healthy share of the canvas, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units baked into tick formatting ('%'
-          and 'x')
+        comment: Descriptive axis labels with units ('%' and 'x' ratio)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds and
-          chrome are theme-correct in both renders'
+        comment: 'First series is #009E73, identical across themes; backgrounds theme-correct'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured but close to standard theme application; doesn't
-          reach a distinctly custom or highly polished look
+        comment: Improved from prior attempt (focal marker + callouts) but still close
+          to a refined default rather than a fully bespoke composition
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid, generous whitespace, clean legend — some
-          refinement visible beyond defaults
+        comment: Y-axis-only subtle grid, generous whitespace, clean legend - unchanged
+          from prior attempt
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Decile markers plus dashed random-baseline create a clear model-vs-random
-          comparison, though no explicit value callouts
+        comment: Enlarged focus marker plus two explicit numeric callouts now guide
+          the viewer directly to the key insight (3.1x at 10%)
     spec_compliance:
       score: 15
       max: 15
@@ -141,51 +141,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line-chart lift curve
+        comment: Correct lift curve as a line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 0-100% x-axis, cumulative lift y-axis, y=1 reference line, and decile
-          markers all present
+        comment: Baseline reference line at y=1, decile markers, and now explicit
+          percentile values - all spec notes covered
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = percent targeted, Y = lift ratio, full 0-100% range shown
+        comment: X = population targeted %, Y = cumulative lift ratio, correctly assigned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels are clear and
-          correct
+        comment: Title format correct; legend labels match datasets
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Realistic noisy-then-converging lift shape and decile markers shown;
-          no explicit numeric value labels at key percentiles
+        comment: Realistic noisy-then-converging shape plus explicit numeric values
+          at key percentiles, per spec suggestion
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world fraud-detection targeting scenario
+        comment: Neutral, plausible fraud-detection scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lift values (~3.75x down to 1.0x) are realistic for a moderately
-          strong classifier
+        comment: Lift values and convergence to 1.0x at 100% are factually consistent
+          with how lift is defined
     code_quality:
       score: 10
       max: 10
@@ -195,35 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> mount -> chart; the tiny LCG factory is
-          the library-recommended pattern for seeded randomness in-browser
+        comment: Linear imports -> data -> plugin -> chart structure, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) makes generation fully deterministic
+        comment: Fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies solely on the injected Chart global
+        comment: No imports beyond the global Chart.js
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise, no fake UI or over-engineering
+        comment: The added plugin is a small, appropriate use of Chart.js's plugin
+          API, not over-engineered
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts canvas into #container, animation disabled, current Chart.js
-          API'
+        comment: 'Mounts to #container, animation: false, current Chart.js v4 API'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,22 +229,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct linear x-scale for percentage data, tick callbacks, top-aligned
-          legend with point-style markers
+        comment: Scriptable options and dataset config used idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Scriptable pointRadius function (per-index conditional sizing) is
-          a genuinely Chart.js-specific technique
-  verdict: REJECTED
+        comment: Custom plugin hooking afterDatasetsDraw to draw canvas-native callouts,
+          plus scriptable per-index pointRadius - both distinctly Chart.js-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
-  styling:
-  - grid-styling
+  styling: []
