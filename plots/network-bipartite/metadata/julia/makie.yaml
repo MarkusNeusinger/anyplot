@@ -1,0 +1,258 @@
+library: makie
+language: julia
+specification_id: network-bipartite
+created: '2026-09-05T09:57:44Z'
+updated: '2026-09-05T10:17:09Z'
+generated_by: claude-sonnet
+workflow_run: 33958958210
+issue: 5247
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Correct bipartite structure: genes and diseases in two clearly separated columns,
+    color-coded by set membership (green genes / blue diseases)'
+  - 'All required encodings present: node size scales with degree (hub diseases like
+    Huntington''s Disease, Type 1 Diabetes, Cystic Fibrosis, Muscular Dystrophy clearly
+    stand out), edge width and opacity scale with association strength'
+  - Vectorized linesegments! call with per-segment color/linewidth vectors replaces
+    the prior per-edge lines! loop — idiomatic and more performant Makie usage
+  - Vertical canvas utilization noticeably improved versus the previous attempt (tighter
+    max_y/ylims and larger fonts/markers fill more of the 3200x1800 canvas)
+  - 'Clean minimalist chrome: no spines/ticks/gridlines, unobtrusive horizontal legend,
+    node stroke color matches page background creating a halo effect that separates
+    markers from overlapping edges'
+  - 'Correct theme handling: data colors identical between light/dark renders, backgrounds/text/legend
+    correctly flip per theme'
+  - Realistic, neutral gene-disease association dataset with plausible association-strength
+    values
+  weaknesses:
+  - 'Horizontal canvas usage is still limited: measured content bounding box spans
+    only ~48% of canvas width (x≈922 to x≈2456 of 3200px), with ~29% left margin and
+    ~23% right margin — the xlims! tightening from (-1.0, 2.0) to (-0.95, 1.85) was
+    too small a change to meaningfully close the gap the previous review flagged;
+    widening the column separation or reducing xlims! padding further would let the
+    two columns fill closer to 60-70% of width.'
+  - With 24 total labeled nodes, gene/disease labels remain slightly tight at very
+    small preview widths (e.g. 400px thumbnail) — a further modest fontsize increase
+    (or trimming a couple of the longest disease names) would help legibility hold
+    up better at reduced scale.
+  - 'Library Mastery is now solid but could go further: the vectorized linesegments!
+    call is a good idiomatic step, but the plot still doesn''t leverage other distinctive
+    Makie features (e.g. custom Colorbar-driven weight legend, or NetworkLayout-style
+    curved Bezier edges via a manual path) that would push Library Mastery higher.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "network-bipartite · julia · makie · anyplot.ai" centered at top in dark ink, fully readable. Horizontal, frameless legend ("Genes" green dot, "Diseases" blue dot) directly beneath the title, also fully readable. No axis ticks/labels/gridlines (appropriate — this is a network diagram, not a Cartesian plot).
+      Data: Genes (green #009E73) form the left column with labels to the left of each node; diseases (blue, Imprint palette position 3) form the right column with labels to the right of each node. Edges are dark-ink lines whose opacity and width scale with association strength. Node size scales with degree, clearly highlighting hub diseases (Huntington's Disease, Type 1 Diabetes, Cystic Fibrosis, Muscular Dystrophy). Measured content bounding box: x≈922-2456 of 3200px (~48% width), y≈39-1515 of 1800px (~82% height including title/legend). All text is clearly readable against the light background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout and legend, now rendered in light ink (#F0EFE8), fully legible. No dark-on-dark issues observed anywhere — title, legend, and all 24 node labels are clearly visible against the dark background.
+      Data: Node colors (green genes, blue diseases) are pixel-identical to the light render — only chrome (background, text, edge line color) flips, as required. Edge lines render as light gray, retaining the same alpha/width weight encoding and remaining visible without looking harsh.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit fontsizes (17pt labels, 20pt title), readable in both themes;
+          slightly tight at 400px thumbnail with 24 labeled nodes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node size by degree, edge width/opacity by weight, both clearly visible
+          and well-adapted
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue is CVD-safe, good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Vertical fill improved (~65-82% of height); horizontal fill measured
+          only ~48% of width, still short of the 50-80% 'perfect' band
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; no axes needed for a network diagram
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73; backgrounds correct per theme;
+          data colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Degree-based sizing, weight-based edge styling, background-matched
+          node strokes show real design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/ticks/gridlines removed, clean chrome; whitespace still somewhat
+          uneven horizontally
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Size + opacity encodings clearly draw the eye to hub nodes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bipartite layout, two clearly separated columns
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Column separation, color by set, size by degree, edge width/opacity
+          by weight, non-overlapping labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All genes/diseases plotted, source/target/weight mapped correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match (Genes/Diseases)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bipartite structure, hub highlighting, weight encoding all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Gene-disease associations are a realistic, neutral bioinformatics
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 14 genes / 10 diseases, edge count within spec range, plausible weights
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/scatter!/linesegments!/text!/axislegend usage throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Vectorized linesegments! with per-segment color/linewidth vectors
+          is a genuine Makie-specific technique, though still fairly standard scatter/text
+          primitives elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - Colors
+  techniques:
+  - network-graph
+  - bipartite-layout
+  - node-degree-encoding
+  - edge-weight-encoding
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - degree-computation
+  - weight-normalization
+  styling:
+  - publication-ready
+  - alpha-blending
+  - theme-adaptive-chrome
