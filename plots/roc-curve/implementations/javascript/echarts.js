@@ -18,16 +18,14 @@ function makeLcg(seed) {
   };
 }
 
-function randNormal(random, mean, stdDev) {
-  const u1 = Math.max(random(), 1e-9);
-  const u2 = random();
-  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  return mean + z * stdDev;
-}
-
 function sampleScores(seed, mean, stdDev, count) {
   const random = makeLcg(seed);
-  return Array.from({ length: count }, () => randNormal(random, mean, stdDev));
+  return Array.from({ length: count }, () => {
+    const u1 = Math.max(random(), 1e-9);
+    const u2 = random();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    return mean + z * stdDev;
+  });
 }
 
 function rocCurve(negScores, posScores) {
@@ -113,7 +111,7 @@ chart.setOption({
     max: 1,
     interval: 0.2,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
@@ -127,7 +125,7 @@ chart.setOption({
     max: 1,
     interval: 0.2,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
@@ -153,6 +151,13 @@ chart.setOption({
       showSymbol: false,
       lineStyle: { color: t.palette[0], width: 3.5 },
       itemStyle: { color: t.palette[0] },
+      areaStyle: { color: t.palette[0], opacity: 0.12 },
+      markArea: {
+        silent: true,
+        label: { show: false },
+        itemStyle: { color: t.palette[0], opacity: 0.07 },
+        data: [[{ coord: [0, 1] }, { coord: [0.22, 0.82] }]],
+      },
       z: 3,
     },
     {
