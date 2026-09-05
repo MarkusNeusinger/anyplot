@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: dot-matrix-proportional
 created: '2026-09-05T00:16:47Z'
-updated: '2026-09-05T00:20:26Z'
+updated: '2026-09-05T00:30:04Z'
 generated_by: claude-sonnet
 workflow_run: 33932081647
 issue: 5241
@@ -12,41 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dot-matri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dot-matrix-proportional/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Grid size (20x10=200) matches the total exactly, with dots filled left-to-right,
-    top-to-bottom continuously across categories
-  - 'First series correctly uses Imprint brand green #009E73; neutral/negative categories
-    use the documented semantic-anchor exception order'
-  - Legend shows category name, raw count, and percentage per group, satisfying the
-    spec's count/percentage annotation suggestion
-  - Subtle per-dot border matching the page background gives clean visual separation
-    without extra chrome
-  - Clean, deterministic, KISS-structured code; correct mount-node contract, animation
-    disabled, canvas dimensions on target
-  - Both renders pass the theme-readability check - identical data colors, fully legible
-    chrome in both themes, no clipping
+  - First categorical series correctly uses Imprint brand green (#009E73); the semantic
+    red for the negative category and the theme-adaptive muted gray for the neutral
+    category form a thoughtful, deliberate color mapping rather than a raw palette
+    cycle.
+  - The dashed ink border on the 'Dissatisfied' dots adds a non-color secondary cue,
+    keeping the two sentiment extremes distinguishable under red-green color-vision
+    deficiency.
+  - The markArea highlight plus the 'Majority — 59%' label is a genuine native-ECharts
+    data-storytelling touch that surfaces the key insight at a glance and showcases
+    a library feature beyond a generic scatter port.
+  - Legend entries embed both count and percentage per category, satisfying the spec's
+    suggestion to add count/percentage annotations alongside the legend.
+  - 'Theme-adaptive chrome is clean and correct in both renders: warm off-white /
+    near-black backgrounds, fully legible title and legend text, identical data colors
+    between themes.'
   weaknesses:
-  - Red (Dissatisfied) vs. green (Satisfied) is the sole color-coded distinction for
-    the two sentiment extremes, with no secondary encoding - a red-green CVD accessibility
-    gap
-  - Design stays close to a functional grid-of-circles; nothing beyond the border-separation
-    touch creates additional visual hierarchy
-  - Library usage is generic scatter series; no ECharts-distinctive feature (e.g.
-    graphic elements, effectScatter) is used to elevate it beyond a baseline port
+  - The 'Majority — 59%' markArea label is set at fontSize 13, which shrinks to only
+    a few pixels at the ~400px mobile thumbnail and becomes illegible there, even
+    though the title and legend remain readable at that size.
+  - The markArea highlight rectangle only spans full grid rows (floor(118/20) = 5
+    rows = 100 dots), so 18 of the 118 'Satisfied' dots (the partial 6th row) sit
+    outside the highlighted region despite belonging to the same category — a slight
+    visual mismatch with the '59%' label, which refers to all 118 dots.
+  - Design is still fundamentally a plain grid of uniform circles; beyond the majority
+    callout and dashed accent border there is limited additional visual hierarchy
+    or refinement to push it into publication-grade territory.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title centered at top in dark ink, legend centered at bottom in softer ink tone with category/count/percentage labels. All text clearly readable against the light background.
-      Data: 20x10 grid of 200 uniform circular dots, filled left-to-right, top-to-bottom. First 118 dots are Imprint brand green (#009E73, "Satisfied"), next 52 are muted gray ("Neutral"), final 30 are semantic red ("Dissatisfied"). Each dot has a thin border matching the page background for separation.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), consistent with the Imprint light theme.
+      Chrome: Title "dot-matrix-proportional · javascript · echarts · anyplot.ai" in dark ink, centered top, clearly readable. Legend at bottom-center lists "Satisfied — 118 (59%)", "Neutral — 52 (26%)", "Dissatisfied — 30 (15%)" in soft dark gray text, fully legible. A small "Majority — 59%" label sits inside a pale green highlight box over the top-left of the grid; legible at full resolution but shrinks to unreadable at mobile thumbnail size.
+      Data: A 20×10 grid of 200 uniform circles filled left-to-right, top-to-bottom. First ~118 dots are brand green (#009E73, matching the Imprint categorical position 1), next 52 are a theme-adaptive muted gray, and the final 30 are a semantic red with a dashed dark border. Non-accent dots have a subtle background-colored ring separating adjacent circles.
+      Legibility verdict: PASS (all chrome text readable against the light background; only the small majority annotation degrades at mobile scale).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and legend render in light ink, clearly legible against the dark surface. No dark-on-dark issues observed.
-      Data: Identical dot colors and grid layout to the light render - green/gray/red data colors confirmed unchanged; only chrome (background, text color) flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), consistent with the Imprint dark theme.
+      Chrome: Same title and legend text now rendered in light ink/gray, clearly readable against the dark background — no dark-on-dark failures observed. The majority highlight box is a subtle dark-green tint with a light-colored label, still legible at full size.
+      Data: Identical dot colors and layout to the light render — green, gray, and red positions and hues match exactly; only the dashed border on the red dots switches from dark ink to a light color to stay visible against the dark background, and the thin rings between green/gray dots now pick up the dark page background.
+      Legibility verdict: PASS (all chrome text and data markers read clearly on the dark surface; data colors confirmed identical to the light render).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -54,72 +60,78 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: Explicit font sizes, fully legible in both themes
+        comment: Title and legend explicitly sized and readable in both themes; the
+          'Majority' markArea label (fontSize 13) becomes illegible at the ~400px
+          mobile thumbnail.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean grid, no collisions
+        comment: No collisions between title, grid, legend, or annotation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Uniform 44px dots, well spaced for 200-point grid
+        comment: 44px uniform dots are clearly visible and well-spaced for a 200-dot
+          grid.
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Red vs. green sole signal for sentiment extremes - CVD accessibility
-          gap
+        passed: true
+        comment: Dashed border on the red category gives a non-color CVD-safe secondary
+          cue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced proportions, correct 3200x1800 canvas, nothing cut off
+        comment: Grid + legend occupy a balanced ~60-65% of the canvas with even margins;
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed; title format matches spec
+        comment: No traditional axes needed for a dot matrix; title format is correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, semantic-anchor exception for neutral/negative,
-          theme-correct backgrounds'
+        comment: 'First series is #009E73, chrome and backgrounds are theme-correct
+          in both renders, data colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Semantic color mapping and dot-border touch, but reads as a functional
-          grid
+        comment: Semantic color mapping, dashed accent border, and cutout-style dot
+          rings are thoughtful choices clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Hidden axes, generous whitespace, minimal further refinement
+        comment: Axes hidden, generous whitespace, subtle highlight fill; minor polish
+          still possible.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Continuous fill order gives an at-a-glance proportion read, no additional
-          emphasis
+        comment: The majority highlight + label creates a focal point, but the highlight
+          box covers only 100 of 118 dots and the label is illegible at mobile scale,
+          undercutting the story slightly.
     spec_compliance:
       score: 15
       max: 15
@@ -129,48 +141,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine dot matrix, not a waffle chart
+        comment: Correct dot matrix grid, filled left-to-right/top-to-bottom.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Grid matches total, uniform dots, correct fill order, legend with
-          counts/percentages
+        comment: Uniform dots, color-coding, legend with counts/percentages, grid
+          sized to total — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 200 units mapped, counts sum correctly
+        comment: Category counts map correctly to dot positions; all 200 units shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec, legend labels match categories
+        comment: Title format exactly matches the mandated pattern; legend labels
+          match categories.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full dot-matrix feature set demonstrated
+        comment: Three categories with clearly different magnitudes (majority/mid/minority)
+          demonstrate the plot type well.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral customer satisfaction survey
+        comment: Customer satisfaction survey is a real, neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 total across 3 categories, within spec range
+        comment: 118+52+30=200 sums correctly to the stated total; realistic survey
+          proportions.
     code_quality:
       score: 10
       max: 10
@@ -180,33 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic in-memory data
+        comment: Fully deterministic hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports
+        comment: No imports beyond the echarts global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Clean, no fake functionality, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: Follows the mount-node contract, animation disabled, no explicit
+          size/DPR.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,22 +230,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard scatter + symbolSize approach for dot matrix
+        comment: Correct idiomatic setOption/series usage; embedding count/pct into
+          series.name rather than a legend.formatter is a minor stylistic shortcut.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: No ECharts-distinctive feature beyond generic scatter
+        passed: true
+        comment: markArea is a genuine ECharts-specific feature used meaningfully,
+          though the technique itself isn't unique to ECharts among charting libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
+  - alpha-blending
   - edge-highlighting
