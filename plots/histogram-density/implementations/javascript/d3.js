@@ -79,15 +79,19 @@ g.selectAll("rect")
   .attr("opacity", 0.9);
 
 // --- Theoretical PDF overlay ----------------------------------------------
+// Subtle area fill under the curve reinforces the empirical-vs-theoretical
+// comparison at a glance, beyond the line alone.
+const area = d3.area().x((d) => x(d.x)).y0(ih).y1((d) => y(d.y)).curve(d3.curveNatural);
+g.append("path").datum(pdfPoints).attr("fill", t.palette[1]).attr("opacity", 0.12).attr("d", area);
+
 const line = d3.line().x((d) => x(d.x)).y((d) => y(d.y)).curve(d3.curveNatural);
-g.append("path").datum(pdfPoints).attr("fill", "none").attr("stroke", t.palette[2]).attr("stroke-width", 3.5).attr("d", line);
+g.append("path").datum(pdfPoints).attr("fill", "none").attr("stroke", t.palette[1]).attr("stroke-width", 3.5).attr("d", line);
 
 // --- Axes -----------------------------------------------------------------
-const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(8));
-const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6));
+const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(8).tickSize(0));
+const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickSize(0));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
-  ax.selectAll("line").attr("stroke", t.inkSoft);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
 
@@ -113,7 +117,7 @@ g.append("text")
 const legend = g.append("g").attr("transform", `translate(${iw - 250}, 6)`);
 legend.append("rect").attr("width", 20).attr("height", 20).attr("fill", t.palette[0]).attr("opacity", 0.9);
 legend.append("text").attr("x", 30).attr("y", 15).attr("fill", t.inkSoft).style("font-size", "16px").text("Observed density");
-legend.append("line").attr("x1", 0).attr("x2", 20).attr("y1", 44).attr("y2", 44).attr("stroke", t.palette[2]).attr("stroke-width", 3.5);
+legend.append("line").attr("x1", 0).attr("x2", 20).attr("y1", 44).attr("y2", 44).attr("stroke", t.palette[1]).attr("stroke-width", 3.5);
 legend.append("text").attr("x", 30).attr("y", 49).attr("fill", t.inkSoft).style("font-size", "16px").text("Normal PDF fit");
 
 // --- Title --------------------------------------------------------------
