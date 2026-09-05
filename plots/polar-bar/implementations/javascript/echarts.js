@@ -37,14 +37,43 @@ const frequencies = [
 const chart = echarts.init(document.getElementById("container"));
 
 // --- Option --------------------------------------------------------------------
+// barMinHeight reserves a visible radial band for thin stack segments so the
+// calm-direction wind-speed colors stay distinguishable near the center.
 const series = speedBins.map((bin, binIndex) => ({
   name: bin,
   type: "bar",
   coordinateSystem: "polar",
   stack: "wind",
+  barMinHeight: 5,
   data: frequencies.map((row) => row[binIndex]),
   itemStyle: { color: t.palette[binIndex] },
 }));
+
+// Subtle amber corridor behind the prevailing SW-WSW-W wind sector — the
+// chart's natural focal point — drawn as a custom polar series so it sits
+// underneath the stacked bars (echarts' own markArea does not support the
+// polar coordinate system). Built as a sampled polygon from api.coord(),
+// which already applies the angleAxis/radiusAxis transform used by the
+// bars, so the wedge always lines up with the SW/WSW/W category bands.
+const sectorStart = directions.indexOf("SW") - 0.5;
+const sectorEnd = directions.indexOf("W") + 0.5;
+const arcSamples = 24;
+const highlightSector = {
+  // No `name` — keeps this annotation series out of the legend.
+  type: "custom",
+  coordinateSystem: "polar",
+  silent: true,
+  renderItem: (_params, api) => {
+    const [cx, cy] = api.coord([0, sectorStart]);
+    const points = [[cx, cy]];
+    for (let i = 0; i <= arcSamples; i += 1) {
+      const angle = sectorStart + ((sectorEnd - sectorStart) * i) / arcSamples;
+      points.push(api.coord([60, angle]));
+    }
+    return { type: "polygon", shape: { points }, style: { fill: t.amber, opacity: 0.12 } };
+  },
+  data: [0],
+};
 
 chart.setOption({
   animation: false,
@@ -75,10 +104,12 @@ chart.setOption({
   radiusAxis: {
     type: "value",
     name: "Hours observed",
+    min: 0,
+    max: 60,
     nameTextStyle: { color: t.inkSoft, fontSize: 13 },
     axisLabel: { color: t.inkSoft, fontSize: 13 },
     axisLine: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
-  series,
+  series: [highlightSector, ...series],
 });
