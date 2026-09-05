@@ -1,12 +1,8 @@
 // anyplot.ai
 // diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
-// Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 89/100 | Updated: 2026-09-05
-//# anyplot-orientation: square
-// anyplot.ai
-// diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 // Library: d3 7.9.0 | JavaScript 22
 // Quality: pending | Created: 2026-09-04
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -122,8 +118,8 @@ const svg = d3.select("#container").append("svg").attr("width", width).attr("hei
 svg.append("rect").attr("width", width).attr("height", height).attr("fill", t.pageBg);
 
 const titleH = 70;
-const gutterX = 70;
-const gutterY = 80;
+const gutterX = 75;
+const gutterY = 75;
 const outer = 30;
 const gridW = width - 2 * outer;
 const gridH = height - titleH - 2 * outer;
@@ -145,7 +141,7 @@ const panelPositions = [
 ];
 
 function styleAxis(sel) {
-  sel.selectAll("text").attr("fill", t.inkSoft).style("font-size", "13px");
+  sel.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   sel.selectAll("line").attr("stroke", t.grid);
   sel.select(".domain").attr("stroke", t.inkSoft);
 }
@@ -154,14 +150,24 @@ function panelChrome(g, iw, ih, title, xLabel, yLabel) {
   g.append("text").attr("x", iw / 2).attr("y", -18).attr("text-anchor", "middle")
     .attr("fill", t.ink).style("font-size", "16px").style("font-weight", "600").text(title);
   g.append("text").attr("x", iw / 2).attr("y", ih + 42).attr("text-anchor", "middle")
-    .attr("fill", t.inkSoft).style("font-size", "13px").text(xLabel);
+    .attr("fill", t.inkSoft).style("font-size", "14px").text(xLabel);
   g.append("text").attr("x", -ih / 2).attr("y", -50).attr("transform", "rotate(-90)")
-    .attr("text-anchor", "middle").attr("fill", t.inkSoft).style("font-size", "13px").text(yLabel);
+    .attr("text-anchor", "middle").attr("fill", t.inkSoft).style("font-size", "14px").text(yLabel);
 }
 
-function labelInfluential(g, xs, ys, indices) {
+function addGrid(g, x, y, iw, ih) {
+  g.append("g").selectAll("line.grid-y").data(y.ticks(5)).join("line")
+    .attr("x1", 0).attr("x2", iw).attr("y1", (d) => y(d)).attr("y2", (d) => y(d))
+    .attr("stroke", t.grid).attr("stroke-opacity", 0.15);
+  g.append("g").selectAll("line.grid-x").data(x.ticks(5)).join("line")
+    .attr("y1", 0).attr("y2", ih).attr("x1", (d) => x(d)).attr("x2", (d) => x(d))
+    .attr("stroke", t.grid).attr("stroke-opacity", 0.15);
+}
+
+function labelInfluential(g, xs, ys, indices, offsetFn) {
   indices.forEach((i) => {
-    g.append("text").attr("x", xs(i) + 8).attr("y", ys(i) - 8)
+    const [dx, dy] = offsetFn ? offsetFn(i) : [8, -8];
+    g.append("text").attr("x", xs(i) + dx).attr("y", ys(i) + dy)
       .attr("fill", t.inkSoft).style("font-size", "12px").text(i);
   });
 }
@@ -176,6 +182,7 @@ function labelInfluential(g, xs, ys, indices) {
   const x = d3.scaleLinear().domain(d3.extent(fitted)).nice().range([0, iw]);
   const y = d3.scaleLinear().domain(d3.extent(residuals)).nice().range([ih, 0]);
 
+  addGrid(g, x, y, iw, ih);
   styleAxis(g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5)));
   styleAxis(g.append("g").call(d3.axisLeft(y).ticks(5)));
 
@@ -208,6 +215,7 @@ function labelInfluential(g, xs, ys, indices) {
   const x = d3.scaleLinear().domain(domain).nice().range([0, iw]);
   const y = d3.scaleLinear().domain(domain).nice().range([ih, 0]);
 
+  addGrid(g, x, y, iw, ih);
   styleAxis(g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5)));
   styleAxis(g.append("g").call(d3.axisLeft(y).ticks(5)));
 
@@ -224,7 +232,21 @@ function labelInfluential(g, xs, ys, indices) {
     .attr("stroke", t.pageBg).attr("stroke-width", 1);
 
   const byIdx = new Map(qqData.map((d) => [d.idx, d]));
-  labelInfluential(g, (i) => x(byIdx.get(i).theoretical), (i) => y(byIdx.get(i).sample), topInfluential);
+  // The 45-degree reference line runs bottom-left to top-right on screen; a
+  // (+8,-8) offset moves roughly parallel to it, which is why labels used to
+  // merge with the line. Offset perpendicular instead, direction chosen by
+  // which side of the line the point actually falls on.
+  labelInfluential(
+    g,
+    (i) => x(byIdx.get(i).theoretical),
+    (i) => y(byIdx.get(i).sample),
+    topInfluential,
+    (i) => {
+      const d = byIdx.get(i);
+      const aboveLine = y(d.sample) < y(d.theoretical);
+      return aboveLine ? [-10, -10] : [10, 12];
+    },
+  );
   panelChrome(g, iw, ih, "Normal Q-Q", "Theoretical Quantiles", "Standardized Residuals");
 }
 
@@ -238,6 +260,7 @@ function labelInfluential(g, xs, ys, indices) {
   const x = d3.scaleLinear().domain(d3.extent(fitted)).nice().range([0, iw]);
   const y = d3.scaleLinear().domain([0, d3.max(sqrtAbsStdResid) * 1.1]).nice().range([ih, 0]);
 
+  addGrid(g, x, y, iw, ih);
   styleAxis(g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5)));
   styleAxis(g.append("g").call(d3.axisLeft(y).ticks(5)));
 
@@ -266,6 +289,7 @@ function labelInfluential(g, xs, ys, indices) {
   const x = d3.scaleLinear().domain([0, d3.max(leverage) * 1.1]).nice().range([0, iw]);
   const y = d3.scaleLinear().domain(d3.extent(stdResid)).nice().range([ih, 0]);
 
+  addGrid(g, x, y, iw, ih);
   styleAxis(g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(5)));
   styleAxis(g.append("g").call(d3.axisLeft(y).ticks(5)));
 
