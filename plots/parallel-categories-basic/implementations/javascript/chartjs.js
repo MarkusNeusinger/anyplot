@@ -76,6 +76,7 @@ const nodePos = dims.map((_, d) => {
 });
 
 // Priority -> Department (transition 0), grouped by priority for contiguous color blocks.
+// t0[department][priority] = ticket count flowing along that priority->department edge.
 const t0 = {};
 cats[1].forEach((dept) => {
   t0[dept] = {};
@@ -96,6 +97,7 @@ cats[1].forEach((dept) => {
 
 // Department -> Outcome (transition 1), still split by priority first so a
 // priority's color stays a contiguous block all the way through.
+// t1[department][priority][outcome] = ticket count for that full 3-hop path.
 const t1 = {};
 cats[1].forEach((dept) => {
   t1[dept] = {};
@@ -140,22 +142,34 @@ function curvePoints(x0, y0, x1, y1) {
   return pts;
 }
 
+// Each ribbon is two line datasets (top edge, bottom edge) with the bottom one
+// filled up to the top ("fill: -1"). Giving both edges a thin matching-color
+// stroke keeps adjacent/overlapping ribbons visually separated instead of
+// blurring into one blob, and `highlight` bumps a path's opacity + stroke
+// weight to call out the diagram's key pattern (see the transition-1 loop).
 const datasets = [];
-function addRibbon(x0, x1, startRange, endRange, color) {
+function addRibbon(x0, x1, startRange, endRange, color, flowLabel, highlight = false) {
+  const fillAlpha = highlight ? 0.75 : 0.55;
+  const strokeAlpha = highlight ? 1 : 0.85;
+  const strokeWidth = highlight ? 1.5 : 1;
   datasets.push({
     data: curvePoints(x0, startRange[1], x1, endRange[1]),
-    borderWidth: 0,
+    borderWidth: strokeWidth,
+    borderColor: hexToRgba(color, strokeAlpha),
     pointRadius: 0,
     fill: false,
     tension: 0,
   });
   datasets.push({
     data: curvePoints(x0, startRange[0], x1, endRange[0]),
-    borderWidth: 0,
+    borderWidth: strokeWidth,
+    borderColor: hexToRgba(color, strokeAlpha),
     pointRadius: 0,
+    pointHitRadius: 10,
     fill: "-1",
-    backgroundColor: hexToRgba(color, 0.55),
+    backgroundColor: hexToRgba(color, fillAlpha),
     tension: 0,
+    flowLabel,
   });
 }
 
@@ -163,15 +177,23 @@ cats[0].forEach((pr) => {
   cats[1].forEach((dept) => {
     const start = priorityRightSeg[pr][dept];
     const end = deptLeftSeg[dept][pr];
-    if (start && end) addRibbon(0, 1, start, end, priorityColor[pr]);
+    if (start && end) addRibbon(0, 1, start, end, priorityColor[pr], `${pr} → ${dept}: ${t0[dept][pr]} tickets`);
   });
 });
+// High-priority tickets that end up Escalated are the standout pattern in this
+// data (71% of High tickets escalate, vs. 19% Medium and 3% Low) - highlight
+// those two paths so the diagram surfaces that insight instead of treating
+// every flow equally.
 cats[0].forEach((pr) => {
   cats[1].forEach((dept) => {
     cats[2].forEach((o) => {
       const start = deptRightSeg[dept]?.[pr]?.[o];
       const end = outcomeLeftSeg[o]?.[`${pr}|${dept}`];
-      if (start && end) addRibbon(1, 2, start, end, priorityColor[pr]);
+      const count = t1[dept][pr][o];
+      if (start && end) {
+        const highlight = pr === "High" && o === "Escalated";
+        addRibbon(1, 2, start, end, priorityColor[pr], `${pr} → ${dept} → ${o}: ${count} tickets`, highlight);
+      }
     });
   });
 });
@@ -190,8 +212,10 @@ dims.forEach((_, d) => {
       borderWidth: NODE_WIDTH,
       borderCapStyle: "butt",
       pointRadius: 0,
+      pointHitRadius: Math.max(15, (y1 - y0) / 2),
       fill: false,
       tension: 0,
+      nodeLabel: `${c}: ${totals[d][c]} tickets`,
     });
   });
 });
@@ -260,8 +284,21 @@ new Chart(canvas, {
           filter: (item, data) => data.datasets[item.datasetIndex].isLegend === true,
         },
       },
-      tooltip: { enabled: false },
+      tooltip: {
+        backgroundColor: t.elevatedBg,
+        titleColor: t.ink,
+        bodyColor: t.ink,
+        borderColor: t.grid,
+        borderWidth: 1,
+        displayColors: false,
+        filter: (item) => Boolean(item.dataset.flowLabel || item.dataset.nodeLabel),
+        callbacks: {
+          title: () => "",
+          label: (item) => item.dataset.flowLabel || item.dataset.nodeLabel,
+        },
+      },
     },
+    interaction: { mode: "nearest", intersect: true },
     scales: {
       x: {
         type: "linear",
