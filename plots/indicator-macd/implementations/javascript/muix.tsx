@@ -67,6 +67,15 @@ const macdLine = ema12.map((v, i) => v - ema26[i]);
 const signalLine = ema(macdLine, 9);
 const histogram = macdLine.map((v, i) => parseFloat((v - signalLine[i]).toFixed(3)));
 
+// Most recent sign flip in the histogram = the latest MACD/signal crossover,
+// called out on the chart as a lightweight annotation.
+let lastCrossoverIndex = null;
+for (let i = 1; i < histogram.length; i++) {
+  if (Math.sign(histogram[i]) !== 0 && Math.sign(histogram[i]) !== Math.sign(histogram[i - 1])) {
+    lastCrossoverIndex = i;
+  }
+}
+
 // Shared numeric domain for both y-axes so histogram bars and lines stay on
 // the same visual scale (a colorMap-carrying axis can't also carry the lines'
 // explicit series colors — see the dedicated "value-hist" axis below).
@@ -168,8 +177,8 @@ export default function Chart() {
         margin={MARGIN}
         skipAnimation
         sx={{
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.4 },
           "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiLineElement-root": { strokeWidth: 2.75 },
         }}
       >
         <ChartsGrid horizontal />
@@ -180,8 +189,30 @@ export default function Chart() {
           axisId="value"
           lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeWidth: 1.5 }}
         />
-        <ChartsXAxis axisId="dates" position="bottom" label="Trading Date" labelStyle={{ fontSize: 14, fill: t.ink }} />
-        <ChartsYAxis axisId="value" position="left" label="MACD Value" labelStyle={{ fontSize: 14, fill: t.ink }} />
+        {lastCrossoverIndex !== null && (
+          <ChartsReferenceLine
+            x={dateLabels[lastCrossoverIndex]}
+            axisId="dates"
+            label="Latest crossover"
+            labelAlign="end"
+            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "2 4", strokeOpacity: 0.6 }}
+          />
+        )}
+        <ChartsXAxis
+          axisId="dates"
+          position="bottom"
+          label="Trading Date"
+          labelStyle={{ fontSize: 14, fill: t.ink }}
+          disableLine
+        />
+        <ChartsYAxis
+          axisId="value"
+          position="left"
+          label="MACD Value ($)"
+          labelStyle={{ fontSize: 14, fill: t.ink }}
+          disableLine
+        />
         <ChartsTooltip trigger="axis" />
       </ChartContainer>
 
@@ -189,11 +220,11 @@ export default function Chart() {
       <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "32px" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Box sx={{ width: 24, height: 3, bgcolor: t.palette[0], borderRadius: "2px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>MACD Line</Typography>
+          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>MACD Line (12, 26)</Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Box sx={{ width: 24, height: 3, bgcolor: t.palette[1], borderRadius: "2px", flexShrink: 0 }} />
-          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>Signal Line</Typography>
+          <Typography sx={{ color: t.inkSoft, fontSize: 14 }}>Signal Line (9)</Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Box sx={{ width: 14, height: 14, bgcolor: t.palette[0], borderRadius: "2px", flexShrink: 0 }} />
