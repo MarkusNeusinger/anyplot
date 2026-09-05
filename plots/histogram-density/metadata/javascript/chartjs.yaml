@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: histogram-density
 created: '2026-09-05T04:23:48Z'
-updated: '2026-09-05T04:27:40Z'
+updated: '2026-09-05T04:37:33Z'
 generated_by: claude-sonnet
 workflow_run: 33944235471
 issue: 2442
@@ -12,58 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-density/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correctly normalizes the histogram so total bar area equals 1 (density = counts
-    / (n * binWidth)), matching the spec's core requirement
-  - Overlays a theoretical Normal PDF for goodness-of-fit comparison, exactly the
-    'consider adding a theoretical PDF overlay' suggestion from the spec notes
-  - 'Imprint palette applied correctly: empirical density bars use #009E73 (brand
-    green, position 1), PDF line uses #C475FD (lavender, position 2), identical across
-    both themes'
-  - Bars merged with categoryPercentage/barPercentage = 1.0 for a proper continuous
-    histogram silhouette (no gaps between bins)
-  - Deterministic reproducibility via a fixed-seed LCG plus Box-Muller transform —
-    no external RNG dependency
-  - All font sizes explicitly set (title 22px, legend 16px, ticks 14px, axis titles
-    18px); axis labels carry units (bpm); y-axis-only grid per style guide; both renders
-    theme-correct with fully readable text
+  - 'Correct density normalization: bars are scaled by 1/(n * binWidth) so the histogram
+    area integrates to 1, matching the spec''s core requirement (not raw counts).'
+  - Adds a theoretical Normal PDF overlay (mixed bar+line chart) evaluated at bin
+    centers for direct goodness-of-fit comparison, exactly the enhancement the spec
+    suggests.
+  - Custom tooltip callback reports a z-score for each bar, and a hand-built legend
+    generateLabels() correctly represents both the bar and line series types with
+    matching swatches.
+  - 'Clean theme handling: title, axis titles, tick labels, legend, and grid all read
+    theme tokens (t.ink, t.inkSoft, t.grid); both renders are legible with no dark-on-dark
+    or light-on-light failures.'
+  - Deterministic, dependency-free data generation via a fixed-seed LCG + Box-Muller
+    transform, matching the JS 'no seeded RNG in browser' constraint.
+  - 'Correct output contract: single canvas appended to #container, animation: false,
+    no savefig-style calls, no stray DOM nodes.'
   weaknesses:
-  - 'DE-01: Reads as a well-configured Chart.js default — legend swatches are plain
-    rectangles (including a boxed outline for the line series rather than a line-style
-    swatch), and typography beyond font-size is untouched. Consider `legend.labels.usePointStyle`
-    with a line-shaped key for the PDF series, or other typographic refinement.'
-  - 'DE-02: No visual refinement beyond applying the base theme tokens — grid and
-    spacing are clean but generic, nothing distinguishes this from a stock Chart.js
-    mixed chart.'
-  - 'DE-03: The empirical-vs-theoretical overlay implies a goodness-of-fit story but
-    nothing calls attention to it — e.g. no annotation/shaded band highlighting where
-    the empirical histogram deviates from (or tightly tracks) the theoretical curve,
-    no callout on the peak.'
-  - 'LM-02: The bar+line mixed chart is a fairly common Chart.js technique; lean further
-    into something more distinctive (e.g. a gradient fill under the PDF curve, scriptable
-    per-bin styling, or a custom tooltip surfacing z-scores) to raise Library Mastery.'
-  - Title spans only ~33% of the canvas width — legible and explicitly sized, but
-    on the narrow side relative to the 50-70% guideline; a touch larger would balance
-    the composition better (minor, not a legibility problem).
+  - 'Per-bar backgroundColor is alpha-blended by goodness-of-fit residual (0.45-1.0
+    opacity of #009E73) rather than a flat single-series color. Because alpha compositing
+    happens against the theme page background, the same bar renders noticeably differently
+    across themes: in the dark render the low-alpha (worst-fit) bars become a muted
+    dark teal that visually blends toward the near-black background, most visible
+    on the tall outlier bar near x=71-75, while the equivalent bar in the light render
+    reads as a clear pale mint. This is an unlabeled second visual encoding with no
+    legend entry or annotation explaining what the shading means, so it reads as an
+    inconsistency rather than an intentional signal.'
+  - Recommend either flattening the bars back to a single solid t.palette[0] fill
+    (simplest, spec only asks for the histogram + optional PDF overlay) or, if keeping
+    the fit-shading idea, adding a one-line note/annotation or legend entry ('darker
+    = closer fit to theoretical PDF') and raising the minimum alpha floor so no bar
+    loses enough saturation to look washed-out against the dark background.
+  - X-axis tick labels are decimal bin-center values (e.g. '71.3') without a unit
+    suffix on each tick; the axis title carries '(bpm)' so this is a minor readability
+    nuance rather than a spec violation, but rounding to fewer distinct tick values
+    or adding integer bpm ticks would read slightly cleaner.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "histogram-density · javascript · chartjs · anyplot.ai" in bold dark text at top, clearly legible. Legend below the title with two entries: an outlined lavender rectangle for "Normal PDF (theoretical)" and a filled green rectangle for "Empirical density," both dark-text labels, fully readable. Y-axis title "Density" (rotated) and X-axis title "Resting Heart Rate (bpm)" in dark ink, both descriptive with units. Tick labels on both axes in a slightly softer dark gray, clearly visible. Horizontal gridlines only, subtle and unobtrusive.
-      Data: Green histogram bars (#009E73, brand green, first series) form a bell-shaped, unimodal, roughly symmetric distribution of resting heart rate; bars touch with no gaps. A lavender line (#C475FD, palette position 2) traces the theoretical Normal PDF closely overlaying the histogram's shape, confirming a good empirical/theoretical match.
-      Legibility verdict: PASS — all text (title, axis titles, tick labels, legend) is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-density · javascript · chartjs · anyplot.ai" in bold dark ink, clearly visible. Legend ("Empirical density" square swatch, "Normal PDF (theoretical)" line swatch) in dark ink, fully readable. X-axis title "Resting Heart Rate (bpm)" and Y-axis title "Density" in dark ink. Tick labels in a slightly softer dark gray, all legible. Horizontal grid lines subtle, only on the y-axis, not competing with data.
+      Data: 24 contiguous bars forming a bell-shaped histogram from ~48.7 to ~93 bpm, all in shades of the Imprint green (#009E73) with per-bar opacity varying by goodness-of-fit residual (fully saturated near best-fit bins, paler mint where the empirical bar deviates more from the theoretical curve). A smooth violet/lavender line (palette[1]) traces the theoretical Normal PDF on top of the bars, peaking at the same location as the bars' mode. First series color is the brand green as required.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white text, clearly legible. Legend entries render the same way with light-colored text labels. Axis titles and tick labels are rendered in light gray/white tones, fully legible against the dark background. Gridlines remain subtle (light, low-opacity horizontal lines).
-      Data: Bar and line colors are identical to the light render (#009E73 green bars, #C475FD lavender PDF line) — only the chrome (background, text, grid) flips as expected; no unauthorized color shift.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, and tick text is clearly visible against the dark surface.
-
-    Both renders confirm data colors are identical between themes and only chrome adapts, satisfying the theme-adaptive chrome requirement.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, and axis titles render in white/light ink, fully legible against the dark background. Tick labels render in a softer light gray, still legible. Grid lines are subtle and only lightly visible, appropriate contrast for dark mode. No dark-on-dark text anywhere.
+      Data: Same 24-bar bell-shaped histogram and same violet PDF line, confirming data colors are identical across themes (only chrome flipped). However, the per-bar alpha blending is visibly theme-dependent: the same low-alpha ("worst residual") bars that read as pale mint in the light render become a much darker, desaturated teal in the dark render because the alpha compositing mixes with the near-black page background instead of the off-white one — most noticeable on the tall bar near x≈71-75 which loses visual prominence relative to its neighbors. The green and violet hues remain distinguishable from the background and from each other, so this is a legibility/consistency concern rather than an outright failure.
+      Legibility verdict: PASS (with a flagged consistency weakness — see review weaknesses).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -71,74 +71,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title runs
-          narrower (~33% of width) than the 50-70% guideline, a minor proportional
-          softness
+        comment: Title, axis titles, tick labels, and legend all explicitly colored
+          from theme tokens and readable in both renders.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, legend, axes, or data
+        comment: No collisions between text, legend, bars, or the PDF line in either
+          render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars merged (categoryPercentage/barPercentage=1.0) for a clean continuous
-          histogram; PDF line at 3px stands out clearly in both themes
+        comment: All 24 bars and the PDF line are distinguishable in both themes,
+          but per-bar alpha blending (fit-residual shading) loses saturation against
+          the dark background, muting the tallest bar in the dark render.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender is CVD-safe and high-contrast, not relying on hue
-          alone given shape difference (bar vs line)
+        comment: Green bars vs. violet line are distinct in hue and luminance in both
+          themes; not a red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large portion of the canvas, balanced margins, nothing
-          cut off
+        comment: Title ~55% of width, balanced axis label sizes, no overflow or clipping,
+          canvas dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units (bpm) or clear meaning (Density)
+        comment: Both axes descriptive with units ('Resting Heart Rate (bpm)', 'Density').
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73, second series #C475FD (canonical order), identical
-          across themes, backgrounds correctly #FAF8F1/#1A1A17'
+        passed: false
+        comment: 'First series is #009E73 and line uses palette[1] correctly, backgrounds
+          match theme spec, but per-bar alpha blending against theme-dependent backgrounds
+          means the effective rendered bar colors are not identical between light
+          and dark.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; legend swatches are plain default
-          rectangles, no typographic refinement beyond size
+        passed: true
+        comment: Custom mixed bar+line chart, hand-built legend, and dynamic per-bar
+          shading show real design effort, though the shading choice adds unexplained
+          visual noise.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clean grid/spacing from theme tokens but no additional polish (no
-          shadow/depth, no refined legend layout)
+        passed: true
+        comment: No canvas frame/spines, subtle single-axis grid, generous whitespace,
+          restrained typography.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Empirical-vs-theoretical overlay creates a comparison narrative,
-          but nothing calls out the fit explicitly (no annotation/shading)
+        passed: true
+        comment: PDF overlay gives a clear comparative focal point, but the unlabeled
+          fit-residual shading undercuts the story rather than reinforcing it.
     spec_compliance:
       score: 15
       max: 15
@@ -148,51 +152,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density histogram with PDF overlay
+        comment: Correctly implemented as a density histogram (mixed bar+line).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-normalized density, PDF overlay for context — all spec notes
-          addressed
+        comment: Density y-axis, area-normalized bars, consistent bin width, and a
+          theoretical PDF overlay for context.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = bin center (value), Y = density, correctly assigned
+        comment: X = bin center (bpm), Y = density; full data range covered by axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels ('Empirical density', 'Normal
-          PDF (theoretical)') match datasets
+        comment: Title matches the mandated format exactly; legend labels ('Empirical
+          density', 'Normal PDF (theoretical)') are clear and correct.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows a full unimodal density distribution plus theoretical overlay;
-          no second distribution for sample-size comparison (optional per spec, not
-          required)
+        comment: Shows density normalization, consistent binning, and a theoretical
+          comparison curve — all aspects called out in the spec's notes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Resting heart rate for adults — realistic, neutral, comprehensible
+        comment: Resting heart rate for adults is a plausible, neutral, non-controversial
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: mean=72bpm, std=8bpm — factually sensible resting heart rate parameters
+        comment: Mean=72 bpm, std=8 bpm, n=600 — realistic parameters for the domain.
     code_quality:
       score: 10
       max: 10
@@ -202,35 +206,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: data generation -> binning -> mount -> chart, no
-          functions/classes'
+        comment: Flat script; only small, justified helper functions (rand, normalPdf,
+          hexToRgba), no classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG + Box-Muller, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Chart, nothing unused
+        comment: No imports beyond the global Chart; nothing unused.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity for the mixed chart + tooltip/legend customization,
+          no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract; animation:false set; current Chart.js
-          API
+        comment: 'Canvas appended to #container, animation: false set, current Chart.js
+          v4 API used throughout.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -238,23 +243,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of Chart.js mixed bar+line chart with order for z-index
-          and barPercentage/categoryPercentage for a seamless histogram
+        comment: Idiomatic mixed bar+line dataset with correct 'order' stacking and
+          standard scales/plugins config.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Mixed chart type (bar+line combo) is a genuine Chart.js-specific
-          technique, though a fairly common one
-  verdict: REJECTED
+        comment: Custom generateLabels() merging two dataset types into one legend,
+          per-point tooltip z-score callback, and a function-based backgroundColor
+          callback — all beyond basic API usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - layer-composition
   patterns:
   - data-generation
   dataprep:
   - binning
-  - normalization
-  styling: []
+  styling:
+  - alpha-blending
