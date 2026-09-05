@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: scatter-color-mapped
 created: '2026-09-05T13:51:43Z'
-updated: '2026-09-05T13:56:01Z'
+updated: '2026-09-05T14:04:29Z'
 generated_by: claude-sonnet
 workflow_run: 33969911907
 issue: 2004
@@ -12,37 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-color-mapped/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
-  strengths:
-  - Correct use of the Imprint imprint_seq (green→blue) continuous colormap via ANYPLOT_TOKENS.seq
-    for the single-polarity temperature variable, with visualMap.calculable enabled
-    for interactive range filtering in the HTML output
-  - 'Realistic, neutral scenario: sea-surface-temperature readings across Pacific-basin
-    coordinates, directly matching the spec''s suggested geographic-temperature application,
-    with a physically plausible warmer-near-equator / cooler-at-high-latitude gradient'
-  - Fully theme-adaptive chrome (title, axis names, tick labels, axis lines, split
-    lines, visualMap text) with identical data colors between light and dark renders
-  - 'Clean, deterministic, KISS-structured code: seeded LCG data generation, no functions/classes,
-    only the echarts global used, moderate marker size (20px) with 0.85 opacity and
-    a page-background border for definition'
-  weaknesses:
-  - Longitude axis mixes a negative numeric scale (-170 to -110) with a '(°W)' unit
-    suffix — conventionally western longitudes are shown as positive magnitudes with
-    the W suffix, or the signed values are shown without a directional suffix. Pick
-    one convention to avoid the reader double-negating.
-  - Design Excellence is at 'well-configured default' level (DE-01/DE-02 = 4/8, 4/6)
-    — the plot is technically polished but doesn't yet push into publication-grade
-    territory. Consider a stronger focal point, e.g. lightly emphasizing the warm
-    equatorial band or the coldest high-latitude stations, to sharpen the storytelling
-    (DE-03).
-  - A handful of markers in dense clusters overlap slightly (e.g. the pair near 37°N,
-    -163°W and around 27°N, -134°W) — a touch more opacity reduction or a slightly
-    smaller symbolSize would clean up the densest regions.
-  - Library Mastery is solid but not maximal (LM-01/LM-02 = 4/5, 3/5) — beyond visualMap.calculable,
-    consider leveraging further ECharts-distinctive touches (e.g. a piecewise visualMap
-    band annotation or emphasis state) to differentiate from a generic scatter+colorbar
-    implementation.
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
