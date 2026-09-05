@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: network-bipartite
+created: '2026-09-05T09:50:37Z'
+updated: '2026-09-05T10:09:10Z'
+generated_by: claude-sonnet
+workflow_run: 33958845329
+issue: 5247
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Directly addressed both attempt-1 weaknesses: a renderer-drawn double halo now
+    gives the top-degree hub node (Headset) a clear, theme-correct focal point, and
+    gently bowed spline edges reduce the straight-line crossing clutter in the middle
+    of the chart.'
+  - 'Correctly navigates the Highcharts core-bundle constraint: since `networkgraph`
+    lives in an unloaded add-on module, the implementation builds the bipartite graph
+    from scatter nodes plus curved spline edges — a legitimate workaround, not a forbidden
+    module import.'
+  - Node radius encodes degree and edge opacity/lineWidth jointly encode weight, exactly
+    matching the spec's hub-highlighting and weight-encoding notes.
+  - Clean two-column left/right layout with outward-aligned data labels keeps labels
+    legible and clear of the dense edge tangle in both themes.
+  - 'Theme handling is correct: identical Imprint data colors (`#009E73` users / `#C475FD`
+    products) across renders, chrome flips correctly, warm off-white / near-black
+    backgrounds match spec.'
+  - Deterministic tiny LCG generates the purchase data in-browser without relying
+    on a seeded RNG, fully reproducible.
+  weaknesses:
+  - The mid-chart crossing pattern is reduced but still fairly dense given ~40 edges
+    across 22 nodes; the bowed-spline bend amounts are subtle, so the busyness improvement
+    over straight lines is modest — further opacity tapering on the lowest-weight
+    edges could clean this up more.
+  - 'Library mastery is good but not maximal: the scatter+spline+renderer-halo composition
+    is a sound, distinctive workaround, but doesn''t fully showcase a broader set
+    of Highcharts-unique capabilities beyond this single custom-rendering touch.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — matches the spec surface.
+      Chrome: Title "network-bipartite · javascript · highcharts · anyplot.ai" and subtitle "User–product purchase network · node size encodes degree, edge weight encodes purchase frequency" render in dark ink, both clearly legible. Left-column user labels (Ortiz, M. ... Petrova, I.) and right-column product labels (Wireless Mouse ... Cable Organizer) are bold dark text, fully readable. Bottom legend ("Users" diamond / "Products" square) is legible and near the plot.
+      Data: 12 green (#009E73) diamond nodes on the left (Users), 10 violet (#C475FD) square nodes on the right (Products) — correct Imprint palette positions 1 and 2. Node size scales with degree (e.g. "Webcam" is visibly tiny, "Headset" is one of the largest). Grey spline edges vary in width/opacity with purchase weight. The highest-degree hub node ("Headset") is wrapped in two concentric violet halo rings, giving the chart a clear focal point.
+      Legibility verdict: PASS — no light-on-light text, all chrome elements readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — matches the spec surface.
+      Chrome: Title, subtitle, node labels, and legend all flip to light ink/text and remain fully legible against the dark surface. No dark-on-dark issues observed anywhere (title, node labels, tick-less axes, legend all pass).
+      Data: Node colors are pixel-identical to the light render (#009E73 green / #C475FD violet), confirming only chrome adapted to theme. The hub halo around "Headset" is still clearly visible on the dark surface. Edge styling (width/opacity by weight) is unchanged from the light render.
+      Legibility verdict: PASS — all text and data elements read clearly on the dark surface.
+
+    Both renders pass the theme-readability check; the repair-loop's hub-halo and bowed-spline additions are visible and effective in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 14px subtitle/legend,
+          13px data labels); readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Outward-aligned data labels avoid the dense edge tangle; no overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Node size/edge width-opacity adapt to degree/weight; bowed splines
+          soften but don't eliminate mid-chart crossing density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. violet, CVD-safe Imprint palette, neutral gray edges
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-column layout uses canvas well, balanced margins, nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly hidden for a node-link diagram; subtitle explains
+          the encoding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD (canonical order); theme-correct
+          backgrounds/chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Renderer-drawn hub halo is a thoughtful, above-default touch; not
+          yet full publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Bowed splines, hidden axes, generous whitespace; mid-chart density
+          keeps it just short of perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hub halo + degree-sized nodes give the viewer a clear entry point
+          into the network
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bipartite layout, two clearly separated columns, cross-set
+          edges only
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Set-membership color, degree-sized nodes, weight-encoded edges, legible
+          non-overlapping labels, curved edges all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 12 users, 10 products, and edges visible; positional layout correctly
+          used
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels 'Users'/'Products' match data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows degree variation (low-degree Webcam to high-degree hub) and
+          weight variation, though no fully isolated (0-degree) node
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic user-product purchase scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 users / 10 products / edges within spec's 10-50 nodes and 20-200
+          edges ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small helper functions (rand, layout, nodeRadius) are a reasonable
+          necessity for network layout math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a node-link diagram; renderer halo is
+          real, not fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled everywhere
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scatter+spline composition with hidden axes is a sound idiom given
+          the unavailable networkgraph module
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.renderer.circle() custom-drawn halo is a genuinely Highcharts-specific
+          technique, hard to replicate as elegantly elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
