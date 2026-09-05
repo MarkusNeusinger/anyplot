@@ -6,13 +6,13 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: co-authorship network across four university research labs ------
+// --- Data: co-authorship network across five university research labs ------
 // The core Highcharts bundle has no heatmap/colorAxis module loaded, so the
 // matrix is drawn cell-by-cell with the SVG renderer, same as any other
 // vector shape Highcharts can draw natively.
-const LABS = ['Neuroscience', 'Robotics', 'Genomics', 'Climate Science'];
+const LABS = ['Neuroscience', 'Robotics', 'Genomics', 'Climate Science', 'Materials Science'];
 const LAB_SIZE = 8;
-const N = LABS.length * LAB_SIZE; // 32 researchers total
+const N = LABS.length * LAB_SIZE; // 40 researchers total across five labs
 const labOf = (i) => Math.floor(i / LAB_SIZE);
 const NODE_NAMES = Array.from({ length: N }, (_, i) => `${LABS[labOf(i)].slice(0, 2).toUpperCase()}${(i % LAB_SIZE) + 1}`);
 
@@ -40,7 +40,8 @@ for (let i = 0; i < N; i++) {
     }
   }
 }
-// Diagonal (self-pairs) carries no meaning and renders as "no collaboration".
+// Diagonal (self-pairs) carries no meaning; it is hatched (see drawAll) to
+// disambiguate "not applicable" from a genuine zero-weight absent edge.
 
 let maxWeight = 0;
 WEIGHT.forEach((row) => row.forEach((w) => { if (w > maxWeight) maxWeight = w; }));
@@ -70,7 +71,7 @@ const TITLE_FS = Math.max(Math.round(22 * Math.min(1, 67 / TITLE_TEXT.length)), 
 // layer below, so everything lines up without a runtime resync. A fixed
 // column is reserved to the right of the grid for the colorbar + its labels
 // so long strings like "Joint papers" never run past the canvas edge.
-const CHART_MARGIN = [130, 10, 150, 150]; // [top, right, bottom, left]
+const CHART_MARGIN = [130, 10, 175, 150]; // [top, right, bottom, left]
 const COLORBAR_COLUMN = 200;
 const size = window.ANYPLOT_SIZE;
 const gridSpan = Math.min(
@@ -100,6 +101,8 @@ function drawAll() {
   const gridTop = chart.plotTop + (chart.plotHeight - gridSpan) / 2;
 
   // Matrix cells — full N x N grid, both triangles filled (undirected graph).
+  // Diagonal (self-pair) cells get a hatch overlay so "not applicable" reads
+  // as visually distinct from a genuine zero-weight absent edge.
   for (let row = 0; row < N; row++) {
     for (let col = 0; col < N; col++) {
       const w = WEIGHT[row][col];
@@ -111,6 +114,15 @@ function drawAll() {
           .attr({ fill: weightFill(w), stroke: 'none', zIndex: 2 })
           .add()
       );
+      if (row === col) {
+        const pad = Math.max(CELL * 0.15, 1);
+        drawn.push(
+          r.path(['M', x + pad, y + pad, 'L', x + CELL - pad, y + CELL - pad]).attr({ stroke: t.inkSoft, 'stroke-width': 1, opacity: 0.4, zIndex: 3 }).add()
+        );
+        drawn.push(
+          r.path(['M', x + CELL - pad, y + pad, 'L', x + pad, y + CELL - pad]).attr({ stroke: t.inkSoft, 'stroke-width': 1, opacity: 0.4, zIndex: 3 }).add()
+        );
+      }
     }
   }
 
@@ -131,8 +143,18 @@ function drawAll() {
     r.rect(gridLeft, gridTop, gridSpan, gridSpan).attr({ fill: 'none', stroke: t.inkSoft, 'stroke-width': 1.5, zIndex: 3 }).add()
   );
 
+  // Sparse tick marks halfway through each block — full per-node labels would
+  // crowd a 40x40 grid, but a light mid-block tick gives orientation within
+  // each lab's rows/columns without adding text.
+  for (let i = LAB_SIZE / 2; i < N; i += LAB_SIZE) {
+    const x = gridLeft + i * CELL;
+    drawn.push(r.path(['M', x, gridTop + gridSpan, 'L', x, gridTop + gridSpan + 6]).attr({ stroke: t.grid, 'stroke-width': 1, zIndex: 2 }).add());
+    const y = gridTop + i * CELL;
+    drawn.push(r.path(['M', gridLeft - 6, y, 'L', gridLeft, y]).attr({ stroke: t.grid, 'stroke-width': 1, zIndex: 2 }).add());
+  }
+
   // Lab labels centered on each block — per-node tick labels would crowd a
-  // 32x32 grid, so only the group boundaries are labeled (x below, y left).
+  // 40x40 grid, so only the group boundaries are labeled (x below, y left).
   LABS.forEach((lab, b) => {
     const center = gridLeft + (b + 0.5) * LAB_SIZE * CELL;
     drawn.push(
@@ -175,6 +197,20 @@ function drawAll() {
   drawn.push(
     r.text('No papers', barLeft + barWidth + 10, swatchTop + barWidth / 2 + 5).attr({ align: 'left', zIndex: 2 }).css({ color: t.inkSoft, fontSize: '13px' }).add()
   );
+  // "Self-pair" swatch — same hatch pattern drawn on the matrix diagonal, so
+  // the legend disambiguates "not applicable" from a genuine absent edge.
+  const swatch2Top = swatchTop + barWidth + 14;
+  drawn.push(r.rect(barLeft, swatch2Top, barWidth, barWidth).attr({ fill: t.elevatedBg, stroke: t.inkSoft, 'stroke-width': 1, zIndex: 3 }).add());
+  const hp = barWidth * 0.15;
+  drawn.push(
+    r.path(['M', barLeft + hp, swatch2Top + hp, 'L', barLeft + barWidth - hp, swatch2Top + barWidth - hp]).attr({ stroke: t.inkSoft, 'stroke-width': 1, opacity: 0.4, zIndex: 3 }).add()
+  );
+  drawn.push(
+    r.path(['M', barLeft + barWidth - hp, swatch2Top + hp, 'L', barLeft + hp, swatch2Top + barWidth - hp]).attr({ stroke: t.inkSoft, 'stroke-width': 1, opacity: 0.4, zIndex: 3 }).add()
+  );
+  drawn.push(
+    r.text('Self-pair (n/a)', barLeft + barWidth + 10, swatch2Top + barWidth / 2 + 5).attr({ align: 'left', zIndex: 2 }).css({ color: t.inkSoft, fontSize: '13px' }).add()
+  );
 }
 
 // Invisible scatter layer aligned to each cell so hovering exposes a real
@@ -202,7 +238,7 @@ Highcharts.chart('container', {
     style: { color: t.ink, fontSize: TITLE_FS + 'px', fontWeight: '600' },
   },
   subtitle: {
-    text: '32 researchers across four labs, ordered by lab to expose block-diagonal collaboration clusters',
+    text: '40 researchers across five labs, ordered by lab to expose block-diagonal collaboration clusters',
     style: { color: t.inkSoft, fontSize: '14px' },
   },
   xAxis: { visible: false, min: -0.5, max: N - 0.5 },
@@ -216,7 +252,7 @@ Highcharts.chart('container', {
     style: { color: t.ink, fontSize: '13px' },
     formatter: function () {
       const p = this.point;
-      if (p.from === p.to) return `<b>${p.from}</b>`;
+      if (p.from === p.to) return `<b>${p.from}</b><br/>Self-pair — not applicable`;
       return p.papers > 0 ? `<b>${p.from} ↔ ${p.to}</b><br/>${p.papers} joint paper${p.papers === 1 ? '' : 's'}` : `<b>${p.from} ↔ ${p.to}</b><br/>No collaboration`;
     },
   },
