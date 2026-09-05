@@ -1,0 +1,235 @@
+library: ggplot2
+language: r
+specification_id: pyramid-basic
+created: '2026-09-05T12:24:01Z'
+updated: '2026-09-05T12:37:42Z'
+generated_by: claude-sonnet
+workflow_run: 33965640792
+issue: 1000
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Idiomatic ggplot2 population-pyramid pattern (negative values + coord_flip) with
+    a clean conditional hjust for label placement on each side
+  - Semantic gender color mapping (blue/rose) directly supported by the spec's own
+    note ("blue/pink for gender")
+  - Fully symmetric axis scale for fair bilateral comparison, with a value label on
+    every bar
+  - Realistic demographic data - tapering age structure plus the female-longevity
+    effect in the oldest bracket
+  - Theme-adaptive chrome correctly threaded through both renders; data colors identical
+    across themes
+  weaknesses:
+  - Gridlines (panel.grid.major.x) use full-opacity INK color instead of a subtle
+    low-alpha rgba - soften to rgba(26,26,23,0.15) / rgba(240,239,232,0.15) equivalents
+    so they read as a subtle grid rather than bold dividers
+  - Blue/rose color pair sits in a similar hue family for CVD viewers - consider a
+    thin ink-color stroke on one series, or verify CVD distance, for stronger accessibility
+    margin
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "pyramid-basic · r · ggplot2 · anyplot.ai" in dark ink top-left; axis titles "Age Group" / "Population (millions)" in dark ink; tick labels and value labels in secondary dark-gray ink; top-centered legend with "Male"/"Female" swatches; vertical reference lines at -6/-3/0/3/6. All readable against the light background.
+      Data: Male bars in blue (#4467A3), Female bars in rose (#954477), symmetric mirrored bar pyramid across 9 age groups with per-bar numeric value labels.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Same title/axis/tick/legend elements, all flipped to light ink on the dark surface; legend box becomes a dark elevated panel with light text. No dark-on-dark failures observed.
+      Data: Male (#4467A3) and Female (#954477) bars are pixel-identical in hue to the light render - only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set, readable in both themes and at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, bars, legend, gridlines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar widths and labels well suited to 9 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Blue and rose sit in a similar hue family for CVD viewers; mitigated
+          by redundant value labels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills majority of canvas, legend close to
+          plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 3 & 7 via valid semantic-exception (spec
+          calls for blue/pink for gender); identical across themes, chrome theme-correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic colors, clean minimal theme, value labels
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Gridlines use full-opacity INK instead of subtle low-alpha rgba,
+          read as bold dividers
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Tapering pyramid shape plus value labels and color contrast give
+          immediate insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pyramid chart with opposing bars sharing central axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric scale, distinct colors, category axis, legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Age group on shared axis, values correctly mirrored
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full age range, tapering pyramid shape, gender variation across all
+          ages
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world population demographics scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible values; older-age female > male consistent with real demographics
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: dplyr/tidyr/scales/ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves via ragg::agg_png to plot-{theme}.png
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Textbook ggplot2 pyramid idiom: negative values + coord_flip + symmetric
+          scale'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Mirrored-bar technique is generic, achievable with minor changes
+          in most libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep: []
+  styling:
+  - grid-styling
