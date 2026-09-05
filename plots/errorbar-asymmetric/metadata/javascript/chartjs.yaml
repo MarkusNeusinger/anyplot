@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: errorbar-asymmetric
 created: '2026-09-05T01:11:32Z'
-updated: '2026-09-05T01:15:51Z'
+updated: '2026-09-05T01:24:53Z'
 generated_by: claude-sonnet
 workflow_run: 33935151377
 issue: 2781
@@ -12,49 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-asymmetric/javascript/chartjs/plot-dark.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Chart.js has no native error-bar chart type, and the implementation correctly
-    avoids the trap of reaching for an uninstalled community plugin — it uses the
-    'line' type with showLine:false for the categorical-axis point layer and a custom
-    afterDatasetsDraw plugin to draw the true asymmetric whiskers and caps.
-  - 'Both renders are theme-correct: brand green (#009E73) markers and error bars
-    are pixel-identical between light and dark, while backgrounds (#FAF8F1 / #1A1A17),
-    grid, and text correctly flip via ANYPLOT_TOKENS.'
-  - Sparse 6-point dataset is given prominent, well-differentiated markers (radius
-    10, white/page-colored border ring) and thick 3px whiskers with visible caps,
-    so nothing is hard to read at either theme.
-  - The subtitle satisfies the spec's requirement to explain what the asymmetric bounds
-    represent, and the header/title format matches the required 'errorbar-asymmetric
-    · javascript · chartjs · anyplot.ai' pattern exactly.
-  - 'Code is clean: deterministic hardcoded data, no unused imports, single canvas
-    appended once, animation disabled per the harness contract.'
+  - 'Both repair-loop fixes from attempt 1 landed cleanly: the subtitle now correctly
+    reads ''90% CI (5th–95th percentile)'' (was mislabeled ''95% CI''), and the y-axis
+    max is now computed dynamically from the tallest CI bound (yAxisMax formula) instead
+    of a fixed 0–40, cutting the dead band above Treatment C from ~15% to ~8% of the
+    plot height.'
+  - The repair also added a callout annotation ('Largest response') pointing at the
+    Treatment C whisker, giving the chart a visual focal point that was missing in
+    attempt 1 — a genuine Design Excellence improvement, not just a bug fix.
+  - Chart.js has no native error-bar chart type; the implementation correctly avoids
+    reaching for an uninstalled community plugin and instead uses a 'line' dataset
+    with showLine:false for the categorical point layer plus a custom afterDatasetsDraw
+    plugin to draw the true asymmetric whiskers and caps.
+  - 'Both renders are theme-correct: brand green (#009E73) markers/whiskers are pixel-identical
+    between light and dark, while backgrounds (#FAF8F1 / #1A1A17), grid, and text
+    correctly flip via ANYPLOT_TOKENS.'
+  - Sparse 6-point dataset gets prominent, well-differentiated markers (radius 10,
+    page-colored border ring) and thick 3px whiskers with visible 20px-wide caps —
+    satisfies the spec's explicit 'visible caps' requirement.
   weaknesses:
-  - Subtitle says 'asymmetric 95% CI (5th–95th percentile)', but a 5th–95th percentile
-    span is a 90% interval, not 95% — fix the label to '90% CI (5th–95th percentile)'
-    or move the bounds to 2.5th/97.5th percentile to genuinely match '95%'.
-  - Y-axis is fixed at 0–40 while the tallest bar (Treatment C) only reaches ~34.8,
-    leaving a dead band of empty space across roughly the top 12% of the plot height
-    — tighten the yAxisMax rounding/multiplier so the data fills the frame better.
+  - The y-axis top tick lands on the computed max (38) rather than the next round
+    multiple of the 5-unit step used everywhere else (0, 5, 10, ... 35, 38) — a minor
+    visual-rhythm break at the very top of the axis; consider rounding yAxisMax up
+    to the next multiple of 5 instead of 2 so the tick sequence stays uniform.
   - Only a single series is shown; the spec's optional suggestion to use different
-    colors/markers when comparing multiple series was not explored, so the plot doesn't
-    showcase how the asymmetric-error-bar pattern would scale to a multi-series comparison.
+    colors/markers when comparing multiple series is still unexplored, so the plot
+    doesn't demonstrate how the asymmetric-error-bar pattern scales to a multi-series
+    comparison (low priority — spec marks this as optional).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches the mandated #FAF8F1 surface — not pure white, not dark.
-      Chrome: Title "errorbar-asymmetric · javascript · chartjs · anyplot.ai" in dark ink at the top, italic subtitle below explaining the CI bounds, dark "Treatment Group" x-axis title and "Symptom Improvement (%)" y-axis title, muted gray tick labels for both axes, subtle horizontal y-axis gridlines only. All text is clearly legible against the light background.
-      Data: Six treatment groups (Control through Treatment E) each shown as a brand-green (#009E73) point with a light-bordered ring, connected to a vertical asymmetric whisker (green) with horizontal caps at both ends marking the lower/upper CI bounds. Whisker lengths vary per group (upper arm consistently longer than lower arm, as intended for the asymmetric log-transformed CI).
+      Background: Warm off-white, matches the mandated #FAF8F1 surface -- not pure white, not dark.
+      Chrome: Title "errorbar-asymmetric · javascript · chartjs · anyplot.ai" in dark ink at the top, italic subtitle below reading "Points show mean improvement; bars show asymmetric 90% CI (5th-95th percentile)" (now internally consistent -- 90% matches 5th-95th), dark "Treatment Group" x-axis title and "Symptom Improvement (%)" y-axis title, muted gray tick labels for both axes, subtle horizontal y-axis gridlines only (x-axis grid off). A small italic "Largest response" callout sits above the Treatment C whisker. All text is clearly legible against the light background.
+      Data: Six treatment groups (Control through Treatment E) each shown as a brand-green (#009E73) point with a light-bordered ring, connected to a vertical asymmetric whisker (green) with horizontal caps at both ends marking the lower/upper CI bounds. Whisker lengths vary per group with the upper arm consistently longer than the lower arm, matching the intended log-transformed asymmetric CI. The y-axis now tops out at 38 (vs. the tallest whisker at ~34.8), a much tighter fit than the previous fixed 0-40 scale.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches the mandated #1A1A17 surface — not pure black, not light.
-      Chrome: Same title/subtitle now in light/white ink, axis titles in light ink, tick labels in a lighter muted gray, gridlines subtle but visible against the dark background. No dark-on-dark text found anywhere — all chrome flipped correctly.
-      Data: Same brand-green (#009E73) points and whiskers as the light render, at identical pixel positions and values — confirms Imprint data-color parity between themes (only chrome flipped).
+      Background: Warm near-black, matches the mandated #1A1A17 surface -- not pure black, not light.
+      Chrome: Same title/subtitle/callout now in light/white ink, axis titles in light ink, tick labels in a lighter muted gray, gridlines subtle but visible against the dark background. No dark-on-dark text found anywhere -- all chrome flipped correctly.
+      Data: Same brand-green (#009E73) points and whiskers as the light render, at identical pixel positions and values -- confirms Imprint data-color parity between themes (only chrome flipped).
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -69,14 +71,15 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, markers, or whiskers in either render.
+        comment: No collisions between text, markers, whiskers, or the new callout
+          annotation in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Sparse 6-point data given large bordered markers (r=10) and thick
-          3px whiskers with caps — clearly visible.
+          3px whiskers with 20px caps -- clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -86,11 +89,12 @@ review:
           on both surfaces.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800; title/legend proportions fine, but fixed
-          y-max=40 leaves a large empty band above the tallest bar (~34.8) unused.
+        comment: Canvas is exactly 3200x1800; yAxisMax is now computed dynamically
+          from the tallest CI bound, shrinking the empty band above Treatment C from
+          ~15% to ~8% of plot height (fixed from attempt 1).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -106,7 +110,7 @@ review:
         comment: 'First (only) series uses #009E73 from tokens.palette[0]; backgrounds
           match Imprint light/dark tokens; identical data color across themes.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -114,8 +118,8 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Deliberate touches (bordered ring markers, title/subtitle hierarchy)
-          beyond bare defaults, but overall still workmanlike.
+        comment: Deliberate touches (bordered ring markers, title/subtitle hierarchy,
+          callout) beyond bare defaults, but overall still workmanlike.
       - id: DE-02
         name: Visual Refinement
         score: 3
@@ -125,13 +129,13 @@ review:
           heavily refined beyond that.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Whisker asymmetry pattern is consistent and visible, but no explicit
-          emphasis/annotation calling out the best-performing group.
+        passed: true
+        comment: New 'Largest response' callout on Treatment C creates a clear focal
+          point and visual hierarchy that attempt 1 lacked.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,12 +146,12 @@ review:
         comment: Correctly renders an asymmetric error-bar plot via custom plugin.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Visible caps present and an annotation explains the bounds, but the
-          annotation text is internally inconsistent (labels '95% CI' while defining
-          5th-95th percentile, which is a 90% interval).
+        comment: Visible caps present and the subtitle annotation is now internally
+          consistent ('90% CI' matches 5th-95th percentile) -- fixed from attempt
+          1.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -187,8 +191,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 0-40% scale for a symptom-improvement percentage is sensible for
-          the domain.
+        comment: 0-38% scale for a symptom-improvement percentage is sensible for
+          the domain, now tightly fit to the data range.
     code_quality:
       score: 10
       max: 10
@@ -243,13 +247,13 @@ review:
         max: 5
         passed: false
         comment: Uses the plugin/afterDatasetsDraw hook to extend Chart.js beyond
-          built-ins, but the drawing itself is basic canvas line/stroke calls rather
-          than a showcase of a distinctive Chart.js capability.
+          built-ins, but the drawing itself is basic canvas line/stroke/text calls
+          rather than a showcase of a distinctive Chart.js-only capability.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
+  - annotations
   patterns:
   - data-generation
   dataprep: []
