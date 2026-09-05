@@ -80,6 +80,25 @@ for (let row = 0; row < n; row++) {
   }
 }
 
+// Notable structural exceptions: the strongest cross-department ties that
+// bridge otherwise-separate blocks. Called out with a ring marker so the
+// viewer's eye is drawn past the block-diagonal pattern to the few
+// collaborations that cross department lines.
+const bridges = [];
+for (let i = 0; i < n; i++) {
+  for (let j = i + 1; j < n; j++) {
+    if (nodeDept[i] !== nodeDept[j] && weights[i][j] > 0) {
+      bridges.push([i, j, weights[i][j]]);
+    }
+  }
+}
+bridges.sort((a, b) => b[2] - a[2]);
+const bridgeMarkers = [];
+bridges.slice(0, 3).forEach(([i, j]) => {
+  bridgeMarkers.push([j, i]);
+  bridgeMarkers.push([i, j]);
+});
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -108,6 +127,9 @@ chart.setOption({
     axisTick: { show: false },
     splitLine: { show: false },
     axisLabel: { color: t.inkSoft, fontSize: 14, interval: 0, formatter: axisLabelFormatter },
+    // Boundary labels keep the 30-node axis readable; hovering near the axis
+    // still reveals the individual node name via the axis pointer.
+    axisPointer: { show: true, type: "line", label: { show: true, backgroundColor: t.ink, color: t.pageBg, fontSize: 12 } },
   },
   yAxis: {
     type: "category",
@@ -117,7 +139,14 @@ chart.setOption({
     axisTick: { show: false },
     splitLine: { show: false },
     axisLabel: { color: t.inkSoft, fontSize: 14, interval: 0, formatter: axisLabelFormatter },
+    axisPointer: { show: true, type: "line", label: { show: true, backgroundColor: t.ink, color: t.pageBg, fontSize: 12 } },
   },
+  // Lets viewers zoom into a department block to inspect individual node
+  // pairs on the 30x30 matrix without cluttering the static view with labels.
+  dataZoom: [
+    { type: "inside", xAxisIndex: 0, filterMode: "none" },
+    { type: "inside", yAxisIndex: 0, filterMode: "none" },
+  ],
   visualMap: {
     type: "continuous",
     min: 0.05,
@@ -137,6 +166,19 @@ chart.setOption({
       type: "heatmap",
       data: cells,
       itemStyle: { color: t.elevatedBg },
+    },
+    {
+      type: "scatter",
+      name: "Notable cross-department bridge",
+      data: bridgeMarkers,
+      symbol: "circle",
+      symbolSize: 14,
+      itemStyle: { color: "transparent", borderColor: t.ink, borderWidth: 2 },
+      tooltip: {
+        formatter: (p) =>
+          `${nodeNames[p.value[1]]} ↔ ${nodeNames[p.value[0]]}<br/>notable cross-department bridge (strength ${weights[p.value[1]][p.value[0]].toFixed(2)})`,
+      },
+      z: 10,
     },
   ],
 });
