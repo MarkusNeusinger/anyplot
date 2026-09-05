@@ -1,0 +1,229 @@
+library: echarts
+language: javascript
+specification_id: network-bipartite
+created: '2026-09-05T09:49:49Z'
+updated: '2026-09-05T10:05:02Z'
+generated_by: claude-sonnet
+workflow_run: 33958625215
+issue: 5247
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Barycenter crossing-minimization (8 alternating sweeps) dramatically cleans up
+    the edge field compared to attempt 1's fixed-order 'hairball' — the bipartite
+    structure is now easy to trace.
+  - Opacity floor for low-weight edges raised from ~0.29 to 0.35, so even the weakest
+    connections stay legible on both backgrounds.
+  - Max-weight edges are highlighted in amber with a thicker stroke, giving the chart
+    a clear focal point without touching the correct Imprint categorical colors used
+    for nodes.
+  - 'emphasis.focus: ''adjacency'' with blur states on non-adjacent elements, plus
+    an edge-weight label on hover, add genuinely distinctive echarts graph-series
+    capabilities for the interactive HTML view.'
+  - Degree-weighted node sizing, correct Imprint palette order (green Researchers,
+    lavender Papers), and fully theme-adaptive chrome are preserved from attempt 1.
+  weaknesses:
+  - Amber is used to flag max-weight edges, but the style guide reserves amber for
+    the warning/caution semantic role — here it functions as an unlabeled 'strongest
+    connection' highlight with no legend entry explaining it, which is a minor semantic
+    misuse of the anchor color.
+  - Visual hierarchy communicates 'these are the strongest links' but doesn't otherwise
+    interpret the network (e.g. no callout naming the most-connected hub) — DE-03
+    storytelling is good but not yet at the 'excellent, immediate insight' tier.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "network-bipartite · javascript · echarts · anyplot.ai" centered top in dark ink; two-item legend ("Researchers" green swatch / "Papers" lavender swatch) below it; ten researcher node labels on the left, fourteen paper node labels on the right, all in dark/soft-dark text. All chrome text is clearly readable against the light background.
+      Data: Researcher nodes are brand green (#009E73), paper nodes are lavender (#C475FD) — correct Imprint canonical order (position 1, position 2). Node size scales with degree (A. Chen and D. Nakamura are visibly the largest hubs). Edges are muted gray with width/opacity scaled by weight; the small subset of maximum-weight edges (weight=4) are highlighted in amber/gold, standing out clearly against the gray field. Compared to the prior attempt, the barycenter-ordered columns produce a much cleaner, more traceable edge field with far fewer crossings.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, legend, and node labels now rendered in light/off-white and soft-light text against the dark surface. No dark-on-dark failures — every label, the title, and the legend text are clearly legible.
+      Data: Node colors are identical to the light render (#009E73 green, #C475FD lavender) — confirms only chrome flipped. Muted edge gray brightens appropriately for dark-theme contrast; amber highlight edges remain identically colored and equally prominent as in the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px, legend 15px, node labels 14px all explicitly set and
+          readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Barycenter crossing-minimization removed the prior hairball; no text/text
+          or text/node collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Opacity floor raised to 0.35 — even the weakest edges are now legible;
+          amber highlight edges are prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/amber trio has good contrast and is CVD-safe; no red-green
+          reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced two-column layout, generous margins, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a graph series; title correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Nodes use correct canonical Imprint order and theme-correct backgrounds,
+          but amber is used as an unlabeled 'max weight' highlight rather than its
+          designated warning/caution role.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Crossing-minimized layout plus amber-highlighted strongest edges
+          is clearly above a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Whitespace, subtle curveness, and the cleaned-up edge field are well
+          polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Amber highlight and hub sizing create a focal point, but the amber's
+          meaning isn't labeled in the legend.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct bipartite network graph, two node sets, cross-set-only edges.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Two separated columns, category coloring, degree-encoded size, weight-encoded
+          edge width/opacity, curved edges, non-overlapping labels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: All 10 researchers, 14 papers, and 29 edges are rendered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches mandated format; legend labels match the two node categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Demonstrates node coloring, degree-based sizing, and weight-based
+          edge encoding simultaneously.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Plausible, neutral author-paper affiliation network with realistic
+          ML/AI paper topics.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: 10x14 nodes and 29 edges sit comfortably within the spec's ranges.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Flat procedural script; the small barycenterSort helper is justified
+          algorithmic logic, not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fully deterministic, hardcoded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No imports; only the provided echarts global and tokens are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity for the crossing-minimization algorithm; no
+          fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: 'Correct mount-node contract, animation: false, no explicit size/devicePixelRatio.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Correct graph series with layout:'none', categories, per-node/per-edge
+          styling, emphasis/blur states.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: emphasis.focus:'adjacency' with blur states and an edge-weight hover
+          label are genuinely echarts-distinctive graph-series capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - crossing-minimization
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
