@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: pyramid-basic
 created: '2026-09-05T12:24:48Z'
-updated: '2026-09-05T12:29:03Z'
+updated: '2026-09-05T12:37:12Z'
 generated_by: claude-sonnet
 workflow_run: 33965758576
 issue: 1000
@@ -12,49 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/javascript/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Correct chart type: opposing horizontal bars sharing a central category axis,
-    forming a clean population pyramid'
-  - Symmetric y-axis scale (-3500 to 3500) as required by the spec for fair left/right
-    comparison
+  - 'Fixed both attempt-1 weaknesses cleanly: the y-axis title no longer double-encodes
+    the scale (dropped ''(thousands)'', kept the single ''k'' tick-suffix convention),
+    and a peak-age-group data label (''3280k peak'' / ''3210k peak'') now highlights
+    the bulge at 50-59, adding a genuine data-storytelling touch beyond the bare textbook
+    recipe.'
   - 'Correct Imprint palette usage: Male (first series) is brand green #009E73, Female
-    is lavender #C475FD, identical across both themes'
+    is lavender #C475FD, identical data colors across both themes.'
   - 'Full theme-adaptive chrome: title/axis/tick/legend colors pull from tokens, backgrounds
-    transparent so the page surface shows through correctly in both themes'
-  - Linked opposite x-axis mirrors the age-group category labels on the right edge,
-    a nice readability touch beyond the bare minimum
-  - Realistic, plausible demographic data with a coherent bulge shape (aging population
-    effect), 9 age groups within the spec's 5-15 range
+    transparent so the page surface shows through correctly in light and dark.'
+  - Symmetric value-axis scale keeps the left/right comparison fair, and the linked
+    opposite category axis mirrors age-group labels on both edges for readability.
   - Clean, deterministic, dependency-free code that correctly follows the Highcharts
     JS mount-node contract (transparent background, animation and credits disabled,
-    no explicit width/height)
+    no explicit width/height).
   weaknesses:
-  - 'X-axis title ''Population (thousands)'' combined with the tick-label formatter
-    appending ''k'' double-encodes the scale (e.g. tick ''3000k'') -- pick one convention:
-    either drop ''(thousands)'' from the axis title and keep the k-suffix formatter,
-    or drop the k-suffix and keep the plain thousands values, since combining both
-    risks a reader misreading the magnitude by 1000x.'
-  - The implementation follows the canonical Highcharts population-pyramid recipe
-    (stacked bar + negated values + linked axis) closely without additional visual
-    embellishment (e.g. no per-bar data labels, no highlighted focal age group) that
-    would elevate it beyond a textbook example.
+  - 'yAxis min/max are set to -3500/3500, but Highcharts'' default startOnTick/endOnTick
+    extends the rendered range to ±4000 (visible ''4000k'' end labels) — purely cosmetic
+    extra margin since it stays symmetric, but if exact configured bounds matter,
+    add startOnTick: false, endOnTick: false to yAxis.'
+  - 'Design excellence is still modest: the chart largely follows the canonical Highcharts
+    population-pyramid recipe (stacked bar + negated values + linked axis); the new
+    peak label is a good, small step but the overall composition remains close to
+    a textbook example.'
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white (~#FAF8F1), not pure white.
-      Chrome: Title "pyramid-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly readable. Y-axis category labels (age groups 0-9 through 80+) mirrored on both the left and right edges via a linked opposite axis. X-axis title "Population (thousands)" and tick labels (0k-4000k on each side) in soft dark gray. Legend at bottom with "Male" (green) and "Female" (lavender) swatches. Subtle vertical gridlines.
-      Data: Male bars extend left in brand green #009E73, Female bars extend right in lavender #C475FD, both meeting at the shared central axis, forming a clear pyramid/bulge shape peaking at age 50-59.
+      Chrome: Title "pyramid-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly readable. Y-axis category labels (age groups 0-9 through 80+) mirrored on both the left and right edges via a linked opposite axis. X-axis title "Population" and tick labels (0k-4000k on each side, formatted with a single 'k' suffix) in soft dark gray. Legend at bottom with "Male" (green) and "Female" (lavender) swatches. Subtle vertical gridlines.
+      Data: Male bars extend left in brand green #009E73, Female bars extend right in lavender #C475FD, both meeting at the shared central axis, forming a clear pyramid/bulge shape peaking at age 50-59, where a bold "3280k peak" / "3210k peak" data label calls out the widest bars.
       Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: warm near-black (~#1A1A17), not pure black.
-      Chrome: Same title, axis titles, tick labels, and legend, now rendered in light ink/off-white and soft light gray, clearly legible against the dark background. Gridlines remain subtle.
-      Data: Male and Female bar colors are identical to the light render (#009E73 and #C475FD) -- confirmed unchanged, only chrome (text/background) flipped.
-      Legibility verdict: PASS - no dark-on-dark failures; all title, axis, tick, and legend text is clearly visible against the near-black surface.
+      Chrome: Same title, axis title, tick labels, and legend, now rendered in light ink/off-white and soft light gray, clearly legible against the dark background. Gridlines remain subtle. The peak data labels remain in high-contrast ink on top of the green/lavender bars.
+      Data: Male and Female bar colors are identical to the light render (#009E73 and #C475FD) — confirmed unchanged, only chrome (text/background) flipped.
+      Legibility verdict: PASS - no dark-on-dark failures; all title, axis, tick, legend, and data-label text is clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,14 +60,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis titles, tick labels, legend) explicitly sized
-          and clearly readable in both themes
+        comment: All text (title, axis titles, tick labels, legend, peak data labels)
+          explicitly sized and clearly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No text or data collisions in either render, including the new peak
+          data labels
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -91,11 +90,11 @@ review:
         comment: Canvas gate passed; symmetric bars, generous margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis title says '(thousands)' but tick formatter also appends 'k',
-          double-encoding the scale and risking misreading the magnitude
+        passed: true
+        comment: 'Fixed from attempt 1: axis title now reads ''Population'' with a
+          single consistent ''k'' tick-suffix convention, no more double-encoding'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -104,30 +103,30 @@ review:
         comment: 'First series is brand green #009E73, identical data colors across
           both themes, correct theme-adaptive backgrounds'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Clean but follows the standard Highcharts population-pyramid recipe
-          without extra embellishment
+        comment: Clean pyramid with a new peak-callout label; still close to the standard
+          Highcharts population-pyramid recipe overall
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle gridlines, borderless bars, mirrored axis labels add some
-          refinement beyond bare default
+        comment: Subtle gridlines, borderless bars, mirrored axis labels add refinement
+          beyond bare default
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Pyramid shape naturally shows the demographic bulge, but this is
-          inherent to the chart type rather than an AI-added emphasis technique
+        comment: New bold 'peak' data labels on the widest bars give the pyramid a
+          clear focal point beyond the shape alone, an improvement over attempt 1
     spec_compliance:
       score: 15
       max: 15
@@ -234,13 +233,14 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Linked opposite x-axis for mirrored labels is a nice distinctive
-          touch, though it follows the well-known Highcharts pyramid demo pattern
+        comment: Linked opposite axis plus conditional peak data-label formatter are
+          nice touches, though built on the well-known Highcharts pyramid demo pattern
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
+  - annotations
   patterns:
   - data-generation
   dataprep: []
