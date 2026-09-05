@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: phase-diagram
 created: '2026-09-05T10:33:07Z'
-updated: '2026-09-05T10:38:08Z'
+updated: '2026-09-05T10:49:24Z'
 generated_by: claude-sonnet
 workflow_run: 33960756684
 issue: 3004
@@ -12,53 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - 'First trajectory correctly uses Imprint brand green #009E73; subsequent trajectories
-    follow canonical Imprint order (lavender #C475FD, blue #4467A3)'
-  - Physically accurate underdamped-pendulum RK4 integration (deterministic, no RNG)
-    with three distinct initial conditions clearly revealing convergence to the same
-    stable spiral equilibrium
-  - Equilibrium point marked with a distinct high-contrast crossRot marker using theme-adaptive
-    ink color; trajectory start points marked with matching-color circles outlined
-    in the page background
-  - Theme-adaptive chrome (title, axis titles, tick labels, background, grid) is correctly
-    implemented in both renders and the data colors are identical between light and
-    dark themes
-  - Font sizes explicitly set (title 22, axis titles 16, ticks 14, legend 16) and
-    well-proportioned on the 2400x2400 canvas; no text overlap or edge clipping in
-    either render
-  - 'Nice idiomatic touch: legend.labels.filter hides the unlabeled start-point datasets
-    so the legend stays clean with only the three trajectories and the equilibrium
-    point'
+  - 'Legend now correctly uses usePointStyle: true, so the equilibrium point''s crossRot
+    marker renders as an "X" glyph in the legend, matching the plotted marker and
+    fixing the previous mismatch'
+  - Time-evolution direction is now encoded via a per-segment alpha gradient (25%
+    → 100% opacity along each trajectory) using Chart.js's segment.borderColor callback
+    — directly addressing the spec's suggestion to show time evolution, and a genuinely
+    idiomatic Chart.js-specific technique
+  - The three trajectories now use distinct damping ratios (ζ = 0.05, 0.15, 0.4) with
+    step counts scaled to each trajectory's own time constant, producing visibly different
+    qualitative behavior (fast collapse vs. slow lingering spiral) instead of three
+    copies of the same regime
+  - Physically accurate underdamped-pendulum RK4 integration remains fully deterministic
+    (fixed dt, no RNG); theme-adaptive chrome, canonical Imprint palette order, and
+    the 2400x2400 canvas proportions are all still correctly implemented in both renders
+  - No text overlap or edge clipping in either render; font sizes are explicit and
+    well-balanced (title 22, axis titles 16, ticks 14, legend 16)
   weaknesses:
-  - No time-direction indicator (arrows or a color gradient along the trajectory)
-    even though the spec explicitly suggests this to show time evolution — a viewer
-    can currently only infer flow direction from the inward-spiraling shape, not confirm
-    it
-  - All three trajectories show the same qualitative behavior (damped convergence
-    to the single stable equilibrium at the same zeta) — varying the damping ratio
-    across trajectories, or adding a case that lingers near dx/dt=0, would broaden
-    feature coverage of what a phase diagram can reveal
-  - 'The equilibrium dataset uses pointStyle: ''crossRot'', but its legend swatch
-    renders as a plain rectangle instead of the crossRot symbol (Chart.js default
-    legend behavior) — the legend doesn''t visually match the marker shown on the
-    plot; set legend.labels.usePointStyle: true to fix'
-  - RK4 integration is implemented via two helper functions (derivatives, integrate)
-    — reasonable given the numerical-integration nature of a phase-diagram spec, but
-    technically departs from a flat imports-to-plot KISS structure
+  - The time-direction alpha gradient is correctly implemented but visually subtle
+    at normal viewing size — the difference between 25% and 100% opacity is hard to
+    perceive against the busy overlapping spirals, especially along the sparser outer
+    arcs; a small arrowhead near the equilibrium or a wider alpha range (e.g. 0.1→1.0)
+    would make the flow direction unmistakable
+  - All three trajectories are still underdamped spirals converging to the same single
+    stable equilibrium — varying ζ broadens the pacing (fast vs. slow collapse) but
+    doesn't yet show a qualitatively different regime (e.g. an overdamped non-oscillatory
+    approach) that would fully exploit the spec's suggestion about basin-of-attraction/limit-cycle
+    structure
+  - RK4 integration still uses two small helper functions (derivatives, integrate)
+    — reasonable for the numerical-integration domain but a minor, unresolved departure
+    from a flat KISS script structure
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "phase-diagram · javascript · chartjs · anyplot.ai" centered at top; a one-row legend below it lists the three trajectory labels (θ0/ω0 initial conditions) plus "Equilibrium (θ=0, ω=0)"; dark axis titles "Position θ (rad)" and "Angular velocity dθ/dt (rad/s)"; dark tick labels at -3.2..3.2 on both axes; subtle light-gray gridlines. All chrome text is clearly readable against the light background.
-      Data: Three spiral trajectories in brand green (#009E73), lavender (#C475FD), and blue (#4467A3), each starting from a filled circle at its initial condition and spiraling inward toward a black crossRot ("X") marker at the origin, marking the stable equilibrium. Colors match the canonical Imprint palette order with green first.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "phase-diagram · javascript · chartjs · anyplot.ai" centered at top; a one-row legend below it lists the three trajectory initial-condition labels plus "✕ Equilibrium (θ=0, ω=0)" — the equilibrium's legend swatch now renders as an "X" glyph (crossRot), matching the plotted marker (usePointStyle: true fixed the prior mismatch). Dark axis titles "Position θ (rad)" and "Angular velocity dθ/dt (rad/s)"; dark tick labels from -3.2 to 3.2 on both axes; subtle light-gray gridlines. All chrome text is clearly readable against the light background.
+      Data: Three spiral trajectories in brand green (#009E73), lavender (#C475FD), and blue (#4467A3), each starting from a filled circle at its initial condition and spiraling inward toward a dark crossRot ("X") marker at the origin. Each trajectory's line is drawn with a per-segment alpha gradient (faint near the start, fully opaque near the equilibrium) to cue the time-evolution direction — visible but subtle against the dense central spirals. The three trajectories use different damping ratios (ζ = 0.05, 0.15, 0.4), producing visibly different loop counts/decay rates (a widely-looping, slowly-decaying purple spiral vs. a tighter, faster-converging green/blue spiral) rather than three copies of the same behavior.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis titles, now rendered in light/cream text; tick labels and legend text also light-colored; gridlines are subtle light lines on the dark surface; the equilibrium legend swatch and the "X" marker flip from black to a cream/off-white tone (theme-adaptive ink token). All chrome text is clearly readable against the dark background — no dark-on-dark failures observed.
-      Data: The three trajectory colors (green, lavender, blue) are identical to the light render — only the chrome (background, text, grid, equilibrium marker color) flipped, as required.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and axis titles, now rendered in light/cream text; tick labels and legend text also light-colored; gridlines are subtle light lines on the dark surface; the equilibrium legend "X" glyph and the plotted crossRot marker flip from dark ink to a light/cream tone via the theme-adaptive ink token. All chrome text is clearly readable against the dark background — no dark-on-dark failures observed.
+      Data: The three trajectory colors (green, lavender, blue) and their per-segment alpha gradients are identical to the light render — only the chrome (background, text, grid, equilibrium marker color) flipped, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -113,31 +110,31 @@ review:
         comment: 'First series #009E73, canonical order, correct theme-adaptive backgrounds
           and chrome in both renders'
     design_excellence:
-      score: 14
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful palette use and a distinctive equilibrium marker place
-          this above a well-configured default, but short of publication-level polish
+        comment: Time-direction alpha gradient and varied damping ratios add real
+          sophistication beyond a well-configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace; legend swatch for the equilibrium
-          marker doesn't match its crossRot pointStyle, a minor polish miss
+        comment: Subtle grid, generous whitespace, and the legend swatch now correctly
+          matches the crossRot equilibrium marker (usePointStyle fix)
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Multiple converging trajectories and a marked equilibrium create
-          a clear focal point, but no time-direction indicator (arrows/gradient) as
-          the spec suggests
+        comment: Per-segment alpha gradient now cues time-evolution direction as the
+          spec suggests, though the effect is visually subtle against the dense central
+          spirals
     spec_compliance:
       score: 15
       max: 15
@@ -153,7 +150,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Trajectory, fixed point, and multiple initial conditions all present
+        comment: Trajectory, fixed point, multiple initial conditions, and a time-direction
+          cue all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -165,19 +163,20 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match the data
+        comment: Title matches mandated format exactly; legend labels and markers
+          match the data
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows convergence and crossing dx/dt=0, but all three trajectories
-          share the same damping regime — no contrasting behavior (e.g. near-limit-cycle)
-          shown
+        comment: Distinct damping ratios (0.05/0.15/0.4) now show contrasting convergence
+          rates, though all three remain underdamped spirals to the same equilibrium
+          rather than a qualitatively different regime
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -189,8 +188,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: omega0=1.5, zeta=0.15 are physically plausible underdamped-pendulum
-          values producing correct spiral behavior
+        comment: omega0=1.5 and the three zeta values are physically plausible underdamped-pendulum
+          parameters producing correct spiral behavior
     code_quality:
       score: 9
       max: 10
@@ -227,7 +226,7 @@ review:
         passed: true
         comment: Mounts canvas correctly, animation:false set, current Chart.js API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -239,19 +238,22 @@ review:
           to hide unlabeled datasets
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses crossRot pointStyle and mixed dataset types, but these patterns
-          are easily replicated in sibling libraries
-  verdict: REJECTED
+        passed: true
+        comment: Uses Chart.js's segment.borderColor callback for per-segment gradient
+          coloring — a genuinely distinctive, library-specific feature not trivially
+          replicated in sibling libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-legend
+  - segment-styling
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending

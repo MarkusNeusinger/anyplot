@@ -1,7 +1,7 @@
 // anyplot.ai
 // phase-diagram: Phase Diagram (State Space Plot)
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-05
+// Quality: 94/100 | Created: 2026-09-05
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
