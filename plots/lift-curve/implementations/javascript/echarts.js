@@ -16,14 +16,16 @@ function rand() {
 const nTransactions = 2000;
 const fraudRate = 0.06;
 
-// Model score correlates with true fraud label but with realistic noise,
-// so the resulting lift curve starts high and decays toward 1.
+// Model score correlates with true fraud label but with realistic noise
+// (wide overlap between the two distributions), so the resulting lift curve
+// starts well below the theoretical maximum and decays toward 1 - the shape
+// of a genuinely good, but imperfect, classifier.
 const records = [];
 for (let i = 0; i < nTransactions; i++) {
   const isFraud = rand() < fraudRate ? 1 : 0;
   const score = isFraud
-    ? Math.min(1, 0.55 + rand() * 0.45)
-    : Math.max(0, rand() * 0.6);
+    ? Math.min(1, 0.35 + rand() * 0.55)
+    : Math.max(0, rand() * 0.7);
   records.push({ isFraud, score });
 }
 records.sort((a, b) => b.score - a.score);
@@ -65,7 +67,7 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 19, fontWeight: 500 },
   },
   legend: {
-    data: ["Model", "Random selection"],
+    data: ["Model"],
     top: 70,
     textStyle: { color: t.inkSoft, fontSize: 15 },
   },
@@ -107,17 +109,53 @@ chart.setOption({
         decileIndices.includes(params.dataIndex) ? 12 : 0,
       lineStyle: { color: t.palette[0], width: 4 },
       itemStyle: { color: t.palette[0] },
-    },
-    {
-      name: "Random selection",
-      type: "line",
-      data: [
-        [0, 1],
-        [100, 1],
-      ],
-      symbol: "none",
-      lineStyle: { color: t.inkSoft, width: 2, type: "dashed" },
-      itemStyle: { color: t.inkSoft },
+      areaStyle: {
+        color: {
+          type: "linear",
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: `${t.palette[0]}33` },
+            { offset: 1, color: `${t.palette[0]}00` },
+          ],
+        },
+      },
+      // Reference line for random selection (y=1) - a markLine keeps the
+      // "no lift" baseline attached to the Model series instead of a second
+      // full series, avoiding legend/series boilerplate for a constant line.
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, width: 2, type: "dashed" },
+        label: {
+          show: true,
+          formatter: "Random selection (no lift)",
+          position: "insideMiddleTop",
+          color: t.inkSoft,
+          fontSize: 13,
+        },
+        data: [{ yAxis: 1 }],
+      },
+      // Callout annotating the headline lift value at the first decile.
+      markPoint: {
+        symbol: "pin",
+        symbolSize: 56,
+        itemStyle: { color: t.palette[0] },
+        label: {
+          formatter: `${liftValues[1].toFixed(1)}x`,
+          color: t.pageBg,
+          fontSize: 13,
+          fontWeight: 600,
+        },
+        data: [
+          {
+            name: "Top decile lift",
+            coord: [pctTargeted[1], liftValues[1]],
+          },
+        ],
+      },
     },
   ],
 });
