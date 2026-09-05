@@ -25,15 +25,36 @@ const species = [
   { name: "Alpine Iris", leafLength: 6.3, leafWidth: 2.4, n: 45 },
 ];
 
-const series = species.map((sp) => ({
+const series = species.map((sp, i) => ({
   name: sp.name,
   type: "scatter",
-  symbolSize: 22,
+  symbolSize: 18,
   data: Array.from({ length: sp.n }, () => [
     Number(gaussian(sp.leafLength, 0.55).toFixed(2)),
     Number(gaussian(sp.leafWidth, 0.28).toFixed(2)),
   ]),
-  itemStyle: { opacity: 0.8 },
+  // Theme-adaptive edge separates overlapping markers in the Marsh/Alpine
+  // overlap band (5.5-6.5 cm); page-bg stroke reads as a halo, not chartjunk.
+  itemStyle: { opacity: 0.72, borderColor: t.pageBg, borderWidth: 1 },
+  emphasis: {
+    focus: "series",
+    itemStyle: { opacity: 1, borderColor: t.ink, borderWidth: 1.5 },
+  },
+  // Overlap-zone callout lives on the middle (Marsh Iris) series only.
+  markArea:
+    i === 1
+      ? {
+          silent: true,
+          itemStyle: { color: t.inkSoft, opacity: 0.06 },
+          label: { color: t.inkSoft, fontSize: 12, position: "insideBottom" },
+          data: [
+            [
+              { xAxis: 5.5, name: "Overlap zone" },
+              { xAxis: 6.5 },
+            ],
+          ],
+        }
+      : undefined,
 }));
 
 // --- Init ---------------------------------------------------------------
@@ -54,6 +75,11 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 16 },
     itemWidth: 18,
     itemHeight: 12,
+  },
+  tooltip: {
+    trigger: "item",
+    formatter: (p) =>
+      `${p.seriesName}<br/>Leaf Length: ${p.data[0]} cm<br/>Leaf Width: ${p.data[1]} cm`,
   },
   grid: { left: 90, right: 60, top: 130, bottom: 90 },
   xAxis: {
