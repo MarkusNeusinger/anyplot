@@ -1,0 +1,259 @@
+library: d3
+language: javascript
+specification_id: scatter-categorical
+created: '2026-09-05T13:25:14Z'
+updated: '2026-09-05T13:36:35Z'
+generated_by: claude-sonnet
+workflow_run: 33968641926
+issue: 2597
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Per-species mean diamond markers (d3.symbol + d3.symbolDiamond, computed via d3.mean)
+    add a genuine visual-hierarchy focal point above the raw point cloud, directly
+    fixing the prior attempt's flagged data-storytelling gap
+  - Reduced marker radius (8 -> 6.5) and lower fill-opacity (0.75 -> 0.65) measurably
+    improve individual point discrimination in the dense Adelie/Chinstrap overlap
+    zone (~190-200mm flipper, ~3600-4000g mass) flagged in the prior review
+  - Correct Imprint palette in canonical order (Adelie=#009E73, Chinstrap=lavender,
+    Gentoo=blue), byte-identical between light/dark renders, with fully theme-adaptive
+    chrome (background, text, grid, axis domain, centroid stroke)
+  - 'Clean, idiomatic d3: scaleOrdinal + scaleLinear + axisBottom/axisLeft + data-join
+    pattern + d3-shape symbol generator + d3-array mean, deterministic seeded LCG
+    for reproducible data, no fake interactivity'
+  - Title, axis labels (with units), and legend (including the added 'Species mean'
+    entry) all comply with spec format; no clipping, overlap, or dark-on-dark/light-on-light
+    failures in either render
+  weaknesses:
+  - Library mastery still stops short of D3's real differentiators (voronoi hit-targets
+    for cleaner hover in the HTML output, a toggleable interactive legend, brushing)
+    — the symbol-generator centroid is a nice touch but a higher-level charting library
+    could replicate it about as easily
+  - Marker shapes are not varied by species (spec explicitly lists this as an optional
+    distinction technique) — color is the sole categorical encoding besides the diamond
+    centroids, which are common to all three groups
+  - At very small thumbnail scale (e.g. 400px wide previews) the 16px tick/legend
+    text and 6.5px markers will shrink close to the edge of comfortable legibility
+    — not a failure at full size but worth keeping in mind for responsive previews
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "scatter-categorical · javascript · d3 · anyplot.ai" is bold, dark, centered at top and fully readable. X-axis label "Flipper Length (mm)" and Y-axis label "Body Mass (g)" are dark and clearly legible. Tick labels are medium-gray and readable. A faint gray gridline grid covers both axes without competing with the data. A legend at the right lists "Adelie", "Chinstrap", "Gentoo" with colored dot swatches plus a new "Species mean" entry with a gray diamond swatch, all dark and legible; no clipping at the canvas edge.
+      Data: ~127 points across three species clusters plus three diamond centroid markers (one per species, outlined in dark ink) marking each group's mean flipper length / body mass. Adelie = green (#009E73), Chinstrap = lavender/purple, Gentoo = blue -- matches Imprint canonical order 1/2/3. Markers use a light page-background stroke and reduced opacity/radius versus the prior attempt, giving cleaner separation in the dense central Adelie/Chinstrap overlap zone. Gentoo cluster is clearly separated (higher flipper length + body mass).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and axis labels are near-white and clearly legible against the dark background. Tick labels are light gray and readable -- no dark-on-dark failure anywhere. Gridlines are faint light lines, visible but subtle. Legend text (including "Species mean") is light-colored and fully legible.
+      Data: Same three data colors as the light render -- Adelie green, Chinstrap lavender, Gentoo blue -- confirmed identical hex values; only chrome (background/text/grid/marker+centroid stroke) flipped to dark tokens. Centroid diamond outlines flip from dark ink to light ink stroke as expected for theme-adaptive chrome, while the diamond fill colors stay the species colors, identical to the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, and legend text all readable in
+          both themes at explicit font sizes (22/18/16/14px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions in either render, including
+          the enlarged legend with the new centroid entry
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: r=6.5 markers at fill-opacity 0.65 (reduced from r=8/0.75) noticeably
+          improve individual point discrimination in the dense Adelie/Chinstrap overlap
+          zone flagged previously
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; only 3 categories, well within safe
+          distinguishability range
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; balanced margins, no overflow or cramping despite
+          the extra legend row
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (mm, g); spec-format title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Adelie); canonical order for Chinstrap/Gentoo;
+          centroid fills match species colors; theme-correct backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive tokens throughout, subtle grid, clean legend, plus
+          a custom d3-shape diamond symbol for centroids -- clearly above generic
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain/spines removed, subtle gridlines, generous whitespace and
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Per-species mean diamonds create a clear focal point above the raw
+          point cloud, directly resolving the prior review's flagged gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct categorical scatter plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colorblind-safe colors per category, legend present, alpha
+          transparency for overlap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = flipper length, Y = body mass, both continuous; axes cover full
+          data extent
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match category
+          names plus the added mean-marker entry
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: X, Y, and category variable all present and mapped
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral penguin morphometrics (flipper length vs. body
+          mass by species)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic value ranges (180-235mm flipper, 2500-6000g mass) with
+          sensible per-species spread
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No classes; small RNG/centroid helper functions are needed since
+          the browser has no seeded RNG
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) gives deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3 bundle
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately simple, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct #container mount contract, no animation, current d3 v7 API
+          (join, scaleOrdinal, symbol)'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of d3 scales, axes, data-join pattern, plus d3-shape
+          (symbol generator) and d3-array (mean) modules
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3-shape symbol generator for centroid markers is a real D3-specific
+          technique, though still short of D3's bigger differentiators (voronoi hit-targets,
+          interactive legend, brushing)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - aggregation
+  styling:
+  - alpha-blending
+  - edge-highlighting
