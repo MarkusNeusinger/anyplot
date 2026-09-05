@@ -4,6 +4,7 @@
 // Quality: 88/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -25,11 +26,14 @@ for (let i = 0; i < DAYS; i += 1) {
   dates.push(d);
 }
 
-// Product launch events that shift the daily-active-user trend. `bump` adds
-// a one-time step to the running total the day the event lands.
+// Product/operational events that shift the daily-active-user trend. `bump`
+// adds a one-time step to the running total the day the event lands — most
+// launches step the level up, but the outage steps it down, showing both
+// impact directions.
 const EVENTS = [
   { dayIndex: 34, label: "Beta Launch", bump: 6 },
   { dayIndex: 96, label: "Mobile App Release", bump: 13 },
+  { dayIndex: 130, label: "Service Outage", bump: -15 },
   { dayIndex: 162, label: "API v2 Launch", bump: 9 },
   { dayIndex: 228, label: "Enterprise Tier", bump: 17 },
 ];
@@ -59,6 +63,29 @@ const monthTicks: Date[] = [];
 }
 
 const TITLE = "line-annotated-events · javascript · muix · anyplot.ai";
+
+// Subtle shaded region marking the sustained growth phase after the largest
+// step-up (Enterprise Tier) — a deliberate accent beyond the reference lines
+// themselves, reading the scale through the chart's own x-axis via hooks.
+function GrowthPhaseBand({ from, color }: { from: Date; color: string }) {
+  const xScale = useXScale();
+  const { top, height, left, width } = useDrawingArea();
+  const xStart = xScale(from);
+  if (xStart == null || Number.isNaN(xStart)) return null;
+  const bandWidth = left + width - xStart;
+  if (bandWidth <= 0) return null;
+  return (
+    <rect
+      x={xStart}
+      y={top}
+      width={bandWidth}
+      height={height}
+      fill={color}
+      fillOpacity={0.07}
+      pointerEvents="none"
+    />
+  );
+}
 
 // --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
@@ -139,6 +166,10 @@ export default function Chart() {
           "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       >
+        <GrowthPhaseBand
+          from={dates[EVENTS[EVENTS.length - 1].dayIndex]}
+          color={t.palette[0]}
+        />
         {EVENTS.map((event, i) => (
           <ChartsReferenceLine
             key={event.label}
