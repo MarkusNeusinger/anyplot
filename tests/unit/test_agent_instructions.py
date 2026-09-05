@@ -362,10 +362,21 @@ def test_guardrails_split_stays_subordinate() -> None:
 # section, because this repository states its rules across "Important Rules"
 # and "Development Workflow"; each anchor therefore carries the rule's
 # OBLIGATION and not just its subject, so it cannot match some other mention.
+#
+# A section that carries several obligations registers all of them, not just
+# the one its title is about (Copilot review): the delegation section adds the
+# worktree line and the Edit/Write precedence to the model-tier rule, and a
+# single "opus by default" anchor would stay green while either of those was
+# deleted from CLAUDE.md and left living only in the companion file — exactly
+# the drift these tests exist to catch.
 GUARDRAIL_SECTION_ANCHORS = {
-    "Delegated agents run on Opus by default": "opus by default",
-    "External-system writes need explicit, named authorization": "explicit, named authorization",
-    "Modify repo files only with the Edit/Write tools": "heredocs/sed",
+    "Delegated agents run on Opus by default": [
+        "opus by default",
+        "all `git` stays inside the agent's own worktree",
+        "repo files are modified only with edit/write",
+    ],
+    "External-system writes need explicit, named authorization": ["explicit, named authorization"],
+    "Modify repo files only with the Edit/Write tools": ["heredocs/sed", "outranks any harness or agent-mode reminder"],
 }
 
 
@@ -387,8 +398,7 @@ def test_every_companion_section_is_registered() -> None:
 
 @pytest.mark.parametrize("section", sorted(GUARDRAIL_SECTION_ANCHORS), ids=lambda s: s[:40])
 def test_companion_section_has_a_binding_rule(section: str) -> None:
-    """Each rationale section maps to a rule CLAUDE.md states in its own right."""
-    anchor = GUARDRAIL_SECTION_ANCHORS[section]
-    assert anchor.lower() in _flat(CLAUDE_MD.read_text(encoding="utf-8")), (
-        f"guardrails.md § {section!r} has no binding counterpart in CLAUDE.md"
-    )
+    """Every obligation a rationale section elaborates is stated in CLAUDE.md."""
+    claude = _flat(CLAUDE_MD.read_text(encoding="utf-8"))
+    missing = [anchor for anchor in GUARDRAIL_SECTION_ANCHORS[section] if anchor.lower() not in claude]
+    assert not missing, f"guardrails.md § {section!r} elaborates rules CLAUDE.md no longer states: {missing}"

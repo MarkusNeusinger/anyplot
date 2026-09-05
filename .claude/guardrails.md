@@ -1,8 +1,8 @@
 # Guardrails — the long version
 
-`CLAUDE.md` states each working rule as one line: the rule, its shortest
-reason, its date. This file holds what does not fit there — the incident that
-produced the rule, the recipe it implies, the numbers that make it credible.
+`CLAUDE.md` states each working rule as one line: the rule and its shortest
+reason. This file holds what does not fit there — the incident that produced
+the rule, the recipe it implies, the numbers that make it credible.
 
 The split exists because `CLAUDE.md` is loaded into **every** session, so its
 cost is paid on every turn, while a retro narrative is needed only when
@@ -82,8 +82,11 @@ secret values in its output.
 
 **The reverse direction is its own script, not the same one with a flag.**
 `infra/cloudflare/README.md` § "Rolling back" is explicit about why: a
-rollback has to run in the worst state the service can be in, including the
-secret having been disabled during the incident, so it looks nothing up.
+rollback has to run in the worst state the service can be in, which includes
+the secret having been disabled during the incident — so it never looks the
+SECRET up. It still resolves the serving revision and its image, because it
+has to; what it must not do is depend on anything the incident may have taken
+away.
 
 Afterwards, VERIFY from the session with a read the agent is allowed to make,
 instead of trusting a "done" in chat. A runbook that shipped this way belongs

@@ -27,7 +27,7 @@ A companion guide `.github/copilot-instructions.md` carries the shared rules for
 
 ## Guardrails (the long version)
 
-The rules in this file are stated as one line each: the rule, its shortest reason, its date. The incident behind a rule, the recipe it implies, and the numbers that make it credible live in [`.claude/guardrails.md`](.claude/guardrails.md) — read that file when you actually hit the situation, not on every turn. This file is loaded into every session and pays its cost on every turn; a retro narrative is needed once. Nothing in the companion file is a new rule: if the two ever disagree, CLAUDE.md is the rule and the companion is commentary that fell behind.
+The rules in this file are stated as one line each: the rule and its shortest reason. The incident behind a rule, the recipe it implies, and the numbers that make it credible live in [`.claude/guardrails.md`](.claude/guardrails.md) — read that file when you actually hit the situation, not on every turn. This file is loaded into every session and pays its cost on every turn; a retro narrative is needed once. Nothing in the companion file is a new rule: if the two ever disagree, CLAUDE.md is the rule and the companion is commentary that fell behind.
 
 ## Changelog + releases
 

@@ -116,25 +116,35 @@ format (Summary / Plan / Test plan), the changelog gate, the push,
 and the PR-ref follow-up. English throughout, no
 "Generated with..." lines in the body.
 
-**A multi-paragraph message or body goes through a file — and that
-file is named after the branch.** `git commit -F` and `gh pr create
---body-file` keep the prose out of shell quoting, but the scratchpad
-is shared by every agent of one session, so a generic
-`commitmsg.txt` / `prbody.md` gets overwritten by a parallel agent
-and a later re-read commits someone else's text (sibling repo,
-2026-09-05: both files were clobbered mid-run). Derive the name, or
-take a private directory:
+**A multi-paragraph commit message goes through a file — and that
+file belongs to this branch alone.** `git commit -F` keeps the prose
+out of shell quoting, but the scratchpad is shared by every agent of
+one session, so a generic `commitmsg.txt` gets overwritten by a
+parallel agent and a later re-read commits someone else's text
+(sibling repo, 2026-09-05: both a message and a body file were
+clobbered mid-run). Take a private directory, which needs no
+sanitising at all:
 
 ```bash
-BRANCH=$(git branch --show-current)
-MSG="$SCRATCH/commitmsg-$BRANCH.txt"    # or: D=$(mktemp -d) and write inside it
+D=$(mktemp -d)                 # or, if you name it: BRANCH=$(git branch --show-current)
+MSG="$D/commitmsg.txt"         #     SLUG=${BRANCH//\//-}; MSG="$D/commitmsg-$SLUG.txt"
 ```
 
-Write it with the Write tool, then `git commit -F "$MSG"` in the SAME
-step that wrote it — never re-read one of these files a turn later to
-reuse it, because between the two the file may belong to another
-agent. They are scratch input to one command, not a record; the
-record is the commit.
+A branch name is not a filename — `release/v1.2.3` turns the slash
+into a directory that does not exist — so substitute the separators
+if you derive the name, and never write into a `$SCRATCH` you have
+not set yourself.
+
+Write the file with the Write tool, then `git commit -F "$MSG"` in
+the SAME step that wrote it — never re-read one a turn later to reuse
+it, because between the two it may belong to another agent. These are
+scratch input to one command, not a record; the record is the commit.
+
+The same holds for a PR body you pass as `--body-file`. The mandated
+`/pull_request` command does not take that path — it builds the body
+inline with a quoted heredoc (`agentic/commands/pull_request.md`
+step 6), which has no collision to avoid — so this applies when you
+write a body file yourself.
 
 ## 3 · After opening: pipeline + review loop (do not skip)
 
@@ -230,9 +240,14 @@ push, `gh pr view <num> --json headRefOid`:
    Dedupe the check runs **by name, newest wins**: a superseded run
    (a label re-trigger, a cancelled first attempt) stays beside the
    current one and reads as a red check that is not there any more.
+   Dedupe on `.id`, which grows with creation and is always set — a
+   check run carries no `created_at`, and `started_at` stays null
+   until the run begins, so a `max_by(.started_at)` would hand the
+   row to the OLD completed attempt while the new one is still
+   queued, which is the failure this step exists to prevent.
    ```bash
    gh api repos/{owner}/{repo}/commits/$(gh pr view <num> --json headRefOid --jq .headRefOid)/check-runs \
-     --jq '[.check_runs[]] | group_by(.name) | map(max_by(.started_at)) | .[] | "\(.name): \(.status) \(.conclusion // "")"'
+     --jq '[.check_runs[]] | group_by(.name) | map(max_by(.id)) | .[] | "\(.name): \(.status) \(.conclusion // "")"'
    ```
 3. **A Copilot review actually exists on the PR** — `gh pr view <num>
    --json reviews`, author `copilot-pull-request-reviewer`. The
