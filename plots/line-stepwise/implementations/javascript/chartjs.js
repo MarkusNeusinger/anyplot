@@ -6,7 +6,7 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ---------------------------------------
-// Elevator service requests answered per hour vs. queue depth at close
+// Number of elevators actively in service, sampled hourly
 const hours = [
   "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00",
   "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00",
@@ -17,6 +17,8 @@ const activeElevators = [
   3, 3, 3, 4, 5, 5, 4,
   3, 2,
 ];
+// Peak coverage window (5 elevators, 17:00-18:00) gets a larger point marker
+const peakRadius = activeElevators.map((v) => (v === 5 ? 7 : 4));
 
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -35,8 +37,11 @@ new Chart(canvas, {
         borderColor: t.palette[0],
         backgroundColor: t.palette[0],
         borderWidth: 3.5,
-        pointRadius: 0,
-        pointHoverRadius: 0,
+        pointRadius: peakRadius,
+        pointHoverRadius: peakRadius,
+        pointBackgroundColor: t.palette[0],
+        pointBorderColor: t.pageBg,
+        pointBorderWidth: 1.5,
         fill: false,
         tension: 0,
       },
@@ -52,7 +57,7 @@ new Chart(canvas, {
         display: true,
         text: "line-stepwise · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "500" },
+        font: { size: 24, weight: "500" },
         padding: { bottom: 20 },
       },
       legend: { display: false },
