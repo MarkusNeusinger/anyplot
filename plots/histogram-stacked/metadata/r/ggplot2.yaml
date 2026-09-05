@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: histogram-stacked
 created: '2026-09-05T04:31:55Z'
-updated: '2026-09-05T04:36:04Z'
+updated: '2026-09-05T04:44:52Z'
 generated_by: claude-sonnet
 workflow_run: 33944655834
 issue: 2601
@@ -12,54 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-stacked/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - Correct Imprint palette order (green, lavender, blue) with the brand green always
-    the first series, applied via scale_fill_manual(values = IMPRINT_PALETTE[1:3])
-  - Same bin boundaries shared across all three cohorts by construction — a single
-    geom_histogram(aes(fill = cohort)) call with one binwidth/boundary, exactly matching
-    the spec's 'same bin boundaries applied to all groups' requirement
-  - Theme-adaptive chrome correctly threaded through background, ink, ink_soft and
-    axis/legend colors; both renders use the exact spec hex values (#FAF8F1/#1A1A17)
-    and remain fully readable
-  - Bar/segment borders colored to match PAGE_BG create clean separation between stacked
-    segments and between adjacent bins, improving readability especially for the lower-contrast
-    lavender segment
-  - Reproducible (set.seed(42)), clean imports (dplyr and ragg both actually used),
-    correct output naming via ragg::agg_png
-  - Right-justified top legend is a sensible space-saving layout choice that keeps
-    the plot area large
+  - 'Fixed the prior review''s grid-color weakness: gridlines now use scales::alpha(INK,
+    0.15) for a proper faint tint instead of full-strength INK'
+  - Added a distinctive stat_bin(inherit.aes = FALSE, geom = "step") overlay that
+    traces the combined total across all cohorts, making the 'total = combined frequency'
+    spec requirement visible as a shape
+  - Added an italic annotation calling out the cohort-shift pattern, directly addressing
+    the prior 'missed data-storytelling opportunity' weakness
+  - Widened the right-side plot margin, giving the top-right legend more breathing
+    room from the canvas edge
+  - Correct Imprint palette order maintained (green/lavender/blue, brand green first),
+    same bin boundaries shared across all three cohorts, theme-adaptive chrome correct
+    and identical data colors across both renders, reproducible via set.seed(42)
   weaknesses:
-  - Major-y gridlines use full INK color at linewidth 0.3 rather than a faint tint
-    — per the library guide's own note that ggplot2 has no grid alpha, they read more
-    prominent than the style guide's 'very subtle, 15-25% opacity' target; consider
-    a lighter gray/tan custom color instead of full INK
-  - No visual emphasis or annotation calling out the cohort shift (Freshman skewing
-    low, Senior skewing high) — a missed data-storytelling opportunity given the pattern
-    is already present in the data
-  - Groups are stacked in factor-definition order rather than the spec's optional
-    suggestion to order groups by size within bins (minor, spec marks this as 'consider')
-  - Legend sits close to the right canvas edge with modest margin; a touch more right-side
-    padding would add safety margin across renderers
-  - Styling stays close to theme_minimal defaults plus the border trick — solid but
-    not an especially distinctive treatment (kept Design Excellence just above baseline
-    rather than higher)
+  - Groups are still stacked in factor-definition order rather than the spec's optional
+    'consider ordering groups by size within bins' suggestion (minor, soft suggestion)
+  - The storytelling annotation text is small (size = 2.8, ~8pt) - a touch larger
+    would improve legibility when the image is scaled down for mobile/thumbnail views
+  - Overall styling remains close to theme_minimal defaults plus the border/overlay
+    tricks; room for a more distinctive custom treatment to push Design Excellence
+    further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Exam Scores by Cohort · histogram-stacked · r · ggplot2 · anyplot.ai" in dark ink, top-left. Axis titles "Exam Score" (x) and "Number of Students" (y) in dark ink, clearly legible. Tick labels (40/60/80/100 on x; 0/50/100/150/200 on y) in a softer dark gray, readable. Legend "Cohort" top-right with swatches for Freshman/Sophomore/Senior. Horizontal grid lines only (no vertical grid), thin and dark but not overwhelming. L-shaped axis line (left + bottom) visible.
-      Data: Three stacked color segments per bin — green (#009E73, Freshman), lavender (#C475FD, Sophomore), blue (#4467A3, Senior) — separated by thin off-white borders matching the page background. Distribution shows green dominant in lower-score bins (40-65), a mix of all three around the 65-85 peak, and blue (Senior) dominant in higher-score bins (85-100), consistent with the cohorts' generated means.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "Exam Scores by Cohort · histogram-stacked · r · ggplot2 · anyplot.ai" in dark ink, top-left. Italic annotation "Scores skew higher across cohorts (Freshman -> Senior)" inside panel top-left in softer ink, new since last attempt. Legend "Cohort" top-right with swatches for Freshman/Sophomore/Senior, comfortable margin from right edge. Axis titles "Exam Score" (x) and "Number of Students" (y) in dark ink. Tick labels in softer gray. Horizontal grid lines only, now a faint tint (scales::alpha(INK, 0.15)) rather than full-strength INK.
+      Data: Three stacked color segments per bin - green (#009E73, Freshman), lavender (#C475FD, Sophomore), blue (#4467A3, Senior) - separated by thin PAGE_BG-colored borders. A thin black stepped line overlays the stack, tracing the combined total count across all cohorts per bin.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis titles rendered in light/off-white text; tick labels and legend text in a softer light gray — all clearly legible against the dark background. Grid lines rendered in a light tone, visible but not dominant. Axis line visible in a muted light tone.
-      Data: Same three data colors as the light render (green #009E73, lavender #C475FD, blue #4467A3) — confirmed identical, only the chrome (background, text, grid, borders) flipped between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, and tick label is clearly legible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis titles, and annotation rendered in light/off-white text; tick labels and legend text in softer light gray - all clearly legible. Grid lines are a faint light tint, visible but not dominant. The total step-line correctly flips to light-on-dark (INK token) and remains visible against the dark bars.
+      Data: Same three data colors as the light render (green #009E73, lavender #C475FD, blue #4467A3) - confirmed identical, only chrome flipped between themes.
+      Legibility verdict: PASS - no dark-on-dark failures; every title, axis label, and tick label is clearly legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,49 +57,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; legend sits a bit
-          close to the right edge
+        comment: All chrome readable in both themes; italic annotation is small (~8pt)
+          and could be bumped slightly for mobile legibility
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: Annotation, legend, step-line, and bars don't collide in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked segments clearly distinguishable, borders aid separation
+        comment: Stacked segments and total step-line clearly distinguishable, PAGE_BG
+          borders aid separation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 3 series with CVD-safe Imprint hues plus PAGE_BG-colored borders
-          acting as outlines
+        comment: 3 CVD-safe Imprint hues plus a shape-based (not color-based) total-line
+          cue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and no clipping; legend margin on the right is a
-          bit tight
+        comment: Correct 3200x1800 canvas, no clipping; widened right margin fixes
+          prior tight-legend complaint
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with clear units (Exam Score, Number of Students)
+        comment: Descriptive axis titles with implicit units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical palette order 1-3, correct theme
-          backgrounds in both renders'
+        comment: 'First series #009E73, canonical order, correct theme backgrounds,
+          identical data colors across themes'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -117,22 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above generic defaults thanks to PAGE_BG border separators and right-justified
-          legend, but not an exceptional custom treatment
+        comment: PAGE_BG border separators, right-justified legend, and combined-total
+          overlay add polish beyond generic defaults, but still close to theme_minimal
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: L-shaped spines, minor grid removed, but the major-y gridline uses
-          full INK color rather than a faint tint
+        comment: Gridlines fixed to a proper faint tint (was full-strength INK in
+          prior attempt); L-shaped axis lines kept minimal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: The cohort shift pattern is visible in the data but not actively
-          emphasized with annotation or highlighting
+        comment: New annotation plus total step-line actively call out and visualize
+          the cohort-shift pattern, fixing the prior review's weakness
     spec_compliance:
       score: 15
       max: 15
@@ -150,7 +141,7 @@ review:
         max: 4
         passed: true
         comment: Shared bins, distinct group colors, legend, total = combined frequency
-          all present
+          (now visually reinforced)
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -185,7 +176,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Score range 0-100 and student counts are sensible for the domain
+        comment: Score range 0-100 and student counts sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -207,7 +198,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: dplyr and ragg both actually used, no unused imports
+        comment: dplyr, ragg, and scales::alpha all actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -221,7 +212,7 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -229,19 +220,21 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Standard geom_histogram + fill idiom, relies on default position
-          stack
+        comment: Standard geom_histogram + fill idiom with default stacking; inherit.aes
+          = FALSE overlay used correctly but is a common pattern
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: No distinctive ggplot2-specific feature beyond basic scale_fill_manual
-          and border styling
+        comment: The stat_bin combined-total step overlay is a genuinely distinctive
+          grammar-of-graphics technique, though it's the only such feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
