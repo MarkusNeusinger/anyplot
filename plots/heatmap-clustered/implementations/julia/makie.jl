@@ -258,11 +258,12 @@ Colorbar(
     ticklabelcolor = INK_SOFT, width = 18,
 )
 
-colsize!(fig.layout, 1, Relative(0.16))
-colsize!(fig.layout, 2, Relative(0.66))
-rowsize!(fig.layout, 2, Relative(0.15))
-rowsize!(fig.layout, 3, Relative(0.02))
-rowsize!(fig.layout, 4, Relative(0.71))
+colsize!(fig.layout, 1, Relative(0.14))
+colsize!(fig.layout, 2, Relative(0.62))
+colsize!(fig.layout, 3, Relative(0.24))
+rowsize!(fig.layout, 2, Relative(0.13))
+rowsize!(fig.layout, 3, Relative(0.05))
+rowsize!(fig.layout, 4, Relative(0.70))
 
 # --- Save -----------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
