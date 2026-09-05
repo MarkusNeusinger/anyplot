@@ -1,6 +1,7 @@
 // anyplot.ai
 // funnel-basic: Basic Funnel Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 89/100 | Created: 2026-09-05
 
 //# anyplot-orientation: square
@@ -62,9 +63,13 @@ const PLOT_W = chart.plotWidth;
 const PLOT_H = chart.plotHeight;
 const GAP = 10;
 
-// Center the funnel + label composition as one block so unused margin is
-// balanced left/right, rather than letting the label gutter trail off into
-// empty canvas on the right.
+// First-pass layout: a rough block split just wide enough to hold the
+// funnel + label gutter. The label strings are variable-width, so this
+// guess is deliberately not centered on the canvas yet — the whole
+// composition (funnel + leader lines + labels) is drawn into group `g`
+// below, then re-centered on `g`'s *actual* rendered bounding box (real
+// text extents, not the abstract split) so left/right whitespace balances
+// symmetrically regardless of how wide the label strings turn out to be.
 const BLOCK_W = PLOT_W * 0.86;
 const blockLeft = chart.plotLeft + (PLOT_W - BLOCK_W) / 2;
 const funnelZoneW = BLOCK_W * 0.5;
@@ -76,6 +81,14 @@ const labelX = blockLeft + funnelZoneW + 24;
 const scale = maxHalfWidth / VALUES[0];
 const halfWidths = VALUES.map((v) => v * scale);
 const bandHeight = (PLOT_H - (n - 1) * GAP) / n;
+
+// Steepest stage-to-stage drop-off (largest relative loss from one stage
+// to the next, i.e. the transition with the lowest stage-over-stage
+// conversion rate), called out below with a native Highcharts renderer
+// "callout" label pointing at the transition.
+const dropRates = VALUES.slice(0, -1).map((v, i) => 1 - VALUES[i + 1] / v);
+const steepestIdx = dropRates.indexOf(Math.max(...dropRates));
+let dropAnchor = null;
 
 function addTooltip(el, text) {
   const titleEl = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -101,6 +114,10 @@ STAGES.forEach((stage, i) => {
   // Last stage has no next value to taper into — render it as a flat-bottomed
   // band (its own width top and bottom) rather than inventing a taper amount.
   const bottomHalf = i < n - 1 ? halfWidths[i + 1] : halfWidths[i];
+
+  if (i === steepestIdx) {
+    dropAnchor = { x: centerX - bottomHalf, y: y1 };
+  }
 
   const path = [
     ["M", centerX - topHalf, y0],
@@ -148,3 +165,26 @@ STAGES.forEach((stage, i) => {
     .css({ color: t.inkSoft, fontSize: "14px" })
     .add(g);
 });
+
+// Call out the steepest stage-to-stage drop-off with a native Highcharts
+// SVGRenderer "callout" label (bordered, pointer anchored at the transition)
+// — a distinctive Highcharts component, not a plain SVG <text>.
+if (dropAnchor) {
+  const calloutText = `Steepest drop: −${(dropRates[steepestIdx] * 100).toFixed(1)}%`;
+  const calloutX = Math.max(chart.plotLeft + 4, dropAnchor.x - 210);
+  const calloutY = dropAnchor.y - 34;
+  chart.renderer
+    .label(calloutText, calloutX, calloutY, "callout", dropAnchor.x, dropAnchor.y)
+    .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
+    .attr({ fill: t.elevatedBg, stroke: t.amber, "stroke-width": 1.5, padding: 8, r: 5, zIndex: 4 })
+    .add(g);
+}
+
+// Re-center the whole composition (funnel + leader lines + labels +
+// callout) on its *actual* rendered bounding box — real text extents,
+// not the abstract BLOCK_W split above — so left/right whitespace
+// balances symmetrically instead of trailing off wherever the
+// variable-width label strings happen to end.
+const bbox = g.getBBox(true);
+const shift = chart.plotLeft + PLOT_W / 2 - (bbox.x + bbox.width / 2);
+g.attr({ translateX: shift });
