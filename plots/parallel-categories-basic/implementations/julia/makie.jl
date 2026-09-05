@@ -57,27 +57,37 @@ channel_tops = node_tops(channel_totals)
 product_tops = node_tops(product_totals)
 outcome_tops = node_tops(outcome_totals)
 
-# Stacks the combos crossing a dimension's nodes in the same relative order
-# combos are listed in, so a combo's left/right ribbon segments always meet
-# at the same y-offset within the shared node.
-function stage_positions(n_categories, dim_idx, tops)
+# Stacks the combos touching a node top-to-bottom by `order_key`, so each
+# node edge can use an order tailored to the ribbons it feeds. A node's
+# rectangle is solid (no internal ribbon path is drawn), so its incoming
+# edge (grouped by source category) and outgoing edge (grouped by target
+# category) are free to use independent stacking orders — this is what
+# keeps same-outcome ribbons contiguous and minimizes crossings, per the
+# spec's guidance to order categories to reduce crossings.
+function stack_positions(n_categories, dim_idx, tops, order_key)
     offsets = Dict{NTuple{3,Int},Tuple{Float64,Float64}}()
     for ci in 1:n_categories
+        cat_combos = sort(filter(c -> c[dim_idx] == ci, combos); by=order_key)
         current_top = tops[ci]
-        for c in combos
-            if c[dim_idx] == ci
-                y_bottom = current_top - c[4]
-                offsets[(c[1], c[2], c[3])] = (current_top, y_bottom)
-                current_top = y_bottom
-            end
+        for c in cat_combos
+            y_bottom = current_top - c[4]
+            offsets[(c[1], c[2], c[3])] = (current_top, y_bottom)
+            current_top = y_bottom
         end
     end
     return offsets
 end
 
-channel_pos = stage_positions(length(channels), 1, channel_tops)
-product_pos = stage_positions(length(products), 2, product_tops)
-outcome_pos = stage_positions(length(outcomes), 3, outcome_tops)
+# Channel's only edge feeds product nodes -> order by (product, outcome).
+channel_pos = stack_positions(length(channels), 1, channel_tops, c -> (c[2], c[3]))
+# Product's incoming edge meets the channel edge -> order by (channel, outcome).
+product_pos_in = stack_positions(length(products), 2, product_tops, c -> (c[1], c[3]))
+# Product's outgoing edge feeds outcome nodes -> order by (outcome, channel),
+# so purchased- and abandoned-bound ribbons leave each product as two
+# contiguous bands instead of interleaved by channel.
+product_pos_out = stack_positions(length(products), 2, product_tops, c -> (c[3], c[1]))
+# Outcome's only edge meets the product edge -> order by (product, channel).
+outcome_pos = stack_positions(length(outcomes), 3, outcome_tops, c -> (c[2], c[1]))
 
 # --- Figure -------------------------------------------------------------------
 fig = Figure(
@@ -113,19 +123,22 @@ function draw_ribbon!(ax, x_left, x_right, y_top_l, y_bot_l, y_top_r, y_bot_r, c
     t = smoothstep.((xs .- x_left) ./ (x_right - x_left))
     y_top = y_top_l .+ (y_top_r - y_top_l) .* t
     y_bot = y_bot_l .+ (y_bot_r - y_bot_l) .* t
-    ribbon_color = RGBAf(color.r, color.g, color.b, 0.55)
+    ribbon_color = RGBAf(color.r, color.g, color.b, 0.45)
     band!(ax, xs, y_bot, y_top; color=ribbon_color)
 end
 
-for c in combos
+# Draw the widest ribbons first so the remaining crossings — thinner ribbons
+# layered on top — stay individually readable instead of disappearing under
+# a wide band's translucent fill.
+for c in sort(combos; by=x -> -x[4])
     key = (c[1], c[2], c[3])
     channel_color = IMPRINT_PALETTE[c[1]]
 
     yt_l, yb_l = channel_pos[key]
-    yt_r, yb_r = product_pos[key]
+    yt_r, yb_r = product_pos_in[key]
     draw_ribbon!(ax, X1 + NODE_HW, X2 - NODE_HW, yt_l, yb_l, yt_r, yb_r, channel_color)
 
-    yt_l2, yb_l2 = product_pos[key]
+    yt_l2, yb_l2 = product_pos_out[key]
     yt_r2, yb_r2 = outcome_pos[key]
     draw_ribbon!(ax, X2 + NODE_HW, X3 - NODE_HW, yt_l2, yb_l2, yt_r2, yb_r2, channel_color)
 end
