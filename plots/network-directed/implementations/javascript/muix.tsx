@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-directed: Directed Network Graph
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-05
+// Quality: 91/100 | Created: 2026-09-05
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
