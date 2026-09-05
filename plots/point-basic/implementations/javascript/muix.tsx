@@ -19,15 +19,16 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data: effect of an after-school tutoring program on standardized test
 // scores (Cohen's d), independently estimated at 8 pilot sites with 95% CIs.
+// Sorted descending by estimate so the visual hierarchy reads top-to-bottom.
 const sites = [
-  { site: "Boston", estimate: 0.42, lower: 0.18, upper: 0.66 },
-  { site: "Chicago", estimate: 0.31, lower: 0.05, upper: 0.57 },
   { site: "Denver", estimate: 0.55, lower: 0.3, upper: 0.8 },
-  { site: "Atlanta", estimate: 0.12, lower: -0.1, upper: 0.34 },
-  { site: "Seattle", estimate: 0.28, lower: 0.02, upper: 0.54 },
-  { site: "Miami", estimate: -0.05, lower: -0.28, upper: 0.18 },
-  { site: "Austin", estimate: 0.38, lower: 0.15, upper: 0.61 },
   { site: "Portland", estimate: 0.45, lower: 0.22, upper: 0.68 },
+  { site: "Boston", estimate: 0.42, lower: 0.18, upper: 0.66 },
+  { site: "Austin", estimate: 0.38, lower: 0.15, upper: 0.61 },
+  { site: "Chicago", estimate: 0.31, lower: 0.05, upper: 0.57 },
+  { site: "Seattle", estimate: 0.28, lower: 0.02, upper: 0.54 },
+  { site: "Atlanta", estimate: 0.12, lower: -0.1, upper: 0.34 },
+  { site: "Miami", estimate: -0.05, lower: -0.28, upper: 0.18 },
 ];
 
 const TITLE_HEIGHT = 68;
@@ -95,6 +96,7 @@ export default function Chart() {
             label: "Effect Size (Cohen's d)",
             labelStyle: { fontSize: 15 },
             tickLabelStyle: { fontSize: 14 },
+            tickInterval: [-0.4, -0.2, 0, 0.2, 0.4, 0.6, 0.8, 1.0],
           },
         ]}
         yAxis={[
@@ -116,7 +118,7 @@ export default function Chart() {
         />
         <PointEstimates />
         <ChartsXAxis axisId="effect-size" />
-        <ChartsYAxis axisId="site" />
+        <ChartsYAxis axisId="site" disableTicks />
       </ChartContainer>
     </div>
   );
