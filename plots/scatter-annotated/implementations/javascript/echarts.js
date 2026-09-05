@@ -12,8 +12,8 @@ const CITIES = [
   { name: "Tokyo", area: 2194, pop: 37.4 },
   { name: "Delhi", area: 1484, pop: 30.3 },
   { name: "Shanghai", area: 6341, pop: 27.1 },
-  { name: "São Paulo", area: 1521, pop: 22.0 },
-  { name: "Mexico City", area: 1485, pop: 21.8 },
+  { name: "São Paulo", area: 1521, pop: 22.0, label: { dx: -95, dy: -34 } },
+  { name: "Mexico City", area: 1485, pop: 21.8, label: { dx: 95, dy: 34 } },
   { name: "Dhaka", area: 306, pop: 21.7, label: { dx: -85, dy: -46 } },
   { name: "Cairo", area: 3085, pop: 21.3 },
   { name: "Mumbai", area: 603, pop: 20.7, label: { dx: 75, dy: 42 } },
@@ -36,10 +36,19 @@ const CITIES = [
 
 const LABEL_STYLE = { color: t.ink, fontSize: 14, fontWeight: "medium" };
 
+// Second visual dimension: marker size scales with population density
+// (people per km², sqrt-mapped so encoded area stays perceptually linear).
+const density = (city) => (city.pop * 1e6) / city.area;
+const densities = CITIES.map(density);
+const sqrtMin = Math.sqrt(Math.min(...densities));
+const sqrtMax = Math.sqrt(Math.max(...densities));
+const sizeForDensity = (city) => 14 + ((Math.sqrt(density(city)) - sqrtMin) / (sqrtMax - sqrtMin)) * 30;
+
 const seriesData = CITIES.map((city) => {
   const item = {
     name: city.name,
     value: [city.area, city.pop],
+    symbolSize: sizeForDensity(city),
   };
   if (city.label) {
     item.label = {
@@ -69,17 +78,23 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "scatter-annotated · javascript · echarts · anyplot.ai",
+    subtext: "Marker size scales with population density",
     left: "center",
     textStyle: { color: t.ink, fontSize: 22 },
+    subtextStyle: { color: t.inkSoft, fontSize: 13 },
   },
-  grid: { left: 110, right: 70, top: 110, bottom: 100 },
+  grid: { left: 110, right: 70, top: 130, bottom: 100 },
   tooltip: {
     trigger: "item",
-    formatter: (p) => `${p.name}<br/>Area: ${p.value[0].toLocaleString()} km²<br/>Population: ${p.value[1]}M`,
+    formatter: (p) =>
+      `${p.name}<br/>Area: ${p.value[0].toLocaleString()} km²<br/>Population: ${p.value[1]}M` +
+      `<br/>Density: ${Math.round((p.value[1] * 1e6) / p.value[0]).toLocaleString()} /km²`,
   },
   xAxis: {
     type: "log",
     logBase: 10,
+    min: 100,
+    max: 20000,
     name: "Metropolitan Area (km²)",
     nameLocation: "middle",
     nameGap: 46,
@@ -98,7 +113,7 @@ chart.setOption({
     min: 0,
     max: 40,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { show: false },
+    axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
@@ -106,7 +121,6 @@ chart.setOption({
     {
       type: "scatter",
       data: seriesData,
-      symbolSize: 30,
       itemStyle: { color: t.palette[0], opacity: 0.75, borderColor: t.pageBg, borderWidth: 1.5 },
       labelLayout: { hideOverlap: true, moveOverlap: "shiftY" },
     },
@@ -114,9 +128,10 @@ chart.setOption({
 });
 
 // --- Connecting lines for offset labels --------------------------------
-// Dhaka and Mumbai sit almost on top of each other, so their labels above use
-// a fixed pixel offset. A short line back to the point makes the association
-// explicit without reaching all the way to the text.
+// Dhaka/Mumbai/New York and the near-overlapping São Paulo/Mexico City pair
+// sit close to a neighbour, so their labels above use a fixed pixel offset.
+// A short line back to the point makes the association explicit without
+// reaching all the way to the text.
 const offsetCities = CITIES.filter((city) => city.label && city.label.dx !== undefined);
 const connectors = offsetCities.map((city) => {
   const [px, py] = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, [city.area, city.pop]);
