@@ -55,6 +55,8 @@ const points = readings.map((r) => ({
   custom: { yieldPct: r.yieldPct },
 }));
 
+const peak = readings.reduce((best, r) => (r.yieldPct > best.yieldPct ? r : best));
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -111,6 +113,21 @@ Highcharts.chart("container", {
           .attr({ rotation: 90, align: "center" })
           .css({ color: t.inkSoft, fontSize: "16px" })
           .add();
+
+        // Storytelling touch: ring the highest-yield point and label it, so the
+        // chart guides the viewer to the reaction's sweet spot instead of leaving
+        // an undifferentiated point cloud.
+        const peakX = chart.xAxis[0].toPixels(peak.x, false);
+        const peakY = chart.yAxis[0].toPixels(peak.y, false);
+        chart.renderer
+          .circle(peakX, peakY, 13)
+          .attr({ fill: "none", stroke: t.ink, "stroke-width": 1.5, dashstyle: "Dash" })
+          .add();
+        chart.renderer
+          .label(`Peak yield ${peak.yieldPct.toFixed(0)}%`, peakX + 16, peakY - 26)
+          .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
+          .attr({ padding: 4, zIndex: 6 })
+          .add();
       },
     },
   },
@@ -152,6 +169,7 @@ Highcharts.chart("container", {
         radius: 7,
         lineWidth: 1,
         lineColor: t.pageBg,
+        fillOpacity: 0.88,
       },
     },
   },
