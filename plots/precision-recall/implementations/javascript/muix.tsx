@@ -183,6 +183,13 @@ export default function Chart() {
           "& .MuiChartsAxis-tickLabel": {
             fontSize: "14px !important",
           },
+          // Nudge the y-axis label further from its tick labels — the rotated
+          // "Precision" title otherwise sits close enough to touch the "0.5"
+          // tick label at this font size (x-axis label is untouched: only the
+          // directionY axis root carries this selector).
+          "& .MuiChartsAxis-directionY .MuiChartsAxis-label": {
+            transform: "translateX(-14px)",
+          },
           "& .MuiChartsLegend-label": {
             fontSize: "15px !important",
           },
@@ -199,7 +206,7 @@ export default function Chart() {
             position: { vertical: "bottom", horizontal: "middle" },
           },
         }}
-        margin={{ top: 70, right: 50, bottom: 120, left: 110 }}
+        margin={{ top: 70, right: 50, bottom: 120, left: 122 }}
       >
         <ChartsReferenceLine
           y={baselinePrecision}
