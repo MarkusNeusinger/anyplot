@@ -51,8 +51,10 @@ ends = Date.([
 n_tasks = length(tasks)
 start_nums = Dates.value.(starts)
 end_nums = Dates.value.(ends)
+durations = end_nums .- start_nums
 y_positions = collect(n_tasks:-1:1)  # earliest task plotted at the top
 today_num = Dates.value(Date(2026, 3, 10))
+active_idx = findfirst(i -> start_nums[i] <= today_num <= end_nums[i], 1:n_tasks)
 
 unique_categories = unique(categories)
 category_colors = Dict(zip(unique_categories, IMPRINT_PALETTE[1:length(unique_categories)]))
@@ -75,6 +77,9 @@ ax = Axis(
     xlabel            = "Project Timeline (2026)",
     xlabelsize        = 14,
     xlabelcolor       = INK,
+    ylabel            = "Task",
+    ylabelsize        = 13,
+    ylabelcolor       = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
     xticklabelcolor   = INK_SOFT,
     yticklabelsize    = 13,
@@ -104,6 +109,24 @@ for cat in unique_categories
     )
 end
 
+for i in 1:n_tasks
+    text!(
+        ax, end_nums[i] + 2, y_positions[i];
+        text = "$(durations[i])d", color = INK_SOFT, fontsize = 10, align = (:left, :center),
+    )
+end
+
+if active_idx !== nothing
+    scatter!(
+        ax, [start_nums[active_idx]], [y_positions[active_idx]];
+        marker = :star5, markersize = 16, color = INK, strokewidth = 0,
+    )
+    text!(
+        ax, start_nums[active_idx] - 3, y_positions[active_idx];
+        text = "In Progress", color = INK, fontsize = 11, align = (:right, :center),
+    )
+end
+
 vlines!(ax, [today_num]; color = INK_SOFT, linestyle = :dash, linewidth = 2)
 text!(
     ax, today_num + 2, n_tasks + 0.75;
@@ -111,6 +134,7 @@ text!(
 )
 
 ylims!(ax, 0.3, n_tasks + 1.3)
+xlims!(ax, minimum(start_nums) - 8, maximum(end_nums) + 14)
 
 Legend(
     fig[1, 2], ax, "Category";
