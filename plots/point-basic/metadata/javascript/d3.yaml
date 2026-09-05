@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: point-basic
 created: '2026-09-05T10:44:38Z'
-updated: '2026-09-05T11:04:56Z'
+updated: '2026-09-05T11:17:19Z'
 generated_by: claude-sonnet
 workflow_run: 33961312709
 issue: 2551
@@ -12,62 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/javascript/d3/plot-dark.html
-quality_score: 79
+quality_score: 91
 review:
   strengths:
-  - Correct horizontal point-estimate/forest-plot layout with clear whisker-and-cap
-    error bars and prominent point markers
-  - Categories sorted descending by estimate so the eye reads a clean top-to-bottom
-    ranking
-  - 'Correct Imprint palette (first series #009E73) and correct theme-adaptive backgrounds
-    (#FAF8F1 light / #1A1A17 dark), with identical data color across both themes'
-  - 'Clean chrome: axis domains removed, subtle single-axis (x) gridlines, generous
-    margins, nothing clipped, exact 3200x1800 canvas'
-  - 'Deliberate visual hierarchy: whiskers/caps rendered at reduced opacity (0.45/0.7)
-    against a saturated point marker with a page-background halo stroke, keeping the
-    estimate the focal point of each row'
-  - Descriptive axis label with explicit units ("Mean Satisfaction Score (1-10 scale)");
-    title matches the mandated `{spec-id} · {language} · {library} · anyplot.ai` format
-  - Deterministic, hardcoded, realistic dataset (customer-satisfaction survey scores
-    with plausible confidence intervals)
+  - 'The critical bug from attempt 2 is fixed: the dashed mean-reference line, its
+    "Mean: 7.2" label, and the per-row value labels (8.4, 8.1, 7.6, ...) all render
+    correctly and visibly in both themes'
+  - 'Correct horizontal point-estimate/forest-plot construction: whisker line + end
+    caps + point marker, all via idiomatic d3 data joins'
+  - Deliberate opacity hierarchy (whisker 0.45, caps 0.7, marker fully opaque) creates
+    real depth and a clear reading order
+  - Data sorted descending by estimate, and the mean reference line now gives the
+    ranking an explicit focal point to compare against, exactly addressing the attempt-1
+    storytelling feedback
+  - 'Correct Imprint palette usage: brand green #009E73 for the single series, theme-correct
+    #FAF8F1/#1A1A17 backgrounds, identical data color across both renders'
+  - Explicit font sizing throughout (16px ticks/values, 18px axis label, 26px title),
+    fully theme-adaptive chrome, both renders legible with no dark-on-dark or light-on-light
+    issues
+  - Halo-stroked circle markers (stroke = page background color) give a clean cutout
+    look against the whisker line
+  - Realistic, neutral customer-satisfaction survey scenario with plausible variation
+    in estimates and CI widths
+  - Canvas gate passed (exact 3200x1800), no clipped/cut-off elements in either render
   weaknesses:
-  - 'CRITICAL: the dashed mean-reference line (`g.append("line")` at `x(meanEstimate)`,
-    stroke-dasharray "6,4") and its "Mean: X.X" label are completely absent from BOTH
-    plot-light.png and plot-dark.png. Pixel inspection of the expected column (~x=2294px
-    of the 3200px-wide PNG, spanning the full plot height y=180-1640) shows pure unmodified
-    background color with zero deviation across a 50px-wide band around that column
-    and the full row range - the line and its label are not painted at all, despite
-    being added specifically to give the ranking "the focal point... read against"
-    (per the code''s own comment). This was introduced in the most recent fix commit
-    responding to prior review feedback and does not work.'
-  - 'CRITICAL: the per-row value labels (`rows.append("text")...text((d) => fmt(d.estimate))`,
-    e.g. "8.4", "7.6" meant to sit just past the widest whisker at `x(maxUpper) +
-    24`) are likewise completely absent from both renders - full-column pixel scan
-    across that x-range and the entire plot height turns up zero text pixels, only
-    the one whisker cap that happens to intersect it. Only the title, axis ticks/labels,
-    gridlines, whiskers/caps, and point circles actually render; every text/line element
-    added in the same fix commit for the mean-label and value-labels fails to paint.'
-  - Because the mean-reference feature never renders, the data-storytelling device
-    the code explicitly designs around (comparing each category's estimate against
-    the overall mean) does not exist in the shipped chart - viewers cannot see what
-    the ranking is being read against.
+  - 'Library Mastery is still fairly generic: scaleLinear/scaleBand/axisBottom/axisLeft
+    and simple d3-array helpers (d3.mean, d3.descending, d3.format) are correct and
+    idiomatic but not distinctive to d3 — no d3-specific feature (e.g. d3-shape curve,
+    custom interpolation, or a d3-array technique beyond basic mean/sort) sets this
+    apart from a generic charting library port'
+  - Design Excellence still relies on a single flat color plus opacity variation for
+    depth; a secondary muted accent (e.g. a distinct tone for the reference line vs.
+    data color) could push aesthetic sophistication further
+  - The Mobile App row's point estimate (7.2) sits almost exactly on the mean reference
+    line (7.19) — a data coincidence, not a code defect (the opaque marker correctly
+    renders on top and stays fully legible), but a data tweak that spaces categories
+    away from the mean line would make the reference-line device unambiguous at a
+    glance
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white.
-      Chrome: bold dark title "point-basic · javascript · d3 · anyplot.ai" centered at top; 7 y-axis category labels (Checkout Flow, Customer Support, Search Relevance, Mobile App, Delivery Speed, Product Packaging, Return Process) sorted descending by estimate; x-axis ticks 0/2/4/6/8/10 with descriptive label "Mean Satisfaction Score (1-10 scale)"; subtle vertical gridlines at each x tick; axis domains (spines) removed.
-      Data: 7 rows, each with a green (#009E73) filled point circle (with a light-background-colored halo stroke) at the estimate, flanked by a green whisker line (reduced opacity) from lower to upper bound with green end caps (higher opacity). All data ink is the correct Imprint palette[0] green, consistent with the dark render.
-      MISSING ELEMENTS (verified via pixel-level inspection, not just visual scan): the dashed vertical mean-reference line and its "Mean: 7.2" label that the source code explicitly adds are not present anywhere in the image - a full scan of the expected column and neighborhood (x ~2270-2320px of 3200px width, full plot height) found zero non-background pixels. The per-row numeric value labels ("8.4", "8.1", "7.6", etc.) that the code also adds past the widest whisker are likewise absent - a full scan of that column across all 7 row y-positions found no text pixels at all.
-      Legibility verdict: PASS for all text that IS rendered (title, tick labels, axis label) - clearly readable against the light background. FAIL on completeness: two coded features (mean line + label, per-row value labels) never render at all in either theme.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "point-basic · javascript · d3 · anyplot.ai" centered at top. Seven category labels (Checkout Flow, Customer Support, Search Relevance, Mobile App, Delivery Speed, Product Packaging, Return Process) on the y-axis, sorted descending by estimate. X-axis ticks 0/2/4/6/8/10 with descriptive label "Mean Satisfaction Score (1-10 scale)". Subtle vertical gridlines. Dashed dark reference line at x≈7.2 with a bold "Mean: 7.2" label above it. Per-row numeric value labels (8.4, 8.1, 7.6, 7.2, 6.9, 6.3, 5.8) aligned in a column past the widest whisker. All chrome text is clearly readable against the light background.
+      Data: Brand green (#009E73) whiskers (reduced opacity) with capped ends (higher opacity) and a filled, halo-stroked (page-background-colored stroke) circle point estimate per row.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black.
-      Chrome: same title, category labels, and x-axis label rendered in light/off-white ink, clearly legible against the dark background - no dark-on-dark failures observed. Gridlines subtle but visible.
-      Data: identical green (#009E73) point markers, whiskers, and caps as the light render - data colors are correctly identical between themes; only chrome (background, text) flipped as expected.
-      MISSING ELEMENTS: same as light render - the dashed mean-reference line/label and the per-row value labels are entirely absent from this render too (confirmed by cropping and pixel comparison at the same coordinates).
-      Legibility verdict: PASS for all text that IS rendered - no dark-on-dark issues. FAIL on completeness for the same two missing features as the light render.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout to the light render. Title, category labels, axis label, tick labels, the "Mean: 7.2" annotation, and the per-row value labels are all rendered in light/off-white text, fully legible against the dark background. No dark-on-dark failures observed anywhere (all text has clear contrast against the near-black surface).
+      Data: Identical brand-green (#009E73) whiskers, caps, and point markers as the light render — confirming only chrome (background, text color) flips between themes, exactly as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -75,36 +71,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text that renders (title, tick labels, axis label) is crisp and
-          legible in both themes
+        comment: Explicit font sizes (16/18/26px), fully readable in both themes,
+          no dark-on-dark/light-on-light
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or legend elements
+        comment: No collisions; the opaque marker correctly renders on top where the
+          mean line nearly coincides with the Mobile App point
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (7 points) rendered with large, clearly visible markers
-          and halo stroke
+        comment: Sparse 7-point data with prominent 10px markers and a clear opacity
+          hierarchy between whiskers, caps, and points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue palette, good contrast on both backgrounds, no red-green
-          reliance
+        comment: Single-series brand green with adequate contrast; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas exact (3200x1800), margins/proportions fine, but the layout
-          is missing two designed elements (mean reference line + value-label column)
-          that never paint, leaving unused visual space the design intended to use
+        passed: true
+        comment: Canvas gate passed (3200x1800); balanced margins, nothing clipped
+          or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -116,130 +111,144 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, correct theme backgrounds, both renders
-          theme-correct'
+        comment: '#009E73 first series, correct theme backgrounds, identical data
+          color across renders'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Deliberate opacity hierarchy between whiskers/caps/points and halo-stroked
-          markers shows real polish
+        passed: true
+        comment: Deliberate opacity hierarchy, halo-stroked markers, and a working
+          annotated reference line show real polish, though still built on a single
+          flat color
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Spines removed, subtle single-axis grid, generous whitespace, halo-stroked
-          markers
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 5
         max: 6
-        comment: The code's explicit storytelling device - a mean reference line the
-          ranking is read against - completely fails to render, so no focal-point
-          comparison reaches the viewer despite the descending sort
+        passed: true
+        comment: Descending sort plus the now-functional mean reference line give
+          the viewer a clear, explicit focal point to compare each category against
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct horizontal point-estimate plot with CI whiskers and caps
+        passed: true
+        comment: Correct point-estimate/forest-plot with CI whiskers
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Point, CI, and end caps all present per spec; the code's own added
-          value-labels never render
+        passed: true
+        comment: Points, CI bounds, capped whiskers, reference line, and value labels
+          all present and rendering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Category on y, estimate/bounds on x, all data visible within axis
-          range
+        passed: true
+        comment: X = estimate (linear), Y = category (band), correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format matches spec-id / language / library / anyplot.ai exactly;
-          no legend needed for single series
+        passed: true
+        comment: Title matches mandated format; single series needs no legend
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        comment: Points, CIs, and caps present, but the reference-line and value-label
-          features the implementation attempts are entirely non-functional
+        passed: true
+        comment: All forest-plot elements (point, CI, caps, reference line, value
+          labels) present and visible
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible, neutral customer-satisfaction survey scores
+        passed: true
+        comment: Plausible, neutral customer-satisfaction survey scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: 1-10 scale with sensible CI widths
+        passed: true
+        comment: 1-10 satisfaction scale is sensible for the domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        comment: No functions/classes, flat script
+        passed: true
+        comment: No functions/classes, flat top-level script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Hardcoded deterministic data
+        passed: true
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: d3 global only, no unused imports
+        passed: true
+        comment: Only the d3 global used, no unused imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        comment: Contains two blocks of dead/non-functional code (reference line +
-          value labels) that never paint despite being present in the source
+        passed: true
+        comment: Previously-dead reference-line/value-label code now renders correctly;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct mount-node contract, no manual file writes
+        passed: true
+        comment: Correct mount-node contract, no animation, current d3 v7 API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct scales, axes, joins, and selections; undermined slightly
-          by the non-rendering elements
+        passed: true
+        comment: Idiomatic scale/axis/join patterns, band padding, tick formatting
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
-        comment: Standard band/linear scale usage; no distinctive D3-specific technique
-          beyond the (broken) reference-line/annotation attempt
-  verdict: REJECTED
+        passed: false
+        comment: d3.mean/d3.descending/d3.format combine for a coherent aggregate-and-annotate
+          feature, but nothing beyond standard d3-array usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending
