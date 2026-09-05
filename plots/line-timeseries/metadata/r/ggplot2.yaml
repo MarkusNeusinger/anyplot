@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-timeseries
 created: '2026-09-05T08:24:09Z'
-updated: '2026-09-05T08:28:22Z'
+updated: '2026-09-05T08:38:00Z'
 generated_by: claude-sonnet
 workflow_run: 33954977971
 issue: 2006
@@ -12,67 +12,67 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-time
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 88
 review:
   strengths:
-  - Mandated title format is exact ("line-timeseries · r · ggplot2 · anyplot.ai")
-    and the single-series legend is correctly omitted
-  - Intelligent monthly x-axis date formatting (scale_x_date + label_date("%b")) with
-    rotated (30°) tick labels avoids overlap across a 6-month span
-  - Grid lines present on both axes at a subtle, theme-adaptive opacity; brand green
-    (#009E73) is identical across light and dark renders and both renders are theme-correct
-  - All font sizes explicitly set (title 12pt, axis.title 10pt, axis.text 8pt); L-shaped
-    spine cleanup (top/right removed, tick marks removed) is a deliberate refinement
-    beyond theme_minimal defaults
-  - Clean KISS structure with set.seed(42) for reproducibility
+  - 'All four previously-flagged weaknesses are resolved: the seasonal sine phase
+    now peaks near day ~200 (mid-July), so the observed 182-day window (Jan-Jul) shows
+    a physically plausible steady rise instead of an implausible mid-April peak and
+    crash; the y-axis title now reads ''Outdoor Temperature (°C)'' with units; the
+    primary line weight was bumped from 1.1 to 2 for stronger visual prominence; and
+    the unused `library(dplyr)` import was removed'
+  - Added a geom_smooth (loess, span=0.3, dashed muted gray, se=FALSE) trend overlay
+    beneath the raw data line, introducing real visual hierarchy between the noisy
+    daily signal and the underlying seasonal trend
+  - Mandated title format is exact ('line-timeseries · r · ggplot2 · anyplot.ai'),
+    legend is correctly omitted, and all font sizes are explicit and legible in both
+    themes
+  - Both renders are theme-correct with identical brand-green (#009E73) data values;
+    only chrome (background, ink, grid) flips between light and dark
   weaknesses:
-  - 'DQ-03: The seasonal sine (4 + 14*sin(2*pi*(day-10)/365)) peaks around day ~101
-    (mid-April) and has already fallen back to ~6°C by day 182 (~July 1) — a real
-    Northern Hemisphere temperate outdoor-temperature cycle peaks around June/July
-    and is still rising or near its peak by early July, not crashing back toward winter
-    values. Shift the phase so the peak lands near day ~200 (mid-July) instead.'
-  - 'VQ-06: Y-axis label "Outdoor Temperature" carries no unit even though tick labels
-    show "°C" via label_number(suffix="°C") — rename to "Outdoor Temperature (°C)"
-    for full unit disclosure on the axis title itself.'
-  - 'VQ-03 / DE-01: geom_line(linewidth = 1.1) is only ~2x the ggplot2 default (0.5)
-    for a single, sole-focus series; the style guide recommends ~2.5-3.5 for a primary
-    line and thicker lines when there are few series — bump to ~1.8-2.2 for more visual
-    prominence against the noisy daily data.'
-  - 'CQ-03: `library(dplyr)` is imported but never used anywhere in the script (no
-    dplyr:: calls, no pipes) — remove the unused import.'
-  - 'DE-01/DE-03: The plot is a well-configured single default line with no visual
-    hierarchy or emphasis (e.g. no highlight of the seasonal peak/trough, no smoothed
-    trend overlay) — data is displayed but not interpreted for the viewer.'
+  - The dashed gray loess trend line has no legend, annotation, or caption identifying
+    what it represents - a viewer can't tell it's a smoothed trend from the plot alone.
+    A small in-plot label (e.g. 'trend' near the line's right end) or a minimal legend
+    entry would close this gap.
+  - 30° rotation on the 7 monthly tick labels isn't necessary given the generous spacing
+    between months; horizontal labels would look cleaner and slightly more polished.
+  - 'DE-01/DE-02: still a fairly standard ''raw line + smooth'' pattern without further
+    distinctive polish - e.g. no annotation calling out the seasonal minimum, no subtitle
+    framing the narrative for the viewer.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
       Chrome: Bold dark title "line-timeseries · r · ggplot2 · anyplot.ai" top-left; "Date" (x) and
-        "Outdoor Temperature" (y) axis titles in dark ink; rotated (~30°) monthly tick labels
-        (Jan-Jul) in a lighter soft-ink gray; y tick labels show "5°C"-"20°C" with degree suffix.
-        Faint grid lines visible on both axes (vertical at month ticks, horizontal at 5°C steps).
-        Only left and bottom axis lines are drawn (top/right spines removed, tick marks removed).
-      Data: A single jagged green (#009E73) line tracing daily outdoor temperature from ~3°C in
-        January, rising with weekly wobble and sensor noise to a peak of ~21°C around early April,
-        then oscillating and declining back down to ~6°C by the end of June/start of July.
-      Legibility verdict: PASS — all title, axis, and tick text is clearly readable against the
+        "Outdoor Temperature (°C)" (y) axis titles in dark ink, now carrying the unit; rotated
+        (~30°) monthly tick labels (Jan-Jul) in a lighter soft-ink gray; y tick labels show
+        "-10°C" to "20°C" with degree suffix. Faint grid lines visible on both axes (vertical at
+        month ticks, horizontal at 10°C steps). Only left and bottom axis lines are drawn
+        (top/right spines removed, tick marks removed).
+      Data: A bold jagged green (#009E73, linewidth=2) line traces daily outdoor temperature
+        rising from about -10°C in January through weekly wobble and sensor noise to roughly
+        17°C by the end of June/start of July, with a dashed muted-gray loess trend line running
+        underneath showing the smoothed underlying seasonal rise.
+      Legibility verdict: PASS - all title, axis, and tick text is clearly readable against the
         light background; no light-on-light issues observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout as the light render — bold off-white/cream title, off-white axis titles,
-        lighter-gray rotated tick labels, faint grid lines. Axis lines (left+bottom) rendered in a
-        lighter soft-ink gray matching the dark theme.
-      Data: Identical green (#009E73) line shape and values as the light render — same rise to a
-        peak near early April and decline toward ~6°C by July.
-      Legibility verdict: PASS — all title, axis, and tick text is clearly readable against the
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same layout as the light render - bold off-white/cream title, off-white axis
+        titles (including the same "(°C)" unit), lighter-gray rotated tick labels, faint grid
+        lines. Axis lines (left+bottom) rendered in a lighter soft-ink gray matching the dark
+        theme.
+      Data: Identical green (#009E73) line shape and values as the light render, with the same
+        dashed muted-gray trend line (color swapped to the lighter dark-theme muted tone) tracing
+        the same rising seasonal trend.
+      Legibility verdict: PASS - all title, axis, and tick text is clearly readable against the
         dark background (light text on dark, correctly theme-flipped); no dark-on-dark failures
         observed. Brand green reads well on the dark surface.
 
     Both renders use identical data-series colors (#009E73) and only chrome (background, text,
-    grid, axis-line color) flips between themes, as required.
+    grid, axis-line color, muted trend-line tone) flips between themes, as required.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -84,23 +84,24 @@ review:
           8pt); readable in both themes with no overflow or clipping
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Rotated 30° monthly tick labels are evenly spaced with no overlap
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line visible but linewidth=1.1 is thin (~2x ggplot2 default) for
-          a sole-focus series; recommend ~1.8-2.2
+        comment: No text overlap; minor visual crowding where the dashed trend line
+          runs through the choppy Jan-Feb data segment
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: linewidth bumped from 1.1 to 2 for the primary series (fixed from
+          prior review); trend line thinner (0.8) and dashed to stay secondary
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, good contrast against both surfaces, no red-green
+        comment: Single main series, good contrast against both surfaces, no red-green
           dependence
       - id: VQ-05
         name: Layout & Canvas
@@ -110,11 +111,11 @@ review:
         comment: Plot fills the canvas well with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '"Outdoor Temperature" y-axis label has no unit suffix even though
-          tick labels show °C'
+        passed: true
+        comment: Y-axis label now reads 'Outdoor Temperature (°C)' with unit (fixed
+          from prior review)
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -123,7 +124,7 @@ review:
         comment: 'First series is #009E73, backgrounds match Imprint theme tokens,
           both renders theme-correct'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -131,22 +132,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default (custom theme tokens) but no distinctive
-          polish beyond that
+        comment: Well-configured theme plus a trend overlay, but still a fairly common
+          raw+smooth pattern rather than distinctive polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
         comment: Grid subtle, spines removed to L-shape, tick marks removed, custom
-          margins — solid but not maximal refinement
+          margins - solid but unchanged from prior review; unnecessary label rotation
+          given month spacing
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed without emphasis or interpretation of the seasonal
-          peak/trough
+        comment: Loess trend line now gives the raw signal an interpretive reference,
+          an improvement over the prior default line, but it carries no label/legend
+          and there is no further emphasis (e.g. annotated min/max)
     spec_compliance:
       score: 15
       max: 15
@@ -175,33 +178,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend correctly omitted for single series
+        comment: Title format exact; legend correctly omitted for single main series
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows seasonal trend, weekly wobble, and daily noise; no extreme/anomalous
-          days
+        comment: Shows seasonal trend, weekly wobble, daily noise, and a trend overlay
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Outdoor temperature over 6 months — realistic, neutral scenario
+        comment: Outdoor temperature over 6 months - realistic, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Sine phase peaks mid-April and decays back to ~6°C by July — physically
-          wrong timing for a Northern Hemisphere seasonal cycle
+        passed: true
+        comment: Sine phase shifted so the seasonal peak lands near day ~200 (mid-July);
+          the 182-day observed window now shows a physically correct steady winter-to-summer
+          rise instead of an implausible mid-April peak and crash
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -218,10 +221,11 @@ review:
         comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but never used
+        passed: true
+        comment: Unused library(dplyr) removed; only ggplot2, scales, ragg used, all
+          actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -235,30 +239,33 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: Correct use of scale_x_date/date_breaks, scales::label_date/label_number,
-          theme_minimal
+          geom_smooth, theme_minimal
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic date-axis usage — no ggplot2-distinctive feature leveraged
-  verdict: REJECTED
+        comment: geom_smooth(method='loess') layered with geom_line is a ggplot2-idiomatic
+          statistical layer beyond basic date-axis usage, though a common pattern
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scales
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
+  - regression
   styling:
   - grid-styling
