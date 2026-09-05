@@ -21,7 +21,7 @@ function noise(scale) {
 }
 
 const TISSUES = ["Liver", "Heart", "Kidney", "Lung", "Brain"];
-const SAMPLES_PER_TISSUE = 6;
+const SAMPLES_PER_TISSUE = 9;
 const FEATURE_DIMS = 5;
 
 const tissueCenters = TISSUES.map(() =>
@@ -197,14 +197,16 @@ function renderBranch(params) {
   };
 }
 
-// Leaf marker + a short color-coded ring segment (metadata ring) + a
-// radially-aligned label, flipped upright on the left hemisphere.
+// Leaf marker + a color-coded metadata-ring arc (one short arc band per leaf,
+// at a fixed outer radius, split by a small angular gap from its neighbors)
+// + a radially-aligned label, flipped upright on the left hemisphere.
+const ringRadius = maxRadius + 20;
+const ringHalfWidth = angleStep * 0.35;
 function renderLeaf(params) {
   const leaf = leafNodes[params.dataIndex];
   const color = t.palette[leaf.cluster];
   const [dx, dy] = toXY(leaf.radius, leaf.angle);
-  const [rx, ry] = toXY(leaf.radius + 16, leaf.angle);
-  const [lx, ly] = toXY(leaf.radius + 34, leaf.angle);
+  const [lx, ly] = toXY(ringRadius + 20, leaf.angle);
 
   const isLeftHalf = Math.cos(leaf.angle) < 0;
   const rotation = isLeftHalf ? -(leaf.angle + Math.PI) : -leaf.angle;
@@ -213,7 +215,18 @@ function renderLeaf(params) {
     type: "group",
     children: [
       { type: "circle", shape: { cx: dx, cy: dy, r: 5 }, style: { fill: color } },
-      { type: "circle", shape: { cx: rx, cy: ry, r: 7 }, style: { fill: color } },
+      {
+        type: "arc",
+        shape: {
+          cx,
+          cy,
+          r: ringRadius,
+          startAngle: leaf.angle - ringHalfWidth,
+          endAngle: leaf.angle + ringHalfWidth,
+          clockwise: true,
+        },
+        style: { stroke: color, lineWidth: 6, fill: "none", lineCap: "round" },
+      },
       {
         type: "text",
         x: lx,
@@ -223,6 +236,7 @@ function renderLeaf(params) {
           text: leaf.label,
           fill: t.inkSoft,
           fontSize: 15,
+          fontWeight: 600,
           align: isLeftHalf ? "right" : "left",
           verticalAlign: "middle",
         },
