@@ -1,0 +1,238 @@
+library: d3
+language: javascript
+specification_id: indicator-macd
+created: '2026-09-05T05:37:26Z'
+updated: '2026-09-05T05:50:09Z'
+generated_by: claude-sonnet
+workflow_run: 33947396899
+issue: 3181
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-macd/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - New crossover callout (dot + dashed leader + auto-sized backdrop via getBBox())
+    directly answers the attempt-1 DE-03 feedback and gives the chart a clear, spec-relevant
+    focal point
+  - Dashed zero-reference line now visually distinct from the solid axis domain lines,
+    per attempt-1 DE-02 feedback
+  - 'Careful, spec-aware palette usage retained: histogram uses the documented finance
+    gain/loss exception, MACD/signal use blue/ochre per spec suggestion, data colors
+    identical across themes'
+  - Clean, deterministic data generation (fixed-seed LCG) producing a realistic multi-cycle
+    MACD pattern
+  weaknesses:
+  - Only the bullish crossover is annotated; the earlier, equally visible bearish
+    crossover (~late May) is not labeled, leaving the "trend reversal" story only
+    half-told
+  - Axis domain lines remain plain/default; no further visual refinement applied there
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Bold dark title "indicator-macd · javascript · d3 · anyplot.ai" centered at top; horizontal legend below (MACD blue line, Signal ochre line, Histogram+ green swatch, Histogram- red swatch); dark "Trading Date" / "MACD Value" axis titles; dark tick labels; horizontal-only gridlines subtle grey. All clearly legible.
+      Data: Blue MACD line and ochre signal line oscillating ~-5 to +6; green/red histogram bars above/below a dashed zero-reference line; a new green-dot + dashed-leader + backdrop-boxed "Bullish crossover" callout near the late-June trough. First categorical color (green, histogram+) is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Same title, legend, and axis titles now in light text against the dark background; tick labels and axis domain lines in soft light tone; gridlines subtle and visible.
+      Data: MACD line, signal line, histogram bars, and the crossover callout dot/label are pixel-identical in hue to the light render; only chrome flipped. No dark-on-dark issues — all text (title, legend, ticks, axis labels, callout text) is clearly readable against the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, fully legible in both themes; minor
+          room for heavier tick-label weight at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: New callout label doesn't collide with the MACD line, legend, or
+          axes
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths, bar sizing, and callout dot well tuned for 120 data
+          points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Histogram color is redundant with bar position, not sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no clipping, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive Trading Date / MACD Value labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint palette usage and finance semantic exception; correct
+          theme backgrounds
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: New crossover callout with getBBox()-sized backdrop shows intentional
+          hierarchy; chrome otherwise standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Zero line now dashed, distinct from axis domain lines; domain lines
+          still plain default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bullish crossover callout gives a clear focal point, but bearish
+          crossover left unlabeled
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct MACD indicator chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Histogram, dashed zero line, distinct MACD/signal colors, params
+          noted in legend
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, macd/signal/histogram on y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: MACD line, signal line, histogram, zero line, crossover annotation
+          all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible neutral synthetic stock price series
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MACD/signal values sensible relative to underlying price
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script, small deterministic helper functions only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, current D3 v7 API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scale/axis/.join() usage, dynamic legend spacing via getBBox()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: getBBox()-measured auto-sized callout backdrop is a genuine browser-specific
+          technique; no transitions/voronoi/brushing
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
