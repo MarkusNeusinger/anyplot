@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: manhattan-gwas
 created: '2026-09-05T08:53:56Z'
-updated: '2026-09-05T08:58:10Z'
+updated: '2026-09-05T09:08:34Z'
 generated_by: claude-sonnet
 workflow_run: 33956304993
 issue: 2925
@@ -12,54 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/manhattan
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/manhattan-gwas/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 95
 review:
   strengths:
   - 'Correct Manhattan-plot structure: cumulative genomic position on the x-axis,
     -log10(p) on the y-axis, alternating chromosome colors, and both the genome-wide
-    (p<5e-8) and suggestive (p<1e-5) threshold lines are all present and correctly
-    positioned.'
-  - Deterministic LCG + Box-Muller PRNG with a fixed seed produces reproducible data;
-    injected peaks on chromosomes 2, 6, 11, and 17 create a realistic, legible pattern
-    of significant loci above the genome-wide threshold.
+    (p<5e-8) and suggestive (p<1e-5) threshold lines are present and correctly positioned.'
+  - 'Palette order now follows the canonical Imprint sequence: even-chromosome points
+    use palette[0] (#009E73 green) and odd-chromosome points use palette[1] (#C475FD
+    lavender) - directly resolves the prior review''s VQ-07 deduction (previously
+    palette[2] blue was used for the second series).'
+  - New 'Top hit — Chr 17' star marker + text-callout plugin (afterDatasetsDraw, clamped
+    inside chartArea) creates a clear focal point and visual hierarchy, directly resolving
+    the prior review's DE-03 data-storytelling weakness.
+  - Dense background scatter (~4,600 points across 23 chromosomes) now uses alpha-reduced
+    markers (hexToRgba at 0.65) at a small 2.5px radius, appropriately combating overplotting
+    per the data-density heuristic - resolves the prior VQ-03 note.
   - Theme-adaptive chrome (t.ink, t.inkSoft, t.grid) is threaded through title, axis
-    labels, ticks, and legend, and reads correctly in both the light and dark renders.
-  - Custom afterBuildTicks callback plus a tick-label callback correctly centers each
-    chromosome's label under its cumulative-position midpoint range - non-trivial,
-    idiomatic Chart.js usage combining scatter and line dataset types in one chart.
-  - Title exactly matches the mandated `manhattan-gwas · javascript · chartjs · anyplot.ai`
-    format, and legend labels clearly describe each series (even/odd chromosome bands,
-    significant hits, both threshold lines).
+    labels, ticks, and legend, and reads correctly in both light and dark renders
+    with pixel-identical data colors.
   weaknesses:
-  - 'Palette order deviates from the Imprint canonical sequence without a real-world
-    semantic justification: the even-chromosome series uses palette[2] (blue #4467A3)
-    instead of palette[1] (lavender #C475FD), skipping a slot for aesthetic reasons.
-    Chromosome parity has no inherent color association, so the style guide''s ''use
-    positions 1->N in order, don''t cherry-pick'' rule applies - switch the odd/even
-    bands to palette[0]/palette[1].'
-  - The dense background scatter (~4,600 points across 23 chromosomes) uses a fixed
-    pointRadius of 2.5 with no reduced opacity. Per the data-density heuristic, datasets
-    above ~500 points should pair small markers with alpha < 1 to reduce visual clutter,
-    especially in the vertically stacked peak regions.
-  - 'Design Excellence lands close to a well-configured default: styling is clean
-    but there is no strong additional focal point (e.g., a labeled top hit, or heavier
-    visual emphasis on the most significant peak) to sharpen the data-storytelling
-    beyond color + threshold lines.'
+  - DE-01 is strong but still short of full publication-level polish - consider a
+    slightly more refined typographic hierarchy (e.g., lighter tick-label weight relative
+    to bold axis titles) to push past 'strong design' into top-tier territory.
+  - Significant hits and the genome-wide threshold line both use palette[4] (#AE3030
+    red), which is a reasonable semantic choice (danger/significance) but skips palette[2]/[3]
+    in the strict sequential order - acceptable as a semantic exception, but worth
+    a second look if future review passes want strict canonical sequencing across
+    all series.
+  - The y-axis-only grid is subtle and appropriate, but in the dark render it could
+    be dialed a touch further toward the background for an even more publication-ready
+    feel.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Title "manhattan-gwas · javascript · chartjs · anyplot.ai" in bold dark ink at top, fully visible and not clipped. Y-axis title "-log10(p-value)" and x-axis title "Chromosome" in dark ink, both clearly legible. Chromosome tick labels (1-22, X) centered below their respective bands, legible at this size. Y-axis grid lines are subtle horizontal light-gray lines; x-axis has no grid (by design). Legend at the bottom with 5 entries (Chr (even), Chr (odd), Genome-wide significant, Genome-wide (p < 5e-8), Suggestive (p < 1e-5)) in soft dark text, fully readable.
-      Data: First series (Chr even) renders in brand green #009E73, second series (Chr odd) renders in blue #4467A3 (note: this skips the canonical palette[1] lavender slot), significant hits render in matte red #AE3030, matching the dashed genome-wide threshold line color. Four clear peaks rise above the genome-wide dashed red line on chromosomes 2, 6, 11, and 17, exactly matching the peaks injected in code. Background noise points are small and cover 0-4 on the y-axis with light overlap.
+      Chrome: Title "manhattan-gwas · javascript · chartjs · anyplot.ai" in bold dark ink at top, fully visible, not clipped. Y-axis title "-log10(p-value)" and x-axis title "Chromosome" in dark ink, both clearly legible. Chromosome tick labels (1-22, X) centered below their respective bands. Y-axis grid lines are subtle horizontal light-gray lines; x-axis has no grid (by design). Legend at the bottom with 6 entries (Chr (even), Chr (odd), Genome-wide significant, Genome-wide (p < 5e-8), Suggestive (p < 1e-5), Top hit (Chr 17)) in soft dark text, fully readable.
+      Data: First series (Chr even) renders in brand green #009E73 (palette[0]), second series (Chr odd) renders in lavender #C475FD (palette[1]) - correct canonical order, resolving the prior review's palette-order weakness. Significant hits and the genome-wide dashed line render in matte red (palette[4], semantic "danger" exception). A gold/amber star marker with a black outline marks the single top hit on chromosome 17, with a "Top hit — Chr 17" text callout placed just above it, clamped within the plot area and not overlapping any other element. Background noise points (~4,600, alpha 0.65) are small and cover 0-4 on the y-axis with light, expected overlap.
       Legibility verdict: PASS - all text is clearly readable against the light background, no dark-on-light or light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Title and both axis titles render in light/off-white ink, clearly visible against the dark background. Tick labels and legend text render in a lighter soft gray, fully legible. Grid lines are subtle light-toned horizontal lines on the y-axis, matching the light render's grid placement.
-      Data: Data colors are pixel-identical to the light render - brand green, blue, and matte red for the three point series, with the same dashed/dotted threshold-line colors (matte red genome-wide line, off-white suggestive line, which correctly flips to a light tone for dark-theme visibility). The same four peaks are visible in the same x-positions as the light render, confirming positional consistency between renders.
-      Legibility verdict: PASS - no dark-on-dark failures observed; all title, axis, tick, and legend text is clearly visible against the near-black background.
+      Chrome: Title and both axis titles render in light/off-white ink, clearly visible against the dark background. Tick labels and legend text render in lighter soft gray, fully legible. Grid lines are subtle light-toned horizontal lines on the y-axis, matching the light render's placement. The suggestive-threshold line correctly flips from dark gray to an off-white dashed line for dark-mode visibility.
+      Data: Data colors are pixel-identical to the light render - brand green, lavender, and matte red for the three point series, plus the same amber/black-outlined star for the top hit and its text callout (rendered in light ink here). The same four peaks (chromosomes 2, 6, 11, 17) are visible at the same x-positions, confirming positional consistency between renders.
+      Legibility verdict: PASS - no dark-on-dark failures observed; all title, axis, tick, legend, and callout text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -74,21 +72,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or the legend in either render.
+        comment: No text overlaps other text, data, or the legend in either render;
+          the new top-hit callout is clamped within the chart area.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker sizes (2.5px background, 3.5px significant) are reasonable,
-          but ~4,600 background points with no alpha reduction causes minor visual
-          density near peaks.
+        comment: Background scatter now uses alpha 0.65 at 2.5px radius, appropriately
+          combating overplotting for ~4,600 points; significant hits at 3.5px and
+          the 7px star for the top hit stand out clearly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/red combination is CVD-safe and well-contrasted against
+        comment: Green/lavender/red combination is CVD-safe and well-contrasted against
           both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
@@ -105,39 +104,39 @@ review:
         comment: Both axis titles are descriptive ('-log10(p-value)', 'Chromosome').
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series is correctly #009E73, but the second categorical series
-          uses palette[2] (blue) instead of the canonical palette[1] (lavender) with
-          no semantic justification for chromosome parity. Theme chrome is otherwise
-          correct in both renders.'
+        passed: true
+        comment: 'First series is #009E73 (palette[0]), second series now correctly
+          uses palette[1] lavender in canonical order - resolves the prior review''s
+          deduction. Significant/threshold red uses palette[4] as a reasonable semantic
+          ''danger'' exception. Theme chrome is correct in both renders.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean, thoughtfully colored, above a raw library default, but not
-          yet publication-level polish.
+        comment: Thoughtful color choices and a purposeful star/callout highlight
+          clearly above a raw default, though not yet full publication-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Y-axis-only subtle grid, no chartjunk, generous whitespace, legend
-          well-placed.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color contrast (red significant hits) plus dashed/dotted threshold
-          lines create visual hierarchy that guides the eye to the peaks, though no
-          direct peak labeling.
+        comment: Y-axis-only subtle grid, generous whitespace, well-placed legend
+          - good refinement without being maximally polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The new labeled top-hit star creates an explicit, unmistakable focal
+          point on top of the existing color/threshold hierarchy - viewer immediately
+          sees the strongest signal. Resolves the prior review's weakness.
     spec_compliance:
       score: 15
       max: 15
@@ -155,7 +154,7 @@ review:
         passed: true
         comment: Cumulative position x-axis with centered chromosome labels, alternating
           colors, genome-wide and suggestive threshold lines, highlighted significant
-          hits - all present.
+          hits, and a labeled top hit - all present.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -169,19 +168,18 @@ review:
         max: 3
         passed: true
         comment: Title matches the mandated format exactly; legend labels correctly
-          describe each series.
+          describe each series including the new top-hit entry.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows background noise, 4 distinct significant peaks, and both threshold
-          lines; subsampled point count is a reasonable browser-render tradeoff, explained
-          in a code comment.
+        comment: Shows background noise, 4 distinct significant peaks, both threshold
+          lines, and a labeled top hit - covers all aspects of the plot type.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -204,8 +202,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> mount -> chart structure; the small PRNG helper functions
-          are necessary since the browser has no seeded RNG.
+        comment: Linear data -> mount -> chart structure; the small PRNG and plugin
+          helper functions are necessary given the browser has no seeded RNG.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -224,8 +222,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering; appropriately concise for the plot's
-          complexity.
+        comment: No fake UI or over-engineering; the custom tick and label plugins
+          are legitimate, appropriately concise Chart.js techniques.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -234,27 +232,29 @@ review:
         comment: 'Follows the mount-node contract correctly (canvas appended to #container,
           animation: false, no manual sizing).'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed scatter+line dataset types, standard Chart.js option structure,
+          and a well-formed afterDatasetsDraw plugin used correctly.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Mixed scatter+line dataset types and standard Chart.js option structure
-          used correctly.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Custom afterBuildTicks + tick callback to reposition and relabel
-          axis ticks is a distinctive, non-trivial Chart.js technique.
-  verdict: REJECTED
+        comment: Custom afterBuildTicks + tick-label callback to reposition/relabel
+          axis ticks, plus a bespoke afterDatasetsDraw callout plugin - both genuinely
+          distinctive Chart.js plugin-API techniques.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
@@ -262,4 +262,5 @@ impl_tags:
   dataprep:
   - cumulative-sum
   styling:
+  - alpha-blending
   - grid-styling
