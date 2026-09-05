@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: elbow-curve
 created: '2026-09-05T00:55:02Z'
-updated: '2026-09-05T00:58:41Z'
+updated: '2026-09-05T01:07:37Z'
 generated_by: claude-sonnet
 workflow_run: 33934163728
 issue: 2333
@@ -12,125 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/elbow-cur
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/elbow-curve/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 94
 review:
   strengths:
-  - Correct elbow-curve chart with a dashed reference line and 'Elbow · k=4' label
-    directly satisfying the spec's suggestion to annotate the optimal k
+  - 'Fully resolved every attempt-1 weakness: added a subtle brand-green area fill
+    under the curve, an emphasized solid amber marker at the elbow point, a stroke-halo
+    background chip behind the ''Elbow · k=4'' label, and switched from linear to
+    monotoneX curve interpolation per the spec''s smoothness note'
   - 'Both renders are legible and theme-correct: dark ink on the warm off-white light
-    background, light ink on the warm near-black dark background, identical brand-green
-    data color across themes'
-  - Documented, deliberate workaround for MUI X's yAxis label-offset limitation (custom
-    rotated label element) instead of letting the axis title collide with wide tick
-    numbers
-  - Idiomatic use of the MUI X-distinctive ChartsReferenceLine component for the elbow
-    annotation instead of a hand-drawn overlay
+    background (#FAF8F1), light ink on the warm near-black dark background (#1A1A17),
+    identical brand-green/amber data colors across themes'
+  - Idiomatic, well-documented use of MUI X's ChartsReferenceLine for the elbow annotation,
+    plus a clean series-overlay technique (a second series holding a single non-null
+    point) to recolor just the elbow marker without touching the rest of the line
+  - Custom rotated Y-axis label element works around a documented MUI X yAxis label-offset
+    limitation that would otherwise collide with wide tick numbers like '1,300'
+  - 'Correct, spec-compliant data mapping: 10 k-values (1-10), monotonically decreasing
+    inertia with a visible elbow at k=4, markers at every discrete point'
   weaknesses:
-  - 'Design excellence is modest: beyond the single brand-green line and amber reference
-    line, there''s no distinguishing color/visual treatment (e.g. a subtle area fill
-    under the curve, or marker emphasis at the elbow point) to lift it past a competent-but-plain
-    default look'
-  - curve is set to 'linear' (straight segments between points); the spec notes 'a
-    smooth connecting line helps visualize the curve shape' — consider a monotone/smooth
-    curve interpolation to make the diminishing-returns shape read more naturally
-  - The 'Elbow · k=4' label sits directly on the dashed reference line with no background
-    plate, so its contrast against the horizontal gridlines it crosses is slightly
-    lower than the rest of the chrome — a small background chip or offset would improve
-    legibility further
-  - Legend is hidden entirely; for a single-series chart this is acceptable, but the
-    y-axis title 'Inertia (WCSS)' is the only place the metric name appears — a discoverable
-    series label (even via tooltip-accessible legend) would reinforce what the line
-    represents
+  - The elbow emphasis still relies on a manual second-series overlay + sx CSS-class
+    overrides rather than a single first-class MUI X API for 'highlight this one point'
+    — functional and clean, but a workaround rather than a canonical pattern
+  - Design remains fundamentally a single-line-plus-annotation composition; a subtle
+    secondary cue (e.g. faint tick-mark shading past k=4 to visually reinforce 'diminishing
+    returns') could push the storytelling further, though this is optional polish,
+    not a defect
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "elbow-curve · javascript · muix · anyplot.ai" top-left in dark ink, clearly readable. X-axis title "Number of Clusters (k)" and rotated Y-axis title "Inertia (WCSS)" both dark ink, legible. Tick labels (1-10 on x, 100-1,300 on y) in a slightly softer dark gray, all readable. Subtle horizontal gridlines only, not dominant.
-      Data: Single line series in brand green (#009E73-like) with open-circle markers at each of the 10 k-values, clearly visible against the light background. Dashed amber vertical reference line at k=4 with "Elbow · k=4" label in soft dark text, readable though it sits directly on the dashed line with no background plate.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), correct — not pure white.
+      Chrome: Title "elbow-curve · javascript · muix · anyplot.ai" top-left in dark ink, fully legible. X-axis title "Number of Clusters (k)" and rotated Y-axis title "Inertia (WCSS)" in dark ink, both legible. Tick labels (1-10 / 0-1,300 with thousands separators) in softer dark gray, all readable. Subtle horizontal-only gridlines.
+      Data: Brand-green (#009E73) line with monotoneX smooth curve and hollow circle markers at each of the 10 k-values, plus a light-green area wash beneath the curve. Dashed amber vertical reference line at k=4 with a solid amber-filled marker (white/pageBg stroke halo) emphasizing the elbow point, labeled "Elbow · k=4" with a stroke-halo background chip that keeps it crisp where it crosses gridlines/the dashed line.
+      Legibility verdict: PASS — all text readable, no dark-on-dark or light-on-light issues, no overlap.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis titles now rendered in light ink, clearly readable against the dark background. Tick labels in a softer light gray, legible. Gridlines subtle but visible.
-      Data: Line/marker color is identical brand green to the light render — confirmed unchanged across themes. Amber dashed reference line and its "Elbow · k=4" label are both visible and legible on the dark surface; no dark-on-dark failures observed anywhere (title, axis titles, and tick labels are all light text, not dark).
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), correct — not pure black.
+      Chrome: Same title and axis titles now in light ink, clearly readable against the dark surface; tick labels in a softer light gray, legible. Gridlines subtle but visible.
+      Data: Identical brand-green line/markers, area wash, and amber reference line/marker as light render — only chrome flipped, confirming palette consistency between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element uses light ink on the dark background, halo chip keeps the elbow label legible over the dashed line and gridlines.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/axis/tick text explicitly sized and readable in both themes
+        comment: All text readable in both themes, explicit font sizes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No collisions between text and data, but elbow label sits directly
-          on the dashed reference line/gridlines without a background plate
+        comment: Elbow label now has a stroke-halo background chip, resolving the
+          attempt-1 collision with gridlines/reference line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 sparse points with clearly visible open-circle markers, appropriate
-          for the data density
+        comment: Sparse data (10 points) has prominent hollow markers plus an emphasized
+          solid elbow marker
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green line and amber reference line have strong contrast against
-          both backgrounds; no red-green-only signal
+        comment: Green/amber contrast, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, no overflow or clipping, balanced axis label
-          sizes, generous margins
+        comment: Canvas dimension gate passed; balanced proportions, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units ('Inertia (WCSS)', 'Number of
-          Clusters (k)')
+        comment: Descriptive labels with units (WCSS)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series is brand green from palette[0], backgrounds match Imprint
-          light/dark tokens, identical data color across themes
+        comment: 'First series is #009E73; correct theme backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Competent but plain: single accent line plus a reference line, no
-          additional visual treatment (fill, emphasis marker at elbow, etc.)'
+        passed: true
+        comment: Area fill wash + emphasized amber elbow marker added since attempt
+          1; competent and polished, though still a fairly simple composition
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Grid intentionally restricted to horizontal-only and subtle; no spines
-          to remove (library default) so refinement effort is modest
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Explicit elbow annotation (dashed line + label at k=4) creates a
-          clear focal point directly answering the spec's core question
+        comment: Stroke-halo label chip, refined marker stroke, deliberate horizontal-only
+          grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Amber solid marker + dashed reference line + label create an unambiguous,
+          strengthened focal point at the elbow
     spec_compliance:
       score: 15
       max: 15
@@ -140,52 +132,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct elbow/line chart with markers at discrete k values
+        comment: Correct elbow/line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Markers at each k, connecting line, and elbow-point annotation all
-          present
+        comment: Markers, smooth connecting line, elbow annotation all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = k (1-10), Y = inertia, full range shown on both axes
+        comment: k on x-axis, inertia on y-axis, all 10 points shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated 'elbow-curve · javascript · muix · anyplot.ai'
-          format exactly; legend appropriately omitted for a single series
+        comment: Title matches required format exactly
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows the full diminishing-returns curve shape and the elbow point,
-          covering the core diagnostic use case
+        comment: Now shows smooth monotoneX curve per spec's suggestion, plus markers
+          and elbow annotation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Inertia values (1250 → 108) are plausible for a customer-segmentation
-          K-means run and neutral in subject matter
+        comment: Plausible customer-segmentation inertia values, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: k from 1-10 and inertia magnitude are sensible defaults for this
-          diagnostic
+        comment: Sensible WCSS magnitude and decay shape
     code_quality:
       score: 10
       max: 10
@@ -195,13 +183,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single functional component, no unnecessary abstraction
+        comment: Single default-exported component, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data arrays
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -213,17 +201,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, including a well-documented workaround for
-          a real MUI X layout limitation; no fake UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, sizes from window.ANYPLOT_SIZE, current community
-          @mui/x-charts API
+        comment: Correct mount-node contract, skipAnimation set
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,16 +217,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of xAxis/yAxis tickLabelStyle, margin, and grid props
-          at the high-level LineChart API
+        comment: Idiomatic LineChart/ChartsReferenceLine usage; the single-point overlay
+          series is a reasonable but non-canonical workaround
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine used for the elbow annotation is a genuinely
-          MUI X-distinctive component, though the rest of the chart stays at defaults
-  verdict: REJECTED
+        comment: ChartsReferenceLine plus sx-based per-series styling (area fill,
+          emphasized marker) now shows two distinctive techniques vs. one in attempt
+          1
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -249,4 +236,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
+  - edge-highlighting
