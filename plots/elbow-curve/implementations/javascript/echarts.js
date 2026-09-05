@@ -35,7 +35,14 @@ chart.setOption({
     top: 24,
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
   },
-  grid: { left: 130, right: 80, top: 130, bottom: 110, containLabel: false },
+  grid: { left: 130, right: 80, top: 100, bottom: 110, containLabel: false },
+  tooltip: {
+    trigger: "axis",
+    formatter: (params) => {
+      const [k, value] = params[0].value;
+      return `k = ${k}<br/>inertia = ${value.toLocaleString("en-US")}`;
+    },
+  },
   xAxis: {
     type: "value",
     min: 1,
@@ -71,6 +78,7 @@ chart.setOption({
       data: seriesData,
       lineStyle: { color: t.palette[0], width: 3.5 },
       symbol: "circle",
+      smooth: 0.25,
       z: 2,
       markLine: {
         symbol: "none",
