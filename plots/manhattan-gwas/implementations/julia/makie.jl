@@ -31,13 +31,17 @@ chrom_lengths_mb = Float64[
     249, 243, 198, 191, 180, 171, 159, 145, 138, 134, 135, 133,
     114, 107, 102, 90, 83, 80, 59, 64, 47, 51, 156,
 ]
-snps_per_mb = 14.0
+snps_per_mb = 36.0
 peak_chroms = ("2", "6", "9", "17", "X")
 
 chrom_ids  = String[]
 positions  = Float64[]
 neglog10p  = Float64[]
 chrom_centers = Float64[]
+
+top_hit_pos    = Float64[]
+top_hit_p      = Float64[]
+top_hit_labels = String[]
 
 cumulative_offset = 0.0
 for (name, length_mb) in zip(chrom_names, chrom_lengths_mb)
@@ -50,6 +54,11 @@ for (name, length_mb) in zip(chrom_names, chrom_lengths_mb)
         peak_width = length_mb * 0.015
         peak_signal = 12.0 .* exp.(-((local_pos .- peak_center) .^ 2) ./ (2 * peak_width^2))
         baseline_p = baseline_p .+ peak_signal .* (0.5 .+ 0.5 .* rand(n_snps))
+
+        top_idx = argmax(baseline_p)
+        push!(top_hit_pos, local_pos[top_idx] + cumulative_offset)
+        push!(top_hit_p, baseline_p[top_idx])
+        push!(top_hit_labels, "rs" * string(rand(1_000_000:99_999_999)))
     end
 
     append!(chrom_ids, fill(name, n_snps))
@@ -88,7 +97,7 @@ ax = Axis(
     ylabelsize         = 14,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
-    xticklabelsize     = 11,
+    xticklabelsize     = 10,
     yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
@@ -107,13 +116,24 @@ ax.xticks = (chrom_centers, chrom_names)
 
 scatter!(
     ax, positions, neglog10p;
-    color = point_colors, markersize = 4, alpha = 0.75, strokewidth = 0,
+    color = point_colors, markersize = 3, alpha = 0.6, strokewidth = 0,
 )
 scatter!(
     ax, positions[significant], neglog10p[significant];
-    color = AMBER, markersize = 9, strokewidth = 0.6, strokecolor = INK,
+    color = AMBER, markersize = 8, strokewidth = 0.6, strokecolor = INK,
     label = "Genome-wide significant SNP",
 )
+
+text!(
+    ax, top_hit_pos, top_hit_p .+ 0.6;
+    text = top_hit_labels, color = INK_SOFT, fontsize = 11,
+    align = (:center, :bottom),
+)
+
+# Extra headroom above the tallest peak/label keeps the top-left legend box
+# (pixel-anchored) clear of the chromosome-2 peak, which otherwise sits
+# closest to the axis top among the labeled hits.
+ylims!(ax, -0.3, maximum(neglog10p) + 2.5)
 
 hlines!(
     ax, [suggestive_threshold];
