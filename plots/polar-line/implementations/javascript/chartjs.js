@@ -1,12 +1,9 @@
 // anyplot.ai
 // polar-line: Polar Line Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 82/100 | Created: 2026-09-05
-//# anyplot-orientation: square
-// anyplot.ai
-// polar-line: Polar Line Plot
-// Library: chartjs 4.4.7 | JavaScript 22
 // Quality: pending | Created: 2026-09-05
+
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -30,15 +27,21 @@ function nextRandom() {
 for (let i = 0; i < N_DIRECTIONS; i++) {
   const degrees = i * (360 / N_DIRECTIONS);
   directionLabels.push(`${degrees}°`);
-  const morningJitter = (nextRandom() - 0.5) * 1.2;
-  const afternoonJitter = (nextRandom() - 0.5) * 1.2;
+  const morningJitter = (nextRandom() - 0.5) * 1;
+  const afternoonJitter = (nextRandom() - 0.5) * 1;
+  // Prevailing-wind amplitudes toned down to a ~3x calm/dominant ratio,
+  // which reads as a more believable average-wind-speed profile than the
+  // ~6x swing of the previous attempt.
   morningSpeed.push(
-    Math.max(2, 8 + 6 * Math.cos((degrees - 225) * (Math.PI / 180)) + morningJitter)
+    Math.max(2, 6 + 3 * Math.cos((degrees - 225) * (Math.PI / 180)) + morningJitter)
   );
   afternoonSpeed.push(
-    Math.max(2, 10 + 7 * Math.cos((degrees - 90) * (Math.PI / 180)) + afternoonJitter)
+    Math.max(2, 7.5 + 3.5 * Math.cos((degrees - 90) * (Math.PI / 180)) + afternoonJitter)
   );
 }
+
+const morningPeakIndex = morningSpeed.indexOf(Math.max(...morningSpeed));
+const afternoonPeakIndex = afternoonSpeed.indexOf(Math.max(...afternoonSpeed));
 
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -55,9 +58,11 @@ new Chart(canvas, {
         data: morningSpeed,
         borderColor: t.palette[0],
         pointBackgroundColor: t.palette[0],
+        pointStyle: "circle",
         pointRadius: 4,
         borderWidth: 3,
-        fill: false,
+        backgroundColor: `${t.palette[0]}26`,
+        fill: "origin",
         tension: 0,
       },
       {
@@ -65,9 +70,11 @@ new Chart(canvas, {
         data: afternoonSpeed,
         borderColor: t.palette[1],
         pointBackgroundColor: t.palette[1],
-        pointRadius: 4,
+        pointStyle: "triangle",
+        pointRadius: 5,
         borderWidth: 3,
-        fill: false,
+        backgroundColor: `${t.palette[1]}26`,
+        fill: "origin",
         tension: 0,
       },
     ],
@@ -83,12 +90,18 @@ new Chart(canvas, {
         color: t.ink,
         font: { size: 22 },
       },
+      subtitle: {
+        display: true,
+        text: `Peak winds: morning ${directionLabels[morningPeakIndex]}, afternoon ${directionLabels[afternoonPeakIndex]}`,
+        color: t.inkSoft,
+        font: { size: 15, style: "italic" },
+        padding: { bottom: 12 },
+      },
       legend: {
         labels: {
           color: t.ink,
           font: { size: 16 },
           usePointStyle: true,
-          pointStyle: "circle",
         },
       },
     },
@@ -106,6 +119,7 @@ new Chart(canvas, {
           color: t.inkSoft,
           backdropColor: "transparent",
           font: { size: 12 },
+          callback: (value) => `${value} mph`,
         },
       },
     },
