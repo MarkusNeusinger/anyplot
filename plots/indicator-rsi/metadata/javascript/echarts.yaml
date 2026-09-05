@@ -1,0 +1,247 @@
+library: echarts
+language: javascript
+specification_id: indicator-rsi
+created: '2026-09-05T06:02:18Z'
+updated: '2026-09-05T06:14:54Z'
+generated_by: claude-sonnet
+workflow_run: 33948472109
+issue: 3229
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-rsi/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correct 14-period Wilder-style RSI smoothing, matching the spec's standard lookback
+    and calling it out in the subtitle and series name
+  - Fixed 0-100 Y-axis with dashed 30/70 threshold lines plus an optional dotted 50
+    neutral centerline, exceeding the spec's minimum requirements
+  - Overbought zone tinted with a semantic red (palette[4]) and oversold zone now
+    tinted with a neutral inkSoft gray, fixing the prior-attempt issue where the oversold
+    fill shared the RSI line's own green hue
+  - markLine threshold labels ('Overbought'/'Neutral'/'Oversold') now render at the
+    same 14px used elsewhere in the chrome, fixing the prior-attempt font-size inconsistency
+  - Deterministic LCG-seeded price walk drives the RSI through a full round trip across
+    neutral, overbought, and oversold territory
+  - 'Idiomatic, distinctive ECharts usage: markArea + markLine for threshold bands
+    is comparatively hard to replicate cleanly in other libraries'
+  - 'Theme-adaptive chrome correctly threaded through title, subtitle, axes, and markLine
+    labels; first (and only) series is Imprint brand green #009E73 identical across
+    both renders'
+  weaknesses:
+  - Four small helper functions (hexToRgba, lcg, nextTradingDay, computeRsi) remain;
+    justified by the RSI/trading-calendar math but hexToRgba could be dropped by precomputing
+    the two rgba() strings once
+  - Y-axis name 'RSI' has no unit annotation (e.g. '(0-100)') — minor, since RSI is
+    a dimensionless index, but would nudge VQ-06 to unambiguous
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "indicator-rsi · javascript · echarts · anyplot.ai" and subtitle "14-period RSI on daily closing prices · overbought > 70 · oversold < 30" render in dark ink and are fully legible. Y-axis shows "RSI" with 0-100 ticks at interval 10; X-axis shows month ticks (Feb-Jul). Dashed "Overbought" (70), dotted "Neutral" (50), and dashed "Oversold" (30) reference-line labels sit clear of the plot area on the right margin, all at consistent 14px sizing, no clipping at the canvas edge.
+      Data: A single brand-green (#009E73) RSI line (3px, no markers/symbols) traces from ~73 down through a full oscillation cycling between ~20 (oversold, mid-March) and ~81 (overbought, early Feb and early May) and back up to ~68 by July. The 70-100 band is tinted a light rose/red (palette[4] at low alpha) and the 0-30 band is tinted a light neutral gray (inkSoft at low alpha) — the two zones are now visually distinct from each other and from the green data line.
+      Legibility verdict: PASS — all text readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, and all axis/tick/threshold-line labels render in light ink and remain fully legible — no dark-on-dark failures anywhere. Threshold-line labels are still 14px, matching the light render.
+      Data: The RSI line is the identical brand green (#009E73) as the light render, confirming data-color consistency across themes. The overbought band is now a dark maroon tint and the oversold band a dark neutral-gray tint, both appropriate for the surface and clearly distinguishable from the green line and from each other.
+      Legibility verdict: PASS — no dark-on-dark issues found; only chrome (background, text, zone tint) flips between renders, data color stays constant as required.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22, subtitle 15, axis/tick/markLine
+          labels unified at 14px); readable in both themes; no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, threshold labels, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px line width appropriate for ~116-point daily series, clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe; zone tints distinguishable from data line
+          and each other without relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the canvas well, balanced margins, right margin sized
+          for threshold labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'RSI' axis name; dimensionless index so no unit needed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 identical in both themes; correct #FAF8F1/#1A1A17
+          backgrounds; zone tints use palette[4] (red) and inkSoft (neutral) as semantic
+          exceptions'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic red/neutral zone shading now clearly distinct from the data
+          line, fixing the prior-attempt hue clash; thoughtful color use above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis line hidden, subtle single-color splitLines, generous grid
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded zones plus labeled threshold lines make the overbought/oversold
+          narrative immediately legible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct RSI line-oscillator chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Fixed 0-100 axis, 30/70 threshold lines, optional 50 centerline,
+          zone shading, 14-period lookback noted in subtitle and series name
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, RSI on Y, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend correctly omitted for the single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: RSI cycles through neutral, overbought (~80), and oversold (~20)
+          multiple times
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible generic daily-closing-price scenario, not tied to a named
+          instrument
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wilder RSI math bounded correctly to 0-100, realistic oscillation
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Four small helper functions (hexToRgba, lcg, nextTradingDay, computeRsi)
+          justified by RSI/trading-calendar math but add structure beyond the simplest
+          shape
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG(42) seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; echarts global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: markArea + markLine + time-axis line chart is a well-composed, idiomatic
+          ECharts pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The markArea/markLine declarative threshold-band combo is genuinely
+          distinctive to ECharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - alpha-blending
