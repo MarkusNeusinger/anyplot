@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: histogram-2d
+created: '2026-09-05T03:50:13Z'
+updated: '2026-09-05T04:03:29Z'
+generated_by: claude-sonnet
+workflow_run: 33942659342
+issue: 2012
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-2d/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Interior "checkerboard holes" issue from attempt 1 substantially resolved: tripling
+    SAMPLE_SIZE (6000 -> 16000) and reducing BIN_COUNT (28 -> 20) produced a much
+    more contiguous, solid density cloud in both renders'
+  - Added a correlation-callout subtitle ("Older customers purchase more often --
+    sample correlation r = 0.50") that gives the chart a clear narrative focal point
+    (DE-03)
+  - Custom tooltip formatter surfaces the bin's age/purchase-frequency/count for the
+    interactive HTML output, and ink-colored hover emphasis adds a touch of ECharts-specific
+    polish beyond the plain heatmap
+  - Theme-adaptive chrome, Imprint imprint_seq colormap, and the mandated title format
+    are all correct and consistent across both light and dark renders
+  - Clean, deterministic, KISS-structured code (fixed-seed LCG, no unused imports,
+    correct mount-node/animation:false contract)
+  weaknesses:
+  - A handful of isolated zero-count bins still puncture the density cloud (e.g. near
+    the top of the populated region and a couple near the tails) -- much improved
+    from attempt 1's checkerboard but not fully eliminated; consider flooring near-zero
+    bins at a minimum visible shade, or further tuning BIN_COUNT/SAMPLE_SIZE, for
+    a fully smooth surface
+  - 'Library Mastery is still fairly generic for ECharts: heatmap + continuous visualMap
+    + a tooltip formatter is an improvement but doesn''t showcase distinctive ECharts
+    capabilities (e.g. dataZoom to explore the dense center, roam/zoom, or brush selection)
+    that would add real value in the interactive HTML view'
+  - 'Design Excellence remains at ''well-configured, not exceptional'': the new subtitle
+    adds a narrative touch, but the visualMap legend and overall composition are still
+    close to library defaults; more visual hierarchy (e.g. emphasizing the densest
+    cluster) would elevate the polish further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white, not dark.
+      Chrome: Title "histogram-2d · javascript · echarts · anyplot.ai" is bold dark text, centered, fully readable, with a soft-gray subtitle below it ("Older customers purchase more often — sample correlation r = 0.50") that is also fully legible. X-axis label "Customer Age (years)" and Y-axis label "Purchases per Year" are dark ink, clearly legible and similar in size. Tick labels (19/31/42/53/65 on X; 0.5/4.1/7.6/11.2/14.8 on Y, interval-skipped to avoid crowding) are soft gray and fully legible. The "Point count" visualMap legend on the right (0-370) is small but legible gray text with clear spacing from the heatmap.
+      Data: A dense, mostly contiguous cloud of square heatmap cells spans diagonally from lower-left to upper-right, colored on the Imprint imprint_seq scale — brand green (#009E73) for low counts fading to blue (~#4467A3) for the densest bins near the center-right. A few small zero-count gaps remain within the cloud (bare cream background), but the cloud reads as a solid density surface overall, a clear improvement over the scattered holes of the previous attempt.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black, not light.
+      Chrome: Title, subtitle, axis labels, and tick labels have all flipped to light/off-white tones and remain fully readable against the dark background — no dark-on-dark failures observed anywhere. The visualMap legend text is likewise light and legible.
+      Data: The same diagonal heatmap cloud appears with identical green-to-blue data colors and identical cell positions as the light render, confirming Imprint palette and layout consistency across themes. The same small handful of zero-count gaps appear as near-black squares, slightly better hidden against the dark background than in light mode.
+      Legibility verdict: PASS — all title/subtitle/axis/tick text is clearly readable in the dark theme; no dark-on-dark issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis 16, ticks/legend 14/15);
+          readable in both themes with balanced proportions and no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tick interval skipping avoids label collisions; visualMap legend
+          sits clear of the heatmap; no overlap anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Higher sample size and fewer bins produced a mostly solid density
+          surface; only a couple of minor zero-count gaps remain, a clear improvement
+          over attempt 1
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq is CVD-safe by design; strong luminance range from green
+          to blue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); heatmap plus legend fill the canvas
+          with balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels include units (years, per year); title matches mandated
+          format exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used for single-polarity count data; theme-correct backgrounds
+          and chrome in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Correlation-callout subtitle and hover emphasis add a touch of polish
+          beyond attempt 1's plain heatmap, but still short of exceptional sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean axis lines, subtle cell borders in the page background color,
+          generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New subtitle explicitly names the trend and correlation strength,
+          giving the chart a clear focal point on top of the diagonal density gradient
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D-histogram-as-heatmap implementation with rectangular bins
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar (visualMap) present, perceptually-uniform imprint_seq colormap,
+          adjustable bin resolution via BIN_COUNT
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Age on X, purchase frequency on Y, both axes show the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; visualMap legend labeled 'Point
+          count'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full joint density with a clear correlated cluster and tapering
+          tails
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer age vs. purchase frequency is a real, neutral market-research
+          scenario drawn from the spec's Applications list
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Age range ~18-75 and purchases-per-year ~0-17 are both realistic;
+          sample size 16,000 fits the spec's recommended range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small, justified helper functions (LCG, Box-Muller normal, Pearson
+          correlation) with a linear data -> bin -> option flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the echarts global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriately simple, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set, current API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct heatmap + continuous visualMap usage, now with a formatted
+          tooltip and hover emphasis
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Still generic for ECharts -- no dataZoom, roam, or brush; a tooltip
+          formatter alone isn't a distinctive library feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap

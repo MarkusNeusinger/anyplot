@@ -1,0 +1,267 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-polar
+created: '2026-09-05T03:40:27Z'
+updated: '2026-09-05T03:46:39Z'
+generated_by: claude-sonnet
+workflow_run: 33941974567
+issue: 5244
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-polar/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Faithfully hand-implements a true polar heatmap using only the core Highcharts
+    renderer (chart.renderer.arc/rect/text) since neither highcharts-more nor the
+    heatmap module is loaded — exactly the workaround the library prompt calls for,
+    rather than reaching for another library.
+  - Data shape (7 days x 24 hours = 168 cells) matches the specification's own suggested
+    example precisely, with a realistic weekday bimodal commute pattern (~9am/~7pm
+    peaks) versus a single broad weekend afternoon peak.
+  - 'Full theme-adaptive chrome: day-label halo boxes, hour labels, and the custom
+    colorbar all correctly flip between light/dark tokens while the imprint_seq (green-to-blue)
+    data colors stay pixel-identical between renders.'
+  - 'Genuine interactivity is preserved despite the hand-drawn wheel: an invisible
+    scatter layer aligned to each wedge centroid recovers real native Highcharts tooltips
+    (day, hour, value) rather than faking hover states.'
+  - Custom sequential colorbar with correct min/max value labels and units ("Visits
+    / hr") directly satisfies the spec's "include a colorbar legend for value interpretation"
+    requirement, and thin cell borders satisfy the spec's gridline suggestion.
+  weaknesses:
+  - Day-of-week ring labels sit in plain rounded-rect halo boxes; slightly more typographic
+    refinement (e.g. a thin border matching the theme's rule color) would lift Design
+    Excellence further.
+  - The workaround needs several helper functions (baseline, hexToRgb, lerp, rgbToCss,
+    hourAngle, drawAll) which is more structure than a minimal KISS snippet — justified
+    by the missing polar/heatmap modules, but worth simplifying if those modules ever
+    become available.
+  - The weekday-commute vs weekend-afternoon story is only visible through color intensity;
+    no explicit callout highlights the two peak regimes for a reader scanning quickly.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-polar · javascript · highcharts · anyplot.ai" in bold dark ink at top, centered; subtitle "Simulated hourly visits · Mon (inner ring) to Sun (outer ring)" in softer grey below it. Hour labels (12am/6am/12pm/6pm) sit outside the wheel in soft grey. Day-of-week labels (Mon..Sun) sit on light halo boxes along the 12am spoke, dark text on near-white box fill so they stay legible over any wedge color beneath. Colorbar on the right labeled "Visits / hr" with "153" (top, blue) and "11" (bottom, green) in grey text.
+      Data: A ring-and-wedge wheel of 7 rings (Mon inner to Sun outer) x 24 angular sectors (hours), colored via the Imprint imprint_seq gradient (brand green #009E73 at low values -> blue #4467A3 at high values). A clear blue (high-value) cluster appears in the 3pm-8pm arc across the rings, consistent with the weekday evening commute peak and the weekend afternoon peak; a secondary blue patch near 9am is visible in the inner (weekday) rings only.
+      Legibility verdict: PASS — all text (title, subtitle, hour labels, day labels, colorbar) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light ink/grey, clearly visible against the dark background. Hour labels outside the wheel are light grey. Day-of-week halo boxes flip to a dark elevated-surface fill with light text, keeping the same legibility pattern as the light render. Colorbar labels ("153", "11", "Visits / hr") render in light grey, fully readable.
+      Data: The wedge colors are identical to the light render — same green-to-blue imprint_seq gradient, same high-value cluster positions (weekday commute peaks near 9am/7pm, weekend afternoon peak) — confirming only chrome flips between themes, not data color.
+      Legibility verdict: PASS — no dark-on-dark failures found; every title/label/tick is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px scaled, subtitle 14px,
+          hour/day/colorbar labels 12-16px); readable and well-proportioned in both
+          themes, no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Day-label halo boxes and hour labels sit clear of each other and
+          of the colorbar; no text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 168 wedge cells are appropriately sized for the density; individual
+          hour/day cells are clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous green-to-blue imprint_seq gradient is CVD-safe and does
+          not rely on hue alone for a categorical signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Wheel plus colorbar use the large majority of the square canvas;
+          the wider right margin is purposefully reserved for the colorbar, not wasted
+          space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar carries units ("Visits / hr"); hour and day-of-week labels
+          are descriptive and unambiguous.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq (green->blue) sequential colormap for single-polarity
+          data; theme-correct backgrounds and chrome in both renders; data colors
+          identical across themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully custom hand-drawn wheel with halo-boxed ring labels and a bespoke
+          colorbar; clearly above a generic default (none exists for this combination),
+          though typography stays fairly plain.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle 1px cell strokes, bordered colorbar, generous whitespace;
+          label boxes are simple rounded rects rather than more refined callouts.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color intensity clearly surfaces the weekday bimodal commute vs.
+          weekend single-peak pattern, guiding the viewer without needing explicit
+          annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct polar heatmap: angular = cyclic hour-of-day, radial = day-of-week
+          rings.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Continuous angular wrap, radial rings outward from center, colorbar
+          legend, cell borders, and readable angular labels at 12am/6am/12pm/6pm are
+          all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angular = hour, radial = day, matches spec exactly; all 168 cells
+          are rendered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; colorbar substitutes correctly
+          for a legend with clear labels.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the full value range (11-153) and both weekday/weekend regimes;
+          within-weekday variation is comparatively subtle.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible website-traffic scenario, matching the spec's
+          own suggested application.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Visit-count magnitudes and the commute-shaped peaks are plausible
+          for hourly web traffic.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions are needed for the hand-drawn wheel (justified
+          by missing modules), more structure than a minimal snippet.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG (seed=42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals or dead imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is appropriate to the constraint; no fake UI, tooltips
+          are real via the overlay series.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Highcharts
+          renderer API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses exactly the core-renderer + series pattern the library prompt
+          prescribes for polar/heatmap types when the add-on modules aren't loaded.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combining chart.renderer primitives with an invisible overlay series
+          for native tooltips is a technique fairly specific to Highcharts' architecture.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - polar-projection
+  - hover-tooltips
+  - patches
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
