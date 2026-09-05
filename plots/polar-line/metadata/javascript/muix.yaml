@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: polar-line
 created: '2026-09-05T11:31:01Z'
-updated: '2026-09-05T11:36:28Z'
+updated: '2026-09-05T11:43:31Z'
 generated_by: claude-sonnet
 workflow_run: 33963097458
 issue: 2692
@@ -12,56 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Faithfully reconstructs a native-feeling polar/radial line chart even though the
-    community @mui/x-charts package has no polar chart component, using real trigonometry
-    mapped through useDrawingArea rather than faked chrome
-  - The hand-drawn polylines are backed by a genuine matching scatter series (same
-    coordinate transform), so ChartsLegend and ChartsTooltip read real series data
-    instead of decorative labels
-  - Two clearly differentiated, realistic antenna radiation patterns (near-circular
-    omnidirectional dipole vs. narrow-beam Yagi with a visible back lobe) give the
-    chart genuine data storytelling
-  - Theme-adaptive chrome is correct in both renders and the Imprint palette is applied
-    correctly (brand green first, lavender second, identical across light/dark)
-  - Concentric gain rings and 45° radial spokes satisfy the spec's grid requirement,
-    with subtle opacity/weight differences (cardinal vs. intercardinal) for a refined
-    hierarchy
+  - 'Real polar trigonometry (not faked): the hand-drawn SVG rings/spokes/polygons
+    and the underlying MUI ScatterPlot series are mapped through the same linear xAxis/yAxis
+    domain, so the real MUI scatter dots, ChartsLegend, and ChartsTooltip all read
+    genuine series data instead of decorative chrome'
+  - Theme-adaptive gain-tick labels use a page-background stroke halo instead of a
+    flat pill background, keeping '0.2'/'0.4'/etc. legible where the pattern lines
+    cross them, in both light and dark
+  - Degree labels use angle-aware text-anchor/dominant-baseline logic so labels at
+    0/45/90/... never collide with the spokes or each other
+  - Realistic, neutral RF antenna radiation-pattern use case (omnidirectional dipole
+    vs. directional Yagi) with a sensible 0-1 normalized-gain scale and a small physical
+    ripple/back-lobe rather than an idealized circle
+  - 'Correct Imprint categorical order (green #009E73 then lavender #C475FD), identical
+    across both themes; both backgrounds correctly warm off-white / warm near-black'
+  - skipAnimation set, deterministic in-memory data generation, and only used imports
   weaknesses:
-  - The radial (gain) axis only shows bare numeric ticks (0.2–1.0) with no descriptive
-    label anywhere on the chart (e.g. 'Normalized gain') — a first-time viewer has
-    no textual cue for what the ring values represent beyond inferring it from the
-    title/legend.
-  - Scatter markers (markerSize=6) are on the small side for only 24 sparse points
-    per series (per the density heuristic, <50 points should get larger, more prominent
-    markers), especially where the Yagi back-lobe points cluster tightly near the
-    center and start to merge visually.
-  - The plain rounded-rect background behind each gain tick label (fill=PAGE_BG) is
-    a slightly utilitarian way to keep labels legible over the crossing pattern lines
-    — a subtler treatment (e.g. a text halo/stroke in the page background color) would
-    look more polished.
-  - The chart leans on a manual composition workaround (ChartContainer + useDrawingArea
-    + a shadow scatter series) rather than any higher-level, chart-type-specific MUI
-    X feature — solid engineering, but library mastery credit is capped since it's
-    a generic SVG-layer technique rather than something distinctive to MUI X's own
-    chart vocabulary.
+  - 'The file has a duplicated, contradictory header block (lines 1-10): two ''//
+    anyplot.ai'' headers stacked back to back, one claiming ''Quality: 88/100'' with
+    ''Library: muix 7.29.1 | JavaScript 22.23.2'' and no license line, the other claiming
+    ''Quality: pending'' with ''Library: MUI X Charts | React | Node 22'' plus the
+    License line. The ''//# anyplot-orientation: square'' directive ends up sandwiched
+    between the two blocks instead of sitting alone as the very first line per the
+    header-style contract. Collapse this to a single, correct header block with the
+    orientation directive as line 1.'
+  - The Yagi series' back-lobe sample points (near the center, around the 90°/270°
+    crossing) cluster very tightly and slightly overlap each other visually — a minor
+    consequence of the real gain function being near-zero across many consecutive
+    angles, not a layout bug, but it makes individual points hard to distinguish there.
+  - Design excellence and library mastery are solid but could go further — e.g. no
+    highlight/annotation calling out the boresight peak (0°) or the front-to-back
+    ratio, which would strengthen the data-storytelling angle for this antenna-engineering
+    context.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold centered title "polar-line · javascript · muix · anyplot.ai" in dark ink; eight radial spokes labeled 0°/45°/90°/.../315° (cardinal directions bold/larger, intercardinal lighter/smaller); five concentric gain rings labeled 0.2–1.0 along the top spoke with a small background pill behind each number for legibility; bottom legend with "Omnidirectional dipole" (green swatch) and "Directional Yagi" (lavender swatch). All chrome text is dark and clearly readable against the light background.
-      Data: First series (Omnidirectional dipole) is brand green #009E73 forming a near-circular closed loop with a small ripple; second series (Directional Yagi) is lavender/purple forming a narrow spike toward 0° (boresight) with a small back-lobe bump near 180° and low values elsewhere. Circular markers trace each 15° sample point on both curves.
-      Legibility verdict: PASS — no overlapping or clipped text observed; gain tick labels near the top spoke stay legible over the crossing lines thanks to their background pill.
+      Background: Warm off-white (#FAF8F1), consistent with the Imprint light theme, not pure white.
+      Chrome: Title "polar-line · javascript · muix · anyplot.ai" centered at top in bold dark ink, clearly legible. Concentric gain rings (0.2-1.0) labeled with white-haloed dark-ink text along the top spoke. Eight radial spokes at 45° increments with degree labels (0°-315°), cardinal directions (0/90/180/270) bolder/larger than intercardinal. A rotated "Normalized gain" axis label runs alongside the ring ticks. Bottom legend shows "Omnidirectional dipole" (green swatch) and "Directional Yagi" (lavender swatch). All text is clearly readable against the light background — no light-on-light issues.
+      Data: Omnidirectional dipole drawn as a near-circular green (#009E73) polygon with a small ripple, gain roughly 0.75-0.85 all around. Directional Yagi drawn as a lavender (#C475FD) polygon with a sharp, narrow main lobe reaching 1.0 at 0° (boresight) and dropping to a very small back lobe (~0.05-0.1) across the 90°-270° range. Markers are prominent (size 8) and clearly distinguishable from the lines and background.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render — title, degree labels, gain-ring labels, and legend all render in light ink/text tokens (INK / INK_SOFT) against the dark background. Grid rings and spokes use the theme's grid token at reduced opacity, staying subtle but visible.
-      Data: Data colors are pixel-identical to the light render — brand green for the omnidirectional pattern, the same lavender for the Yagi pattern — confirming only chrome (not data color) flips between themes.
-      Legibility verdict: PASS — no dark-on-dark text found; all title/spoke/tick/legend text is clearly light-colored and readable against the dark surface.
+      Background: Warm near-black (#1A1A17), consistent with the Imprint dark theme, not pure black.
+      Chrome: Same title, ring, spoke, degree-label, axis-label, and legend layout as the light render, now rendered in light ink/text against the dark background. Grid rings and spokes are subtle gray, clearly visible without dominating. No dark-on-dark failures observed — all text (title, degree labels, gain-tick labels, legend) reads clearly against the dark surface.
+      Data: Both the green omnidirectional and lavender directional-Yagi polygons use the identical colors and shapes as the light render — only the chrome (background, text, grid) flipped, confirming palette identity is preserved across themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -69,55 +69,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout with a clear weight/size hierarchy
-          (bold 30px title, bold 18px cardinal spoke labels, 14px intercardinal labels,
-          15px gain ticks, 16px legend); readable in both themes.
+        comment: All text (title, degree labels, gain ticks, legend) legible in both
+          themes; halo-stroked tick labels stay readable where lines cross them
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No text-on-text or text-on-data collisions observed; gain tick labels
-          use a background pill to stay legible where pattern lines cross the top
-          spoke.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines (stroke-width 3) are clearly visible, but markerSize=6 is a
-          bit small for only 24 sparse points per series, and Yagi's back-lobe markers
-          cluster tightly near the center.
+        comment: No text collisions; Yagi back-lobe data points cluster tightly near
+          center (data-driven, not a layout defect)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 points/series (sparse), markerSize=8 and strokeWidth=3 are appropriately
+          prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green vs. lavender gives strong CVD-safe contrast, not relying
-          on hue alone since the two series also have very different shapes.
+        comment: Green vs. lavender is CVD-distinguishable, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins on all sides (110px), the polar plot fills the square
-          canvas well, legend sits directly beneath the plot, nothing is cut off.
+        comment: Correct 2400x2400 square canvas, balanced proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Degree labels are self-explanatory, but the radial axis has only
-          bare numbers (0.2-1.0) with no descriptive label (e.g. 'Normalized gain')
-          anywhere on the chart.
+        passed: true
+        comment: Radial axis labeled 'Normalized gain', degree spokes labeled, descriptive
+          title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (brand green), second series uses Imprint
-          position 2 (lavender #C475FD), identical across light/dark; backgrounds
-          match #FAF8F1 / #1A1A17; all chrome is theme-correct in both renders.'
+        comment: 'First series #009E73, second #C475FD (canonical order); correct
+          theme backgrounds in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -127,25 +120,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: A fully custom polar chart with an intentional typographic hierarchy
-          and subtle ring styling — well above a library default (the community package
-          has no native polar chart at all) but short of flawless publication polish.
+        comment: Custom polar geometry, halo-stroked labels, angle-aware anchor/baseline
+          logic show real polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid opacity is subtle and spines are absent by construction, but
-          the flat rounded-rect backgrounds behind gain tick labels read as slightly
-          utilitarian rather than fully refined.
+        comment: Subtle inner grid rings (reduced opacity), solid outer ring, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The contrast between the near-circular omnidirectional pattern and
-          the narrow Yagi beam (with a visible back lobe) creates an immediate, clear
-          visual comparison.
+        comment: Clear omni vs. directional contrast tells the antenna-pattern story;
+          could add a boresight/front-to-back annotation for more emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -155,29 +145,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct polar line chart: points connected by lines around a circular
-          axis, closed since azimuth wraps at 360°.'
+        comment: Genuine polar line plot with real trigonometry
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Theta/radius mapping, multiple series with distinct colors, concentric-circle
-          + radial-line grid — all present.
+        comment: Concentric rings + radial spokes grid, multi-series, lines connect
+          in theta order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle (theta) and gain (radius) correctly mapped; all 24 samples
-          per series shown around the full 360°.
+        comment: theta/radius correctly mapped, full 0-360 range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels ('Omnidirectional
-          dipole', 'Directional Yagi') correctly describe the series.
+        comment: Title matches required format; legend labels match series
     data_quality:
       score: 14
       max: 15
@@ -187,63 +174,57 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Two clearly distinct pattern shapes (broad omnidirectional with ripple
-          vs. narrow directional beam with back lobe) cover the main variety expected
-          of this plot type.
+        comment: Full angular sweep, multi-series magnitude comparison
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral RF/antenna-engineering scenario (far-field radiation
-          patterns), fully comprehensible and non-controversial.
+        comment: Plausible, neutral RF antenna radiation-pattern domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized gain 0-1 with a narrow forward main lobe, small back lobe,
-          and near-circular omni pattern are all physically plausible antenna behaviors.
+        comment: Normalized 0-1 gain scale is sensible for the domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Straightforward top-to-bottom structure (data generation, small pure
-          geometry helpers, two React components); no over-structuring.
+        comment: Otherwise simple structure, but duplicated/contradictory header comment
+          block is a cleanliness defect
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic closed-form gain formulas, no randomness.
+        comment: Deterministic in-memory formulas, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (ChartContainer, ScatterPlot, ChartsLegend, ChartsTooltip,
-          useDrawingArea) is used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or fake-interactivity code; the custom SVG layer is genuinely
-          coupled to real data through the shared coordinate transform.
+        comment: No fake UI; the scatter+SVG composition is a legitimate workaround
+          for MUI X lacking a native polar chart
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set on ChartContainer; sizes from window.ANYPLOT_SIZE;
-          current MUI X API, no deprecated calls.
+        comment: skipAnimation set, mount-node contract respected, current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -251,27 +232,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses MUI X's documented composition pattern (ChartContainer children
-          + useDrawingArea) correctly, though it operates at the lower composition
-          layer rather than a higher-level chart component.
+        comment: Idiomatic use of ChartContainer + useDrawingArea to extend MUI X
+          beyond its built-in chart types
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: useDrawingArea plus a real backing scatter series to keep legend/tooltip
-          genuine is a technique fairly specific to MUI X's composition model, though
-          it is a workaround rather than a native distinctive chart type.
-  verdict: REJECTED
+        comment: Wires ChartsTooltip/ChartsLegend to real scatter data underlying
+          the custom polar geometry
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - manual-ticks
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
