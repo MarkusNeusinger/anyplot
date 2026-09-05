@@ -1,0 +1,241 @@
+library: d3
+language: javascript
+specification_id: dendrogram-radial
+created: '2026-09-04T23:54:20Z'
+updated: '2026-09-05T00:09:43Z'
+generated_by: claude-sonnet
+workflow_run: 33930779682
+issue: 5245
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/javascript/d3/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Idiomatic D3 pipeline (d3.hierarchy -> d3.cluster -> d3.linkRadial) with a correct
+    distance-proportional radius remap (root at r=0, leaves at r=outerRadius)
+  - 'Both renders are pixel-identical on data colors and fully theme-correct on chrome
+    (no dark-on-dark or light-on-light issues); canonical Imprint order with #009E73
+    as the first cluster'
+  - Leaf count expanded to ~86 languages across 5 lineages (up from 40), genuinely
+    showcasing the radial layout's space-efficiency advantage, and the vertical centering
+    now balances the full visual bbox (branches + labels) instead of just the bare
+    layout radius
+  weaknesses:
+  - Leaf labels (13px) and legend text (14px) remain on the small side for a chart
+    with ~86 leaves - still borderline once scaled down to a ~400px thumbnail; consider
+    a modest size bump or alternating radial offsets
+  - Design Excellence still reads close to the standard d3-gallery radial dendrogram
+    look (curved links, hollow merge markers) - the optional outer metadata ring from
+    the spec, or a subtle merge-distance guide ring, would push the storytelling further
+  - A small residual vertical whitespace asymmetry remains even after the bbox-centering
+    fix - bottom of the canvas is still marginally emptier than the top
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: bold dark-ink title "dendrogram-radial · javascript · d3 · anyplot.ai" at top center; top-left legend maps the 5 cluster colors (Systems & Low-Level, Enterprise OOP, Functional, Dynamic Scripting, Data & Scientific) to swatches; all clearly readable against the light background
+      Data: root sits near canvas center, curved (linkRadial) branches fan out to 5 colored lineages (green #009E73, lavender, blue, ochre, matte red - canonical Imprint order); hollow circles mark internal merge points, filled dots mark ~86 leaf tips, leaf labels colored to match their cluster
+      Legibility verdict: PASS - all chrome and data text is readable at full canvas size; leaf/legend text is on the smaller side and would benefit from a size bump for small-thumbnail contexts, but nothing is unreadable
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: title and legend text switched to light ink, clearly readable against the dark background; internal merge-point circle fill switches from light page background to dark page background; no dark-on-dark issues found
+      Data: branch, leaf-tip, and leaf-label colors are pixel-identical to the light render (only chrome flipped), confirming theme-adaptive tokens are threaded correctly
+      Legibility verdict: PASS - same small-text caveat as the light render, no legibility failures
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit font sizes (13px leaves, 14px legend, 22px title), readable
+          in both themes, but small given ~86 densely packed leaf labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No label/label or label/data collisions despite the higher leaf count
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Leaf tips and merge-point markers appropriately sized for ~86 leaves,
+          not optimal (could be marginally larger)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 5 distinct hues plus spatial separation by sector; no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: bbox-based centering fix improved balance vs. the prior attempt,
+          but a small residual top/bottom whitespace asymmetry remains
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format exact; legend descriptive; no axes needed for this layout
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First cluster is Imprint #009E73, canonical order, correct theme
+          backgrounds, identical data colors across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Curved linkRadial branches, hollow merge-point markers, clean legend
+          - solid but close to the standard d3-gallery radial dendrogram look
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No chart junk, generous whitespace, subtle stroke opacity - refined
+          but not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Cluster coloring conveys grouping but there's no additional hierarchy/emphasis
+          (e.g. merge-distance guide ring or outer metadata ring)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct radial dendrogram: root at center, leaves on circumference'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distance-proportional branch length, equal angular leaf spacing,
+          cluster coloring all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Distance-to-radius and hierarchy-to-angle mappings correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; legend matches the 5 lineages
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: ~86 leaves across 5 lineages with nested sub-families now clearly
+          demonstrates the radial layout's space-efficiency advantage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, comprehensible, neutral programming-language taxonomy standing
+          in for a real clustering dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Monotonic synthetic distances (children always < parent, deterministic
+          LCG) are logically consistent for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script; the only functions are small, necessary recursive
+          tree helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animations, sized from ANYPLOT_SIZE
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical d3.hierarchy + d3.cluster + d3.linkRadial pipeline
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom distance-proportional radius remap plus internal merge-point
+          markers - a feature combination distinctive to d3-hierarchy
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - publication-ready
