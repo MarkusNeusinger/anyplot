@@ -1,0 +1,242 @@
+library: d3
+language: javascript
+specification_id: residual-plot
+created: '2026-09-05T12:29:56Z'
+updated: '2026-09-05T12:35:13Z'
+generated_by: claude-sonnet
+workflow_run: 33965860468
+issue: 2332
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/residual-plot/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Complete feature set: zero-reference line, ±2σ outlier bands, binned local-mean
+    smoother, and color+size-coded outliers are all present per spec'
+  - Theme-adaptive chrome is correct in both renders — all text and grid elements
+    read clearly on both surfaces, and the Imprint data colors (green/blue/red) are
+    pixel-identical between light and dark
+  - Realistic, neutral energy-consumption regression scenario that visibly demonstrates
+    the classic residual-plot diagnostic pattern (variance fanning out as the fitted
+    value grows)
+  - 'Idiomatic D3 axis handling: a separate floating-grid group (domain removed, tick
+    lines used as gridlines) versus the labeled tick-axis group (domain kept, tick
+    marks removed) — clean L-shaped spines with no chartjunk'
+  weaknesses:
+  - Design is solid but fairly standard — the ±2σ band is a flat uniform gray rectangle
+    and the legend is unboxed plain text; a touch more visual refinement (e.g. a softer
+    band edge, a subtle backdrop behind the legend) would lift Design Excellence further
+  - The 'Local mean (binned)' smoother is a simple per-bin average rather than a true
+    LOWESS/kernel fit; acceptable under the spec's 'LOWESS-style' allowance, but a
+    real kernel smoother would read even cleaner
+  - lcgRand/lcgRandn are small standalone helper functions, a minor deviation from
+    the strict KISS 'no functions' guidance — necessary here for seeded randomness
+    in the browser, so only a small deduction
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "residual-plot · javascript · d3 · anyplot.ai" in bold dark ink at top-center; x-axis label "Fitted Value — Predicted Energy Consumption (kWh)" and rotated y-axis label "Residual — Actual − Predicted (kWh)" in dark-soft ink; tick labels dark and legible; subtle gray gridlines on both axes; all clearly readable against the light background.
+      Data: ~400 green (#009E73) circles scattered around a dashed "y = 0" reference line, fanning out (heteroscedastic spread) as fitted value increases; a muted gray band marks the ±2σ zone with dashed boundary lines labeled "+2σ"/"−2σ"; a blue smoothed trend line tracks the local mean; red-colored, slightly larger circles mark points outside ±2σ as outliers; a top-left legend labels "Residual", "Outlier (|residual| > 2σ)", and "Local mean (binned)".
+      Legibility verdict: PASS — no light-on-light text, all chrome and data clearly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/off-white, fully legible against the dark background; gridlines rendered as faint light lines, still subtle but visible.
+      Data: Same green residual points, blue smoother line, and red outlier points as the light render — colors are identical (only chrome flipped), confirming the Imprint palette is theme-invariant for data. The ±2σ band and its dashed boundary lines / labels remain visible and legible.
+      Legibility verdict: PASS — no dark-on-dark text; every title, axis label, tick label, and legend entry is clearly readable against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-26px); readable in both themes;
+          title comfortably sized (~35% of width)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, tick labels, and data markers do not collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 400-point scatter uses r=6/8 with density-appropriate 0.55/0.85 fill-opacity
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Outliers distinguished by both color and size, plus legend text —
+          not relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area ~70% of canvas, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (kWh)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; outliers use semantic red (palette[4]); backgrounds
+          theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Sigma bands, semantic outlier color, and smoother trend go clearly
+          beyond default scatter styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed, L-shaped spines, subtle floating grid, generous
+          whitespace; band/legend styling is plain
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color+size contrast on outliers and the smoother line create a clear
+          focal point without needing annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Standard residual plot: residuals vs. fitted values'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero line, alpha transparency, smoother, ±2σ bands, and outlier coloring
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Fitted value on x, residual on y, per spec convention
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels accurately describe the series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows heteroscedasticity, outliers, and near-zero central tendency
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible energy-consumption regression scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fitted values and residual magnitudes are sensible for monthly kWh
+          consumption
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear data→plot flow; two small LCG helper functions are
+          a minor deviation, needed for seeded randomness in-browser
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; current d3 v7 join API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scales, axes, selection.join, d3.line/curve all used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hand-built floating grid and manual legend show d3's low-level control,
+          though the binned-mean smoother itself is generic logic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
