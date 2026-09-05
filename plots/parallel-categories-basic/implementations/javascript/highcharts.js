@@ -25,10 +25,12 @@ const OUTCOME_ORDER = ["Purchased", "Abandoned"];
 const COLUMN_LABELS = ["Acquisition Channel", "Product Category", "Purchase Outcome"];
 
 // Color by the first dimension (channel) so a ribbon's hue traces a session's
-// origin all the way through the product and outcome columns.
+// origin all the way through the product and outcome columns. Palette
+// positions follow CHANNEL_ORDER exactly — brand green goes to the first
+// (topmost, largest) channel, not cherry-picked.
 const CHANNEL_COLOR = {
-  "Organic Search": t.palette[0], // brand green — first dimension is the color key
-  "Paid Search": t.palette[1],
+  "Paid Search": t.palette[0], // brand green — first channel in canonical/visual order
+  "Organic Search": t.palette[1],
   "Social Media": t.palette[2],
   Referral: t.palette[3],
 };
@@ -132,18 +134,58 @@ function drawParallelCategories(chart) {
   const productSeg = buildSegments(chart, PRODUCT_ORDER, productTotal, gap, scale);
   const outcomeSeg = buildSegments(chart, OUTCOME_ORDER, outcomeTotal, gap, scale);
 
-  const ribbon = (x0, y0Top, y0Bottom, x1, y1Top, y1Bottom, color) => {
+  // Ribbons are grouped by originating channel so a hover can highlight one
+  // channel's whole path (both hops) while dimming every other ribbon — the
+  // same thin colored stroke also keeps each ribbon's edge legible where
+  // translucent fills overlap and would otherwise blend into a muddy blob.
+  const ribbonsByChannel = {};
+  CHANNEL_ORDER.forEach((c) => (ribbonsByChannel[c] = []));
+  const REST_FILL_OPACITY = 0.45;
+  const REST_STROKE_OPACITY = 0.65;
+  const HOVER_FILL_OPACITY = 0.85;
+  const DIM_OPACITY = 0.08;
+
+  const ribbon = (x0, y0Top, y0Bottom, x1, y1Top, y1Bottom, color, channel) => {
     const cx = (x0 + x1) / 2;
-    r.path([
+    const el = r.path([
       "M", x0, y0Top,
       "C", cx, y0Top, cx, y1Top, x1, y1Top,
       "L", x1, y1Bottom,
       "C", cx, y1Bottom, cx, y0Bottom, x0, y0Bottom,
       "Z",
     ])
-      .attr({ fill: color, "fill-opacity": 0.45 })
+      .attr({
+        fill: color,
+        "fill-opacity": REST_FILL_OPACITY,
+        stroke: color,
+        "stroke-width": 0.75,
+        "stroke-opacity": REST_STROKE_OPACITY,
+      })
+      .css({ cursor: "pointer" })
       .add();
+    ribbonsByChannel[channel].push(el);
+    el.on("mouseover", () => highlightChannel(channel));
+    el.on("mouseout", resetRibbons);
+    return el;
   };
+
+  function highlightChannel(channel) {
+    Object.entries(ribbonsByChannel).forEach(([ch, elements]) => {
+      const active = ch === channel;
+      elements.forEach((el) =>
+        el.attr({
+          "fill-opacity": active ? HOVER_FILL_OPACITY : DIM_OPACITY,
+          "stroke-opacity": active ? 1 : DIM_OPACITY,
+        }),
+      );
+    });
+  }
+
+  function resetRibbons() {
+    Object.values(ribbonsByChannel)
+      .flat()
+      .forEach((el) => el.attr({ "fill-opacity": REST_FILL_OPACITY, "stroke-opacity": REST_STROKE_OPACITY }));
+  }
 
   // Stage 1 — Channel -> Product. Iterating products outer / channels inner
   // gives every product node a fixed, repeatable top-to-bottom order of
@@ -165,7 +207,7 @@ function drawParallelCategories(chart) {
       const h = value * scale;
       const y0 = srcCursor[channel];
       const y1 = tgtCursor[product];
-      ribbon(x0a, y0, y0 + h, x1a, y1, y1 + h, CHANNEL_COLOR[channel]);
+      ribbon(x0a, y0, y0 + h, x1a, y1, y1 + h, CHANNEL_COLOR[channel], channel);
       subBand[`${product}|${channel}`] = { top: y1, bottom: y1 + h };
       srcCursor[channel] += h;
       tgtCursor[product] += h;
@@ -189,7 +231,7 @@ function drawParallelCategories(chart) {
         if (value <= 0) return;
         const h = value * scale;
         const y1 = tgtCursor2[outcome];
-        ribbon(x0b, localTop, localTop + h, x1b, y1, y1 + h, CHANNEL_COLOR[channel]);
+        ribbon(x0b, localTop, localTop + h, x1b, y1, y1 + h, CHANNEL_COLOR[channel], channel);
         localTop += h;
         tgtCursor2[outcome] += h;
       });
@@ -206,7 +248,16 @@ function drawParallelCategories(chart) {
         .add();
     });
   };
-  CHANNEL_ORDER.forEach((c) => drawNode(colX(0), { [c]: channelSeg[c] }, CHANNEL_COLOR[c]));
+  CHANNEL_ORDER.forEach((c) => {
+    const s = channelSeg[c];
+    if (s.height < 1) return;
+    r.rect(colX(0) - nodeWidth / 2, s.top, nodeWidth, s.height, 3)
+      .attr({ fill: CHANNEL_COLOR[c], stroke: t.pageBg, "stroke-width": 1.5 })
+      .css({ cursor: "pointer" })
+      .on("mouseover", () => highlightChannel(c))
+      .on("mouseout", resetRibbons)
+      .add();
+  });
   PRODUCT_ORDER.forEach((p) => drawNode(colX(1), { [p]: productSeg[p] }, t.inkSoft));
   OUTCOME_ORDER.forEach((o) => drawNode(colX(2), { [o]: outcomeSeg[o] }, t.inkSoft));
 
@@ -247,18 +298,24 @@ function drawParallelCategories(chart) {
   });
 
   // Legend — identifies the channel colors, which is the dimension the
-  // ribbons are keyed on throughout both hops.
+  // ribbons are keyed on throughout both hops. Also hoverable, so it doubles
+  // as a discoverable entry point into the same path-highlight as the nodes.
   const itemWidth = 200;
   const legendWidth = itemWidth * CHANNEL_ORDER.length;
   const legendY = chart.plotTop + chart.plotHeight + 40;
   const legendStartX = chart.plotLeft + (chart.plotWidth - legendWidth) / 2;
   CHANNEL_ORDER.forEach((c, i) => {
     const itemX = legendStartX + i * itemWidth;
-    r.rect(itemX, legendY - 11, 14, 14, 2).attr({ fill: CHANNEL_COLOR[c] }).add();
-    r.text(c, itemX + 22, legendY)
+    const swatch = r.rect(itemX, legendY - 11, 14, 14, 2).attr({ fill: CHANNEL_COLOR[c] }).css({ cursor: "pointer" }).add();
+    const label = r
+      .text(c, itemX + 22, legendY)
       .attr({ align: "left" })
-      .css({ color: t.inkSoft, fontSize: "14px" })
+      .css({ color: t.inkSoft, fontSize: "14px", cursor: "pointer" })
       .add();
+    [swatch, label].forEach((el) => {
+      el.on("mouseover", () => highlightChannel(c));
+      el.on("mouseout", resetRibbons);
+    });
   });
 }
 
