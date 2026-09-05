@@ -97,6 +97,11 @@ const legendBins = Array.from({ length: 5 }, (_, i) => {
   return { label: `$${Math.round(lo)}–${Math.round(hi)}k`, color: colorFor((lo + hi) / 2) };
 });
 
+// Notable extremes, called out in the subtitle for an immediate takeaway.
+const maxState = states.reduce((a, b) => (b.value > a.value ? b : a));
+const minState = states.reduce((a, b) => (b.value < a.value ? b : a));
+const subtitle = `Highest: ${maxState.name} ($${maxState.value.toFixed(1)}k) · Lowest: ${minState.name} ($${minState.value.toFixed(1)}k)`;
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -108,7 +113,12 @@ Highcharts.chart("container", {
   credits: { enabled: false },
   title: {
     text: title,
+    margin: 28,
     style: { color: t.ink, fontSize: `${titleFontSize}px`, fontWeight: "600" },
+  },
+  subtitle: {
+    text: subtitle,
+    style: { color: t.inkSoft, fontSize: "14px", fontStyle: "italic" },
   },
   xAxis: {
     min: -0.7,
@@ -135,9 +145,10 @@ Highcharts.chart("container", {
     verticalAlign: "bottom",
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
-    symbolWidth: 16,
-    symbolHeight: 16,
-    symbolRadius: 2,
+    symbolWidth: 18,
+    symbolHeight: 18,
+    symbolRadius: 4,
+    itemMarginBottom: 4,
     title: {
       text: "Per-capita income ($k/yr)",
       style: { color: t.inkSoft, fontSize: "14px" },
@@ -146,9 +157,19 @@ Highcharts.chart("container", {
   tooltip: {
     backgroundColor: t.elevatedBg,
     borderColor: t.grid,
+    useHTML: true,
     style: { color: t.ink, fontSize: "13px" },
     formatter() {
-      return `<b>${this.point.name}</b><br/>$${this.point.value.toFixed(1)}k per capita`;
+      const rank = states.filter((s) => s.value > this.point.value).length + 1;
+      return (
+        `<div style="min-width:170px">` +
+        `<span style="display:inline-block;width:10px;height:10px;border-radius:2px;` +
+        `background:${this.point.color};margin-right:6px"></span>` +
+        `<b>${this.point.name}</b><br/>` +
+        `$${this.point.value.toFixed(1)}k per capita<br/>` +
+        `<span style="color:${t.inkSoft}">Rank ${rank} of ${states.length}</span>` +
+        `</div>`
+      );
     },
   },
   plotOptions: {
@@ -191,7 +212,7 @@ Highcharts.chart("container", {
       color: bin.color,
       data: [],
       showInLegend: true,
-      marker: { symbol: "square", radius: 8, lineWidth: 0 },
+      marker: { symbol: "square", radius: 9, lineWidth: 1, lineColor: t.grid },
       dataLabels: { enabled: false },
     })),
   ],
