@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-stepwise
 created: '2026-09-05T07:54:33Z'
-updated: '2026-09-05T07:58:46Z'
+updated: '2026-09-05T08:06:56Z'
 generated_by: claude-sonnet
 workflow_run: 33953677004
 issue: 2600
@@ -12,121 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-step
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stepwise/javascript/chartjs/plot-dark.html
-quality_score: 81
+quality_score: 90
 review:
   strengths:
-  - 'Clean, correct step-line rendering: horizontal plateaus and vertical jumps are
-    unambiguous in both themes'
-  - Theme-adaptive chrome is fully correct — title/axis/tick colors, grid, and background
-    all flip properly between light and dark with zero dark-on-dark or light-on-light
-    issues
-  - Y-axis-only grid (x grid hidden) matches the style guide's grid guidance for line
-    charts and keeps the plateau shapes uncluttered
-  - Deterministic in-memory data, single canvas mount, animation disabled — mount-node
-    contract followed correctly
-  - Single-series legend correctly omitted per the decoration-removal checklist
-  - suggestedMax headroom above the data max keeps the top step from touching the
-    plot ceiling
+  - 'Both renders are fully theme-correct: identical #009E73 data color, correct #FAF8F1/#1A1A17
+    backgrounds, all text legible in both themes'
+  - Data-driven point radius (larger markers at the peak elevator count) creates a
+    genuine focal point without any fake/simulated interactivity
+  - Example data cleanly demonstrates step persistence, both directions of change,
+    and varying segment widths
+  - 'Clean, idiomatic Chart.js code using stepped: "before" and per-point styling
+    arrays'
   weaknesses:
-  - 'No markers at the data points (pointRadius: 0) on a sparse 16-point series —
-    the style guide''s data-density heuristic calls for prominent markers under 50
-    points; small markers at each hourly vertex would make the actual discrete measurement
-    points (where the step occurs) legible instead of only the interpolated step shape.'
-  - The header comment ('Elevator service requests answered per hour vs. queue depth
-    at close') does not describe what is actually plotted (active elevators in service
-    by hour) — stale/misleading comment, should be corrected to match the real data
-    and axis labels.
-  - Design is functionally correct but generic — no visual emphasis (e.g. subtle highlight
-    or annotation) drawing attention to the evening peak (5 elevators, 17:00–19:00),
-    which is the most notable feature in the data.
-  - Title occupies only ~28% of plot width — well under the 50-70% guideline range;
-    not a violation given the shorter title (no descriptive prefix), but a slightly
-    larger title fontsize would balance the composition better.
+  - Design Excellence is still fairly plain for a repeat attempt - consider adding
+    one more deliberate refinement (e.g., a subtle fill under the line, or annotating
+    the peak window explicitly) to push DE-01/DE-03 further
+  - Library Mastery usage is solid but generic; leaning further into a Chart.js-distinctive
+    feature (e.g., a segment-level color/style callback highlighting the peak stretch)
+    would raise LM-02
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "line-stepwise · javascript · chartjs · anyplot.ai" in dark ink, centered, clearly legible. X-axis title "Time of Day" and Y-axis title "Elevators in Service" in dark ink. Tick labels (06:00-20:00, 0-6) in a softer grey, all legible. Horizontal grid lines are faint and only present on the Y-axis; no vertical grid.
-      Data: Single brand-green (#009E73) step line, line width ~3.5px, no point markers. The line clearly shows horizontal plateaus (value held constant, e.g. 2 elevators from 06:00-08:00, 4 from 08:00-11:00) connected by sharp vertical jumps at the hour the value changes (e.g. instant jump from 3 to 5 at 17:00). Suggested max of 6 leaves headroom above the data peak of 5.
-      Legibility verdict: PASS — no light-on-light text found anywhere.
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "line-stepwise · javascript · chartjs · anyplot.ai" in dark ink at top; axis titles "Time of Day" and "Elevators in Service" in dark ink; tick labels in soft dark gray; subtle horizontal y-axis gridlines only. All fully readable against the light background.
+      Data: Single stepped line in #009E73 teal-green with small circular markers; two markers at the 17:00/18:00 peak (value 5) use a larger radius to draw attention to the peak coverage window.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels correctly flip to light tones (white/light-grey) against the dark background, all clearly legible. Grid lines are faint light lines on the Y-axis only, matching the light render's grid pattern (just inverted contrast).
-      Data: Same brand-green (#009E73) step line as the light render — data color is identical between themes, confirming only chrome adapted. Same plateau/jump shape, same suggestedMax headroom.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element reads clearly against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all render in light colors (light ink / soft light gray), fully legible against the near-black background. No dark-on-dark failures observed. Gridlines are faint light gray, consistent with the light render's subtlety.
+      Data: Identical #009E73 line, markers, and peak-radius emphasis as the light render - data colors unchanged between themes, confirming only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at correct font sizes (title 22px,
-          axis labels 16px, ticks 14px)
+        comment: Explicit font sizes (24/16/14px), fully readable in both themes and
+          well-proportioned
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, ticks, or the data line
+        comment: No collisions anywhere
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: 'Line itself is clearly visible, but pointRadius: 0 on a sparse 16-point
-          series hides the actual discrete measurement points the data-density heuristic
-          calls for'
+        comment: Markers appropriately sized; peak markers enlarged for emphasis without
+          crowding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast brand green on both cream and near-black surfaces
+        comment: Strong contrast in both themes, single-series green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing clipped or overflowing
+        comment: Plot fills canvas well, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Time of Day'' and ''Elevators in Service'' are descriptive'
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds match #FAF8F1/#1A1A17, chrome
-          flips correctly'
+        comment: 'First series is #009E73, identical across themes; backgrounds match
+          Imprint tokens exactly'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        comment: Functionally correct but generic default styling — no custom typography
-          or emphasis beyond the base config
+        passed: true
+        comment: Peak-radius accent is thoughtful but overall styling remains fairly
+          plain
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: X-grid intentionally hidden, Y-grid kept subtle, single-series legend
-          correctly omitted — modest but deliberate refinement above generic default
+        passed: true
+        comment: X-axis gridlines removed, subtle y-axis grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        comment: No visual hierarchy or emphasis on the notable evening peak; the
-          shape alone tells the story
+        passed: true
+        comment: Enlarged peak markers create a genuine focal point guiding the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -135,95 +123,110 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: 'Correct step-line chart via Chart.js stepped: ''before'''
+        passed: true
+        comment: Correct step-line chart with clear horizontal-then-vertical transitions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Clear horizontal-then-vertical transitions matching the spec's description
+        passed: true
+        comment: Step persistence and discrete jumps both clearly visible
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X = hourly time labels, Y = elevator count, all 16 points rendered
+        passed: true
+        comment: Time of day on x, elevator count on y, all points represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format matches exactly; single-series legend correctly hidden
+        passed: true
+        comment: Title format exactly matches mandated pattern; legend correctly hidden
+          for single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Shows both plateau persistence and instantaneous jumps clearly
+        passed: true
+        comment: Upward and downward steps, varying jump magnitudes and segment durations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible, neutral building-operations scenario (elevators in service
-          by hour)
+        passed: true
+        comment: Elevators in service over operating hours is a neutral, plausible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: 2-5 elevators is a sensible range for a mid-size building
+        passed: true
+        comment: 2-5 elevators is realistic for a mid-size building with a believable
+          evening peak
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        comment: Flat config object, no functions/classes, but the header comment
-          describes a different scenario ('requests answered / queue depth') than
-          what is actually plotted
+        passed: true
+        comment: Flat data -> mount -> chart config, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic hardcoded arrays
+        passed: true
+        comment: Fully deterministic hardcoded arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No extraneous imports; uses only the provided globals
+        passed: true
+        comment: No imports beyond the global Chart
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity, no fake UI/interactivity
+        passed: true
+        comment: Clean, no over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: 'Correct mount-node contract, animation: false set'
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no manual canvas
+          sizing'
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Idiomatic use of scales, ticks (autoSkip/maxTicksLimit), and suggestedMax
+        passed: true
+        comment: 'Native stepped: "before" option and per-point pointRadius/pointHoverRadius
+          arrays'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        comment: Uses Chart.js's native stepped interpolation, the library's signature
-          feature for this plot type, but nothing further (no custom plugins/tooltips)
+        passed: false
+        comment: Data-driven point radius is nice but overall a fairly standard single-series
+          configuration
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - stepped-line
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - edge-highlighting
