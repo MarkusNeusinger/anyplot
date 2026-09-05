@@ -87,6 +87,26 @@ end
 start_point = Point2f(0.5, height - 0.5)
 goal_point = Point2f(width - 0.5, 0.5)
 
+# Softly rounded print-frame border around the maze — a Makie `poly!`-built
+# rounded rectangle (traced corner-arc by corner-arc) rather than a plain
+# `lines!` rectangle, giving the puzzle sheet a finished, card-like edge.
+frame_x0, frame_x1 = -0.6, width + 0.6
+frame_y0, frame_y1 = -0.6, height + 0.6
+frame_r = 0.6
+frame_corners = [
+    (frame_x1 - frame_r, frame_y0 + frame_r, -90.0, 0.0),
+    (frame_x1 - frame_r, frame_y1 - frame_r, 0.0, 90.0),
+    (frame_x0 + frame_r, frame_y1 - frame_r, 90.0, 180.0),
+    (frame_x0 + frame_r, frame_y0 + frame_r, 180.0, 270.0),
+]
+frame_pts = Point2f[]
+for (cx, cy, a0, a1) in frame_corners
+    for t in range(a0, a1; length=12)
+        θ = deg2rad(t)
+        push!(frame_pts, Point2f(cx + frame_r * cos(θ), cy + frame_r * sin(θ)))
+    end
+end
+
 # --- Plot ----------------------------------------------------------------------
 fig = Figure(
     size=(1200, 1200),
@@ -104,9 +124,17 @@ ax = Axis(
 )
 hidedecorations!(ax)
 hidespines!(ax)
-limits!(ax, -0.8, width + 0.8, -0.8, height + 0.8)
+limits!(ax, -1.0, width + 1.0, -1.0, height + 1.0)
 
-linesegments!(ax, wall_segments; color=INK, linewidth=5)
+# Subtle accent tint on the start/goal cells — a light hint of visual
+# hierarchy beyond the markers themselves, reinforcing the start-to-goal
+# narrative before the walls are drawn on top.
+poly!(ax, Rect2f(0, height - 1, 1, 1); color=(IMPRINT_PALETTE[1], 0.12), strokewidth=0)
+poly!(ax, Rect2f(width - 1, 0, 1, 1); color=(IMPRINT_PALETTE[5], 0.12), strokewidth=0)
+
+linesegments!(ax, wall_segments; color=INK, linewidth=6)
+
+poly!(ax, frame_pts; color=(PAGE_BG, 0.0), strokecolor=INK_SOFT, strokewidth=3)
 
 # Start (brand green, "go") and goal (matte red, "stop") — the traffic-light
 # green/red convention is a strong, widely shared color cue (semantic
