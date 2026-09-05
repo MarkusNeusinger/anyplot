@@ -1,0 +1,266 @@
+library: d3
+language: javascript
+specification_id: heatmap-clustered
+created: '2026-09-05T03:09:29Z'
+updated: '2026-09-05T03:20:28Z'
+generated_by: claude-sonnet
+workflow_run: 33940760927
+issue: 2021
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-clustered/javascript/d3/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Implements full hierarchical clustering (average-linkage/UPGMA, Euclidean distance)
+    from scratch in vanilla D3 — a real engineering feat given JS has no scipy.cluster
+    equivalent — and correctly reorders both rows and columns by the clustering result.
+  - Both row and column dendrograms are rendered with correct elbow-style links derived
+    from actual merge heights, not decorative placeholders.
+  - 'Correct colormap choice: imprint_div for zero-centered z-score data, with the
+    theme-adaptive midpoint baked into window.ANYPLOT_TOKENS.div — data colors are
+    the same underlying scale in both themes.'
+  - Colorbar includes a proper d3.axisRight with tick values and a rotated 'Expression
+    (z-score)' label with units.
+  - Deterministic LCG-seeded PRNG substitutes for the lack of a native seeded RNG
+    in the browser, keeping the implementation reproducible.
+  - Theme-adaptive chrome (t.ink / t.inkSoft / t.grid) is threaded consistently through
+    title, dendrogram strokes, row/column labels, and colorbar axis — both renders
+    are legible.
+  - Title format exactly matches the mandated 'heatmap-clustered · javascript · d3
+    · anyplot.ai' convention.
+  weaknesses:
+  - Spec suggests (optional) row/column color bars for group annotations to mark cluster/dosage-group
+    membership at a glance — not implemented; would strengthen both visual storytelling
+    and feature coverage.
+  - Design is functionally correct but visually generic — a standard red/blue clustermap
+    look. Pushing further on Design Excellence would mean e.g. a subtle highlight
+    or annotation calling out the strongest co-expression block, or extra whitespace
+    between dendrograms and heatmap.
+  - Code relies on several helper functions (lcg, euclideanDistance, averageLinkageCluster,
+    assignPositions, collectSegments) rather than a flat top-to-bottom script — justified
+    here since D3 has no built-in agglomerative clustering, but still a KISS deviation
+    worth noting.
+  - Dendrogram stroke-width (1.5px) is a little thin relative to the large 2400px
+    canvas and the size of the heatmap cells; bumping to ~2px would give it more visual
+    weight.
+  - Manual u/v coordinate assignment for dendrogram layout duplicates functionality
+    that d3-hierarchy's cluster/tree layout partially offers — using it (even just
+    for the leaf-position math) would be a more idiomatic library showcase.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "heatmap-clustered · javascript · d3 · anyplot.ai" centered at top, clearly readable against the light surface. Row labels (Gene-01..Gene-18) in dark gray, right-aligned to the left of the heatmap. Column labels (Control-1..Low-Dose-4) rotated ~-40°, dark gray, below the heatmap. Dendrogram lines (row: left of heatmap, column: above heatmap) rendered as thin dark-gray elbow links. Colorbar on the right with tick labels -3..3 and a rotated "Expression (z-score)" axis label.
+      Data: 18x12 grid of cells colored on a red (negative) - near-neutral - blue (positive) diverging scale, matching the Imprint imprint_div colormap. Rows and columns are visibly reordered into contiguous colored blocks (e.g. top rows solid red under Control columns, transitioning to blue under Low-Dose columns), showing genuine cluster structure.
+      Legibility verdict: PASS — all text (title, row/column labels, colorbar ticks and label) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title text now rendered in light/white, clearly legible. Row and column labels rendered in light gray, fully readable. Dendrogram lines rendered in light gray, clearly visible against the dark background. Colorbar ticks and axis label are light-colored and legible.
+      Data: Same 18x12 grid and same underlying diverging scale (red/blue hues at the same data values) as the light render — only the chrome (background, text, dendrogram strokes, colorbar frame) flipped to the dark-theme tokens. The theme-adaptive midpoint of imprint_div (near-black vs. near-white) is the only reason the blended mid-range cells look moderately different in tone between the two renders, which is expected/spec-compliant behavior, not a chrome/data-color violation.
+      Legibility verdict: PASS — no dark-on-dark text found; all title, tick, row/column label, and colorbar text is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (26px title, 13-14px labels/ticks),
+          readable in both themes, no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or labels in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cells are large and clearly visible; dendrogram stroke-width (1.5px)
+          is a little thin for the canvas scale.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging red/blue Imprint scale is CVD-safe, not red-green.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Heatmap + dendrograms + colorbar fill the square canvas well with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Colorbar labeled 'Expression (z-score)' with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div correctly used for zero-centered data; theme-adaptive
+          midpoint correctly implemented; backgrounds are theme-correct in both renders.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured, correct implementation but visually reads as a standard
+          clustermap default rather than a custom aesthetic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Border kept intentionally (enclosed heatmap exception), whitespace
+          generous, no bold grid — some refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clustering itself creates clear visual hierarchy/block structure
+          guiding the reader, though no explicit annotation calls out the insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct clustered heatmap (clustermap-style) with both row and column
+          dendrograms.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dendrograms on both axes, reordering, diverging colormap, and colorbar
+          all present; optional row/column group color bars omitted.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rows = genes, columns = dosage-group replicates, all data visible
+          after reordering.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; colorbar legend is correctly
+          labeled.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Four distinct co-expression modules with both positive and negative
+          effects across dosage groups produce a genuine clustering pattern.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Gene-expression z-scores across dosage groups is a real, neutral,
+          comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Z-score range (~-3 to 3) is realistic for standardized expression
+          data.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses several helper functions for the clustering algorithm; justified
+          (no JS equivalent to scipy.cluster) but not a flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG PRNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No import statements; only the provided d3 global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the algorithm, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract; single svg appended to #container;
+          no animation.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scaleBand/scaleLinear/scaleSequential and selection.data().join()
+          patterns throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-rolled hierarchical clustering + dendrogram rendering is a distinctive,
+          hard-to-replicate-elsewhere feature; could lean on d3-hierarchy's layout
+          utilities a bit more.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - dendrogram
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - custom-colormap
