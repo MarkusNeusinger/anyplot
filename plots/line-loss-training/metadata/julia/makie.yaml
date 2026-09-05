@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-loss-training
 created: '2026-09-05T07:34:32Z'
-updated: '2026-09-05T07:38:52Z'
+updated: '2026-09-05T07:46:46Z'
 generated_by: claude-sonnet
 workflow_run: 33952406072
 issue: 2860
@@ -12,53 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-loss
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-loss-training/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Correct dual-curve line plot clearly showing training vs. validation loss divergence
-    (the classic overfitting signature)
-  - Early-stopping epoch explicitly marked with the amber semantic-anchor color plus
-    a dashed reference line — effective, purposeful data storytelling
+  - 'Palette compliance fixed: validation loss now uses canonical Imprint position
+    2 (#C475FD lavender) instead of position 3, matching the mandated categorical
+    order'
+  - 'Training-loss noise model fixed: multiplicative noise proportional to the decaying
+    base value replaces the old additive noise, eliminating the unrealistic ~10x epoch-to-epoch
+    swings in the post-overfit tail'
+  - New text annotation ('Best val loss @ epoch 49') makes the early-stopping storytelling
+    explicit without requiring the reader to cross-reference the legend
+  - Correct dual-curve overfitting signature (training loss keeps decaying while validation
+    loss bottoms out around epoch 45-49 and then rises) — exactly the diagnostic pattern
+    the spec calls for
+  - Log-scale y-axis is the right call given the loss spans more than two orders of
+    magnitude, matching the spec's suggestion
   - 'Theme chrome is fully correct in both renders: warm off-white/near-black backgrounds,
     legible ink-colored text, subtle single-axis grid, no dark-on-dark or light-on-light
     failures'
-  - Log-scale y-axis is the right call given the loss spans more than two orders of
-    magnitude, and matches the spec's suggestion
   - Clean KISS script structure, explicit Random.seed!(42), correct save API (px_per_unit=2)
     producing the exact 3200×1800 canvas
   weaknesses:
-  - 'VQ-07: Second series (validation loss) uses Imprint palette position 3 (#4467A3
-    blue) instead of the canonical position 2 (#C475FD lavender) — no semantic cue
-    (e.g. real-world color association) justifies skipping position 2. Reassign to
-    IMPRINT_PALETTE[2] (lavender) or keep blue but document why the canonical order
-    is broken.'
-  - 'DQ-03: The training-loss segment past ~epoch 60 oscillates by up to ~10x from
-    one epoch to the next, which reads as unrealistic training-loss behavior (training
-    loss computed over a fixed training set is usually smoother than this even under
-    overfitting). Reduce the additive noise amplitude in the post-overfit segment
-    or scale it proportionally to the loss value so the curve stays visually plausible.'
-  - 'DE-01/DE-03: Design is solid but generic beyond the early-stopping marker — consider
-    a short text annotation near the marker (e.g. "Best val loss @ epoch 49") so the
-    storytelling is explicit without requiring the reader to cross-reference the legend.'
-  - 'LM-02: Relies on generic Makie primitives (lines!, scatter!, vlines!, axislegend)
-    that map 1:1 to other libraries'' APIs — consider a more Makie-distinctive touch
-    (e.g. a custom Label annotation, tailored tick formatting, or a manually laid-out
-    Legend) to better showcase the library.'
+  - 'LM-02: Still relies on generic Makie primitives (lines!, scatter!, vlines!, text!,
+    axislegend) that map ~1:1 to other libraries'' APIs — a Makie-distinctive touch
+    (e.g. band!/vspan-style shading of the post-overfit region, or a custom recipe)
+    would raise this further'
+  - Consider shading the post-overfitting region (epoch ~45-80) with a translucent
+    band in addition to the single dashed vline — would reinforce the divergence zone
+    visually and strengthen DE-01/DE-03
+  - Legend text size is inherited from the figure default rather than pinned explicitly
+    via axislegend(labelsize=...) — no legibility issue observed at this canvas size,
+    but worth setting explicitly for consistency
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "line-loss-training · julia · makie · anyplot.ai" in bold dark ink, "Epoch" x-axis label and "Cross-Entropy Loss (log scale)" y-axis label in dark ink, tick labels in softer dark-grey ink, subtle horizontal-only grid lines. Legend top-right, no frame, listing "Training loss", "Validation loss", "Early-stopping epoch". All text clearly readable against the light background.
-      Data: Training loss line in brand green (#009E73, palette position 1), validation loss line in blue (#4467A3, palette position 3), amber (#DDCC77) dashed vertical line + filled circle marking the early-stopping epoch (~49) at the validation-loss minimum. Both lines decay together to ~epoch 45, then validation loss rises while training loss keeps falling and becomes increasingly noisy/erratic past epoch 60.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-loss-training · julia · makie · anyplot.ai" in bold dark ink at top center; "Epoch" x-axis label and "Cross-Entropy Loss (log scale)" y-axis label in dark ink; tick labels in softer dark-gray ink; horizontal gridlines subtle and light; top/right spines removed, left/bottom spines soft gray. Legend top-right (Training loss, Validation loss, Early-stopping epoch), borderless, background matches page. All text clearly readable against the light background.
+      Data: First series (training loss) is Imprint brand green (#009E73); second series (validation loss) is Imprint position-2 lavender (#C475FD) — canonical order, correct. Amber (#DDCC77) dashed vertical line and a filled amber-with-page-colored-stroke marker highlight the early-stopping epoch (49), with a small text annotation "Best val loss @ epoch 49" placed clear of both curves and the marker. Y-axis uses a log scale (10^0.0, 10^-0.5, 10^-1.0 gridlines) appropriate for the multi-order-of-magnitude loss range.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title/axis labels/tick labels now rendered in light ink (#F0EFE8 primary, #B8B7B0 secondary), same subtle grid (now light-on-dark, low opacity), legend still top-right, borderless. No dark-on-dark issues anywhere — every text element flips to a light tone that remains clearly legible against the near-black surface.
-      Data: Training-loss green and validation-loss blue are pixel-identical to the light render, as is the amber early-stopping marker — confirms data colors stay constant across themes while only chrome flips.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis labels/tick labels now rendered in light ink (title/axis labels near-white, tick labels a softer light gray), same subtle grid now light-on-dark at low opacity, legend still top-right, borderless. No dark-on-dark issues anywhere — every text element flips to a light tone that stays clearly legible against the near-black surface.
+      Data: Training-loss green, validation-loss lavender, and the amber early-stopping marker/line/annotation are pixel-identical in hue to the light render — confirms data colors stay constant across themes while only chrome flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -74,68 +74,69 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, legend, and data across either render
+        comment: Annotation text sits clear of both curves and the marker in both
+          themes; legend does not collide with data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Linewidth 3.0 and markersize 18 are well adapted to the 80-point
-          series density
+        comment: linewidth=3.0 for 80-point lines is well-sized; early-stopping marker
+          (markersize=18, stroked) stands out clearly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue pairing plus a distinct amber marker are CVD-safe and
-          mutually distinguishable
+        comment: Green/lavender pair from the CVD-safe Imprint palette, amber marker
+          adds a third distinguishable hue; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a healthy majority of the canvas with balanced margins;
-          legend sits near the plot in genuinely empty space
+        comment: Saved PNG is exactly 3200x1800; title, axes, and legend all within
+          bounds with no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Epoch" and "Cross-Entropy Loss (log scale)" are descriptive and
-          specify the loss function plus the scale transform'
+        comment: '''Cross-Entropy Loss (log scale)'' names both the loss function
+          and the scale; title matches the mandated format'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73, but second series uses palette position
-          3 (#4467A3) instead of canonical position 2 (#C475FD) with no semantic justification'
+        passed: true
+        comment: 'Fixed from attempt 1: validation loss now uses canonical Imprint
+          position 2 (#C475FD lavender); training loss is position 1 (#009E73); backgrounds
+          theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above a bare default thanks to the intentional early-stopping marker
-          and theme-adaptive styling, but not exceptional/publication-level polish
+        comment: Semantic amber accent kept outside the categorical pool, dashed reference
+          line plus marker plus annotation form a deliberate three-part callout
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle single-axis grid, borderless legend,
-          generous whitespace — solid but not maximal refinement
+        comment: Top/right spines removed, single-axis subtle grid, generous whitespace,
+          borderless legend blended into page background
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Amber marker + dashed vline create a clear focal point at the early-stopping
-          epoch, guiding the reader to the overfitting insight; would reach 'excellent'
-          with an explicit text annotation
+        comment: New text annotation makes the early-stopping / overfitting-onset
+          story explicit without forcing the reader to cross-reference the legend
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-line training/validation loss curve
+        comment: Correct dual-line plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend, epoch range 1-80, loss-function-labeled
-          y-axis, log scale, and optional early-stopping marker all present
+        comment: Distinct colors, clear legend, epoch range 1-80, plus both optional
+          features (early-stopping marker, log scale) implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=epoch, Y=loss, both series fully visible across the full epoch
-          range
+        comment: X=epoch, Y=loss; full data range shown on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels are accurate
+        comment: Title matches 'line-loss-training · julia · makie · anyplot.ai';
+          legend labels (Training loss, Validation loss, Early-stopping epoch) match
+          the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -175,23 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows smooth joint decay, the overfitting divergence point, and the
-          early-stopping epoch — all key aspects of a training-loss plot
+        comment: Shows smooth decay, train/val divergence, overfitting onset, and
+          the optimal early-stopping point
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible ML-training scenario
+        comment: Plausible, neutral neural-network training scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Overall loss magnitudes and the overfitting shape are plausible,
-          but the training-loss segment past epoch ~60 oscillates by up to ~10x per
-          epoch, which is more erratic than real training-loss behavior typically
-          looks
+        comment: 'Fixed from attempt 1: multiplicative noise proportional to the decaying
+          base value replaces additive noise, so the post-overfit training-loss tail
+          is smooth and visually plausible instead of swinging ~10x epoch-to-epoch'
     code_quality:
       score: 10
       max: 10
@@ -201,52 +202,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports → data → plot → save script, no functions/classes
+        comment: No functions/classes, flat top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used; no unused imports
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake functionality
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2 via current CairoMakie
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
           API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis/lines!/scatter!/axislegend usage with full theme-token
-          wiring
+        comment: Idiomatic Axis/lines!/scatter!/vlines!/text!/axislegend composition,
+          high-level API throughout
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: vlines!, scatter!, lines!, axislegend, and yscale=log10 all have
-          direct 1:1 equivalents in other libraries — nothing here is distinctively
-          Makie
-  verdict: REJECTED
+        passed: true
+        comment: Combines vlines!+scatter!+text! for a composed annotation, but still
+          relies on primitives that map ~1:1 to other libraries' APIs — no Makie-distinctive
+          touch (e.g. band!, custom recipe)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -256,3 +257,4 @@ impl_tags:
   dataprep: []
   styling:
   - publication-ready
+  - grid-styling
