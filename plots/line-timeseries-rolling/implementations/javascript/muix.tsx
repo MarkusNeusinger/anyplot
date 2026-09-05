@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-05
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
@@ -25,13 +26,18 @@ const dates = Array.from({ length: NUM_DAYS }, (_, day) => {
 });
 
 // Daily unique visitors to a blog: weekday/weekend seasonality, a slow
-// baseline climb, a two-week traffic surge around a viral post (day 58-74),
-// plus day-to-day noise — exactly the volatility a rolling average smooths.
+// baseline climb, a two-week traffic surge around a viral post, plus
+// day-to-day noise — exactly the volatility a rolling average smooths.
+const SURGE_START_DAY = 58;
+const SURGE_END_DAY = 74;
 const rawVisitors = dates.map((date, day) => {
   const weekday = date.getDay();
   const weekendDip = weekday === 0 || weekday === 6 ? 0.62 : 1;
   const trend = 1 + day * 0.004;
-  const surge = day >= 58 && day <= 74 ? 1 + 0.5 * Math.sin(((day - 58) / 16) * Math.PI) : 1;
+  const surge =
+    day >= SURGE_START_DAY && day <= SURGE_END_DAY
+      ? 1 + 0.5 * Math.sin(((day - SURGE_START_DAY) / (SURGE_END_DAY - SURGE_START_DAY)) * Math.PI)
+      : 1;
   const noise = 1 + (rand() - 0.5) * 0.22;
   const baseline = 2200;
   return Math.max(300, Math.round(baseline * weekendDip * trend * surge * noise));
@@ -99,7 +105,9 @@ export default function Chart() {
               id: "rolling",
               label: `Rolling Average (${WINDOW}-Day)`,
               data: rollingAvg,
-              showMark: false,
+              // Only mark the latest point — a subtle callout of the current
+              // trend value without cluttering the smoothed line.
+              showMark: ({ index }) => index === rollingAvg.length - 1,
               color: t.palette[1],
               valueFormatter: (v) => (v == null ? "" : `${v.toLocaleString("en-US")} visitors`),
             },
@@ -133,9 +141,26 @@ export default function Chart() {
           sx={{
             "& .MuiLineElement-series-raw": { strokeWidth: 1.5, strokeOpacity: 0.5 },
             "& .MuiLineElement-series-rolling": { strokeWidth: 3.5 },
+            "& .MuiMarkElement-series-rolling": { r: 6, strokeWidth: 2.5 },
             "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
           }}
-        />
+        >
+          {/* Call out the viral-post surge — the chart's clearest story beat —
+              with a bracketed reference-line pair in the amber "caution/notable
+              event" anchor, distinct from both data-series colors. */}
+          <ChartsReferenceLine
+            x={dates[SURGE_START_DAY]}
+            label="Viral post surge"
+            labelAlign="start"
+            lineStyle={{ stroke: t.amber, strokeDasharray: "5 4", strokeWidth: 1.5 }}
+            labelStyle={{ fontSize: 13, fontWeight: 600, fill: t.amber }}
+            spacing={{ x: 6, y: 6 }}
+          />
+          <ChartsReferenceLine
+            x={dates[SURGE_END_DAY]}
+            lineStyle={{ stroke: t.amber, strokeDasharray: "5 4", strokeWidth: 1.5 }}
+          />
+        </LineChart>
       </Box>
     </Box>
   );
