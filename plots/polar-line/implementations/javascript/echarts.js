@@ -7,17 +7,28 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// Average monthly temperature (°C) for two hemispheres — opposite seasonal phase.
+// Weekly average temperature (°C) for two hemispheres — opposite seasonal phase.
+// A single annual sinusoid per hemisphere (calibrated to typical monthly climate
+// normals) gives a smooth 52-point ring instead of 12 sparse vertices.
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const northernHemisphere = [0, 1, 6, 12, 18, 23, 26, 25, 21, 15, 9, 3];
-const southernHemisphere = [23, 23, 22, 19, 16, 13, 12, 13, 16, 18, 20, 22];
+const WEEKS_PER_YEAR = 52;
+const monthOf = (week) => (week / WEEKS_PER_YEAR) * 12;
+
+const northernHemisphere = Array.from({ length: WEEKS_PER_YEAR }, (_, week) => {
+  const month = monthOf(week);
+  return Math.round((13.3 - 13 * Math.cos((2 * Math.PI * month) / 12)) * 10) / 10;
+});
+const southernHemisphere = Array.from({ length: WEEKS_PER_YEAR }, (_, week) => {
+  const month = monthOf(week);
+  return Math.round((18 + 5.5 * Math.cos((2 * Math.PI * month) / 12)) * 10) / 10;
+});
 
 // A category angleAxis would break alignment if a 13th slot were appended just
 // to close the loop, so the axis runs on a continuous 0-12 value scale instead
 // (one unit per month) and each series repeats its January value at month 12 —
 // same angle as month 0 — to draw a fully closed ring. Polar series data pairs
 // are [radiusValue, angleValue] (radiusAxis is dimension 0), not the reverse.
-const closeLoop = (values) => values.map((v, i) => [v, i]).concat([[values[0], 12]]);
+const closeLoop = (values) => values.map((v, i) => [v, monthOf(i)]).concat([[values[0], 12]]);
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -38,7 +49,7 @@ chart.setOption({
     data: ["Northern hemisphere", "Southern hemisphere"],
     textStyle: { color: t.ink, fontSize: 16 },
   },
-  polar: { center: ["50%", "54%"], radius: "62%" },
+  polar: { center: ["50%", "54%"], radius: "60%" },
   angleAxis: {
     type: "value",
     min: 0,
@@ -47,13 +58,13 @@ chart.setOption({
     startAngle: 90,
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (value) => months[value] || "" },
     axisLine: { lineStyle: { color: t.inkSoft } },
-    splitLine: { lineStyle: { color: t.grid } },
+    splitLine: { lineStyle: { color: t.grid, type: "dashed" } },
   },
   radiusAxis: {
     type: "value",
     min: -5,
     max: 30,
-    axisLabel: { color: t.inkSoft, fontSize: 13, formatter: "{value}°C" },
+    axisLabel: { color: t.inkSoft, fontSize: 13, formatter: "{value}°C", margin: 18 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
   },
@@ -64,8 +75,8 @@ chart.setOption({
       coordinateSystem: "polar",
       data: closeLoop(northernHemisphere),
       symbol: "circle",
-      symbolSize: 9,
-      lineStyle: { width: 3.5 },
+      symbolSize: 6,
+      lineStyle: { width: 3 },
     },
     {
       name: "Southern hemisphere",
@@ -73,8 +84,8 @@ chart.setOption({
       coordinateSystem: "polar",
       data: closeLoop(southernHemisphere),
       symbol: "circle",
-      symbolSize: 9,
-      lineStyle: { width: 3.5 },
+      symbolSize: 6,
+      lineStyle: { width: 3 },
     },
   ],
 });
