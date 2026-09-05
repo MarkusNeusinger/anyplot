@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: dendrogram-radial
 created: '2026-09-05T00:12:05Z'
-updated: '2026-09-05T00:16:31Z'
+updated: '2026-09-05T00:41:41Z'
 generated_by: claude-sonnet
 workflow_run: 33931351126
 issue: 5245
@@ -12,108 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 79
 review:
   strengths:
-  - 'Correct radial layout: root at the center, leaves equally spaced around the circumference
-    with a small top gap, and branch radius exactly proportional to merge distance'
-  - Custom from-scratch agglomerative (UPGMA / Lance-Williams) clustering, needed
-    because Clustering.jl isn't available in the CI runtime — a legitimate structural
-    workaround rather than a shortcut
-  - DFS leaf ordering keeps sibling subtrees angularly contiguous so branches never
-    cross
-  - Color-coded outer ring correctly implements the spec's optional metadata-ring
-    feature as contiguous per-module arcs
-  - Theme-adaptive chrome (INK, INK_SOFT, PAGE_BG) correctly threaded through; data
-    colors are identical between light and dark renders
-  - Clean single-file KISS structure with no functions/classes, reproducible via a
-    fixed seed
+  - Hand-built radial dendrogram from scratch (UPGMA/Lance-Williams linkage, DFS leaf
+    ordering, polar trigonometry) since CairoMakie has no native dendrogram or polar-axis
+    recipe — a technically sophisticated implementation
+  - 'Branch coloring correctly implements the standard scipy color_threshold convention:
+    a merge keeps its module color only while every leaf beneath it is pure, falling
+    back to neutral ink otherwise, which gives a clear visual hierarchy at the root'
+  - Adds the spec's optional color-coded outer ring as contiguous per-module arcs,
+    and DFS leaf ordering keeps each module's leaves angularly contiguous so branches
+    never cross
+  - 'Clean chrome: hidedecorations!/hidespines! remove all axis clutter, generous
+    outer padding (limits 1.32x radius) and a small angular gap at the top keep the
+    circle from feeling cramped'
+  - No edge clipping in either render — verified programmatically that no non-background
+    pixel touches the canvas border in either theme
+  - Canvas is exactly 2400x2400 (verified), matching the square target with no drift
+  - Code is reproducible (Random.seed!(42)), uses only imported/used packages, and
+    cleanly follows Imports -> Data -> Clustering -> Plot -> Save with no functions/classes
   weaknesses:
-  - 'VQ-07: The categorical palette cherry-picks positions 1, 3, 4, 7 (green, blue,
-    ochre, rose) instead of the canonical 1-2-3-4 order (green, lavender, blue, ochre).
-    The four labels (Immune/Metabolic/Neural/Cardiac) are abstract functional-module
-    names without a strong widely-shared real-world color association, so the semantic-exception
-    carve-out doesn''t apply — use IMPRINT_PALETTE[1:4] in canonical order instead
-    of hand-picking positions 1, 3, 4, 7.'
-  - 'VQ-01/VQ-05: Title (titlesize=20) occupies only ~30-35% of the 2400x2400 canvas
-    width, well below the ~50-70% comfortable-fill guidance for a square canvas —
-    bump titlesize to roughly 24-26 for better proportional balance.'
-  - 'VQ-03: Leaf markers (markersize=8) are a bit small at the leaf tips for n=40
-    (sparser end of the recommended range) — increase to ~10-12 for stronger element
-    visibility without crowding.'
-  - 'DE-01/DE-03: The module color-coding and outer ring are directly suggested by
-    the spec''s own notes rather than being extra polish beyond what was asked — consider
-    adding a stronger focal point (e.g., emphasizing the largest/most divergent merge)
-    to push storytelling beyond just implementing the spec-listed features.'
+  - 'CRITICAL — rendered images do not match the committed source: plot-light.png/plot-dark.png
+    show Immune=#009E73 (correct), but Metabolic renders as #4467A3 (blue, which is
+    IMPRINT_PALETTE[3] in the source), Neural renders as #BD8233 (ochre, IMPRINT_PALETTE[4]),
+    and Cardiac renders as #954477 (rose) — a color that does not exist anywhere in
+    this file''s 4-element IMPRINT_PALETTE array at all. I verified with `colorant"#C475FD"`
+    in a Julia REPL that it parses to (196,117,253) lavender exactly as expected,
+    and traced the code by hand: as written, `IMPRINT_PALETTE[node_group[i]]` with
+    leaf_group 1..4 for Immune/Metabolic/Neural/Cardiac MUST produce Immune=green,
+    Metabolic=lavender(#C475FD), Neural=blue(#4467A3), Cardiac=ochre(#BD8233). The
+    rendered PNGs (confirmed via pixel-level analysis, consistent across both light
+    and dark) cannot be produced by the current makie.jl. This strongly indicates
+    the plot_images checked for this review are stale artifacts from a prior attempt/version,
+    not a fresh render of the current source. Before the next review, verify plot-light.png
+    and plot-dark.png are regenerated from the current commit — if they are, the palette
+    should already be correct and no code change should be needed for this specific
+    issue.'
+  - Because the rendered artifact's validity is in doubt, the rest of the visual scoring
+    (text legibility, layout balance, color accessibility, design polish) in this
+    review is necessarily conservative — a genuine re-render is needed for a fully
+    trustworthy assessment
+  - Only 40 leaves are used; the spec calls out that the radial layout's main value
+    is handling 'hundreds of leaves' where linear dendrograms become unwieldy — 40
+    is within the stated 20-500 range but doesn't showcase the space-efficiency advantage
+    the spec emphasizes. Consider more leaves (e.g. 80-150) to demonstrate the format's
+    real strength
+  - 40 small rotated leaf labels packed around the circumference are legible at full
+    2400px resolution but risk becoming a blur at the ~400px mobile thumbnail size
+    — consider whether fontsize should scale up slightly or whether labels should
+    thin out for higher leaf counts
+  - Data storytelling is limited to color-by-module; there's no annotation or callout
+    highlighting the specific insight (e.g., which module has the tightest/loosest
+    internal clustering) beyond the raw structure
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "dendrogram-radial · julia · makie · anyplot.ai" in bold dark text at top, clearly visible. A "Module" legend (frameless, dark text, colored line swatches for Immune/Metabolic/Neural/Cardiac) sits to the right of the circle. Leaf labels (e.g., IMM-01, MET-05, NEU-09, CAR-08) radiate outward in dark secondary-ink text, rotated to follow their angular position and flipped on the left half for readability. No overlaps observed.
-      Data: A circular radial dendrogram fills most of the canvas. Root sits at the center (small hub), branching outward into four color-coded module clusters occupying roughly a quarter of the circle each — green (Immune, #009E73), blue (Metabolic), ochre (Neural), rose (Cardiac). A thick color-coded outer ring runs around the circumference matching each leaf's module, and small circular markers mark each of the 40 leaf tips in the same module colors. Mixed-ancestry branches (spanning more than one module) render in a neutral soft-ink tone.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — confirmed no non-background pixel touches any canvas edge (no clipping).
+      Chrome: Title "dendrogram-radial · julia · makie · anyplot.ai" is bold, dark ink, fully visible near the top with generous margin. All axis decorations/spines are hidden (radial dendrogram has no x/y axes). 40 leaf labels (IMM-01..10, MET-01..10, NEU-01..10, CAR-01..10) are placed radially around the circumference in dark-soft ink, each rotated to stay upright and legible; no overlap between labels observed. Legend "Module" box (top-right, off to the side of the circle) lists all four group names with frameless line swatches, dark ink text.
+      Data: Root and mixed-ancestry branches near the circle's center render in neutral ink-soft gray. Outward branches are colored by module. Pixel-level verification found the four module colors actually rendered are: Immune = #009E73 (brand green, correct), Metabolic = #4467A3 (blue), Neural = #BD8233 (ochre), Cardiac = #954477 (rose). Per the source code's IMPRINT_PALETTE array (green, lavender #C475FD, blue, ochre in that order) the expected colors should have been Immune=green, Metabolic=lavender, Neural=blue, Cardiac=ochre — the rose hue used for Cardiac isn't even present in this file's declared palette. An outer color-coded ring mirrors the same four colors as contiguous arcs, and leaf-tip scatter markers are colored to match their module.
+      Legibility verdict: PASS (all text is readable against the light background) — but see the color-mismatch finding above; the image most likely does not reflect the current source and needs re-verification.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/off-white bold text, clearly visible. Legend text and leaf labels flipped to light gray/off-white, fully legible against the dark background. Root hub and mixed-branch color correctly flipped from near-black to near-white ink.
-      Data: Same radial dendrogram structure, with the four module-colored branch clusters and outer ring in colors identical to the light render (green #009E73, blue, ochre, rose) — data colors confirmed unchanged between themes, only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed.
+      Background: Warm near-black, consistent with #1A1A17 — confirmed no non-background pixel touches any canvas edge (no clipping).
+      Chrome: Same layout as the light render; title and all leaf/tick labels flip to light ink (#F0EFE8 / soft light gray) and remain clearly readable — no dark-on-dark failures observed. Legend text is light-colored and legible against the dark background.
+      Data: Confirmed pixel-for-pixel identical data colors to the light render — same green/blue/ochre/rose set in the same angular positions, so whatever produced this render is internally self-consistent between themes even though it disagrees with the source file's declared palette.
+      Legibility verdict: PASS (all text readable against the dark background) — same color-mismatch caveat as the light render applies.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 20
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes, but title is
-          proportionally small (~30-35% of canvas width) for the square canvas
+        comment: Font sizes explicitly set (titlesize=26, labelsize=12/14, etc.) and
+          readable at full res, but 40 small rotated circumferential labels are a
+          mobile-legibility risk; artifact-validity doubt also limits confidence
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Leaf labels evenly radiate outward with rotation/flip handling; no
-          overlaps observed
+        comment: No text/data overlap observed in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Branches and ring clearly visible; leaf markers (markersize=8) a
-          bit small for n=40
+        comment: Line width 2.5, markersize 11 appropriate for 40 leaves
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Module colors distinguishable, mixed branches use neutral ink instead
-          of ambiguous blends
+        passed: false
+        comment: Colors as rendered are distinguishable, but validity of the rendered
+          palette itself is in doubt (see VQ-07)
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Circle fills a large, balanced portion of the canvas; legend sits
-          near the plot
+        passed: false
+        comment: Circle + legend use canvas reasonably but legend column leaves some
+          right-side whitespace imbalance
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No x/y axes needed for a radial dendrogram; title and legend are
-          descriptive
+        comment: No numeric axes needed for a dendrogram; title fully descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'First series correctly #009E73, but positions 2-4 cherry-pick palette
-          slots 3,4,7 instead of canonical 2,3,4 with no semantic justification for
-          abstract module names'
+        comment: Rendered colors (green/blue/ochre/rose) skip canonical positions
+          2 and 5 and use position 7 for a 4th declared-array color that doesn't exist
+          in the source's IMPRINT_PALETTE at all — confirmed via pixel analysis and
+          Julia colorant parsing that the current source, if actually executed, would
+          produce green/lavender/blue/ochre instead. Strong evidence the checked images
+          are stale/mismatched with the current commit
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -121,22 +142,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Module color-coding and outer ring look polished, but these are spec-suggested
-          features rather than extra design work beyond the brief
+        comment: Hand-built radial layout with module coloring and outer ring — above
+          a configured default, but not flawless given the palette-integrity concern
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines/decorations fully hidden, generous whitespace, but small leaf
-          markers slightly undercut refinement
+        comment: Spines/decorations fully hidden, generous padding, small angular
+          gap for label separation
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Color-coded clusters and ring create visual hierarchy, but no additional
-          focal point beyond the spec's suggested features
+        passed: false
+        comment: Color-by-module and gray-root create some hierarchy, but no explicit
+          callout of the actual insight (e.g. tightest/loosest module)
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +167,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct radial dendrogram with root at center
+        comment: Correct radial/circular dendrogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equal-spaced leaves, distance-proportional radius, cluster-colored
-          branches, and optional metadata ring all present
+        comment: Root at center, leaves at circumference, distance-proportional radius,
+          cluster-colored branches, and the optional outer metadata ring are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle/radius mapping correctly encodes leaf position and merge distance
+        comment: Angle = leaf position (DFS order), radius = merge distance from root
+          — correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match module names
+        comment: Title format exactly matches spec-id · julia · makie · anyplot.ai;
+          legend labels match the four module names consistently with whatever colors
+          are rendered
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -175,22 +199,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 40 leaves across 4 modules with varying subcluster tightness and
-          some mixed-ancestry merges
+        comment: Shows varying branch depths, subclusters, and mixed-ancestry root
+          branches; only 40 leaves so doesn't fully showcase the 'hundreds of leaves'
+          scale the spec highlights as the format's key advantage
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Synthetic gene-expression modules (Immune/Metabolic/Neural/Cardiac)
-          are a neutral, plausible scientific scenario
+        comment: Gene-expression modules (Immune/Metabolic/Neural/Cardiac) are a realistic,
+          neutral bioinformatics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Synthetic expression means and noise levels are internally consistent
-          and plausible
+        comment: Synthetic but plausible module means and noise scale for a clustering
+          demo
     code_quality:
       score: 10
       max: 10
@@ -200,36 +225,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear imports -> data -> clustering -> plot
-          -> save flow
+        comment: No functions/classes; linear Imports -> Data -> Clustering -> Plot
+          -> Save flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used
+        comment: CairoMakie, Colors, Random all used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual clustering is appropriately complex given the missing Clustering.jl
-          dependency, no fake functionality
+        comment: No fake functionality; the from-scratch UPGMA/Lance-Williams clustering
+          is appropriately complex given Clustering.jl isn't available in the CI runtime
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2 matching the square canvas
-          target
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct current API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -237,15 +261,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of Axis, hidedecorations!/hidespines!, DataAspect(),
-          and Legend
+        comment: Good use of Axis, Legend/LineElement, arc!, scatter!, text! with
+          rotation/align
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses arc! and Point2f-based primitive drawing distinctive to Makie's
-          vector-drawing model
+        comment: Manual polar geometry via arc!/lines! trigonometry to work around
+          CairoMakie's lack of a native dendrogram/polar recipe is a distinctive,
+          hard-to-replicate-elsewhere technique
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -254,7 +279,9 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - hierarchical-clustering
   styling:
