@@ -1,7 +1,7 @@
 # anyplot.ai
 # gantt-basic: Basic Gantt Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-09-05
+# Quality: 91/100 | Created: 2026-09-05
 
 using CairoMakie
 using Dates
