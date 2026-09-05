@@ -27,13 +27,15 @@ df <- tibble(equity_returns = equity_returns, bond_returns = bond_returns)
 title_text <- "histogram-2d · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(df, aes(x = equity_returns, y = bond_returns)) +
-  geom_bin2d(bins = 45) +
+  geom_bin2d(bins = 28) +
   scale_fill_gradient(
     low = "#009E73",
     high = "#4467A3",
     name = "Count",
+    trans = "sqrt",
     labels = scales::label_comma()
   ) +
+  stat_density_2d(color = INK_SOFT, linewidth = 0.25, alpha = 0.5) +
   labs(
     title = title_text,
     x = "Equity Daily Return (%)",
