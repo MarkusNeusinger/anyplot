@@ -1,7 +1,7 @@
 // anyplot.ai
 // pdp-basic: Partial Dependence Plot
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-05
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 91/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 // The harness only exposes pageBg/elevatedBg/ink/inkSoft/grid/palette/amber/seq/div —
