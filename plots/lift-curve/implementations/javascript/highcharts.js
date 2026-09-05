@@ -1,7 +1,7 @@
 // anyplot.ai
 // lift-curve: Model Lift Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-09-05
+// Quality: 93/100 | Created: 2026-09-05
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

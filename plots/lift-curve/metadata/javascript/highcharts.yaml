@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: lift-curve
 created: '2026-09-05T06:28:54Z'
-updated: '2026-09-05T06:33:07Z'
+updated: '2026-09-05T06:42:14Z'
 generated_by: claude-sonnet
 workflow_run: 33949643164
 issue: 2379
@@ -12,122 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 93
 review:
   strengths:
-  - Reference line at y=1 correctly uses the theme-adaptive `neutral` (ink) semantic
-    anchor rather than a palette color, matching the style guide's intended role for
-    baseline/reference series
-  - Decile markers (radius 6) with per-point dataLabels give exact lift values at
-    10% increments, directly satisfying the spec's suggestion to show decile markers
-    or key percentile values
-  - enableMouseTracking:false on the reference series avoids a redundant tooltip on
-    the flat comparison line, and zIndex ordering keeps the model curve on top
-  - 'Both renders are fully theme-correct: identical brand-green data color, correct
-    #FAF8F1/#1A1A17 backgrounds, and legible chrome text in both themes'
-  - Deterministic mulberry32 PRNG with a fixed seed produces reproducible synthetic
-    data, and the propensity-plus-noise model produces a realistic, gradually-decaying
-    lift curve as the spec requires
+  - 'Area fill uses threshold: 1 so only the wedge between the curve and the y=1 baseline
+    is shaded, visually emphasizing the magnitude of lift captured above random selection'
+  - Decile markers (10%, 20%, ... 100%) show explicit data labels with the exact lift
+    value, giving the viewer concrete reference points along the curve as suggested
+    by the spec notes
+  - Custom tooltip pointFormatter surfaces the underlying responders/customers counts
+    behind each lift value, adding real interactive depth beyond the static PNG
+  - All font sizes are explicitly set and identical Imprint green (#009E73) is used
+    for the data series in both light and dark renders, with theme-correct chrome
+    (background, grid, text) in both
+  - Deterministic mulberry32 PRNG seeded at 42 produces a realistic, right-skewed
+    propensity distribution (pow(rand(),4)) with a noisy model score, avoiding a suspiciously
+    smooth synthetic curve
   weaknesses:
-  - Design is close to a well-configured default line chart — no shaded/filled area
-    between the model curve and the y=1 reference line to visually emphasize the lift
-    magnitude, which would sharpen the data storytelling
-  - Title occupies only ~30% of the plot width at the current 22px size; while not
-    a legibility problem, there is headroom to give the title more visual weight in
-    the hierarchy
-  - Data point dataLabels (13px) are near the small end of the sizing range — legible
-    now, but leave little margin when scaled down for mobile widths
-  - Only the decile-level lift values are surfaced; the underlying response counts
-    (numerator) that produced each ratio are not exposed anywhere (e.g., tooltip or
-    subtitle), which would round out feature coverage
+  - 'Design Excellence is solid but not exceptional: a single-hue area fill and dashed
+    reference line is clean but doesn''t push further into a distinctive visual signature
+    (e.g., no annotation calling out the optimal targeting cutoff) — DE-02/DE-03 have
+    headroom'
+  - Y-axis title 'Cumulative Lift' relies on the tick format ({value}x) rather than
+    the axis title itself to convey the unit — an explicit '(x)' suffix on the axis
+    title would make the unit unambiguous without needing to read the ticks
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold dark title "lift-curve · javascript · highcharts · anyplot.ai" centered at top, gray subtitle with baseline response rate, dark axis titles ("Population Targeted (%)", "Cumulative Lift"), soft-gray tick labels on both axes, subtle horizontal gridlines only, legend at bottom with "Model" and "Random selection (no lift)" swatches. All chrome text clearly legible against the light background.
-      Data: Green (#009E73) line starts near 4.8x at 0%, decays with realistic noise/wobble in the 0-10% range, then smoothly approaches 1.0x by 100%. Filled green decile markers (10%, 20%, ... 100%) carry bold black dataLabels ("4.0x", "3.3x", ... "1.0x"). A black dashed horizontal line at y=1x represents random selection, per spec requirement.
-      Legibility verdict: PASS
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "lift-curve · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Retention offer targeting · baseline response rate 18.8%" in soft gray beneath it. X-axis "Population Targeted (%)" and Y-axis "Cumulative Lift" titles and tick labels (0%-100%, 0x-5.5x) are dark gray/black and clearly legible against the light background. Subtle light-gray horizontal gridlines are visible but not dominant. Legend at the bottom shows "Model" (solid green line swatch) and "Random selection (no lift)" (dashed dark swatch).
+      Data: A green (#009E73) line starts near 4.8x at 0% population targeted and decays smoothly (with minor realistic noise near the start) down to 1.0x at 100%, with a translucent green fill wedge between the curve and the dashed y=1 reference line. Ten decile markers (10%-100%) are shown as filled green dots with black data-label text (4.0x, 3.3x, 2.8x, 2.3x, 1.9x, 1.6x, 1.4x, 1.2x, 1.1x, 1.0x) positioned just above each marker, none overlapping each other or the curve.
+      Legibility verdict: PASS — all text and data elements are clearly readable, no dark-on-light or light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title/subtitle/axis text now rendered in white/light-gray, fully legible against the dark background — no dark-on-dark issues found on title, axis labels, tick labels, or legend text. Gridlines are subtle light-gray at low opacity.
-      Data: Identical brand-green (#009E73) line and marker colors as the light render — only chrome inverted, confirming Imprint palette data-color constancy. The reference line correctly flips from black-dashed (light) to white-dashed (dark), consistent with using the theme-adaptive `neutral`/`ink` anchor rather than a fixed hex.
-      Legibility verdict: PASS
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Same title/subtitle text, now rendered in white/light-gray, clearly legible against the dark background. Axis titles and tick labels are light gray, gridlines are a subtle dark-gray that remains visible without dominating. Legend text is light-colored and readable.
+      Data: The line, fill, and marker colors are identical to the light render (#009E73 green, same dashed reference line color logic adapted to light ink for dark theme) — only the chrome (background, text, grid) has flipped. The decile data-label text is now white, clearly legible against both the dark background and the darker green fill area beneath it — no dark-on-dark failures observed.
+      Legibility verdict: PASS — all text remains legible in the dark theme; data colors match the light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; decile dataLabels (13px) are legible
-          but near the small end of the range
+        comment: All font sizes explicitly set (title 24px, subtitle/ticks 14px, axis
+          titles 16px); readable, well-proportioned, no overflow in either theme
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/marker collisions observed in either render
+        comment: Decile data labels are well spaced above their markers; no collisions
+          with curve, legend, or each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Decile markers (radius 6) and 3px line are prominent and density-appropriate
-          for a 100-point curve
+        comment: 3px line width and radius-6 decile markers are appropriately sized
+          for a 100-point curve; unlabeled intermediate points stay unobtrusive
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green vs. neutral ink dashed line gives strong contrast; no
-          red-green reliance
+        comment: Single-hue green curve vs. dashed neutral reference line — distinguishable
+          by both hue and dash pattern, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced axis labels, generous margins, nothing clipped or overflowing
+        comment: Plot area fills the canvas with balanced margins; legend sits directly
+          beneath the plot, nothing isolated or cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled with units (%, x); mandated title format used exactly
+        comment: Descriptive axis titles; unit conveyed via tick format (% and x suffixes)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; reference line correctly uses the theme-adaptive
-          neutral anchor; backgrounds correct in both themes'
+        comment: 'First series is #009E73 in both renders; backgrounds are theme-correct
+          #FAF8F1/#1A1A17; chrome fully adapts'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Solid but close to a well-configured default line chart; no fill/gradient
-          to emphasize lift magnitude
+        passed: true
+        comment: Thoughtful threshold-based fill and single accent hue is clearly
+          above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Y-axis-only grid, minimal spines, generous whitespace; clean but
-          not exceptional
+        passed: true
+        comment: Subtle gridlines and generous whitespace; some refinement visible
+          but not maximally minimal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Decile labels and dashed reference line tell the story, but no shaded
-          lift region or other emphasis to sharpen the focal point
+        passed: true
+        comment: The wedge fill above baseline plus decile value labels create a clear
+          visual hierarchy emphasizing captured lift, though no explicit annotation
+          calls out an optimal cutoff
     spec_compliance:
       score: 15
       max: 15
@@ -137,110 +136,115 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart is correct for a lift curve
+        comment: Correct lift curve with cumulative lift line and random-selection
+          reference line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: y=1 reference line, decile markers/labels, 0-100% x-axis all present
+        comment: 0-100% x-axis, cumulative lift y-axis, y=1 reference line, decile
+          markers with values all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = population targeted %, Y = cumulative lift ratio
+        comment: X = population targeted %, Y = cumulative lift ratio, correctly mapped
+          and fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels are clear
+        comment: Title matches required format exactly; legend labels ('Model', 'Random
+          selection (no lift)') match the series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers cumulative lift, decile markers, and baseline; underlying
-          response counts aren't surfaced anywhere
+        comment: Shows full curve shape, decile markers, reference line, and tooltip-level
+          detail
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retention-campaign scenario with plausible baseline rate; neutral
-          subject matter
+        comment: Neutral, comprehensible retention-offer targeting scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2000 customers, 18.8% baseline, lift 1x-4.8x are all sensible for
-          the domain
+        comment: 18.8% baseline response rate and decaying lift toward 1.0x at 100%
+          are consistent with real-world retention campaign modeling
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Flat top-level script aside from one deterministic-PRNG helper function
+        comment: Linear imports → data → chart structure; the mulberry32 helper is
+          the minimal justified exception for browser-side determinism
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed mulberry32 PRNG
+        comment: mulberry32(42) deterministic PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; only window globals used
+        comment: No imports; uses only the global Highcharts object
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled at both required
-          levels
+        comment: chart.animation and plotOptions.series.animation both false; current
+          Highcharts API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of area threshold, plotOptions, and Highcharts.color().setOpacity()
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic per-point dataLabels/marker overrides, tooltip valueSuffix
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: enableMouseTracking:false + zIndex layering is a nice touch, but
-          otherwise fairly generic line-series usage
+        comment: Threshold-anchored area fill, per-point custom data driving a dynamic
+          tooltip pointFormatter, and per-point dataLabels/marker toggling for deciles
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - publication-ready
+  - alpha-blending
