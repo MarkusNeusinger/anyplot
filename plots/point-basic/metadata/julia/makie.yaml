@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: point-basic
 created: '2026-09-05T10:55:10Z'
-updated: '2026-09-05T10:59:10Z'
+updated: '2026-09-05T11:15:45Z'
 generated_by: claude-sonnet
 workflow_run: 33961745832
 issue: 2551
@@ -12,58 +12,68 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correct forest/point-estimate plot type using rangebars! + scatter!, exactly matching
-    the spec's category/estimate/lower_bound/upper_bound structure
-  - Subgroups sorted by estimate value, creating a natural visual hierarchy from smallest
-    to largest effect
-  - Dashed reference line at x=0 (per spec's 'consider adding a reference line at
-    zero') makes it easy to see which CIs cross the null
-  - Error bars have visible whisker caps (whiskerwidth=14), satisfying the spec's
-    'caps at endpoints' requirement
-  - 'Theme-adaptive chrome correctly implemented: identical brand-green (#009E73)
-    data color in both renders, chrome flips cleanly with no dark-on-dark or light-on-light
-    issues'
-  - 'Title format matches the exact required convention: ''point-basic · julia · makie
-    · anyplot.ai'''
+  - 'Attempt-1 feedback fully addressed: x/y tick label sizes raised 12→14 for mobile
+    legibility, x/y axis-label sizes now explicit at 15, and the data-generation seed
+    is now functional (rand(n) jitter) instead of a no-op Random.seed! call'
+  - New filled-vs-hollow marker convention (filled = CI excludes the null, open =
+    CI spans it) adds a real semantic layer and a clear visual hierarchy without introducing
+    a second hue — the Label caption at fig[2,1] documents the convention cleanly,
+    replacing the need for a formal legend
+  - Correct forest/point-estimate plot using rangebars!(direction=:x) + scatter!,
+    matching the spec's category/estimate/lower_bound/upper_bound structure exactly,
+    with visible whisker caps (whiskerwidth=14)
+  - Subgroups sorted by estimate value, creating a natural, easy-to-scan visual hierarchy
+    from smallest to largest effect, reinforced by the dashed zero-reference line
+  - 'Theme-adaptive chrome is fully correct: identical brand-green (#009E73) data
+    color in both renders, with title, axis labels, ticks, spines and grid transparency
+    correctly following INK/INK_SOFT/PAGE_BG tokens — no dark-on-dark or light-on-light
+    failures'
+  - 'Clean, KISS-structured code: flat script, only used imports (CairoMakie, Colors,
+    Random), title format exactly matches the mandated convention'
   weaknesses:
-  - Y-axis category tick labels and x tick labels (ticklabelsize=12) risk becoming
-    hard to read once the image is scaled down for mobile thumbnails (~400px wide)
-    — consider bumping ticklabelsize slightly for legibility resilience across responsive
-    sizes
-  - Visual design leans heavily on the documented style-guide defaults (spine removal,
-    grid alpha) without much additional refinement beyond the single accent color
-    — consider a subtle enhancement such as highlighting or annotating the subgroup(s)
-    whose CI crosses zero to increase data storytelling impact
-  - Random.seed!(42) is set but the dataset is fully hardcoded (no actual rand()/randn()
-    calls), so the seed has no functional effect — either drop the unused Random import/seed
-    or use it meaningfully
+  - 'Canvas utilization is unbalanced: the axis block (y-category labels through the
+    rightmost x=0.8 gridline) only occupies roughly the left ~28-30% of the 3200x1800
+    canvas width, leaving a large, empty, un-balanced whitespace band on the right
+    side of the figure with no title, legend, or content to fill it. Fix by widening
+    xlims! further (or letting the axis stretch to the full column), reducing the
+    Figure''s implicit right margin, or adding `colsize!(fig.layout, 1, Relative(1))`/checking
+    why the Axis is not expanding to fill the 1x1 GridLayout cell edge-to-edge.'
+  - 'Library Mastery is still fairly generic for Makie: rangebars! + scatter! + vlines!
+    + a Label caption are all correct but not distinctly showcase-y for Makie specifically
+    — the same forest plot could be built nearly identically in most other plotting
+    libraries.'
+  - DE-01 aesthetic sophistication remains single-hue by (reasonable) domain convention;
+    there's still room for one more polish touch (e.g., subtle row banding, or a light
+    background band highlighting the 'no effect' zone around the dashed line) to push
+    past a well-executed style-guide baseline.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Bold dark title "point-basic · julia · makie · anyplot.ai" centered at top, clearly readable. X-axis label "Standardized Mean Difference (95% CI)" and y-axis label "Subgroup" in dark ink, fully legible. Y-axis category tick labels (No prior therapy, Age < 40, Female, Age 40-59, Male, Age 60+, Prior therapy) and x-axis numeric ticks (0.0-0.8) render in a slightly softer dark gray, all readable against the light background. Subtle vertical gridlines only (y-gridlines disabled), a dashed reference line at x=0. Top and right spines removed.
-      Data: Seven brand-green (#009E73) point markers with horizontal range-bar error bars and whisker caps, one per subgroup, sorted ascending by estimate.
+      Chrome: Bold dark title "point-basic · julia · makie · anyplot.ai" centered above the axis block. X-axis label "Standardized Mean Difference (95% CI)" and y-axis label "Subgroup" in dark ink, both fully legible. Y-axis category tick labels (No prior therapy, Age < 40, Female, Age 40-59, Male, Age 60+, Prior therapy — sorted descending by estimate) and x-axis numeric ticks (0.0-0.8) render in soft dark gray, all clearly readable. Subtle vertical gridlines only (y-gridlines disabled), a dashed reference line at x=0, top/right spines removed. A small caption below the axis reads "○ open marker — 95% CI spans the null (SMD = 0)" in soft ink, fully visible and not clipped. Note: the axis block (labels + plot area) only spans roughly the left third of the canvas width, leaving a large unbalanced empty band on the right of the figure.
+      Data: Seven brand-green (#009E73) range-bar error bars with whisker caps; five filled circle markers (CI excludes zero) and two hollow/open circle markers (CI spans zero) — a clean semantic distinction that reads at a glance.
       Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/off-white and soft light-gray tones respectively, clearly visible against the dark background. No dark-on-dark issues found on title, axis labels, or tick labels. Gridlines and dashed reference line remain subtle but visible. Spines and layout identical to the light render.
-      Data: Same seven brand-green (#009E73) point markers and error bars — colors confirmed identical to the light render; only chrome (background, text, grid) flipped.
+      Chrome: Same title, axis labels, tick labels, and caption now rendered in light ink/off-white and soft light-gray tones respectively — all clearly visible against the dark background. No dark-on-dark issues found on title, axis labels, tick labels, or the marker-convention caption. Gridlines and the dashed reference line remain subtle but visible. Spines and overall layout (including the same right-side whitespace imbalance) are identical to the light render.
+      Data: Same seven brand-green (#009E73) markers and range-bars, with the identical filled/open split — colors confirmed identical to the light render; only chrome (background, text, grid) flipped.
       Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly set and readable in both themes at full size; ticklabelsize=12
-          for both axes may thin out at mobile thumbnail scale (~400px)
+        comment: Tick label sizes raised from 12 to 14, axis-label sizes explicit
+          at 15, titlesize 20 — all readable in both themes; small residual risk at
+          mobile thumbnail scale keeps this just short of perfect
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -76,27 +86,28 @@ review:
         max: 6
         passed: true
         comment: Sparse data (7 points) rendered with prominent markersize=20 and
-          linewidth=2.5 error bars
+          linewidth=2.5 range-bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green hue against dark ink text gives adequate contrast;
-          no red-green reliance
+        comment: Single brand-green hue plus filled/open marker distinction avoids
+          relying on color alone for significance signaling
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: No clipping/overflow at canvas edges; canvas dimension gate passed;
-          xlims/ylims comfortably contain all CI whiskers
+        passed: false
+        comment: Axis block (labels + plot area) fills only roughly the left ~30%
+          of the 3200x1800 canvas width; the right side of the figure is empty, unbalanced
+          whitespace with nothing to fill it
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive xlabel includes units/CI level; ylabel and title present
+        comment: xlabel includes units/CI level, ylabel and title both present
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -105,30 +116,31 @@ review:
         comment: 'First (only) series uses #009E73; backgrounds match #FAF8F1/#1A1A17;
           both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Sorting subgroups by estimate is a nice touch, but overall relies
-          on a single accent color with no further custom palette work
+        passed: true
+        comment: Filled/hollow marker convention for null-crossing CIs is a thoughtful,
+          above-default design choice; still single-hue by domain convention
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Spines removed and grid subtle, but this mostly follows the documented
-          style-guide skeleton rather than adding refinement beyond it
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Ascending sort by estimate plus dashed zero-reference line creates
-          a clear, interpretable hierarchy (forest-plot convention)
+        comment: Spines removed, grid subtle and x-only, but whitespace balance is
+          undermined by the large empty band on the right of the canvas
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Descending sort, dashed zero line, and the new filled/open marker
+          split let the viewer immediately see which subgroups have a statistically
+          distinguishable effect
     spec_compliance:
       score: 15
       max: 15
@@ -156,8 +168,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact required format; no legend needed for single
-          series
+        comment: Title matches the exact required format; marker convention documented
+          via caption in place of a formal legend
     data_quality:
       score: 15
       max: 15
@@ -167,8 +179,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows category, estimate, CI, reference line, and caps — all plot-type
-          aspects covered
+        comment: Shows category, estimate, CI, reference line, caps, and both significant/non-significant
+          subgroups
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -196,8 +208,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present (data is hardcoded so it has no functional
-          effect, but requirement is nominally met)
+        comment: Random.seed!(42) now has a functional effect via rand(n) jitter on
+          estimate/half_width
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,7 +221,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity, no fake interactivity, comment explains the
+          marker-convention rationale
       - id: CQ-05
         name: Output & API
         score: 1
@@ -217,7 +230,7 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png with px_per_unit=2
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -225,21 +238,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses rangebars!, scatter!, vlines! — idiomatic Makie recipes for
-          a forest plot
+        comment: Uses rangebars!, scatter!, vlines!, and a GridLayout Label — idiomatic
+          Makie composition for a forest plot
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: rangebars! with direction=:x and whiskerwidth is Makie-specific but
-          not a showcase of deeper library capability
+        comment: rangebars!(direction=:x) plus a second layered scatter! pass for
+          open/filled markers uses some Makie-specific composition, but the overall
+          approach could still be replicated fairly directly in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  patterns: []
+  - annotations
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - grid-styling
