@@ -48,6 +48,21 @@ Highcharts.chart("container", {
         return `${this.value}:00`;
       },
     },
+    // CPU and Memory both crest in this window (see data formulas above) —
+    // a plotBand calls out the one moment worth noticing among four equally-weighted lines.
+    plotBands: [
+      {
+        from: 8.5,
+        to: 10.5,
+        color: t.elevatedBg,
+        label: {
+          text: "CPU + Memory peak",
+          style: { color: t.inkSoft, fontSize: "12px" },
+          verticalAlign: "top",
+          y: 16,
+        },
+      },
+    ],
   },
   yAxis: {
     title: { text: "Utilization (%)", style: { color: t.inkSoft, fontSize: "16px" } },
