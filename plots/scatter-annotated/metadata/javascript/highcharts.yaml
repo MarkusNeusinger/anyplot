@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-annotated
 created: '2026-09-05T13:09:12Z'
-updated: '2026-09-05T13:12:37Z'
+updated: '2026-09-05T13:23:00Z'
 generated_by: claude-sonnet
 workflow_run: 33967807558
 issue: 2790
@@ -12,49 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-annotated/javascript/highcharts/plot-dark.html
-quality_score: 77
+quality_score: 88
 review:
   strengths:
-  - 'Theme-adaptive chrome is correctly threaded through: title/axis/tick text and
-    grid lines flip color between light and dark while the single green data series
-    (#009E73) stays identical, and both backgrounds match the FAF8F1/1A1A17 spec.'
-  - Log-log axes are the right call for the wide-range revenue vs. market-cap data
-    (Adobe ~$19B to Amazon ~$575B revenue) — avoids squashing small companies into
+  - 'Both previously flagged weaknesses are fixed with real implementation work: subtle
+    connector lines (drawn via chart.renderer.path in the render event, since Highcharts
+    has no built-in scatter dataLabel connector) now link every offset label back
+    to its marker, and Nvidia/Amazon are highlighted with a larger, bolder marker
+    plus bold label text as documented focal points (Nvidia''s ~36x revenue-to-market-cap
+    multiple, Amazon''s revenue leadership) — real visual hierarchy where before all
+    15 points were visually identical.'
+  - Log-log axes remain the right call for the wide-range revenue vs. market-cap data
+    (Adobe ~$19B to Amazon ~$575B revenue), avoiding squashing small companies into
     a corner.
-  - 'Data labels for all 15 points stay legible and mostly non-overlapping with `allowOverlap:
-    false`, including graceful inward placement for the Amazon point near the right
-    edge.'
-  - Realistic, neutral company dataset (well-known tech firms) with plausible illustrative
-    revenue/market-cap figures.
+  - 'Theme-adaptive chrome is correctly threaded through: title/axis/tick text, grid
+    lines, and connector-line color (t.inkSoft) flip between light and dark while
+    the green data series (#009E73) and highlight color stay pixel-identical between
+    themes.'
+  - Realistic, neutral, well-known company dataset with plausible illustrative revenue/market-cap
+    figures, explicitly labeled as illustrative rather than live data.
   - 'Clean, minimal implementation: no unused imports, deterministic hardcoded data,
-    correct mount-node/animation contract for the JS harness.'
+    correct mount-node/animation contract (chart + series animation both disabled)
+    for the JS render harness.'
   weaknesses:
-  - Spec notes call for 'subtle connecting lines or arrows from labels to points when
-    offset' — labels are simply offset to the right (x:10, y:4) with no leader line,
-    so a label whose position gets nudged by Highcharts' overlap avoidance can read
-    as ambiguously attached to its point. Consider a thin connector (e.g. `dataLabels.connectorColor`/manual
-    line) when the label is displaced from the marker.
-  - 'Design excellence is generic: axis styling, marker treatment, and layout all
-    follow the library defaults from the style guide with no additional customization
-    (no accent styling, no size/emphasis variation to create a focal point) — functional
-    but not distinctive.'
-  - All 15 points share identical size and color, so there's no visual hierarchy highlighting
-    any particular company as a focal point beyond the text labels themselves.
+  - Design excellence, while improved by the highlight treatment, is still fairly
+    conservative beyond the two focal points — spines/grid and general chrome remain
+    close to style-guide defaults with no additional refinement (e.g. no accent on
+    the axis for the highlighted points' ranges, no supplementary annotation text
+    explaining why Nvidia/Amazon stand out visually on the chart itself, only in code
+    comments).
+  - The title renders noticeably smaller than typical (~35% of canvas width at 22px)
+    — well under the usual 50-70% comfortable range for this mandated title string;
+    not a defect since nothing overflows or looks squeezed, but there is headroom
+    to size it slightly larger for better visual weight relative to the wide canvas.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold dark title "scatter-annotated · javascript · highcharts · anyplot.ai" centered at top; dark-gray axis titles ("Annual Revenue (USD billions, log scale)" / "Market Cap (USD billions, log scale)"); medium-gray tick labels on both log-scaled axes; subtle light-gray gridlines on both axes. All chrome text is clearly readable against the light background.
-      Data: 15 green (#009E73) circular markers at ~70% opacity, each with a black text label naming the company (Apple, Microsoft, Alphabet, Amazon, Nvidia, Meta, Tesla, Broadcom, Oracle, Adobe, Salesforce, IBM, Intel, Cisco, Uber) placed just to the right of its point. First (and only) series correctly uses the brand green.
+      Chrome: Bold dark title "scatter-annotated · javascript · highcharts · anyplot.ai" centered at top (~35% of canvas width); dark-gray axis titles ("Annual Revenue (USD billions, log scale)" / "Market Cap (USD billions, log scale)"); medium-gray tick labels on both log-scaled axes; subtle light-gray gridlines. All chrome text is clearly readable against the light background.
+      Data: 15 green (#009E73) circular markers, most at ~70% opacity with a short subtle connector dash leading to a black company-name label placed to the right. Nvidia and Amazon are rendered as larger, fully opaque markers with bold labels, visually distinguishing them as focal outliers (Nvidia's outsized market-cap-to-revenue multiple, Amazon's revenue leadership). Verified via pixel crop that the "Amazon" label at the far right stays fully within the canvas with a small margin — no clipping.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and axis titles render in light off-white; tick labels in light gray; gridlines in a subtle light-on-dark tone. No dark-on-dark or light-on-light failures observed — all text is clearly legible.
-      Data: Same 15 green (#009E73) markers at the same positions and same opacity as the light render — data colors are identical between themes, only chrome (background, text, grid) flipped as required.
+      Chrome: Title and axis titles render in light off-white; tick labels in light gray; gridlines and connector dashes in a subtle light-on-dark tone. No dark-on-dark or light-on-light failures observed — all text is clearly legible.
+      Data: Same 15 green (#009E73) markers at identical positions, opacity, and highlight treatment (Nvidia/Amazon larger + bold) as the light render — data colors are pixel-identical between themes, only chrome (background, text, grid, connectors) flipped as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,22 +67,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes; data labels
-          at 13px are legible without dominating the markers
+        comment: All text readable in both themes at appropriate sizes; 13px data
+          labels legible without dominating markers
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 15 labeled points stay mostly clear of each other; a couple of labels
-          (Cisco/IBM) sit close but do not overlap
+        comment: 15 labeled points stay clear of each other, including the previously-flagged
+          Cisco/IBM pair
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Marker radius 7 with alpha 0.7 is appropriately prominent for a sparse
-          (15-point) dataset
+        comment: Marker radius 7 (9 for highlighted points) with alpha 0.7 is appropriately
+          prominent for a sparse 15-point dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -90,7 +95,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no clipping or overflow; balanced margins
+        comment: Canvas gate passed (no drift file present); no clipping or overflow;
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,32 +111,34 @@ review:
         comment: 'First series is #009E73; backgrounds match FAF8F1/1A1A17; identical
           data color across themes'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Follows style-guide defaults competently but with no distinctive
-          polish beyond that
+        comment: Adds genuine focal-point styling (larger opaque marker + bold label
+          for Nvidia/Amazon) beyond the prior generic pass, but overall chrome still
+          close to defaults
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization beyond token-driven theming; no extra refinement
-          of spines/grid beyond defaults
+        comment: Custom SVG-rendered connector lines are a real refinement touch;
+          spines/grid otherwise unchanged from defaults
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or emphasis - all points identical size/color,
-          no focal point beyond labels
+        passed: true
+        comment: Clear, reasoned focal points (Nvidia's outsized multiple, Amazon's
+          revenue lead) now create real visual hierarchy vs. the prior all-identical
+          markers
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,11 +149,11 @@ review:
         comment: Correct annotated scatter
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Labels + moderate alpha present; missing the suggested subtle connecting
-          lines/arrows for offset labels
+        comment: Labels, moderate alpha, AND now subtle connecting lines from labels
+          to points are all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -160,16 +168,16 @@ review:
         comment: Title matches required format exactly; legend correctly omitted for
           single series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers labeling, transparency, x/y scatter; lacks the connector-line
-          aspect from the notes
+        comment: Now covers labeling, transparency, connector lines, AND highlight/hierarchy
+          from the spec notes
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -181,7 +189,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Revenue/market-cap ranges are realistic; log scale suits the multi-order-of-magnitude
+        comment: Revenue/market-cap ranges realistic; log scale suits the multi-order-of-magnitude
           spread
     code_quality:
       score: 10
@@ -204,45 +212,50 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses the provided Highcharts global only
+        comment: No imports; uses only the provided Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity
+        comment: Appropriate complexity for the custom connector-line renderer; no
+          fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no explicit width/height
+        comment: Correct mount-node contract, chart + series animation both disabled,
+          no explicit width/height
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines logarithmic axes, dataLabels, and a render-event hook into
+          the SVG renderer — broader, more deliberate API usage than a basic scatter
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Standard scatter + logarithmic axis + dataLabels usage, idiomatic
-          but not deep
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Generic dataLabels usage; no distinctive Highcharts-specific feature
-          exploited
+        comment: 'Manually drawing connector lines via chart.renderer.path in the
+          render event is a genuine library-specific workaround (documented reasoning:
+          Highcharts has no built-in scatter dataLabel connector)'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - log-scale
+  - patches
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
