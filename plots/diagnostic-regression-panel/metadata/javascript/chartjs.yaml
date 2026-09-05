@@ -1,0 +1,240 @@
+library: chartjs
+language: javascript
+specification_id: diagnostic-regression-panel
+created: '2026-09-04T23:58:51Z'
+updated: '2026-09-05T00:03:54Z'
+generated_by: claude-sonnet
+workflow_run: 33930734653
+issue: 5242
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct, from-scratch implementations of Cook's distance, leverage/hat-values,
+    standardized residuals, LOWESS smoothing, and the Q-Q probit transform — real
+    statistical rigor within Chart.js's constraints.
+  - 'Thoughtful semantic color use: amber for Cook''s-distance warning contours, theme-adaptive
+    ink for reference lines, keeping the categorical green reserved for actual data.'
+  - 'The influential-point labeling (#3, #10, #119) ties all four panels into one
+    coherent diagnostic story, exactly matching the spec''s intent.'
+  - Both themes are fully readable with pixel-identical data colors — clean theme-adaptation
+    work.
+  weaknesses:
+  - In the Normal Q-Q panel, the "#119" label overlaps its own data marker (trailing
+    digit partially obscured) in both renders — nudge the label-avoidance logic to
+    also offset when a label's own point sits directly on the placement line, or increase
+    the offset slightly for points near the panel corner.
+  - Visual refinement stays close to Chart.js defaults beyond the theme/color work;
+    could differentiate further (e.g., slightly larger gaps between panels, or subtler
+    gridlines) for extra polish.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Shared title "diagnostic-regression-panel · javascript · chartjs · anyplot.ai" in bold dark ink at top; 4 panel titles ("Residuals vs Fitted", "Normal Q-Q", "Scale-Location", "Residuals vs Leverage") in dark ink; axis titles and tick labels dark/soft-dark, all clearly legible against the cream background; grid lines subtle light gray.
+      Data: Green (#009E73) scatter markers with page-bg-colored borders in all 4 panels; lavender (palette[1]) LOWESS smoother lines in panels 1 and 3; black dashed zero/45-degree reference lines in panels 1 and 2; amber dashed Cook's-distance contours (D=0.5, D=1.0) in panel 4; top-3 influential points (#3, #10, #119) labeled in dark text across every panel.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/panel-title/axis-label/tick-label structure, now rendered in light ink (title/labels) and soft-light ink (ticks); grid lines subtle light-on-dark. No dark-on-dark failures observed — all text clearly readable.
+      Data: Colors identical to the light render — green markers, lavender LOWESS lines, amber contour lines, dashed reference lines all match pixel-for-pixel; only chrome (background, text, grid) flipped as required.
+      Legibility verdict: PASS
+
+    Minor note (both renders): the "#119" point label in the Normal Q-Q panel sits close enough to its own marker that the marker overlaps the trailing digit — a small VQ-02 deduction, not a legibility failure of chrome text.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized, fully readable in both themes; clean
+          hierarchy from 30px main title down to 15px ticks
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: '"#119" label overlaps its own marker in the Normal Q-Q panel (both
+          renders)'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size appropriate for n=120; some overlap in denser clusters,
+          mitigated by page-bg-colored point borders
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green data contrasts well on both surfaces; amber used sparingly,
+          not as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas is the right call for a symmetric 2x2 panel; no clipping
+          or overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Precise statistical axis labels matching spec vocabulary
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; lavender for LOWESS; amber semantic anchor
+          for Cook''s-D contours; ink/neutral for reference lines; both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantically-correct color assignment plus a custom label-avoidance
+          plugin — above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean grid and whitespace; stays close to Chart.js defaults otherwise
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Same influential observations traced across all four panels, giving
+          the composite a coherent narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2x2 regression-diagnostic panel replicating R's plot(lm)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero-line + LOWESS, Q-Q 45-degree line, scale-location LOWESS, Cook's-distance
+          contours, top-3 influential labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct x/y per panel with sensible headroom
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Encodes non-linearity, heteroscedasticity, high-leverage points,
+          high-influence outliers, and near-normal residuals
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Generic, neutral regression-diagnostic scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible axis ranges and magnitudes for a textbook diagnostic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are justified reuse across 4 near-identical panels
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no filesystem calls
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter+showLine overlay pattern with shared options factory
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin with edge-avoidance label placement
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - lowess-smoothing
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
