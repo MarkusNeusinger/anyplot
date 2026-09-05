@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: polar-line
 created: '2026-09-05T11:31:06Z'
-updated: '2026-09-05T11:35:41Z'
+updated: '2026-09-05T11:49:35Z'
 generated_by: claude-sonnet
 workflow_run: 33962981850
 issue: 2692
@@ -12,123 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-lin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-line/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 78
 review:
   strengths:
-  - Correct Imprint palette in canonical order with brand green always first, identical
-    across both themes
-  - Fully theme-adaptive chrome (background, ink, grid, legend box) with no dark-on-dark
-    or light-on-light failures in either render
-  - 'Idiomatic PolarAxis usage: theta_0/direction to orient January at top, a custom
-    rtickformat closure to append ''mm'' units, and an rtickangle offset that deliberately
-    avoids radial-label/spoke clash'
-  - Realistic, well-differentiated three-zone rainfall dataset that clearly demonstrates
-    the plot type's cyclical nature
-  - Clean, reproducible, single-file KISS structure
+  - 'Idiomatic PolarAxis configuration: theta_0 = pi/2 puts January at the top, direction
+    = 1 sets a sensible angular sweep, and rtickformat appends "mm" units with rtickangle
+    offset so radial labels don''t clash with the January spoke'
+  - Correct Imprint palette in canonical order (green/lavender/blue for the three
+    series), with a subtle band! fill under the highest-variance series adding a focal
+    point
+  - 'Theme-adaptive chrome works correctly: background, ink, grid, and spine colors
+    flip cleanly between light and dark renders while all three data series colors
+    stay pixel-identical'
+  - 'Realistic, neutral dataset: monthly rainfall across three climate zones with
+    a genuine sinusoidal seasonal cycle, phase-shifted per zone, and clamped to stay
+    non-negative'
+  - Clean single-script KISS structure, seeded RNG (Random.seed!(42)), only used imports,
+    correct save call with px_per_unit = 2 landing exactly on the 2400x2400 canonical
+    square canvas
   weaknesses:
-  - 'Design Excellence is the main gap: the chart is technically correct but visually
-    reads as a competent default rather than a polished, story-driven piece. Consider
-    a deliberate focal point - e.g. a subtle fill/alpha under the Tropical loop (the
-    highest-variance series) or a brief peak-season annotation - to give the chart
-    a clear point of view'
-  - No per-point markers on the 12 monthly measurements - only the interpolated line
-    is shown. Adding small markers (e.g. scatter! at each theta/value pair) would
-    better communicate 'monthly data points connected by lines' per the spec description
-    and would help visibility when the PNG is scaled down for mobile
-  - The fig[1,2] legend column shifts the polar circle noticeably left of canvas center,
-    leaving unused whitespace to the right of the legend. Consider a narrower legend
-    column (colsize!) or repositioning the legend (e.g. below the plot) so the circle
-    sits centered in the square canvas
+  - 'Legend layout doesn''t match the code''s own intent and pushes the plot off-center:
+    the code comment says the horizontal Legend at fig[2,1] with rowsize!(fig.layout,
+    2, Fixed(70)) keeps the circle horizontally centered in the square canvas, but
+    in BOTH renders the legend actually appears as a vertical column to the right
+    of the circle (roughly level with the Oct spoke), not as a slim row below it.
+    Measured on plot-light.png: the polar circle''s true center sits at x=927px while
+    the 2400px-wide canvas center is x=1200px — an ~11% leftward shift — leaving a
+    large empty gap in the bottom-right quadrant. Fix: the Legend is not landing in
+    the intended GridLayout row/column (PolarAxis likely occupies more of the layout
+    than assumed, or the Legend needs explicit tellwidth=false / a corrected row index)
+    — reposition it so it renders as a horizontal strip below the centered circle,
+    matching the code''s own stated design intent.'
+  - 'The ''peak wet season'' text!() annotation near the Tropical series'' July peak
+    does not render at all in either theme — confirmed by cropping multiple zoom levels
+    around the Jul spoke in both plot-light.png and plot-dark.png; no such text is
+    visible anywhere on either canvas. This silently drops the implementation''s intended
+    data-storytelling focal point. Fix: check whether text! on a PolarAxis needs the
+    position/offset expressed differently (e.g. offset units, alignment, or z-order
+    relative to the axis clip region) so the label actually appears near (peak_theta,
+    peak_r); if it truly cannot be made to render, remove the dead call rather than
+    leaving broken code.'
+  - 'The band! fill under the Tropical series (alpha = 0.12) is essentially imperceptible
+    against the #FAF8F1/#1A1A17 backgrounds in both renders — verified by close crop
+    near the plot center, no discernible tint. If it''s meant to visually reinforce
+    the peak/focal point, raise the alpha or otherwise verify it''s actually contributing
+    to the design.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "polar-line · julia · makie · anyplot.ai" centered above the plot in dark ink; twelve theta ticks labeled Jan-Dec around the ring; radial grid rings labeled "0 mm" through "250 mm" on a spoke offset ~15° from the January axis; legend (Tropical/Temperate/Arid) top-right on a card-colored background with no visible frame. All chrome text is clearly readable dark-on-light.
-      Data: Three closed line loops - Tropical (brand green #009E73, largest/most variable, peaking June-September), Temperate (lavender #C475FD, peaking December-January), Arid (blue #4467A3, small near-center loop, low amplitude). First series confirmed #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1-consistent) canvas, uniform, no dark patches.
+      Chrome: Title "polar-line · julia · makie · anyplot.ai" is dark ink, clearly readable, positioned above the circle. Month labels (Jan-Dec) ring the outside of the circle in dark-gray, all fully visible with comfortable margin (checked "Apr" close-up: no clipping). Radial "mm" tick labels (0/50/100/150/200/250 mm) run along an offset spoke near the top, legible and non-overlapping with the January gridline. Grid lines (concentric circles + radial spokes) are subtle light gray, visible but not dominant. The legend ("Tropical"/"Temperate"/"Arid" with color swatches) is fully legible but is positioned as a VERTICAL column to the right of the circle at roughly the Oct-spoke height, not as a horizontal row below the plot as the code intends — this pushes the circle itself off-center (measured circle center x=927px vs. canvas center x=1200px on the 2400px-wide canvas).
+      Data: Three closed line loops — Tropical (green #009E73, outermost/most variable, with a very faint, barely-visible fill underneath), Temperate (lavender #C475FD, mid-range), Arid (blue #4467A3, small loop near center). All three are clearly distinguishable from each other and from the background. Markers are present at each of the 12 monthly vertices. No "peak wet season" annotation text is visible anywhere near the Tropical peak (checked around the Jul spoke at multiple zoom levels) despite it being present in the code.
+      Legibility verdict: PASS (all present text is readable; the missing annotation is a rendering bug, not a legibility failure, and is called out separately as a weakness)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same layout as light render with all chrome flipped to light-on-dark - title, month labels, radial "mm" labels, and legend text all render in light gray/white tones against the dark surface; gridlines and spine are soft light gray at low opacity; legend swatch background flips to the dark elevated tone. No dark-on-dark failures found - every label remains clearly legible.
-      Data: Colors identical to light render - brand green Tropical, lavender Temperate, blue Arid - confirming the categorical palette holds constant across themes.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17-consistent) canvas, uniform.
+      Chrome: Title and axis text render in light ink/off-white, clearly readable against the dark background — no dark-on-dark issues found. Month labels and "mm" radial tick labels are all legible light-gray/white. Grid lines are subtle light-gray, visible without dominating. Spine (outer circle boundary) is a soft light-gray. Same off-center legend/circle issue as the light render — legend again sits as a vertical column to the right rather than a horizontal row below.
+      Data: Same three series, pixel-identical colors to the light render (green/lavender/blue), clearly visible against the dark surface. Same missing "peak wet season" annotation — confirmed absent via crop around the Jul peak.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; text-vs-background contrast is good in both themes)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; fully readable in both themes with
-          no overflow
+        comment: All present text readable in both themes; missing annotation is absence,
+          not illegibility
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: rtickangle offset keeps radial labels clear of January spoke and
-          theta labels
+        comment: No collisions between labels, ticks, or data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines prominent and well-separated, but no per-point markers for
-          the 12 monthly measurements
+        comment: Markers and lines clearly visible; band fill under Tropical is nearly
+          imperceptible (alpha 0.12)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good luminance separation between series, no red-green-only signal
+        comment: Distinct hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 1
         max: 4
-        passed: true
-        comment: Legend column shifts the polar circle left of canvas center, leaving
-          asymmetric whitespace
+        passed: false
+        comment: Legend renders as a vertical side column instead of the coded horizontal
+          row below the plot, pushing the circle ~11% off-center on the square canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Radial ticks carry 'mm' units, theta ticks are descriptive month
-          names
+        comment: Radial ticks carry mm units, theta ticks show month names, title
+          correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, theme-correct backgrounds and chrome in
-          both renders
+        comment: 'First series is #009E73, canonical palette order, correct theme
+          backgrounds in both renders'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured PolarAxis default with some tasteful touches, not
-          a distinctive design
+        passed: true
+        comment: Nice touches (unit-formatted rticks, offset rtickangle, subtle band)
+          undermined by the layout bug
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Subtle grid and frameless legend, but close to out-of-the-box defaults
-          otherwise
-      - id: DE-03
-        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: No deliberate visual hierarchy or emphasis beyond raw overlapping
-          loops
+        comment: Off-center circle and mispositioned legend leave a large unused gap
+          in the canvas
+      - id: DE-03
+        name: Data Storytelling
+        score: 1
+        max: 6
+        passed: false
+        comment: The intended focal-point annotation ('peak wet season') never renders,
+          so the storytelling device is entirely absent
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +155,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PolarAxis + lines! polar-line construction
+        comment: Correct polar line plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Theta-ordered connected closed loops, multiple colored series, concentric
-          + radial grid
+        comment: Theta/radius mapping, multiple series, lines connected in theta order,
+          concentric+radial grid all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: theta = month angle, radius = rainfall magnitude, full 12-month range
-          visible
+        comment: Correct axis mapping, radial ticks cover full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match series
+        comment: Title format correct; legend labels match series (position issue
+          scored under VQ-05/DE-02)
     data_quality:
       score: 15
       max: 15
@@ -168,22 +185,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three climate zones with distinct amplitude/phase show full seasonal-cycle
-          behavior
+        comment: Full monthly theta sweep, three series with distinct radius magnitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible climate/rainfall scenario
+        comment: Plausible, neutral rainfall-by-climate-zone scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic monthly rainfall ranges for the named climate types
+        comment: mm scale and 0-250 range sensible for rainfall
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -191,7 +207,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports -> data -> plot -> save, no functions/classes
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,43 +222,46 @@ review:
         comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriately concise, no fake functionality
+        passed: false
+        comment: text! annotation call is dead code — never produces visible output
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current save(...) API
+        comment: Saves plot-$(THEME).png with px_per_unit = 2, lands on 2400x2400
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of PolarAxis keyword API (theta_0, direction, rtickformat
-          closure, rtickangle)
+        comment: Good PolarAxis-specific configuration (theta_0, direction, rtickformat,
+          rtickangle)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Several Makie-specific PolarAxis customizations, but overall concept
-          achievable in other libraries' polar APIs
+        comment: band! fill and text! annotation are distinctive attempts but both
+          under-deliver (invisible fill, non-rendering text)
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - manual-ticks
+  - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - publication-ready
