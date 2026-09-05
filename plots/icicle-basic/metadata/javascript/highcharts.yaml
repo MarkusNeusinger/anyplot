@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: icicle-basic
+created: '2026-09-05T05:29:29Z'
+updated: '2026-09-05T05:44:00Z'
+generated_by: claude-sonnet
+workflow_run: 33946991297
+issue: 2497
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/icicle-basic/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'The root-row proportion issue flagged in attempt 1 is fixed: ROW_WEIGHTS gives
+    the root ~0.55x a normal row and redistributes the freed height to the deeper,
+    information-dense rows -- no more large near-empty band at the top.'
+  - New hover interaction (mouseenter/mouseleave on each tile's rect) brightens the
+    hovered tile and thickens/recolors its ancestry chain up to the root, directly
+    addressing the 'generic Library Mastery' weakness from the prior review.
+  - Depth-graded stroke weight (heaviest at root, lightest at leaves) plus a subtle
+    corner radius adds real visual refinement over the previous uniform 2px stroke.
+  - Shrink-to-fit label floor raised from 10px to 11px, improving thumbnail-scale
+    legibility for the smallest tile labels.
+  - Palette, theme-adaptive chrome, spec compliance, and data quality remain excellent
+    and unchanged from the strong prior baseline.
+  weaknesses:
+  - Design Excellence is improved but still reads as a fundamentally flat colored-block
+    layout -- a static focal point (e.g. one branch visually emphasized, or a subtler
+    tint gradient) would help storytelling (DE-03) beyond the current area/hover encoding.
+  - The smallest labels ('api', 'unit') are still close to the shrink-to-fit floor
+    (now 11px) -- if a future revision touches this area, consider widening tile padding
+    slightly further or dropping to abbreviated labels rather than lowering the floor
+    again.
+  - LM-01 remains capped by the missing core-bundle module; this is a known, well-documented
+    constraint (not a code quality issue) rather than something to fix further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "Repository File Sizes · icicle-basic · javascript · highcharts · anyplot.ai" fully visible with margin above and below; gray subtitle beneath it explaining the tile-width/row-depth encoding. No axes, no legend (by design for an icicle chart).
+      Data: Root "repo" tile is now a much smaller elevated band (~0.55x a normal row) with dark text (2,935 KB) instead of the prior full-row waste. Below it, 5 top-level branches use the Imprint canonical palette in order -- src=brand green #009E73, node_modules=lavender, docs=blue, tests=ochre, assets=matte red -- each with a rounded-corner stroke that is heavier near the root and thinner toward the leaves. Deeper rows (components/utils/api/styles under src; react/webpack/lodash under node_modules; leaf files at the bottom) inherit their branch hue, progressively tinted toward the page background with depth. Labels are bold and readable where the tile is wide/tall enough; the narrowest leaf tiles correctly omit labels rather than overflow.
+      Legibility verdict: PASS -- all title, subtitle, and tile-label text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and subtitle render in light text (white/light-gray) against the dark background, fully legible. Root "repo" tile becomes a dark elevated box with a light-gray border and white text.
+      Data: All five branch hues (green/lavender/blue/ochre/matte red) and every descendant tint are pixel-identical to the light render -- confirming only chrome (backgrounds, borders, title/subtitle color) flips between themes, exactly as required.
+      Legibility verdict: PASS -- tile labels use per-tile luma-based text color (dark text on the light root tile, light text on the colored branch tiles) in both themes; no dark-on-dark or light-on-light failures observed on either render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable at full size in both themes; shrink-to-fit floor
+          raised from 10px to 11px, improving thumbnail-scale readability for the
+          smallest labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; labels stay within their tile bounds.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 nodes at moderate density, all tiles clearly separated by gap
+          + stroke.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint hues distinguishable; per-tile luma-based label color keeps
+          contrast correct on every fill.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Root row now ~0.55x a normal row instead of a full row, fixing the
+          prior wasted-space issue; no overflow/clipping at any edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for an icicle chart; title + subtitle are descriptive
+          with units (KB).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for the 5 top-level branches,
+          identical data hues across themes, correct theme backgrounds.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Depth-graded stroke weight, rounded tile corners, and ancestry-highlight
+          hover interaction add real polish beyond a flat wireframe, but the overall
+          look is still a straightforward colored-block layout.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Root-row proportion fix and varied stroke weight address the prior
+          main complaint; grid-free, legend-free chrome stays clean.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Hierarchy and category are conveyed via rows/color/hover, but there's
+          still no single emphasized static focal point beyond the inherent area encoding.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct icicle layout: adjacent layered rectangles by depth, not
+          nested (unlike a treemap).'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: name/parent/value hierarchy, top-to-bottom orientation, color-by-branch,
+          labels hidden on small nodes -- all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value correctly rolled up bottom-up and mapped to tile width; children's
+          total width matches parent.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · icicle-basic · javascript ·
+          highcharts · anyplot.ai'; no formal legend needed since tiles self-label.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 hierarchy levels shown; native <title> tooltip adds full ancestry
+          path + % of repo.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Repository file-size breakdown is realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: KB values (25 KB - 890 KB) are sensible for source files vs. node_modules
+          packages.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions (mix, luma, fitFontSize, rollUp, partition,
+          ancestorsOf) -- justified by the recursive tree/partition algorithm, not
+          a flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a hand-rolled layout; no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses Highcharts.chart('container', ...) with no explicit width/height,
+          animation disabled.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Necessary manual SVG drawing given the missing core-bundle treemap/icicle
+          module; correctly uses chart.renderer / theme tokens, but isn't the library's
+          high-level series API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: 'New this attempt: hovering a tile brightens it and its full ancestry
+          chain via native mouseenter/mouseleave -- a genuinely Highcharts-flavored
+          touch, raising it above the plain native <title> tooltip from attempt 1.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
