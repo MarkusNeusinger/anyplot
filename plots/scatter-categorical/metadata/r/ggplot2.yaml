@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: scatter-categorical
 created: '2026-09-05T13:28:34Z'
-updated: '2026-09-05T13:32:54Z'
+updated: '2026-09-05T13:42:15Z'
 generated_by: claude-sonnet
 workflow_run: 33968886404
 issue: 2597
@@ -12,99 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-categorical/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 82
 review:
   strengths:
-  - Uses the real palmerpenguins dataset — a well-known, neutral, scientifically realistic
-    scatter-categorical example that naturally shows the three-cluster feature coverage
-    the spec asks for
-  - 'Correct Imprint palette in canonical order (#009E73 / #C475FD / #4467A3), identical
-    across both themes'
-  - All theme chrome (background, title, axis, tick, legend colors) correctly threads
-    ANYPLOT_THEME with no dark-on-dark or light-on-light failures
-  - Explicit font sizes throughout (axis.title, axis.text, plot.title, legend.text/title),
-    and axis.ticks = element_blank() keeps tick labels while dropping tick marks per
-    the style guide
-  - Title format exactly matches the mandated {spec-id} · {language} · {library} ·
-    anyplot.ai pattern; legend labels (Adelie, Chinstrap, Gentoo) correctly match
-    the data
+  - 'Correct Imprint palette usage: canonical order with brand green (#009E73) as
+    the first series, identical hues across light and dark renders — only chrome changed.'
+  - 'Theme-adaptive chrome is fully threaded through: title, axis text, tick labels,
+    grid, and legend all use the INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens, so both
+    renders are cleanly readable with no dark-on-dark or light-on-light failures.'
+  - White-stroke markers (shape=21, color="white", stroke=0.3) give clean point definition
+    against the busy three-cluster scatter, per the style guide's overlapping-points
+    recommendation.
+  - Realistic, appropriately scaled real-world dataset (palmerpenguins bill/flipper
+    measurements) with a clear three-species structure that suits a categorical-scatter
+    spec.
+  - 'KISS R script: no functions, only the imports actually used (ggplot2, dplyr,
+    ragg, palmerpenguins), set.seed(42) for reproducibility, correct ggsave/agg_png
+    output contract.'
   weaknesses:
-  - Grid lines (panel.grid.major) use full INK color in both themes, making them read
-    as bold/high-contrast rather than the 'very subtle' 15-25%-opacity grid the style
-    guide calls for — since ggplot2 doesn't expose grid alpha, blend INK toward the
-    background (e.g. mix with PAGE_BG) or use INK_SOFT instead of full INK to lower
-    the contrast
-  - No white edge stroke on geom_point() markers (shape = 21, color = 'white', fill
-    = ...) despite meaningful overlap in the dense Adelie cluster — the style guide
-    recommends this for scatter marker definition, especially with overlapping points
-  - Design is essentially theme_minimal() plus a palette swap — no distinctive ggplot2
-    feature (e.g. stat_ellipse() per group, geom_density_2d() contours, or coord_fixed())
-    that would showcase the library's strengths or add data storytelling beyond raw
-    color-by-category
+  - The stat_ellipse() confidence-ellipse layer (linewidth=0.6, alpha=0.6, level=0.68)
+    produces no visible mark in either render — checked multiple low-density regions
+    at the periphery of each species cluster (e.g. around bill=25-38mm/flipper=172-188mm
+    for Adelie, and the sparse top/right margins of the Gentoo cluster) on both plot-light.png
+    and plot-dark.png, and there is no elliptical outline anywhere, only point markers.
+    Either the layer isn't rendering as intended or its line is too faint/thin to
+    read at this resolution — the code carries the complexity of a design feature
+    that currently delivers zero visual value. Either make the ellipse actually visible
+    (thicker linewidth, e.g. 1.0-1.2, and/or a fixed ink-toned stroke instead of the
+    species color so it reads distinctly from the point fill) or remove the layer.
+  - 'geom_point alpha=0.85 is too high for this density: each species has roughly
+    130-150 overlapping points, and the Adelie cluster in particular renders as a
+    dense, hard-to-separate blob. Lower alpha to ~0.6-0.65 (per the data-density heuristic
+    in the style guide) to improve within-cluster point separation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "scatter-categorical · r · ggplot2 · anyplot.ai" in dark ink top-left; "Bill Length (mm)" / "Flipper Length (mm)" axis titles in dark ink; tick labels in softer gray. All clearly readable. Grid lines present on both axes but rendered in near-full dark ink rather than a faint tint — bolder than the "very subtle" style-guide target, though not a legibility failure.
-      Data: Three clusters colored by species — Adelie in brand green (#009E73), Chinstrap in lavender (#C475FD), Gentoo in blue (#4467A3) — clearly distinguishable, first series correctly uses the brand green.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with the required #FAF8F1 surface — not pure white, not dark.
+      Chrome: Title "scatter-categorical · r · ggplot2 · anyplot.ai" in dark ink top-left, comfortably within ~50% of plot width. Axis titles "Bill Length (mm)" / "Flipper Length (mm)" in dark ink, tick labels in a softer gray-ink, all clearly legible. Grid is a faint horizontal/vertical line grid, subtle and non-competing. Legend "Species" sits at the right with three swatches (Adelie/Chinstrap/Gentoo) on a slightly lighter elevated panel, text fully readable.
+      Data: Three overlapping point clouds by species — Adelie in brand green (#009E73, bottom-left), Chinstrap in lavender (#C475FD, right-of-center), Gentoo in blue (#4467A3, top). Each marker has a thin white stroke. Points are semi-transparent (alpha 0.85) but still show heavy overlap within the dense Adelie and Gentoo cores. No visible trace of the stat_ellipse layer that the code adds (checked multiple low-density areas at cluster edges — no elliptical outline present in either theme).
+      Legibility verdict: PASS (all title/axis/tick/legend text is clearly readable against the light background; no overlap or clipping observed).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels flip to light/off-white tones and remain fully readable. No dark-on-dark failures. Legend card uses the elevated dark surface (#242420-consistent) with light text. Grid lines flip to a light tint but are similarly bold/high-contrast as in the light render (same underlying issue, not a legibility failure).
-      Data: Colors are pixel-identical to the light render (green/lavender/blue) — only chrome flipped, as required.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with the required #1A1A17 surface — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark surface — fully legible, no dark-on-dark failures anywhere. Grid lines are faint light strokes, visible but subtle. Legend panel uses the darker elevated background (#242420) with light text, readable.
+      Data: Identical hues to the light render — brand green, lavender, blue — confirming the Imprint palette data colors are held constant across themes; only chrome flipped. Same overlap pattern as light render, and again no visible ellipse outline in either theme.
+      Legibility verdict: PASS (all chrome elements read cleanly on the dark surface; brand green remains vivid; no light-on-light or dark-on-dark issues).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; well-proportioned title (~54% of
-          plot width), readable in both themes
+        comment: All text readable in both themes; title fits within ~50% of plot
+          width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap with data or other text
+        comment: No text/legend/data collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Visible and reasonably sized for ~340 points, but no white edge stroke
-          to define overlapping markers in the dense Adelie cluster
+        comment: alpha=0.85 is a bit high for ~150 overlapping points per species;
+          Adelie cluster reads as a dense blob.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, well separated, no red-green sole signal
+        comment: Imprint palette is CVD-safe; no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); balanced margins, legend near plot
+        comment: Canvas dimension gate passed; no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (mm)
+        comment: Descriptive axis labels with units (mm).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (#009E73/#C475FD/#4467A3), identical across
-          themes, theme-correct chrome in both renders
+        comment: 'First series is #009E73, canonical order, correct theme backgrounds
+          in both renders.'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -112,22 +115,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured theme_minimal default plus palette swap; no distinctive
-          design touch
+        comment: White-edge markers are a nice touch, but the intended stat_ellipse
+          sophistication doesn't render, leaving mostly default-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Tick marks removed (good), but grid uses full INK color instead of
-          a faint tint, reading as bold/high-contrast; no marker edge stroke
+        passed: true
+        comment: Spines removed via theme_minimal, subtle grid, reasonable whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clusters are visible from the data itself but no added visual hierarchy
-          or emphasis
+        comment: No effective visual hierarchy beyond color-coding — the ellipse that
+          would have shown cluster confidence bounds is invisible.
     spec_compliance:
       score: 15
       max: 15
@@ -137,50 +139,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct categorical scatter plot
+        comment: Correct categorical scatter plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: X/Y continuous vars, categorical color, legend all present
+        comment: Distinct per-category colors, legend present, alpha transparency
+          for overlap.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bill length on X, flipper length on Y, species as color — correct
+        comment: Bill length (x) vs flipper length (y), species as category — correct
+          and complete.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend labels correct
+        comment: Title matches the mandated format; legend labels match species names.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Three species clusters with distinct correlation patterns and overlap
-          regions
+        comment: Covers the core categorical-scatter features; the ellipse addition
+          would have raised this further if visible.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral scientific dataset (palmerpenguins)
+        comment: Real, neutral penguin biometric dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bill/flipper length ranges match real penguin biology
+        comment: Bill length 30-60mm, flipper length 170-230mm — realistic ranges.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -188,33 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: No functions/classes, linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, dplyr, ragg, palmerpenguins all used
+        comment: All four imported packages are used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake functionality
+        passed: false
+        comment: stat_ellipse layer adds complexity with no visible render payoff.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png, no deprecated calls
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current ggplot2 API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -222,20 +226,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Clean scale_color_manual + theme() usage, textbook idiom
+        comment: Idiomatic aes mapping, scale_manual, theme system, shape=21 fill/color
+          split.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic categorical scatter, no ggplot2-distinctive feature used
-  verdict: REJECTED
+        comment: stat_ellipse was a good attempt at a distinctive ggplot2 feature
+          but isn't visibly delivering.
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - dplyr
-  techniques: []
+  dependencies: []
+  techniques:
+  - confidence-ellipse
   patterns:
   - dataset-loading
   dataprep: []
   styling:
+  - edge-highlighting
   - alpha-blending
