@@ -45,6 +45,14 @@ for (let i = 0; i < days; i++) {
 }
 const band = upper.map((u, i) => u - lower[i]);
 
+// Zoom the y-axis to the data range (rather than starting at 0) so the trend
+// and the widening confidence band aren't diluted by empty vertical space.
+const yMin = Math.floor((Math.min(...lower) - 100) / 200) * 200;
+
+// Boundary between the observed window (days 0-29) and the forecast horizon
+// (days 30-59), marked on the chart so viewers can see where the forecast begins.
+const forecastStart = 30;
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -88,6 +96,7 @@ chart.setOption({
   yAxis: {
     type: "value",
     name: "Daily Active Users",
+    min: yMin,
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { show: false },
@@ -122,6 +131,13 @@ chart.setOption({
       lineStyle: { width: 3.5, color: t.palette[0] },
       itemStyle: { color: t.palette[0] },
       z: 3,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { type: "dashed", color: t.inkSoft, width: 1.5 },
+        label: { formatter: "Forecast begins", color: t.inkSoft, fontSize: 13, position: "insideEndTop" },
+        data: [{ xAxis: forecastStart }],
+      },
     },
   ],
 });
