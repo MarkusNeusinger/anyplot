@@ -1,0 +1,242 @@
+library: echarts
+language: javascript
+specification_id: lift-curve
+created: '2026-09-05T06:23:57Z'
+updated: '2026-09-05T06:38:39Z'
+generated_by: claude-sonnet
+workflow_run: 33949414500
+issue: 2379
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lift-curve/javascript/echarts/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Cleanly addresses every prior weakness: markLine replaces the second ''Random
+    selection'' series (more idiomatic, no legend boilerplate), a markPoint callout
+    labels the headline 4.3x lift at the first decile, and the fraud/non-fraud score
+    overlap was widened so the curve shape reads as a realistic, imperfect classifier
+    instead of near-perfect separation'
+  - Gradient areaStyle fill under the curve adds real visual hierarchy and reinforces
+    the 'diminishing returns' story as targeted population grows
+  - 'Correctly implements every spec requirement: y=1 no-lift reference line (via
+    markLine), decile markers, cumulative-lift curve decaying toward 1'
+  - Clean, theme-adaptive chrome — both renders pass the light/dark readability checklist
+    with no overlap or clipping
+  - Distinctive per-point symbolSize function selectively shows markers only at deciles,
+    keeping the 20-point series uncluttered
+  - Deterministic, self-contained data generation via a fixed-seed LCG
+  weaknesses:
+  - Axis-name/tick hierarchy could use slightly more contrast in weight (very minor,
+    carried over from attempt 1)
+  - The curve/area fill starts at the first data point (5% targeted) rather than at
+    x=0, leaving a small empty gap at the left edge of the plot area
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Fraud Detection Model · lift-curve · javascript · echarts · anyplot.ai" centered at top in dark ink; legend below shows "Model" (green line + circle marker); axis names "Population Targeted (%)" and "Cumulative Lift" and tick labels all render in dark/soft-dark ink, clearly legible against the light background.
+      Data: Green line/markers/area fill use #009E73 (brand green, first Imprint series color). A dashed grey reference line at y=1 is labeled "Random selection (no lift)". A pin-shaped callout labeled "4.3x" marks the lift value at the first (10%) decile. A soft gradient area fill under the curve fades from green (near the steep left side) to transparent (as the curve approaches 1 on the right).
+      Legibility verdict: PASS — all text is clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout; title, legend, and axis text now render in light ink/soft-grey tones, clearly legible against the dark background. No dark-on-dark failures observed anywhere (title, ticks, axis names, legend, markLine label, and markPoint callout text are all visible).
+      Data: Green line/markers/area fill are pixel-identical in hue to the light render (#009E73) — only chrome (background, text, grid, axis lines) flipped, as required.
+      Legibility verdict: PASS — all text is clearly readable, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and legible in both themes; axis-name/tick
+          hierarchy could use slightly more weight contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axes, markLine label, markPoint
+          callout, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Non-decile markers hidden (symbolSize=0) to avoid clutter across
+          20 points; decile markers (size 12) clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single accent line vs. grey dashed reference, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas, balanced margins, no overflow/clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (%)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme-adaptive backgrounds in both
+          renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Gradient area fill + pin callout add real polish over the attempt-1
+          default line-chart look
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace, gradient fill;
+          no spines/box visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: markPoint callout creates a clear focal point (4.3x at top decile);
+          area fill visually reinforces the diminishing-returns narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lift-curve line/area chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: y=1 reference line (markLine), decile markers, cumulative lift over
+          targeted %, curve decays toward 1
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = population targeted %, Y = cumulative lift, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend label
+          matches series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full curve, decile emphasis, headline callout, and baseline reference
+          all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fraud-detection scenario is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Widened score overlap now yields a realistic ~4.3x top-decile lift
+          instead of the near-theoretical-maximum ~15x from attempt 1
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat, linear script; only helper is the RNG
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports/deps
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no explicit size/DPR'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: markLine now used for the y=1 reference instead of a second series
+          — addresses prior feedback, fully idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Combines markLine, markPoint callout, gradient areaStyle, and a selective
+          per-point symbolSize function — genuinely distinctive ECharts usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - gradient-fill
+  - alpha-blending
