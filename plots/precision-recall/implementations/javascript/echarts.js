@@ -61,10 +61,6 @@ for (let i = 1; i < points.length; i++) {
 }
 
 const curveData = points.map((p) => [p.recall, p.precision]);
-const baselineData = [
-  [0, baselinePrecision],
-  [1, baselinePrecision],
-];
 
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -82,7 +78,7 @@ chart.setOption({
   },
   grid: { left: 90, right: 60, top: 100, bottom: 80 },
   legend: {
-    data: [`Fraud classifier (AP = ${averagePrecision.toFixed(2)})`, "Random baseline"],
+    data: [`Fraud classifier (AP = ${averagePrecision.toFixed(2)})`],
     top: 60,
     textStyle: { color: t.ink, fontSize: 14 },
   },
@@ -120,15 +116,28 @@ chart.setOption({
       itemStyle: { color: t.palette[0] },
       lineStyle: { width: 3, color: t.palette[0] },
       areaStyle: { color: t.palette[0], opacity: 0.12 },
-    },
-    {
-      // Imprint "neutral" semantic anchor (baseline/reference line) — theme-adaptive ink.
-      name: "Random baseline",
-      type: "line",
-      data: baselineData,
-      showSymbol: false,
-      itemStyle: { color: t.ink },
-      lineStyle: { width: 2, type: "dashed", color: t.ink },
+      // Shade the region up to the AP level so the summary metric reads
+      // directly off the chart, not just from the legend.
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.ink, opacity: 0.05 },
+        label: { position: "insideTopLeft", color: t.inkSoft, fontSize: 13 },
+        data: [
+          [
+            { xAxis: 0, yAxis: 0, label: { formatter: `AP = ${averagePrecision.toFixed(2)}` } },
+            { xAxis: 1, yAxis: averagePrecision },
+          ],
+        ],
+      },
+      // Imprint "neutral" semantic anchor (random-classifier reference) —
+      // theme-adaptive ink, idiomatic markLine instead of a second series.
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.ink, type: "dashed", width: 2 },
+        label: { formatter: "Random baseline", color: t.inkSoft, fontSize: 12, position: "insideEndTop" },
+        data: [{ yAxis: baselinePrecision }],
+      },
     },
   ],
 });
