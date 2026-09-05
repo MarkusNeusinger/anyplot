@@ -15,8 +15,9 @@ const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Imprint palette — position 1 (brand green) always the first series
-const MACD_COLOR   = colorant"#009E73"  # Imprint position 1
+# Imprint palette — MACD line uses blue so it never blends into the green
+# gain bars; histogram keeps the sanctioned green/red finance semantic.
+const MACD_COLOR   = colorant"#4467A3"  # Imprint position 3 — blue
 const SIGNAL_COLOR = colorant"#C475FD"  # Imprint position 2 — lavender
 const GAIN_COLOR   = colorant"#009E73"  # semantic: bullish histogram bars (finance profit/up → green)
 const LOSS_COLOR   = colorant"#AE3030"  # semantic: bearish histogram bars (finance loss/down → red)
@@ -45,6 +46,15 @@ macd_histogram = macd_line .- signal_line
 
 trading_day = 1:n_days
 bar_colors = [value >= 0 ? GAIN_COLOR : LOSS_COLOR for value in macd_histogram]
+
+# Crossover points (MACD line crosses the signal line) reinforce the
+# buy/sell-signal narrative called out in the spec's Applications section.
+crossover_idx = [i for i in 2:n_days if sign(macd_histogram[i - 1]) != sign(macd_histogram[i])]
+crossover_x = trading_day[crossover_idx]
+crossover_y = macd_line[crossover_idx]
+crossover_bullish = [macd_histogram[i] >= 0 for i in crossover_idx]
+crossover_colors = [bullish ? GAIN_COLOR : LOSS_COLOR for bullish in crossover_bullish]
+crossover_markers = [bullish ? :utriangle : :dtriangle for bullish in crossover_bullish]
 
 # Plot
 fig = Figure(
@@ -81,6 +91,11 @@ barplot!(ax, trading_day, macd_histogram; color = bar_colors, width = 0.8, strok
 hlines!(ax, [0]; color = INK_SOFT, linewidth = 1.5, linestyle = :dash)
 lines!(ax, trading_day, macd_line; color = MACD_COLOR, linewidth = 3, label = "MACD (12, 26)")
 lines!(ax, trading_day, signal_line; color = SIGNAL_COLOR, linewidth = 3, label = "Signal (9)")
+scatter!(
+    ax, crossover_x, crossover_y;
+    color = crossover_colors, marker = crossover_markers,
+    markersize = 16, strokewidth = 1.5, strokecolor = PAGE_BG,
+)
 
 axislegend(ax; position = :lt, framevisible = false, labelcolor = INK, labelsize = 12)
 
