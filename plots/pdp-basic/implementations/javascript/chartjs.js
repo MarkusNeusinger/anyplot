@@ -57,6 +57,40 @@ document.getElementById("container").appendChild(canvas);
 // --- Chart --------------------------------------------------------------------
 const title = "House Price vs. Square Footage · pdp-basic · javascript · chartjs · anyplot.ai";
 
+// Custom plugin: callout the zero-crossing (median sq ft, where partial
+// dependence is centered at $0) so the "centered" framing is explicit rather
+// than only inferable from the curve shape.
+const zeroCrossingCallout = {
+  id: "zeroCrossingCallout",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const px = scales.x.getPixelForValue(SQFT_MEDIAN);
+    const py = scales.y.getPixelForValue(0);
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(px, chartArea.top);
+    ctx.lineTo(px, chartArea.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI * 2);
+    ctx.fillStyle = t.palette[0];
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = t.pageBg;
+    ctx.stroke();
+    ctx.fillStyle = t.ink;
+    ctx.font = "600 15px sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`Median: ${SQFT_MEDIAN.toLocaleString()} sq ft → $0`, px + 12, py - 10);
+    ctx.restore();
+  },
+};
+
 new Chart(canvas, {
   type: "line",
   data: {
@@ -106,13 +140,14 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 10, right: 30, bottom: 10, left: 10 } },
+    layout: { padding: { top: 14, right: 30, bottom: 14, left: 10 } },
     plugins: {
-      title: { display: true, text: title, color: t.ink, font: { size: 19, weight: "500" } },
+      title: { display: true, text: title, color: t.ink, font: { size: 21, weight: "700" } },
       legend: {
         labels: {
           color: t.inkSoft,
           font: { size: 14 },
+          padding: 20,
           filter: (item) => item.text === "Partial dependence" || item.text === "95% confidence band",
         },
       },
@@ -124,7 +159,7 @@ new Chart(canvas, {
         max: SQFT_MAX,
         title: { display: true, text: "Living Area (sq ft)", color: t.ink, font: { size: 18 } },
         ticks: { color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { display: false },
       },
       y: {
         title: { display: true, text: "Partial Dependence ($k, centered)", color: t.ink, font: { size: 18 } },
@@ -140,4 +175,5 @@ new Chart(canvas, {
       },
     },
   },
+  plugins: [zeroCrossingCallout],
 });
