@@ -88,16 +88,16 @@ for (i, sex) in enumerate(SEXES)
         ax = Axis(
             fig[row, j];
             backgroundcolor  = PAGE_BG,
-            xticklabelsize   = 12,
-            yticklabelsize   = 12,
+            xticklabelsize   = 13,
+            yticklabelsize   = 13,
             xticklabelcolor  = INK_SOFT,
             yticklabelcolor  = INK_SOFT,
             xtickcolor       = INK_SOFT,
             ytickcolor       = INK_SOFT,
             leftspinecolor   = INK_SOFT,
             bottomspinecolor = INK_SOFT,
-            topspinecolor    = INK_SOFT,
-            rightspinecolor  = INK_SOFT,
+            topspinevisible  = false,
+            rightspinevisible = false,
             xgridcolor       = RGBAf(INK.r, INK.g, INK.b, 0.12),
             ygridcolor       = RGBAf(INK.r, INK.g, INK.b, 0.12),
             xminorgridvisible = false,
@@ -105,7 +105,12 @@ for (i, sex) in enumerate(SEXES)
         )
         scatter!(
             ax, bill_length[(species, sex)], bill_depth[(species, sex)];
-            color = BRAND, markersize = 8, alpha = 0.6, strokewidth = 0,
+            color = BRAND, markersize = 10, alpha = 0.6, strokewidth = 0,
+        )
+        text!(
+            ax, 0.96, 0.96;
+            text = "n=$(N_PER_FACET)", space = :relative,
+            align = (:right, :top), fontsize = 11, color = INK_SOFT,
         )
 
         j != 1 && hideydecorations!(ax; grid = false)
