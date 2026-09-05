@@ -1,0 +1,257 @@
+library: muix
+language: javascript
+specification_id: contour-density
+created: '2026-09-04T23:23:55Z'
+updated: '2026-09-04T23:39:35Z'
+generated_by: claude-sonnet
+workflow_run: 33928664127
+issue: 2552
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-density/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Critical VQ-02 defect from Attempt 1 (rotated "Weight (g)" y-axis title overlapping
+    the "46.5" tick label) is fully fixed in both renders — verified pixel-crop of
+    the left axis shows clean separation at every tick position.
+  - 'The "two production batches" story promised by the subtitle is now visually legible:
+    the batch means were separated further apart, so the density contours show two
+    clearly distinct, well-separated clusters instead of one merged blob.'
+  - Density legend now labels all five levels (Highest, ~65%, ~46%, ~28%, Lowest)
+    instead of only the two endpoints, removing the prior ambiguity on the middle
+    rows.
+  - 'Genuinely sophisticated composition: a real 2D KDE evaluated on a grid, contour
+    vertices extracted via a from-scratch marching-squares implementation (with saddle-case
+    resolution), drawn through MUI X''s documented useXScale/useYScale composition
+    hooks over a ScatterChart — the correct community pattern for a chart type MUI
+    X has no native primitive for.'
+  - Imprint sequential ramp (t.seq[0] green -> t.seq[1] blue) correctly applied to
+    the single-polarity continuous density data, pixel-identical between light and
+    dark renders; deterministic seeded LCG data; explicit font sizing throughout;
+    clean imports.
+  weaknesses:
+  - 'Design Excellence is solid but not top-tier: grid/legend styling reads as well-executed
+    rather than exceptional — a subtle annotation identifying the two batches (e.g.
+    small "Batch A"/"Batch B" labels near each cluster) would push Data Storytelling
+    further since the legend only encodes density, not batch identity.'
+  - The file carries a larger-than-typical amount of helper-function structure (KDE
+    grid, marching-squares extractor, color mixing) versus a flat Import -> Data ->
+    Plot script — justified here by the from-scratch contour implementation MUI X
+    community lacks natively, but still worth noting for CQ-01.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "Bearing QC: Diameter vs. Weight · contour-density · javascript · muix · anyplot.ai" (auto-scaled to ~18px given its 82-char length, comfortably fits without clipping) plus an italic dark-ink subtitle "Contours trace KDE density across two production batches (n = 1,400 parts)". X-axis "Outer Diameter (mm)" with ticks 23.5-25.0, Y-axis "Weight (g)" with ticks 43.0-51.0, both dark ink, clearly legible. Verified via pixel crop: the rotated y-axis title no longer overlaps any tick label (the Attempt 1 "46.5" collision is fixed — margin.left increased to 150 and tickFontSize widened to 46 to clear the offset). Grid lines are thin and subtle.
+      Data: Gray semi-transparent sampled scatter (n=1,400, two clusters visible) underneath five nested contour lines ramping green -> blue (outer/lowest -> inner/highest density), matching the Imprint sequential ramp (t.seq[0] -> t.seq[1]). Two distinct, well-separated density clusters are clearly visible (batch A lower-left, batch B upper-right), correctly telling the "two production batches" story from the subtitle. A "KDE density" legend at the right labels all five levels: Highest, ~65%, ~46%, ~28%, Lowest.
+      Legibility verdict: PASS — all text readable, no overlaps, no dark-on-light or light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle rendered in light ink, clearly readable against the dark background. Axis labels and tick labels in light ink, same layout as light render — the y-axis title/tick-label clearance holds identically in this theme (confirmed via pixel crop, no dark-on-dark collision). Grid lines subtle but visible.
+      Data: Data colors (green -> blue contour ramp, gray scatter dots) are pixel-identical to the light render — only the chrome (background, text, grid) flipped, exactly as required. The brand green end of the ramp is still clearly visible against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark text anywhere; all chrome elements correctly threaded through theme tokens.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title auto-scaled for the 82-char mandated
+          string, subtitle, axis labels, ticks, legend); readable in both themes,
+          no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Attempt 1's y-axis title / "46.5" tick-label collision is fixed in
+          both renders; verified via pixel crop, no overlap anywhere.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter markers (3.5px, low alpha) appropriately sized for 1,400
+          dense points; contour stroke widths scale with density level.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue gradient plus gray context dots give good luminance
+          separation; not reliant on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area occupies roughly 55-60% of the 2400x2400 canvas with balanced
+          margins; legend sits adjacent to the chart, not isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Outer Diameter (mm)" and "Weight (g)" both carry units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous density uses imprint_seq (t.seq[0]->t.seq[1], green->blue),
+          pixel-identical across themes; backgrounds are theme-correct #FAF8F1/#1A1A17.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom continuous contour color ramp and hand-built legend, clearly
+          above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, no visible spines, generous whitespace; not maximally
+          refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed since Attempt 1: batch means separated further apart, so the
+          two-cluster story is now clearly visible in the contours; no explicit batch-identity
+          labels though.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct density contour plot with KDE isolines.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple contour levels, scatter overlay for context, KDE-based density
+          all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Outer Diameter, Y=Weight, both axes show the full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match the density levels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bimodal two-cluster distribution, five density gradient levels, raw-point
+          context overlay -- comprehensive coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bearing QC diameter vs. weight is a realistic, neutral engineering/quality-control
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24mm diameter / ~45-48g weight bearing values are physically plausible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: More helper functions than a flat script, justified by the from-scratch
+          KDE + marching-squares composition.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed=42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ScatterChart, useXScale/useYScale, Box, Typography -- all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch contour implementation;
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default-exported component, skipAnimation
+          set.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the documented useXScale/useYScale composition hooks exactly
+          as MUI X intends for chart types outside the built-in set.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The scale-hook composition pattern for a custom contour mark is genuinely
+          MUI X-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
