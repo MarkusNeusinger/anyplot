@@ -90,7 +90,7 @@ const SERIES = [
     type: "scatter",
     data: omni.map(({ deg, gain }) => ({ ...toPoint(deg, gain), id: `omni-${deg}`, deg, gain })),
     color: OMNI_COLOR,
-    markerSize: 6,
+    markerSize: 8,
     label: "Omnidirectional dipole",
     valueFormatter: (v) => `${v.deg}° · gain ${v.gain.toFixed(2)}`,
   },
@@ -98,7 +98,7 @@ const SERIES = [
     type: "scatter",
     data: yagi.map(({ deg, gain }) => ({ ...toPoint(deg, gain), id: `yagi-${deg}`, deg, gain })),
     color: YAGI_COLOR,
-    markerSize: 6,
+    markerSize: 8,
     label: "Directional Yagi",
     valueFormatter: (v) => `${v.deg}° · gain ${v.gain.toFixed(2)}`,
   },
@@ -183,19 +183,49 @@ function PolarLayer() {
       />
 
       {/* Gain (radius) tick labels, offset off the top spoke, drawn last so
-          they sit above the pattern lines that cross it */}
+          they sit above the pattern lines that cross it. A page-background
+          stroke halo (instead of a flat rect) keeps them legible without the
+          utilitarian pill look. */}
       {RINGS.map((level) => {
         const ty = cy - (level / GAIN_MAX) * R;
         const label = level.toFixed(1);
         return (
-          <g key={`tick-${level}`}>
-            <rect x={cx + 6} y={ty - 11} width={40} height={22} rx={4} fill={PAGE_BG} />
-            <text x={cx + 12} y={ty} fill={INK_SOFT} fontSize={15} textAnchor="start" dominantBaseline="central">
-              {label}
-            </text>
-          </g>
+          <text
+            key={`tick-${level}`}
+            x={cx + 12}
+            y={ty}
+            fill={INK_SOFT}
+            fontSize={15}
+            textAnchor="start"
+            dominantBaseline="central"
+            stroke={PAGE_BG}
+            strokeWidth={4}
+            strokeLinejoin="round"
+            paintOrder="stroke"
+          >
+            {label}
+          </text>
         );
       })}
+
+      {/* Descriptive label for the radial (gain) axis, running alongside the
+          ring ticks so the numbers aren't bare digits */}
+      <text
+        x={cx + 58}
+        y={cy - (RINGS[2] / GAIN_MAX) * R}
+        fill={INK_SOFT}
+        fontSize={13}
+        fontWeight={600}
+        textAnchor="middle"
+        dominantBaseline="central"
+        stroke={PAGE_BG}
+        strokeWidth={4}
+        strokeLinejoin="round"
+        paintOrder="stroke"
+        transform={`rotate(-90, ${cx + 58}, ${cy - (RINGS[2] / GAIN_MAX) * R})`}
+      >
+        Normalized gain
+      </text>
     </g>
   );
 }
