@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: precision-recall
 created: '2026-09-05T12:17:38Z'
-updated: '2026-09-05T12:21:01Z'
+updated: '2026-09-05T12:30:34Z'
 generated_by: claude-sonnet
 workflow_run: 33965421447
 issue: 2274
@@ -12,50 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/precision
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/precision-recall/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Correct use of stairs!(...; step = :post) to render an accurate step-function
-    precision-recall curve, exactly matching the spec's 'stepped line style' requirement
-    rather than approximating it with lines!.
-  - Average Precision is computed correctly from the (recall, precision) step points
-    via the standard rectangle-sum formula and surfaced directly in the legend label.
-  - Baseline reference line at the true positive class ratio (fraud rate) is included,
-    dashed, and clearly labeled per spec.
-  - 'Theme-adaptive chrome is implemented correctly and consistently: PAGE_BG/INK/INK_SOFT
-    tokens flip between light and dark, while the brand-green data color (#009E73)
-    stays identical across both renders.'
-  - Canvas lands exactly on the 3200x1800 landscape target (resolution=(1600,900),
-    px_per_unit=2), and Legend(fig[1,2], ax) is the idiomatic Makie pattern for a
-    side legend panel.
-  - Realistic, neutral fraud-detection scenario (2000 transactions, 6% base rate,
-    noisy latent signal) with reproducible Random.seed!(42).
+  - Iso-F1 reference contours (0.2/0.4/0.6/0.8) add genuine domain context beyond
+    the base spec ask
+  - Best-F1 halo marker creates a clear, actionable focal point that anchors the data
+    storytelling
+  - Filled Average-Precision area under a properly stepped (stairs!, step=:post) curve
+    follows PR-curve convention accurately
+  - 'Theme-adaptive chrome correctly threaded through both renders; first series is
+    Imprint #009E73 in both'
+  - 'Idiomatic Makie usage: grid-based Figure layout, stairs!/band!/hlines! recipes,
+    auto-populated Legend(fig[1,2], ax)'
   weaknesses:
-  - 'Iso-F1 reference curves (spec Notes: ''consider showing iso-F1 curves as contour
-    lines'') are omitted entirely — optional per the spec wording, but would meaningfully
-    strengthen data storytelling and library-mastery signal; consider adding 2-3 thin
-    dashed iso-F1 contours (e.g. F1 = 0.2/0.4/0.6/0.8) as light background context.'
-  - Data storytelling is limited to the curve + baseline; no visual emphasis on the
-    operating point/threshold that maximizes F1, and no shaded area under the curve
-    to reinforce the AP metric visually.
-  - Legend column (fig[1,2]) leaves substantial empty vertical space next to a two-entry
-    legend — not a hard layout fault, but a slightly imbalanced use of canvas real
-    estate.
+  - Title occupies only ~33% of plot width at titlesize=20 — not a defect (no overflow/clipping),
+    but a slightly larger fontsize would give it a stronger typographic anchor for
+    such a short spec-id
+  - 'Library Mastery ceiling: stairs!/band!/hlines! are solid but fairly portable
+    concepts (step plot, fill-between, hline exist elsewhere) — a more Makie-distinctive
+    touch (e.g. a custom Theme object, Observables-driven element) would push LM-02
+    higher'
+  - Iso-F1 contour values (0.2/0.4/0.6/0.8) are only labeled in aggregate in the legend
+    — direct in-plot labels on the contour lines themselves would sharpen the reference
+    utility further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — clearly not pure white, not dark.
-      Chrome: Bold black title "precision-recall · julia · makie · anyplot.ai" centered at top, fully readable. "Recall" (x-axis) and "Precision" (y-axis) labels in dark ink, clearly legible. Tick labels (0.0/0.5/1.0 on both axes) in a softer gray, still easily readable. Subtle light-gray gridlines at x=0.5 and y=0.5/1.0 visible but not distracting. Top/right spines removed; left/bottom spines present in soft gray.
-      Data: Stepped precision-recall curve in brand green (#009E73), clearly visible against the light background, correctly showing the staircase shape from (0,1) down to the final low-recall/low-precision point. A dashed gray horizontal baseline line near precision≈0.06 represents the fraud rate. Legend at right lists "Precision-recall (AP = 0.65)" and "Baseline (fraud rate = 5.8%)" in dark, readable text with no frame border.
-      Legibility verdict: PASS — no light-on-light issues anywhere.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "precision-recall · julia · makie · anyplot.ai" in bold dark ink, clearly visible. "Recall"/"Precision" axis labels and 0.0/0.5/1.0 tick labels in dark/soft-dark ink, all legible. Subtle grid lines at the 0.5 marks only. Frameless legend at right listing Iso-F1, Precision-recall (AP), Baseline, and Best F1 — all readable against the cream background.
+      Data: Stepped green (#009E73) precision-recall curve with a light green fill under the curve, dotted soft-ink iso-F1 reference contours, a dashed baseline line, and a green-stroked halo marker (cutout fill) at the best-F1 operating point. First (and only) data series is confirmed Imprint brand green.
+      Legibility verdict: PASS — no light-on-light text anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and axis labels render in off-white/light ink, clearly legible against the dark background. Tick labels appear in a lighter gray tone than the light render's tick color, appropriately adapted and still easily readable. Gridlines are subtle, light, low-alpha lines that don't dominate the dark surface. Spines follow the same light-gray token as the light render's dark-ink equivalent.
-      Data: The stepped curve is rendered in the identical brand green (#009E73) as the light render — confirmed same hue/saturation, only the surrounding chrome changed. The dashed baseline line is now a light gray, clearly visible against the dark background. Legend text is white/light and fully legible, no frame border.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and lines maintain strong contrast against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels flip to light ink (white/off-white) and remain fully readable. Grid lines and legend frame remain subtle. Legend text renders in light ink against the dark surface.
+      Data: Precision-recall curve, fill, iso-F1 dotted contours, dashed baseline, and best-F1 halo marker are pixel-identical in color to the light render — only the chrome (background, text) flipped, confirming theme-adaptive tokens were threaded correctly.
+      Legibility verdict: PASS — no dark-on-dark failures; no black text on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,70 +58,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick fonts explicit (20/14/12), all readable in both themes
+        comment: All sizes explicitly set (titlesize=20, labelsize=14, ticklabelsize=12),
+          readable in both themes; title occupies only ~33% of width (below typical
+          50-70% aim) though not overflowing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data/legend collisions in either render
+        comment: No collisions between legend, data, or text
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Stepped curve at linewidth=3.0 clearly visible against both backgrounds
+        comment: 3.0-linewidth stepped curve and 16px halo marker are clearly visible
+          against both surfaces
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. gray dashed baseline gives adequate contrast, no red-green
-          sole signal
+        comment: Distinguishing via linestyle (solid/dotted/dashed) as well as color,
+          not hue-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas measured exactly 3200x1800; no overflow or crowding
+        comment: Plot area fills ~80% of the 3200x1800 canvas, legend sits close to
+          the plot, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Recall/Precision are the standard, descriptive metric names
+        comment: '''Recall''/''Precision'' are the standard, complete domain terms
+          for unitless ratio metrics'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; identical data
-          color across themes'
+        comment: 'First series is Imprint #009E73 identically in both renders; backgrounds
+          correct #FAF8F1/#1A1A17; chrome theme-correct in both'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom theme tokens and consistent ink hierarchy, but overall composition
-          stays close to a clean default
+        comment: Fill-under-curve, iso-F1 contours, and halo marker are clearly above
+          a configured default, though short of full publication-grade polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines trimmed, grid subtle, legend frameless — solid but not exceptional
-          refinement
+        comment: Top/right spines removed, subtle grid, frameless legend, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Baseline + AP-in-legend give some context; no emphasis on best threshold
-          or AUC shading
+        comment: Best-F1 halo marker + baseline + AP fill create a clear focal point
+          and comparison frame
     spec_compliance:
       score: 15
       max: 15
@@ -135,50 +132,45 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct precision-recall curve with stepped style
+        comment: Correct stepped precision-recall curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: AP in legend, baseline reference, stepped line all present; iso-F1
-          contours were only a 'consider' suggestion
+        comment: AP in legend, baseline reference, stepped line, iso-F1 curves all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X=Recall, Y=Precision, full [0,1] range shown
+        comment: Recall on X, Precision on Y, full 0-1 range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches 'precision-recall · julia · makie · anyplot.ai' exactly;
-          legend labels match series
+        comment: Title matches mandated format exactly; legend labels are descriptive
+          and match the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: true
-        comment: Full curve incl. (0,1) anchor, AP, baseline; iso-F1 reference omitted
+        comment: Realistic jagged curve shape, meaningful best-F1 point, convergence
+          toward baseline at recall=1
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral fraud-detection scenario, plausible signal/noise model
+        comment: Fraud-detection scenario, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 2000 samples, 6% base rate — sensible for the domain
+        comment: 6% fraud rate is realistic for fraud-detection domain; AP/F1 values
+          consistent with the plotted curve
     code_quality:
       score: 10
       max: 10
@@ -187,58 +179,54 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: No functions/classes, linear imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
         comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
         comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current stairs!/band!
+          API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
-        comment: stairs!, hlines!, and Legend(fig[1,2], ax) are all idiomatic Makie
-          constructs
+        comment: Figure/Axis grid layout with Legend(fig[1,2], ax) auto-populated
+          from labeled series is textbook idiomatic Makie
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: stairs!(step=:post) is a well-chosen Makie-specific primitive; no
-          further distinctive features (e.g. contour-based iso-F1) used
+        comment: Uses Makie-specific stairs!/band! recipes and the grid-based layout
+          system, but these concepts are portable to other libraries with different
+          names
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - publication-ready
-  - minimal-chrome
+  - alpha-blending
+  - grid-styling
