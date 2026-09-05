@@ -1,7 +1,7 @@
 // anyplot.ai
 // pdp-basic: Partial Dependence Plot
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-05
+// Quality: 95/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
