@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: funnel-basic
 created: '2026-09-05T02:03:42Z'
-updated: '2026-09-05T02:07:23Z'
+updated: '2026-09-05T02:14:33Z'
 generated_by: claude-sonnet
 workflow_run: 33937745039
 issue: 789
@@ -12,57 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Correct funnel construction: each trapezoid''s top/bottom half-width is derived
-    directly from value/value[1], so segment width is genuinely proportional to stage
-    value relative to the first stage, exactly as the spec requires.'
-  - Both value and percentage-of-first-stage are shown per stage ('4,200 (100%)' ...
-    '340 (8%)'), and stages are ordered largest-to-smallest top-to-bottom per the
-    spec's Notes.
-  - Imprint palette used correctly in canonical order (green, lavender, blue, ochre,
-    red) with the brand green first; identical data colors between light and dark
-    renders, only chrome (title/label ink, background) flips correctly with no dark-on-dark
-    or light-on-light failures.
-  - theme_void() strips all axis/grid chrome appropriately for a funnel diagram; the
-    mandated title string is exact and correctly sized/centered without overflow or
-    clipping in either render.
-  - 'Clean, minimal R: no unnecessary functions/classes beyond one small lapply to
-    build the polygon segments, set.seed(42) present, only used imports (ggplot2/dplyr/tibble/ragg),
-    correct ragg::agg_png save with plot-{theme}.png naming.'
+  - 'Repair-1 feedback fully resolved: the funnel now spans the full landscape canvas
+    width with leader lines connecting each trapezoid to its label column, eliminating
+    the empty right-side whitespace from attempt 1'
+  - 'Correct funnel geometry: trapezoid widths are proportional to stage value relative
+    to the first stage, stages ordered largest-to-smallest top-to-bottom'
+  - Clean Imprint palette usage in canonical order, brand green first, identical data
+    colors across both light and dark renders
+  - Value + percentage labels present on every stage; realistic and neutral HR recruitment-funnel
+    dataset with plausible values
+  - Minimal void-themed chrome with subtle background-colored borders between segments
+    for clean visual separation
   weaknesses:
-  - 'Significant unused whitespace on the right ~35-40% of the canvas: the funnel
-    + label block only extends to roughly 60% of the plot width in both renders, leaving
-    a large empty region that unbalances the landscape composition. Consider widening
-    the funnel, increasing left/right margins symmetrically, centering the composition,
-    or switching to the square 2400x2400 canvas to reduce dead space.'
-  - 'The design is competent but fairly plain: a single value/percentage label pair
-    per segment with no additional storytelling cue (e.g. a subtle drop-off/conversion
-    delta between consecutive stages, or a connecting guide line from funnel edge
-    to label) — would raise Design Excellence and Data Storytelling above the current
-    baseline.'
-  - geom_polygon is the only viable ggplot2 path for a funnel (no native funnel geom
-    exists), so Library Mastery credit is capped — LM-02 stays modest since the manual-polygon
-    technique is the expected workaround rather than a distinctive value-add beyond
-    it.
+  - Noticeable unused whitespace below the 'Hired' label relative to the tighter top
+    margin above the title — tighten ylim/plot margins or grow the funnel slightly
+    to balance top vs. bottom dead space
+  - Leader lines and label column use uniform gray styling; segment-colored or otherwise
+    differentiated leader lines would strengthen the visual hierarchy between funnel
+    and label column
+  - Library mastery is solid but moderate — the polygon/segment/text composition is
+    the correct workaround for ggplot2's missing native funnel geom, but doesn't showcase
+    anything beyond that core technique
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "funnel-basic · r · ggplot2 · anyplot.ai" centered near top in dark ink, clearly legible. Five stage labels (bold name + "value (percent%)" in softer ink) sit to the right of the funnel, all fully readable against the light background with good contrast. No axes/grid (theme_void), appropriate for this chart type.
-      Data: Five trapezoidal segments narrowing top-to-bottom, colored in Imprint canonical order: brand green (#009E73, Applications), lavender (Screened), blue (Interviewed), ochre (Offer Extended), matte red (Hired). Segment width tracks each stage's value relative to the first stage. Thin background-colored dividers separate segments cleanly.
-      Legibility verdict: PASS — all text (title, bold stage names, value/percent lines) is clearly readable against the warm off-white surface, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "funnel-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink, fully visible with no clipping. Five stage labels (bold name + muted "count (pct%)" line) at right, each connected to its trapezoid by a thin gray leader line. No axes/ticks (theme_void), consistent with a funnel chart.
+      Data: Five trapezoids narrowing top-to-bottom in Imprint canonical order — green (Applications, 4,200/100%), lavender (Screened, 2,600/62%), blue (Interviewed, 1,450/35%), ochre (Offer Extended, 680/16%), matte red (Hired, 340/8%). Widths are visibly proportional to value. First series is brand green #009E73.
+      Legibility verdict: PASS — all title, stage-name, and value text reads clearly against the light background; no overlaps.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and five stage labels, now rendered in light ink (title/names) and soft light-gray ink (value/percent lines), both clearly legible against the dark surface. Thin dark dividers between segments read as subtle seams rather than gaps.
-      Data: Identical five segment colors and identical proportions to the light render — only the chrome (title/label ink, background) flipped as expected; data colors did not shift.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, stage name, and value/percent label is clearly visible against the near-black background.
-
-    Cross-render check: Data colors (green/lavender/blue/ochre/red) are pixel-identical between the two renders; only ink and background tokens changed, matching the theme-adaptive chrome contract.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title, same five stage labels, now in light ink/muted light-gray, fully legible. Leader lines still visible as a subtle gray. No dark-on-dark text found.
+      Data: Same five trapezoid colors and proportions as the light render — green, lavender, blue, ochre, matte red segments are pixel-identical hues, confirming only chrome flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; all text and segment colors clearly distinguishable from the background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -70,49 +58,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; explicit font sizes
-          set for title, stage names, and value/percent lines.
+        comment: Title, stage names, and value/percentage text are readable in both
+          themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, segments, or labels.
+        comment: No collisions between labels, leader lines, or funnel segments
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Segments are large, distinctly colored, and clearly bounded; appropriate
-          for a 5-stage funnel.
+        comment: All five trapezoids clearly visible with distinct colors, even the
+          narrow bottom segment
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint colors plus redundant text labels per stage remove
-          any color-alone ambiguity.
+        comment: Distinct hues, not solely red-green dependent, adequate contrast
+          on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Large unused whitespace on the right ~35-40% of the landscape canvas
-          unbalances the composition.
+        passed: true
+        comment: Repair-1 whitespace fix worked well overall, but bottom margin below
+          the last label is still noticeably larger than the top margin above the
+          title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a funnel diagram (theme_void); mandated title
-          string present and correctly formatted.
+        comment: No traditional axes (expected for a funnel chart); title format matches
+          spec exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order used, brand green first, identical data colors
-          across themes, correct theme backgrounds.
+        comment: Imprint canonical order, brand green first series, correct theme-adaptive
+          backgrounds, identical data colors across themes
     design_excellence:
       score: 13
       max: 20
@@ -122,22 +111,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean use of Imprint palette and typographic hierarchy, but overall
-          composition is fairly plain and imbalanced.
+        comment: Background-colored segment borders and leader-line label column show
+          intentional polish beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_void removes all chrome and margins are generous, but the right
-          side of the canvas is left largely empty.
+        comment: theme_void removes all chrome, generous whitespace around the funnel
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Strong top-to-bottom narrowing plus value/percent labels create a
-          clear, easy-to-follow drop-off story.
+        comment: Decreasing widths plus percentage callouts give a clear drop-off
+          narrative down the funnel
     spec_compliance:
       score: 15
       max: 15
@@ -147,50 +135,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly constructed as narrowing trapezoidal segments (funnel chart).
+        comment: Correct funnel chart via stacked trapezoids
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, value+percentage labels, largest-to-smallest ordering,
-          width proportional to value/value[1] — all present.
+        comment: Distinct colors per stage, value+percentage labels, largest-to-smallest
+          ordering, proportional widths — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stage and value columns correctly mapped; all 5 stages shown.
+        comment: All five stages shown, width mapped correctly to value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated 'funnel-basic · r · ggplot2 · anyplot.ai'
-          format exactly; legend appropriately omitted since labels double as identification.
+        comment: Title matches 'funnel-basic · r · ggplot2 · anyplot.ai' exactly;
+          no legend needed since labels are direct annotations
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers ordering, proportional widths, and value/percent labeling
-          — the core funnel-basic aspects.
+        comment: Shows all stages, values, and derived percentages
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: HR recruitment funnel (Applications to Hired) is realistic and neutral.
+        comment: Plausible, neutral HR recruitment funnel (Applications -> Hired)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 4,200 down to 340 is a plausible recruitment-funnel drop-off pattern.
+        comment: Value magnitudes and drop-off ratios are sensible for a recruitment
+          pipeline
     code_quality:
       score: 10
       max: 10
@@ -200,34 +188,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; the single lapply for polygon construction is minimal
-          and justified.
+        comment: No classes; a small lapply loop builds trapezoid coordinates, otherwise
+          flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42) present; data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: dplyr, tibble, and ragg are all actually used.
+        comment: ggplot2, dplyr, tibble, ragg all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: Appropriate complexity for constructing a non-native funnel geom;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct canvas size.
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct canvas size
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -235,15 +224,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_polygon + geom_text + theme_void is the correct idiomatic approach
-          given ggplot2 has no native funnel geom.
+        comment: geom_polygon/geom_segment/geom_text + scale_fill_manual + theme_void
+          is the idiomatic grammar-of-graphics approach for a chart type ggplot2 has
+          no native geom for
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: The manual-polygon technique is the expected workaround rather than
-          a distinctive value-add beyond it.
+        passed: true
+        comment: Leader-line label column is a nice touch, but the technique set doesn't
+          go much further beyond the core polygon-composition workaround
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -251,9 +241,9 @@ impl_tags:
   - annotations
   - layer-composition
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
-  - publication-ready
+  - alpha-blending
