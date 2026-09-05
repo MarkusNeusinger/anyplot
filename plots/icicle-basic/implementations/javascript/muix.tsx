@@ -128,6 +128,11 @@ function computeValue(node) {
 }
 computeValue(TREE);
 
+// Fixed neutral grey for the root/total band -- unlike `t.ink`, this stays
+// pixel-identical across light and dark renders, so every data band
+// (including root) is theme-stable, not just the top-level branches.
+const ROOT_FILL = "#6B6A63";
+
 // Each top-level directory owns one Imprint hue; every descendant inherits
 // its ancestor's hue so a branch stays recognizable at any depth (the
 // spec's "color by hierarchy level or category" note).
@@ -135,7 +140,7 @@ function assignBranch(node, color) {
   node.branchColor = color;
   node.children?.forEach((c) => assignBranch(c, color));
 }
-assignBranch(TREE, t.ink); // root itself reads as the neutral/total anchor
+assignBranch(TREE, ROOT_FILL); // root itself reads as the neutral/total anchor
 TREE.children.forEach((dir, i) => assignBranch(dir, t.palette[i % t.palette.length]));
 
 // --- Icicle (partition) layout: each depth is a full-width horizontal band;
@@ -223,7 +228,7 @@ function textColorForRgb(rgb) {
 const MARGIN = { top: 96, right: 24, bottom: 20, left: 24 };
 const ROW_GUTTER = 5;
 const COL_GUTTER = 2;
-const LABEL_FONT_SIZE = [22, 17, 14, 12]; // by depth
+const LABEL_FONT_SIZE = [22, 17, 15, 13]; // by depth -- 15/13 for the two deepest levels (was 14/12) so labels hold up better at mobile thumbnail scale
 const CHAR_WIDTH_RATIO = 0.56;
 
 function fmtKB(v) {
@@ -274,7 +279,6 @@ function Icicle() {
         const fontSize = LABEL_FONT_SIZE[node.depth];
 
         if (node.depth === 0) {
-          const fill = t.ink;
           return (
             <IcicleRect
               key="root"
@@ -282,8 +286,8 @@ function Icicle() {
               y={y}
               w={w}
               h={h}
-              fill={fill}
-              textFill={t.pageBg}
+              fill={ROOT_FILL}
+              textFill={textColorForRgb(hexToRgb(ROOT_FILL))}
               label={`${node.name} · ${fmtKB(node.value)} total`}
               fontSize={fontSize}
               tooltip={`${node.name}: ${fmtKB(node.value)}`}
