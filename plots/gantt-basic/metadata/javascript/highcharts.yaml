@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: gantt-basic
 created: '2026-09-05T02:52:29Z'
-updated: '2026-09-05T02:56:42Z'
+updated: '2026-09-05T03:04:52Z'
 generated_by: claude-sonnet
 workflow_run: 33939851296
 issue: 2377
@@ -12,9 +12,14 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-basic/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
+  - 'Both prior weaknesses from Attempt 1 are addressed: the y-axis title is now the
+    descriptive "Project Timeline (2026)" instead of generic "Timeline", and bars
+    for tasks fully completed before the status-check date now render at reduced opacity
+    (0.55) versus full opacity for in-progress/upcoming tasks, adding a genuine visual
+    hierarchy device.'
   - 'Creative, well-documented workaround for the missing highcharts-gantt module:
     an invisible offset series plus one visible stacked series per category reproduces
     a true Gantt timeline using only the core bundle, including an explanatory comment
@@ -22,36 +27,39 @@ review:
   - 'Category color coding is correctly Imprint-compliant: Planning uses #009E73 (palette[0])
     and the remaining categories follow the canonical palette order, identical between
     light and dark renders.'
-  - 'Both renders are fully legible and theme-correct: warm off-white/near-black backgrounds,
-    dark-on-light and light-on-dark text with no dark-on-dark or light-on-light failures.'
+  - Both renders are fully legible and theme-correct, with no dark-on-dark or light-on-light
+    failures.
   - Tasks are ordered chronologically by start date, and overlapping bars (Database
     Setup/Backend API, Backend API/Frontend Build) clearly communicate parallel work
     streams.
-  - A dashed 'Status check' plotLine with rotated label adds a meaningful narrative
-    anchor point given the project dates sit outside the real current date.
-  - Custom tooltip formatter surfaces task name, category, and formatted start–end
+  - Custom tooltip formatter surfaces task name, category, and formatted start-end
     date range.
   weaknesses:
-  - The y-axis title 'Timeline' is generic — a more descriptive label (e.g. 'Project
-    Timeline (2026)') would add context without extra width.
-  - The rotated 'Status check' plotLine label requires tilting to read; a short horizontal
-    label above the line (or moving it to the top margin) would be quicker to scan.
-  - Design Excellence is competent but standard for the category-coded Gantt pattern
-    — no additional visual hierarchy device (e.g. subtle duration/date labels on the
-    longer bars, or a lighter treatment for completed vs. upcoming tasks relative
-    to the status line) elevates it beyond a solid baseline.
+  - 'The "Status check" plotLine label still renders fully vertical/rotated in both
+    renders even though the code now sets label.rotation: 0 and align/verticalAlign:
+    top -- this is a Highcharts gotcha specific to the ''bar'' series type: because
+    ''bar'' charts are internally inverted column charts, a yAxis plotLine label''s
+    rotation is applied in the pre-inversion coordinate space, so rotation: 0 in the
+    option object still produces a vertical label after the chart''s internal axis
+    inversion. The attempt-1 feedback asked for a horizontal, quick-to-scan label
+    and this fix did not achieve that visually -- try rotation: 90 (which becomes
+    horizontal post-inversion), or move the text to a fixed annotation positioned
+    in the top margin instead of a plotLines.label.'
+  - Design Excellence is improved but still fairly standard for the category-coded
+    Gantt pattern beyond the new opacity treatment -- no additional hierarchy device
+    (e.g. subtle duration/date labels on the longer bars) further elevates it.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white, not dark — consistent with the light token.
-      Chrome: Title "gantt-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly readable. 11 task names run down the left as category labels in dark text. Bottom axis shows date ticks (Jan 2 – Mar 23) in soft ink, with the axis title "Timeline" centered below. Legend with 5 category swatches (Planning, Design, Development, Testing, Launch) sits below the plot. Subtle vertical gridlines per date tick. A dashed vertical "Status check" plotLine with a rotated label crosses the mid-project date.
-      Data: Horizontal bars, one per task, spanning start-to-end date on the bottom time axis. First category (Planning) is Imprint green (#009E73); Design is violet, Development is blue, Testing is amber, Launch is red — all from the Imprint palette in canonical order. Overlapping bars (e.g. Backend API and Frontend Build) clearly show concurrent work.
-      Legibility verdict: PASS — all text (title, task labels, date ticks, axis title, legend, status-check label) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 -- correct light theme surface.
+      Chrome: Title "gantt-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly readable and well within canvas bounds. 11 task-name category labels on the left axis, all legible, no overlap. Bottom axis shows date ticks (Jan 2 - Mar 23) with the improved axis title "Project Timeline (2026)" centered below -- more descriptive than attempt 1's generic "Timeline". Legend with 5 category swatches (Planning, Design, Development, Testing, Launch) sits below the plot, all readable. A dashed "Status check" plotLine crosses the mid-project date, but its label still renders fully vertical (rotated 90°) rather than horizontal, despite the code now specifying rotation: 0 -- confirmed via pixel crop, this label is not clipped or overlapping anything, just awkward to scan quickly.
+      Data: First category (Planning) is Imprint green #009E73, followed by violet (Design), blue (Development), amber (Testing), red (Launch) in canonical palette order. New in this attempt: bars for tasks that finished before the Status check date (Market Research, Requirements Gathering, Wireframing, UI Design, Database Setup) render at visibly reduced opacity, while in-progress/upcoming bars (Backend API, Frontend Build, and everything after) render at full saturation -- a real "done vs. upcoming" visual hierarchy device.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black, not light — consistent with the dark token.
-      Chrome: Same layout as the light render — title, task labels, date ticks, "Timeline" axis title, legend, and the dashed "Status check" plotLine — all rendered in light ink tones against the dark background.
-      Data: Bar colors are pixel-identical to the light render (Planning green #009E73, Design violet, Development blue, Testing amber, Launch red) — confirms only chrome flipped, not data colors.
-      Legibility verdict: PASS — title, task labels, date ticks, axis title, legend text, and the status-check label are all light-colored and clearly legible against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black, matches #1A1A17 -- correct dark theme surface.
+      Chrome: Identical layout to the light render -- title, task labels, date ticks, "Project Timeline (2026)" axis title, legend, and the "Status check" plotLine (still vertical) -- all rendered in light ink against the dark background. No dark-on-dark failures; all text clearly legible.
+      Data: Bar colors are pixel-identical to the light render (Planning green #009E73, Design violet, Development blue, Testing amber, Launch red), confirming only chrome flipped. The same opacity-based done/upcoming treatment is present and equally visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,69 +70,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, all text readable in both themes
+        comment: All text readable in both themes; Status check label is legible but
+          still awkwardly rotated 90° instead of horizontal
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No collisions between text, bars, legend, or the plotLine label
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 bars at appropriate width/height, clearly distinguishable
+        comment: Bars sized and spaced well for 11 tasks; new opacity treatment keeps
+          completed-task bars distinguishable, not washed out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette provides adequate contrast; category is also encoded
-          by row position and legend text, not color alone
+        comment: Imprint palette is CVD-safe; category is never the sole signal (position
+          + label reinforce it)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed (3200x1800); no clipping or overflow
+        comment: Landscape canvas correct, no overflow or clipping, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date-formatted x-axis, task categories on y-axis
+        comment: Y-axis title now descriptive ("Project Timeline (2026)"), addressing
+          attempt-1 feedback
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+        comment: 'First series #009E73, canonical order, correct theme-adaptive backgrounds
           in both renders'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean, professional look with intentional category color coding;
-          no strong distinguishing polish beyond that
+        comment: Clean professional look, category color coding, and the new opacity-based
+          hierarchy add intentional polish beyond attempt 1
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace; fairly standard chrome otherwise
+        comment: Subtle grid, generous whitespace; chrome otherwise unchanged from
+          attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Chronological ordering and the status-check line add some narrative
-          value; no stronger focal-point device
+        comment: Chronological ordering, the status-check reference line, and now
+          the done-vs-upcoming opacity treatment together create a much clearer narrative
+          than attempt 1
     spec_compliance:
       score: 15
       max: 15
@@ -134,26 +147,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt-style horizontal timeline bars
+        comment: Correct Gantt-style horizontal timeline via stacked bar workaround
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: task/start/end/category all present, logical ordering, date formatting,
-          status-check reference line, adequate bar spacing
+        comment: Category coloring, date axis, status-check reference line, ordered
+          tasks -- all spec notes covered
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates on time axis, tasks on category axis, full range shown
+        comment: Task start/end correctly mapped to bar span on the datetime axis
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match categories
+        comment: Title matches required format; legend labels match category names
     data_quality:
       score: 15
       max: 15
@@ -163,20 +176,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Durations, overlaps, category grouping, and a status-check reference
-          all shown
+        comment: 11 tasks across 5 categories with overlapping and sequential dependencies
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral software-launch project plan
+        comment: Plausible, neutral software launch project timeline
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 11 tasks within the 5-30 range, realistic multi-week durations
+        comment: Task durations (days to weeks) and project span (~2.5 months) are
+          sensible
     code_quality:
       score: 10
       max: 10
@@ -186,33 +199,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, flat data + config
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hard-coded deterministic dates, no randomness
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the Highcharts global is used
+        comment: No imports beyond the global Highcharts
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Workaround for the missing gantt module is well-reasoned and clearly
-          commented, no fake UI
+        comment: No fake UI; the offset-stacking workaround is well commented and
+          appropriate given the module constraint
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled at both chart and
-          series level
+        comment: 'animation: false set on chart and series; harness owns file output'
     library_mastery:
       score: 8
       max: 10
@@ -222,23 +234,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Solid use of stacked bar series, plotLines, and custom tooltip formatter
+        comment: Good use of stacking, plotLines, and datetime axis, but the plotLine
+          label rotation for an inverted 'bar' chart is still mishandled
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: Invisible offset-series stacking trick to simulate a Gantt chart
-          without the unavailable gantt module is a genuinely distinctive technique
+          without the unavailable gantt module, plus the new opacity-based done/upcoming
+          treatment
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - stacked-bars
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
-  - publication-ready
+  - alpha-blending

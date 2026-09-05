@@ -1,8 +1,7 @@
 // anyplot.ai
 // gantt-basic: Basic Gantt Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 88/100 | Created: 2026-09-05
+// Quality: 91/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
 
