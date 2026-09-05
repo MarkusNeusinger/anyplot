@@ -36,7 +36,7 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "Reservoir Water Level · line-filled · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "20px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   xAxis: {
     title: { text: "Day", style: { color: t.inkSoft, fontSize: "16px" } },
@@ -54,14 +54,26 @@ Highcharts.chart("container", {
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   legend: { enabled: false },
-  tooltip: { enabled: false },
+  tooltip: {
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    style: { color: t.ink, fontSize: "13px" },
+    headerFormat: "Day {point.key}<br/>",
+    pointFormat: "Water Level: <b>{point.y} m</b>",
+  },
   plotOptions: {
     series: { animation: false },
     area: {
       lineWidth: 2.5,
       color: t.palette[0],
-      fillColor: t.palette[0] + "4D",
-      marker: { enabled: false },
+      fillColor: {
+        linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+        stops: [
+          [0, t.palette[0] + "8C"],
+          [1, t.palette[0] + "21"],
+        ],
+      },
+      marker: { enabled: true, radius: 3, fillColor: t.palette[0], lineWidth: 0 },
       threshold: 0,
     },
   },
