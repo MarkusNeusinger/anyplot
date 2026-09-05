@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: network-bipartite
+created: '2026-09-05T09:45:35Z'
+updated: '2026-09-05T10:00:33Z'
+generated_by: claude-sonnet
+workflow_run: 33958514747
+issue: 5247
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-bipartite/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Directly addressed every weakness from Attempt 1: replaced the hand-rolled bezier
+    path with d3.linkHorizontal(), added an explicit degree/weight legend, balanced
+    the margins, and added barycenter node reordering to reduce edge crossings'
+  - Correct Imprint palette usage across both themes, with node/edge encodings (degree
+    -> radius, weight -> width/opacity) implemented cleanly
+  - Realistic, neutral, biologically plausible gene-disease dataset with genuine hub
+    structure
+  - Title and legend (column headers plus explicit size/weight key) exactly match
+    spec requirements
+  weaknesses:
+  - Middle band still shows moderate edge-crossing clutter -- the dataset is dense
+    enough (30 edges over 24 nodes) that barycenter reordering only partially untangles
+    it
+  - Lowest-weight edges (opacity approx 0.22) are hard to see against the background
+    -- consider a slightly higher opacity floor (e.g. 0.3) so even weak associations
+    stay visible
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Bold centered title "network-bipartite · javascript · d3 · anyplot.ai" with a soft-gray
+        subtitle below it, green "Genes" and purple "Diseases" column headers, node labels flanking
+        each column, and a new bottom legend decoding "Node size = degree" (degree 1 vs degree 6
+        samples) and "Edge width/opacity = strength" (0.30 vs 0.95 samples). All clearly readable.
+      Data: 14 brand-green (#009E73) gene nodes on the left, 10 lavender (#C475FD) disease nodes on
+        the right, radius-scaled by degree (TP53, Breast/Lung/Colorectal Cancer are visibly the
+        largest hubs). Curved d3.linkHorizontal() edges connect the columns, stroke width and opacity
+        both scaling with association weight.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title/subtitle/headers/labels/legend now rendered in light ink, fully legible
+        against the dark surface. No dark-on-dark failures found anywhere (title, node labels, and
+        legend text all check out).
+      Data: Node fill colors (#009E73 green, #C475FD lavender) are pixel-identical to the light
+        render -- only chrome (background, text, edge gray tone) flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout (12-26px), no overflow, readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels sit clear of nodes, edges, and the new legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Degree/weight scaling is clean, but the lowest-weight edges (opacity
+          ~0.22) are nearly invisible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender clearly distinguishable, reinforced by column position
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Margins now balanced (135/230/140/130), nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Column headers descriptively label the two sets
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series canonical position-2 #C475FD,
+          theme-correct chrome'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful degree/weight encodings, curved link-generator edges,
+          subtle node strokes, explicit legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Barycenter reordering only partially reduces edge-crossing clutter
+          in the middle band
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New legend makes encoding self-explanatory; hub genes/diseases immediately
+          visible as the largest nodes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bipartite layout, two clearly separated columns
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Degree-sized nodes, weight-encoded edges, set coloring, curved edges,
+          non-overlapping labels, crossing-reduction pass
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source/target correctly mapped to left/right columns, all nodes represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; column headers plus size/weight
+          legend fully explain encoding
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Hub nodes, low-degree nodes, varied edge weights (0.3-0.95), many-to-many
+          and one-to-one relationships
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral gene-disease association domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Association strengths align with known biology (BRCA1/2, VHL, MLH1,
+          APOE)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear but introduces two small helper functions for the crossing-reduction
+          pass
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately-scoped, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container sized from ANYPLOT_SIZE, no animation'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic .data().join() with d3-scale/d3-array/d3-shape
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses d3.linkHorizontal() plus a hand-rolled barycenter crossing-reduction
+          heuristic; short of a full distinctive module like d3-force/d3-sankey
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  - edge-crossing-minimization
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
