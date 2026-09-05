@@ -1,6 +1,7 @@
 // anyplot.ai
 // gantt-basic: Basic Gantt Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 88/100 | Created: 2026-09-05
 
 const t = window.ANYPLOT_TOKENS;
@@ -37,19 +38,23 @@ const tasks = [
 const taskNames = tasks.map((d) => d.task);
 const offsets = tasks.map((d) => d.start);
 
-// One series per category (sparse, null elsewhere) so the legend doubles as
-// the category key while still sharing a single stack with the offset series.
-const categorySeries = categories.map((cat) => ({
-  name: cat,
-  color: categoryColors[cat],
-  stack: "gantt",
-  data: tasks.map((d) => (d.category === cat ? d.end - d.start : null)),
-}));
-
 const dayMs = 24 * 3600 * 1000;
 const projectStart = Math.min(...tasks.map((d) => d.start));
 const projectEnd = Math.max(...tasks.map((d) => d.end));
 const statusCheck = Date.UTC(2026, 1, 15); // mid-project progress check
+
+// One series per category (sparse, null elsewhere) so the legend doubles as
+// the category key while still sharing a single stack with the offset series.
+// Tasks fully finished before the status check render at reduced opacity, a
+// lightweight "done vs. upcoming" hierarchy relative to the reference line.
+const categorySeries = categories.map((cat) => ({
+  name: cat,
+  color: categoryColors[cat],
+  stack: "gantt",
+  data: tasks.map((d) =>
+    d.category === cat ? { y: d.end - d.start, opacity: d.end <= statusCheck ? 0.55 : 1 } : null
+  ),
+}));
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -83,7 +88,7 @@ Highcharts.chart("container", {
     // series on top and the visible duration segment at the zero baseline
     // (off-screen). Keep array order so offset stacks first, at the bottom.
     reversedStacks: false,
-    title: { text: "Timeline", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: { text: "Project Timeline (2026)", style: { color: t.inkSoft, fontSize: "16px" } },
     gridLineColor: t.grid,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
@@ -100,7 +105,10 @@ Highcharts.chart("container", {
         zIndex: 5,
         label: {
           text: "Status check",
-          style: { color: t.ink, fontSize: "12px" },
+          rotation: 0,
+          align: "center",
+          verticalAlign: "top",
+          style: { color: t.ink, fontSize: "12px", fontWeight: "600" },
           y: -6,
         },
       },
