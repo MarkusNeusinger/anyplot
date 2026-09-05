@@ -11,6 +11,7 @@
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
+import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -24,9 +25,10 @@ function nextRandom() {
 
 // Simulated transaction population: fraud flag + model's predicted fraud score.
 // Fraudulent cases skew toward higher scores, but with enough noise that the
-// model isn't perfect — a realistic imperfect classifier.
+// model isn't perfect — a realistic imperfect classifier. 3% base rate is in
+// line with real-world card-fraud incidence (well under the 8% used earlier).
 const populationSize = 2000;
-const fraudRate = 0.08;
+const fraudRate = 0.03;
 const trueLabels = [];
 const modelScores = [];
 for (let i = 0; i < populationSize; i += 1) {
@@ -56,6 +58,69 @@ const liftByPct = percentages.map((pct) => {
   const targetedRate = cumulativeFraud[cutoff - 1] / cutoff;
   return targetedRate / baselineRate;
 });
+
+// Key deciles called out with their exact lift value, per the spec's
+// suggestion to surface actual values at a few percentiles.
+const keyPercentiles = [10, 25, 50];
+const maxLift = liftByPct[0];
+
+// Labels the curve's own points at a few key deciles (must be a LineChart
+// child so useXScale/useYScale resolve against the chart's own axes).
+function KeyPercentileLabels() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  if (!xScale || !yScale) return null;
+
+  return (
+    <g>
+      {keyPercentiles.map((pct) => {
+        const idx = percentages.indexOf(pct);
+        const value = liftByPct[idx];
+        const x = xScale(pct);
+        const y = yScale(value);
+        // Points near the curve's peak sit close to the top margin — flip
+        // the label below the point there so it never runs off-canvas.
+        const below = value > maxLift * 0.85;
+        return (
+          <text
+            key={pct}
+            x={x}
+            y={below ? y + 22 : y - 14}
+            textAnchor="middle"
+            fontSize={14}
+            fontWeight={600}
+            fill={t.ink}
+          >
+            {value.toFixed(1)}×
+          </text>
+        );
+      })}
+    </g>
+  );
+}
+
+// A rotated y-axis title, positioned explicitly to clear the "×"-suffixed
+// tick labels — drawn by hand instead of leaning on the built-in `yAxis.label`,
+// whose only offset lever (the deprecated `tickFontSize`) also resizes the
+// tick text itself, forcing a fight between the two concerns.
+function YAxisTitle() {
+  const { left, top, height } = useDrawingArea();
+  const x = left - 78;
+  const y = top + height / 2;
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="middle"
+      dominantBaseline="middle"
+      fontSize={16}
+      fill={t.ink}
+      transform={`rotate(-90 ${x} ${y})`}
+    >
+      Cumulative lift
+    </text>
+  );
+}
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
@@ -87,7 +152,6 @@ export default function Chart() {
         series={[
           {
             data: liftByPct,
-            label: "Model (ranked by predicted fraud score)",
             color: t.palette[0],
             curve: "monotoneX",
             showMark: true,
@@ -103,12 +167,8 @@ export default function Chart() {
         ]}
         yAxis={[
           {
-            label: "Cumulative lift",
             min: 0,
             valueFormatter: (v) => `${v.toFixed(1)}×`,
-            // Widens the axis-label offset to clear the "×"-suffixed tick text
-            // (MUI X reserves space from this prop, not from measured tick width).
-            tickFontSize: 48,
           },
         ]}
         grid={{ horizontal: true }}
@@ -146,6 +206,8 @@ export default function Chart() {
             fontSize: 14,
           }}
         />
+        <KeyPercentileLabels />
+        <YAxisTitle />
       </LineChart>
     </div>
   );
