@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: learning-curve-basic
 created: '2026-09-05T06:26:34Z'
-updated: '2026-09-05T06:30:27Z'
+updated: '2026-09-05T06:38:58Z'
 generated_by: claude-sonnet
 workflow_run: 33949471691
 issue: 2275
@@ -12,47 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/learning-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/learning-curve-basic/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
+  - 'Both flagged weaknesses from the previous attempt are fixed: markers are now
+    enabled (radius 5) on the sparse 10-point training and validation lines, and the
+    x-axis is a numeric linear scale with explicit tickPositions instead of a categorical
+    axis, so pixel spacing now honestly reflects the non-uniform training-set sizes
+    (50, 100, 200 ... 1500).'
   - 'Correct Imprint palette compliance: brand green (#009E73) for the training series,
-    canonical lavender (#C475FD) for validation, identical between light and dark
+    canonical lavender for validation, identical data colors between light and dark
     renders, with fully legible warm off-white/near-black chrome in both themes.'
   - Clever confidence-band implementation via paired transparent-base + translucent-range
-    stacked area series, staying within the core Highcharts bundle and correctly avoiding
-    the forbidden arearange/highcharts-more module.
+    stacked area series per line — the correct core-Highcharts-only technique that
+    avoids the forbidden arearange/highcharts-more module.
   - 'Clean, deterministic, minimal code: no unused imports, no fake interactivity,
     hardcoded reproducible data, correct mount-node contract (animation disabled,
     no explicit width/height, transparent background).'
   weaknesses:
-  - 'Both lines disable markers entirely (plotOptions.series.marker.enabled=false)
-    despite only 10 sparse data points per series — add prominent markers (marker.enabled:
-    true, radius ~5) to the training and validation line series so individual sampled
-    sizes are visible, per the sparse-data marker guideline.'
-  - 'X-axis uses a categorical axis with evenly-spaced labels (50, 100, 200, 300,
-    400, 500, 700, 900, 1200, 1500) even though the underlying training-set sizes
-    are not evenly spaced — this misrepresents the true relationship between axis
-    position and sample size; consider a linear or logarithmic numeric xAxis (type:
-    ''linear'' or ''logarithmic'') so spacing reflects the actual size differences.'
-  - Design excellence is fairly generic beyond the color/band choices — no subtitle
-    or annotation calling out the diagnostic takeaway (e.g. the narrowing train/validation
-    gap indicating a shrinking-variance regime), missing an opportunity for stronger
-    data storytelling.
+  - Design excellence is still fairly generic beyond the color/band choices — the
+    subtitle states the convergence trend in words, but there's no visual annotation
+    or emphasis (e.g. a callout on the narrowing gap) that would give the chart a
+    stronger focal point.
+  - 'yAxis config carries a stray `reversedStacks: false` property that has no effect
+    since the yAxis isn''t stacked (only the paired area series use `stacking: ''normal''`
+    on their own stack groups) — harmless but is leftover configuration cruft; safe
+    to remove for cleanliness.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "learning-curve-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; x-axis title "Training Set Size" and y-axis title "Accuracy (%)" in a softer ink tone, both readable; tick labels (50-1500 on x, 60%-100% on y) legible; horizontal gridlines subtle but visible; legend at bottom ("Training score", "Validation score") readable.
-      Data: Training score is a brand-green (#009E73) line starting near 99% and gently declining to ~94% as training size grows, with a thin, matching translucent green confidence band. Validation score is a lavender/purple (#C475FD) line starting near 71% and rising to ~92%, with a much wider translucent purple confidence band that visibly narrows as training size increases. First series is correctly the brand green.
+      Chrome: Title "learning-curve-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; subtitle in softer gray legible below it; x-axis title "Training Set Size" and y-axis title "Accuracy (%)" in softer ink tone, both readable; tick labels (50-1500 on x with correct non-uniform linear spacing, 60%-100% on y) legible; horizontal gridlines subtle but visible; legend at bottom ("Training score", "Validation score") readable.
+      Data: Training score is a brand-green (#009E73) line with visible triangle-down markers, starting near 99% and gently declining to ~94% as training size grows, with a thin matching translucent green confidence band. Validation score is a lavender line with visible circular markers, starting near 71% and rising to ~92%, with a wider translucent lavender confidence band that visibly narrows as training size increases. First series is correctly the brand green. Markers are now present on both sparse (10-point) series, addressing the prior attempt's invisible-marker weakness.
       Legibility verdict: PASS — no light-on-light issues, all text and data clearly distinguishable from the background.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels rendered in light/off-white text, clearly legible against the dark background; gridlines subtle but visible; legend text light-colored and readable.
-      Data: Training score (green) and validation score (lavender) lines and confidence bands use the exact same colors as the light render — only the chrome (background, text, grid) flipped to the dark theme, as required.
+      Chrome: Title, subtitle, axis titles, and tick labels rendered in light/off-white text, clearly legible against the dark background; gridlines subtle but visible; legend text light-colored and readable.
+      Data: Training score (green, triangle markers) and validation score (lavender, circular markers) lines and confidence bands use the exact same colors as the light render — only the chrome (background, text, grid) flipped to the dark theme, as required.
       Legibility verdict: PASS — no dark-on-dark failures observed; all text and data are clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,8 +60,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text explicitly sized and readable in
-          both themes.
+        comment: All title/subtitle/axis/tick/legend text explicitly sized and readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -70,11 +70,11 @@ review:
         comment: No text or data collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines and bands are clearly distinguishable, but markers are disabled
-          entirely despite only 10 sparse data points per series.
+        comment: Markers now enabled (radius 5) on both sparse 10-point series, fixing
+          the prior invisible-marker weakness; lines and bands are clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -99,8 +99,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 brand green, second is canonical lavender
-          #C475FD; backgrounds correct in both themes.'
+        comment: 'First series is #009E73 brand green, second is canonical lavender;
+          backgrounds correct in both themes.'
     design_excellence:
       score: 11
       max: 20
@@ -110,25 +110,25 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Confidence-band overlay shows some polish beyond generic defaults,
-          but overall styling stays close to library defaults with no extra visual
-          flourishes.
+        comment: Confidence-band overlay shows polish beyond generic defaults, but
+          overall styling stays close to library defaults with no extra visual flourishes.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Chrome is clean (no spines to remove in Highcharts) but grid and
-          spacing are standard, not particularly refined.
+        comment: Chrome is clean but grid and spacing are standard, not particularly
+          refined.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Converging/narrowing bands tell a story visually, but no annotation
-          or emphasis calls out the diagnostic takeaway.
+        comment: Converging/narrowing bands tell a visual story and the subtitle names
+          the trend, but there is no annotation or emphasis calling out the diagnostic
+          takeaway.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,18 +139,18 @@ review:
         comment: 'Correct learning-curve chart: two lines with shaded confidence bands.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Confidence bands, legend, and labeled y-axis metric present; x-axis
-          shows sample sizes but not to numeric scale (categorical axis).
+        comment: Confidence bands, legend, labeled y-axis metric, and x-axis now correctly
+          showing actual sample sizes on a linear scale.
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: X/Y correct and all data shown, but categorical x-axis evenly spaces
-          non-uniform training sizes, misrepresenting true spacing.
+        comment: X/Y correct and all data shown; linear x-axis now honestly represents
+          non-uniform training-set-size spacing.
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -168,8 +168,8 @@ review:
         max: 6
         passed: true
         comment: Shows both curves, confidence bands, legend, and labeled axes; uses
-          precomputed mean/std rather than raw per-fold data, but this is a reasonable
-          JS-side simplification.
+          precomputed mean/std rather than raw per-fold data, a reasonable JS-side
+          simplification.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -227,15 +227,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of chart/xAxis/yAxis/legend/plotOptions configuration.
+        comment: Idiomatic chart/xAxis/yAxis/legend/plotOptions configuration; minor
+          cruft (unused yAxis.reversedStacks) keeps this from a perfect score.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
         comment: Stacked transparent+translucent area pairs to build a confidence
-          band without highcharts-more's arearange is a genuine display of library-specific
-          ingenuity.
+          band without highcharts-more's arearange is genuine library-specific ingenuity.
   verdict: APPROVED
 impl_tags:
   dependencies: []
