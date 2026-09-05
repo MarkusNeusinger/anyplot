@@ -25,9 +25,14 @@ const BRAND = IMPRINT_PALETTE[1]
 # --- Data ---------------------------------------------------------------
 # Warehouse pallet inventory over a 24h operating day: each delivery or
 # outgoing shipment nudges the stock level, which then holds constant until
-# the next event — a natural fit for a post-aligned step plot.
-n_events = 58
-event_hours = sort(rand(n_events) .* 24)
+# the next event — a natural fit for a post-aligned step plot. Gaps between
+# events are floored so clusters of near-simultaneous jumps don't muddy the
+# step shape.
+n_events = 46
+min_gap = 0.18
+gaps = min_gap .+ rand(n_events) .* (24 / n_events - min_gap) * 1.8
+event_hours = cumsum(gaps)
+event_hours = event_hours[event_hours .< 24]
 hour = vcat(0.0, event_hours, 24.0)
 
 stock = zeros(Int, length(hour))
@@ -37,6 +42,9 @@ for i in 2:length(stock)-1
     stock[i] = clamp(stock[i-1] + jump, 400, 1600)
 end
 stock[end] = stock[end-1]
+
+peak_idx = argmax(stock)
+peak_hour, peak_stock = hour[peak_idx], stock[peak_idx]
 
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
@@ -48,7 +56,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "line-stepwise · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 25,
     titlecolor         = INK,
     xlabel             = "Hour of Day",
     ylabel             = "Pallets in Stock",
@@ -74,6 +82,17 @@ ax = Axis(
 )
 
 stairs!(ax, hour, stock; step = :post, color = BRAND, linewidth = 3.0)
+
+# Focal point: call out the peak stock level reached during the day
+scatter!(ax, [peak_hour], [peak_stock]; color = BRAND, markersize = 12, strokewidth = 2, strokecolor = PAGE_BG)
+text!(
+    ax, peak_hour, peak_stock;
+    text = "Peak: $(peak_stock) pallets",
+    color = INK,
+    fontsize = 13,
+    align = (peak_hour > 20 ? :right : :left, :bottom),
+    offset = (peak_hour > 20 ? -10 : 10, 8),
+)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
