@@ -13,19 +13,22 @@ const t = window.ANYPLOT_TOKENS;
 // Survey of 400 subscribers per service, asked which genre they watch most.
 // Each category holds two independent counts (not a signed net score) --
 // Service A always extends left, Service B always extends right, sharing the
-// zero baseline as the pyramid's central axis.
-const genres = [
-  "Action & Adventure",
-  "Drama",
-  "Comedy",
-  "Sci-Fi & Fantasy",
-  "Reality TV",
-  "Anime",
-  "Documentary",
-  "Kids & Family",
-];
-const streamVista = [138, 146, 121, 98, 61, 74, 52, 45];
-const waveFlix = [112, 158, 133, 71, 84, 58, 68, 63];
+// zero baseline as the pyramid's central axis. Sorted by combined magnitude
+// (descending) so the chart tapers into a classic pyramid silhouette.
+const genreRows = [
+  { name: "Action & Adventure", streamVista: 75, waveFlix: 60 },
+  { name: "Drama", streamVista: 90, waveFlix: 94 },
+  { name: "Comedy", streamVista: 65, waveFlix: 71 },
+  { name: "Sci-Fi & Fantasy", streamVista: 50, waveFlix: 38 },
+  { name: "Reality TV", streamVista: 33, waveFlix: 46 },
+  { name: "Anime", streamVista: 40, waveFlix: 45 },
+  { name: "Documentary", streamVista: 27, waveFlix: 36 },
+  { name: "Kids & Family", streamVista: 20, waveFlix: 10 },
+].sort((a, b) => b.streamVista + b.waveFlix - (a.streamVista + a.waveFlix));
+
+const genres = genreRows.map((r) => r.name);
+const streamVista = genreRows.map((r) => r.streamVista);
+const waveFlix = genreRows.map((r) => r.waveFlix);
 
 // One shared stack per row: negative values (Service A, negated below) land
 // left of zero, positive values (Service B) land right -- MUI X's default
@@ -33,17 +36,22 @@ const waveFlix = [112, 158, 133, 71, 84, 58, 68, 63];
 const leftData = streamVista.map((v) => -v);
 const rightData = waveFlix;
 
-const axisLimit = Math.ceil((Math.max(...streamVista, ...waveFlix) + 10) / 10) * 10;
+const axisLimit = Math.ceil((Math.max(...streamVista, ...waveFlix) + 10) / 20) * 20;
+// Explicit tick positions every 20 units -- the default continuous-scale tick
+// generator produced 35 ticks (every 10) across this range, which is too
+// dense for mobile-scale legibility.
+const xTicks = [];
+for (let v = -axisLimit; v <= axisLimit; v += 20) xTicks.push(v);
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const CHART_TOP = 76;
+  const CHART_TOP = 82;
 
   return (
     <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
       <Box sx={{ position: "absolute", top: 22, left: 32, right: 32 }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500 }}>
+        <Typography sx={{ color: t.ink, fontSize: 28, fontWeight: 600 }}>
           pyramid-basic · javascript · muix · anyplot.ai
         </Typography>
       </Box>
@@ -81,6 +89,7 @@ export default function Chart() {
               label: "Subscribers who picked this genre as their favorite",
               labelStyle: { fontSize: 16, fill: t.inkSoft },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              tickInterval: xTicks,
               valueFormatter: (v) => `${Math.abs(v)}`,
             },
           ]}
