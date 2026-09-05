@@ -15,7 +15,7 @@ const ih = height - margin.top - margin.bottom;
 const OMEGA = 1.3;
 const ZETA = 0.12;
 const DT = 0.05;
-const STEPS = 140;
+const STEPS = 220;
 
 function derivative(state) {
   const [x, v] = state;
@@ -70,7 +70,16 @@ const v = d3.scaleLinear().domain([-maxAbs, maxAbs]).range([ih, 0]);
 const xAxisG = g.append("g").attr("transform", `translate(0,${v(0)})`).call(d3.axisBottom(x).ticks(8));
 const yAxisG = g.append("g").attr("transform", `translate(${x(0)},0)`).call(d3.axisLeft(v).ticks(8));
 for (const ax of [xAxisG, yAxisG]) {
-  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+  // Origin-crossing ticks sit inside the densest trajectory overlap, so give
+  // the labels a page-colored halo (paint-order stroke) to stay legible
+  // instead of competing with the spiral strokes underneath.
+  ax.selectAll("text")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "14px")
+    .style("paint-order", "stroke")
+    .style("stroke", t.pageBg)
+    .style("stroke-width", "5px")
+    .style("stroke-linejoin", "round");
   ax.selectAll("line").attr("stroke", t.grid);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
@@ -82,7 +91,7 @@ for (const ax of [xAxisG, yAxisG]) {
 for (const tr of trajectories) {
   const n = tr.points.length;
   for (let i = 0; i < n - 1; i++) {
-    const opacity = 0.3 + 0.7 * (i / (n - 2));
+    const opacity = 0.45 + 0.55 * (i / (n - 2));
     g.append("line")
       .attr("x1", x(tr.points[i].x))
       .attr("y1", v(tr.points[i].v))
