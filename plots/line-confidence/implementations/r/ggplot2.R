@@ -44,13 +44,35 @@ df <- tibble(
   upper = dau_upper
 )
 
+# --- Narrative anchors ------------------------------------------------------
+# Weekly seasonality peak (first cycle) - gives viewers a concrete landmark
+# for the sawtooth pattern instead of leaving it purely implicit.
+peak_row <- df[which.max(df$dau[1:14]), ]
+
+# Final-horizon interval width - turns "the band widens" into a concrete
+# number, anchoring the growing-uncertainty story at the point it matters most.
+last_row   <- df[horizon_days, ]
+half_width <- (last_row$upper - last_row$lower) / 2
+
 # --- Plot -----------------------------------------------------------------------
 p <- ggplot(df, aes(x = date)) +
   geom_ribbon(aes(ymin = lower, ymax = upper, fill = "95% prediction interval"),
               alpha = 0.25) +
   geom_line(aes(y = dau, color = "Forecast mean"), linewidth = 1.1) +
+  geom_vline(xintercept = peak_row$date, linetype = "dashed",
+             color = INK_SOFT, linewidth = 0.4) +
+  annotate("text", x = peak_row$date, y = max(df$upper), label = "Weekly peak",
+           hjust = -0.1, vjust = 1, size = 2.6, color = INK_SOFT) +
+  geom_segment(data = last_row,
+               aes(x = date, xend = date, y = lower, yend = upper),
+               inherit.aes = FALSE, color = INK, linewidth = 0.5,
+               arrow = grid::arrow(ends = "both", length = grid::unit(0.05, "in"))) +
+  annotate("text", x = last_row$date, y = (last_row$lower + last_row$upper) / 2,
+           label = sprintf("95%% CI: ±%s", comma(round(half_width))),
+           hjust = 1.1, vjust = 0.5, size = 2.6, color = INK, fontface = "italic") +
   scale_fill_manual(name = NULL, values = c("95% prediction interval" = BRAND)) +
   scale_color_manual(name = NULL, values = c("Forecast mean" = BRAND)) +
+  scale_x_date(expand = expansion(mult = c(0.01, 0.05))) +
   scale_y_continuous(labels = label_comma()) +
   labs(
     title = "line-confidence · r · ggplot2 · anyplot.ai",
