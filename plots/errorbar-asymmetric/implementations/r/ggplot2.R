@@ -45,14 +45,27 @@ df <- tibble::tibble(
     station     = factor(station, levels = stations[order(median_mm)])
   )
 
+overall_median <- median(df$median_mm)
+
 # --- Plot -----------------------------------------------------------------
+# A dashed reference line at the cross-station median gives readers an
+# anchor to judge each station's rainfall against, beyond the sorted order.
 p <- ggplot(df, aes(x = station, y = median_mm)) +
+  geom_hline(
+    yintercept = overall_median, linetype = "dashed",
+    color = INK_SOFT, linewidth = 0.5, alpha = 0.7
+  ) +
   geom_errorbar(
     aes(ymin = median_mm - error_lower, ymax = median_mm + error_upper),
     color = BRAND, width = 0.3, linewidth = 0.8
   ) +
   geom_point(color = BRAND, size = 2.8) +
-  coord_flip() +
+  annotate(
+    "text", x = 12.5, y = overall_median,
+    label = sprintf("All-station median: %s mm", label_comma()(round(overall_median))),
+    hjust = 0.5, vjust = 0, size = 2.6, color = INK_SOFT, fontface = "italic"
+  ) +
+  coord_flip(clip = "off") +
   scale_y_continuous(labels = label_comma()) +
   labs(
     title    = "errorbar-asymmetric · r · ggplot2 · anyplot.ai",
@@ -73,7 +86,7 @@ p <- ggplot(df, aes(x = station, y = median_mm)) +
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK, size = 12, face = "bold"),
     plot.subtitle     = element_text(color = INK_SOFT, size = 9),
-    plot.margin       = margin(12, 16, 12, 12)
+    plot.margin       = margin(22, 16, 12, 12)
   )
 
 # --- Save -------------------------------------------------------------------
