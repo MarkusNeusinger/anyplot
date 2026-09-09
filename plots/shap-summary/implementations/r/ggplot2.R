@@ -76,17 +76,29 @@ shap_df <- shap_df |>
   left_join(importance, by = "feature") |>
   mutate(feature = factor(feature, levels = importance$feature[order(importance$mean_abs_shap)]))
 
+# Call out the top driver feature (highest mean |SHAP value|) with a star
+# prefix on its axis label — a light storytelling touch beyond the raw sort.
+top_feature <- importance$feature[which.max(importance$mean_abs_shap)]
+feature_levels <- levels(shap_df$feature)
+axis_labels <- feature_levels
+axis_labels[feature_levels == top_feature] <- paste0("★ ", top_feature)
+
 # --- Plot ----------------------------------------------------------------
-p <- ggplot(shap_df, aes(x = shap_value, y = feature, color = feature_value_norm)) +
+# shape=21 gives points a stroke independent of fill, so mid-range values
+# (fill == PAGE_BG at the diverging midpoint, per style guide) stay visible
+# as a faint outlined ring rather than vanishing into the background.
+p <- ggplot(shap_df, aes(x = shap_value, y = feature, fill = feature_value_norm)) +
   geom_vline(xintercept = 0, color = INK_SOFT, linewidth = 0.5, linetype = "dashed") +
-  geom_jitter(height = 0.30, width = 0, size = 1.9, alpha = 0.55) +
-  scale_color_gradient2(
+  geom_jitter(shape = 21, color = INK_SOFT, stroke = 0.25,
+              height = 0.30, width = 0, size = 1.9, alpha = 0.55) +
+  scale_fill_gradient2(
     low = SHAP_LOW, mid = MIDPOINT_BG, high = SHAP_HIGH, midpoint = 0.5,
     breaks = c(0.06, 0.94), labels = c("Low", "High"),
-    name = "Feature\nvalue",
+    name = "Feature value",
     guide = guide_colorbar(barheight = unit(3.4, "cm"), barwidth = unit(0.35, "cm"))
   ) +
   scale_x_continuous(labels = label_dollar(scale = 1e-3, suffix = "k")) +
+  scale_y_discrete(labels = axis_labels) +
   labs(
     x = "SHAP Value (Impact on Predicted Price)",
     y = NULL,
