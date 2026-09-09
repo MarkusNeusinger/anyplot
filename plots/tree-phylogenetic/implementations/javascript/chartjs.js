@@ -112,6 +112,7 @@ function layout(node, parentX) {
 }
 layout(tree, 0);
 const n = leafCounter;
+const maxXTick = Math.ceil(maxX);
 
 // --- Clade colors (Imprint palette, canonical order) -----------------------
 const cladeColors = {
@@ -119,6 +120,12 @@ const cladeColors = {
   platyrrhini: t.palette[1], // lavender
   cercopithecidae: t.palette[2], // blue
   hominidae: t.palette[3], // ochre — great apes, incl. the human lineage
+};
+const cladeNames = {
+  strepsirrhini: "Strepsirrhini",
+  platyrrhini: "Platyrrhini",
+  cercopithecidae: "Cercopithecidae",
+  hominidae: "Hominidae (great apes)",
 };
 const BACKBONE = t.inkSoft;
 
@@ -170,7 +177,7 @@ document.getElementById("container").appendChild(canvas);
 // --- Chart ---------------------------------------------------------------
 const TITLE = "tree-phylogenetic · javascript · chartjs · anyplot.ai";
 const SUBTITLE =
-  "Branch & label color marks family-level clades — Strepsirrhini, Platyrrhini, Cercopithecidae, Hominidae (great apes)";
+  "Branch & label color marks family-level clades — see legend below";
 
 new Chart(canvas, {
   type: "scatter",
@@ -207,13 +214,33 @@ new Chart(canvas, {
         font: { size: 14, style: "italic" },
         padding: { bottom: 18 },
       },
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: "bottom",
+        onClick: () => {},
+        labels: {
+          generateLabels: () =>
+            Object.keys(cladeColors).map((key) => ({
+              text: cladeNames[key],
+              fillStyle: cladeColors[key],
+              strokeStyle: cladeColors[key],
+              lineWidth: 0,
+              pointStyle: "circle",
+            })),
+          color: t.ink,
+          font: { size: 14 },
+          usePointStyle: true,
+          boxWidth: 10,
+          boxHeight: 10,
+          padding: 20,
+        },
+      },
     },
     scales: {
       x: {
         type: "linear",
         min: -0.3,
-        max: maxX + 0.3,
+        max: maxXTick + 0.3,
         border: { color: t.inkSoft },
         grid: { color: t.grid },
         title: {
@@ -221,6 +248,11 @@ new Chart(canvas, {
           text: "Relative evolutionary distance",
           color: t.ink,
           font: { size: 16 },
+        },
+        afterBuildTicks: (axis) => {
+          axis.ticks = Array.from({ length: maxXTick + 1 }, (_, i) => ({
+            value: i,
+          }));
         },
         ticks: { color: t.inkSoft, font: { size: 14 } },
       },
