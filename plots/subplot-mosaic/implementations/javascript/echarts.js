@@ -1,3 +1,7 @@
+// anyplot.ai
+// subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
 // anyplot.ai
 // subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
