@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: sparkline-basic
 created: '2026-09-09T18:13:34Z'
-updated: '2026-09-09T18:18:08Z'
+updated: '2026-09-09T18:28:19Z'
 generated_by: claude-sonnet
 workflow_run: 34387121851
 issue: 1011
@@ -12,53 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Clever adaptation of the sparkline concept to the fixed 3200x1800 landscape canvas:
-    four table-style rows each contain a ~18:1 wide-and-short sparkline, honoring
-    the spec''s compact-aspect-ratio guidance for the mark itself while filling the
-    mandated canvas via the ''table cells'' dashboard use case named in the spec''s
-    Applications section.'
-  - Clean typographic hierarchy per row (company name, ticker, price, colored percent-change
-    badge with arrow) reads like a real fintech product table.
-  - 'Correct, redundant color coding: green (#009E73, palette[0]) for gains and red
-    (#AE3030, palette[4], a legitimate Imprint palette member) for losses, reinforced
-    by up/down arrows and text rather than relying on hue alone.'
-  - Both up and down trends are shown across varied volatility and price scales ($13-$164),
-    giving good feature coverage for a trend-shape chart.
-  - No axes, ticks, or gridlines anywhere - correctly honors the sparkline's 'extreme
-    minimalism' requirement.
-  - First/last point markers (hollow vs. filled) and a subtle area fill implement
-    two of the spec's optional features.
-  - Both themes render correctly with identical data colors and theme-correct chrome
-    (background, text, divider lines).
+  - Rebuilt the per-stock rows with D3's idiomatic svg.selectAll('g.row').data(stocks).join('g')
+    data-join, directly addressing the LM-01 feedback from attempt 1.
+  - Added min/max highlight dots (skipping indices that coincide with the first/last
+    markers), completing the last unimplemented optional spec feature.
+  - Standout-mover emphasis (subtle 5%-opacity row tint + bolder company name on the
+    largest absolute mover, Halcyon Health at -65.2%) gives the plot a clear visual
+    hierarchy that was missing before.
+  - 'Clever adaptation of the sparkline concept to the fixed 3200x1800 canvas: four
+    table-style rows, each a ~19:1 wide-and-short sparkline mark, honoring the spec''s
+    compact-aspect-ratio note for the mark itself while filling the mandated canvas
+    via the ''table cells'' dashboard use case from the spec''s Applications section.'
+  - 'Correct, redundant color coding: green (#009E73) for gains, red (#AE3030) for
+    losses, reinforced by arrow glyphs and text, not hue alone.'
+  - Both themes render correctly with identical data colors and fully theme-correct
+    chrome (text, dividers, backgrounds).
   weaknesses:
-  - The four per-stock rows are built with an imperative stocks.forEach(...) loop
-    and individual .append() calls rather than D3's idiomatic selection.data(stocks).join('g')
-    pattern - a missed opportunity to demonstrate D3's core data-binding paradigm
-    for a naturally repeated row structure.
-  - The spec's optional 'highlight min/max points with colored dots' feature is not
-    implemented - only first/last points are marked.
-  - 'Design excellence is solid but stops short of publication-ready: no emphasis
-    singles out the standout mover (Halcyon Health, -65.2%), so the viewer has to
-    compare all four percentages manually instead of being guided to the biggest story
-    in the data.'
-  - The lcg/buildSeries helper functions add structure beyond a flat top-to-bottom
-    script; understandable since the browser has no seeded RNG, but keep the rest
-    of the script as flat as possible.
+  - The lcg/buildSeries helper functions and the rows.each() callback add structure
+    beyond a flat top-to-bottom script (acceptable given the browser has no seeded
+    RNG, but keep in mind for CQ-01 on future revisions).
+  - 'LM-02 remains generic: curveMonotoneX and tspan composition are nice touches
+    but not features unique to D3 specifically.'
+  - The standout-mover tint is quite subtle (5% opacity) — a slightly stronger treatment
+    (e.g. 8-10% opacity or a small badge) would push DE-03 storytelling from good
+    to excellent.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Bold dark title "sparkline-basic · javascript · d3 · anyplot.ai" centered at top, clearly legible. Each of the four rows has a bold dark company name, a smaller soft-gray ticker with letter-spacing, a large bold price, and a colored percent-change badge with a triangle arrow. Thin light-gray divider lines separate rows. All text is dark-on-light and reads clearly.
-      Data: Row 1 (Nova Robotics) and row 3 (Crestline Energy) are upward-trending green (#009E73) sparklines with a light green area fill; row 2 (Bluewave Foods) and row 4 (Halcyon Health) are downward-trending red/maroon sparklines with a light red area fill. Each line ends in a filled dot (current value) and starts with a hollow ring (starting value).
-      Legibility verdict: PASS - all text and data elements are clearly readable, no overlap, no clipping at any edge.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark centered title "sparkline-basic · javascript · d3 · anyplot.ai" at top. Four table-style rows (Nova Robotics/NVRO, Bluewave Foods/BLUW, Crestline Energy/CRST, Halcyon Health/HLCN), each with dark company name, gray ticker, bold price, and a colored arrow+percentage. Thin light-gray divider lines separate rows. The bottom row (Halcyon Health) has a subtle full-row reddish tint calling out the largest mover.
+      Data: Two rows trend up in brand green (#009E73) with light green area fill; two trend down in matte red (#AE3030) with light red area fill. Each line starts with a hollow ring marker, ends with a filled dot, and has small faded dots marking the series min/max (skipped where they'd coincide with first/last).
+      Legibility verdict: PASS — all text (title, names, tickers, prices, percentages) is clearly dark-on-light and readable; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title and per-row labels now rendered in light/white text against the dark background - fully legible, no dark-on-dark issues anywhere (company names, tickers, prices, dividers all clearly visible).
-      Data: Line and fill colors are identical to the light render (#009E73 green rows, #AE3030 red rows) - only the chrome (background, text, divider color) flips, confirming the palette rule. Hollow start markers and filled end markers remain visible against the dark background.
-      Legibility verdict: PASS - all text is clearly readable in the dark theme, no dark-on-dark failures, data colors match the light render exactly.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout; title and all per-row text now render in light/white, remaining fully legible. Dividers and the standout tint are still visible against the dark surface.
+      Data: Line/fill/marker colors are identical to the light render (#009E73 green, #AE3030 red) — only chrome (background, text, dividers) flipped, confirming palette compliance.
+      Legibility verdict: PASS — no dark-on-dark failures anywhere; ticker and price text remain readable at their secondary/tertiary sizes.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,71 +61,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14-22px), readable in both themes,
-          no overflow or clipping
+        comment: All font sizes explicitly set (14/16/20/22px); readable in both themes,
+          no dark-on-dark or light-on-light failures
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2.5px lines and 3.5-5px markers well-suited to ~40-point sparse series
+        comment: 40-point series with 2.5px lines and 3.5-5px markers are well-sized
+          for the compact sparkline mark
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green direction coding is redundantly reinforced with arrows
-          and text, not the sole signal
+        comment: Green/red is reinforced redundantly with arrow glyphs and text, not
+          hue-only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Four rows balanced across the canvas, generous but not wasteful margins
+        comment: Four rows fill ~94% of the CSS mount height with balanced margins;
+          nothing crowded or clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A - sparkline spec explicitly forbids axes/labels; title is descriptive
+        comment: N/A axes by spec design (pure sparkline); title matches mandated
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second color #AE3030 is a valid Imprint palette
-          member; both renders theme-correct'
+        comment: 'Up=#009E73, down=#AE3030 (legitimate finance semantic exception);
+          identical data colors across themes; backgrounds are #FAF8F1/#1A1A17'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        passed: true
-        comment: Thoughtful fintech-table typography and hierarchy, above library
-          defaults, short of full publication polish
+        comment: Fintech-table typography plus the new standout tint/bold treatment
+          reads as intentional, above-default design
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        passed: true
-        comment: All axis chrome removed, subtle 1px dividers, considered hollow/filled
-          marker treatment
+        comment: No axes/frames, subtle dividers, considered min/max + first/last
+          markers
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Color and arrows create visual hierarchy for direction, but no emphasis
-          calls out the standout mover
+        comment: Repair added a subtle full-row tint + bolder name on the largest
+          mover (Halcyon Health, -65.2%), giving the viewer a clear focal point without
+          an explicit annotation
     spec_compliance:
       score: 15
       max: 15
@@ -142,50 +135,44 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct minimalist sparkline construction, no axes
+        comment: 'Correct sparkline mark: continuous line, no axes/ticks/gridlines'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: No axes/labels/gridlines; compact per-sparkline aspect; fill + first/last
-          markers implemented
+        comment: 'All optional features now present: first/last markers, min/max highlight,
+          area fill, standout emphasis'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Sequential index to x, value to y, correctly scaled per row
+        comment: Index-to-value mapping correct, full series visible per row
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format exact; color/arrow coding acts as an inline legend
+        comment: Title matches `sparkline-basic · javascript · d3 · anyplot.ai`; no
+          legend needed (per-row labels serve that role)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: true
-        comment: Both up and down trends with varied volatility and scale shown
+        comment: Up and down trends, varied volatility/drift, and now min/max extremes
+          are all represented across the 4 series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, plausible finance scenario with fictional company names
-          and tickers
+        comment: Fictional stock tickers/prices, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Prices and percent changes are internally consistent and realistic
+        comment: Per-share prices and percent moves are all plausible
     code_quality:
       score: 9
       max: 10
@@ -194,60 +181,54 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Mostly flat script; small lcg/buildSeries helpers needed for deterministic
-          browser RNG
+        comment: Flat top-to-bottom otherwise, but the lcg/buildSeries helpers plus
+          rows.each() add structure beyond a bare script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
         comment: Fixed-seed LCG per series
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No imports beyond the global d3
+        comment: No imports beyond the d3 global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI or over-engineering
+        comment: No fake functionality; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Single svg sized from ANYPLOT_SIZE, no animation, mount-node contract
-          respected
+        comment: Correct mount-node contract, no animation
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
-        comment: Correct scale/shape-generator usage, but row iteration uses forEach
-          instead of D3's data-join pattern
+        comment: Repair replaced the imperative forEach with svg.selectAll('g.row').data(stocks).join('g')
+          — the canonical D3 data-join pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: curveMonotoneX interpolation and multi-part tspan text composition
-          leverage D3's low-level control
-  verdict: REJECTED
+        comment: curveMonotoneX interpolation, d3.extent, and multi-part tspan composition;
+          no feature that couldn't be replicated in another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
