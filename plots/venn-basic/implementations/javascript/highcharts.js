@@ -88,25 +88,53 @@ function drawVennDiagram(chart) {
       .add();
   });
 
-  // Set-name labels, positioned just outside each circle.
+  // Set-name labels, positioned just outside each circle. Rendered in the
+  // theme ink color (not the raw palette hue) so all three stay above WCAG
+  // large-text contrast in light mode; the outer circle stroke already
+  // carries the color-coded set identity.
   const nameLabels = [
-    { text: setLabels[0], x: centerHiking.x, y: centerHiking.y - rHiking - 16, color: t.palette[0] },
-    { text: setLabels[1], x: centerCycling.x, y: centerCycling.y - rCycling - 16, color: t.palette[1] },
-    { text: setLabels[2], x: centerSwimming.x, y: centerSwimming.y + rSwimming + 34, color: t.palette[2] },
+    { text: setLabels[0], x: centerHiking.x, y: centerHiking.y - rHiking - 16 },
+    {
+      text: setLabels[1],
+      x: centerCycling.x,
+      y: centerCycling.y - rCycling - 16,
+    },
+    {
+      text: setLabels[2],
+      x: centerSwimming.x,
+      y: centerSwimming.y + rSwimming + 34,
+    },
   ];
-  nameLabels.forEach(({ text, x, y, color }) => {
+  nameLabels.forEach(({ text, x, y }) => {
     renderer
       .text(text, x, y)
       .attr({ align: "center" })
-      .css({ color, fontSize: "18px", fontWeight: "600", fontFamily: "inherit" })
+      .css({
+        color: t.ink,
+        fontSize: "18px",
+        fontWeight: "600",
+        fontFamily: "inherit",
+      })
       .add();
   });
 
   // Region count labels — one per exclusive slice, plus the triple overlap.
   const regionLabels = [
-    { value: onlyHiking, x: centerHiking.x - rHiking * 0.45, y: centerHiking.y - rHiking * 0.3 },
-    { value: onlyCycling, x: centerCycling.x + rCycling * 0.45, y: centerCycling.y - rCycling * 0.3 },
-    { value: onlySwimming, x: centerSwimming.x, y: centerSwimming.y + rSwimming * 0.5 },
+    {
+      value: onlyHiking,
+      x: centerHiking.x - rHiking * 0.45,
+      y: centerHiking.y - rHiking * 0.3,
+    },
+    {
+      value: onlyCycling,
+      x: centerCycling.x + rCycling * 0.45,
+      y: centerCycling.y - rCycling * 0.3,
+    },
+    {
+      value: onlySwimming,
+      x: centerSwimming.x,
+      y: centerSwimming.y + rSwimming * 0.5,
+    },
     {
       value: hikingCycling,
       x: (centerHiking.x + centerCycling.x) / 2,
@@ -128,7 +156,12 @@ function drawVennDiagram(chart) {
     renderer
       .text(String(value), x, y)
       .attr({ align: "center" })
-      .css({ color: t.ink, fontSize: "20px", fontWeight: "600", fontFamily: "inherit" })
+      .css({
+        color: t.ink,
+        fontSize: "20px",
+        fontWeight: "600",
+        fontFamily: "inherit",
+      })
       .add();
   });
 }
