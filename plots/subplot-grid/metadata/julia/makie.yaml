@@ -1,0 +1,236 @@
+library: makie
+language: julia
+specification_id: subplot-grid
+created: '2026-09-09T19:10:25Z'
+updated: '2026-09-09T19:30:26Z'
+generated_by: claude-sonnet
+workflow_run: 34393013175
+issue: 2782
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - linkxaxes! between Price Trend and Trading Volume creates a genuine shared-axis
+    dashboard comparison, directly satisfying the spec's shared-vs-independent-axes
+    requirement
+  - Per-panel grid strategy (y-only grid for the line/bar/histogram panels, both-axes
+    grid for the scatter panel) follows the style guide's grid guidance exactly
+  - Focal-point storytelling via the peak-price marker (white stroke) and the highlighted
+    volume-spike bar, without resorting to text annotations
+  - Theme-adaptive chrome is fully correct in both renders — no dark-on-dark or light-on-light
+    failures, and the Imprint data colors are pixel-identical between light and dark
+  - 'Idiomatic CairoMakie: Figure/Axis grid layout, band! fill under the price line,
+    Label spanning fig[0, 1:2] for the figure-level title, colgap!/rowgap! for spacing
+    control'
+  weaknesses:
+  - Volume vs. Return scatter markers use ochre (#BD8233) with strokewidth=0 — one
+    of the five Imprint hues that fall below WCAG 3:1 contrast on the cream background;
+    a thin ink-colored stroke (strokewidth≈1, strokecolor=INK) would tighten accessibility
+    margin per the style guide's optional-outline guidance
+  - Subplot title sizes (15pt) sit close to the tick-label weight in the type hierarchy
+    — a touch more differentiation between panel titles and tick labels would sharpen
+    the hierarchy, though current sizes are fully legible
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target exactly (not pure white).
+      Chrome: Title "subplot-grid · julia · makie · anyplot.ai" in bold dark ink, fully legible. Each of the four panel titles (Price Trend, Return Distribution, Trading Volume, Volume vs. Return) is dark and crisp. Axis labels (Price (USD), Daily Return (%), Trading Days, Trading Day, Volume (shares)) are dark ink; tick labels are softer gray-brown, all readable. Subtle y-only grid on the line/bar/hist panels, both-axes grid on the scatter panel.
+      Data: First series (price line + band fill + peak marker) is Imprint green #009E73. Histogram is lavender, volume bars are blue (spike day full-opacity, rest at ~60% alpha), scatter points are ochre. Colors read clearly against the light surface.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target exactly (not pure black).
+      Chrome: Title and panel titles render in light ink (#F0EFE8), fully legible against the dark surface — no dark-on-dark failures anywhere. Tick labels use the softer light-gray secondary-text token and remain clearly readable. Grid lines are faint and non-competing.
+      Data: Price line/band/marker, histogram, volume bars, and scatter markers are pixel-identical in hue to the light render — only the chrome (background, text, grid, spines) flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or panels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker/line/bar sizes well matched to each panel's density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No red-green-only signal; scatter ochre could use a stroke for extra
+          contrast margin (see weaknesses)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed, no overflow or cramping, generous colgap/rowgap
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct in both themes, data colors
+          identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Band fill, focal-point highlighting, per-panel color assignment
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, per-plot-type grid strategy, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak marker and spike-day emphasis guide the viewer without text
+          clutter
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 2x2 subplot grid, four distinct plot types
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Shared axes (linkxaxes!) and independent axes both demonstrated
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mappings correct across all four panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed given self-labeled
+          panels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Price, volume, return distribution, and their relationship all covered
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible financial dashboard, neutral (no real tickers)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price, volume, and return ranges all realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Figure/Axis grid layout, chrome NamedTuple splat reuse across axes
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: linkxaxes!, band!, Label spanning columns, colgap!/rowgap!
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - grid-styling
