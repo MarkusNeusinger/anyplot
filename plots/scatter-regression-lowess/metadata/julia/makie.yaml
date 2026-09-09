@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: scatter-regression-lowess
 created: '2026-09-09T06:56:52Z'
-updated: '2026-09-09T07:16:32Z'
+updated: '2026-09-09T07:24:17Z'
 generated_by: claude-sonnet
 workflow_run: 34321012506
 issue: 2855
@@ -12,57 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 86
 review:
   strengths:
-  - 'Realistic, domain-appropriate data: a photosynthesis light-response (P-I) curve
-    is a textbook LOWESS use case, with a genuinely non-linear saturating-then-declining
-    shape that benefits from local smoothing.'
-  - 'LOWESS parameters match spec guidance: frac=0.35 (within the 0.3-0.5 range),
-    tricube weighting, scatter alpha=0.55 (within the 0.5-0.7 range) -- the dense
-    mid-range overplotting flagged in the prior review is visibly improved.'
-  - 'Clean theme-adaptive chrome: title/labels/ticks/grid correctly flip between light
-    and dark via INK/INK_SOFT tokens, backgrounds match #FAF8F1/#1A1A17 exactly, and
-    Imprint data colors (brand green points, position-3 blue curve) are pixel-identical
-    across both renders.'
-  - Correct 3200x1800 canvas, correct output filename convention, single seeded script
-    driving both themes, top/right spines removed, frameless elevated-surface legend.
+  - LOWESS math is implemented correctly by hand (tricube-weighted local linear regression)
+    and produces a smooth, non-oscillating curve that tracks the photosynthesis light-response
+    saturation curve faithfully
+  - 'Realistic, neutral, domain-plausible data: a plant physiology light-response
+    curve (PAR vs. net CO2 assimilation) with correct units and physiologically sensible
+    magnitudes'
+  - 'Theme-adaptive chrome is correctly threaded through every element (background,
+    ink, soft ink, spines, grid) and both renders are legible with identical data
+    colors (#009E73 scatter, #4467A3 curve)'
+  - 'Clean idiomatic Makie structure: explicit Axis kwargs, spines/gridlines styled
+    per the style guide, canvas exactly 3200x1800, no functions/classes, single seeded
+    RNG'
   weaknesses:
-  - 'The newly-added 95% CI confidence band is effectively invisible in both renders:
-    pixel sampling across the full width of both plot-light.png and plot-dark.png
-    finds no perceptible shaded region around the LOWESS curve, even near x=0 where
-    the band should be widest. At color=(CURVE_COLOR, 0.18) the fill is too faint
-    and, given the tight local weighted-regression standard errors from n=200 points,
-    the band is only a few pixels tall in most places -- raise the fill alpha to roughly
-    0.3-0.4 and/or verify the polygon is actually being drawn (not just computed)
-    so the CI reads as an intentional design element rather than not existing.'
-  - 'The band''s legend entry is broken: `band!(...; label="95% CI")` never produces
-    a third legend row -- both plot-light.png and plot-dark.png show only two entries
-    ("Observations", "LOWESS fit"), confirmed by direct crop inspection of the legend
-    region in both themes. Makie''s automatic axislegend does not appear to pick up
-    a label from the `band!`/`Band` recipe the way it does for `scatter!`/`lines!`.
-    Either add an explicit legend entry (e.g. a `PolyElement` passed to `axislegend(ax,
-    [scatter_elem, line_elem, PolyElement(color=(CURVE_COLOR,0.18))], [...])`) or
-    drop the ineffective `label` kwarg so the code doesn''t imply a legend row that
-    never renders.'
-  - 'Library Mastery stays at the default floor: beyond the (currently non-functional)
-    confidence band, no Makie-specific idiom sets this apart from a generic Axis/scatter!/lines!/axislegend
-    combo.'
+  - 'The 95% CI confidence band is computed and passed to band!(), and a third legend
+    entry (''95% CI'' via PolyElement) is built for it, but neither renders: pixel-sampling
+    the saved PNG along the flat middle of the curve (e.g. x=1800) shows the exact
+    background color #FAF8F1 immediately above/below the line with zero blue tint
+    at any offset, and the rendered legend box only ever shows 2 rows (''Observations'',
+    ''LOWESS fit'') -- the ''95% CI'' swatch+label never appears at all. Either the
+    band_lo/band_hi values collapse to near-zero width (check the SE formula -- effective_n
+    = sw^2/sum(w.^2) with k=70 of 200 points likely overestimates effective sample
+    size, making the band too thin to see) or band!() is being drawn in a z-order/units
+    combination that makes it invisible; the legend truncation to 2 of 3 entries needs
+    separate debugging (verify legend_elements/legend_labels stay length-3 and that
+    axislegend isn''t silently dropping the PolyElement row). Fix by either making
+    the band visibly wide enough to read (e.g. verify SE isn''t near-zero, or swap
+    to a less optimistic effective-N estimate) and confirming all 3 legend rows render,
+    or removing the band/legend entry entirely since it is optional per the spec and
+    currently ships as dead code that promises a feature it doesn''t deliver.'
+  - 'Design Excellence is solid but not exceptional: the confidence band would have
+    been the main visual-storytelling differentiator (showing where the LOWESS fit
+    is less certain, e.g. at the sparse tails of the light-intensity range) and its
+    absence flattens the visual hierarchy back to a fairly standard scatter+line composition.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "scatter-regression-lowess · julia · makie · anyplot.ai" in bold dark ink, centered top, fully within canvas bounds (no clipping). X-axis label "Light Intensity (μmol photons m⁻² s⁻¹)" and Y-axis label "Net Photosynthesis (μmol CO₂ m⁻² s⁻¹)" both dark ink, clearly readable. Tick labels in a softer grey-brown, legible. Grid lines faint on both axes. Top/right spines removed (L-shaped frame). Legend top-left, frameless, on a slightly elevated cream box, reads "Observations" and "LOWESS fit" only -- no third "95% CI" row despite the code labeling the confidence band.
-      Data: Scatter points in brand green (#009E73) with a theme-matched stroke, alpha ~0.55, showing a clear saturating light-response shape (steep rise 0-500, plateau ~750-1500, slight decline after 1500 -- photoinhibition). LOWESS fit line in Imprint blue (#4467A3), smooth, tracks the point cloud's central tendency without oscillating. Pixel sampling around the curve (including near x=0, where the CI should be widest) finds no perceptible shaded confidence band anywhere in the image.
-      Legibility verdict: PASS -- all rendered text is clearly readable against the light background; no light-on-light issues. (The CI band is a missing/invisible-element issue, not a legibility issue.)
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "scatter-regression-lowess · julia · makie · anyplot.ai" in bold dark ink at top center, ~35% of plot width, fully visible with no clipping. X-axis label "Light Intensity (μmol photons m⁻² s⁻¹)" and y-axis label "Net Photosynthesis (μmol CO₂ m⁻² s⁻¹)" both in dark ink, similarly sized and balanced. Tick labels in a softer gray-ink tone, clearly legible. Grid lines are faint horizontal/vertical off-black at low alpha, subtle but visible. Top and right spines removed; left/bottom spines in soft ink.
+      Data: ~200 semi-transparent teal-green (#009E73) scatter points showing a saturating light-response curve (steep rise from ~0 to ~700 μmol, then a broad plateau, slight late decline), overlaid with a solid blue-gray (#4467A3) LOWESS line that tracks the shape smoothly with no visible oscillation. A 95% CI band was computed and given a legend entry in code, but pixel-sampling shows no blue tint anywhere around the line and the legend only shows 2 rows ("Observations", "LOWESS fit") -- the confidence band does not actually render (see weaknesses).
+      Legibility verdict: PASS (all rendered chrome and data are readable; the only issue is a non-rendering optional feature, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/soft-grey tones, fully legible against the dark surface. Grid lines are faint light lines. Legend box uses the dark elevated surface with light text, frameless, matching the light-theme layout -- again only two entries, no "95% CI" row.
-      Data: Scatter (brand green) and LOWESS curve (Imprint blue) are pixel-identical in hue/saturation to the light render -- only chrome (background, text, grid, legend box) flipped as expected. As in the light render, no confidence band is visible anywhere along the curve.
-      Legibility verdict: PASS -- no dark-on-dark failures; every rendered text element (title, axis labels, ticks, legend) is clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels now in light ink (#F0EFE8) / soft light-gray, both clearly legible against the dark surface. Grid lines remain faint and visible without dominating. No dark-on-dark text anywhere.
+      Data: Same #009E73 scatter and #4467A3 LOWESS line as the light render -- data colors are identical between themes, only chrome flipped, per the Imprint palette rule. Same missing-band issue as the light render (no visible band, legend still only 2 rows).
+      Legibility verdict: PASS (fully readable in dark mode; same non-rendering-band caveat as above, not a legibility defect).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -70,77 +70,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes explicitly set (title
-          20, labels 14, ticks 12) and scale correctly.
+        comment: All titles/labels/ticks readable in both themes with explicit font
+          sizes; no light-on-light or dark-on-dark issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; legend sits in an empty region of the plot.
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: The 95% CI band is present in code but not perceptibly visible anywhere
-          in either render -- pixel sampling around the curve, including near x=0
-          where the band should be widest, shows no shaded region. A newly-added element
-          that renders invisibly is a genuine visibility failure.
+        passed: true
+        comment: Markersize 9 with alpha 0.55 and 200 points is well-chosen density;
+          LOWESS line at width 3 is clearly distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. blue, not red-green; adequate contrast on both surfaces.
+        comment: Green/blue combination has good contrast and is CVD-safe; not a red-green
+          pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas (no gate failure), generous margins, nothing
-          clipped.
+        comment: Canvas exactly 3200x1800; title ~35% width, well within bounds; no
+          overflow or cutoff
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units; correctly formatted title.
+        comment: Both axis labels descriptive with correct units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, curve uses Imprint position 3; backgrounds
-          correct in both themes; data colors identical across themes.'
+        comment: 'First series #009E73, curve #4467A3 (Imprint position 3); backgrounds
+          match theme tokens exactly in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Competent theme-token-driven polish (matched stroke, elevated legend
-          surface) but the intended new differentiator -- the CI band -- doesn't read
-          visually, so it adds no sophistication in practice.
+        passed: true
+        comment: Custom Imprint palette and alpha-blended scatter show polish, but
+          the CI band -- the intended sophistication differentiator -- doesn't actually
+          render
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed, subtle grid, generous whitespace; standard style-guide
-          defaults rather than extra refinement.
+        passed: true
+        comment: Spines removed, subtle themed grid, generous whitespace, elevated
+          legend background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: The saturating/declining curve tells a clear story on its own; the
-          uncertainty story the band was meant to add is not delivered.
+        passed: true
+        comment: Saturation curve shape reads clearly as the light-response plateau;
+          would be stronger with a working uncertainty band at the sparse tails
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -148,55 +147,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter with LOWESS regression overlay, correctly implemented via
-          local weighted regression.
+        comment: Scatter + LOWESS regression curve, correct
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Distinct solid contrasting-color curve, frac=0.35 within guidance,
-          moderate point alpha, axis labels + descriptive title all present.
+        comment: Distinct solid contrasting curve, frac=0.35 bandwidth, alpha=0.55
+          points all match spec; optional CI band is present in code but non-functional
+          in the render
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = light intensity, Y = net photosynthesis, full data range shown
-          on both axes.
+        comment: X=light intensity, Y=net photosynthesis, correct and complete axes
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title format is correct, but the legend advertises only 2 of the
-          3 labeled series -- the '95% CI' entry never renders in either theme, so
-          the legend doesn't match what the code intends to show.
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match rendered
+          series (Observations, LOWESS fit)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Demonstrates LOWESS's core value (adapting to a saturating, non-linear
-          shape) well; the CI band would have added an extra dimension had it rendered.
+        comment: Scatter, smooth non-oscillating LOWESS fit, and (attempted) CI band
+          all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral photosynthesis-light-response scenario with realistic
-          units.
+        comment: Plant physiology light-response curve is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: PAR range (0-2000 μmol photons m⁻² s⁻¹) and photosynthesis rate range
-          (~1-13.5 μmol CO2 m⁻² s⁻¹) are realistic for this domain.
+        comment: PAR 0-2000 μmol and net photosynthesis 0-13.5 μmol CO2 are physiologically
+          sensible
     code_quality:
       score: 9
       max: 10
@@ -206,59 +202,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; flat script.
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before data generation.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie, Colors, Random -- all used.
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: The `label = "95% CI"` kwarg on `band!` is dead weight -- it never
-          produces a legend entry, so the code implies behavior it doesn't deliver.
+        comment: The band!/legend code for the CI is dead weight -- it computes and
+          wires up a feature that never appears in the output
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png via px_per_unit=2, matching convention.
+        comment: save(plot-$(THEME).png, px_per_unit=2), current Makie API
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Correct high-level Axis/scatter!/lines!/axislegend usage, but the
-          band! + label combination is used incorrectly relative to Makie's automatic
-          legend behavior.
+        passed: true
+        comment: Axis kwargs and theme tokens used idiomatically, but band! usage
+          does not achieve the intended visual result
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No Makie-specific standout feature beyond the (currently non-functional)
-          confidence band.
-  verdict: REJECTED
+        passed: true
+        comment: Attempted band! + custom MarkerElement/LineElement/PolyElement legend
+          construction is a distinctive Makie technique, though currently broken
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - grid-styling
