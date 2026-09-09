@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: tree-phylogenetic
 created: '2026-09-09T20:44:01Z'
-updated: '2026-09-09T20:49:59Z'
+updated: '2026-09-09T21:00:33Z'
 generated_by: claude-sonnet
 workflow_run: 34401851779
 issue: 3070
@@ -12,52 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phyl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - 'Technically correct phylogram: the x-axis encodes cumulative branch length (evolutionary
-    distance) via `x = parentX + node.length`, so branch lengths are truly proportional
-    rather than a generic dendrogram with equal-spaced levels.'
-  - 'Correct Imprint palette usage: first clade (Prosimians) is brand green #009E73
-    and the remaining three clades follow canonical positions 2-4 (lavender, blue,
-    ochre); data colors are identical between light and dark renders.'
-  - Biologically realistic and neutral primate phylogeny data with sensible branch-length
-    magnitudes (e.g. very short Human-Chimp split at 0.018-0.02, deep Prosimian divergence
-    at 0.32) and a correct taxonomic structure (Prosimians / Anthropoidea -> New World
-    Monkeys / Catarrhini -> Old World Monkeys / Apes).
-  - 'Sound library choice: uses ECharts'' `graph` series on a `cartesian2d` coordinate
-    system with invisible corner nodes to produce the classic right-angle cladogram
-    routing, since the native `tree` series only supports depth-based (not quantitative
-    branch-length) layouts.'
-  - 'Clean theme-adaptive chrome: title, axis label, tick labels, and legend all read
-    clearly on both the warm off-white and warm near-black backgrounds with no dark-on-dark
-    or light-on-light failures.'
+  - 'Technically correct phylogram: x-axis encodes cumulative branch length (x = parentX
+    + node.length), so branches are truly proportional to evolutionary distance rather
+    than an equal-spaced dendrogram.'
+  - 'Both attempt-1 weaknesses are now fixed: the tooltip is enabled with a rich formatter
+    (species, clade, branch length, cumulative distance), and a static callout annotates
+    the shortest split (Human-Chimpanzee, 0.018) as a clear focal point.'
+  - 'emphasis.focus: ''adjacency'' plus matching blur states give the graph series
+    a genuine ECharts interaction showcase (trace a lineage on hover) at zero cost
+    to the static PNG.'
+  - 'Correct Imprint palette usage: first clade (Prosimians) is brand green #009E73,
+    remaining three clades follow canonical positions 2-4; data colors are pixel-identical
+    between light and dark renders.'
+  - Biologically realistic, neutral primate phylogeny with a correct taxonomic structure
+    (Prosimians/Anthropoidea -> New World Monkeys/Catarrhini -> Old World Monkeys/Apes)
+    and sensible branch-length magnitudes.
+  - 'Sound library choice: uses the graph series with invisible corner nodes to get
+    right-angle cladogram routing that ECharts'' native tree series (depth-based only)
+    cannot provide.'
+  - Clean theme-adaptive chrome with no legibility failures in either theme; muted
+    grey correctly distinguishes unclustered basal splits from the four highlighted
+    clades.
   weaknesses:
-  - 'Tooltip is fully disabled (`tooltip: { show: false }`); as an interactive JS
-    library, a hover tooltip surfacing species name / branch length / clade would
-    add real value in the HTML detail view with zero cost to the static PNG — an easy
-    library-mastery win that was left on the table.'
-  - 'No interactive-only flourish showcasing ECharts'' interaction model (e.g. legend-hover
-    emphasis to trace a single lineage, `emphasis.focus: ''series''`) — the implementation
-    is functionally correct but reads as a fairly plain static rendering.'
-  - The spec's suggestion to 'add a scale bar to indicate branch length units' is
-    only satisfied indirectly via the labeled continuous x-axis; a small in-plot scale
-    annotation would have been a nice-to-have refinement.
+  - 'The focal-point annotation text (''Shortest split: Human-Chimpanzee (0.018)'')
+    is set at fontSize 12 in italic, noticeably smaller than the 14-15px used elsewhere
+    in the chart chrome — fine at full size but the first element to lose legibility
+    if scaled down for a mobile-width thumbnail.'
+  - The spec's 'add a scale bar' note is still satisfied only indirectly via the labeled
+    continuous x-axis rather than a dedicated in-plot scale-bar glyph; acceptable
+    but a minor nice-to-have.
+  - No circular/radial layout variant is offered (spec lists it as one option among
+    rectangular); the rectangular phylogram chosen is fully valid and matches most
+    published trees, so this is not a deduction, just unexplored breadth.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the anyplot light-theme surface.
-      Chrome: Title "tree-phylogenetic · javascript · echarts · anyplot.ai" in bold dark ink, centered at top. A 4-item legend (Prosimians, New World Monkeys, Old World Monkeys, Apes (Hominoidea)) sits below the title with color swatches matching the branch/node colors. X-axis is labeled "Evolutionary distance (substitutions per site)" with dark-ink tick labels (0 to 0.7) and subtle vertical gridlines. Y-axis is hidden (species order is conveyed via leaf position and labels instead). All chrome text is clearly legible against the light background.
-      Data: A rectangular cladogram (phylogram) with right-angle branch routing. Branch lengths are drawn proportional to evolutionary distance along the x-axis. The first/brand series color (#009E73, green) is used for the Prosimians clade (Lemur, Galago); New World Monkeys (Marmoset, Squirrel Monkey) use lavender/purple; Old World Monkeys (Baboon, Macaque) use blue; Apes (Gibbon, Orangutan, Gorilla, Chimpanzee, Human) use ochre. The two deepest splits (root and Anthropoidea) that don't belong to a single named clade are drawn in a muted grey. Eleven species leaf labels are placed to the right of their leaf nodes in dark ink, with no overlap between labels or with branch lines.
-      Legibility verdict: PASS — all text (title, legend, axis label, tick labels, species labels) is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "tree-phylogenetic · javascript · echarts · anyplot.ai" centered at top; 4-item legend below (Prosimians, New World Monkeys, Old World Monkeys, Apes (Hominoidea)) with matching swatch colors; x-axis labeled "Evolutionary distance (substitutions per site)" with clear tick labels (0-0.7) and subtle vertical gridlines. All chrome text is dark ink on the light surface and fully readable.
+      Data: Rectangular cladogram with right-angle branch routing. First clade (Prosimians) uses brand green #009E73; the other three clades use violet, blue, and amber. Deep/unclustered splits (root and the Anthropoidea internal branch) render in muted grey, visually distinct from the four highlighted clades. 11 species leaf labels sit to the right of their nodes in dark ink with no overlap. A small italic grey annotation calls out the shortest split (Human-Chimpanzee, 0.018) near the bottom-right without colliding with any branch or label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with the anyplot dark-theme surface.
-      Chrome: Same layout as the light render — title, legend, and axis label/ticks are now rendered in light ink (white/light-grey) against the dark background. Gridlines remain subtle vertical lines, slightly lighter than the background.
-      Data: Identical tree topology and identical branch/node colors to the light render (green, lavender, blue, ochre for the four clades; grey/muted for the unclustered root branches) — confirming only chrome flips between themes, not data colors. Species leaf labels are rendered in light ink and remain fully legible with no overlap.
-      Legibility verdict: PASS — no dark-on-dark failures; all title, legend, axis, and species-label text is clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, and axis text flip to light ink (white/near-white) and remain fully legible against the dark surface — no dark-on-dark failures anywhere (title, legend, axis label, tick labels, leaf labels, and the italic callout are all clearly visible).
+      Data: Branch and node colors (green #009E73, violet, blue, amber, muted grey) are pixel-identical to the light render — only the background/chrome flipped, confirming correct theme-adaptive implementation. Layout and topology are identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,78 +69,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title 22, legend/labels 15, tick
-          labels 14); readable in both themes.
+        comment: All chrome text and leaf labels readable in both themes; the italic
+          12px focal-callout is the smallest element and the first to strain at mobile
+          scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between species labels, legend, or branch lines in
-          either render.
+        comment: No collisions between labels, branches, legend, or the new focal-point
+          annotation.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Leaf markers (size 16) and line widths (2.2-3) are appropriately
-          prominent for a sparse 11-leaf tree; internal branch-point dots (size 9)
-          are a bit small but not a real problem.
+        comment: Leaf nodes (16px) vs internal nodes (9px) sized to hierarchy; branch
+          line widths (2.2/3) distinguish muted vs. clade-colored edges.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues are CVD-distinct; clade identity is redundantly
-          encoded via legend + direct labels, not color alone.
+        comment: Four hue-distinct clade colors plus grey; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No clipping, generous margins, right-side margin (300px) comfortably
-          fits the longest leaf label.
+        comment: Canvas gate passed (3200x1800); nothing clipped; generous right margin
+          for leaf labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis descriptive with units ('substitutions per site'); title matches
-          the mandated format.
+        comment: X-axis descriptive with units; title matches required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First clade is brand green #009E73; remaining clades follow canonical
-          Imprint order 2-4; backgrounds are theme-correct #FAF8F1/#1A1A17.'
+        comment: 'First clade = #009E73; remaining clades follow canonical Imprint
+          order; backgrounds correct in both themes.'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom right-angle cladogram routing with clade-based color and muted-grey
-          unclustered branches shows real design intent, though the overall visual
-          language is a fairly conventional tree diagram.
+        comment: Clade coloring, right-angle corner routing, muted basal branches,
+          and a deliberate focal-point callout show real design intent.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No box frame, subtle vertical-only gridlines, generous whitespace
-          around the plot area.
+        comment: No frame/spines, subtle gridlines, generous whitespace, bottom-only
+          axis line.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Clade coloring plus branch-length geometry clearly communicates evolutionary
-          grouping and relative divergence, but there's no additional emphasis/annotation
-          beyond the base encoding.
+        comment: 'Attempt-1 weakness fixed: the Human-Chimpanzee shortest-split callout
+          gives the chart a clear narrative focal point beyond the base clade encoding.'
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rectangular phylogenetic tree / cladogram.
+        comment: Rectangular phylogram/cladogram with proportional branch lengths.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Tree structure, species labels, proportional branch lengths, and
-          clade color-coding are all present.
+        comment: Proportional branch lengths, clade color-coding, labeled scale axis
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = cumulative branch length, Y = leaf order; all 11 leaves and internal
-          nodes shown.
+        comment: X = cumulative evolutionary distance, Y = leaf order; all 11 species
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated 'tree-phylogenetic · javascript · echarts
-          · anyplot.ai' format; legend labels match the clade names.
+        comment: Title format correct; legend labels match clade names exactly.
     data_quality:
       score: 15
       max: 15
@@ -177,22 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows nested hierarchy, branch lengths, multiple clades, and both
-          close and distant relationships (Human-Chimp vs. Prosimian divergence).
+        comment: Branch lengths, clade grouping, root, leaf labels, scale axis all
+          present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral primate phylogeny with a biologically sound topology
-          and relative branch-length magnitudes.
+        comment: Real, neutral primate mtDNA phylogeny with correct taxonomic structure.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Branch lengths (0.018-0.32) sit in the realistic range for substitutions-per-site
-          units used in real molecular phylogenies.
+        comment: Branch lengths (0.014-0.32) are plausible substitutions-per-site
+          magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -202,33 +200,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small, purpose-built recursive layout function; no unnecessary classes.
+        comment: The recursive walk() function is necessary tree-layout logic, not
+          incidental complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded, deterministic tree data — no randomness.
+        comment: Fully hardcoded, deterministic tree data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided echarts global and ANYPLOT_TOKENS.
+        comment: No imports; uses the global echarts only.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom tree layout; no fake interactivity.
+        comment: No fake UI; appropriate complexity for a custom tree layout.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, current echarts API.
+        comment: animation:false, no explicit width/height/devicePixelRatio on init,
+          correct mount-node contract.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -236,21 +236,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Well-justified use of the graph series on a cartesian2d coordinate
-          system to get quantitative branch-length positioning that the native tree
-          series can't provide.
+        comment: Well-justified use of the graph series on cartesian2d for true quantitative
+          branch-length positioning, since the native tree series can't do that.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Tooltip is disabled entirely and no emphasis/interaction flourish
-          is used, missing an easy opportunity to showcase ECharts' interactivity
-          in the HTML output.
+        passed: true
+        comment: 'Attempt-1 weakness fixed: tooltip formatter, emphasis.focus:''adjacency'',
+          and matching blur states now showcase ECharts'' interaction model.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
