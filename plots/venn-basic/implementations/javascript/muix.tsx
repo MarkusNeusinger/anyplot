@@ -71,12 +71,16 @@ function VennMarks() {
     { name: setLabels[2], count: onlyC, x: centers[2].x + radii[2] * 0.32, y: centers[2].y + radii[2] * 0.4 },
   ];
 
-  const overlapRegions = [
+  const pairOverlapRegions = [
     { count: onlyAB, x: (centers[0].x + centers[1].x) / 2 - offset * 0.08, y: (centers[0].y + centers[1].y) / 2 },
     { count: onlyAC, x: (centers[0].x + centers[2].x) / 2 + offset * 0.08, y: (centers[0].y + centers[2].y) / 2 },
     { count: onlyBC, x: cx, y: centers[1].y + radii[1] * 0.62 },
-    { count: tripleABC, x: cx, y: cy + offset * 0.05 },
   ];
+
+  const tripleX = cx;
+  const tripleY = cy + offset * 0.05;
+  const calloutRadius = avgRadius * 0.24;
+  const circleStrokeWidths = [3, 2.25, 1.5];
 
   return (
     <>
@@ -89,7 +93,7 @@ function VennMarks() {
           fill={seriesColors[i]}
           fillOpacity={0.55}
           stroke={seriesColors[i]}
-          strokeWidth={2}
+          strokeWidth={circleStrokeWidths[i]}
         />
       ))}
       {onlyRegions.map((r) => (
@@ -102,11 +106,24 @@ function VennMarks() {
           </text>
         </React.Fragment>
       ))}
-      {overlapRegions.map((r, i) => (
+      {pairOverlapRegions.map((r, i) => (
         <text key={i} {...textProps} x={r.x} y={r.y} fontSize={22} fontWeight={600}>
           {r.count}
         </text>
       ))}
+      {/* Callout badge on the triple overlap — the diagram's focal point. */}
+      <circle
+        cx={tripleX}
+        cy={tripleY}
+        r={calloutRadius}
+        fill={t.pageBg}
+        fillOpacity={0.85}
+        stroke={t.ink}
+        strokeWidth={1.5}
+      />
+      <text {...textProps} x={tripleX} y={tripleY} fontSize={28} fontWeight={800} strokeWidth={4}>
+        {tripleABC}
+      </text>
     </>
   );
 }
@@ -125,7 +142,7 @@ export default function Chart() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 22,
+          fontSize: 26,
           fontWeight: 500,
           color: t.ink,
         }}
