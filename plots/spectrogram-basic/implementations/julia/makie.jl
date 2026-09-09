@@ -60,11 +60,11 @@ end
 
 power_db = 10 .* log10.(power .+ 1e-12)
 power_db .-= maximum(power_db)
-power_db = clamp.(power_db, -30.0, 0.0)
+power_db = clamp.(power_db, -50.0, 0.0)
 
 # --- Plot ---------------------------------------------------------------
 fig = Figure(
-    resolution = (1600, 900),
+    size = (1600, 900),
     fontsize = 14,
     backgroundcolor = PAGE_BG,
 )
@@ -72,7 +72,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title = "spectrogram-basic · julia · makie · anyplot.ai",
-    titlesize = 20,
+    titlesize = 24,
     titlecolor = INK,
     xlabel = "Time (s)",
     ylabel = "Frequency (Hz)",
@@ -97,7 +97,7 @@ ax = Axis(
 
 imprint_seq = cgrad([colorant"#009E73", colorant"#4467A3"])
 
-hm = heatmap!(ax, times, freqs, power_db'; colormap = imprint_seq, colorrange = (-30.0, 0.0))
+hm = heatmap!(ax, times, freqs, power_db'; colormap = imprint_seq, colorrange = (-50.0, 0.0))
 
 Colorbar(
     fig[1, 2],
@@ -105,9 +105,32 @@ Colorbar(
     label = "Power (dB)",
     labelcolor = INK,
     labelsize = 14,
+    ticks = -50:10:0,
     ticklabelsize = 12,
     ticklabelcolor = INK_SOFT,
     tickcolor = INK_SOFT,
+)
+
+# --- Fault-burst annotation (distinctive Makie touch) ------------------------
+fault_freq = 620.0
+scatter!(
+    ax,
+    [fault_center],
+    [fault_freq];
+    color = :transparent,
+    strokecolor = INK,
+    strokewidth = 2,
+    markersize = 22,
+)
+text!(
+    ax,
+    fault_center,
+    fault_freq;
+    text = "bearing fault",
+    align = (:left, :bottom),
+    offset = (10, 8),
+    color = INK,
+    fontsize = 12,
 )
 
 # --- Save -------------------------------------------------------------------
