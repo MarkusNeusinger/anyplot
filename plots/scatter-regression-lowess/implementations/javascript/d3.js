@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-regression-lowess: Scatter Plot with LOWESS Regression
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 83/100 | Created: 2026-09-09
+// Quality: 85/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
