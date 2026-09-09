@@ -1,0 +1,257 @@
+library: ggplot2
+language: r
+specification_id: tree-phylogenetic
+created: '2026-09-09T20:42:36Z'
+updated: '2026-09-09T20:57:22Z'
+generated_by: claude-sonnet
+workflow_run: 34402109457
+issue: 3070
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Fixed the attempt-1 legend-glyph bug: show.legend = FALSE now on geom_text(),
+    so both legend keys render as clean point+line swatches with no stray italic ''a''
+    bleeding underneath, in both themes.'
+  - 'Fixed the attempt-1 element-prominence weakness: branch linewidth raised 1.1→1.4
+    and tip marker size raised 2.8→3.4, giving the sparse 7-tip tree appropriate visual
+    weight on the wide canvas.'
+  - 'Clear visual hierarchy and genuine data storytelling: brand green (#009E73) highlights
+    the ''Great apes (Hominidae)'' clade against the muted semantic-anchor gray for
+    ''Other primates'', immediately drawing the eye to the human-relevant lineage.'
+  - Scientifically accurate, neutral divergence times (Human-Chimp ~6 Mya, Hominidae
+    ~15 Mya, Catarrhini ~29 Mya, root ~43 Mya) consistent with published primate phylogenomic
+    estimates.
+  - 'Theme-adaptive chrome correctly implemented: data colors (brand green, muted
+    gray) are pixel-identical between renders while background/text/grid flip appropriately;
+    clean idiomatic ggplot2 composition of a custom cladogram from geom_segment/geom_point/geom_text
+    since ggplot2 has no built-in phylo geom.'
+  weaknesses:
+  - No dedicated scale-bar annotation beyond the x-axis ticks - the spec suggests
+    a scale bar to indicate substitution/divergence units; the x-axis already serves
+    this role adequately, so this is a nice-to-have polish rather than a defect.
+  - 'Library Mastery is solid but not distinctive: the geom_segment/geom_point/geom_text
+    composition is the standard native-grammar workaround for trees in ggplot2 rather
+    than showcasing a more unique capability (e.g. ggplot2 extensions, custom stat,
+    or coord transform).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "Primate Phylogeny · tree-phylogenetic · r · ggplot2 · anyplot.ai" in dark ink, clearly readable, occupies well under 70% of plot width. X-axis label "Divergence time (millions of years ago)" and tick labels (40, 30, 20, 10, 0) in dark/soft-dark ink, all legible. Y-axis intentionally has no ticks/title since species names serve as the categorical axis. Subtle vertical major gridlines present but not competing with data. Legend "Clade" at bottom with two clean entries (green point+line swatch for "Great apes (Hominidae)", gray point+line swatch for "Other primates") - the attempt-1 stray "a" glyph artifact is gone in both entries.
+      Data: Rectangular cladogram with right-angled branches. "Great apes (Hominidae)" clade (Human, Chimpanzee, Gorilla, Orangutan) rendered in brand green (#009E73) with linewidth 1.4 and marker size 3.4; "Other primates" (Gibbon, Rhesus Macaque, Common Marmoset) rendered in muted gray at the same weight. Italic species tip labels sit to the right of each tip marker, fully within canvas bounds.
+      Legibility verdict: PASS - all title/axis/tick/legend text is clearly readable against the light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, x-axis label, and tick labels all rendered in light ink (white/light gray), clearly legible against the dark background - no dark-on-dark failures observed. Gridlines are subtle light vertical lines, visible but not dominant. Legend entries are clean (no stray glyph) here too.
+      Data: Data colors are identical to the light render - the Great-apes clade is the same #009E73 green with the same linewidth/marker size, and "Other primates" uses the theme-adaptive muted-gray token (correctly lighter in dark mode than in light mode, per the muted semantic-anchor definition). Only chrome flipped, as required.
+      Legibility verdict: PASS - all text reads clearly on the dark surface; brand green and muted gray both remain distinguishable and identical to the light render's data colors.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 12pt, axis title 10pt, axis/legend
+          text 8pt); readable in both themes; title fits without clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Attempt-1 stray italic 'a' legend-glyph artifact fixed via show.legend
+          = FALSE on geom_text() - legend keys are now clean in both themes; no other
+          overlaps.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Branch linewidth raised to 1.4 and tip marker size to 3.4 per attempt-1
+          feedback, giving the sparse 7-tip tree appropriate prominence on the wide
+          canvas.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. neutral gray is distinguishable regardless of color-vision
+          deficiency; not reliant on red-green.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a large share of the canvas, legend
+          sits directly below the plot, nothing cut off; landscape 3200x1800 confirmed
+          exact.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label descriptive with units ('millions of years ago'); y-axis
+          intentionally omitted since species labels serve that role.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; second clade uses the theme-adaptive ''muted''
+          semantic anchor appropriately; backgrounds and chrome are theme-correct
+          in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color hierarchy and clean typography, clearly above library
+          defaults; not yet at full publication-level polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal grid, spines/ticks removed, generous whitespace; the attempt-1
+          stray legend-glyph artifact that undercut refinement is now fixed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Brand-green vs. muted-gray clade coloring creates an immediate, clear
+          focal point on the human-relevant lineage.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rectangular cladogram/phylogram with proportional branch
+          lengths.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Species labels, proportional branch lengths, and clade color-coding
+          all present; Newick parsing not literally used but not feasible natively
+          in ggplot2 without extension packages.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = divergence time (correctly signed/labeled), Y = species order;
+          all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches '{Descriptive Title} · {spec-id} · {language}
+          · {library} · anyplot.ai'; legend labels match the clade data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows branch-length proportionality, clade grouping, and tip labels;
+          no dedicated scale-bar element beyond axis ticks.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral scientific scenario (primate phylogeny).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Divergence times align well with published primate phylogenomic estimates.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean tibble construction, no fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, correct plot-{theme}.png naming.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic composition of geom_segment/geom_point/geom_text to build
+          a custom chart type, the recommended ggplot2 approach when no native geom
+          exists.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages ggplot2's layered grammar-of-graphics composability to
+          construct a tree diagram from primitives; not using a truly unique ggplot2-only
+          feature beyond that.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
