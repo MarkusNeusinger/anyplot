@@ -30,23 +30,51 @@ for (let i = 0; i < N; i++) {
 }
 const points = displacement.map((x, i) => ({ x, y: fuelEconomy[i] }));
 
-function histogram(data, binCount) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const binWidth = (max - min) / binCount;
+// "Nice number" axis rounding (Heckbert's algorithm) so the outer scale bounds
+// land on round values (e.g. 1.0, 6.5) instead of the raw, jagged data extent.
+function niceNum(range, round) {
+  const exponent = Math.floor(Math.log10(range));
+  const fraction = range / Math.pow(10, exponent);
+  let niceFraction;
+  if (round) {
+    if (fraction < 1.5) niceFraction = 1;
+    else if (fraction < 3) niceFraction = 2;
+    else if (fraction < 7) niceFraction = 5;
+    else niceFraction = 10;
+  } else if (fraction <= 1) {
+    niceFraction = 1;
+  } else if (fraction <= 2) {
+    niceFraction = 2;
+  } else if (fraction <= 5) {
+    niceFraction = 5;
+  } else {
+    niceFraction = 10;
+  }
+  return niceFraction * Math.pow(10, exponent);
+}
+
+function niceDomain(min, max, targetTicks = 8) {
+  const step = niceNum(niceNum(max - min, false) / (targetTicks - 1), true);
+  return { min: Math.floor(min / step) * step, max: Math.ceil(max / step) * step };
+}
+
+function histogram(data, binCount, domainMin, domainMax) {
+  const binWidth = (domainMax - domainMin) / binCount;
   const counts = new Array(binCount).fill(0);
   data.forEach((value) => {
-    let idx = Math.floor((value - min) / binWidth);
+    let idx = Math.floor((value - domainMin) / binWidth);
     idx = Math.min(Math.max(idx, 0), binCount - 1);
     counts[idx]++;
   });
-  const centers = counts.map((_, i) => min + (i + 0.5) * binWidth);
-  return { counts, centers, domainMin: min - binWidth * 0.5, domainMax: max + binWidth * 0.5 };
+  const centers = counts.map((_, i) => domainMin + (i + 0.5) * binWidth);
+  return { counts, centers };
 }
 
 const BIN_COUNT = 22;
-const xHist = histogram(displacement, BIN_COUNT);
-const yHist = histogram(fuelEconomy, BIN_COUNT);
+const xDomain = niceDomain(Math.min(...displacement), Math.max(...displacement));
+const yDomain = niceDomain(Math.min(...fuelEconomy), Math.max(...fuelEconomy));
+const xHist = histogram(displacement, BIN_COUNT, xDomain.min, xDomain.max);
+const yHist = histogram(fuelEconomy, BIN_COUNT, yDomain.min, yDomain.max);
 
 function hexToRgba(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -57,6 +85,7 @@ function hexToRgba(hex, alpha) {
 
 const BRAND = t.palette[0];
 const MARGINAL_COLOR = hexToRgba(BRAND, 0.4);
+const MARGINAL_BORDER = hexToRgba(BRAND, 0.7);
 
 // Chart.js linear scales always force a tick at the exact min/max, which can
 // crowd the neighbouring "nice" step tick when min/max don't land on a round
@@ -139,8 +168,8 @@ new Chart(makeCanvas(mainCell), {
     scales: {
       x: {
         type: "linear",
-        min: xHist.domainMin,
-        max: xHist.domainMax,
+        min: xDomain.min,
+        max: xDomain.max,
         title: { display: true, text: "Engine Displacement (L)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
@@ -151,8 +180,8 @@ new Chart(makeCanvas(mainCell), {
       },
       y: {
         type: "linear",
-        min: yHist.domainMin,
-        max: yHist.domainMax,
+        min: yDomain.min,
+        max: yDomain.max,
         title: { display: true, text: "Fuel Economy (mpg)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
@@ -173,6 +202,10 @@ new Chart(makeCanvas(topCell), {
       {
         data: xHist.centers.map((center, i) => ({ x: center, y: xHist.counts[i] })),
         backgroundColor: MARGINAL_COLOR,
+        borderColor: MARGINAL_BORDER,
+        borderWidth: 1,
+        borderRadius: { topLeft: 2, topRight: 2 },
+        borderSkipped: false,
         barPercentage: 1.0,
         categoryPercentage: 0.95,
       },
@@ -186,8 +219,8 @@ new Chart(makeCanvas(topCell), {
     scales: {
       x: {
         type: "linear",
-        min: xHist.domainMin,
-        max: xHist.domainMax,
+        min: xDomain.min,
+        max: xDomain.max,
         display: true,
         ticks: { display: false },
         grid: { display: false },
@@ -216,6 +249,10 @@ new Chart(makeCanvas(rightCell), {
       {
         data: yHist.centers.map((center, i) => ({ x: yHist.counts[i], y: center })),
         backgroundColor: MARGINAL_COLOR,
+        borderColor: MARGINAL_BORDER,
+        borderWidth: 1,
+        borderRadius: { topRight: 2, bottomRight: 2 },
+        borderSkipped: false,
         barPercentage: 1.0,
         categoryPercentage: 0.95,
       },
@@ -241,8 +278,8 @@ new Chart(makeCanvas(rightCell), {
       },
       y: {
         type: "linear",
-        min: yHist.domainMin,
-        max: yHist.domainMax,
+        min: yDomain.min,
+        max: yDomain.max,
         display: true,
         ticks: { display: false },
         grid: { display: false },
