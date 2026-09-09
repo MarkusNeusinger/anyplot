@@ -35,8 +35,8 @@ for (let n = 0; n < N_SAMPLES; n++) {
 }
 
 // --- Short-Time Fourier Transform (iterative radix-2 Cooley-Tukey) ----------
-const WINDOW = 64; // samples per frame (power of 2)
-const HOP = 150; // samples between frame starts
+const WINDOW = 256; // samples per frame (power of 2)
+const HOP = 64; // samples between frame starts (WINDOW / 4, for finer time resolution)
 const FREQ_BINS = WINDOW / 2; // one-sided spectrum bins
 const TIME_STEP = HOP / SAMPLE_RATE; // seconds per frame
 const FREQ_STEP = SAMPLE_RATE / WINDOW; // Hz per bin
@@ -98,7 +98,7 @@ for (let f = 0; f < N_FRAMES; f++) {
   }
   power.push(row);
 }
-const MIN_DB = maxDb - 55;
+const MIN_DB = maxDb - 60; // wide enough to keep noise-floor texture visible instead of clipping to solid green
 const MAX_DB = maxDb;
 const TOTAL_SEC = ((N_FRAMES - 1) * HOP + WINDOW) / SAMPLE_RATE;
 
