@@ -12,9 +12,9 @@ const t = window.ANYPLOT_TOKENS;
 const SAMPLE_RATE = 4096;
 const NUM_BINS = 1024;
 const PEAKS = [
-  { freq: 60, amplitude: 1.0, width: 3 },
-  { freq: 240, amplitude: 0.55, width: 5 },
-  { freq: 850, amplitude: 0.32, width: 9 },
+  { freq: 60, amplitude: 1.0, width: 3, role: "running speed" },
+  { freq: 240, amplitude: 0.55, width: 5, role: "gear mesh" },
+  { freq: 850, amplitude: 0.32, width: 9, role: "bearing fault" },
 ];
 
 // Tiny fixed-seed LCG for reproducible pseudo-noise.
@@ -65,7 +65,12 @@ chart.setOption({
     top: 18,
     textStyle: { color: t.ink, fontSize: 18, fontWeight: 500 },
   },
-  grid: { left: 90, right: 60, top: 100, bottom: 90 },
+  legend: {
+    data: ["Power spectrum", "Dominant frequencies"],
+    top: 54,
+    textStyle: { color: t.ink, fontSize: 14 },
+  },
+  grid: { left: 90, right: 60, top: 130, bottom: 90 },
   xAxis: {
     type: "log",
     name: "Frequency (Hz)",
@@ -102,12 +107,24 @@ chart.setOption({
     {
       type: "scatter",
       name: "Dominant frequencies",
-      data: dominantIndices.map((idx) => [frequencies[idx], amplitudesDb[idx]]),
+      data: dominantIndices.map((idx, i) => ({
+        value: [frequencies[idx], amplitudesDb[idx]],
+        name: `${PEAKS[i].freq} Hz — ${PEAKS[i].role}`,
+      })),
       symbolSize: 14,
       itemStyle: {
         color: "transparent",
-        borderColor: t.palette[4],
+        borderColor: t.palette[1],
         borderWidth: 2.5,
+      },
+      label: {
+        show: true,
+        position: "top",
+        distance: 8,
+        formatter: (params) => params.name,
+        color: t.ink,
+        fontSize: 12,
+        fontWeight: 500,
       },
     },
   ],
