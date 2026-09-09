@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: timeseries-decomposition
+created: '2026-09-09T20:46:18Z'
+updated: '2026-09-09T21:01:56Z'
+generated_by: claude-sonnet
+workflow_run: 34401833824
+issue: 2992
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Data size increased to 108 monthly points (9 years, 9 full seasonal cycles), landing
+    within the spec's recommended 100-1000 point range while still leaving the moving-average
+    edge NaNs correctly excluded.
+  - 'Component-to-palette assignment now follows the canonical Imprint order: Original=palette[1]
+    (green), Trend=palette[2] (lavender), Seasonal=palette[3] (blue) — addresses the
+    prior review''s palette-order note.'
+  - 'Physically accurate classical additive decomposition: centered 2xN moving-average
+    trend, deseasonalized-average seasonal cycle, and residual = original - trend
+    - seasonal, faithfully mirroring seasonal_decompose logic in pure Julia.'
+  - 'Idiomatic Makie GridLayout usage: linkxaxes! for a shared time axis, x-tick labels
+    shown only on the bottom Residual panel to avoid clutter, and a Label spanning
+    fig[1:4, 0] for a single shared y-axis title.'
+  - Residual panel uses a thoughtful stem/scatter representation with a dashed zero-reference
+    line rather than a reused line style, correctly representing noise as discrete
+    values.
+  - 'Theme-adaptive chrome verified correct in both renders: data colors are pixel-identical
+    between light and dark, only background/text/grid/spine tokens flip.'
+  weaknesses:
+  - Title occupies only ~43.5% of canvas width (measured), below the 50-70% comfortable
+    range noted in the style guide — not an overflow or squeeze issue, so not scored
+    as a deduction, but a slightly larger base fontsize in the length-scaling formula
+    would give the title more visual presence.
+  - 'Design Excellence remains largely conventional for this plot type: stacked-panel
+    decomposition with straightforward color-per-component is correct and legible
+    but does not add much beyond the expected layout (e.g. no highlighted anomaly,
+    no secondary annotation calling out a notable seasonal peak or residual outlier).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent) across the figure and all four stacked panel backgrounds.
+      Chrome: Bold dark title "Monthly Retail Sales · timeseries-decomposition · julia · makie · anyplot.ai" centered at top, fully readable (measured ~43.5% of canvas width). Each of the four panels ("Original", "Trend", "Seasonal", "Residual") has a left-aligned bold dark panel title. Y-axis tick labels are soft dark gray and readable on every panel; x-axis year tick labels (2019-2027) appear only on the bottom Residual panel via the shared/linked x-axis. A single rotated "Sales (thousand USD)" label spans the left side of all four panels, fully visible with no left-edge clipping.
+      Data: Original = green (#009E73) line; Trend = lavender line (correctly starts/ends short of the full range due to moving-average edge NaNs); Seasonal = blue repeating sinusoidal cycle; Residual = neutral gray stem/scatter around a dashed zero line, with 108 points now densely but still legibly plotted.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent) across the figure and all four panels.
+      Chrome: Title and panel titles render in light/white ink, clearly legible. Tick labels use a lighter soft gray, fully readable — no dark-on-dark failures anywhere.
+      Data: Colors (green/lavender/blue/gray) are pixel-identical to the light render, confirming only chrome flips between themes, not data color.
+      Legibility verdict: PASS
+
+    Both renders pass legibility; no theme-adaptation failures found. No AR-08 (fake interactivity) or AR-09 (edge clipping) violations observed in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title is smaller than the comfortable
+          proportion range but fully legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, panels, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Residual stem+scatter remains clearly visible even with 108 points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), no clipping or overflow, good panel
+          proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (Sales (thousand USD), Date)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green #009E73; Trend/Seasonal now use canonical palette[2]/[3]
+          order; correct light/dark backgrounds'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom GridLayout composition and dynamic title-sizing formula beyond
+          generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, x-ticks deduplicated onto bottom panel
+          only
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color-coded components and stem-style residuals aid comparison, but
+          hierarchy is conventional for this plot type
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 4-panel time series decomposition
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four components present; 108 points now within spec's 100-1000
+          recommended range with 9 full seasonal cycles
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, shared time axis across panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; panel titles
+          label each component
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows original, trend, seasonal, and residual
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral monthly retail sales scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible magnitude (200-650 thousand USD) and noise-to-signal ratio
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics, Dates all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: GridLayout, linkxaxes!, spanning Label are idiomatic Makie patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Stem+scatter residual and spanning shared-axis label are distinctive
+          touches beyond generic usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - publication-ready
+  - grid-styling
