@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: violin-box
 created: '2026-09-09T21:23:19Z'
-updated: '2026-09-09T21:28:36Z'
+updated: '2026-09-09T21:35:56Z'
 generated_by: claude-sonnet
 workflow_run: 34406374385
 issue: 2646
@@ -12,57 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-bo
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - 'Correct plot type: violin with an embedded box plot exactly per spec, including
-    quartile box, median line, whiskers, and outlier points.'
-  - Clean KISS-structured code, reproducible via set.seed(42), correct output naming
-    through ragg::agg_png.
+  - 'Correct Imprint palette in canonical order (#009E73, #C475FD, #4467A3) with identical
+    data colors across light and dark renders, and theme-correct chrome (backgrounds,
+    text, grid) in both'
+  - 'Faithfully implements every spec requirement: KDE violin shape, centered box
+    plot with median/quartiles/whiskers, outlier points, plus a bonus mean-diamond
+    marker via stat_summary'
   - Realistic, neutral dataset (resting heart rate across training regimens) with
-    genuinely different means/spreads per group and real outliers, giving good feature
-    coverage.
-  - Title format matches the mandated pattern exactly; legend correctly omitted since
-    groups are already labeled on the x-axis.
-  - Factor levels ordered Sedentary → Recreational → Endurance, giving an implicit
-    narrative of decreasing resting heart rate with more training.
+    clearly differentiated per-group means/spreads and a coherent Sedentary > Recreational
+    > Endurance narrative
+  - Clean, idiomatic ggplot2 layering (geom_violin + geom_boxplot + stat_summary +
+    scale_fill_manual + theme_minimal) with explicit theme tokens threaded correctly
+    through both ANYPLOT_THEME branches
+  - Explicit font sizing throughout (title=12, axis.title=10, axis.text=8) matching
+    style-guide defaults; no clipping, no overlap, strong canvas utilization
   weaknesses:
-  - 'geom_violin uses alpha=0.55, which blends the Imprint fill color with the page
-    background. Because the light (#FAF8F1) and dark (#1A1A17) backgrounds are so
-    different, the same hex value renders as very different perceived colors: e.g.
-    Sedentary green is a pale mint (measured ~rgb(113,199,172)) in light mode but
-    a deep forest green (~rgb(12,99,73)) in dark mode; the lavender and blue series
-    shift the same way. This breaks the ''data colors identical across themes'' rule
-    even though the underlying hex codes match. Fix: raise the violin fill alpha to
-    ~0.85-0.95 (or drop alpha entirely and rely on the box-plot cutout for contrast)
-    so the rendered hue stays close to the true Imprint value in both themes.'
-  - Boxplot outlier points use outlier.size=1.6, barely above ggplot2's default (1.5)
-    and well under the style guide's 'prominent markers for sparse data' guidance
-    (there are only a handful of outliers total) — increase to ~3-3.5 so they read
-    clearly at 3200x1800 and when scaled to mobile widths.
-  - 'Design Excellence is only at ''well-configured default'' level: theme_minimal
-    plus a handful of standard overrides (y-grid only, no ticks, no legend) is competent
-    but not distinctive — consider a more deliberate treatment for the median line
-    or violin outline to lift aesthetic sophistication.'
-  - 'Library Mastery is generic: layering geom_violin + geom_boxplot is the standard
-    idiom and doesn''t showcase a ggplot2-distinctive capability. Consider e.g. geom_violin(draw_quantiles=...)
-    or a stat_summary mean marker to differentiate from what other libraries would
-    produce.'
+  - Mean-diamond marker fill matches the box fill (both PAGE_BG), so it relies solely
+    on the INK stroke outline for visibility — a distinct fill color would read more
+    clearly at a glance
+  - Whisker linewidth (0.5) is on the thin side and could be marginally harder to
+    see when the PNG is scaled down to mobile width
+  - DE-03 storytelling is carried entirely by color/ordering; an explicit annotation
+    or callout of the RHR-vs-training trend would push visual hierarchy further (not
+    required by spec, optional polish)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "violin-box · r · ggplot2 · anyplot.ai" top-left in dark ink; y-axis "Resting Heart Rate (bpm)" with gridlines at 40/60/80/100; x-axis "Training Regimen" with category labels Sedentary / Recreational / Endurance. All chrome text renders in dark ink on the light background, clearly legible.
-      Data: Three violin+box combos left to right: pale mint-green (Sedentary, median ~74 bpm), pale lavender/pink (Recreational, median ~65 bpm), pale steel-blue (Endurance, median ~54 bpm). White box-plot cutouts with black outline show quartiles and median line inside each violin. A handful of dark-gray outlier dots appear above/below the Sedentary and Recreational violins. First series measured at approx rgb(113,199,172), i.e. the Imprint green (#009E73) blended at alpha=0.55 over the cream background.
-      Legibility verdict: PASS (title, axis labels, tick labels, category labels all clearly readable against the light background).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "violin-box · r · ggplot2 · anyplot.ai" top-left in dark ink, fully visible with no clipping. Axis title "Resting Heart Rate (bpm)" (y) and "Training Regimen" (x) in dark ink, tick labels ("100"/"80"/"60"/"40" and "Sedentary"/"Recreational"/"Endurance") in softer grey. Horizontal major gridlines only, subtle grey, not dominant.
+      Data: Three violins — Sedentary (green #009E73), Recreational (lavender #C475FD), Endurance (blue #4467A3) — matching canonical Imprint order. Each violin has a centered box plot (near-white fill, dark outline) with a median bar, a diamond mean marker, and dark-grey outlier dots (Sedentary and Recreational each show outliers; Endurance shows none, consistent with its tighter spread).
+      Legibility verdict: PASS — all title/axis/tick text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Same title and axis labels, now rendered in light ink (off-white/light-gray), clearly legible against the dark background. No dark-on-dark text found.
-      Data: The same three groups now render as much more saturated, deep hues — deep forest-green, deep purple, and navy-blue — rather than the pastel tones seen in the light render. Measured Sedentary fill is approx rgb(12,99,73), i.e. the same #009E73 hex blended at alpha=0.55 over the near-black background. Because the alpha blend interacts with a drastically different backdrop, the perceived color diverges substantially from the light render even though the source hex values are identical — this is flagged as a VQ-07 partial-compliance issue. Outlier points now render as light-gray dots, still visible. Box-plot cutouts flip to a dark fill via the PAGE_BG token, consistent with the theme.
-      Legibility verdict: PASS for text readability; FAIL for cross-theme color identity (see VQ-07 note) — data hues are recognizably the same family but not the same perceived color between the two renders.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and axis labels now rendered in light ink (near-white), tick labels in light grey. Gridlines flip to a faint light grey, still subtle. No dark-on-dark text anywhere.
+      Data: The three violins are rendered in the identical green/lavender/blue hues as the light render — confirmed unchanged. Box-plot fill now matches the dark PAGE_BG with a light-ink outline and median bar; outlier dots are light grey, clearly visible against both the violin fill and the dark canvas.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no unreadable or dark-on-dark elements found.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -70,28 +60,27 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 12pt, axis title 10pt, tick text
-          8pt), matching style-guide defaults; readable in both themes with no overflow
+        comment: All font sizes explicitly set (title=12, axis.title=10, axis.text=8);
+          readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, violins, boxes, or outlier points
+        comment: No text or element collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Violin/box widths well-proportioned, but outlier.size=1.6 is barely
-          above ggplot2 default and too small for the small number of outliers present
+        comment: Boxes/outliers/mean marker visible and appropriately scaled; whisker
+          linewidth and same-fill mean marker are minor refinements
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast and CVD-safe distinction between the three groups within
-          each render
+        comment: Green/lavender/blue trio is CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -103,42 +92,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (bpm), x-axis descriptive
+        comment: Y-axis has units (bpm), X-axis descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series is #009E73 and palette order is correct, but geom_violin
-          alpha=0.55 blended against the very different light/dark backgrounds makes
-          the same hex render as pale pastel colors in light mode vs. deep saturated
-          colors in dark mode — data-color identity is not visually preserved across
-          themes'
+        passed: true
+        comment: Canonical Imprint order, identical data colors across themes, theme-correct
+          chrome
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default; palette + cutout box treatment is
-          tasteful but the cross-theme alpha issue undercuts polish
+        passed: true
+        comment: Custom palette, distinct box-in-violin treatment, diamond mean marker
+          — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid, ticks removed, legend omitted as redundant
-          — clear refinement beyond raw defaults
+        comment: Minimal theme, no spines, only horizontal gridlines, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Ordered factor levels (Sedentary → Recreational → Endurance) create
-          a visible decreasing-heart-rate narrative left to right
+        comment: Color contrast and group ordering (Sedentary>Recreational>Endurance)
+          guide the reader to the trend, though no explicit annotation
     spec_compliance:
       score: 15
       max: 15
@@ -148,27 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Violin with embedded box plot, exactly as specified
+        comment: Violin with embedded box plot, correct
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Box centered in violin, median/quartiles/whiskers shown, KDE shape
-          visible, outliers shown as points
+        comment: Box centered in violin, median/quartiles/whiskers, KDE shape, outlier
+          points all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: group on x, value on y, all data visible
+        comment: group on x, value on y, axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend correctly omitted since groups are
-          already labeled on the x-axis
+        comment: Title format correct; legend omitted intentionally since x-axis already
+          labels groups
     data_quality:
       score: 15
       max: 15
@@ -178,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Different means and spreads per group plus real outliers in two of
-          three groups
+        comment: Outliers present in two of three groups, distinct spreads across
+          all three
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Resting heart rate by training regimen is a real, neutral, comprehensible
-          scenario
+        comment: Resting heart rate by training regimen — neutral, comprehensible,
+          real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (54-92 bpm range across groups) are physiologically realistic
+        comment: 74/65/54 bpm means with realistic spreads for sedentary/recreational/endurance
+          profiles
     code_quality:
       score: 10
       max: 10
@@ -202,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → theme tokens → data → plot → save, no functions/classes
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -220,39 +206,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering, no fake functionality
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with ragg::agg_png, correct plot-{theme}.png naming
+        comment: ggsave with ragg::agg_png device, linewidth (not deprecated size),
+          plot-{THEME}.png
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct layering of geom_violin + geom_boxplot with matched widths
-          and scale_fill_manual
+        comment: High-level layered grammar-of-graphics usage, scale_fill_manual,
+          stat_summary
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic two-geom-layer combo, achievable similarly in other libraries;
-          no ggplot2-distinctive feature used
-  verdict: REJECTED
+        passed: true
+        comment: Multi-geom layer composition (violin+boxplot+stat_summary) is a clean
+          ggplot2-idiomatic pattern, though replicable elsewhere with more code
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - dplyr
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - kde
   styling:
-  - alpha-blending
-  - grid-styling
+  - edge-highlighting
