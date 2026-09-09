@@ -186,8 +186,8 @@ chart.setOption({
       xAxisIndex: 0,
       yAxisIndex: 0,
       data: points,
-      symbolSize: 12,
-      itemStyle: { color: t.palette[0], opacity: 0.65 },
+      symbolSize: 10,
+      itemStyle: { color: t.palette[0], opacity: 0.55, borderColor: t.pageBg, borderWidth: 1 },
     },
     {
       // Top marginal: vertical bars, one per x bin, growing upward from the
