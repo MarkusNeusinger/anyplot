@@ -77,8 +77,11 @@ panel_a <- ggplot(overview_df, aes(date, page_views)) +
 # --- Panel B: device breakdown (medium, spans 2 cols) -------------------------
 panel_b <- ggplot(device_df, aes(device, visits)) +
   geom_col(fill = BRAND, width = 0.6) +
+  geom_text(
+    aes(label = scales::comma(visits)), vjust = -0.4, size = 2.6, color = INK
+  ) +
   labs(title = "Traffic by device", x = NULL, y = "Visits") +
-  scale_y_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.3))) +
   base_chrome +
   theme(
     panel.grid.major.x = element_blank(),
@@ -89,36 +92,59 @@ panel_b <- ggplot(device_df, aes(device, visits)) +
 panel_c <- ggplot(pages_df, aes(avg_session_sec, bounce_rate_pct)) +
   geom_point(aes(size = pageviews), color = BRAND, alpha = 0.75) +
   labs(title = "Page engagement", x = "Avg session (s)", y = "Bounce (%)") +
-  scale_size_area(max_size = 8) +
+  scale_size_area(
+    name = "Pageviews", max_size = 8,
+    breaks = c(2000, 5000, 9000), labels = scales::comma
+  ) +
   base_chrome +
-  theme(axis.title = element_text(size = 8), axis.text = element_text(size = 7))
+  theme(
+    axis.title         = element_text(size = 8),
+    axis.text          = element_text(size = 7),
+    legend.position    = "right",
+    legend.background  = element_rect(fill = PAGE_BG, color = NA),
+    legend.text        = element_text(size = 6, color = INK_SOFT),
+    legend.title        = element_text(size = 6.5, color = INK),
+    legend.key.size     = unit(8, "pt"),
+    legend.margin       = margin(0, 0, 0, 0)
+  )
 
 # --- Panels D/E/F: small metric trends (bottom row) ---------------------------
 small_chrome <- base_chrome +
   theme(
     panel.grid.major.x = element_blank(),
     axis.title  = element_blank(),
-    axis.text.y = element_text(size = 6.5),
-    axis.text.x = element_text(size = 6.5),
-    plot.title  = element_text(size = 8)
+    axis.text.y = element_text(size = 7.5),
+    axis.text.x = element_text(size = 7.5),
+    plot.title  = element_text(size = 8.5)
   )
 
+peak_label <- function(df) {
+  df[which.max(df$value), , drop = FALSE]
+}
+
 panel_d <- ggplot(bounce_df, aes(date, value)) +
-  geom_line(color = BRAND, linewidth = 0.9) +
-  geom_point(color = BRAND, size = 1.4) +
+  geom_line(color = BRAND, linewidth = 1.0) +
+  geom_point(color = BRAND, size = 2.2) +
   labs(title = "Bounce rate (%)") +
   small_chrome
 
 panel_e <- ggplot(session_df, aes(date, value)) +
-  geom_line(color = BRAND, linewidth = 0.9) +
-  geom_point(color = BRAND, size = 1.4) +
+  geom_line(color = BRAND, linewidth = 1.0) +
+  geom_point(color = BRAND, size = 2.2) +
   labs(title = "Avg session (s)") +
   small_chrome
 
+conversion_peak <- peak_label(conversion_df)
 panel_f <- ggplot(conversion_df, aes(date, value)) +
-  geom_line(color = BRAND, linewidth = 0.9) +
-  geom_point(color = BRAND, size = 1.4) +
+  geom_line(color = BRAND, linewidth = 1.0) +
+  geom_point(color = BRAND, size = 2.2) +
+  geom_point(data = conversion_peak, color = BRAND, size = 3.6) +
+  geom_text(
+    data = conversion_peak, aes(label = sprintf("%.1f%%", value)),
+    vjust = 2.4, size = 2.4, color = INK, fontface = "bold"
+  ) +
   labs(title = "Conversion rate (%)") +
+  scale_y_continuous(expand = expansion(mult = c(0.1, 0.15))) +
   small_chrome
 
 # --- Mosaic assembly -----------------------------------------------------
