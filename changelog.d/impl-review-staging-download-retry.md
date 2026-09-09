@@ -7,4 +7,4 @@
   2026-09-09, staging complete both times). The download now tries three times with a short
   backoff, stops as soon as both theme renders are on disk, and keeps `gsutil`'s stderr in a
   warning per failed attempt, so a transfer blip heals in the same run and a genuinely empty
-  staging folder still fails loudly at the render check.
+  staging folder still fails loudly at the render check. (#11697)
