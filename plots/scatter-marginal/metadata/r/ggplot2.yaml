@@ -1,0 +1,249 @@
+library: ggplot2
+language: r
+specification_id: scatter-marginal
+created: '2026-09-09T06:58:52Z'
+updated: '2026-09-09T07:11:21Z'
+generated_by: claude-sonnet
+workflow_run: 34320964090
+issue: 2005
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Precise panel alignment between the main scatter and both marginal panels via
+    ggplotGrob width/height matching — a real grid-graphics technique, not a generic
+    default
+  - 'Attempt-1 review feedback substantively addressed: tick label size increased
+    (9pt to 10pt), marginal density-curve linewidth reduced and alpha-dimmed (0.9
+    solid to 0.6 linewidth at alpha=0.6) so the marginals now read more clearly as
+    secondary to the main scatter'
+  - 'Mandated title format is exact, Imprint brand green (#009E73) is the sole data
+    color, and theme-adaptive backgrounds match the required hex values (#FAF8F1 /
+    #1A1A17) exactly with data colors held identical across themes'
+  - Realistic, neutral rainfall-vs-crop-yield dataset (n=400) with a plausible moderate
+    correlation and sensible domain scale
+  - 'Clean, reproducible, single-file code: set.seed(42), no unused imports, no functions/classes,
+    no fake interactivity'
+  weaknesses:
+  - The newly added panel.grid.major (GRID color, linewidth 0.25) is nearly imperceptible
+    in the rendered PNG — pixel sampling across the full 2400x2400 canvas finds only
+    a handful of matching pixels. It doesn't hurt legibility, but it also doesn't
+    deliver the 'aid reading approximate values' goal the prior review asked for;
+    bump linewidth to ~0.3-0.35 or use a slightly higher-contrast tone so it's actually
+    visible without dominating.
+  - Marginal histogram/KDE still share the exact same brand-green hue as the main
+    scatter (only alpha/linewidth reduced) rather than a desaturated/muted tone —
+    a subtler tint would separate 'primary' from 'secondary' data more clearly per
+    the spec's 'subtle colors for marginal distributions' guidance.
+  - In the densest cluster of the main scatter (~750-900mm rainfall), overlapping
+    points fully merge into solid blobs despite alpha=0.6 — a slightly smaller marker
+    (e.g. size=2.0) or lower alpha (~0.5) could reveal more internal density structure
+    there.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white and not dark.
+      Chrome: Title "scatter-marginal · r · ggplot2 · anyplot.ai" top-left in dark ink, fully legible. Axis titles "Annual Rainfall (mm)" / "Crop Yield (t/ha)" and tick labels in dark ink / soft grey, clearly legible at their current sizes. A subtle major gridline is coded in (color #CDCCC5) but is visually almost imperceptible against the background — pixel sampling confirms only a handful of matching pixels across the canvas.
+      Data: 400 points in brand green (#009E73) at alpha≈0.6 forming a positively-correlated cloud; first (only) series is correctly #009E73. Top marginal panel shows the rainfall histogram+KDE, right marginal panel (flipped) shows the crop-yield histogram+KDE, both in the same green at low fill alpha (0.3) with a thinner, alpha-dimmed (0.6) density line — both aligned to the main panel's axis ranges via ggplotGrob width/height matching.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black and not light.
+      Chrome: Title, axis titles, and tick labels switch to light ink / soft light-grey and remain fully legible — no dark-on-dark failures in the main panel or either marginal panel. The subtle gridline is present in the dark-theme tone (#454541) but, like the light render, is essentially invisible at normal viewing scale.
+      Data: Scatter points, histogram fills, and KDE lines are pixel-identical in hue to the light render (#009E73) — only the chrome (background, text) flips between themes, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; tick label size bumped from 9pt
+          to 10pt per attempt-1 feedback
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/label collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha=0.6 markers reveal density well; densest cluster (~750-900mm)
+          still merges into solid blobs
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas correct, no clipping, panels well-aligned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 as sole series, correct theme-adaptive backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Composite jointplot with grob-alignment is above generic defaults;
+          single-hue palette with minimal additional flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/ticks removed, generous whitespace, marginal density line
+          dimmed as requested; the newly-added gridline is coded but nearly invisible
+          in the render, so it doesn't fully deliver the requested reading cue
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point (main scatter) with marginals providing univariate
+          context; no additional emphasis (trend line, highlighted region)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter with aligned marginal histogram+KDE panels
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Main scatter lower-left, marginals top/right, aligned axes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=rainfall_mm, y=crop_yield_t_ha, full data range shown via coord_cartesian
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Joint scatter plus both marginal distributions (histogram+KDE)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Rainfall vs. crop yield, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible mm/t-ha ranges for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2, gridExtra, ragg — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a composite grob layout, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: High-level ggplot2 API throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Manual ggplotGrob width/height matching for cross-panel alignment
+          is genuine grid-graphics mastery, beyond basic API usage
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - gridextra
+  techniques:
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling
