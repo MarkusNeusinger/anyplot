@@ -1,7 +1,7 @@
 // anyplot.ai
 // violin-split: Split Violin Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-09
+// Quality: 93/100 | Created: 2026-09-09
 import { Box, Typography } from "@mui/material";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
