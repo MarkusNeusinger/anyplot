@@ -41,6 +41,28 @@ const spectrum = Array.from({ length: nPoints }, (_, i) => {
   return [frequency, amplitudeDb];
 });
 
+// Mark the fundamental's apex point with a dataLabel + halo marker so the
+// viewer doesn't have to infer which peak is the fundamental from position alone.
+let fundamentalIndex = 0;
+let fundamentalPeakDb = -Infinity;
+spectrum.forEach(([frequency, amplitudeDb], i) => {
+  if (frequency >= fundamentalHz * 0.9 && frequency <= fundamentalHz * 1.1 && amplitudeDb > fundamentalPeakDb) {
+    fundamentalPeakDb = amplitudeDb;
+    fundamentalIndex = i;
+  }
+});
+spectrum[fundamentalIndex] = {
+  x: spectrum[fundamentalIndex][0],
+  y: spectrum[fundamentalIndex][1],
+  marker: { enabled: true, radius: 4, fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 2 },
+  dataLabels: {
+    enabled: true,
+    format: "Fundamental (440 Hz)",
+    y: -16,
+    style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+  },
+};
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -73,10 +95,26 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Amplitude (dB)", style: { color: t.inkSoft, fontSize: "16px" } },
+    plotLines: [
+      {
+        value: noiseFloorDb,
+        color: t.inkSoft,
+        dashStyle: "Dash",
+        width: 1,
+        zIndex: 5,
+        label: {
+          text: "Noise floor",
+          align: "right",
+          x: -8,
+          y: -6,
+          style: { color: t.inkSoft, fontSize: "12px" },
+        },
+      },
+    ],
   },
   legend: { enabled: false },
   plotOptions: {
-    series: { animation: false, marker: { enabled: false } },
+    series: { animation: false, marker: { enabled: false }, dataLabels: { enabled: false } },
     area: {
       threshold: -75,
       fillOpacity: 0.15,
