@@ -80,6 +80,8 @@ const medianSurvival = (steps) => {
   return hit ? hit.time : null;
 };
 
+const atRiskCounts = (observations, times) => times.map((time) => observations.filter((o) => o.time >= time).length);
+
 const kmNew = kaplanMeier(newTherapy);
 const kmStandard = kaplanMeier(standardTherapy);
 const medianNew = medianSurvival(kmNew.steps);
@@ -134,7 +136,10 @@ const extendToAxisMax = (steps) => {
   return last.time < AXIS_MAX ? [...steps, { ...last, time: AXIS_MAX }] : steps;
 };
 
-const buildArmSeries = (label, km, color) => {
+const colorNew = t.palette[0];
+const colorStandard = t.palette[1];
+
+const buildArmSeries = (label, km, color, medianTime) => {
   const extended = extendToAxisMax(km.steps);
   const curveData = extended.map((s) => [s.time, s.survival]);
   const lowerData = extended.map((s) => [s.time, s.lower]);
@@ -147,7 +152,7 @@ const buildArmSeries = (label, km, color) => {
       stack: stackKey,
       step: "end",
       data: lowerData,
-      lineStyle: { opacity: 0 },
+      lineStyle: { opacity: 0.3, width: 1, color },
       symbol: "none",
       silent: true,
       tooltip: { show: false },
@@ -158,9 +163,9 @@ const buildArmSeries = (label, km, color) => {
       stack: stackKey,
       step: "end",
       data: widthData,
-      lineStyle: { opacity: 0 },
+      lineStyle: { opacity: 0.3, width: 1, color },
       symbol: "none",
-      areaStyle: { color, opacity: 0.18 },
+      areaStyle: { color, opacity: 0.12 },
       silent: true,
       tooltip: { show: false },
       z: 2,
@@ -173,7 +178,22 @@ const buildArmSeries = (label, km, color) => {
       symbol: "none",
       lineStyle: { width: 3, color },
       itemStyle: { color },
+      endLabel: { show: true, formatter: label, color, fontSize: 13, fontWeight: 600, distance: 10 },
+      clip: false,
       z: 3,
+      ...(medianTime == null
+        ? {}
+        : {
+            markPoint: {
+              symbol: "diamond",
+              symbolSize: 12,
+              itemStyle: { color, borderColor: t.pageBg, borderWidth: 1.5 },
+              label: { show: false },
+              silent: true,
+              tooltip: { show: false },
+              data: [{ coord: [medianTime, 0.5], name: "median" }],
+            },
+          }),
     },
     {
       name: `${label} censored`,
@@ -207,14 +227,32 @@ const medianDropLine = (medianTime, color) =>
         },
       ];
 
-const colorNew = t.palette[0];
-const colorStandard = t.palette[1];
+// --- At-risk table (below the plot, own grid sharing the time scale) --------
+const AT_RISK_STEP = 6;
+const AT_RISK_TIMES = [];
+for (let time = 0; time <= AXIS_MAX; time += AT_RISK_STEP) AT_RISK_TIMES.push(time);
+const atRiskNewCounts = atRiskCounts(newTherapy, AT_RISK_TIMES);
+const atRiskStandardCounts = atRiskCounts(standardTherapy, AT_RISK_TIMES);
+
+const atRiskRowSeries = (rowIndex, counts, color) => ({
+  type: "scatter",
+  xAxisIndex: 1,
+  yAxisIndex: 1,
+  data: AT_RISK_TIMES.map((time, i) => [time, rowIndex, counts[i]]),
+  encode: { x: 0, y: 1, label: 2 },
+  symbolSize: 0,
+  label: { show: true, formatter: (p) => p.value[2], color, fontSize: 14, fontWeight: 600 },
+  silent: true,
+  tooltip: { show: false },
+});
 
 const series = [
-  ...buildArmSeries("New Therapy", kmNew, colorNew),
-  ...buildArmSeries("Standard Therapy", kmStandard, colorStandard),
+  ...buildArmSeries("New Therapy", kmNew, colorNew, medianNew),
+  ...buildArmSeries("Standard Therapy", kmStandard, colorStandard, medianStandard),
   ...medianDropLine(medianNew, colorNew),
   ...medianDropLine(medianStandard, colorStandard),
+  atRiskRowSeries(0, atRiskNewCounts, colorNew),
+  atRiskRowSeries(1, atRiskStandardCounts, colorStandard),
 ];
 
 // 50%-survival reference line, attached to the first real curve series.
@@ -226,9 +264,9 @@ series[2].markLine = {
   data: [{ yAxis: 0.5 }],
 };
 
-// --- Title sizing (scales down once the string runs past the 67-char baseline) ---
+// --- Title sizing (scales down once the string runs past the 78-char baseline) ---
 const TITLE = "Overall Survival by Treatment Arm · survival-kaplan-meier · javascript · echarts · anyplot.ai";
-const titleFontSize = Math.max(14, Math.round(22 * Math.min(1, 67 / TITLE.length)));
+const titleFontSize = Math.max(18, Math.round(28 * Math.min(1, 78 / TITLE.length)));
 const medianLabel = (m) => (m == null ? "not reached" : `${m.toFixed(1)} mo`);
 const pLabel = pValue < 0.0001 ? "< 0.0001" : pValue.toFixed(4);
 const SUBTITLE = `Kaplan-Meier estimate with 95% CI · median OS ${medianLabel(medianNew)} vs ${medianLabel(medianStandard)} · log-rank p = ${pLabel}`;
@@ -245,42 +283,85 @@ chart.setOption({
     text: TITLE,
     subtext: SUBTITLE,
     left: "center",
-    top: 30,
+    top: 26,
     textStyle: { color: t.ink, fontSize: titleFontSize, fontWeight: 500 },
     subtextStyle: { color: t.inkSoft, fontSize: 15 },
   },
   tooltip: { trigger: "axis" },
   legend: {
     data: [`New Therapy (n=${kmNew.n})`, `Standard Therapy (n=${kmStandard.n})`],
-    top: 128,
+    top: 126,
     textStyle: { color: t.ink, fontSize: 16 },
   },
-  grid: { left: 120, right: 60, top: 200, bottom: 90 },
-  xAxis: {
-    type: "value",
-    name: "Time (months)",
-    nameLocation: "middle",
-    nameGap: 40,
-    nameTextStyle: { color: t.ink, fontSize: 16 },
-    min: 0,
-    max: AXIS_MAX,
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { show: false },
-    splitLine: { show: false },
-  },
-  yAxis: {
-    type: "value",
-    name: "Survival Probability",
-    nameLocation: "middle",
-    nameGap: 70,
-    nameTextStyle: { color: t.ink, fontSize: 16 },
-    min: 0,
-    max: 1,
-    axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (value) => `${Math.round(value * 100)}%` },
-    axisLine: { show: false },
-    axisTick: { show: false },
-    splitLine: { lineStyle: { color: t.grid } },
-  },
+  graphic: [
+    {
+      type: "text",
+      left: 140,
+      top: 674,
+      style: { text: "No. at Risk", fill: t.inkSoft, fontSize: 13, fontWeight: 600 },
+    },
+  ],
+  grid: [
+    { left: 140, right: 150, top: 186, height: 470 },
+    { left: 140, right: 150, top: 700, height: 90 },
+  ],
+  xAxis: [
+    {
+      type: "value",
+      gridIndex: 0,
+      min: 0,
+      max: AXIS_MAX,
+      axisLabel: { show: false },
+      axisLine: { lineStyle: { color: t.inkSoft } },
+      axisTick: { show: false },
+      splitLine: { show: false },
+    },
+    {
+      type: "value",
+      gridIndex: 1,
+      name: "Time (months)",
+      nameLocation: "middle",
+      nameGap: 34,
+      nameTextStyle: { color: t.ink, fontSize: 16 },
+      min: 0,
+      max: AXIS_MAX,
+      interval: AT_RISK_STEP,
+      axisLabel: { color: t.inkSoft, fontSize: 13 },
+      axisLine: { lineStyle: { color: t.inkSoft } },
+      axisTick: { show: false },
+      splitLine: { show: false },
+    },
+  ],
+  yAxis: [
+    {
+      type: "value",
+      gridIndex: 0,
+      name: "Survival Probability",
+      nameLocation: "middle",
+      nameGap: 70,
+      nameTextStyle: { color: t.ink, fontSize: 16 },
+      min: 0,
+      max: 1,
+      axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (value) => `${Math.round(value * 100)}%` },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: t.grid } },
+    },
+    {
+      type: "category",
+      gridIndex: 1,
+      data: ["New Therapy", "Standard Therapy"],
+      inverse: true,
+      axisLabel: {
+        color: (value, index) => (index === 0 ? colorNew : colorStandard),
+        fontSize: 13,
+        fontWeight: 500,
+        margin: 14,
+      },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { show: false },
+    },
+  ],
   series,
 });
