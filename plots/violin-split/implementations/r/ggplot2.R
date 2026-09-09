@@ -31,6 +31,10 @@ score_params <- list(
   History = list(Control = c(mean = 78, sd = 7),  Tutoring = c(mean = 79, sd = 7))
 )
 
+# Outer lapply walks the 4 subjects, inner lapply walks the 2 cohorts within
+# each subject; each leaf draws n_per_group scores from that cohort's
+# mean/sd and clamps them to a valid 0-100 exam range. do.call(rbind, ...)
+# flattens each level's list-of-data-frames back into a single data frame.
 scores <- do.call(rbind, lapply(subjects, function(subj) {
   do.call(rbind, lapply(groups, function(grp) {
     params <- score_params[[subj]][[grp]]
@@ -50,6 +54,10 @@ scores <- do.call(rbind, lapply(subjects, function(subj) {
 subject_positions <- setNames(seq_along(subjects), subjects)
 half_width <- 0.42
 
+# Same subject/cohort nesting as above, but each leaf builds one polygon:
+# the outer ring follows the KDE curve (scaled to half_width and mirrored
+# left/right by `side`), the inner ring is a straight vertical line back
+# down the category center — closing the ring exactly on the shared axis.
 violin_polygons <- do.call(rbind, lapply(subjects, function(subj) {
   do.call(rbind, lapply(groups, function(grp) {
     values <- scores$score[scores$subject == subj & scores$group == grp]
@@ -75,6 +83,32 @@ medians <- scores %>%
     x_end   = center + side * half_width * 0.85
   )
 
+# --- Storytelling callout ---------------------------------------------------
+# Identify the subject with the largest Tutoring-vs-Control median gap and
+# call it out directly on the chart, so the strongest program effect is
+# immediately visible rather than left for the reader to eyeball.
+gap_by_subject <- sapply(subjects, function(subj) {
+  ctrl <- medians$median_score[medians$subject == subj & medians$group == "Control"]
+  tut  <- medians$median_score[medians$subject == subj & medians$group == "Tutoring"]
+  tut - ctrl
+})
+focus_subject <- names(which.max(abs(gap_by_subject)))
+focus_gap     <- gap_by_subject[[focus_subject]]
+focus_center  <- subject_positions[[focus_subject]]
+focus_top     <- max(violin_polygons$y[violin_polygons$subject == focus_subject]) + 5
+
+callout_bracket <- data.frame(
+  x    = focus_center - half_width * 0.85,
+  xend = focus_center + half_width * 0.85,
+  y    = focus_top,
+  yend = focus_top
+)
+callout_label <- data.frame(
+  x     = focus_center,
+  y     = focus_top + 4,
+  label = sprintf("Largest gain: %s %+.1f pts", focus_subject, focus_gap)
+)
+
 # --- Plot --------------------------------------------------------------------
 p <- ggplot() +
   geom_polygon(data = violin_polygons,
@@ -83,8 +117,15 @@ p <- ggplot() +
   geom_segment(data = medians,
                aes(x = x_start, xend = x_end, y = median_score, yend = median_score),
                color = INK, linewidth = 0.7) +
+  geom_segment(data = callout_bracket,
+               aes(x = x, xend = xend, y = y, yend = yend),
+               color = INK_SOFT, linewidth = 0.4) +
+  geom_text(data = callout_label,
+            aes(x = x, y = y, label = label),
+            color = INK, size = 3.1, fontface = "bold") +
   scale_fill_manual(values = c(IMPRINT_PALETTE[1], IMPRINT_PALETTE[2]), name = "Cohort") +
   scale_x_continuous(breaks = subject_positions, labels = names(subject_positions)) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
   labs(
     title = "violin-split · r · ggplot2 · anyplot.ai",
     x = "Subject",
@@ -100,7 +141,7 @@ p <- ggplot() +
     axis.title         = element_text(color = INK, size = 10),
     axis.text          = element_text(color = INK_SOFT, size = 8),
     axis.ticks         = element_blank(),
-    plot.title         = element_text(color = INK, size = 12),
+    plot.title         = element_text(color = INK, size = 14, face = "bold"),
     legend.position    = "top",
     legend.background  = element_rect(fill = PAGE_BG, color = NA),
     legend.text        = element_text(color = INK_SOFT, size = 8),
