@@ -24,10 +24,15 @@ true_response = 13.5 .* (1 .- exp.(-light_intensity ./ 280)) .- 0.0016 .* light_
 net_photosynthesis = true_response .+ randn(n) .* 0.9  # μmol CO2 m⁻² s⁻¹
 
 # --- LOWESS smoothing: local weighted linear regression, tricube weights ------
+# A pointwise 95% confidence band is derived from the weighted-regression standard
+# error at each evaluation point (weighted residual variance scaled by the local
+# effective sample size sw^2 / sum(w^2)).
 frac = 0.35
 k = ceil(Int, frac * n)
 eval_x = collect(range(minimum(light_intensity), maximum(light_intensity); length = 200))
 fitted_y = similar(eval_x)
+band_lo = similar(eval_x)
+band_hi = similar(eval_x)
 
 for (i, x0) in enumerate(eval_x)
     dist = abs.(light_intensity .- x0)
@@ -43,6 +48,13 @@ for (i, x0) in enumerate(eval_x)
     slope = (sw * sxy - sx * sy) / (sw * sxx - sx^2)
     intercept = (sy - slope * sx) / sw
     fitted_y[i] = intercept + slope * x0
+
+    resid = net_photosynthesis .- (intercept .+ slope .* light_intensity)
+    weighted_var = sum(w .* resid .^ 2) / sw
+    effective_n = sw^2 / sum(w .^ 2)
+    se = sqrt(weighted_var / effective_n)
+    band_lo[i] = fitted_y[i] - 1.96 * se
+    band_hi[i] = fitted_y[i] + 1.96 * se
 end
 
 # --- Plot -----------------------------------------------------------------
@@ -78,9 +90,10 @@ ax = Axis(
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
+band!(ax, eval_x, band_lo, band_hi; color = (CURVE_COLOR, 0.18), label = "95% CI")
 scatter!(
     ax, light_intensity, net_photosynthesis;
-    color = (BRAND, 0.65), markersize = 11,
+    color = (BRAND, 0.55), markersize = 9,
     strokecolor = PAGE_BG, strokewidth = 1,
     label = "Observations",
 )
