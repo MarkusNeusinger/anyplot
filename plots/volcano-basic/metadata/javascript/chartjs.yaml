@@ -1,0 +1,236 @@
+library: chartjs
+language: javascript
+specification_id: volcano-basic
+created: '2026-09-09T21:53:07Z'
+updated: '2026-09-09T22:06:16Z'
+generated_by: claude-sonnet
+workflow_run: 34408596618
+issue: 2924
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Top significant features (TP53, EGFR, KRAS, BRCA1, PTEN) are now labeled by name
+    via a custom afterDatasetsDraw plugin, directly addressing the prior review's
+    data-storytelling suggestion.
+  - Grid is now restricted to the y-axis only (x-axis grid disabled), giving a visibly
+    cleaner composition than the previous both-axes grid.
+  - Non-significant cluster alpha reduced (INK_MUTED at 0.4) to relieve crowding near
+    the origin while significant points keep a stronger 0.65 alpha.
+  - Correct Imprint hex colors mapped to domain-standard semantic roles (matte red
+    = up-regulated, blue = down-regulated, muted gray = non-significant) matching
+    the spec's explicit request and real-world bioinformatics convention.
+  - 'Both renders are fully theme-correct: warm off-white/near-black backgrounds,
+    all chrome and gene labels legible, data colors identical across themes.'
+  - Deterministic seeded LCG data generation producing a realistic, full-coverage
+    volcano distribution with proper title/legend/axis compliance.
+  weaknesses:
+  - Title occupies only ~30% of plot width at fontsize 22 — well under the typical
+    50-70% target (minor proportional note, not a legibility defect).
+  - Composition, while now enriched with gene-name callouts, is still a fairly standard
+    volcano-plot treatment without an extra distinctive flourish (e.g. quadrant shading
+    or a hover-callout style annotation box).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white.
+      Chrome: Bold dark title "volcano-basic · javascript · chartjs · anyplot.ai" centered at top; legend row below with three swatches (gray "Not significant", blue "Down-regulated", red "Up-regulated" — the two dashed threshold-line datasets are correctly hidden via the legend filter). Axis titles "log2(Fold Change)" and "-log10(p-value)" are dark and bold; tick labels are a softer dark gray. Black dashed threshold lines (horizontal p=0.05, vertical ±1 fold-change) are clearly visible.
+      Data: Classic V/funnel volcano shape — dense gray cluster near the origin below the horizontal cutoff and between the vertical cutoffs; blue points fan toward the upper-left, red points toward the upper-right. Five gene-name labels (TP53, EGFR, KRAS at top-right; BRCA1, PTEN at top-left) mark the top significant hits and do not overlap other text or points. First-series color rule is satisfied via the documented semantic exception (red=up, blue=down, gray=non-sig, matching the spec's explicit request).
+      Legibility verdict: PASS — all text clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Identical layout to the light render with all chrome flipped to light/off-white — title, legend text, axis titles, tick labels, and the dashed threshold lines (now white) are all clearly legible against the dark surface. Gene-name labels are drawn in the light ink color and read cleanly against the dark background.
+      Data: Point cloud and gene labels are in the exact same positions with identical data colors (gray/blue/red) as the light render — only chrome flipped, confirming Imprint palette persistence across themes.
+      Legibility verdict: PASS — no dark-on-dark failures detected; every text element adapted correctly.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 18px, ticks/legend
+          14-16px), readable in both themes; title width ~30% of plot, under the 50-70%
+          target but not a legibility defect.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, gene labels, legend, or data points in
+          either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Non-significant cluster alpha lowered to 0.4 to reduce crowding near
+          the origin; significant points at 0.65 alpha remain prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue/gray triad is CVD-safe and well separated; not relying on
+          red-green alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift file); balanced margins, nothing cut
+          off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"log2(Fold Change)" / "-log10(p-value)" are descriptive, standard
+          genomics notation.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint hexes used throughout (#4467A3 blue, #AE3030 matte red,
+          theme-adaptive muted gray); semantic-exception mapping matches spec''s explicit
+          color request. Backgrounds and chrome theme-correct in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Domain-conventional coloring, gene-name callouts, and clean typography
+          exceed generic defaults, though the overall composition remains a fairly
+          standard volcano-plot treatment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Grid now restricted to the y-axis only; legend filter hides redundant
+          cutoff-line entries; clean, low-clutter presentation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Top-hit gene labels (TP53, EGFR, KRAS, BRCA1, PTEN) plus color-coded
+          regulation direction and dashed threshold lines create clear visual hierarchy
+          and narrative, directly addressing the prior review's suggestion.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct volcano scatter with threshold lines.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Horizontal p=0.05 cutoff, vertical +/-2-fold cutoffs, significance
+          color-coding, alpha transparency, and top-feature labeling are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: x=log2(fold change), y=-log10(p-value), correctly assigned.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format exact; legend labels match the data categories.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Full V-shaped distribution with dense non-significant core and sparse
+          extreme outliers on both tails, plus named top hits.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Proteomics tumor-vs-healthy-tissue framing; neutral, real-world scientific
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Fold-change and p-value ranges are realistic for proteomics/omics
+          data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Straightforward top-to-bottom flow; small helper functions (LCG,
+          normal sampling, alpha conversion) are appropriate for a browser snippet.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic seeded LCG (seed=42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No unused imports; uses only browser globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, no fake UI or interactivity simulation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: 'Correct mount-node contract, animation: false set, current Chart.js
+          API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Idiomatic mixed chart (scatter base + line-type threshold datasets)
+          and legend filter callback.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Custom afterDatasetsDraw plugin for gene-name callouts is a genuinely
+          distinctive Chart.js-specific technique beyond the previous attempt's generic
+          usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

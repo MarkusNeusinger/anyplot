@@ -1,0 +1,243 @@
+library: d3
+language: javascript
+specification_id: waffle-basic
+created: '2026-09-09T21:56:24Z'
+updated: '2026-09-09T22:12:25Z'
+generated_by: claude-sonnet
+workflow_run: 34409247580
+issue: 998
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/d3/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Legend font size increase (16px to 19px) directly fixes the attempt-1 legibility
+    weakness and now balances well against the title.
+  - 'Grid math remains exactly correct: 100 cells, values sum to 100, row-major assignment.'
+  - Drop-shadow filter (feDropShadow) and dashed decade-band guide lines are genuine
+    D3-specific additions (SVG filter defs, data-bound line elements) that show real
+    attempt to lift the design.
+  - Legend now greedy-wraps into centered rows, avoiding the single-row-overflow risk
+    of attempt 1.
+  - Data colors identical between light/dark renders; only chrome adapts, exactly
+    as required.
+  weaknesses:
+  - The leading-category emphasis stroke (stroke-opacity 0.3) on the largest category's
+    cells/swatch is visually indistinguishable from the drop-shadow edge already applied
+    to every cell -- zooming 2-3x on the PNG shows no discernible difference between
+    the emphasized green cells and the unemphasized cells. Raise the stroke opacity/width
+    enough to actually read as emphasis.
+  - The dashed decade-band guide lines are only visible on a close crop; at normal
+    viewing size they blend into the existing cell gaps and don't yet deliver a noticeable
+    fifths-of-the-total rhythm.
+  - Design Excellence is still close to a standard waffle grid -- beyond the shadow
+    and (currently imperceptible) emphasis, there's no strong focal point guiding
+    the viewer to the largest category.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "waffle-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered at top. Legend wraps into two centered rows below the grid with five rounded color swatches and labels ("Digital Advertising (32%)", "Content Marketing (24%)", "Events & Sponsorships (18%)", "Public Relations (14%)", "Tools & Software (12%)") at 19px, rendered in dark ink. All text is clearly legible against the light background.
+      Data: A 10x10 grid (100 cells with gaps, rounded corners, and a subtle drop shadow) filled in row-major order: green (#009E73, Digital Advertising), lavender (Content Marketing), blue (Events & Sponsorships), ochre (Public Relations), matte red (Tools & Software), in descending-value order. A faint dashed guide line crosses the grid every 2 rows. Cell counts visually match each category's percentage.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title and two-row legend layout as the light render, now rendered in light ink/off-white text against the dark surface. Title and all five legend labels are clearly readable with no dark-on-dark text.
+      Data: Identical five data colors and identical cell layout/order/shadow/band-guides as the light render -- only the background and text color flipped, confirming theme-adaptive chrome without touching data colors.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Legend bumped 16px to 19px per attempt-1 feedback; now well-balanced
+          against the 22px title, readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Greedy-wrap legend (3 items row 1, 2 items row 2) avoids any collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 100 cells clearly visible and distinctly colored with visible
+          gaps.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Five-hue Imprint palette plus text labels disambiguate any CVD concern.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid and wrapped legend fit cleanly inside the square canvas, nothing
+          clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed; title matches mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining categories follow canonical Imprint
+          order, identical across themes, backgrounds match FAF8F1/1A1A17.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Drop shadow adds a small depth cue, but at normal viewing size still
+          reads as a fairly standard waffle grid.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean whitespace; the new dashed band-guides are refined but nearly
+          invisible without zooming.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Descending sort gives scan order, but the leading-category emphasis
+          stroke is visually indistinguishable from the drop-shadow edge on every
+          cell.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waffle/grid chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 10x10 grid, distinct colors, legend with percentages all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Cell counts per category correctly proportional to values.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec; legend labels match categories and percentages.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid, legend, and proportional fill all demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Marketing budget allocation across 5 categories is realistic and
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum exactly to 100 and are sensible percentages.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-to-bottom script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Draws into #container per the mount-node contract; no animation.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scaleOrdinal + selection.join, SVG filter/feDropShadow
+          defs.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: getComputedTextLength()-driven legend wrapping/centering and data-bound
+          band-guide lines are genuine D3-distinctive touches.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

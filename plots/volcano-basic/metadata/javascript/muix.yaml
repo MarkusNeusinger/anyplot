@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: volcano-basic
+created: '2026-09-09T22:05:48Z'
+updated: '2026-09-09T22:17:04Z'
+generated_by: claude-sonnet
+workflow_run: 34409919021
+issue: 2924
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Clean, correct volcano-plot structure with well-chosen semantic (not ordinal)
+    color mapping, explicitly documented as an intentional deviation from canonical
+    Imprint order and fully consistent with the style guide's semantic-exception rule
+  - Both vertical fold-change threshold lines are now labeled ("FC = -2", "FC = 2")
+    consistently with the horizontal p-value line, fixing the inconsistency flagged
+    in attempt 1
+  - Alpha transparency and marker edge-stroke thoughtfully applied to mitigate overplotting
+    in the dense 350-point dataset
+  - Fully deterministic, dependency-free data generation with a realistic funnel-shaped
+    distribution; both renders theme-correct with no legibility failures
+  weaknesses:
+  - Densest cluster of non-significant points near the origin still has meaningful
+    point-on-point stacking - a touch more transparency or slightly smaller markers
+    there would preserve individual-point legibility
+  - No labeling of top significant features by name (spec lists this as optional/"consider"),
+    which would add storytelling value for a genomics audience
+  - Visual refinement still relies mostly on MUI X defaults beyond the marker/line
+    styling already applied
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "volcano-basic · javascript · muix · anyplot.ai" centered at top in dark ink, fully legible and not clipped. X-axis "log2 Fold Change" and Y-axis "-log10(p-value)" labels with correct subscript typography, dark ink on light background. Tick labels dense but readable. Legend top-right (Not significant / Down-regulated / Up-regulated) with matching swatches, clear of data. Dashed amber threshold lines labeled "p = 0.05", "FC = -2", "FC = 2".
+      Data: ~350 points in three semantic colors - muted gray (non-significant), matte blue (down-regulated, palette[2]), matte red (up-regulated, palette[4]) - forming the expected volcano funnel shape. Note: first categorical series is NOT brand green here by design - this is a documented semantic-exception case (domain convention: up=red, down=blue, non-sig=muted gray) sanctioned by the style guide.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title and axis labels render in light ink, clearly legible against the dark surface. Grid lines subtle but visible. Legend and both threshold-line labels crisp and legible. No dark-on-dark issues found.
+      Data: Point colors (gray/blue/red) are pixel-identical to the light render; only chrome flipped as required. Marker edge stroke correctly switches to a dark-compatible accent.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, legend, and all threshold-line labels
+          clearly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with other text or data; legend clear of extreme
+          points
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha blending + edge stroke handle the dense funnel reasonably well,
+          but the densest gray cluster near the origin still shows point-on-point
+          stacking
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue/gray coding avoids the red-green CVD trap; adequate contrast
+          on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); no clipping or overflow; balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with correct subscript notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct theme backgrounds; documented semantic-exception color mapping
+          matches style guide
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color choice, edge-stroked markers, styled dashed
+          threshold lines; solid but not exceptional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace; axis chrome still mostly MUI-default
+          beyond marker/line styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded significance plus fully-labeled threshold lines create
+          a clear, guided funnel narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct volcano/scatter plot with fold-change vs. significance
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal p=0.05 line, vertical +/-1 fold-change lines (now both
+          labeled), three-way significance color coding, alpha transparency all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = log2FC, Y = -log10(p), axes cover full data range with sensible
+          padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels clear and descriptive
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the full up/down/non-significant spectrum with a realistic
+          funnel shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible RNA-seq differential expression scenario, domain-neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fold-change and p-value ranges sensible for omics data; 350 genes
+          reasonable dataset size
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes, only small deterministic helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG RNG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ScatterChart and ChartsReferenceLine imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly follows harness contract (ANYPLOT_SIZE, skipAnimation,
+          default export)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic ScatterChart + ChartsReferenceLine composition, community-only
+          surface
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ChartsReferenceLine for all three threshold annotations (now
+          consistently labeled) and sx marker stroke styling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
