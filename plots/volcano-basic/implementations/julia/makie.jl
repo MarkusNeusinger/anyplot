@@ -26,9 +26,14 @@ const COLOR_DOWN   = colorant"#4467A3"
 
 # --- Data: simulated differential gene expression (RNA-seq) -------------
 n_genes = 2200
+gene_names = "Gene" .* string.(1:n_genes)
 log2_fold_change = randn(n_genes) .* 1.3
-neg_log10_pvalue = abs.(log2_fold_change .* (1.6 .+ 0.5 .* randn(n_genes))) .+
-                   abs.(randn(n_genes) .* 0.6)
+# Independent additive noise dominates over the fold-change-linked term so the
+# cloud scatters realistically around the thresholds instead of forming a
+# clean deterministic "V" (borderline points land on either side by chance,
+# as in real differential-expression data).
+neg_log10_pvalue = abs.(log2_fold_change .* (1.1 .+ 0.55 .* randn(n_genes))) .+
+                    abs.(randn(n_genes) .* 1.3)
 
 fc_threshold = 1.0
 p_threshold = -log10(0.05)
@@ -79,6 +84,21 @@ scatter!(ax, log2_fold_change[is_up], neg_log10_pvalue[is_up];
 hlines!(ax, [p_threshold]; color = INK_SOFT, linestyle = :dash, linewidth = 1.5)
 vlines!(ax, [-fc_threshold, fc_threshold]; color = INK_SOFT, linestyle = :dash,
     linewidth = 1.5)
+
+# Label the top few most-significant up/down genes by name, per the spec's
+# optional annotation suggestion — a distinctive use of Makie's text! recipe.
+n_label = 3
+top_up = findall(is_up)[sortperm(neg_log10_pvalue[is_up]; rev = true)[1:min(n_label, count(is_up))]]
+top_down = findall(is_down)[sortperm(neg_log10_pvalue[is_down]; rev = true)[1:min(n_label, count(is_down))]]
+
+for i in top_up
+    text!(ax, log2_fold_change[i] + 0.08, neg_log10_pvalue[i];
+        text = gene_names[i], color = INK, fontsize = 11, align = (:left, :center))
+end
+for i in top_down
+    text!(ax, log2_fold_change[i] - 0.08, neg_log10_pvalue[i];
+        text = gene_names[i], color = INK, fontsize = 11, align = (:right, :center))
+end
 
 axislegend(ax; position = :rt, backgroundcolor = ELEVATED_BG,
     framecolor = INK_SOFT, labelcolor = INK)
