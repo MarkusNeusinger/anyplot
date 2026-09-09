@@ -115,7 +115,15 @@ chart.setOption({
     type: "value",
     min: -0.5,
     max: featureLabels.length - 0.5,
-    axisLabel: { color: t.inkSoft, fontSize: 14, customValues: rowIndices, formatter: (v) => featureLabels[v] },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      customValues: rowIndices,
+      // Bold + slightly larger label draws the eye to the single most impactful
+      // feature (topmost row) to sharpen the importance-ordering story.
+      formatter: (v) => (v === rowIndices.length - 1 ? `{top|${featureLabels[v]}}` : featureLabels[v]),
+      rich: { top: { color: t.ink, fontWeight: "bold", fontSize: 15 } },
+    },
     axisTick: { show: false, customValues: rowIndices },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { customValues: rowIndices, lineStyle: { color: t.grid } },
@@ -127,7 +135,7 @@ chart.setOption({
     max: 1,
     calculable: false,
     right: 16,
-    top: "middle",
+    top: 320,
     itemWidth: 18,
     itemHeight: 260,
     text: ["High", "Low"],
@@ -135,12 +143,22 @@ chart.setOption({
     textStyle: { color: t.inkSoft, fontSize: 14 },
     inRange: { color: ["#4467A3", t.pageBg, "#AE3030"] },
   },
+  graphic: {
+    elements: [
+      {
+        type: "text",
+        right: 4,
+        top: 288,
+        style: { text: "Feature value", fill: t.inkSoft, fontSize: 12, fontWeight: 500, align: "right" },
+      },
+    ],
+  },
   series: [
     {
       type: "scatter",
       data: points,
-      symbolSize: 8,
-      itemStyle: { opacity: 0.72 },
+      symbolSize: 6,
+      itemStyle: { opacity: 0.58 },
       markLine: {
         silent: true,
         symbol: "none",
