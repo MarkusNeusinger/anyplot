@@ -1,0 +1,247 @@
+library: makie
+language: julia
+specification_id: venn-basic
+created: '2026-09-09T21:22:20Z'
+updated: '2026-09-09T21:36:29Z'
+generated_by: claude-sonnet
+workflow_run: 34406120583
+issue: 2444
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - Correct 3-circle Venn with all 7 regions present and distinctly labeled with count
+    + percentage; inclusion-exclusion arithmetic verified correct (all regions sum
+    to n=270).
+  - Circle radii scaled by sqrt(set size) for an area-proportional impression, with
+    the Imprint palette (green, lavender, blue) applied in canonical order and kept
+    pixel-identical between light and dark renders.
+  - 'Genuine data storytelling: the triple-overlap region gets a soft halo backdrop,
+    a bolder/larger label, and a grid-layout callout row (fig[2,1] Label) that turns
+    the number into a one-sentence insight — a Makie-distinctive layout technique,
+    not just axis text.'
+  - 'Theme-adaptive chrome is clean end to end: backgrounds, ink tokens, and circle
+    strokes all flip correctly between themes with no dark-on-dark or light-on-light
+    failures.'
+  weaknesses:
+  - Overlap-region fills (two-way vs. three-way) sit close in hue/lightness after
+    alpha-blending (purple, teal, slate-blue, navy) — the diagram leans on the printed
+    counts to disambiguate regions rather than strong hue separation; a slightly higher
+    fill_alpha or a small saturation bump on the triple-overlap halo would make the
+    three-way region read as visually distinct at a glance, not just via its label.
+  - Typography is solid but single-register (bold vs. regular only) — a touch more
+    type hierarchy (e.g. a lighter weight or smaller size for the '(X%)' sub-line
+    vs. the count) would push Design Excellence further toward publication-grade.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "venn-basic · julia · makie · anyplot.ai" in dark ink at top, clearly legible. "Python", "SQL", "JavaScript" set-name labels in bold dark text sit just outside their circles. Bottom caption line ("15 engineers (6%) are full-stack...") in a softer dark-gray, also legible.
+      Data: Three overlapping circles — Python = brand green (#009E73), SQL = lavender (#C475FD), JavaScript = blue (#4467A3), all at ~0.55 alpha with soft dark strokes. All 7 Venn regions (3 singles, 3 pairwise, 1 triple) show a count + percentage in dark ink text. The triple-overlap region (15, 6%) sits inside a light halo circle for emphasis.
+      Legibility verdict: PASS — all text reads clearly against the light background and against the translucent circle fills.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and set-name labels now rendered in light/white ink, clearly legible against the dark background. Caption line in a softer light-gray tone, legible.
+      Data: Same three circle colors (#009E73 green, #C475FD lavender, #4467A3 blue) — confirmed identical to the light render; only the page background, strokes, and text ink flipped. Triple-overlap halo circle uses a slightly elevated dark backdrop, region text in white.
+      Legibility verdict: PASS — no dark-on-dark failures; all region labels, set names, title, and caption remain fully readable.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable at full size and proportionally
+          sound in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions — region labels, set names, halo label, and caption
+          all clear of each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circle fills and strokes clearly visible; halo backdrop makes the
+          smallest region legible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Two-way and three-way overlap fills sit close in hue/lightness after
+          blending; relies on printed counts more than hue separation to distinguish
+          regions
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Circles use the majority of the 2400x2400 canvas with balanced margins
+          for title and caption
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Set names act as descriptive labels in place of axes; no generic
+          x/y
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (green, lavender, blue), identical across
+          themes; backgrounds correctly #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom palette and halo focal treatment, clearly above
+          default — not quite FiveThirtyEight-level typographic polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Decorations/spines hidden, generous whitespace, subtle strokes; triple-overlap
+          blend is slightly muddy
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Halo + bold label + explicit caption sentence turn the rarest region
+          into a clear, immediate insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3-set Venn diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Set labels, sizes, pairwise and triple overlaps, counts and percentages
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each of the 7 regions correctly maps to its inclusion-exclusion value
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; set names double as an inline legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 regions distinctly populated, no degenerate/empty regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible developer-skill survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Set sizes and overlaps arithmetically consistent, sums to stated
+          n=270
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> geometry -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no randomness needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a 3-set Venn, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, correct canvas size
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: poly!/Circle, DataAspect, hidedecorations!/hidespines!, Figure grid
+          layout with Label row
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Grid-layout callout row (fig[2,1] Label) is a genuine Makie layout
+          technique, though the core circle-drawing is replicable elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
