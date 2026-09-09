@@ -3,10 +3,6 @@
 // Library: echarts 6.1.0 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
-// anyplot.ai
-// subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -133,17 +129,31 @@ chart.setOption({
   series: [
     { name: "Weekly Visits", type: "line", xAxisIndex: 0, yAxisIndex: 0,
       data: weeklyVisits, smooth: true, symbol: "none",
-      lineStyle: { width: 3 }, areaStyle: { opacity: 0.15 } },
+      lineStyle: { width: 3 }, areaStyle: { opacity: 0.15 },
+      markLine: {
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: { color: t.inkSoft, fontSize: 12, formatter: (p) => `avg ${Math.round(p.value).toLocaleString()}` },
+        data: [{ type: "average", name: "Average" }],
+      },
+      markPoint: {
+        symbol: "circle",
+        symbolSize: 11,
+        itemStyle: { color: t.palette[0], borderColor: t.pageBg, borderWidth: 2 },
+        label: { position: "top", color: t.ink, fontSize: 13, fontWeight: 600,
+          formatter: (p) => Math.round(p.value).toLocaleString() },
+        data: [{ type: "max", name: "Peak" }],
+      } },
     { name: "Visits by Device", type: "bar", xAxisIndex: 1, yAxisIndex: 1,
-      data: deviceVisits, barWidth: "50%" },
+      data: deviceVisits, barWidth: "50%", itemStyle: { opacity: 0.85 } },
     { name: "Sessions", type: "scatter", xAxisIndex: 2, yAxisIndex: 2,
-      data: sessionPoints, symbolSize: 12 },
+      data: sessionPoints, symbolSize: 12, itemStyle: { opacity: 0.85 } },
     { name: "Bounce Rate", type: "bar", xAxisIndex: 3, yAxisIndex: 3,
-      data: bounceRate, barWidth: "55%" },
+      data: bounceRate, barWidth: "55%", itemStyle: { opacity: 0.6 } },
     { name: "Avg Session", type: "line", xAxisIndex: 4, yAxisIndex: 4,
       data: avgSessionMin, smooth: true, symbol: "circle", symbolSize: 8,
-      lineStyle: { width: 3 } },
+      lineStyle: { width: 3, opacity: 0.6 }, itemStyle: { opacity: 0.6 } },
     { name: "Conversion", type: "bar", xAxisIndex: 5, yAxisIndex: 5,
-      data: conversionRate, barWidth: "55%" },
+      data: conversionRate, barWidth: "55%", itemStyle: { opacity: 0.6 } },
   ],
 });
