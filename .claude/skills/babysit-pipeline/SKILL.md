@@ -259,6 +259,16 @@ nothing failed.
   put the spec on `rescue_specs.txt`: the driver's dispatch
   auto-closes every open PR of the pair, so a regeneration fired while
   a repair is mid-flight throws that work away.
+- **A `Review: PR #N` run failing at "Verify both theme renders exist"
+  with staging complete is a lost download, not a missing render.** The
+  PR keeps no verdict label, so no watchdog case matches and the driver
+  waits an hour before calling the spec stalled. Check
+  `gs://anyplot-images/staging/<spec>/<lang>/<lib>/` — 18 objects means
+  the generate/repair upload was fine — then `gh workflow run
+  impl-review.yml -f pr_number=N` once, only when no `Review: PR #N`
+  run is active. The download step retries since the 2026-09-09 fix;
+  a repeat on the same PR after that means the staging folder really is
+  empty and the pair needs a fresh generate.
 - **A `Merge: PR #N` run that fails AFTER "Merge PR to main" leaves a
   silent hole: the squash is on main (metadata pointing at production
   URLs, the driver counts the pair as done) but the images are still in
