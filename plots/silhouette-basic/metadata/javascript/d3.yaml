@@ -1,0 +1,246 @@
+library: d3
+language: javascript
+specification_id: silhouette-basic
+created: '2026-09-09T07:39:23Z'
+updated: '2026-09-09T07:44:31Z'
+generated_by: claude-sonnet
+workflow_run: 34324261104
+issue: 2334
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correctly reproduces the canonical scikit-learn-style silhouette plot: thin horizontal
+    per-sample bars sorted within each cluster, grouped with a gap between clusters,
+    plus a dashed overall-average reference line'
+  - 'Imprint palette applied correctly — brand green #009E73 first, canonical order
+    for the abstract cluster categories, identical data colors between light and dark
+    renders'
+  - Per-cluster average silhouette score is annotated inline at each color band's
+    vertical midpoint, doubling as a compact legend without a separate floating box
+  - All font sizes are explicitly set and the theme-adaptive ink/inkSoft/grid tokens
+    are threaded through every text and line element correctly in both themes
+  - 'Realistic, plausible data: emulated iris k-means clustering with a believable
+    quality gradient (well-separated setosa ~0.80 avg vs. overlapping versicolor/virginica
+    ~0.33-0.49) and includes negative silhouette values to show potential misclassification,
+    per the spec notes'
+  weaknesses:
+  - Data generation uses three small helper functions (rand, randNormal, clip) for
+    the fixed-seed LCG rather than fully inline code — reasonable given the browser
+    has no seeded RNG, but a stricter KISS reading would inline this
+  - Design Excellence is solid but not yet publication-tier — no subtitle/context
+    line, and the per-cluster annotation typography doesn't differ much from the overall-average
+    annotation; a touch more visual hierarchy (e.g. subtle differentiation between
+    primary and secondary annotations) would help
+  - The per-cluster annotation labels on the right sit close to the canvas edge (within
+    margin.right=230px) — comfortably inside the canvas today, but leaves little safety
+    margin for longer cluster labels in other datasets
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "silhouette-basic · javascript · d3 · anyplot.ai" centered at top; dark bold "Overall avg = 0.53" label next to a black dashed vertical reference line; x-axis tick labels (-0.2 to 1.0) in soft dark gray; x-axis title "Silhouette Coefficient" in dark ink below the axis; subtle vertical gridlines. All chrome text is clearly legible against the light background.
+      Data: Three horizontal color bands stacked vertically, each made of many thin per-sample bars sorted by descending silhouette value: green (#009E73, Cluster 0 · setosa, avg 0.80), lavender/purple (Cluster 1 · versicolor, avg 0.49), and blue (Cluster 2 · virginica, avg 0.33, dipping slightly negative). First categorical series is confirmed #009E73. Per-cluster average labels sit inline to the right of each band.
+      Legibility verdict: PASS — no light-on-light text, all chrome and data clearly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title now rendered in light/white text; "Overall avg = 0.53" label in white next to a white dashed reference line; tick labels and axis title in light gray; gridlines faint and light-colored. All chrome elements are clearly visible against the dark background — no dark-on-dark failures observed.
+      Data: Identical green (#009E73), lavender, and blue bands as the light render — data colors confirmed unchanged between themes, only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — no dark-on-dark text, everything reads cleanly.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, labels 15-16px, ticks
+          14px); readable in both themes with no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin per-sample bars (~9-10px each for ~50 samples/cluster) are clearly
+          visible, appropriate for medium density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue combination is CVD-safe and mutually distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills ~80% of canvas, balanced margins, legend/annotations
+          near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Silhouette Coefficient" is descriptive and self-explanatory (dimensionless
+          metric)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          and background in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful inline annotation layout and typography clearly above
+          library defaults, not yet full publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis removed, subtle gridlines, generous whitespace via cluster
+          gaps; some refinement but not maximal polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted bars, color coding, and avg reference lines create clear visual
+          hierarchy guiding the reader to the cluster-quality comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct silhouette plot format
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted per-cluster bars, distinct colors, overall avg line, per-cluster
+          avg annotation — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = silhouette value, sample rows grouped by cluster; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend/annotation labels match cluster data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows high, medium, and low/negative silhouette values across clusters
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real, neutral scenario: iris k-means clustering'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cluster silhouette averages plausible for iris clustering (well-separated
+          setosa vs overlapping versicolor/virginica)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear imports->data->plot flow, but three small helper functions
+          (rand, randNormal, clip) for the LCG deviate slightly from pure KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG since browser lacks a seeded RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly mounts into #container per the JS harness contract'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic d3 scales, axisBottom, data joins with .join()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Bespoke per-sample row layout and inline group annotations leverage
+          d3's low-level data-join flexibility beyond a generic chart wrapper
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome

@@ -1,0 +1,234 @@
+library: chartjs
+language: javascript
+specification_id: shap-waterfall
+created: '2026-09-09T07:35:46Z'
+updated: '2026-09-09T07:47:41Z'
+generated_by: claude-sonnet
+workflow_run: 34323881020
+issue: 5237
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses were correctly fixed: value labels now use Chart.defaults.font.family
+    instead of hardcoded Arial, and the x-axis max padding was tightened from *1.2
+    to *1.1, giving bars more of the canvas width.'
+  - Custom canvas plugin (afterDatasetsDraw) renders dashed cumulative-flow connectors
+    and per-bar value labels — an idiomatic, native-API use of Chart.js rather than
+    an external plugin.
+  - 'Correct floating-bar technique (data: [start, end]) faithfully implements the
+    cumulative waterfall flow.'
+  - 'Full theme-adaptive chrome: title, ticks, grid, and neutral base/final bars all
+    flip correctly between light and dark, while red/blue data colors stay pixel-identical.'
+  - Realistic, neutral loan-approval data with 12 features, correctly sorted by descending
+    |SHAP| magnitude, and internally consistent (base + sum(shap) = final).
+  weaknesses:
+  - 'Row spacing across the 14 rows (categoryPercentage: 0.85) is still on the denser
+    side — a touch more headroom would give slightly more breathing room, though it''s
+    not currently a legibility problem.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Bold dark-ink title "shap-waterfall · javascript · chartjs · anyplot.ai" top-centered; legend with red/blue/black swatches; subtle vertical gridlines; dark axis tick labels and x-axis title "Predicted Approval Probability" with % suffix. All clearly legible.
+      Data: Twelve feature bars flow from a black "Base value" bar (45.0%) through alternating red positive segments (Income +18.5, Credit Score +12.8, ...) and blue negative segments (Missed Payments -14.2, Debt-to-Income Ratio -9.6, ...), connected by dashed grey connector lines, to a black "Final prediction" bar (54.6%). First categorical color intentionally red/blue per spec's SHAP convention, not #009E73 (semantic exception, legend-labeled). X-axis max now tops out at 70% (tightened from 80% in attempt 1), so bars fill more of the canvas.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title/legend/axis structure rendered in light cream ink; ticks and axis title flip to soft cream; gridlines subtle light-on-dark. No dark-on-dark failures found.
+      Data: Base/Final total bars flip from black to a cream/off-white fill (theme-adaptive t.ink token); red (#AE3030) and blue (#4467A3) segment colors are pixel-identical to the light render, confirming only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; plugin label font-family fix resolved
+          attempt-1 mismatch
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, bars, or connectors
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible; 14-row spacing still slightly dense
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue (not red-green) plus redundant +/- text encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Nothing cut off; x-axis max padding tightened from 1.2x to 1.1x
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis title with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue is a spec-mandated semantic exception from Imprint palette
+          positions; both renders theme-correct
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom plugin and rounded bar corners show polish above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean chrome, subtle connectors, tightened scale gives purposeful
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed cumulative-flow connectors and labeled anchors create a clear
+          narrative arc
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal waterfall (floating-bar) chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Ordering, cumulative flow, coloring, labeled anchors, value labels,
+          connectors all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend matches semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 features plus base/final anchors
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral loan-approval feature set
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Internally consistent base + sum(shap) = final
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper plus one plugin object, justified by overlay requirement
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only browser globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation false
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Floating-bar technique plus native plugin API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom canvas-drawn connectors and labels without external plugin
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - waterfall-flow
+  - floating-bar
+  - annotations
+  - connector-lines
+  - custom-plugin
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - theme-adaptive
