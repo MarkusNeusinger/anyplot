@@ -129,7 +129,8 @@ anyplot_theme <- theme_minimal(base_size = 7) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid        = element_blank(),
+    panel.grid.major  = element_line(color = grDevices::adjustcolor(INK, alpha.f = 0.12), linewidth = 0.15),
+    panel.grid.minor  = element_blank(),
     axis.line         = element_line(color = INK_SOFT),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
@@ -140,8 +141,8 @@ anyplot_theme <- theme_minimal(base_size = 7) +
   )
 
 # --- Plot -------------------------------------------------------------------
-p <- ggplot(streamlines, aes(x = x, y = y, group = id, color = speed_capped)) +
-  geom_path(linewidth = 0.9, lineend = "round", alpha = 0.9) +
+p <- ggplot(streamlines, aes(x = x, y = y, group = id, color = speed_capped, linewidth = speed_capped)) +
+  geom_path(lineend = "round", alpha = 0.9) +
   geom_point(
     data = charges, aes(x = x, y = y),
     inherit.aes = FALSE, color = INK, size = 3, alpha = 0.9
@@ -150,6 +151,7 @@ p <- ggplot(streamlines, aes(x = x, y = y, group = id, color = speed_capped)) +
     name = "Field strength", low = IMPRINT_SEQ_LOW, high = IMPRINT_SEQ_HIGH,
     limits = c(0, cap_val)
   ) +
+  scale_linewidth(range = c(0.5, 1.3), guide = "none") +
   coord_equal(xlim = bound_x, ylim = bound_y, expand = FALSE) +
   labs(title = plot_title, x = "X Position", y = "Y Position") +
   anyplot_theme
