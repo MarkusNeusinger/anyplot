@@ -1,0 +1,233 @@
+library: d3
+language: javascript
+specification_id: violin-split
+created: '2026-09-09T21:42:10Z'
+updated: '2026-09-09T21:54:40Z'
+generated_by: claude-sonnet
+workflow_run: 34407849639
+issue: 1949
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All three weaknesses from attempt 1 are directly and substantively addressed:
+    storytelling callout added, quartile/median ticks thickened, KDE boundary-corrected
+    via the reflection method (with an explanatory comment)'
+  - 'Correct split-violin construction: two KDE halves per category meeting cleanly
+    at a center seam, per spec'
+  - 'Imprint palette correctly applied (first series #009E73), identical data colors
+    across both themes, both renders theme-correct'
+  - Deterministic seeded LCG + Box-Muller data generation; fully reproducible
+  - Realistic, neutral midterm/final exam dataset across 5 courses within spec's size
+    bounds
+  weaknesses:
+  - Axis domain (spine) lines are still fully drawn on both x and y axes; a slightly
+    more minimal treatment (e.g., dropping or lightening the y-axis domain line) would
+    push visual refinement further
+  - Helper-function count (RNG, kde, quartiles, drawQuartiles) is on the higher side
+    for a "no functions/classes" KISS ideal, though justified by the statistical computation
+    involved
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Centered dark-ink title "violin-split · javascript · d3 · anyplot.ai"; axis labels "Course" (x) and "Exam Score (%)" (y); subtle horizontal gridlines; legend top-right with "Midterm"/"Final" swatches. All readable against the light background.
+      Data: Five split violins (Algebra, Biology, Chemistry, Physics, Statistics), green (#009E73) left half = Midterm, light purple right half = Final, meeting at a thin off-white center seam. Thickened Q1/Q3/median tick marks per half. Callout "Largest gain: Physics +10.6 pts" with dashed leader line above the Physics violin.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title, axis labels, gridlines, and legend rendered in light/white text — all clearly legible; no dark-on-dark failures. Quartile/median ticks flip to a dark (pageBg) stroke and remain visible against the saturated fills, now thicker than attempt 1.
+      Data: Identical green/purple data colors to the light render — only chrome flipped, confirming theme-adaptive design.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Fonts explicit and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Quartile/median ticks thickened (2px/3px), now clearly visible at
+          preview scale
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple split, adequate contrast, not red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, both renders theme-correct backgrounds'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Split violins, thickened quartile ticks, callout annotation show
+          design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, ticks removed; axis domain lines still fully retained
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New callout gives a clear focal point, resolving prior attempt's
+          weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct split violin plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors + legend, center seam, quartile markers, alpha transparency
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, midterm/final split per course
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format, legend labels clear
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Boundary-corrected KDE removes prior abrupt taper; quartile markers
+          + violin shape cover the plot type well
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Midterm/final exam scores by course - realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 score range, sensible course-level values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, justified by statistical computation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG + Box-Muller
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond d3 global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper d3-scale, d3-shape (area + curveBasis), d3-array usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Reflection-method KDE boundary correction is a distinctive statistical
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
