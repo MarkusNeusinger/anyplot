@@ -1,8 +1,7 @@
 // anyplot.ai
 // scatter-regression-lowess: Scatter Plot with LOWESS Regression
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-09
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 84/100 | Created: 2026-09-09
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
