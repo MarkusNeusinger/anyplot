@@ -94,9 +94,41 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
   },
   grid: [
-    { id: "topBar", left: 220, right: 60, top: 90, bottom: 460 },
+    { id: "topBar", left: 220, right: 60, top: 130, bottom: 460 },
     { id: "leftBar", left: 40, right: 1380, top: 480, bottom: 90 },
     { id: "matrix", left: 220, right: 60, top: 480, bottom: 90 },
+  ],
+  graphic: [
+    {
+      type: "text",
+      left: 1410,
+      top: 44,
+      style: { text: "Intersection degree", fill: t.inkSoft, fontSize: 12, fontWeight: 500 },
+    },
+    {
+      type: "rect",
+      left: 1410,
+      top: 64,
+      shape: { width: 130, height: 8 },
+      style: {
+        fill: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+          { offset: 0, color: t.seq[0] },
+          { offset: 1, color: t.seq[1] },
+        ]),
+      },
+    },
+    {
+      type: "text",
+      left: 1410,
+      top: 76,
+      style: { text: "1 set", fill: t.inkSoft, fontSize: 10 },
+    },
+    {
+      type: "text",
+      left: 1410 + 130,
+      top: 76,
+      style: { text: `${maxDegree} sets`, fill: t.inkSoft, fontSize: 10, align: "right" },
+    },
   ],
   xAxis: [
     {
@@ -175,9 +207,16 @@ chart.setOption({
       xAxisIndex: 0,
       yAxisIndex: 0,
       barWidth: "62%",
-      data: intersections.map((it) => ({
+      data: intersections.map((it, idx) => ({
         value: it.size,
-        itemStyle: { color: seqColor(it.degree) },
+        itemStyle:
+          idx === 0
+            ? { color: seqColor(it.degree), borderColor: t.ink, borderWidth: 2 }
+            : { color: seqColor(it.degree) },
+        label:
+          idx === 0
+            ? { show: true, position: "top", color: t.ink, fontSize: 13, fontWeight: 600 }
+            : undefined,
       })),
     },
     {
