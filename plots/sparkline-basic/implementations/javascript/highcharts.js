@@ -1,7 +1,7 @@
 // anyplot.ai
 // sparkline-basic: Basic Sparkline
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 81/100 | Created: 2026-09-09
+// Quality: 90/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 
