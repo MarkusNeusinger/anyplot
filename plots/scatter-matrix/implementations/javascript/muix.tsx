@@ -1,7 +1,3 @@
-// anyplot.ai
-// scatter-matrix: Scatter Plot Matrix
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-09
 //# anyplot-orientation: square
 // anyplot.ai
 // scatter-matrix: Scatter Plot Matrix
@@ -153,11 +149,21 @@ VARS.forEach(({ key }) => {
 // --- Layout ------------------------------------------------------------------
 const HEADER_H = 64;
 const SIDE_PAD = 16;
+const CELL_GAP = 6;
 const cell = Math.floor(
-  Math.min(size.width - 2 * SIDE_PAD, size.height - HEADER_H - SIDE_PAD) / N,
+  Math.min(
+    size.width - 2 * SIDE_PAD - (N - 1) * CELL_GAP,
+    size.height - HEADER_H - SIDE_PAD - (N - 1) * CELL_GAP,
+  ) / N,
 );
 const EDGE_LABEL = 15;
-const EDGE_TICK = 11;
+const EDGE_TICK = 12;
+
+// Petal length vs. petal width is the pair with the clearest species
+// separation (per the AI review's data-storytelling feedback) — a subtle
+// marker emphasis on those cells helps the reader find the strongest story
+// without scanning all 16 panels.
+const HIGHLIGHT_VARS = new Set(["petalLength", "petalWidth"]);
 
 function axisTextStyle(fontSize, fill) {
   return { fontSize, fill, fontFamily: "inherit" };
@@ -171,6 +177,10 @@ export default function Chart() {
       const isDiagonal = row === col;
       const rowVar = VARS[row];
       const colVar = VARS[col];
+      const isHighlight =
+        !isDiagonal &&
+        HIGHLIGHT_VARS.has(rowVar.key) &&
+        HIGHLIGHT_VARS.has(colVar.key);
       const showXEdge = row === N - 1;
       const showYEdge = !isDiagonal && col === 0;
       const margin = {
@@ -221,8 +231,8 @@ export default function Chart() {
         const series = SPECIES.map((species, speciesIndex) => ({
           id: species.name,
           label: species.name,
-          color: hexToRgba(species.color, 0.72),
-          markerSize: 4,
+          color: hexToRgba(species.color, isHighlight ? 0.85 : 0.72),
+          markerSize: isHighlight ? 5 : 4,
           data: points
             .filter((p) => p.speciesIndex === speciesIndex)
             .map((p) => ({ id: p.id, x: p[colVar.key], y: p[rowVar.key] })),
@@ -271,7 +281,9 @@ export default function Chart() {
           sx={{
             width: cell,
             height: cell,
-            border: `1px solid ${t.grid}`,
+            border: isHighlight
+              ? `1px solid ${hexToRgba(t.palette[0], 0.45)}`
+              : `1px solid ${t.grid}`,
             boxSizing: "border-box",
             display: "flex",
             alignItems: "center",
@@ -332,6 +344,7 @@ export default function Chart() {
           display: "grid",
           gridTemplateColumns: `repeat(${N}, ${cell}px)`,
           gridTemplateRows: `repeat(${N}, ${cell}px)`,
+          gap: `${CELL_GAP}px`,
           margin: "0 auto",
         }}
       >
