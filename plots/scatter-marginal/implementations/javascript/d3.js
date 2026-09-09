@@ -87,10 +87,18 @@ function kernelDensityEstimator(kernel, thresholds) {
   return (values) => thresholds.map((tv) => [tv, d3.mean(values, (v) => kernel(tv - v))]);
 }
 
-const bwX = (x.domain()[1] - x.domain()[0]) / 14;
-const bwY = (y.domain()[1] - y.domain()[0]) / 14;
-const densityX = kernelDensityEstimator(kernelEpanechnikov(bwX), x.ticks(80))(points.map((d) => d.sunlight));
-const densityY = kernelDensityEstimator(kernelEpanechnikov(bwY), y.ticks(80))(points.map((d) => d.height_cm));
+// Silverman's rule of thumb: bw = 1.06 * std * n^(-1/5) — a principled
+// bandwidth selector rather than a fixed fraction of the domain.
+function silvermanBandwidth(values) {
+  const std = d3.deviation(values);
+  return 1.06 * std * Math.pow(values.length, -1 / 5);
+}
+const sunlightValues = points.map((d) => d.sunlight);
+const heightValues = points.map((d) => d.height_cm);
+const bwX = silvermanBandwidth(sunlightValues);
+const bwY = silvermanBandwidth(heightValues);
+const densityX = kernelDensityEstimator(kernelEpanechnikov(bwX), x.ticks(80))(sunlightValues);
+const densityY = kernelDensityEstimator(kernelEpanechnikov(bwY), y.ticks(80))(heightValues);
 
 const topDensityScale = d3
   .scaleLinear()
@@ -154,7 +162,7 @@ mainG
   .join("circle")
   .attr("cx", (d) => x(d.sunlight))
   .attr("cy", (d) => y(d.height_cm))
-  .attr("r", 5)
+  .attr("r", 4)
   .attr("fill", t.palette[0])
   .attr("fill-opacity", 0.65)
   .attr("stroke", t.pageBg)
@@ -181,9 +189,20 @@ mainG
 const topG = svg.append("g").attr("transform", `translate(${mainX},${outerTop})`);
 
 topG
-  .selectAll("rect")
+  .append("rect")
+  .attr("class", "panel-frame")
+  .attr("x", 0)
+  .attr("y", 0)
+  .attr("width", mainW)
+  .attr("height", topPanelH)
+  .attr("fill", "none")
+  .attr("stroke", t.grid);
+
+topG
+  .selectAll("rect.bar")
   .data(xBins)
   .join("rect")
+  .attr("class", "bar")
   .attr("x", (d) => x(d.x0) + 1)
   .attr("width", (d) => Math.max(0, x(d.x1) - x(d.x0) - 2))
   .attr("y", (d) => topCountScale(d.length))
@@ -197,9 +216,20 @@ topG.append("path").datum(densityX).attr("fill", "none").attr("stroke", t.inkSof
 const rightG = svg.append("g").attr("transform", `translate(${mainX + mainW + gap},${mainY})`);
 
 rightG
-  .selectAll("rect")
+  .append("rect")
+  .attr("class", "panel-frame")
+  .attr("x", 0)
+  .attr("y", 0)
+  .attr("width", rightPanelW)
+  .attr("height", mainH)
+  .attr("fill", "none")
+  .attr("stroke", t.grid);
+
+rightG
+  .selectAll("rect.bar")
   .data(yBins)
   .join("rect")
+  .attr("class", "bar")
   .attr("x", 0)
   .attr("width", (d) => rightCountScale(d.length))
   .attr("y", (d) => y(d.x1) + 1)
