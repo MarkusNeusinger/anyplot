@@ -41,11 +41,6 @@ clusterSpecs.forEach((spec, clusterIndex) => {
 const sampleCount = petalLength.length;
 
 // --- Silhouette coefficient per sample (standard formula, Euclidean space) -
-function distance(i, j) {
-  const dx = petalLength[i] - petalLength[j];
-  const dy = petalWidth[i] - petalWidth[j];
-  return Math.sqrt(dx * dx + dy * dy);
-}
 const silhouette = new Array(sampleCount).fill(0);
 for (let i = 0; i < sampleCount; i++) {
   const ownCluster = clusterLabels[i];
@@ -55,7 +50,9 @@ for (let i = 0; i < sampleCount; i++) {
   const separationCounts = {};
   for (let j = 0; j < sampleCount; j++) {
     if (i === j) continue;
-    const d = distance(i, j);
+    const dx = petalLength[i] - petalLength[j];
+    const dy = petalWidth[i] - petalWidth[j];
+    const d = Math.sqrt(dx * dx + dy * dy);
     if (clusterLabels[j] === ownCluster) {
       cohesionSum += d;
       cohesionCount++;
@@ -120,6 +117,14 @@ const silhouetteAnnotations = {
     ctx.stroke();
     ctx.setLineDash([]);
 
+    const avgLabel = `avg ${overallAvg.toFixed(2)}`;
+    ctx.font = "600 14px sans-serif";
+    ctx.fillStyle = t.amber;
+    ctx.textBaseline = "alphabetic";
+    const nearRightEdge = avgX > chartArea.right - 100;
+    ctx.textAlign = nearRightEdge ? "right" : "left";
+    ctx.fillText(avgLabel, nearRightEdge ? avgX - 8 : avgX + 8, chartArea.top + 16);
+
     ctx.font = "600 15px sans-serif";
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
@@ -159,7 +164,7 @@ new Chart(canvas, {
         display: true,
         text: "silhouette-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 25 },
       },
       legend: { display: false },
     },
