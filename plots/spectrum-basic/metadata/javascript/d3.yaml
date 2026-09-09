@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: spectrum-basic
+created: '2026-09-09T18:17:56Z'
+updated: '2026-09-09T18:32:55Z'
+generated_by: claude-sonnet
+workflow_run: 34387481640
+issue: 2926
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Direct numeric harmonic labels ("440 Hz", "880 Hz", ...) positioned above each
+    peak with real getBBox-measured collision avoidance — a genuinely D3-distinctive
+    technique that directly satisfies the spec's "annotate dominant components" note
+    and resolves the prior review's LM-02 weakness.
+  - Peak marker radius is driven by a sqrt scale over linear (not dB) amplitude, so
+    marker area tracks acoustic power — the fundamental reads as the visually dominant
+    peak while higher harmonics taper off, adding a genuine data-storytelling layer.
+  - 'Theme-adaptive chrome is correctly threaded through every element via window.ANYPLOT_TOKENS
+    — both renders are fully legible, backgrounds match #FAF8F1/#1A1A17, and the data
+    color (#009E73) is identical between light and dark.'
+  - Log-scale frequency axis uses sensible, hand-picked tick values (20, 50, 100,
+    200, 500, 1k, 2k, 5k, 10k, 20k) with a custom k-suffix formatter instead of noisy
+    default log ticks.
+  - 'Deterministic seeded data (mulberry32) builds a realistic synthetic audio spectrum:
+    a 440 Hz fundamental with decaying harmonics over a pink-noise-shaped floor with
+    plausible ripple, sized well within the spec''s 256-4096 bin range.'
+  - Title format is exactly correct and the legend is appropriately omitted for a
+    single-series plot.
+  weaknesses:
+  - The chart is still fundamentally a single flat-color area+line with accent markers;
+    a subtle secondary visual cue (e.g. a faint reference band for the expected noise-floor
+    range) would push Aesthetic Sophistication further toward publication-distinctive.
+  - Title occupies only ~30% of the plot width — not a violation (fully readable,
+    no overflow), but there is headroom to grow it slightly given the short spec-id/library
+    name combination.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "spectrum-basic · javascript · d3 · anyplot.ai" centered at top. Dark axis labels "Frequency (Hz)" and rotated "Amplitude (dB)". Dark tick labels on a log-scale x-axis (20 Hz–20 kHz, hand-picked ticks) and linear y-axis (0 to −100 dB in 20 dB steps). Subtle horizontal-only gridlines, clearly visible but not dominant.
+      Data: Single teal-green (#009E73) filled area + line tracing a pink-noise-shaped floor sloping from ~−70 dB to ~−95 dB, with six sharp harmonic peaks (440, 880, 1320, 1760, 2200, 2640 Hz), each marked by a circle (radius scaled by acoustic prominence) outlined in the page-background color, and each directly labeled with its frequency in Hz. Labels are cleanly positioned above their markers with no overlap between neighboring labels (e.g. 2200 Hz / 2640 Hz are vertically staggered).
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels now rendered in light/off-white ink, fully legible against the dark surface. Gridlines remain subtle and visible without competing with the data.
+      Data: The teal-green area/line/markers are identical in hue to the light render (only chrome flips) — confirming the Imprint data-color rule. Peak labels remain in light ink, clearly legible against the near-black background, with the same non-overlapping placement as the light render.
+      Legibility verdict: PASS — no dark-on-dark failures observed; brand green #009E73 reads clearly on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (13/14/17/22px), fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: getBBox-based collision avoidance keeps peak labels from overlapping
+          each other or the axes
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line/area/markers clearly visible; marker size scales with harmonic
+          prominence
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series, strong contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, no canvas gate failure
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Frequency (Hz)" and "Amplitude (dB)" are descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme-adaptive backgrounds in both
+          renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Prominence-scaled markers + numeric peak labels elevate beyond flat
+          default, but still a single-hue area+line composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle y-only grid, clean L-shaped axis frame, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Direct numeric labels plus prominence-scaled markers create a clear,
+          explicit visual hierarchy toward the six harmonics
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct frequency spectrum plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log frequency axis, dB amplitude, units on both axes, dominant-component
+          annotation all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency on x, amplitude on y, full 20 Hz-20 kHz / -100 to 0 dB
+          range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend correctly omitted for
+          single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Noise floor, harmonic peaks, and per-peak prominence all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic audio spectrum (A4 fundamental + harmonics
+          + pink-noise floor)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1024 bins within typical FFT range, dB values realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only a small seeded-RNG helper; otherwise flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: mulberry32(42) fixed-seed PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly mounts svg into #container per the harness contract'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scaleLog/scaleSqrt/scaleLinear, data joins, curveMonotoneX, idiomatic
+          axis calls
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Runtime getBBox-based label placement/collision resolution is a real
+          D3-specific capability (browser text measurement), not replicable as-is
+          in a declarative charting library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

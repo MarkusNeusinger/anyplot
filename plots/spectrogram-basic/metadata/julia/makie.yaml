@@ -1,0 +1,245 @@
+library: makie
+language: julia
+specification_id: spectrogram-basic
+created: '2026-09-09T18:26:21Z'
+updated: '2026-09-09T18:44:24Z'
+generated_by: claude-sonnet
+workflow_run: 34388313880
+issue: 2927
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Correct STFT pipeline: Hann-windowed manual DFT, dB power scaling, clamped colorrange,
+    and a properly labeled Colorbar with power units'
+  - Distinctive fault-burst annotation (open circle + "bearing fault" text) that highlights
+    the specific transient event — a genuine Makie touch beyond a bare heatmap
+  - 'Theme chrome correctly threaded through Axis and Colorbar in both renders: spines/grid
+    removed, INK/INK_SOFT tokens applied to title, labels, ticks, and annotation text'
+  - 'Imprint sequential colormap (#009E73 to #4467A3) used correctly for the continuous
+    power data, with identical data colors between light and dark renders'
+  - Realistic, neutral gearbox-vibration scenario (rising shaft speed chirp + brief
+    bearing-fault impact burst) with physically sensible sample rate, duration, and
+    frequency values
+  weaknesses:
+  - Heatmap noise floor is fairly grainy/mottled across most of the canvas, which
+    slightly dilutes the visual pop of the chirp and fault features against the background
+  - Axis and colorbar tick density is a bit sparse (only 0/500/1000 Hz on the frequency
+    axis, 10 dB steps on the colorbar) — a couple more tick marks would aid precise
+    reading
+  - Frequency axis stays linear; the spec suggests considering a log scale when a
+    signal spans multiple octaves (optional here since the chirp stays within roughly
+    one octave, but worth a note)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent with the light theme spec.
+      Chrome: Title "spectrogram-basic · julia · makie · anyplot.ai" is bold dark text, clearly visible; "Time (s)" and "Frequency (Hz)" axis labels and 0/500/1000 and 1/2/3/4 tick labels render in dark ink and soft dark gray respectively, all legible; colorbar labeled "Power (dB)" with ticks from 0 to -50 in steps of 10, all readable; top/right spines removed, no gridlines, clean minimalist frame.
+      Data: Heatmap uses a green (#009E73, low power/noise floor) to blue (#4467A3, high power) gradient — a rising diagonal chirp streak runs from ~40 Hz at t=0 to ~340 Hz at t=5s, and a short horizontal burst near 620 Hz around t=3s is circled and labeled "bearing fault" in dark ink. Colors match the described Imprint sequential palette.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent with the dark theme spec.
+      Chrome: Same title, axis labels, tick labels, and colorbar label now render in light ink (#F0EFE8) / soft light gray (#B8B7B0), clearly visible against the dark background; no dark-on-dark text observed anywhere, including the "bearing fault" annotation text which flips to light ink.
+      Data: Heatmap gradient (green to blue) and the diagonal chirp streak / fault-burst circle are visually identical in position, shape, and hue to the light render — confirms data colors did not change between themes, only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, colorbar label all readable in both
+          themes at appropriate sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; fault annotation sits clear of the colorbar
+          and other text
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Chirp streak and fault burst are visible, but the noisy background
+          texture slightly reduces contrast for the signal features
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient is CVD-safe, no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title proportion, axis balance, no
+          overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (Time (s), Frequency (Hz), Power
+          (dB))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First-series green base of imprint_seq gradient; correct light/dark
+          chrome backgrounds; data colors identical across themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom Imprint sequential colormap, dB-scaled power, thoughtful annotation
+          beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, no gridlines, generous whitespace around the plot
+          area
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Fault annotation creates a clear focal point on top of the rising-chirp
+          trend, though overall hierarchy could be sharpened further
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-frequency heatmap spectrogram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar with dB units, time/frequency axis labels, perceptually-distinct
+          colormap (Imprint sequential per style guide)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=frequency, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; colorbar serves as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows amplitude-over-time-and-frequency plus an annotated transient
+          event
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Gearbox vibration chirp + bearing fault is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sample rate, duration, and frequency ranges are physically sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-level script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; manual DFT is a documented workaround for
+          the missing FFTW dependency, not fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current save/px_per_unit API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/heatmap!/Colorbar usage; DFT loop is a necessary workaround,
+          not idiomatic signal processing
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: scatter!+text! fault annotation is a nice Makie-specific touch layered
+          on the heatmap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
