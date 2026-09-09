@@ -4,7 +4,7 @@
 #' Quality: 86/100 | Created: 2026-09-09
 
 library(ggplot2)
-library(dplyr)
+library(patchwork)
 library(ragg)
 
 set.seed(42)
@@ -26,6 +26,7 @@ budget <- tibble::tibble(
   ),
   share = c(32, 24, 19, 15, 10)
 )
+dept_colors <- setNames(IMPRINT_PALETTE[seq_len(nrow(budget))], levels(budget$department))
 
 grid_size <- 10
 squares <- rep(budget$department, times = budget$share)
@@ -36,19 +37,24 @@ waffle_df <- tibble::tibble(
   row        = grid_size - square_idx %/% grid_size
 )
 
-legend_labels <- paste0(budget$department, " (", budget$share, "%)")
-
 title_text <- "Company Budget Allocation · waffle-basic · r · ggplot2 · anyplot.ai"
 title_size <- round(12 * min(1, 67 / nchar(title_text)))
 
-# --- Plot ---------------------------------------------------------------
-p <- ggplot(waffle_df, aes(x = col, y = row, fill = department)) +
+# Vertical center of the solid rows fully owned by the largest category, used
+# to place a callout directly on the waffle instead of relying on the legend.
+top_full_rows <- max(1, budget$share[1] %/% grid_size)
+callout_row   <- grid_size - (top_full_rows - 1) / 2
+
+# --- Waffle grid ------------------------------------------------------------
+p_grid <- ggplot(waffle_df, aes(x = col, y = row, fill = department)) +
   geom_tile(color = PAGE_BG, linewidth = 0.6, width = 0.85, height = 0.85) +
+  annotate(
+    "text", x = 5.5, y = callout_row,
+    label = paste0(budget$share[1], "%"),
+    color = "#FFFFFF", fontface = "bold", size = 5.2
+  ) +
   coord_equal(xlim = c(0.5, 10.5), ylim = c(0.5, 10.5), expand = FALSE) +
-  scale_fill_manual(values = IMPRINT_PALETTE[seq_len(nrow(budget))],
-                     labels = legend_labels,
-                     name   = NULL) +
-  guides(fill = guide_legend(nrow = 2, byrow = TRUE)) +
+  scale_fill_manual(values = dept_colors, guide = "none") +
   labs(title = title_text) +
   theme_void(base_size = 8) +
   theme(
@@ -56,13 +62,62 @@ p <- ggplot(waffle_df, aes(x = col, y = row, fill = department)) +
     panel.background = element_rect(fill = PAGE_BG, color = NA),
     plot.title       = element_text(
       color = INK, size = title_size, hjust = 0.5,
-      margin = margin(b = 24)
+      margin = margin(b = 20)
     ),
-    legend.position  = "bottom",
-    legend.text      = element_text(color = INK_SOFT, size = 10),
-    legend.key.size  = unit(1, "lines"),
-    plot.margin      = margin(t = 20, r = 20, b = 12, l = 20)
+    plot.margin      = margin(t = 20, r = 20, b = 4, l = 20)
   )
+
+# --- Custom legend, each row independently centered under the grid ---------
+# A stock guide_legend(nrow = 2, byrow = TRUE) packs the shorter final row
+# flush-left inside its grid cells; measuring each label's real rendered
+# width lets every row (regardless of length) be centered as a whole block,
+# with no risk of the longest label overrunning the canvas edge.
+legend_font_pt <- 2.9 * .pt  # geom_text `size` (mm) -> points, matches rendered glyphs
+key_w_in       <- 0.085
+key_gap_in     <- 0.05
+item_gap_in    <- 0.32
+avail_width_in <- 6 - 2 * (20 / 72.27)  # matches p_grid's left/right plot.margin
+
+text_width_in <- function(label) {
+  grid::convertWidth(
+    grid::grobWidth(grid::textGrob(label, gp = grid::gpar(fontsize = legend_font_pt))),
+    "inches", valueOnly = TRUE
+  )
+}
+
+legend_rows <- list(levels(budget$department)[1:3], levels(budget$department)[4:5])
+build_legend_row <- function(depts, row_y) {
+  labels  <- paste0(depts, " (", budget$share[match(depts, levels(budget$department))], "%)")
+  item_w  <- key_w_in + key_gap_in + vapply(labels, text_width_in, numeric(1))
+  row_w   <- sum(item_w) + item_gap_in * (length(depts) - 1)
+  start_x <- (avail_width_in - row_w) / 2
+  key_x   <- start_x + cumsum(c(0, utils::head(item_w, -1) + item_gap_in))
+  data.frame(
+    department = depts,
+    label      = labels,
+    key_x      = key_x / avail_width_in,
+    text_x     = (key_x + key_w_in + key_gap_in) / avail_width_in,
+    y          = row_y,
+    stringsAsFactors = FALSE
+  )
+}
+legend_df <- do.call(rbind, Map(
+  build_legend_row, legend_rows, rev(seq_along(legend_rows)) - 1
+))
+
+p_legend <- ggplot(legend_df) +
+  geom_point(aes(x = key_x, y = y, color = department), shape = 15, size = 4.2) +
+  geom_text(aes(x = text_x, y = y, label = label), hjust = 0, color = INK_SOFT, size = 2.9) +
+  scale_color_manual(values = dept_colors, guide = "none") +
+  coord_cartesian(
+    xlim = c(0, 1), ylim = c(-0.6, length(legend_rows) - 0.4), expand = FALSE
+  ) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG))
+
+p <- (p_grid / p_legend) +
+  plot_layout(heights = c(10, 1.6)) &
+  theme(plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG))
 
 # --- Save -----------------------------------------------------------------
 ggsave(
@@ -72,5 +127,6 @@ ggsave(
   width    = 6,
   height   = 6,
   units    = "in",
-  dpi      = 400
+  dpi      = 400,
+  bg       = PAGE_BG
 )
