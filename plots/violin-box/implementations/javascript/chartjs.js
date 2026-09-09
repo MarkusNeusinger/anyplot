@@ -1,7 +1,7 @@
 // anyplot.ai
 // violin-box: Violin Plot with Embedded Box Plot
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-09
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 95/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 
