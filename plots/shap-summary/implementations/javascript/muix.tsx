@@ -171,7 +171,7 @@ export default function Chart() {
             type: "continuous",
             min: 0,
             max: 1,
-            color: [t.seq[0], t.seq[1]],
+            color: [t.div[2], t.div[0]],
           },
           valueFormatter: (value) => `${Math.round(value * 100)}th pct`,
         },
