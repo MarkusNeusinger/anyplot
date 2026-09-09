@@ -40,19 +40,9 @@ waffle_df <- tibble::tibble(
 title_text <- "Company Budget Allocation · waffle-basic · r · ggplot2 · anyplot.ai"
 title_size <- round(12 * min(1, 67 / nchar(title_text)))
 
-# Vertical center of the solid rows fully owned by the largest category, used
-# to place a callout directly on the waffle instead of relying on the legend.
-top_full_rows <- max(1, budget$share[1] %/% grid_size)
-callout_row   <- grid_size - (top_full_rows - 1) / 2
-
 # --- Waffle grid ------------------------------------------------------------
 p_grid <- ggplot(waffle_df, aes(x = col, y = row, fill = department)) +
   geom_tile(color = PAGE_BG, linewidth = 0.6, width = 0.85, height = 0.85) +
-  annotate(
-    "text", x = 5.5, y = callout_row,
-    label = paste0(budget$share[1], "%"),
-    color = "#FFFFFF", fontface = "bold", size = 5.2
-  ) +
   coord_equal(xlim = c(0.5, 10.5), ylim = c(0.5, 10.5), expand = FALSE) +
   scale_fill_manual(values = dept_colors, guide = "none") +
   labs(title = title_text) +
