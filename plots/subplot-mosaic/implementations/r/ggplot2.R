@@ -1,0 +1,158 @@
+#' anyplot.ai
+#' subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: pending | Created: 2026-09-09
+
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(ragg)
+
+set.seed(42)
+
+# --- Theme tokens ------------------------------------------------------------
+THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                     "#AE3030", "#2ABCCD", "#954477", "#99B314")
+BRAND <- IMPRINT_PALETTE[1]
+
+# --- Data ----------------------------------------------------------------
+# Website analytics dashboard, mosaic layout "AAA;BBC;DEF"
+dates <- seq(as.Date("2024-06-01"), by = "day", length.out = 30)
+page_views <- pmax(500, round(3000 + cumsum(rnorm(30, mean = 10, sd = 120))))
+overview_df <- data.frame(date = dates, page_views = page_views)
+
+devices <- factor(c("Desktop", "Mobile", "Tablet"), levels = c("Desktop", "Mobile", "Tablet"))
+device_visits <- c(12500, 8700, 2100)
+device_df <- data.frame(device = devices, visits = device_visits)
+
+pages <- c("Home", "Blog", "Product", "Pricing", "Docs", "Support")
+avg_session_sec <- c(145, 210, 95, 130, 260, 175) + rnorm(6, 0, 10)
+bounce_rate_pct <- c(38, 22, 55, 47, 18, 33) + rnorm(6, 0, 3)
+page_pageviews <- c(9800, 4200, 3100, 2600, 2000, 1400)
+pages_df <- data.frame(
+  page = pages,
+  avg_session_sec = avg_session_sec,
+  bounce_rate_pct = bounce_rate_pct,
+  pageviews = page_pageviews
+)
+
+recent_days <- dates[17:30]
+bounce_trend <- pmax(10, 45 - seq(0, 13) * 0.6 + rnorm(14, 0, 2))
+session_trend <- 150 + seq(0, 13) * 3 + rnorm(14, 0, 8)
+conversion_trend <- pmax(0, 2.1 + seq(0, 13) * 0.05 + rnorm(14, 0, 0.15))
+bounce_df <- data.frame(date = recent_days, value = bounce_trend)
+session_df <- data.frame(date = recent_days, value = session_trend)
+conversion_df <- data.frame(date = recent_days, value = conversion_trend)
+
+# --- Shared chrome -----------------------------------------------------------
+base_chrome <- theme_minimal(base_size = 8) +
+  theme(
+    plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background  = element_rect(fill = PAGE_BG, color = NA),
+    panel.grid.minor  = element_blank(),
+    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.15),
+    axis.title        = element_text(color = INK),
+    axis.text         = element_text(color = INK_SOFT),
+    plot.title        = element_text(color = INK, face = "plain", size = 9, hjust = 0),
+    legend.position   = "none",
+    plot.margin       = margin(8, 8, 8, 8, unit = "pt")
+  )
+
+# --- Panel A: overview (wide, top row) ---------------------------------------
+panel_a <- ggplot(overview_df, aes(date, page_views)) +
+  geom_area(fill = BRAND, alpha = 0.15) +
+  geom_line(color = BRAND, linewidth = 1.1) +
+  labs(title = "Daily page views", x = NULL, y = "Views") +
+  scale_y_continuous(labels = scales::comma) +
+  base_chrome +
+  theme(
+    panel.grid.major.x = element_blank(),
+    axis.title.y = element_text(size = 9), axis.text = element_text(size = 8)
+  )
+
+# --- Panel B: device breakdown (medium, spans 2 cols) -------------------------
+panel_b <- ggplot(device_df, aes(device, visits)) +
+  geom_col(fill = BRAND, width = 0.6) +
+  labs(title = "Traffic by device", x = NULL, y = "Visits") +
+  scale_y_continuous(labels = scales::comma) +
+  base_chrome +
+  theme(
+    panel.grid.major.x = element_blank(),
+    axis.title.y = element_text(size = 9), axis.text = element_text(size = 8)
+  )
+
+# --- Panel C: page engagement (medium) ----------------------------------------
+panel_c <- ggplot(pages_df, aes(avg_session_sec, bounce_rate_pct)) +
+  geom_point(aes(size = pageviews), color = BRAND, alpha = 0.75) +
+  labs(title = "Page engagement", x = "Avg session (s)", y = "Bounce (%)") +
+  scale_size_area(max_size = 8) +
+  base_chrome +
+  theme(axis.title = element_text(size = 8), axis.text = element_text(size = 7))
+
+# --- Panels D/E/F: small metric trends (bottom row) ---------------------------
+small_chrome <- base_chrome +
+  theme(
+    panel.grid.major.x = element_blank(),
+    axis.title  = element_blank(),
+    axis.text.y = element_text(size = 6.5),
+    axis.text.x = element_text(size = 6.5),
+    plot.title  = element_text(size = 8)
+  )
+
+panel_d <- ggplot(bounce_df, aes(date, value)) +
+  geom_line(color = BRAND, linewidth = 0.9) +
+  geom_point(color = BRAND, size = 1.4) +
+  labs(title = "Bounce rate (%)") +
+  small_chrome
+
+panel_e <- ggplot(session_df, aes(date, value)) +
+  geom_line(color = BRAND, linewidth = 0.9) +
+  geom_point(color = BRAND, size = 1.4) +
+  labs(title = "Avg session (s)") +
+  small_chrome
+
+panel_f <- ggplot(conversion_df, aes(date, value)) +
+  geom_line(color = BRAND, linewidth = 0.9) +
+  geom_point(color = BRAND, size = 1.4) +
+  labs(title = "Conversion rate (%)") +
+  small_chrome
+
+# --- Mosaic assembly -----------------------------------------------------
+# Layout string:  "AAA
+#                  BBC
+#                  DEF"
+layout_matrix <- rbind(
+  c(1, 1, 1),
+  c(2, 2, 3),
+  c(4, 5, 6)
+)
+
+title_text <- "subplot-mosaic · r · ggplot2 · anyplot.ai"
+title_grob <- textGrob(
+  title_text,
+  gp = gpar(fontsize = 12, fontface = "bold", col = INK)
+)
+
+mosaic <- arrangeGrob(
+  panel_a, panel_b, panel_c, panel_d, panel_e, panel_f,
+  layout_matrix = layout_matrix,
+  heights = c(1.8, 1.3, 1),
+  top = title_grob
+)
+
+# --- Save ----------------------------------------------------------------
+agg_png(
+  filename   = sprintf("plot-%s.png", THEME),
+  width      = 8,
+  height     = 4.5,
+  units      = "in",
+  res        = 400,
+  background = PAGE_BG
+)
+grid.draw(rectGrob(gp = gpar(fill = PAGE_BG, col = PAGE_BG)))
+grid.draw(mosaic)
+dev.off()
