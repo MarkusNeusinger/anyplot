@@ -1,8 +1,7 @@
 // anyplot.ai
 // spectrum-basic: Frequency Spectrum Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-09
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 84/100 | Created: 2026-09-09
 import { LineChart } from "@mui/x-charts/LineChart";
 import { Typography } from "@mui/material";
 
