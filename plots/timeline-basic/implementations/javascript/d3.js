@@ -10,18 +10,25 @@ const centerY = height / 2;
 const iw = width - margin.left - margin.right;
 
 // --- Data: product roadmap milestones (in-memory, deterministic) -----------
+// `major: true` flags flagship releases that get an emphasized diamond marker,
+// bolder label, and a longer stem — giving the timeline a focal hierarchy
+// instead of a uniform run of same-weight events.
 const categories = ["Platform", "Mobile", "Analytics", "Security"];
 const events = [
-  { date: new Date(2025, 0, 15), name: "Platform Beta Launch", category: "Platform" },
+  { date: new Date(2025, 0, 15), name: "Platform Beta Launch", category: "Platform", major: true },
+  { date: new Date(2025, 1, 3), name: "Design System v1", category: "Platform" },
   { date: new Date(2025, 1, 20), name: "Mobile App v1.0", category: "Mobile" },
   { date: new Date(2025, 2, 10), name: "Analytics Dashboard", category: "Analytics" },
   { date: new Date(2025, 3, 5), name: "SOC 2 Certification", category: "Security" },
-  { date: new Date(2025, 4, 18), name: "API v2 Release", category: "Platform" },
+  { date: new Date(2025, 4, 18), name: "API v2 Release", category: "Platform", major: true },
+  { date: new Date(2025, 5, 2), name: "Webhook Support", category: "Platform" },
   { date: new Date(2025, 5, 30), name: "Offline Mode", category: "Mobile" },
-  { date: new Date(2025, 7, 12), name: "Predictive Insights", category: "Analytics" },
+  { date: new Date(2025, 7, 12), name: "Predictive Insights", category: "Analytics", major: true },
+  { date: new Date(2025, 7, 28), name: "Custom Reports", category: "Analytics" },
   { date: new Date(2025, 8, 22), name: "SSO Integration", category: "Security" },
-  { date: new Date(2025, 9, 30), name: "Platform GA Release", category: "Platform" },
-  { date: new Date(2025, 11, 5), name: "Cross-Platform Sync", category: "Mobile" },
+  { date: new Date(2025, 9, 30), name: "Platform GA Release", category: "Platform", major: true },
+  { date: new Date(2025, 10, 5), name: "Cross-Platform Sync", category: "Mobile" },
+  { date: new Date(2025, 11, 15), name: "Zero-Trust Rollout", category: "Security" },
 ];
 
 const color = d3.scaleOrdinal().domain(categories).range(t.palette);
@@ -59,52 +66,85 @@ g.selectAll(".month-tick")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
-// --- Events: alternating stems + labels above/below --------------------------
-const stemLen = 170;
-const gap = 18;
+// --- Layout: alternating sides with a collision-avoidance pass ---------------
+// Estimate each name label's rendered half-width (bold sans at its font size)
+// and, when two same-side labels would overlap horizontally, step the later
+// one further out along the stem so it lands on a fresh vertical tier instead
+// of colliding with its neighbor.
+function estimateHalfWidth(text, fontSize) {
+  return (text.length * fontSize * 0.58) / 2;
+}
+
+const baseStem = 130;
+const tierStep = 60;
+const majorBonus = 40;
+const minGap = 16;
+const maxTier = 2;
+
+const sideEnd = { above: -Infinity, below: -Infinity };
+const sideTier = { above: 0, below: 0 };
+
+const laidOut = events.map((d, i) => {
+  const cx = x(d.date);
+  const side = i % 2 === 0 ? "above" : "below";
+  const halfWidth = estimateHalfWidth(d.name, d.major ? 18 : 16);
+
+  if (cx - halfWidth < sideEnd[side] + minGap) {
+    sideTier[side] = Math.min(sideTier[side] + 1, maxTier);
+  } else {
+    sideTier[side] = 0;
+  }
+  sideEnd[side] = cx + halfWidth;
+
+  const stemLen = baseStem + sideTier[side] * tierStep + (d.major ? majorBonus : 0);
+  return { ...d, cx, side, stemLen };
+});
+
+// --- Event markers: d3-shape symbols distinguish major vs. minor milestones --
+const majorSymbol = d3.symbol().type(d3.symbolDiamond).size(320);
+const minorSymbol = d3.symbol().type(d3.symbolCircle).size(100);
 
 const eventGroups = g
   .selectAll(".event")
-  .data(events)
+  .data(laidOut)
   .join("g")
   .attr("class", "event");
 
-eventGroups.each(function (d, i) {
+eventGroups.each(function (d) {
   const eg = d3.select(this);
-  const cx = x(d.date);
+  const above = d.side === "above";
   const c = color(d.category);
-  const above = i % 2 === 0;
-  const tipY = above ? centerY - stemLen : centerY + stemLen;
+  const tipY = above ? centerY - d.stemLen : centerY + d.stemLen;
+  const gap = d.major ? 20 : 18;
   const nameY = above ? tipY - gap : tipY + gap + 4;
   const dateY = above ? nameY - 22 : nameY + 22;
 
   eg.append("line")
-    .attr("x1", cx)
-    .attr("x2", cx)
+    .attr("x1", d.cx)
+    .attr("x2", d.cx)
     .attr("y1", centerY)
     .attr("y2", tipY)
     .attr("stroke", c)
-    .attr("stroke-width", 2);
+    .attr("stroke-width", d.major ? 3 : 2);
 
-  eg.append("circle")
-    .attr("cx", cx)
-    .attr("cy", centerY)
-    .attr("r", 9)
+  eg.append("path")
+    .attr("d", d.major ? majorSymbol() : minorSymbol())
+    .attr("transform", `translate(${d.cx},${centerY})`)
     .attr("fill", c)
     .attr("stroke", t.pageBg)
-    .attr("stroke-width", 2);
+    .attr("stroke-width", d.major ? 3 : 2);
 
   eg.append("text")
-    .attr("x", cx)
+    .attr("x", d.cx)
     .attr("y", nameY)
     .attr("text-anchor", "middle")
     .attr("fill", t.ink)
-    .style("font-size", "16px")
-    .style("font-weight", "600")
+    .style("font-size", d.major ? "18px" : "16px")
+    .style("font-weight", d.major ? "700" : "600")
     .text(d.name);
 
   eg.append("text")
-    .attr("x", cx)
+    .attr("x", d.cx)
     .attr("y", dateY)
     .attr("text-anchor", "middle")
     .attr("fill", t.inkSoft)
