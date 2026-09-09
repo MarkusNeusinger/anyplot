@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-09-09
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -20,6 +19,15 @@ IMPRINT_PALETTE <- c(
   "#AE3030", "#2ABCCD", "#954477", "#99B314"
 )
 BRAND <- IMPRINT_PALETTE[1]
+
+# ggplot2 doesn't expose an alpha channel for grid-line color directly, so
+# fade the grid by blending INK toward PAGE_BG instead of using full-opacity
+# ink (keeps gridlines subtle behind the scatter/LOWESS curve).
+blend_toward_bg <- function(fg, bg, amount) {
+  mixed <- col2rgb(fg) * amount + col2rgb(bg) * (1 - amount)
+  rgb(mixed[1, ], mixed[2, ], mixed[3, ], maxColorValue = 255)
+}
+GRID_COLOR <- blend_toward_bg(INK, PAGE_BG, 0.2)
 
 # --- Data ----------------------------------------------------------------
 # Enzyme activity across a temperature range: activity rises as the enzyme
@@ -53,14 +61,17 @@ p <- ggplot(df, aes(x = temperature_c, y = enzyme_activity)) +
   ) +
   theme_minimal(base_size = 8) +
   theme(
-    plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.3),
-    panel.grid.minor  = element_line(color = INK, linewidth = 0.2),
-    axis.line         = element_line(color = INK_SOFT),
-    axis.title        = element_text(color = INK, size = 10),
-    axis.text         = element_text(color = INK_SOFT, size = 8),
-    plot.title        = element_text(color = INK, size = 12)
+    plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background   = element_rect(fill = PAGE_BG, color = NA),
+    panel.grid.major   = element_line(color = GRID_COLOR, linewidth = 0.3),
+    panel.grid.minor   = element_line(color = GRID_COLOR, linewidth = 0.2),
+    axis.line.x.bottom = element_line(color = INK_SOFT),
+    axis.line.x.top    = element_blank(),
+    axis.line.y.left   = element_line(color = INK_SOFT),
+    axis.line.y.right  = element_blank(),
+    axis.title         = element_text(color = INK, size = 10),
+    axis.text          = element_text(color = INK_SOFT, size = 8),
+    plot.title         = element_text(color = INK, size = 12)
   )
 
 # --- Save --------------------------------------------------------------
