@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: subplot-mosaic
 created: '2026-09-09T19:39:02Z'
-updated: '2026-09-09T19:44:37Z'
+updated: '2026-09-09T19:54:10Z'
 generated_by: claude-sonnet
 workflow_run: 34395784039
 issue: 3002
@@ -12,42 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Genuinely flexible, generic mosaic-layout engine (ASCII pattern to bounding boxes,
-    with '.' placeholder support) rather than a hardcoded 6-panel layout
-  - Six clearly distinct chart types across the cells, well beyond the spec's minimum
-    requirement
-  - Palette and theme-chrome are fully compliant and pixel-identical across light/dark
-    for all data series
-  - Deterministic seeded RNG and a coherent, realistic 'website analytics' scenario
-    spanning all six panels
-  - Elevated-card panel treatment and compact ~s number formatting give the dashboard
-    a polished, professional feel
+  - Faithful ASCII-pattern mosaic parser with true spanning, matching the spec's own
+    suggested dashboard layout (wide overview + two medium + three small panels).
+  - Six genuinely distinct plot types across the six cells, showing real variety rather
+    than repeating one chart type.
+  - Correct canonical Imprint palette order in both multi-series bar panels, with
+    the brand green consistently first.
+  - 'Clean theme handling: identical data colors between light/dark, chrome tokens
+    correctly threaded through every panel with no dark-on-dark or light-on-light
+    failures.'
+  - 'Distinctive D3 technique: dynamic title auto-sizing via measured getBBox() width
+    instead of a heuristic.'
   weaknesses:
-  - No panel has an explicit axis-title/unit label - add a short axis-title (e.g.,
-    'Duration (min)', 'Pages') at least to panel C, where the unit of 'duration' is
-    otherwise ambiguous
-  - Title auto-shrinks to ~44% of canvas width due to the length-based scale factor;
-    a larger fixed base size would fill the available space more confidently without
-    risking overflow
-  - Design stays within a competent, conventional dashboard-card aesthetic (DE-01/DE-02
-    at default-ish levels) - consider removing axis domain lines (spines) on the panels
-    and/or giving panel A extra visual weight to sharpen the visual hierarchy further
-  - Four helper functions plus six per-panel blocks add structural overhead versus
-    a flatter script - could share more margin/axis-styling logic to cut boilerplate
+  - Panel-level axis-unit labels are set at 10px, small relative to canvas size -
+    consider bumping to ~11-12px minimum for better legibility at reduced scale.
+  - The "." empty-cell placeholder capability, called out explicitly in the spec,
+    is implemented but not demonstrated in the example layout.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title, six panel titles, all axis tick labels, and value annotations (e.g. "38%", "2.6%") render in dark text and are clearly readable against both the page background and the lighter elevated-card panel backgrounds. Gridlines are subtle but visible.
-      Data: First/primary series is brand green (#009E73) in every panel (area+line, scatter, sparkline, lollipop dots). The 5-category "Traffic by Channel" bar chart and 3-category "Bounce Rate by Device" bars use the canonical Imprint order (green, lavender, blue, ochre, red / green, lavender, blue).
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Titles, axis labels, tick labels, and value annotations across all six panels are dark ink and clearly readable; panel cards use a subtly elevated off-white background with rounded corners; grid lines are faint and non-dominant.
+      Data: First/primary series is brand green (#009E73) in panels A, C, E, F; multi-series bar panels B and D use the canonical Imprint order (green, purple, blue, ochre, red).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, panel titles, axis ticks, and value annotations all flip to light-colored text and remain clearly readable against both the page background and the darker elevated-card panels. No dark-on-dark text found anywhere (checked bounce-rate %, referral-source labels, and all tick labels specifically).
-      Data: Colors are pixel-identical to the light render - same brand green, lavender, blue, ochre, red across all panels; only chrome (background, text, grid) flipped.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Titles, axis labels, tick labels, and value annotations (38%/54%/47%, 2.6%) are light ink and clearly readable; no dark-on-dark text found anywhere. Grid lines remain subtle but visible.
+      Data: Colors are identical to the light render - brand green in single-series panels, same green/purple/blue/ochre/red sequence in the two multi-series bar panels.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,78 +50,74 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicit, no overlap/overflow in either theme; title
-          auto-shrinks to ~44% of canvas width rather than the ~50-70% target - legible
-          but conservative.
+        comment: Readable at full size in both themes; 10px panel axis-unit labels
+          are small relative to canvas size and risky at reduced scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No colliding text across all six panels.
+        comment: No collisions across any of the six panels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line/area, bars, scatter dots, lollipop dots, and sparkline all well-matched
-          to their panel's data density.
+        comment: Scatter markers, bars, lines, and dots are all clearly distinguishable
+          and appropriately sized for their data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, no red-green-only encoding, adequate alpha on overlapping
-          scatter points.
+        comment: Adequate contrast; no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Six panels fill the canvas with balanced gutters/margins, nothing
-          cut off.
+        comment: Good proportions across all cells, title auto-scaled to ~62% width,
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No panel has an explicit axis-title/unit label; relies on panel title
-          + bare numeric ticks. Panel C never states the duration unit.
+        passed: true
+        comment: Descriptive with units throughout.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 everywhere; multi-series bars follow canonical
-          Imprint order; theme-correct chrome and identical data colors across renders.'
+        comment: 'First series #009E73 everywhere; canonical Imprint order in both
+          multi-series panels; correct backgrounds in both themes.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-executed dashboard-card treatment but reads as a well-configured
-          conventional default rather than a distinctive custom design.
+        passed: true
+        comment: Rounded elevated panel cards, consistent typography, intentional
+          size hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: Gridlines subtle, generous whitespace, but axis domain lines (spines)
-          kept on every panel.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size-based hierarchy (large trend panel on top, supporting detail
-          panels below) creates a genuine visual focal point.
+        comment: Domain spines removed, subtle grid, generous gutters between panels.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point in the wide overview panel, hierarchy guides the
+          eye top-to-bottom.
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine mosaic layout via ASCII-pattern string with a generic cell-bounding-box
-          algorithm supporting '.' placeholders.
+        comment: Genuine ASCII-pattern mosaic with true spanning.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Spanning cells of varying size, consistent gutter spacing, size-based
-          hierarchy, six different chart types per cell.
+        comment: Spanning, hierarchy, and six distinct plot types per cell all present;
+          empty-cell placeholder supported but not exercised in this layout.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned in every panel, full data ranges shown.
+        comment: X/Y correct and axes show all data in every panel.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; no separate legends needed since categories
-          are directly labeled.
+        comment: Title format correct; categorical panels self-label via axis ticks.
     data_quality:
       score: 15
       max: 15
@@ -168,22 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates asymmetric spanning, size hierarchy, and heterogeneous
-          chart types per cell.
+        comment: Covers spanning, hierarchy, and mixed plot types comprehensively.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Coherent, neutral website-analytics-dashboard scenario tying all
-          six datasets together.
+        comment: Plausible, neutral web-analytics data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic, internally consistent values (mobile bounce > desktop,
-          duration correlated with pages, plausible conversion rate).
+        comment: Sensible values for a web-analytics domain.
     code_quality:
       score: 9
       max: 10
@@ -193,33 +178,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses four helper functions plus six per-panel blocks rather than
-          a flat script; largely justified by the six-panel mosaic.
+        comment: Uses helper functions (lcg, stylePanelAxis, axisTitle, cellRect,
+          panel); justified to avoid repetition across six panels but deviates from
+          flattest structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (lcg(42)).
+        comment: Seeded LCG (seed 42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global d3.
+        comment: No unused imports; d3 is a single global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no over-engineering, no fake UI.
+        comment: Appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts to #container sized from ANYPLOT_SIZE, current
-          D3 v7 API, no animations.'
+        comment: Correct mount-node contract, no animation.
     library_mastery:
       score: 9
       max: 10
@@ -229,25 +214,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of D3's data-join pattern, scale/axis composition, area/line
-          generators with curveMonotoneX, d3.format.
+        comment: Proper scale/axis/shape/join usage throughout.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Manually-composed mosaic layout engine and six heterogeneous hand-wired
-          panels leverage D3's low-level flexibility distinctively.
-  verdict: REJECTED
+        comment: Dynamic title auto-sizing via measured getBBox() width - a real-browser
+          solution rather than a heuristic.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
