@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -39,9 +40,32 @@ y_rainfed = Float64[]
 for i in 1:length(crops)
     append!(x_irrigated, fill(i, n_per_group))
     append!(y_irrigated, irrigated_mean[i] .+ irrigated_std[i] .* randn(n_per_group))
+
     append!(x_rainfed, fill(i, n_per_group))
-    append!(y_rainfed, rainfed_mean[i] .+ rainfed_std[i] .* randn(n_per_group))
+    if crops[i] == "Rice"
+        # Rain-fed rice is drought-sensitive: yield clusters into a low mode in
+        # dry years and a high mode in favorable-rainfall years, unlike the
+        # single-mode variability of the other crop/regime combinations.
+        n_drought = round(Int, 0.35 * n_per_group)
+        n_favorable = n_per_group - n_drought
+        append!(
+            y_rainfed,
+            vcat(
+                2.3 .+ 0.35 .* randn(n_drought),
+                4.6 .+ 0.55 .* randn(n_favorable),
+            ),
+        )
+    else
+        append!(y_rainfed, rainfed_mean[i] .+ rainfed_std[i] .* randn(n_per_group))
+    end
 end
+
+# Median yield per crop/regime drives the callout below (computed from the
+# generated samples so it matches whatever the violins actually show).
+irrigated_medians = [median(y_irrigated[x_irrigated .== i]) for i in 1:length(crops)]
+rainfed_medians = [median(y_rainfed[x_rainfed .== i]) for i in 1:length(crops)]
+gains = irrigated_medians .- rainfed_medians
+gain_idx = argmax(gains)
 
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
@@ -53,7 +77,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = "violin-split · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 28,
     titlecolor        = INK,
     xlabel            = "Crop",
     ylabel            = "Yield (tons per hectare)",
@@ -86,6 +110,7 @@ violin!(
     width = 0.85,
     show_median = true,
     mediancolor = INK,
+    datalimits = (0, Inf), # yield cannot be negative; trim the KDE tail at zero
 )
 
 violin!(
@@ -97,6 +122,27 @@ violin!(
     width = 0.85,
     show_median = true,
     mediancolor = INK,
+    datalimits = (0, Inf), # yield cannot be negative; trim the KDE tail at zero
+)
+
+# Storytelling callout: bracket the crop with the largest irrigated-vs-rain-fed
+# median gain, offset (in screen space, toward whichever neighboring gap has
+# room) so it reads next to the violins without clipping against the axis edge.
+callout_side = gain_idx <= length(crops) / 2 ? 1 : -1
+bracket!(
+    ax,
+    gain_idx, irrigated_medians[gain_idx],
+    gain_idx, rainfed_medians[gain_idx];
+    text = "Largest irrigation gain: +$(round(gains[gain_idx], digits = 1)) t/ha ($(crops[gain_idx]))",
+    offset = callout_side * 70,
+    width = 12,
+    orientation = :up,
+    style = :square,
+    color = INK_SOFT,
+    textcolor = INK,
+    fontsize = 13,
+    rotation = 0,
+    align = (callout_side > 0 ? :left : :right, :center),
 )
 
 legend_elements = [
