@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: scatter-matrix
 created: '2026-09-09T06:46:09Z'
-updated: '2026-09-09T06:50:54Z'
+updated: '2026-09-09T06:59:09Z'
 generated_by: claude-sonnet
 workflow_run: 34320085941
 issue: 2035
@@ -12,41 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Correctly builds a fully custom, from-scratch scatter-plot matrix in raw D3 —
-    shared per-column/row scales keep every panel properly aligned, and the matrix
-    is genuinely symmetric (mirrored panels show the same pairs).
-  - 'Theme adaptation is flawless: identical data colors between light/dark, all chrome
-    (ticks, labels, title, legend, grid) correctly threaded through ANYPLOT_TOKENS,
-    no dark-on-dark or light-on-light issues found on close inspection.'
-  - Clean, deterministic, appropriately minimal code (seeded LCG, no unused imports,
-    no fake interactivity).
+  - Diagonal histograms are now stacked and colored per-species (shared bin thresholds
+    computed once from the pooled data, then applied per-species) using the same Imprint
+    palette as the off-diagonal scatters -- the whole matrix now tells one consistent
+    categorical story, directly fixing the attempt-1 weakness.
+  - Inner cell borders are lightened to stroke-opacity 0.35 and a single crisp 1.5px
+    outer frame now wraps the whole 4x4 grid, so the figure reads as one cohesive
+    matrix instead of 16 separately-boxed tiles -- directly fixes the attempt-1 DE-02
+    weakness with no regressions elsewhere.
+  - 'Technical foundation carried over intact: shared per-column/per-row scales keep
+    every panel aligned, the matrix is genuinely symmetric, theme tokens are threaded
+    through every text/stroke element with zero dark-on-dark or light-on-light issues,
+    and data generation remains a clean seeded LCG with no unused imports.'
   weaknesses:
-  - Diagonal histograms are pooled across all species (flat gray), dropping the categorical
-    grouping that the off-diagonal scatters clearly convey — consider overlaying/stacking
-    per-species bars (or per-species density curves) on the diagonal to carry the
-    same story through the whole matrix.
-  - Every one of the 16 cells has a full stroked border rectangle, which adds visual
-    weight across the whole canvas; consider a lighter treatment (e.g. very low-opacity
-    or removing shared internal borders, only stroking the outer boundary) for a more
-    refined look.
-  - Markers rely purely on cell-border strokes as the only inner structure in the
-    densest overlap regions (e.g. sepal width vs. sepal length, where Versicolor/Virginica
-    clusters interleave) — a slightly smaller marker size or lower opacity there would
-    help further.
+  - Off-diagonal scatter panels still show some crowding where Versicolor and Virginica
+    clusters interleave (e.g. sepal width vs. sepal length) -- marker radius/opacity
+    were nudged down slightly (2.6px/0.6 -> 2.3px/0.55) but a further reduction or
+    jitter could help the densest regions.
+  - Tick labels (12px) remain small relative to the large 2400x2400 canvas -- still
+    readable in both themes but on the conservative side for a catalog image viewed
+    at various scales.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "scatter-matrix · javascript · d3 · anyplot.ai" centered at top in dark ink; three-item legend (Setosa/Versicolor/Virginica) below it; variable-name axis labels along the bottom edge and rotated along the left edge; numeric tick labels shown only on the outer row/column of the 4x4 grid. All confirmed readable in close-up crops — no light-on-light issues.
-      Data: Diagonal cells show pooled gray histograms (10 bins) of each variable's distribution. Off-diagonal cells show scatter points colored by species: Setosa = #009E73 (green, first series as required), Versicolor = light purple, Virginica = slate blue. Points are small (r≈2.6px) with 0.6 opacity to manage overplotting of the 150 pooled points per cell.
+      Chrome: Bold centered title "scatter-matrix · javascript · d3 · anyplot.ai" in dark ink; three-item legend (Setosa/Versicolor/Virginica) below it; variable-name axis labels along the bottom (horizontal) and left (rotated -90) edges in dark ink; numeric tick labels (12px) only on the outer row/column. All confirmed readable via full-image and edge-crop inspection -- no clipping at top, bottom, or left edges.
+      Data: First series (Setosa) is #009E73 green, Versicolor is lavender/purple, Virginica is slate blue -- canonical Imprint categorical order. Diagonal cells now show stacked per-species histograms in the same three colors (new in this attempt, previously pooled gray). Off-diagonal cells show per-species scatter points (r=2.3px, 0.55 opacity) revealing clear Setosa separation and Versicolor/Virginica overlap on sepal measurements.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title/legend/axis-label/tick-label layout, now in light ink on the dark surface. Verified in close-up crops: rotated y-axis label, x-axis tick numbers, and axis titles are all clearly legible light-on-dark, no dark-on-dark failures found anywhere.
-      Data: Species colors (green/purple/blue) are pixel-identical to the light render — confirmed by direct comparison of legend swatches and scatter clusters. Only chrome flipped between themes, as required.
+      Chrome: Same title/legend/axis-label layout, now in light ink; tick labels and axis domain lines flip to theme-appropriate light/grid tones. Edge crops (bottom variable labels, rotated left-column labels) confirm every character fully visible, no dark-on-dark failures, no chopped text at any canvas edge.
+      Data: Species colors are pixel-identical to the light render (green/purple/blue), confirming only chrome flipped. Stacked diagonal histograms and off-diagonal scatters read with the same clarity as in light mode.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,70 +57,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, fully readable in both themes; ticks
-          a touch small for the large canvas
+        comment: Explicit font sizes throughout (12px ticks, 15px labels, 24px title),
+          fully readable in both themes; tick labels still a touch small for the large
+          canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions anywhere in the grid, title, or legend
+        comment: No text/data collisions anywhere in the grid, title, or legend
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers sized/opacity-tuned for 150-point overplot; some clusters
-          still crowd in sepal panels
+        comment: Marker radius/opacity nudged down slightly this attempt; some Versicolor/Virginica
+          overlap remains in sepal panels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues clearly distinguishable, no red-green-only encoding
+        comment: Imprint categorical hues clearly distinguishable, no red-green-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas gate passed, no overflow or clipping
+        comment: Square 2400x2400 canvas gate passed; balanced margins, no overflow
+          or clipping at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All four axis labels include units (cm)
+        comment: All four variable labels include units (cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order, correct theme
-          backgrounds'
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Hand-built shared-scale layout, but visual treatment is fairly plain
+        comment: Colored, stacked diagonal histograms plus a lighter unified grid
+          frame make the matrix read as one cohesive, intentional figure -- up from
+          attempt 1's plainer pooled-gray diagonal
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean but every cell has a full stroked border, reads as a heavy
-          grid
+        comment: Inner cell borders lightened to 0.35 opacity with a single crisp
+          outer boundary, directly addressing the attempt-1 heavy-grid feedback
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Off-diagonal color story is clear; diagonal histograms are pooled/gray
-          and drop grouping
+        comment: Diagonal now carries the same per-species story as the off-diagonal
+          scatters, giving the whole matrix a consistent, coherent narrative
     spec_compliance:
       score: 15
       max: 15
@@ -137,20 +141,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Diagonal histograms, off-diagonal scatters, edge labels, color grouping,
+        comment: Diagonal univariate distributions, off-diagonal pairwise scatters,
+          edge variable labels, categorical color encoding, small+transparent markers,
           symmetric matrix all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shared per-column/row scales, correct alignment and range
+        comment: Shared per-column/per-row scales keep alignment correct; axes show
+          full padded data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format, legend labels match data
+        comment: Title matches mandated format; legend labels match species names
     data_quality:
       score: 15
       max: 15
@@ -160,8 +166,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 16 matrix cells populated with meaningful correlation/cluster
-          structure
+        comment: All 16 matrix cells populated with meaningful content; clear correlation
+          and cluster structure throughout
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -173,7 +179,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values match real-world Iris measurement ranges
+        comment: Value ranges match real-world Iris measurements
     code_quality:
       score: 10
       max: 10
@@ -183,13 +189,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, only small deterministic helpers
+        comment: Flat script, only small deterministic helper functions, no unneeded
+          classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic
+        comment: Seeded LCG (seed 42) for fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -201,15 +208,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake interactivity
+        comment: Appropriately complex for a shared-scale matrix; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current D3 v7 API
+        comment: 'Builds one svg into #container sized from ANYPLOT_SIZE, current
+          D3 v7 API'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -217,14 +225,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper join/scale/axis/bin/extent usage
+        comment: Proper d3.select().join(), scaleLinear/scaleOrdinal, axisBottom/axisLeft,
+          d3.bin/d3.extent usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Hand-built pairplot from primitives, but no D3-only interactive primitives
-          used
+        comment: Hand-built pairplot grid from primitives, now with a shared-threshold
+          per-species d3.bin technique to build accurate stacked histograms -- a deeper
+          showcase of d3-array than attempt 1
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -233,9 +243,10 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - publication-ready
