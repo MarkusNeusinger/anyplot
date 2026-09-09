@@ -110,6 +110,7 @@ function walk(node, parentX, inheritedClade) {
       name: node.name,
       x,
       y,
+      length: node.length,
       symbolSize: 16,
       category: clade,
       itemStyle: clade == null ? { color: t.muted } : undefined,
@@ -126,6 +127,7 @@ function walk(node, parentX, inheritedClade) {
     name: node.name,
     x,
     y,
+    length: node.length,
     symbolSize: 9,
     category: clade,
     itemStyle: clade == null ? { color: t.muted } : undefined,
@@ -144,6 +146,10 @@ function walk(node, parentX, inheritedClade) {
 }
 
 walk(TREE, 0, null);
+
+// The shallowest split in the tree (Human-Chimp, 0.018) is the natural focal
+// point for a callout — annotate it directly on the static PNG.
+const focalNode = nodes.find((n) => n.name === "Human-Chimp");
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -167,7 +173,23 @@ chart.setOption({
     itemHeight: 12,
     textStyle: { color: t.ink, fontSize: 15 },
   },
-  tooltip: { show: false },
+  tooltip: {
+    show: true,
+    trigger: "item",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink, fontSize: 13 },
+    formatter: (params) => {
+      const d = params.data;
+      if (!d || !d.symbolSize) return "";
+      const cladeLabel = d.category != null ? CLADE_NAMES[d.category] : "Unclustered (basal split)";
+      const branch = typeof d.length === "number" ? `${d.length.toFixed(3)} subst./site` : "—";
+      return (
+        `<b>${d.name}</b><br/>Clade: ${cladeLabel}<br/>` +
+        `Branch length: ${branch}<br/>Cumulative distance: ${params.value[0].toFixed(3)}`
+      );
+    },
+  },
   grid: { left: 24, right: 300, top: 108, bottom: 90 },
   xAxis: {
     type: "value",
@@ -211,7 +233,39 @@ chart.setOption({
         target: e.target,
         lineStyle: { color: e.color, width: e.color === t.muted ? 2.2 : 3, curveness: 0 },
       })),
+      emphasis: {
+        focus: "adjacency",
+        lineStyle: { width: 5 },
+        itemStyle: { borderColor: t.ink, borderWidth: 2 },
+        label: { fontWeight: 700 },
+      },
+      blur: { itemStyle: { opacity: 0.2 }, lineStyle: { opacity: 0.15 }, label: { opacity: 0.3 } },
       z: 2,
+    },
+    {
+      // Static callout on the shortest split (Human-Chimp) — a zero-size,
+      // non-interactive scatter point used purely to place its label.
+      type: "scatter",
+      coordinateSystem: "cartesian2d",
+      silent: true,
+      z: 3,
+      data: [
+        {
+          value: [focalNode.x, focalNode.y],
+          symbolSize: 0,
+          label: {
+            show: true,
+            formatter: "Shortest split:\nHuman-Chimpanzee (0.018)",
+            position: "left",
+            distance: 18,
+            align: "right",
+            color: t.inkSoft,
+            fontSize: 12,
+            fontStyle: "italic",
+            lineHeight: 16,
+          },
+        },
+      ],
     },
   ],
 });
