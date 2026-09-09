@@ -77,8 +77,8 @@ const chart = echarts.init(document.getElementById("container"));
 // plot unrelated domains.
 const COLUMN = { left: "6%", width: "41%" };
 const COLUMN_RIGHT = { left: "55%", width: "41%" };
-const ROW_TOP = { top: "17%", height: "32%" };
-const ROW_BOTTOM = { top: "62%", height: "32%" };
+const ROW_TOP = { top: "16%", height: "30%" };
+const ROW_BOTTOM = { top: "63%", height: "30%" };
 
 chart.setOption({
   animation: false,
@@ -93,10 +93,10 @@ chart.setOption({
       top: "2%",
       textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
     },
-    { text: "Closing Price ($)", left: COLUMN.left, top: "12%", textStyle: { color: t.ink, fontSize: 16, fontWeight: "normal" } },
-    { text: "Daily Volume", left: COLUMN_RIGHT.left, top: "12%", textStyle: { color: t.ink, fontSize: 16, fontWeight: "normal" } },
-    { text: "Daily Returns Distribution", left: COLUMN.left, top: "57%", textStyle: { color: t.ink, fontSize: 16, fontWeight: "normal" } },
-    { text: "Volume vs. Return", left: COLUMN_RIGHT.left, top: "57%", textStyle: { color: t.ink, fontSize: 16, fontWeight: "normal" } },
+    { text: "Closing Price ($)", left: COLUMN.left, top: "10%", textStyle: { color: t.ink, fontSize: 17, fontWeight: "normal" } },
+    { text: "Daily Volume", left: COLUMN_RIGHT.left, top: "10%", textStyle: { color: t.ink, fontSize: 17, fontWeight: "normal" } },
+    { text: "Daily Returns Distribution", left: COLUMN.left, top: "56%", textStyle: { color: t.ink, fontSize: 17, fontWeight: "normal" } },
+    { text: "Volume vs. Return", left: COLUMN_RIGHT.left, top: "56%", textStyle: { color: t.ink, fontSize: 17, fontWeight: "normal" } },
   ],
   grid: [
     { ...COLUMN, ...ROW_TOP, containLabel: true }, // 0: price line
@@ -110,7 +110,7 @@ chart.setOption({
       type: "category",
       data: dates,
       boundaryGap: false,
-      axisLabel: { color: t.inkSoft, fontSize: 12, interval: 9 },
+      axisLabel: { color: t.inkSoft, fontSize: 13, interval: 9 },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { show: false },
     },
@@ -118,7 +118,7 @@ chart.setOption({
       gridIndex: 1,
       type: "category",
       data: dates,
-      axisLabel: { color: t.inkSoft, fontSize: 12, interval: 9 },
+      axisLabel: { color: t.inkSoft, fontSize: 13, interval: 9 },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { show: false },
     },
@@ -129,8 +129,8 @@ chart.setOption({
       name: "Daily return (%)",
       nameLocation: "middle",
       nameGap: 32,
-      nameTextStyle: { color: t.inkSoft, fontSize: 13 },
-      axisLabel: { color: t.inkSoft, fontSize: 12, rotate: 45 },
+      nameTextStyle: { color: t.inkSoft, fontSize: 14 },
+      axisLabel: { color: t.inkSoft, fontSize: 13, rotate: 45 },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { show: false },
     },
@@ -140,39 +140,42 @@ chart.setOption({
       name: "Volume (M)",
       nameLocation: "middle",
       nameGap: 32,
-      nameTextStyle: { color: t.inkSoft, fontSize: 13 },
-      axisLabel: { color: t.inkSoft, fontSize: 12 },
+      nameTextStyle: { color: t.inkSoft, fontSize: 14 },
+      axisLabel: { color: t.inkSoft, fontSize: 13 },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { lineStyle: { color: t.grid } },
     },
   ],
   yAxis: [
     {
+      // Extra headroom (not plain scale:true) so the "Period high" markPoint
+      // pin has clearance above the line and never collides with the subtitle.
       gridIndex: 0,
       type: "value",
-      scale: true,
-      axisLabel: { color: t.inkSoft, fontSize: 12, formatter: "${value}" },
+      min: (value) => Math.floor(value.min - (value.max - value.min) * 0.08),
+      max: (value) => Math.ceil(value.max + (value.max - value.min) * 0.18),
+      axisLabel: { color: t.inkSoft, fontSize: 13, formatter: "${value}" },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { lineStyle: { color: t.grid } },
     },
     {
       gridIndex: 1,
       type: "value",
-      axisLabel: { color: t.inkSoft, fontSize: 12, formatter: (v) => `${(v / 1e6).toFixed(1)}M` },
+      axisLabel: { color: t.inkSoft, fontSize: 13, formatter: (v) => `${(v / 1e6).toFixed(1)}M` },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { lineStyle: { color: t.grid } },
     },
     {
       gridIndex: 2,
       type: "value",
-      axisLabel: { color: t.inkSoft, fontSize: 12 },
+      axisLabel: { color: t.inkSoft, fontSize: 13 },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { lineStyle: { color: t.grid } },
     },
     {
       gridIndex: 3,
       type: "value",
-      axisLabel: { color: t.inkSoft, fontSize: 12, formatter: "{value}%" },
+      axisLabel: { color: t.inkSoft, fontSize: 13, formatter: "{value}%" },
       axisLine: { lineStyle: { color: t.inkSoft } },
       splitLine: { lineStyle: { color: t.grid } },
     },
@@ -187,6 +190,13 @@ chart.setOption({
       showSymbol: false,
       lineStyle: { width: 3, color: t.palette[0] },
       areaStyle: { color: t.palette[0], opacity: 0.08 },
+      markPoint: {
+        symbolSize: 48,
+        symbolOffset: [22, "-45%"],
+        itemStyle: { color: t.palette[0] },
+        label: { color: "#fff", fontSize: 11, fontWeight: 600, formatter: (p) => `$${p.value.toFixed(2)}` },
+        data: [{ type: "max", name: "Period high" }],
+      },
     },
     {
       name: "Volume",
@@ -196,6 +206,12 @@ chart.setOption({
       data: dailyVolumes,
       itemStyle: { color: t.palette[2] },
       barMaxWidth: 10,
+      markPoint: {
+        symbolSize: 52,
+        itemStyle: { color: t.palette[2] },
+        label: { color: "#fff", fontSize: 10, fontWeight: 600, formatter: (p) => `${(p.value / 1e6).toFixed(1)}M` },
+        data: [{ type: "max", name: "Peak volume" }],
+      },
     },
     {
       name: "Return frequency",
