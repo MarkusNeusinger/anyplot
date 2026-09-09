@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: timeseries-decomposition
 created: '2026-09-09T20:38:03Z'
-updated: '2026-09-09T20:42:31Z'
+updated: '2026-09-09T20:50:48Z'
 generated_by: claude-sonnet
 workflow_run: 34401578475
 issue: 2992
@@ -12,45 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
+  - 'Both attempt-1 weaknesses were addressed directly and effectively: pane titles
+    now carry real typographic hierarchy (bold/17px "Original" vs. 13px/500-weight
+    secondary panes), and the new "One full seasonal cycle" plotBand gives the chart
+    a concrete analytical focal point'
   - Correct classical additive decomposition (centered 2x12 moving average trend,
-    monthly seasonal averaging, deseasonalized residual) — methodologically sound
-    and matches the spec's suggested approach.
+    monthly seasonal averaging, deseasonalized residual) - methodologically sound
+    and matches the spec's suggested approach
   - 'Idiomatic Highcharts multi-pane technique: stacked yAxis array with percentage
     heights is the correct native way to build a 4-panel shared-x-axis decomposition
-    chart.'
-  - Imprint palette correctly applied — Original uses brand green (palette[0]), Trend
-    uses blue (palette[2]), Seasonal uses lavender (palette[1]); Residual uses a deliberate
-    muted grey to visually de-emphasize noise versus signal.
-  - 'Both themes render correctly: warm off-white / near-black backgrounds, all text
-    legible, no dark-on-dark or light-on-light failures.'
+    chart'
+  - Imprint palette correctly applied - Original = brand green (palette[0]), Trend
+    = blue (palette[2]), Seasonal = lavender (palette[1]); Residual uses a deliberate
+    muted grey to de-emphasize noise versus signal
+  - Both themes render correctly with no dark-on-dark or light-on-light failures;
+    the highlight band's low opacity works identically well on both surfaces
   - Deterministic fixed-seed LCG data generation; clean single-file procedural code
-    with no fake interactivity.
+    with no fake interactivity
   weaknesses:
-  - Design excellence is solid but generic — no visual accent or annotation gives
-    the chart an analytical focal point (e.g. highlighting one full seasonal cycle
-    or the growth-trend slope). A subtle highlight would strengthen data storytelling
-    (DE-03).
-  - The four pane labels (Original/Trend/Seasonal/Residual) share identical typographic
-    weight and size — a touch more hierarchy (e.g. slightly bolder/larger label on
-    the primary 'Original' series) would sharpen aesthetic sophistication (DE-01).
-  - Pane y-axes carry no unit context (e.g. 'Index'); a small unit hint alongside
-    the pane titles would round out axis clarity, though not a hard spec requirement
-    here.
+  - Pane y-axes still carry no unit context (e.g. "Index") - a small unit hint alongside
+    the pane titles would round out axis clarity, though this is a minor polish item,
+    not a blocker
+  - The last x-axis tick renders as a truncated "Jan..." due to Highcharts' automatic
+    datetime-label collision handling - cosmetic only, no pixels are clipped at the
+    canvas edge
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white, not dark.
-      Chrome: Title "timeseries-decomposition · javascript · highcharts · anyplot.ai" and subtitle "Additive decomposition · 12-month centered moving average" render in dark ink, clearly legible. Four pane titles (Original, Trend, Seasonal, Residual) are bold dark-grey text at top-left of each pane, fully readable. X-axis month/year tick labels along the bottom and Y-axis tick labels for each of the 4 panes are dark-grey on the light surface, all legible. Grid lines are light grey and subtle but visible.
-      Data: Original = brand green line (#009E73), Trend = blue line (palette[2]), Seasonal = lavender line (palette[1]), Residual = muted grey columns. Colors are clearly distinguishable from the off-white background and from each other.
-      Legibility verdict: PASS — no light-on-light issues found; verified at full size and at the 400px thumbnail export.
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "timeseries-decomposition · javascript · highcharts · anyplot.ai" and subtitle "Additive decomposition · 12-month centered moving average" render in dark ink, clearly legible. Four stacked pane titles (Original bold/17px, Trend/Seasonal/Residual lighter 13px/500-weight secondary style) all readable. Shared datetime x-axis (Jan 2017 - Jan 2025) at the bottom, subtle light grid lines throughout.
+      Data: Original = brand green line (palette[0], #009E73), Trend = blue line (palette[2]), Seasonal = lavender line (palette[1]), Residual = muted-grey columns. A low-opacity (5%) vertical band spans all four panes over Jan 2020-Jan 2021, labeled "One full seasonal cycle."
+      Legibility verdict: PASS - all text clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black, not light.
-      Chrome: Title and subtitle render in light/off-white ink, clearly legible against the dark surface. Pane titles (Original, Trend, Seasonal, Residual) are light-grey bold text, fully readable. X/Y tick labels are light-grey on the dark surface, all legible. Grid lines are subtle dark-grey, visible without dominating.
-      Data: Same brand green, blue, lavender, and muted grey as the light render — data colors are identical between themes; only the chrome (background, text, grid) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures found; all text and data series read clearly against the near-black background.
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title/subtitle/pane-title hierarchy, rendered in light/off-white ink, clearly legible against the dark surface. Subtle dark-grey grid lines. Seasonal-cycle highlight band and label carry over correctly.
+      Data: Identical colors to light render (green/blue/lavender/muted-grey) - confirms only chrome flipped, not data.
+      Legibility verdict: PASS - no dark-on-dark failures; all text and the highlight-band label read clearly.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -61,73 +61,65 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text legible in both themes; minor tick-label crowding at the
-          400px thumbnail export, but readable.
+        comment: Font sizes explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlaps between pane titles, tick labels, or data.
+        comment: No collisions between text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line widths (2.5-3px) with markers disabled suit the 96-point series;
-          residual columns clearly visible.
+        comment: Lines/columns appropriately weighted for ~96-point monthly series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red/green-only signal used.
+        comment: Distinct hues, adequate contrast, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title comfortably within bounds;
-          no overflow or clipping.
+        comment: Canvas gate passed, good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Pane titles are descriptive component names; subtitle documents the
-          decomposition method.
+        comment: 'Descriptive pane titles; minor: no unit hint'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Original) is brand green #009E73; Trend/Seasonal use
-          canonical Imprint blue/lavender; backgrounds correct in both themes.'
+        comment: 'First series #009E73, correct backgrounds both themes'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Correct palette and a thoughtful muted-grey residual choice, but
-          pane titles share uniform weight with no typographic hierarchy.
+        comment: New typographic hierarchy between primary and secondary pane titles
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Pane axis lines/ticks removed, grid subtle, generous spacing — clean
-          refinement.
+        comment: Spines removed, subtle grid, tasteful low-opacity highlight band
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Vertical flow tells the decomposition story, but no focal annotation
-          or highlight anchors the eye.
+        comment: Seasonal-cycle plotBand gives a clear cross-pane focal point
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +129,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Four vertically stacked panes sharing one time axis — correct decomposition
-          plot type.
+        comment: Four vertically stacked component panes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec-required features present: original/trend/seasonal/residual,
-          shared x-axis, component labels, light grid.'
+        comment: Original, Trend, Seasonal, Residual all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = datetime, Y = value per component; axes show the full 8-year
-          range.
+        comment: Shared time axis, correct per-pane y mapping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact required format; legend correctly omitted
-          in favor of per-pane labels.
+        comment: Title matches required format exactly
     data_quality:
       score: 14
       max: 15
@@ -169,22 +157,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Faithful classical decomposition math (centered 2x12 MA, seasonal
-          averaging); trend/residual show real edge-of-window gaps as expected.
+        comment: All four components shown; trend/residual edges correctly null at
+          boundaries
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly retail sales index with a holiday seasonal bump — plausible,
-          neutral context.
+        comment: Plausible neutral monthly retail sales index with holiday seasonality
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (200-320 index units, ±20 seasonal swing) are sensible for
-          the domain.
+        comment: Sensible index-level values and growth rate
     code_quality:
       score: 9
       max: 10
@@ -194,34 +180,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Single small pane() helper for DRY axis config; otherwise a flat
-          procedural script.
+        comment: Small helper function for pane config, otherwise flat procedural
+          code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; none present.
+        comment: No imports beyond global Highcharts
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; complexity matches the decomposition math.
+        comment: No fake interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract followed; animation disabled everywhere.
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -229,26 +215,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic multi-pane yAxis technique — the correct native Highcharts
-          pattern for stacked shared-axis charts.
+        comment: Stacked yAxis array is the canonical Highcharts multi-pane pattern
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Stacked panes plus shared tooltip are distinctive; no further unique
-          Highcharts features layered on top.
-  verdict: REJECTED
+        comment: Shared tooltip plus cross-pane plotBand annotation
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - annotations
   patterns:
   - data-generation
-  - time-series
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
   styling:
+  - alpha-blending
   - publication-ready
-  - minimal-chrome

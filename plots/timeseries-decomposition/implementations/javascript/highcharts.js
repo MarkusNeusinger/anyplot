@@ -1,7 +1,7 @@
 // anyplot.ai
 // timeseries-decomposition: Time Series Decomposition Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-09
+// Quality: 92/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 // "muted" semantic anchor (other/rest) — not in ANYPLOT_TOKENS, derive from theme
