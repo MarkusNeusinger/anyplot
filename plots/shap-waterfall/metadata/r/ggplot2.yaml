@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: shap-waterfall
+created: '2026-09-09T07:41:42Z'
+updated: '2026-09-09T07:47:07Z'
+generated_by: claude-sonnet
+workflow_run: 34324542466
+issue: 5237
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - 'Every spec-required feature is present: magnitude-descending order, cumulative
+    flow from base_value to final_value, red=positive/blue=negative semantic coloring,
+    labeled base-value and prediction reference lines, per-bar numeric SHAP labels,
+    and dotted connector lines between segments.'
+  - 'SHAP arithmetic is internally consistent: the cumulative sum ends exactly at
+    final_value (27.5%), and each bar''s xmin/xmax correctly chains to the previous
+    bar''s cumulative endpoint.'
+  - 'Idiomatic, distinctive ggplot2 construction: geom_rect for the bars (no native
+    waterfall geom exists), scale_y_continuous with manual breaks/labels used as a
+    categorical axis substitute, layered annotate() for base/prediction callouts.'
+  - 'Theme-adaptive chrome is fully correct in both renders (identical Imprint-position
+    red/blue data colors, correct #FAF8F1/#1A1A17 backgrounds, correct ink tokens
+    for text).'
+  - All font sizes explicitly set per the style-guide defaults (text=8, axis.title=10,
+    axis.text=8/9, plot.title=12, legend.text=8); no clipping, overlap, or dark-on-dark/light-on-light
+    issues in either render.
+  - Realistic, neutral credit-scoring example with a plausible mix of positive and
+    negative contributions across 10 features of varying magnitude.
+  - 'Clean KISS code: no functions/classes, clear top-to-bottom flow, only used imports
+    (ggplot2/dplyr/ragg/scales all exercised), no fake interactivity.'
+  weaknesses:
+  - Design polish is strong but not at the very top tier (DE-01/DE-02) — e.g. grid
+    lines use full INK color rather than a lighter/faint shade, relying only on thin
+    linewidth for subtlety.
+  - LM-02 distinctive-feature usage is good (geom_rect waterfall + scale_y_continuous
+    categorical trick) but doesn't reach a fully unique-to-ggplot2 flourish (e.g.
+    coord_flip variant, custom stat) that would be materially harder to replicate
+    in another library.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "shap-waterfall · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible, no clipping. Y-axis shows 10 feature names (Credit Score, Debt-to-Income Ratio, Late Payments (12mo), Employment Length, Annual Income, Loan Amount, Credit Utilization, Age, Open Credit Accounts, Home Ownership) ordered by descending |SHAP|. X-axis "Predicted Default Probability" with percent-formatted ticks (20%, 30%, 40%). Thin vertical major gridlines only, no y-gridlines. A dashed vertical line labeled "Base value E[f(x)] = 35.0%" and a solid vertical line labeled "Prediction f(x) = 27.5%" (bold) mark the start/end of the cumulative flow. Bottom legend reads "Increases risk" (red swatch) / "Decreases risk" (blue swatch).
+      Data: Horizontal bar segments in matte red (#AE3030, positive SHAP) and blue (#4467A3, negative SHAP), each labeled with its signed value (e.g. "-0.22", "+0.15"), connected by thin dotted step lines between consecutive bars, cumulatively tracing from base value to final prediction.
+      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the light background; no overlaps or overflow observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as the light render. Title, axis labels, tick labels, and both reference-line annotations are rendered in light ink (white/light gray), fully legible against the dark background. Gridlines are faint light-colored verticals, still visible but subtle. Legend text and swatches read clearly at the bottom.
+      Data: Bar colors are identical to the light render — matte red (#AE3030) for positive contributions and blue (#4467A3) for negative contributions — confirming only chrome (background, text, grid) flips between themes, not data colors.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, ticks, feature names, SHAP value labels, base/prediction annotations, legend) remains clearly readable against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (text=8, axis.title=10, axis.text=8/9,
+          plot.title=12, legend.text=8); readable in both themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: SHAP value labels, feature names, reference-line annotations, and
+          legend never overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 bars, clearly sized and spaced for this data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue (not red/green) with good contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed exact; balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Predicted Default Probability'' descriptive with percent units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic red=positive/blue=negative is the spec-mandated domain
+          convention (Imprint positions 5 and 3); identical data colors across themes;
+          correct #FAF8F1/#1A1A17 backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic coloring, reference-line annotations, connector
+          lines — clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-gridlines removed, ticks removed, generous whitespace; grid uses
+          full INK at very thin linewidth rather than a faded tint
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: magnitude ordering, labeled base/prediction
+          anchors, and connector lines guide the reader through the cumulative narrative'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal waterfall with cumulative stacked segments
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude ordering, cumulative flow, semantic colors, base/final
+          reference lines, per-bar labels, and connector lines all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = predicted probability, Y = feature names; all 10 features visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'shap-waterfall · r · ggplot2 · anyplot.ai'; legend
+          clearly labels the semantic color meaning
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both positive and negative contributions across a wide range of magnitudes
+          (0.015 to 0.220)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world credit-scoring default-risk explanation scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Base 35% and prediction 27.5% default probability are plausible;
+          SHAP values sum exactly to the stated final value
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg, scales all actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom waterfall; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave(..., device = ragg::agg_png) to plot-{THEME}.png, current
+          linewidth= API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics layering (geom_rect/geom_segment/geom_vline/geom_label/annotate)
+          for a chart type with no native geom
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: scale_y_continuous manual breaks/labels as a categorical-axis trick,
+          plus layered annotate() callouts — distinctive but not maximally unique
+          to ggplot2
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns: []
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
