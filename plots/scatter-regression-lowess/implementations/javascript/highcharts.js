@@ -76,6 +76,16 @@ function lowess(xs, ys, frac, gridSize) {
 
 const lowessCurve = lowess(adSpend, weeklySales, 0.35, 120);
 
+// --- Story markers: find where the LOWESS curve peaks (saturation point) ---
+// then declines (ad fatigue) — drive the zone/band thresholds from the fitted
+// curve itself rather than a hard-coded spend value.
+const xMax = Math.max(...adSpend);
+let peakIndex = 0;
+for (let i = 1; i < lowessCurve.length; i++) {
+  if (lowessCurve[i][1] > lowessCurve[peakIndex][1]) peakIndex = i;
+}
+const peakX = lowessCurve[peakIndex][0];
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -99,18 +109,47 @@ Highcharts.chart("container", {
       text: "Advertising Spend ($1,000s)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickWidth: 0,
     gridLineColor: t.grid,
     gridLineWidth: 1,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: peakX,
+        to: xMax,
+        color: Highcharts.color(t.amber).setOpacity(0.1).get("rgba"),
+        label: {
+          text: "Ad-fatigue region",
+          align: "right",
+          x: -8,
+          y: 16,
+          style: { color: t.inkSoft, fontSize: "12px", fontStyle: "italic" },
+        },
+      },
+    ],
+    plotLines: [
+      {
+        value: peakX,
+        color: t.inkSoft,
+        width: 1,
+        dashStyle: "ShortDash",
+        label: {
+          text: `Saturation ~$${Math.round(peakX)}k`,
+          rotation: 0,
+          y: -6,
+          style: { color: t.inkSoft, fontSize: "12px" },
+        },
+      },
+    ],
   },
   yAxis: {
     title: {
       text: "Weekly Sales (units)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
-    lineColor: t.inkSoft,
+    lineWidth: 0,
+    tickWidth: 0,
     gridLineColor: t.grid,
     gridLineWidth: 1,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
@@ -124,8 +163,8 @@ Highcharts.chart("container", {
     series: { animation: false },
     scatter: {
       marker: {
-        radius: 5,
-        fillColor: Highcharts.color(t.palette[0]).setOpacity(0.6).get("rgba"),
+        radius: 6,
+        fillColor: Highcharts.color(t.palette[0]).setOpacity(0.7).get("rgba"),
         lineWidth: 0,
       },
       states: { hover: { halo: { size: 0 } } },
@@ -149,6 +188,11 @@ Highcharts.chart("container", {
       lineWidth: 3,
       marker: { enabled: false },
       enableMouseTracking: false,
+      zoneAxis: "x",
+      zones: [
+        { value: peakX, color: t.ink },
+        { color: t.amber, dashStyle: "Dash" },
+      ],
     },
   ],
 });
