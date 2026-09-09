@@ -1,7 +1,7 @@
 // anyplot.ai
 // violin-split: Split Violin Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 76/100 | Created: 2026-09-09
+// Quality: 87/100 | Created: 2026-09-09
 
 // Only the core Highcharts bundle is loaded (no highcharts-more), so there is
 // no native arearange/violin series. Instead each half-violin is a plain
