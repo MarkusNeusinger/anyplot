@@ -204,8 +204,12 @@ function drawAll() {
       .attr({ fill: 'none', stroke: t.inkSoft, 'stroke-width': 1, zIndex: 2 })
       .add()
   );
+  // Endpoints plus two evenly spaced intermediate stops (-20 dB, -40 dB) so
+  // readers can estimate values along the gradient, not just the extremes.
   [
     [0, 0],
+    [DB_FLOOR / 3, 1 / 3],
+    [(2 * DB_FLOOR) / 3, 2 / 3],
     [DB_FLOOR, 1],
   ].forEach(([db, frac]) => {
     drawn.push(
