@@ -74,9 +74,18 @@ const header = document.createElement("div");
 header.textContent = "subplot-grid · javascript · chartjs · anyplot.ai";
 header.style.cssText = `
   color: ${t.ink}; font-size: 22px; font-weight: 600;
-  text-align: center; flex-shrink: 0; margin-bottom: 18px;
+  text-align: center; flex-shrink: 0; margin-bottom: 6px;
 `;
 root.appendChild(header);
+
+const caption = document.createElement("div");
+caption.textContent =
+  "Panels 1–2 share the trading-day (x) axis for direct comparison · Panels 3–4 use independent axes fitted to their own scale";
+caption.style.cssText = `
+  color: ${t.inkSoft}; font-size: 13px; font-style: italic;
+  text-align: center; flex-shrink: 0; margin-bottom: 16px;
+`;
+root.appendChild(caption);
 
 const grid = document.createElement("div");
 grid.style.cssText = `
@@ -88,12 +97,25 @@ root.appendChild(grid);
 
 function makeCell() {
   const cell = document.createElement("div");
-  cell.style.cssText = "position: relative; min-width: 0; min-height: 0;";
+  cell.style.cssText = `
+    position: relative; min-width: 0; min-height: 0; box-sizing: border-box;
+    background: ${t.elevatedBg}; border-radius: 10px; padding: 14px 18px;
+  `;
   const canvas = document.createElement("canvas");
   cell.appendChild(canvas);
   grid.appendChild(cell);
   return canvas;
 }
+
+// Shared x-axis (trading day) tick/title config reused verbatim by Panels 1 & 2
+// so the two time-series panels line up for direct comparison.
+const sharedDayTicks = {
+  color: t.inkSoft,
+  font: { size: 11 },
+  autoSkip: false,
+  callback: (_value, index) => (index % 10 === 0 ? dayLabels[index] : null),
+};
+const sharedDayTitle = { display: true, text: "Trading Day", color: t.inkSoft, font: { size: 12 } };
 
 const commonTitle = (text) => ({
   display: true,
@@ -115,7 +137,15 @@ new Chart(makeCell(), {
         label: "Close",
         data: prices,
         borderColor: t.palette[0],
-        backgroundColor: t.palette[0],
+        backgroundColor: (context) => {
+          const { ctx, chartArea } = context.chart;
+          if (!chartArea) return `${t.palette[0]}00`;
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, `${t.palette[0]}40`);
+          gradient.addColorStop(1, `${t.palette[0]}00`);
+          return gradient;
+        },
+        fill: true,
         borderWidth: 2.5,
         pointRadius: 0,
         tension: 0.15,
@@ -128,7 +158,7 @@ new Chart(makeCell(), {
     animation: false,
     plugins: { title: commonTitle("Closing Price"), legend: { display: false } },
     scales: {
-      x: { ticks: { ...axisTicks, maxTicksLimit: 6 }, grid: { display: false } },
+      x: { ticks: sharedDayTicks, grid: { display: false }, title: sharedDayTitle },
       y: { ticks: axisTicks, grid: { color: t.grid }, title: axisTitle("Price ($)") },
     },
   },
@@ -154,7 +184,7 @@ new Chart(makeCell(), {
     animation: false,
     plugins: { title: commonTitle("Trading Volume"), legend: { display: false } },
     scales: {
-      x: { ticks: { ...axisTicks, maxTicksLimit: 6 }, grid: { display: false } },
+      x: { ticks: sharedDayTicks, grid: { display: false }, title: sharedDayTitle },
       y: {
         ticks: { ...axisTicks, callback: (v) => `${(v / 1e6).toFixed(1)}M` },
         grid: { color: t.grid },
@@ -185,7 +215,25 @@ new Chart(makeCell(), {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    plugins: { title: commonTitle("Daily Return Distribution"), legend: { display: false } },
+    plugins: {
+      title: commonTitle("Daily Return Distribution"),
+      legend: {
+        display: true,
+        position: "top",
+        align: "end",
+        onClick: () => {},
+        labels: {
+          color: t.inkSoft,
+          font: { size: 11 },
+          boxWidth: 10,
+          boxHeight: 10,
+          generateLabels: () => [
+            { text: "Gain (≥0%)", fillStyle: t.palette[0], strokeStyle: t.palette[0] },
+            { text: "Loss (<0%)", fillStyle: t.palette[4], strokeStyle: t.palette[4] },
+          ],
+        },
+      },
+    },
     scales: {
       x: { ticks: axisTicks, grid: { display: false }, title: axisTitle("Return (%)") },
       y: { ticks: axisTicks, grid: { color: t.grid }, title: axisTitle("Sessions"), beginAtZero: true },
