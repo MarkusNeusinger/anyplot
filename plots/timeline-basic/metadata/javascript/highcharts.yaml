@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: timeline-basic
 created: '2026-09-09T20:07:45Z'
-updated: '2026-09-09T20:11:42Z'
+updated: '2026-09-09T20:21:04Z'
 generated_by: claude-sonnet
 workflow_run: 34398580353
 issue: 2443
@@ -12,55 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/highcharts/plot-dark.html
-quality_score: 80
+quality_score: 92
 review:
   strengths:
-  - Correct Imprint palette in canonical order (green/lavender/blue for Planning/Development/Release)
-    with redundant marker-shape encoding (diamond/square/triangle) for colorblind
-    safety, matching VQ-04/VQ-07
-  - Alternating above/below data-label positions (indexed, not date-based) cleanly
-    avoid label collisions across all 14 events
-  - Theme-adaptive chrome is fully correct in both renders — warm cream/near-black
-    backgrounds, readable ink-soft tick labels, identical data colors across themes
-  - Realistic, neutral software-roadmap dataset spanning a full year with plausible
-    chronological ordering (kickoff → requirements → design → build → beta → GA →
-    post-launch)
-  - Correct title format and legend labels matching the category data
-  - Clean KISS code structure, no fake interactivity, deterministic hardcoded data
+  - 'Correct Imprint palette: Planning (first series) is #009E73, colors identical
+    between light/dark renders, and each category also gets a distinct marker shape
+    (circle/diamond/square) — a CVD-friendly redundant encoding beyond color alone'
+  - Quarter plotBands (Q1-Q4) give the timeline a Highcharts-distinctive backdrop,
+    add chronological context, and fill vertical whitespace instead of leaving the
+    band empty
+  - Clear focal point via emphasized Beta Release / General Availability milestones
+    (larger ink-outlined markers, bolder labels) creates real data storytelling instead
+    of 14 uniform dots
+  - Alternating above/below label placement (per the spec's explicit guidance) keeps
+    all 14 event labels legible with zero overlap across the full year
+  - Clean, deterministic, KISS-structured code; animation:false set correctly in both
+    chart and plotOptions.series; no fake interactivity
   weaknesses:
-  - 'Excessive unused vertical whitespace: the timeline band (markers + alternating
-    labels) occupies roughly the middle 15-20% of canvas height, leaving two very
-    large blank gaps (~40% of height each) above and below it — hurts canvas utilization
-    (VQ-05) and visual refinement (DE-02). Fix by adding intentional visual weight
-    to fill the space: e.g. a subtle background band/track behind the timeline, vertical
-    connector stems from the axis line to each label, thin category-colored background
-    zones, or a slightly taller marker/line treatment — rather than just centering
-    a thin strip in a tall canvas.'
-  - 'Design feels like a well-configured default: no focal point or emphasis distinguishing
-    key milestones (e.g. ''General Availability'' or ''Beta Release'') from routine
-    ones — low data storytelling (DE-03). Consider size/weight variation or a callout
-    for the most important 1-2 milestones.'
-  - 'Generic technique choice (LM-02): the scatter+line+dataLabels combination could
-    be replicated in almost any charting library with minor syntax changes; no Highcharts-distinctive
-    feature (e.g. xAxis plotBands per phase/quarter, or custom dataLabel connectors)
-    is leveraged.'
+  - Development category color (light violet) has noticeably lower contrast against
+    both backgrounds than the Planning green and Release blue — still legible, but
+    a slightly more saturated tone would give the three categories more even visual
+    weight
+  - Design is polished but stops just short of exceptional — the Q1-Q4 band labels
+    are quite small/subtle and typographic hierarchy between title/subtitle/labels
+    could be pushed a bit further
+  - Feature coverage is solid but minimal for the timeline type — no secondary encoding
+    beyond category+emphasis (e.g. nothing conveys relative importance beyond the
+    two hand-picked milestones)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "timeline-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Software Product Roadmap 2024" in softer gray below it. A thin horizontal ink-soft line runs across the middle third of the canvas representing the timeline axis, with month tick labels (Jan-Dec) and a small tick line at the bottom, plus a bottom-center legend (Planning/Development/Release) with matching marker glyphs. All text is dark-on-light and clearly legible.
-      Data: 14 events plotted as diamond (green #009E73, Planning), square (lavender #C475FD, Development), and triangle (blue #4467A3, Release) markers along the timeline, each with a bold event-name label alternating above/below the line. First categorical series (Planning) correctly renders in brand green.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "timeline-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top center, subtitle "Software Product Roadmap 2024" in muted grey below it. X-axis shows Jan-Dec month ticks along a thin horizontal baseline. Four alternating quarter plotBands (Q1-Q4, very light grey tint) span the full height with small "Q1"/"Q2"/"Q3"/"Q4" labels at top-left of each band. A bottom legend shows Planning (green circle), Development (violet diamond), Release (blue square). All chrome text is clearly legible against the light background.
+      Data: 14 events plotted as colored markers connected to the central axis line by thin grey stems, alternating above/below the axis. Colors: green (Planning), light violet (Development), blue (Release) — first series (Planning) is the brand green #009E73. Beta Release and General Availability are visually emphasized with larger, ink-outlined diamond/square markers and bold labels, creating a clear focal point. No overlapping text, no clipped labels at any edge.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title/subtitle now in light ink (near-white) and soft light-gray subtitle, fully readable against the dark background. Timeline axis line, tick labels, and legend text are all light-colored with no dark-on-dark failures observed.
-      Data: Same 14 events in the identical green/lavender/blue marker colors and shapes as the light render, confirming data colors are unchanged between themes; only the chrome (background, text) flipped.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title and subtitle now rendered in white/light-grey ink, clearly visible against the dark background. Quarter plotBands use a subtle lighter-grey tint distinguishable from the base background. Axis ticks, quarter labels, and legend text are all light-colored and easily readable — no dark-on-dark failures observed anywhere (title, tick labels, category labels, and quarter labels all confirmed legible).
+      Data: Same marker colors and positions as the light render — green, violet, and blue data colors are pixel-identical to the light version, confirming only chrome (background/text/grid) flipped as required. Emphasized Beta Release / General Availability markers retain their ink-outlined styling (now a light outline against dark). No clipping or overlap issues.
       Legibility verdict: PASS
-
-    Additional observation (both renders): the timeline band plus its labels occupies only a thin horizontal strip roughly in the vertical middle of the canvas, leaving very large blank margins above (between subtitle and labels) and below (between labels and the axis/legend) — a canvas-utilization concern noted in the weaknesses.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,72 +61,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle/labels/ticks
-          14px), readable in both themes, no clipping
+        comment: All text readable in both themes at explicit sizes (22px title, 14px
+          labels/ticks/legend); Development violet slightly lower contrast than the
+          other two categories
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating above/below label placement avoids all collisions
+        comment: No collisions between any of the 14 alternating labels, quarter markers,
+          or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker radius appropriate for 14 sparse events
+        comment: Sparse data (14 points) given prominent radius-8 markers, emphasized
+          milestones bumped to radius-15 with ink outline
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant shape encoding (diamond/square/triangle) alongside color
+        comment: Three distinct hues plus per-category marker shape (circle/diamond/square)
+          as a redundant, CVD-safe encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Timeline band + labels only occupy a thin middle strip; large unused
-          blank margins above and below
+        passed: true
+        comment: Canvas gate passed (no drift file present); good proportions, nothing
+          clipped, quarter bands used to fill vertical whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title/subtitle; y-axis correctly hidden as non-meaningful
-          for a timeline
+        comment: Descriptive title + subtitle; y-axis correctly hidden since it carries
+          no data meaning for this plot type
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green, canonical order, theme-correct chrome in
-          both renders
+        comment: 'First categorical series (Planning) is #009E73; data colors identical
+          light/dark; backgrounds correctly #FAF8F1 / #1A1A17'
     design_excellence:
-      score: 9
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: decent palette + shape variety but no exceptional
-          polish'
+        passed: true
+        comment: Quarter plotBands, connector stems, and emphasized-milestone treatment
+          go well beyond generic defaults, though typographic hierarchy could be pushed
+          further
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Clean spines/no grid, but whitespace balance is off (see VQ-05) rather
-          than intentionally refined
+        passed: true
+        comment: Gridlines removed, subtle plotBand tint (0.05 opacity), generous
+          whitespace, clean bottom legend
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Category color-coding gives basic hierarchy but no focal point or
-          emphasis on key milestones
+        passed: true
+        comment: Clear focal point (Beta Release / GA emphasis), quarter bands add
+          chronological structure, category color-coding shows phase progression
     spec_compliance:
       score: 15
       max: 15
@@ -143,26 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct event timeline with markers along a temporal axis
+        comment: Correct event-timeline chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alternating labels, category color-coding, clear month formatting
+        comment: Dates, event names, category color-coding, alternating label positions
           all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = date correctly mapped; all events visible along axis
+        comment: X mapped to date; y intentionally non-meaningful and hidden, appropriate
+          for a timeline
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match Planning/Development/Release
+        comment: Title matches required format exactly; legend labels match the three
           categories
     data_quality:
       score: 14
@@ -173,20 +172,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 14 events across 3 categories spanning the full year; no example
-          of dense clustering to stress-test spacing
+        comment: Covers dates/events/categories/emphasis well; no secondary encoding
+          beyond the two hand-picked milestones
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible software product roadmap scenario
+        comment: Plausible, neutral software product roadmap
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chronologically logical progression of milestones within 2024
+        comment: 14 events across a year is a sensible timeline density
     code_quality:
       score: 10
       max: 10
@@ -196,33 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; simple top-to-bottom data->chart flow
+        comment: Flat top-level script, no unnecessary classes/functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded dates
+        comment: Fully deterministic hardcoded event data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed, uses global Highcharts correctly
+        comment: No imports; only the provided globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart("container", ...) with animation disabled
+        comment: 'Renders into #container; animation:false set in both required spots'
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -230,23 +229,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Sensible scatter+dataLabels+line pattern given core-bundle-only constraint
-          (no annotations/gantt modules)
+        comment: Idiomatic scatter+dataLabels+datetime xAxis+plotBands composition
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic technique replicable in most charting libraries
-  verdict: REJECTED
+        passed: true
+        comment: plotBands as a quarter backdrop and per-series symbol cycling are
+          genuinely Highcharts-distinctive touches
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - plot-bands
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
+  - alpha-blending
   - edge-highlighting
+  - minimal-chrome
