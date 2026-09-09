@@ -1,3 +1,7 @@
+// anyplot.ai
+// sparkline-basic: Basic Sparkline
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
 // anyplot.ai
 // sparkline-basic: Basic Sparkline
