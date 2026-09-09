@@ -70,8 +70,37 @@ const scatterData = rainfallMm.map((r, i) => [r, yieldTonsPerHa[i]]);
 const topHistData = xHist.counts.map((c, i) => [xAxisMin + xHist.width * (i + 0.5), c]);
 const rightHistData = yHist.counts.map((c, i) => [yAxisMin + yHist.width * (i + 0.5), c]);
 
-const scatterColor = Highcharts.color(t.palette[0]).setOpacity(0.65).get();
+// Gaussian KDE overlay (Silverman bandwidth) on each marginal, scaled to the
+// histogram's count axis (density * N * binWidth) so the curve reads directly
+// against the bars behind it — adds distributional shape beyond raw bin counts.
+function stdDev(values) {
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance = values.reduce((a, b) => a + (b - mean) * (b - mean), 0) / values.length;
+  return Math.sqrt(variance);
+}
+function kdeCurve(values, min, max, binWidth, gridPoints) {
+  const n = values.length;
+  const bandwidth = Math.max(1e-6, 1.06 * stdDev(values) * Math.pow(n, -0.2));
+  const step = (max - min) / (gridPoints - 1);
+  const points = [];
+  for (let i = 0; i < gridPoints; i++) {
+    const x = min + step * i;
+    let sum = 0;
+    for (const v of values) {
+      const u = (x - v) / bandwidth;
+      sum += Math.exp(-0.5 * u * u);
+    }
+    const density = sum / (n * bandwidth * Math.sqrt(2 * Math.PI));
+    points.push([x, density * n * binWidth]);
+  }
+  return points;
+}
+const xKde = kdeCurve(rainfallMm, xAxisMin, xAxisMax, xHist.width, 80);
+const yKde = kdeCurve(yieldTonsPerHa, yAxisMin, yAxisMax, yHist.width, 80);
+
+const scatterColor = Highcharts.color(t.palette[0]).setOpacity(0.6).get();
 const marginalColor = Highcharts.color(t.palette[0]).setOpacity(0.4).get();
+const kdeLineColor = t.palette[0];
 
 // --- Mount layout: title strip + top marginal + main scatter + right marginal
 const container = document.getElementById("container");
@@ -146,7 +175,18 @@ Highcharts.chart(topEl, {
     series: { animation: false },
     column: { pointPadding: 0.03, groupPadding: 0, borderWidth: 0, pointRange: xHist.width, color: marginalColor },
   },
-  series: [{ name: "Rainfall distribution", data: topHistData }],
+  series: [
+    { name: "Rainfall distribution", data: topHistData },
+    {
+      name: "Density estimate",
+      type: "spline",
+      data: xKde,
+      color: kdeLineColor,
+      lineWidth: 2,
+      marker: { enabled: false },
+      enableMouseTracking: false,
+    },
+  ],
 });
 
 Highcharts.chart(mainEl, {
@@ -178,7 +218,7 @@ Highcharts.chart(mainEl, {
       name: "Farm plots",
       data: scatterData,
       color: scatterColor,
-      marker: { radius: 5, symbol: "circle", lineColor: t.pageBg, lineWidth: 0.5 },
+      marker: { radius: 4, symbol: "circle", lineColor: t.pageBg, lineWidth: 0.5 },
     },
   ],
 });
@@ -209,5 +249,16 @@ Highcharts.chart(rightEl, {
     series: { animation: false },
     bar: { pointPadding: 0.03, groupPadding: 0, borderWidth: 0, pointRange: yHist.width, color: marginalColor },
   },
-  series: [{ name: "Yield distribution", data: rightHistData }],
+  series: [
+    { name: "Yield distribution", data: rightHistData },
+    {
+      name: "Density estimate",
+      type: "spline",
+      data: yKde,
+      color: kdeLineColor,
+      lineWidth: 2,
+      marker: { enabled: false },
+      enableMouseTracking: false,
+    },
+  ],
 });
