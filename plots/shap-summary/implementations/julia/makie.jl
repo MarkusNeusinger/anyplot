@@ -127,6 +127,14 @@ ax = Axis(
 xlims!(ax, -max_abs_shap, max_abs_shap)
 ylims!(ax, 0.3, n_features + 0.7)
 
+# Subtle accent band behind the top (most important) feature row, drawn
+# before the scatter so it sits underneath the data points.
+top_row_y = Float64(n_features)
+hspan!(
+    ax, top_row_y - 0.5, top_row_y + 0.5;
+    color = RGBAf(colorant"#009E73".r, colorant"#009E73".g, colorant"#009E73".b, 0.08),
+)
+
 vlines!(ax, 0; color = INK_SOFT, linewidth = 1.5, linestyle = :dash)
 
 scatter!(
@@ -134,10 +142,10 @@ scatter!(
     color = colors,
     colormap = IMPRINT_SEQ,
     colorrange = (0, 1),
-    markersize = 9,
+    markersize = 7,
     strokewidth = 0.5,
     strokecolor = PAGE_BG,
-    alpha = 0.85,
+    alpha = 0.7,
 )
 
 Colorbar(
