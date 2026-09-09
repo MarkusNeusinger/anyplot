@@ -1,0 +1,242 @@
+library: highcharts
+language: javascript
+specification_id: scatter-regression-lowess
+created: '2026-09-09T06:54:06Z'
+updated: '2026-09-09T07:06:35Z'
+generated_by: claude-sonnet
+workflow_run: 34320813988
+issue: 2855
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Directly and precisely addressed every attempt-1 weakness: removed default axis
+    lines, added a saturation marker + ad-fatigue plot band, color-coded the trend
+    line''s decline segment via zones, and increased marker radius/opacity for better
+    visibility'
+  - 'Correct Imprint palette usage: first series is #009E73, identical between light
+    and dark renders; amber accent consistent across themes'
+  - Theme-adaptive chrome correctly implemented — background, title, subtitle, axis
+    text, grid, and the LOWESS trend line color all flip appropriately with no dark-on-dark
+    or light-on-light failures
+  - LOWESS trend implemented as a genuine tricube-weighted local linear regression
+    evaluated on a dense grid, not a canned smoother, with frac=0.35 in the recommended
+    0.3-0.5 range
+  - Deterministic, reproducible data generation via a seeded LCG + Box-Muller gaussian
+  - Title format matches the mandated pattern exactly; axis labels are descriptive
+    and carry units
+  - Realistic, neutral business scenario with a genuinely non-monotonic saturation-then-fatigue
+    shape that showcases why LOWESS is useful
+  weaknesses:
+  - The legend only labels 'Weekly observations' and 'LOWESS smoothed trend' — it
+    doesn't visually distinguish the amber decline segment, so a viewer relying solely
+    on the legend (not the plot-band label) could miss that the dashed portion means
+    something different
+  - Overall color palette is still limited to green/ink/amber; a touch more restrained
+    typographic hierarchy would push Aesthetic Sophistication further
+  - Confidence band around the LOWESS curve was not added (explicitly optional in
+    the spec, so not a deduction, but would be a nice next-level touch)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title, subtitle, axis titles, and tick labels are dark and clearly readable. Axis lines/ticks removed (no default spines). Grid lines subtle. Legend centered below plot, readable.
+      Data: ~200 semi-transparent green (#009E73) scatter points; solid black LOWESS curve up to saturation point (~$71k) then dashed amber decline segment; dashed vertical guide line + "Saturation ~$71k" label; shaded "Ad-fatigue region" plot band with italic label.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title, subtitle, axis titles, and tick labels are white/light-gray and clearly readable against the dark background. No dark-on-dark failures. Grid lines subtle.
+      Data: Same #009E73 green scatter points and amber decline/plot-band color as light render (confirmed identical). LOWESS trend line correctly flips from black to white via the ink token, preserving contrast.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; small annotation labels (12px)
+          near lower bound
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or annotations
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius 6, opacity 0.7 appropriate for 200 points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/ink/amber distinguishable via hue and dash style, not hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, no cutoffs, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme backgrounds, data colors identical
+          across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Plot band shading, zoned decline segment, and saturation marker lift
+          this past a generic default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis lines/ticks removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Saturation point and ad-fatigue region explicitly called out with
+          guide line, label, and shaded band
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter + LOWESS line
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct trend line, frac=0.35, alpha=0.7, descriptive title/subtitle
+          mentioning LOWESS
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels descriptive
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows scatter, trend, and annotated regions; optional confidence
+          band omitted
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral ad-spend/sales scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible value ranges for domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat, procedural script with small necessary helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed, none unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter+line series composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotBands, plotLines with labels, and zones/zoneAxis are distinctive
+          Highcharts capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
