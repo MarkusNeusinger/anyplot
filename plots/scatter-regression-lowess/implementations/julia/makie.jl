@@ -90,16 +90,23 @@ ax = Axis(
     ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
-band!(ax, eval_x, band_lo, band_hi; color = (CURVE_COLOR, 0.18), label = "95% CI")
+band!(ax, eval_x, band_lo, band_hi; color = (CURVE_COLOR, 0.35))
 scatter!(
     ax, light_intensity, net_photosynthesis;
     color = (BRAND, 0.55), markersize = 9,
     strokecolor = PAGE_BG, strokewidth = 1,
-    label = "Observations",
 )
-lines!(ax, eval_x, fitted_y; color = CURVE_COLOR, linewidth = 3, label = "LOWESS fit")
+lines!(ax, eval_x, fitted_y; color = CURVE_COLOR, linewidth = 3)
 
-axislegend(ax; position = :lt, backgroundcolor = ELEVATED_BG, labelcolor = INK, framevisible = false)
+# `band!` has no automatic legend entry in Makie, so the legend is built explicitly
+# from proxy elements that mirror the actual plot styling.
+legend_elements = [
+    MarkerElement(color = (BRAND, 0.55), marker = :circle, markersize = 9, strokecolor = PAGE_BG, strokewidth = 1),
+    LineElement(color = CURVE_COLOR, linewidth = 3),
+    PolyElement(color = (CURVE_COLOR, 0.35)),
+]
+legend_labels = ["Observations", "LOWESS fit", "95% CI"]
+axislegend(ax, legend_elements, legend_labels; position = :lt, backgroundcolor = ELEVATED_BG, labelcolor = INK, framevisible = false)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
