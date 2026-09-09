@@ -25,9 +25,10 @@ const pageviews = days.map(() => {
   return Math.round(Math.max(30000, pageviewLevel));
 });
 
-// Panel B — sessions by device category
+// Panel B — sessions by device category (Mobile leads — called out below)
 const devices = ["Desktop", "Mobile", "Tablet"];
 const sessionsByDevice = [18400, 24900, 5100];
+const leadDeviceIndex = sessionsByDevice.indexOf(Math.max(...sessionsByDevice));
 
 // Panel C — bounce rate vs. avg. session duration, by acquisition channel
 const channels = [
@@ -204,7 +205,21 @@ export default function Chart() {
             skipAnimation
             legend={{ hidden: true }}
             margin={{ left: 70, right: 16, top: 12, bottom: 40 }}
-            xAxis={[{ scaleType: "band", data: devices, tickLabelStyle: { fontSize: 13 } }]}
+            xAxis={[
+              {
+                scaleType: "band",
+                data: devices,
+                tickLabelStyle: { fontSize: 13 },
+                // Focal-point emphasis: the leading device (Mobile) stays brand
+                // green, the others mute to inkSoft — calls out the takeaway
+                // without adding annotation infrastructure.
+                colorMap: {
+                  type: "ordinal",
+                  values: devices,
+                  colors: devices.map((_, i) => (i === leadDeviceIndex ? t.palette[0] : t.inkSoft)),
+                },
+              },
+            ]}
             yAxis={[{ tickLabelStyle: { fontSize: 12 } }]}
             series={[{ data: sessionsByDevice, color: t.palette[0] }]}
           />
@@ -216,11 +231,11 @@ export default function Chart() {
             height={sizeC.height}
             skipAnimation
             margin={{ left: 78, right: 16, top: 12, bottom: 46 }}
-            grid={{ horizontal: true, vertical: true }}
+            grid={{ horizontal: true }}
             xAxis={[{ label: "Bounce Rate (%)", tickLabelStyle: { fontSize: 12 } }]}
             yAxis={[{ label: "Duration (s)", tickLabelStyle: { fontSize: 12 } }]}
-            series={channelSeries.map((s) => ({ ...s, markerSize: 6 }))}
-            colors={t.palette.slice(0, channelSeries.length)}
+            series={channelSeries.map((s) => ({ ...s, markerSize: 5 }))}
+            colors={t.palette.slice(0, channelSeries.length).map((c) => withAlpha(c, 0.78))}
             slotProps={{ legend: { labelStyle: { fontSize: 12 } } }}
           />
         </div>
