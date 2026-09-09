@@ -58,12 +58,48 @@ genes <- genes %>%
 # --- Plot -----------------------------------------------------------------
 title_text <- "volcano-basic · r · ggplot2 · anyplot.ai"
 
+# ggrepel is not installed in the CI R environment (see .github/actions/setup-r),
+# so the top-hit gene labels below use a manual rank-based x/y nudge fan-out
+# instead of geom_text_repel() collision avoidance.
+top_labels <- genes %>%
+  filter(status != "Not significant") %>%
+  group_by(status) %>%
+  slice_max(order_by = neg_log10_pvalue, n = 3) %>%
+  arrange(status, desc(neg_log10_pvalue)) %>%
+  mutate(
+    rank_in_group = row_number(),
+    label_x = log2_fold_change + if_else(log2_fold_change > 0, 0.35, -0.35),
+    label_y = neg_log10_pvalue + 0.7 * rank_in_group
+  ) %>%
+  ungroup()
+
+n_up   <- sum(genes$status == "Up-regulated")
+n_down <- sum(genes$status == "Down-regulated")
+
 p <- ggplot(genes, aes(x = log2_fold_change, y = neg_log10_pvalue, color = status)) +
   geom_vline(xintercept = c(-fc_cutoff, fc_cutoff), color = INK_SOFT,
              linewidth = 0.4, linetype = "dashed") +
   geom_hline(yintercept = sig_cutoff, color = INK_SOFT,
              linewidth = 0.4, linetype = "dashed") +
-  geom_point(size = 1.8, alpha = 0.55) +
+  geom_point(data = filter(genes, status == "Not significant"),
+             size = 1.0, alpha = 0.22) +
+  geom_point(data = filter(genes, status != "Not significant"),
+             size = 2.2, alpha = 0.8) +
+  geom_text(
+    data = top_labels,
+    aes(label = gene, x = label_x, y = label_y),
+    hjust = 0.5,
+    vjust = 0,
+    size = 2.6,
+    fontface = "italic",
+    show.legend = FALSE
+  ) +
+  annotate("text", x = Inf, y = Inf, label = paste0(n_up, " up"),
+           hjust = 1.15, vjust = 1.8, size = 2.8, fontface = "bold",
+           color = IMPRINT_UP) +
+  annotate("text", x = -Inf, y = Inf, label = paste0(n_down, " down"),
+           hjust = -0.15, vjust = 1.8, size = 2.8, fontface = "bold",
+           color = IMPRINT_DOWN) +
   scale_color_manual(
     values = c(
       "Not significant" = IMPRINT_NS,
@@ -86,6 +122,7 @@ p <- ggplot(genes, aes(x = log2_fold_change, y = neg_log10_pvalue, color = statu
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
+    axis.line         = element_line(color = INK_SOFT, linewidth = 0.3),
     plot.title        = element_text(color = INK, size = 12),
     legend.position   = "top",
     legend.text       = element_text(color = INK_SOFT, size = 8),
