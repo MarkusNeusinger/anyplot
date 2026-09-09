@@ -41,6 +41,7 @@ pairs_list <- list()
 idx <- 1
 for (rv in vars) {
   for (cv in vars) {
+    if (rv == cv) next
     pairs_list[[idx]] <- tibble::tibble(
       row_var = factor(rv, levels = vars),
       col_var = factor(cv, levels = vars),
@@ -51,19 +52,42 @@ for (rv in vars) {
     idx <- idx + 1
   }
 }
-pairs_df <- bind_rows(pairs_list) %>%
-  mutate(is_diag = row_var == col_var)
+pairs_df <- bind_rows(pairs_list)
+
+# Diagonal density curves, rescaled from raw density units into each row's
+# own data-value range so the KDE fills the panel height instead of being
+# squashed near the bottom against the shared row y-scale.
+diag_list <- list()
+idx <- 1
+for (v in vars) {
+  var_data  <- iris[[v]]
+  var_range <- range(var_data)
+  dens_df <- bind_rows(lapply(levels(iris$Species), function(sp) {
+    d <- density(var_data[iris$Species == sp])
+    tibble::tibble(x = d$x, dens = d$y, species = sp)
+  }))
+  max_dens <- max(dens_df$dens)
+  diag_list[[idx]] <- dens_df %>%
+    mutate(
+      row_var = factor(v, levels = vars),
+      col_var = factor(v, levels = vars),
+      ymin    = var_range[1],
+      ymax    = var_range[1] + (dens / max_dens) * diff(var_range) * 0.9
+    )
+  idx <- idx + 1
+}
+diag_df <- bind_rows(diag_list)
 
 # --- Plot -----------------------------------------------------------------
 p <- ggplot() +
   geom_point(
-    data  = filter(pairs_df, !is_diag),
+    data  = pairs_df,
     aes(x = x, y = y, color = species),
     size = 1.3, alpha = 0.6
   ) +
-  geom_density(
-    data  = filter(pairs_df, is_diag),
-    aes(x = x, fill = species, color = species),
+  geom_ribbon(
+    data  = diag_df,
+    aes(x = x, ymin = ymin, ymax = ymax, fill = species, color = species, group = species),
     alpha = 0.35, linewidth = 0.5
   ) +
   facet_grid(
@@ -86,7 +110,7 @@ p <- ggplot() +
     panel.grid.minor   = element_blank(),
     panel.spacing      = unit(0.4, "lines"),
     axis.title         = element_blank(),
-    axis.text          = element_text(color = INK_SOFT, size = 5),
+    axis.text          = element_text(color = INK_SOFT, size = 6.5),
     axis.ticks         = element_line(color = INK_SOFT, linewidth = 0.2),
     strip.placement    = "outside",
     strip.background   = element_rect(fill = ELEVATED_BG, color = NA),
