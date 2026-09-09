@@ -67,6 +67,32 @@ const verticalThresholdUp = [
   { x: FC_THRESHOLD, y: yLimit },
 ];
 
+// --- Top-hit labels (spec's "consider labeling top significant features") --
+const GENE_POOL = ["TP53", "EGFR", "KRAS", "BRCA1", "PTEN"];
+const topUp = [...upPoints].sort((a, b) => b.y - a.y).slice(0, 3);
+const topDown = [...downPoints].sort((a, b) => b.y - a.y).slice(0, 2);
+const topFeatures = [...topUp, ...topDown].map((p, i) => ({
+  ...p,
+  name: GENE_POOL[i % GENE_POOL.length],
+}));
+
+const topFeatureLabels = {
+  id: "topFeatureLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    ctx.save();
+    ctx.font = "600 13px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textBaseline = "bottom";
+    for (const feature of topFeatures) {
+      const px = scales.x.getPixelForValue(feature.x);
+      const py = scales.y.getPixelForValue(feature.y);
+      ctx.fillText(feature.name, px + 7, py - 3);
+    }
+    ctx.restore();
+  },
+};
+
 function withAlpha(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -81,6 +107,7 @@ document.getElementById("container").appendChild(canvas);
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
   type: "scatter",
+  plugins: [topFeatureLabels],
   data: {
     datasets: [
       {
@@ -116,9 +143,9 @@ new Chart(canvas, {
       {
         label: "Not significant",
         data: nonSigPoints,
-        backgroundColor: withAlpha(INK_MUTED, 0.5),
-        pointRadius: 3,
-        pointHoverRadius: 3,
+        backgroundColor: withAlpha(INK_MUTED, 0.4),
+        pointRadius: 2.5,
+        pointHoverRadius: 2.5,
       },
       {
         label: "Down-regulated",
@@ -161,7 +188,7 @@ new Chart(canvas, {
         min: -xLimit,
         max: xLimit,
         ticks: { color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { display: false },
         title: {
           display: true,
           text: "log2(Fold Change)",
