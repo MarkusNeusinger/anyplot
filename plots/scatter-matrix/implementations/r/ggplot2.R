@@ -54,25 +54,28 @@ for (rv in vars) {
 }
 pairs_df <- bind_rows(pairs_list)
 
-# Diagonal density curves, rescaled from raw density units into each row's
-# own data-value range so the KDE fills the panel height instead of being
-# squashed near the bottom against the shared row y-scale.
+# Diagonal density curves. Each species' KDE is (1) estimated only over that
+# variable's own data range (`from`/`to`), so the shared free x-scale for the
+# column is never pulled wider than the real min/max, and (2) normalized to
+# its OWN peak (not a global max across species) before being rescaled into
+# the row's data-value range, so every species curve reaches the same
+# relative height regardless of how much taller one species' peak density is
+# than another's (e.g. Petal.Width: setosa's peak is ~6x virginica's).
 diag_list <- list()
 idx <- 1
 for (v in vars) {
   var_data  <- iris[[v]]
   var_range <- range(var_data)
   dens_df <- bind_rows(lapply(levels(iris$Species), function(sp) {
-    d <- density(var_data[iris$Species == sp])
-    tibble::tibble(x = d$x, dens = d$y, species = sp)
+    d <- density(var_data[iris$Species == sp], from = var_range[1], to = var_range[2])
+    tibble::tibble(x = d$x, dens = d$y / max(d$y), species = sp)
   }))
-  max_dens <- max(dens_df$dens)
   diag_list[[idx]] <- dens_df %>%
     mutate(
       row_var = factor(v, levels = vars),
       col_var = factor(v, levels = vars),
       ymin    = var_range[1],
-      ymax    = var_range[1] + (dens / max_dens) * diff(var_range) * 0.9
+      ymax    = var_range[1] + dens * diff(var_range) * 0.9
     )
   idx <- idx + 1
 }
