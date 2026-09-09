@@ -94,6 +94,14 @@ chart.setOption({
     itemGap: 32,
     textStyle: { color: t.ink, fontSize: 16 },
   },
+  tooltip: {
+    trigger: "item",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink },
+    formatter: (params) =>
+      `<b>${params.data.name}</b><br/>${params.seriesName} &middot; ${params.data.dateLabel}`,
+  },
   grid: { left: 80, right: 80, top: 190, bottom: 190 },
   xAxis: {
     type: "time",
