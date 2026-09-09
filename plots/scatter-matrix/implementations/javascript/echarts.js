@@ -25,6 +25,7 @@ function randNormal(mean, std) {
 }
 
 const variables = ["Sepal Length", "Sepal Width", "Petal Length", "Petal Width"];
+const axisNames = variables.map((v) => `${v} (cm)`);
 const species = [
   { name: "Setosa", means: [5.0, 3.4, 1.5, 0.25], stds: [0.35, 0.38, 0.17, 0.1] },
   { name: "Versicolor", means: [5.9, 2.77, 4.26, 1.33], stds: [0.51, 0.31, 0.47, 0.2] },
@@ -52,7 +53,7 @@ const varRange = variables.map((_, v) => {
 const N = variables.length;
 const outerLeft = 8.5;
 const outerRight = 2.5;
-const outerTop = 17;
+const outerTop = 13;
 const outerBottom = 9;
 const gap = 2.8;
 const cellW = (100 - outerLeft - outerRight - gap * (N - 1)) / N;
@@ -66,6 +67,18 @@ const series = [];
 
 const histBins = 9;
 const barWidth = Math.max(2, (cellWpx / histBins) * 0.78);
+
+// Regular split-line ticks near a forced min/max label collide with it
+// (e.g. "2.5" running into "2.7"); hide any regular tick that lands within
+// 8% of the range from the forced edge, keeping the forced edge label itself.
+function edgeSafeFormatter([lo, hi], showMin, showMax) {
+  const thresh = (hi - lo) * 0.08;
+  return (val) => {
+    if (showMax && val !== hi && Math.abs(val - hi) < thresh) return "";
+    if (showMin && val !== lo && Math.abs(val - lo) < thresh) return "";
+    return val.toFixed(1);
+  };
+}
 
 for (let row = 0; row < N; row++) {
   for (let col = 0; col < N; col++) {
@@ -82,7 +95,7 @@ for (let row = 0; row < N; row++) {
       type: "value",
       min: varRange[col][0],
       max: varRange[col][1],
-      name: isBottomRow ? variables[col] : "",
+      name: isBottomRow ? axisNames[col] : "",
       nameLocation: "middle",
       nameGap: 30,
       nameTextStyle: { color: t.ink, fontSize: 14 },
@@ -90,7 +103,7 @@ for (let row = 0; row < N; row++) {
         show: isBottomRow,
         color: t.inkSoft,
         fontSize: 11,
-        formatter: (val) => val.toFixed(1),
+        formatter: edgeSafeFormatter(varRange[col], col === 0, col === N - 1),
         showMinLabel: col === 0,
         showMaxLabel: col === N - 1,
       },
@@ -138,7 +151,7 @@ for (let row = 0; row < N; row++) {
         type: "value",
         min: varRange[row][0],
         max: varRange[row][1],
-        name: isLeftCol ? variables[row] : "",
+        name: isLeftCol ? axisNames[row] : "",
         nameLocation: "middle",
         nameGap: 46,
         nameTextStyle: { color: t.ink, fontSize: 14 },
@@ -146,7 +159,7 @@ for (let row = 0; row < N; row++) {
           show: isLeftCol,
           color: t.inkSoft,
           fontSize: 11,
-          formatter: (val) => val.toFixed(1),
+          formatter: edgeSafeFormatter(varRange[row], row === N - 1, row === 0),
           showMinLabel: row === N - 1,
           showMaxLabel: row === 0,
         },
