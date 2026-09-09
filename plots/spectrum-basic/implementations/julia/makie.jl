@@ -50,6 +50,20 @@ mask = frequency .>= 1.0
 frequency = frequency[mask]
 amplitude_db = amplitude_db[mask]
 
+# Locate the actual peak bin nearest each named harmonic, so the annotation
+# sits exactly on the rendered curve rather than the theoretical frequency.
+function nearest_peak_index(target_hz, window_hz = 8.0)
+    candidates = findall(f -> abs(f - target_hz) <= window_hz, frequency)
+    candidates[argmax(amplitude_db[candidates])]
+end
+
+peak_names = ["shaft", "gear mesh", "bearing fault"]
+peak_targets = [shaft_hz, gearmesh_hz, bearing_hz]
+peak_indices = [nearest_peak_index(f) for f in peak_targets]
+peak_freqs = frequency[peak_indices]
+peak_amps = amplitude_db[peak_indices]
+peak_labels = ["$(round(Int, f)) Hz · $name" for (f, name) in zip(peak_freqs, peak_names)]
+
 # --- Plot ---------------------------------------------------------------------
 title_str = "spectrum-basic · julia · makie · anyplot.ai"
 
@@ -88,6 +102,19 @@ ax = Axis(
 )
 
 lines!(ax, frequency, amplitude_db; color = IMPRINT_PALETTE[1], linewidth = 2.5)
+
+# Highlight the three dominant harmonics with markers + labels, giving the
+# viewer a guided read of the shaft/gear-mesh/bearing-fault components.
+scatter!(
+    ax, peak_freqs, peak_amps;
+    color = IMPRINT_PALETTE[1], markersize = 14,
+    strokewidth = 2, strokecolor = PAGE_BG,
+)
+text!(
+    ax, peak_freqs, peak_amps;
+    text = peak_labels, color = INK, fontsize = 13,
+    align = (:center, :bottom), offset = (0, 10),
+)
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
