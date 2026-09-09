@@ -1,0 +1,268 @@
+library: echarts
+language: javascript
+specification_id: spiral-timeseries
+created: '2026-09-09T19:00:17Z'
+updated: '2026-09-09T19:20:08Z'
+generated_by: claude-sonnet
+workflow_run: 34391693760
+issue: 5243
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Color-encodes-value-magnitude now genuinely renders: the spiral is split into
+    ~1094 per-segment lines, each colored by interpolating the Imprint imprint_seq
+    gradient (#009E73 → #4467A3) by the segment''s average output value — the seasonal
+    solar curve is now visibly traced around every revolution (green in winter troughs,
+    blue in summer peaks), fixing the prior review''s core AR/SC failure.'
+  - Renamed 'solar-farm' to 'rooftop solar-panel' in the subtitle and code comment
+    resolves the prior DQ-03 scale mismatch — the 9–50 kWh/day range now reads as
+    a plausible residential system instead of an implausibly tiny utility-scale farm.
+  - 'The ''Year 1/2/3'' radial-axis labels now carry a theme-matched background chip
+    (backgroundColor: t.pageBg, padding), so they no longer visually collide with
+    the spiral line crossing directly beneath them — fixes the prior minor VQ-02 nit.'
+  - Correct Archimedean spiral geometry (radius = cycleIndex + dayFraction) gives
+    constant, uniform spacing between the three revolutions, with the earliest data
+    at the center as required.
+  - Theme-adaptive chrome is fully threaded through (title, subtitle, month/year axis
+    labels, grid) — both renders are fully legible with no dark-on-dark or light-on-light
+    failures, and the data gradient is pixel-identical between themes.
+  - Deterministic mulberry32 PRNG with a fixed seed guarantees reproducibility, and
+    the title format exactly matches the required 'spiral-timeseries · javascript
+    · echarts · anyplot.ai' convention.
+  weaknesses:
+  - 'VQ-05: the polar chart and its High/Low colorbar sit slightly off-balance inside
+    the square canvas — noticeable blank space remains along the bottom-right beside
+    the legend; a marginally larger polar radius or a legend placed closer to the
+    circle''s edge would tighten canvas utilization.'
+  - Line thickness stays a flat 3.5px throughout; the spec's alternate encoding ('color
+    OR line thickness') is only exercised via color. Not a deduction on its own (color
+    already works and is CVD-safe), but a slight thickness modulation tied to distance-from-mean
+    would add a redundant channel for extra robustness.
+  - 'LM-01: the per-segment coloring trick renders ~1094 separate polar ''line'' series
+    to fake a colored line — a legitimate and well-explained workaround for a genuine
+    ECharts limitation (visualMap doesn''t recolor symbol-less polar lines), but a
+    single native `type: ''lines''` series with per-item lineStyle would reach the
+    same visual result more idiomatically and with less series overhead.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "spiral-timeseries · javascript · echarts · anyplot.ai" and subtitle "Daily rooftop solar-panel output (kWh) · each revolution = 1 year" render in dark ink, clearly legible. Month labels (Jan…Dec) ring the outer angle axis; "Year 1/2/3" labels sit on the vertical radius axis near the top, each with a small background chip so they don't visually collide with the crossing spiral line. Radial and angular grid lines are thin, light gray, subtle. The "High"/"Low" visualMap legend on the right renders a green-to-blue vertical color bar with dark, readable text.
+      Data: The spiral (three Archimedean revolutions, expanding outward from center, earliest year innermost) now visibly changes color along its length — green near the winter months (Jan/Dec) and blue near the summer peak (Jun/Jul), consistent with the declared imprint_seq gradient and the "High" (blue) / "Low" (green) legend. The color-encodes-value requirement is genuinely satisfied this time.
+      Legibility verdict: PASS (all text/chrome legible, data encoding renders correctly).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, month labels, and "Year 1/2/3" labels all render in light ink (near-white/light-gray), fully legible against the dark background — no dark-on-dark failures. Grid lines remain subtle and visible. The visualMap "High"/"Low" legend text is light-colored and readable.
+      Data: The spiral's green-to-blue gradient is pixel-identical to the light render — only the chrome (background, text, grid) flips between themes, exactly as required. The winter-to-summer color progression remains clearly visible.
+      Legibility verdict: PASS (all text/chrome legible in dark theme, data encoding renders correctly).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 22px, subtext 15px, axis/legend
+          14px), fully readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed: ''Year'' radial-axis labels now carry a background chip so
+          they no longer touch the crossing spiral line.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 3.5px line is clearly visible against both backgrounds and appropriately
+          sized for the dense day-level data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient has good contrast on both surfaces;
+          no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills most of the square canvas but the High/Low legend leaves
+          some asymmetric blank space to the bottom-right.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive month/year labels plus a subtitle explaining units (kWh)
+          and the revolution mapping.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: the spiral now genuinely renders the imprint_seq gradient
+          (#009E73 → #4467A3) matching the visualMap legend, identical across themes;
+          backgrounds are theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: The now-functional color gradient combined with the spiral geometry
+          gives a genuinely intentional, above-default look.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, and the new label background chips
+          show attention to detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The color progression now visually tells the seasonal story (winter
+          troughs vs. summer peaks) aligned radially across years.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Archimedean spiral time-series chart with proper polar coordinate
+          mapping.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed: color-encodes-value-magnitude now functions correctly; radial
+          grid lines, cycle-start labels, and colorbar are all present.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle correctly maps day-of-year, radius correctly maps cycle index
+          + fraction.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly correct; visualMap legend correctly labeled
+          High/Low and now matches the actual data encoding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed: seasonal magnitude variation, multi-year growth trend, and
+          day-to-day noise are all now visible via the working color encoding.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible daily solar-output scenario with yearly capacity
+          growth and seasonal amplitude.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed: renamed to ''rooftop solar-panel'' — 9–50 kWh/day is a plausible
+          range for a residential system.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script; the two helper functions (hexToRgb, lerpColor)
+          are small pure utilities, not classes/over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic mulberry32 PRNG with fixed seed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the echarts global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: the visualMap/segment-coloring approach now achieves its
+          intended effect and is clearly commented.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, current ECharts API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic polar coordinateSystem usage with a working color encoding;
+          a native `lines` series would be marginally more idiomatic than ~1094 separate
+          series.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Polar coordinate system combined with a manually interpolated continuous
+          gradient is a genuinely ECharts-distinctive, now fully functional, combination.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - custom-colormap
