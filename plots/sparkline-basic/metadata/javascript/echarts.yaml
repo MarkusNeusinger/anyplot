@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: sparkline-basic
 created: '2026-09-09T18:25:49Z'
-updated: '2026-09-09T18:31:47Z'
+updated: '2026-09-09T18:43:26Z'
 generated_by: claude-sonnet
 workflow_run: 34387377492
 issue: 1011
@@ -12,171 +12,152 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Idiomatic multi-grid technique: six independent sparklines are packed into a
-    single ECharts instance via parallel grid/xAxis/yAxis arrays instead of six chart
-    instances — a genuinely advanced ECharts pattern.'
-  - Semantic up/down coloring (green when the trend is good for the metric, matte
-    red when it isn't, per-metric via goodWhenUp) rather than a naive 'green=up' rule
-    — Server Latency and Churn Rate correctly render red on an upward trend while
-    Revenue and Active Users render green.
-  - Data colors are pixel-identical between light and dark renders; only chrome (background,
-    ink, soft ink) flips as required.
-  - Deterministic data generation via a small fixed-seed LCG, appropriate since the
-    browser has no seeded Math.random.
-  - 'Clean chart bodies: axes, gridlines and ticks are fully hidden on every mini
-    sparkline (show: false), matching the spec''s ''no axes, labels, or gridlines''
-    requirement at the line level.'
-  - Fill-under-line (areaStyle) and a highlighted last-value marker (markPoint) are
-    both implemented, covering two of the spec's optional enhancements.
-  - No text clipping or overlap in either render; comfortable margins on all four
-    canvas edges.
+  - Genuine small-multiples dashboard built on ECharts' multi-grid API (gridIndex-based
+    xAxis/yAxis/grid arrays) — six independent mini line charts sharing one canvas,
+    a real showcase of library capability rather than six copy-pasted charts.
+  - Semantic color mapping (brand green for a 'good' trend, matte red for a 'bad'
+    trend, computed per metric via goodWhenUp) correctly applies the finance up/down
+    semantic exception from the style guide instead of blindly cycling the categorical
+    palette.
+  - markPoint highlights the latest value (filled dot) plus the series min/max (hollow
+    rings), directly satisfying the spec's optional 'highlight min/max' and 'highlight
+    first/last' notes.
+  - Deterministic seeded LCG for reproducible data; data colors are pixel-identical
+    between light and dark renders — only chrome flips, exactly as required.
+  - Clean theme-adaptive chrome throughout (ink/inkSoft tokens for text, transparent
+    background over pageBg) with no axes, ticks, or gridlines — matches the sparkline
+    spec's minimalism requirement.
   weaknesses:
-  - Per-card sparkline aspect ratio is roughly 1.75:1 (≈480×273 CSS px), far from
-    the spec's 'compact aspect ratio, typically 4:1 to 8:1' — each tile reads more
-    like a small area chart than a true minimal sparkline. Consider shortening each
-    card's chart height relative to its width, or reducing to fewer/wider cards, to
-    better match the intended sparkline silhouette.
-  - Neither min nor max point is highlighted on any of the six series (only the last
-    point gets a marker) — one of the spec's listed optional enhancements is entirely
-    unused; adding a markPoint for the series max/min would round out feature coverage.
-  - The title occupies only ~31% of the canvas width at fontSize 22 — well under the
-    ~50-70% guideline for a landscape canvas this wide. Not a defect (no clipping/overflow),
-    but the title reads a little small/lost on the 3200px-wide frame; a couple of
-    points larger would balance the layout better.
-  - Small helper functions (lcg, walk) and array-method callbacks (.map/.forEach)
-    run counter to the KISS 'Imports → Data → Plot → Save, no functions' structure
-    — understandable here since six series need the same random-walk generator, but
-    worth a comment noting it's justified by DRY across metrics rather than default
-    style.
-  - At the 400px mobile thumbnail, the small delta-percentage text (▲ 46.7% style)
-    becomes difficult to read — worth a slightly larger relative fontSize for that
-    element specifically, since it currently uses the smallest fontSize (13px) of
-    the three text tiers per card.
+  - Noticeable empty band below every sparkline (roughly a third of each card's height)
+    makes the composition feel top-heavy; tighten HEADER_H/CARD_H allocation or grow
+    sparkHeight toward the shorter end of the spec's 4:1-8:1 ratio range to reduce
+    the dead space.
+  - KPI label/value/delta text is sized for full-resolution viewing and shrinks close
+    to the edge of legibility on the 400px mobile thumbnail given six tiles share
+    the canvas — consider nudging label/value fontsize up slightly.
+  - Adjacent grid columns leave a tight gap (e.g. the 'Active Users' value and the
+    'Server Latency' label) — comfortable with the current labels but would collide
+    if a metric name or formatted value ran longer.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — confirmed not pure white.
-      Chrome: Title "sparkline-basic · javascript · echarts · anyplot.ai" centered near the top in dark ink, clearly legible. Each of the 6 KPI cards has a small gray label (e.g. "Revenue", "Server Latency") top-left, a bold dark value (e.g. "$264K", "209ms") top-right, and a small colored trend line (▲/▼ + percentage) beneath the value. All text is dark-on-light and clearly readable.
-      Data: 6 mini line-and-area charts arranged in a 2x3 grid. First series (Revenue) and most others render in Imprint brand green (#009E73-family) with a light green fill; Server Latency and Churn Rate render in matte red with a light red fill, reflecting that rising latency/churn is a negative signal (semantic exception, not a palette violation). Each series ends in a small solid dot marking the latest value. Lines are thin (1.8px), smoothed, and clean at this scale.
-      Legibility verdict: PASS — no light-on-light text found anywhere.
+      Background: Warm off-white, matches #FAF8F1 target.
+      Chrome: Centered bold title "sparkline-basic · javascript · echarts · anyplot.ai" in dark ink at the top. A 2x3 grid of KPI tiles (Revenue, Active Users, Server Latency / Conversion Rate, Churn Rate, New Signups), each with a soft-gray metric label (top-left), a large bold value (top-right), and a small colored trend delta (▲/▼ + percent) beneath the value. All text is dark ink on the cream background — clearly legible, no light-on-light issues.
+      Data: Each tile holds one thin sparkline with a light area fill beneath it, no axes/ticks/gridlines. Rising "good" metrics (Revenue, Active Users, Conversion Rate, New Signups) use the brand green #009E73 for both line/fill and the trend delta; "bad-when-rising" metrics (Server Latency, Churn Rate) use a matte red instead — a deliberate finance-style semantic exception, not the default categorical order. A filled dot marks the latest value; hollow rings mark the series min/max.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — confirmed not pure black.
-      Chrome: Same title, now in light/white ink, clearly legible against the dark background. Card labels are light gray, values are bold white, trend text remains colored (green/red) exactly as in the light render.
-      Data: The six line/area charts use the identical green and red colors and identical shapes as the light render — only the fills read a bit darker/desaturated relative to their own line color, which is expected area-opacity behavior against a dark backdrop, not a color shift. Confirmed data colors are the same as light.
-      Legibility verdict: PASS — no dark-on-dark text found; all card labels, values and trend indicators are clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 target.
+      Chrome: Same title, now in light ink (#F0EFE8-ish) against the dark background — clearly readable. KPI labels use a muted light-gray secondary tone, values are bright and bold. No dark-on-dark text anywhere; every label/value/tick is legible.
+      Data: Line color, area-fill color, and marker colors are pixel-identical to the light render (same brand green / matte red per tile) — only the chrome (background, text tones) flipped, as required. The green and red both read clearly against the dark surface.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; the smallest trend-delta
-          text (13px) gets tight at 400px mobile thumbnail
+        comment: Readable in both themes at full size; shrinks close to the legibility
+          edge on the 400px thumbnail given six tiles share the canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, values, trend text, or chart lines
-          across any of the 6 cards
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1.8px lines with area fill and a marker on the latest point are clearly
-          visible for this sparse (26-point) data
+        comment: Line weight and marker size appropriate for ~26-point sparse series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red trend semantics are always paired with a ▲/▼ glyph, so
-          direction isn't conveyed by color alone
+        comment: Green/red pairing is the sanctioned finance semantic exception, drawn
+          from the CVD-optimized Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: No overflow or clipping; title is comfortably legible but occupies
-          only ~31% of canvas width, smaller than ideal for a 3200px landscape frame
+        comment: Correct 3200x1800 canvas, nothing clipped, but a visible empty band
+          persists below each sparkline
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format matches exactly; no axes are shown by design, per spec
+        comment: No axes by design (per spec); title present and descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Positive/negative Imprint palette colors used consistently and identically
-          across both themes; backgrounds correct for both themes
+        comment: 'First-series brand green #009E73, correct backgrounds in both themes,
+          identical data colors across themes'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom KPI-card typography hierarchy (label / big value / trend)
-          shows real design intent beyond defaults
+        comment: Cohesive dashboard-tile design with intentional color semantics beyond
+          generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes fully hidden, subtle area fills, generous inter-card whitespace
+        comment: No spines/gridlines, subtle area fill, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Semantic good/bad coloring per metric adds real narrative value,
-          though the pattern is fairly standard for KPI dashboards
+        comment: Bold value + colored trend badge per tile creates a clear focal point
+          per metric
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correctly a multi-sparkline dashboard (a listed spec application),
-          but per-card aspect ratio (~1.75:1) is far from the spec's compact 4:1-8:1
-          sparkline silhouette
+        comment: Small-multiples sparkline layout is an explicitly listed application
+          in the spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sole required field (values array) is used correctly across all 6
-          series; several optional enhancements (fill, last-point marker) are also
-          present
+        comment: No axes/gridlines, compact 5:1 ratio, min/max highlight, area fill
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sequential index maps to x, value maps to y for all series
+        comment: Each series correctly plots its own sequential values
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'sparkline-basic · javascript · echarts · anyplot.ai';
-          no legend needed since each card is self-labeled
+        comment: Title matches the exact mandated format
     data_quality:
       score: 14
       max: 15
@@ -186,22 +167,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Fill-under-line and last-point highlight both present; min/max highlighting
-          (also optional) is unused
+        comment: Covers most optional spec features; explicit first-point marker not
+          separately implemented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Revenue, Active Users, Server Latency, Conversion Rate, Churn Rate,
-          New Signups are all plausible, neutral business KPIs
+        comment: Plausible, neutral SaaS KPI dashboard context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and units ($264K, 209ms, 3.50%, 374) are all sensible for
-          their domain
+        comment: Realistic magnitudes for revenue, users, latency, rates, signups
     code_quality:
       score: 9
       max: 10
@@ -211,36 +190,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions (lcg, walk) plus .map/.forEach deviate
-          from strict Imports→Data→Plot→Save, though justified by needing one generator
-          shared across 6 series
+        comment: Two small helper functions (lcg, walk) used for justified DRY across
+          6 series
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG makes every run deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the provided globals are used
+        comment: No imports beyond the provided echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a 6-panel dashboard; no fake functionality
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mount-node contract followed correctly; animation: false set; no
-          manual save calls'
+        comment: animation:false set, harness-managed output, current API
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -248,22 +225,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Parallel grid/xAxis/yAxis arrays inside one ECharts instance is a
-          genuinely idiomatic, non-obvious multi-grid pattern
+        comment: Correct multi-grid gridIndex pattern, markPoint, graphic overlays
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: markPoint and custom graphic text elements are used well, though
-          these are fairly common ECharts features rather than exotic ones
+        comment: Multi-grid small-multiples + markPoint extremes highlighting is a
+          genuine ECharts-specific showcase
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - faceting
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
