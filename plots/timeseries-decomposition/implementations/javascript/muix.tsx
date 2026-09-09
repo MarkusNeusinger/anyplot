@@ -43,14 +43,15 @@ for (let i = 0; i < MONTHS; i += 1) {
 
 const formatMonth = (date) => date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
-// Original leads (brand green, always-first rule). Trend/Seasonal get the next
-// two Imprint positions; Residual is theme-adaptive ink-soft since it carries
-// no categorical meaning — it is leftover noise, not a labeled series.
+// Canonical Imprint 1->N order, top to bottom: Original, Trend, Seasonal,
+// Residual each take the next palette slot. This also keeps every series a
+// fixed hex that stays identical across themes (no theme-adaptive tokens on
+// data colors).
 const PANELS = [
   { label: "Original", data: originalSeries, color: t.palette[0], zeroLine: false },
-  { label: "Trend", data: trendSeries, color: t.palette[2], zeroLine: false },
-  { label: "Seasonal", data: seasonalSeries, color: t.palette[1], zeroLine: true },
-  { label: "Residual", data: residualSeries, color: t.inkSoft, zeroLine: true },
+  { label: "Trend", data: trendSeries, color: t.palette[1], zeroLine: false },
+  { label: "Seasonal", data: seasonalSeries, color: t.palette[2], zeroLine: true },
+  { label: "Residual", data: residualSeries, color: t.palette[3], zeroLine: true },
 ];
 
 const TITLE = "timeseries-decomposition · javascript · muix · anyplot.ai";
@@ -83,7 +84,7 @@ export default function Chart() {
               sx={{
                 position: "absolute",
                 top: 6,
-                left: 78,
+                left: 96,
                 fontSize: 15,
                 fontWeight: 600,
                 color: t.ink,
@@ -92,6 +93,35 @@ export default function Chart() {
             >
               {panel.label}
             </Typography>
+            {/* Native yAxis.label collides with tick numbers in these short
+                panels regardless of margin, so the units label is drawn by
+                hand instead, spanning the plot area (excludes the x-axis
+                band at the bottom). */}
+            <Box
+              sx={{
+                position: "absolute",
+                left: 2,
+                top: 0,
+                bottom: isLast ? 56 : 8,
+                width: 16,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                pointerEvents: "none",
+              }}
+            >
+              <Typography
+                sx={{
+                  writingMode: "vertical-rl",
+                  transform: "rotate(180deg)",
+                  fontSize: 13,
+                  color: t.inkSoft,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                $k
+              </Typography>
+            </Box>
             <LineChart
               width={width}
               height={panelHeight}
@@ -112,7 +142,7 @@ export default function Chart() {
                   valueFormatter: isLast ? formatMonth : () => "",
                 },
               ]}
-              margin={{ left: 70, right: 30, top: 14, bottom: isLast ? 56 : 8 }}
+              margin={{ left: 88, right: 30, top: 14, bottom: isLast ? 56 : 8 }}
               grid={{ horizontal: true }}
               slotProps={{ legend: { hidden: true } }}
             >
