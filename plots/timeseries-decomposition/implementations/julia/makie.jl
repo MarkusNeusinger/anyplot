@@ -21,12 +21,12 @@ INK_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 # Imprint palette (see prompts/default-style-guide.md "Categorical Palette")
 IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green (Original)
-    colorant"#C475FD",  # 2 — lavender (Seasonal)
-    colorant"#4467A3",  # 3 — blue (Trend)
+    colorant"#C475FD",  # 2 — lavender (Trend)
+    colorant"#4467A3",  # 3 — blue (Seasonal)
 ]
 
-# --- Data: monthly retail sales over 6 years -----------------------------
-n_years  = 6
+# --- Data: monthly retail sales over 9 years -----------------------------
+n_years  = 9
 n_months = n_years * 12
 period   = 12
 dates    = [Date(2019, 1, 1) + Month(i) for i in 0:(n_months - 1)]
@@ -58,7 +58,7 @@ valid    = .!isnan.(residual)
 
 # --- Title (fontsize scaled per prompts/plot-generator.md formula) --------
 title_text     = "Monthly Retail Sales · timeseries-decomposition · julia · makie · anyplot.ai"
-title_fontsize = length(title_text) > 67 ? round(Int, 20 * 67 / length(title_text)) : 20
+title_fontsize = length(title_text) > 67 ? round(Int, 23 * 67 / length(title_text)) : 23
 
 # --- Figure -----------------------------------------------------------------
 fig = Figure(
@@ -118,8 +118,8 @@ ax_residual = Axis(
 )
 
 lines!(ax_original, xs, sales; color = IMPRINT_PALETTE[1], linewidth = 2.5)
-lines!(ax_trend, xs, trend; color = IMPRINT_PALETTE[3], linewidth = 2.5)
-lines!(ax_seasonal, xs, seasonal; color = IMPRINT_PALETTE[2], linewidth = 2.5)
+lines!(ax_trend, xs, trend; color = IMPRINT_PALETTE[2], linewidth = 2.5)
+lines!(ax_seasonal, xs, seasonal; color = IMPRINT_PALETTE[3], linewidth = 2.5)
 
 hlines!(ax_residual, [0.0]; color = INK_SOFT, linewidth = 1, linestyle = :dash)
 for (xi, yi) in zip(xs[valid], residual[valid])
