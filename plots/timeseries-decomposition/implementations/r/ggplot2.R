@@ -17,13 +17,16 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
+# ggplot2 has no grid-alpha knob, so blend INK toward PAGE_BG by hand for a
+# genuinely faint (~18%) gridline color instead of full-strength INK.
+GRID_COLOR  <- colorRampPalette(c(PAGE_BG, INK))(100)[18]
 
 # Imprint palette (see prompts/default-style-guide.md "Categorical Palette")
 IMPRINT_PALETTE <- c(
   "#009E73", # 1 - brand green (Original)
-  "#C475FD", # 2 - lavender
-  "#4467A3", # 3 - blue (Trend)
-  "#BD8233"  # 4 - ochre (Seasonal)
+  "#C475FD", # 2 - lavender (Trend)
+  "#4467A3", # 3 - blue (Seasonal)
+  "#BD8233"  # 4 - ochre (unused)
 )
 
 # --- Data: monthly retail sales over 10 years, additive decomposition --------
@@ -54,8 +57,8 @@ df <- tibble(
 
 component_colors <- c(
   "Original" = IMPRINT_PALETTE[1],
-  "Trend"    = IMPRINT_PALETTE[3],
-  "Seasonal" = IMPRINT_PALETTE[4],
+  "Trend"    = IMPRINT_PALETTE[2],
+  "Seasonal" = IMPRINT_PALETTE[3],
   "Residual" = INK_MUTED
 )
 
@@ -66,10 +69,11 @@ zero_ref <- tibble(
 
 # --- Title (fontsize scaled to length; baseline adjusted for the narrower
 #     6in square canvas vs. the 8in landscape canvas the 67-char/12pt
-#     baseline was calibrated against) ------------------------------------
+#     baseline was calibrated against, with an extra 0.85 trim so the title
+#     sits comfortably inside the panel instead of pressing against it) ----
 title_text        <- "timeseries-decomposition · r · ggplot2 · anyplot.ai"
 title_len         <- nchar(title_text)
-square_baseline   <- 67 * (6 / 8)
+square_baseline   <- 67 * (6 / 8) * 0.85
 title_fontsize    <- if (title_len > square_baseline) {
   round(12 * square_baseline / title_len)
 } else {
@@ -89,7 +93,7 @@ p <- ggplot(df, aes(x = date, y = value, color = component)) +
   ) +
   geom_point(
     data = filter(df, component == "Residual"),
-    size = 1.6, alpha = 0.75
+    size = 2.1, alpha = 0.75
   ) +
   facet_wrap(~component, ncol = 1, scales = "free_y") +
   scale_color_manual(values = component_colors, guide = "none") +
@@ -105,7 +109,7 @@ p <- ggplot(df, aes(x = date, y = value, color = component)) +
     panel.background    = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x  = element_blank(),
     panel.grid.minor    = element_blank(),
-    panel.grid.major.y  = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.y  = element_line(color = GRID_COLOR, linewidth = 0.25),
     panel.spacing       = unit(1.1, "lines"),
     strip.background    = element_rect(fill = ELEVATED_BG, color = NA),
     strip.text          = element_text(color = INK, size = 10, face = "bold"),
