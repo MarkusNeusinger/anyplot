@@ -40,6 +40,22 @@ const downColor = t.palette[4]; // finance convention: down/loss -> matte red
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
+// Diagonal hatch pattern gives "down day" a texture cue in addition to color,
+// so red-green color-vision-deficient viewers can still tell up/down apart.
+const hatchDownId = "hatch-down";
+svg
+  .append("defs")
+  .append("pattern")
+  .attr("id", hatchDownId)
+  .attr("width", 8)
+  .attr("height", 8)
+  .attr("patternUnits", "userSpaceOnUse")
+  .attr("patternTransform", "rotate(45)")
+  .call((p) => {
+    p.append("rect").attr("width", 8).attr("height", 8).attr("fill", downColor);
+    p.append("rect").attr("width", 4).attr("height", 8).attr("fill", t.pageBg);
+  });
+
 svg
   .append("text")
   .attr("x", width / 2)
@@ -94,7 +110,15 @@ function legend(g, items, x, y) {
   const lg = g.append("g").attr("transform", `translate(${x},${y})`);
   items.forEach((item, i) => {
     const row = lg.append("g").attr("transform", `translate(0,${i * 22})`);
-    row.append("rect").attr("width", 14).attr("height", 14).attr("fill", item.color);
+    if (item.shape) {
+      row
+        .append("path")
+        .attr("transform", "translate(7,7)")
+        .attr("d", item.shape.size(110)())
+        .attr("fill", item.color);
+    } else {
+      row.append("rect").attr("width", 14).attr("height", 14).attr("fill", item.fill ?? item.color);
+    }
     row
       .append("text")
       .attr("x", 20)
@@ -217,12 +241,12 @@ g3
   .attr("y", (d) => y3(d.length))
   .attr("width", (d) => Math.max(0, x3(d.x1) - x3(d.x0) - 2))
   .attr("height", (d) => ph - y3(d.length))
-  .attr("fill", (d) => ((d.x0 + d.x1) / 2 >= 0 ? upColor : downColor));
+  .attr("fill", (d) => ((d.x0 + d.x1) / 2 >= 0 ? upColor : `url(#${hatchDownId})`));
 legend(
   g3,
   [
-    { color: upColor, label: "Up day" },
-    { color: downColor, label: "Down day" },
+    { color: upColor, fill: upColor, label: "Up day" },
+    { color: downColor, fill: `url(#${hatchDownId})`, label: "Down day" },
   ],
   pw - 96,
   0
@@ -267,13 +291,17 @@ const xAxis4 = g4
   .attr("transform", `translate(0,${ph})`)
   .call(d3.axisBottom(x4).ticks(5).tickFormat(d3.format(".2s")));
 [xAxis4, yAxis4].forEach(styleAxis);
+// Up days are circles, down days are triangles — a shape cue alongside color
+// so the encoding still reads for red-green color-vision-deficient viewers.
+const symbolUp = d3.symbol().type(d3.symbolCircle).size(140);
+const symbolDown = d3.symbol().type(d3.symbolTriangle).size(150);
 g4
-  .selectAll("circle")
+  .selectAll("path.pt")
   .data(dailyVolumes.map((v, i) => ({ volume: v, ret: dailyReturns[i] })))
-  .join("circle")
-  .attr("cx", (d) => x4(d.volume))
-  .attr("cy", (d) => y4(d.ret))
-  .attr("r", 7)
+  .join("path")
+  .attr("class", "pt")
+  .attr("transform", (d) => `translate(${x4(d.volume)},${y4(d.ret)})`)
+  .attr("d", (d) => (d.ret >= 0 ? symbolUp : symbolDown)())
   .attr("fill", (d) => (d.ret >= 0 ? upColor : downColor))
   .attr("fill-opacity", 0.85)
   .attr("stroke", t.pageBg)
@@ -281,8 +309,8 @@ g4
 legend(
   g4,
   [
-    { color: upColor, label: "Up day" },
-    { color: downColor, label: "Down day" },
+    { color: upColor, shape: d3.symbol().type(d3.symbolCircle), label: "Up day" },
+    { color: downColor, shape: d3.symbol().type(d3.symbolTriangle), label: "Down day" },
   ],
   8,
   8
