@@ -135,7 +135,7 @@ for (const line of rawLines) {
   // Direction arrows at two points along the raw path, colored to match the
   // local field-strength segment they fall in.
   if (n > 12 && lineSegments.length > 0) {
-    [0.22, 0.58].forEach((frac) => {
+    [0.15, 0.42, 0.72].forEach((frac) => {
       const idx = Math.min(n - 3, Math.max(2, Math.round(frac * (n - 1))));
       const segIdx = Math.min(lineSegments.length - 1, Math.floor(idx / segLen));
       const segment = lineSegments[segIdx];
@@ -283,7 +283,10 @@ export default function Chart() {
         height={window.ANYPLOT_SIZE.height - TITLE_HEIGHT}
         margin={MARGIN}
         skipAnimation
-        sx={{ ".MuiLineElement-root": { strokeWidth: 2.75, strokeLinecap: "round" } }}
+        sx={{
+          ".MuiLineElement-root": { strokeWidth: 2.75, strokeLinecap: "round" },
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 0.75 },
+        }}
         xAxis={segments.map((seg) => ({
           id: seg.axisId,
           scaleType: "linear",
@@ -301,18 +304,18 @@ export default function Chart() {
           showMark: false,
         }))}
       >
-        <ChartsGrid horizontal vertical />
+        <ChartsGrid horizontal />
         <LinePlot />
         <FieldOverlay />
         <ChartsXAxis
           axisId={SHARED_AXIS_ID}
-          label="x"
+          label="x (normalized distance)"
           labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
           tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
           stroke={t.inkSoft}
         />
         <ChartsYAxis
-          label="y"
+          label="y (normalized distance)"
           labelStyle={{ fontSize: 16, fill: t.ink, fontWeight: 500 }}
           tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
           stroke={t.inkSoft}
