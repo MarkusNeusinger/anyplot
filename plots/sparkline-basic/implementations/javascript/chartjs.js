@@ -27,12 +27,24 @@ for (let i = 0; i < POINTS; i++) {
 const labels = dailySessions.map((_, i) => `Day ${i + 1}`);
 
 const lastIndex = dailySessions.length - 1;
-const pointRadii = dailySessions.map((_, i) => (i === lastIndex ? 10 : 0));
-
 const dataMin = Math.min(...dailySessions);
 const dataMax = Math.max(...dailySessions);
+const minIndex = dailySessions.indexOf(dataMin);
+const maxIndex = dailySessions.indexOf(dataMax);
+
+const pointRadii = dailySessions.map((_, i) => {
+  if (i === lastIndex) return 10;
+  if (i === minIndex || i === maxIndex) return 7;
+  return 0;
+});
+const pointColors = dailySessions.map((_, i) => {
+  if (i === lastIndex) return t.palette[0];
+  if (i === minIndex || i === maxIndex) return t.amber;
+  return t.palette[0];
+});
+
 const dataRange = dataMax - dataMin;
-const yPad = dataRange * 3.2;
+const yPad = dataRange * 0.18;
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -49,10 +61,10 @@ new Chart(canvas, {
         borderColor: t.palette[0],
         borderWidth: 3.5,
         fill: false,
-        tension: 0.35,
+        tension: 0.15,
         pointRadius: pointRadii,
         pointHoverRadius: pointRadii,
-        pointBackgroundColor: t.palette[0],
+        pointBackgroundColor: pointColors,
         pointBorderColor: t.pageBg,
         pointBorderWidth: 2,
       },
