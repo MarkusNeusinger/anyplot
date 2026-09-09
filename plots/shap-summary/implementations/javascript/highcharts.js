@@ -214,11 +214,14 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    // Faint focal-point band on the most important feature (row 0) so the
+    // ranking hierarchy reads at a glance, not just via row order.
+    plotBands: [{ from: -0.5, to: 0.5, color: t.elevatedBg, zIndex: 0 }],
   },
   plotOptions: {
     series: { animation: false },
     scatter: {
-      marker: { radius: 4, lineWidth: 0.5, lineColor: t.pageBg, fillOpacity: 0.78 },
+      marker: { radius: 5, lineWidth: 0.5, lineColor: t.pageBg, fillOpacity: 0.75 },
     },
   },
   series: [{ name: "SHAP values", showInLegend: false, data: points }],
