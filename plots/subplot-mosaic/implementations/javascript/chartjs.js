@@ -151,7 +151,7 @@ new Chart(makeCell("B"), {
   type: "bar",
   data: {
     labels: months,
-    datasets: [{ label: "Rainfall", data: rainfallMm, backgroundColor: t.palette[2], borderWidth: 0 }],
+    datasets: [{ label: "Rainfall", data: rainfallMm, backgroundColor: t.palette[0], borderWidth: 0 }],
   },
   options: {
     responsive: true,
@@ -169,7 +169,7 @@ new Chart(makeCell("B"), {
 new Chart(makeCell("C"), {
   type: "scatter",
   data: {
-    datasets: [{ label: "Reading", data: windHumidityPoints, backgroundColor: t.palette[1], pointRadius: 4 }],
+    datasets: [{ label: "Reading", data: windHumidityPoints, backgroundColor: t.palette[0], pointRadius: 6.5 }],
   },
   options: {
     responsive: true,
@@ -196,7 +196,7 @@ new Chart(makeCell("D"), {
     animation: false,
     plugins: {
       title: panelTitle("Conditions", 14),
-      legend: { position: "bottom", labels: { color: t.inkSoft, font: { size: 10 }, boxWidth: 9, boxHeight: 9 } },
+      legend: { position: "bottom", labels: { color: t.inkSoft, font: { size: 12 }, boxWidth: 10, boxHeight: 10 } },
     },
   },
 });
@@ -214,7 +214,7 @@ new Chart(makeCell("E"), {
     animation: false,
     plugins: {
       title: panelTitle("Wind Direction", 14),
-      legend: { position: "bottom", labels: { color: t.inkSoft, font: { size: 10 }, boxWidth: 9, boxHeight: 9 } },
+      legend: { position: "bottom", labels: { color: t.inkSoft, font: { size: 12 }, boxWidth: 10, boxHeight: 10 } },
     },
     scales: { r: { ticks: { display: false }, grid: { color: t.grid }, angleLines: { color: t.grid } } },
   },
@@ -234,8 +234,8 @@ new Chart(makeCell("F"), {
     animation: false,
     plugins: { title: panelTitle("Air Quality Days", 14), legend: { display: false } },
     scales: {
-      x: { ticks: axisTicks(10), grid: { color: t.grid }, beginAtZero: true },
-      y: { ticks: axisTicks(11), grid: { display: false } },
+      x: { ticks: axisTicks(12), grid: { color: t.grid }, beginAtZero: true },
+      y: { ticks: axisTicks(12), grid: { display: false } },
     },
   },
 });
