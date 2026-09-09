@@ -1,0 +1,240 @@
+library: ggplot2
+language: r
+specification_id: spectrogram-basic
+created: '2026-09-09T18:19:52Z'
+updated: '2026-09-09T18:31:06Z'
+generated_by: claude-sonnet
+workflow_run: 34387814368
+issue: 2927
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Real short-time Fourier transform (Hann window, 512-sample window, 128-sample
+    hop / 75% overlap) computed from an actual synthetic chirp signal, not a fabricated
+    matrix
+  - 'Correct use of the imprint_seq continuous gradient (#009E73 -> #4467A3) via scale_fill_gradient,
+    matching the house rule that overrides the spec''s viridis/inferno suggestion'
+  - Theme-adaptive chrome correctly threaded through plot.background, panel.background,
+    axis text/title, legend background and text for both light and dark renders
+  - Subtitle communicates STFT parameters (window size, hop, overlap %, dynamic range)
+    which adds real analytical context beyond the minimum spec requirement
+  - Dynamic range compression (48 dB floor) keeps the colorbar meaningful instead
+    of being dominated by a few outlier bins
+  - Clean axis labeling with units (Time (s), Frequency (Hz)) and a correctly formatted
+    mandated title
+  weaknesses:
+  - The ridge-trace line (peak-power frequency per time step) is drawn in INK color
+    at alpha=0.55/linewidth=0.35 directly on top of the already-blue high-power diagonal
+    band, so it is barely distinguishable from the raster underneath and adds little
+    visible storytelling value versus the effort of computing it — consider a higher-contrast/dashed
+    treatment or a lighter color so it visibly traces the ridge as a distinct layer
+  - The ridge-trace layer has no legend entry or annotation explaining what the thin
+    line represents, so a reader has no way to know it's a computed peak-frequency
+    trace rather than a rendering artifact
+  - The noise-floor speckle (scattered small blotches across the green background)
+    is realistic STFT output but reads as slightly busy/textured versus the catalog's
+    usual clean minimal look — the existing 3-tap smoothing helps but doesn't fully
+    quiet it; a slightly wider smoothing kernel or one more pass would tidy this without
+    losing the ridge sharpness
+  - smooth_1d() is a small custom helper function, which is a minor deviation from
+    the KISS 'no functions' default even though it's a reasonable, narrowly-scoped
+    data-prep utility used twice
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the anyplot light-theme spec, not pure white.
+      Chrome: Title "spectrogram-basic · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly legible. Axis titles "Time (s)" and "Frequency (Hz)" in dark ink, tick labels (0,1,2,3 / 0,200,...,1000) in softer grey, all readable. Legend box "Power (dB)" sits at right with an off-white/elevated fill and a thin border, tick marks at 0/20/40 clearly legible.
+      Data: Full-canvas raster heatmap. Background noise floor renders as a teal-green field (low power, near #009E73) with a diagonal band trending from ~100 Hz to ~800 Hz in blue (~#4467A3) tracing the chirp's rising instantaneous frequency — matches the imprint_seq gradient. Scattered faint speckle across the green field reflects the STFT noise floor. A thin ridge-trace overlay line sits on the diagonal but is hard to distinguish from the blue band beneath it.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the anyplot dark-theme spec, not pure black.
+      Chrome: Title and axis titles render in light off-white ink, tick labels in a lighter grey — good contrast against the dark background, no dark-on-dark issues. Legend box fill is the dark "elevated" tone with a light border, "Power (dB)" text and tick numbers (40/20/0) clearly legible.
+      Data: Identical raster content and colors to the light render — same green noise floor and blue chirp ridge (#009E73 -> #4467A3), confirming data colors are unchanged across themes; only the chrome (background, text, legend fill) flipped as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at explicit font sizes; no dark-on-dark/light-on-light
+          issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Raster and ridge trace are dense-data appropriate, but the ridge
+          line barely stands out from the blue band beneath it
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green-to-blue gradient is CVD-safe, no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title, axes, legend all well within
+          bounds, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) and Frequency (Hz) with units, mandated title correctly
+          formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq gradient (#009E73 -> #4467A3) used correctly for continuous
+          power data; backgrounds correct for both themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Real STFT-derived data, thoughtful subtitle with technical parameters,
+          custom gradient
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Grid/ticks removed, generous margins, but the noise-floor speckle
+          texture reads slightly busy versus the catalog's usual clean look
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Chirp ridge is clearly visible via color alone; the intended second-layer
+          ridge trace doesn't add much visible hierarchy since it blends into the
+          band
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct time-frequency heatmap/spectrogram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Colorbar with dB units, clear time/frequency axis labels, dynamic
+          range noted
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: x=time, y=frequency, fill=power, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        comment: Title format correct; ridge-trace layer has no legend entry explaining
+          it
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Covers heatmap, colorbar, dynamic range compression, window/hop metadata
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Plausible chirp signal (100-800 Hz over 4s at 4kHz sample rate),
+          neutral subject matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Sensible Hz/dB/second scales for an audio-style chirp
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: One small, narrowly-scoped smoothing helper function; otherwise flat
+          script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only ggplot2 and ragg imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity for a real STFT, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: ggsave with ragg::agg_png device, plot-{theme}.png naming
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: geom_raster, scale_fill_gradient, guide_colorbar used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Second geom_line layer with inherit.aes=FALSE and a from-scratch
+          STFT show real ggplot2/R mastery beyond a basic heatmap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
