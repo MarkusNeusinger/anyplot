@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-marginal: Scatter Plot with Marginal Distributions
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-09
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
