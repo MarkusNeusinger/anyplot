@@ -1,0 +1,255 @@
+library: echarts
+language: javascript
+specification_id: shap-summary
+created: '2026-09-09T07:28:30Z'
+updated: '2026-09-09T07:44:17Z'
+generated_by: claude-sonnet
+workflow_run: 34323399698
+issue: 2923
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - From-scratch binned-beeswarm jitter algorithm since ECharts has no native SHAP/beeswarm
+    chart type — a genuinely distinctive combination of visualMap continuous dimension-coloring,
+    customValues pseudo-categorical value-axis, and markLine
+  - Feature ordering by descending mean |SHAP| (most important at top) exactly matches
+    the spec, and the top feature label is now bolded to give the chart a clear focal
+    point
+  - 'Diverging blue/mid-tone/red color scale uses the exact imprint_div stops (#4467A3
+    / theme-adaptive midpoint / #AE3030), deliberately reordered so low feature value
+    = blue and high = red, matching both the spec note and standard SHAP convention'
+  - Colorbar now carries an explicit 'Feature value' title above the High/Low labels,
+    removing the ambiguity flagged in the previous review
+  - Floor Level is modeled with a genuine non-linear effect (both very low and very
+    high floors hurt price) — strong feature coverage beyond simple linear relationships
+  - Deterministic LCG + Box-Muller PRNG (seed=42), clean KISS-style code with no fake
+    interactivity
+  - Vertical dashed reference line at x=0 present in both renders; both themes are
+    chrome-correct with identical data colors and fully readable text, and the colorbar/legend
+    sit comfortably inside the canvas with no clipping
+  weaknesses:
+  - Has Balcony (a binary feature) still renders as a dense, largely fused blob of
+    overlapping red/blue dots despite the reduced symbolSize (8→6) and opacity (0.72→0.58)
+    from the previous attempt — for very low-cardinality features consider widening
+    the jitter band further or dropping opacity closer to ~0.4 to keep individual
+    samples distinguishable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) across the full canvas — not pure white, not dark.
+      Chrome: Title "shap-summary · javascript · echarts · anyplot.ai" in dark ink, centered near the top. X-axis title "SHAP value (impact on predicted price, USD)" clearly readable below the axis with units. Y-axis lists 9 feature names from "Living Area (sqm)" (bolded, top, most important) down to "Has Balcony" (bottom, least important). Light gray gridlines are subtle but visible. A dashed vertical reference line marks x=0. A vertical diverging colorbar sits at the right, titled "Feature value", labeled "High" (red, top) and "Low" (blue, bottom), fully inside the canvas with no clipping.
+      Data: Each feature row is a horizontal beeswarm of ~260 semi-transparent dots, colored on a blue-to-red diverging scale by the feature's own normalized value. Color direction is semantically correct per feature (e.g. high Living Area -> red dots on the positive/right side; high Distance to Center -> red dots on the negative/left side). The Has Balcony row (binary feature) shows a dense, partly-fused cluster of dots near x=0 due to only two underlying feature values.
+      Legibility verdict: PASS — all title, axis, and tick text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) across the full canvas — not pure black, not light.
+      Chrome: Same title, axis titles, and 9 feature labels now rendered in light ink/soft-gray, fully legible against the dark background. Gridlines are a dim gray, still visible without dominating. The dashed zero-reference line (light-colored) and the colorbar (same "Feature value" / "High" / "Low" labeling) remain in the same position with light-colored ancillary text.
+      Data: The blue-to-red diverging point colors are identical to the light render (only chrome — background, gridlines, text — flips); the diverging scale's midpoint correctly shifts to the dark background tone instead of staying off-white. Has Balcony still shows the same dense overlap pattern as in the light render.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data markers are clearly distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axis, and tick text readable
+          in both themes with no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text, data, or the legend/colorbar
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Reduced symbolSize (6) and opacity (0.58) improve most rows, but
+          the binary Has Balcony feature still forms a dense, partly-fused cluster
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue-red diverging scale with theme-adaptive midpoint is CVD-safer
+          than red-green; position also encodes SHAP sign redundantly
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800; plot fills a large, balanced portion
+          of the canvas; colorbar sits fully inside the frame with no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label descriptive with units (USD); y-axis shows named features
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Diverging scale matches imprint_div exactly (#4467A3 / theme-adaptive
+          midpoint / #AE3030), correctly reordered low=blue/high=red; backgrounds
+          are #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom beeswarm layout, semantically-correct per-feature color direction,
+          and bolded top-feature label read as intentional, polished design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, no heavy borders, generous whitespace; colorbar now
+          carries a 'Feature value' title for extra polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Importance ordering, diverging color, and the bolded top-feature
+          label now create an explicit focal point that guides the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct SHAP summary beeswarm
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted by mean |SHAP|, diverging color scale, x=0 reference line,
+          and vertical jitter all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=SHAP value, Y=feature (jittered), color=feature value — all correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; colorbar labels (Feature value
+          / High / Low) match the encoded value
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 9 features spanning strong positive/negative linear effects, a deliberately
+          non-linear feature (Floor Level), and a binary feature (Has Balcony)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-estate price model — neutral, comprehensible, realistic scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: SHAP magnitudes and feature ranges are plausible for a house-price
+          model
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data-gen -> option -> setOption; small helper functions only
+          where necessary (PRNG, jitter)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom beeswarm layout, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set, no explicit size/devicePixelRatio on init, follows
+          mount-node contract
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: visualMap continuous dimension-coloring, markLine, customValues axis
+          all used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: visualMap continuous color-by-third-dimension plus customValues pseudo-categorical
+          axis is a genuinely ECharts-distinctive combination not trivially replicated
+          elsewhere
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - custom-colormap
