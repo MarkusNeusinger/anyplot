@@ -67,10 +67,14 @@ const seasonalSeries = timestamps.map((ts, i) => [ts, seasonal[i]]);
 const residualSeries = timestamps.map((ts, i) => [ts, residual[i]]);
 
 // --- Chart -------------------------------------------------------------------
-const paneTitleStyle = { color: t.inkSoft, fontSize: "16px", fontWeight: "600" };
+// Typographic hierarchy: "Original" is the primary reference series, so its
+// pane label reads bolder/larger; the three derived components share a
+// lighter secondary style.
+const paneTitlePrimary = { color: t.ink, fontSize: "17px", fontWeight: "700" };
+const paneTitleSecondary = { color: t.inkSoft, fontSize: "13px", fontWeight: "500" };
 const axisLabelStyle = { color: t.inkSoft, fontSize: "14px" };
 
-function pane(top, text, color) {
+function pane(top, text, primary) {
   return {
     top,
     height: "19%",
@@ -87,7 +91,7 @@ function pane(top, text, color) {
       textAlign: "left",
       x: 0,
       y: -8,
-      style: { ...paneTitleStyle, color },
+      style: primary ? paneTitlePrimary : paneTitleSecondary,
     },
   };
 }
@@ -116,12 +120,29 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: axisLabelStyle },
+    // Focal-point annotation: highlight one full seasonal cycle (2020) as a
+    // reference band spanning all four panes — the "neutral" semantic anchor
+    // (baseline/reference role) rendered as a low-opacity tint of the ink color.
+    plotBands: [
+      {
+        from: Date.UTC(2020, 0, 1),
+        to: Date.UTC(2021, 0, 1),
+        color: Highcharts.color(t.ink).setOpacity(0.05).get(),
+        label: {
+          text: "One full seasonal cycle",
+          align: "center",
+          verticalAlign: "top",
+          y: 14,
+          style: { color: t.inkSoft, fontSize: "12px", fontWeight: "600" },
+        },
+      },
+    ],
   },
   yAxis: [
-    pane("3%", "Original", t.inkSoft),
-    pane("27%", "Trend", t.inkSoft),
-    pane("51%", "Seasonal", t.inkSoft),
-    pane("75%", "Residual", t.inkSoft),
+    pane("3%", "Original", true),
+    pane("27%", "Trend", false),
+    pane("51%", "Seasonal", false),
+    pane("75%", "Residual", false),
   ],
   legend: { enabled: false },
   tooltip: {
