@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: survival-kaplan-meier
 created: '2026-09-09T20:02:10Z'
-updated: '2026-09-09T20:06:12Z'
+updated: '2026-09-09T20:15:02Z'
 generated_by: claude-sonnet
 workflow_run: 34397414984
 issue: 2441
@@ -12,112 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 94
 review:
   strengths:
-  - Correct Kaplan-Meier step function (stepAfter curve) rather than a smoothed line,
-    matching the spec's core requirement.
-  - Real Greenwood's-formula 95% confidence intervals computed from the data, rendered
-    as shaded bands via a stacked base + delta area trick — not a fake/decorative
-    band.
-  - Censored observations are marked with open circles via a per-index showMark function,
-    and the subtitle explicitly explains the encoding.
-  - Clean two-group comparison (standard vs. reinforced design) with a legend, distinct
-    Imprint palette colors, and n= sample sizes shown in the legend labels.
-  - Deterministic data generation via a small fixed-seed LCG (no browser RNG available)
-    with a realistic competing-risks simulation (failure vs. dropout vs. administrative
-    censoring).
-  - 'Correct harness contract: default-exported component, skipAnimation set, sizing
-    from window.ANYPLOT_SIZE, first series uses brand green t.palette[0].'
-  - 'Both renders are theme-correct: light background is warm off-white, dark background
-    is warm near-black, and data colors are identical between themes.'
+  - Genuine Kaplan-Meier estimator with Greenwood's formula for the 95% CI, computed
+    from raw time/event observations rather than pre-baked step coordinates
+  - CI bands built via a clever stacked-area technique (invisible base + visible delta),
+    with the base fill correctly knocked out via targeted sx rules — a distinctive,
+    well-executed use of MUI X's community API
+  - Censored observations marked with open-circle marks only at their own step (showMark
+    keyed off a per-point censored flag), matching the spec's request for censoring
+    tick marks
+  - Two groups clearly distinguished by color with a legend, both curves sharing one
+    aligned time grid via forward-fill so they can be compared directly
+  - Data colors are pixel-identical between light and dark renders; only chrome (background,
+    grid, text) adapts to theme
+  - Realistic, neutral reliability-engineering scenario (bearing failure, standard
+    vs. reinforced design) with a plausible competing-risks data-generation process
+    (failure vs. dropout vs. administrative censoring)
+  - Deterministic fixed-seed LCG for reproducibility since the browser has no seeded
+    RNG
+  - Title and subtitle establish clear context; subtitle explicitly explains the CI
+    bands and censoring marker convention
   weaknesses:
-  - The rotated Y-axis title 'Survival probability' visually overlaps the '50%' tick
-    label in both light and dark renders — the '5' digit is partially obscured by
-    the title's descender/glyph. Increase the left margin (currently margin.left=78)
-    or add spacing between the axis label and tick labels (e.g. via yAxis labelStyle/tickLabelStyle
-    offset or a larger left margin, ~95-100px) so the rotated title clears the tick
-    text.
-  - No median survival time annotation or at-risk table, which the spec calls out
-    as a way to strengthen the storytelling ('Consider adding median survival time
-    annotation and at-risk table below the plot'). Not a required feature, but would
-    raise Data Storytelling and Feature Coverage.
-  - No log-rank test p-value shown despite comparing two groups, which the spec explicitly
-    suggests including for group comparisons.
-  - 'CQ-01 KISS: several helper functions (kaplanMeier, alignToGrid, buildGroupSeries)
-    are used. This is reasonably justified by the statistical complexity of a real
-    KM/Greenwood estimator, but is still a deviation from the flattest possible script
-    structure.'
+  - No median survival time annotation, at-risk table, or log-rank p-value — the spec
+    lists these as optional ('Consider adding'), so this is not a hard requirement,
+    but any one of them would add analytical depth and strengthen the data-storytelling
+    score
+  - 'The yAxis ''tickFontSize: 42'' value is a layout-offset hack (per the code comment)
+    rather than an actual intended tick font size — it works visually but is fragile
+    if MUI X''s internal layout formula changes; a named constant with a comment referencing
+    the specific MUI X version would be more robust'
+  - The CI-band overlap region (where both groups' bands intersect) blends into a
+    neutral grey-blue tone that is neither series color — visually reasonable and
+    expected from alpha compositing, but worth a conscious check that it doesn't read
+    as a third, undefined data category
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), consistent across the full canvas — no white-washing.
-      Chrome: Bold dark title "survival-kaplan-meier · javascript · muix · anyplot.ai" top-left, readable. Subtitle explaining shaded bands and censoring markers below it, readable. X-axis "Time in service (months)" ticked 0-36, Y-axis "Survival probability" ticked 0%-100%. Legend top-right with two color swatches and n= labels, readable. FLAG: the rotated Y-axis title "Survival probability" visually overlaps the "50%" tick label — the "5" digit is partially obscured by the axis-title glyphs where the two text elements cross near mid-height.
-      Data: First series (Standard design) uses brand green #009E73 step line with matching translucent CI band; second series (Reinforced design) uses a lavender/purple Imprint palette color with matching band. Step function shape is correctly discrete (not smoothed). Open circle markers appear at censored time points on both curves.
-      Legibility verdict: FAIL (title/subtitle/legend/axis titles all readable, but the Y-axis title overlaps the "50%" tick label — a real, if localized, overlap defect)
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title top-left ("survival-kaplan-meier · javascript · muix · anyplot.ai"), a grey subtitle explaining the CI bands and censoring marks, dark axis titles ("Time in service (months)", "Survival probability"), dark percentage tick labels (0%-100%) on the y-axis and integer month ticks (0-36) on the x-axis, subtle horizontal-only gridlines, legend swatches top-right. All text is clearly readable against the light background — no light-on-light issues.
+      Data: Two step-function curves — green (#009E73, "Standard design (n=50)") and purple/lavender ("Reinforced design (n=50)") — each with a shaded confidence band in its own hue (region where the two bands overlap blends to a neutral grey-blue). Open circle marks appear only at censoring events along each curve. The green curve declines faster and further (down to ~34% by month 36) than the purple curve (~60% by month 36), a clear and legible visual comparison.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), consistent across the full canvas — no pure black.
-      Chrome: Same title/subtitle in light text, clearly readable against the dark background. Axis titles and tick labels are light-colored and legible. Legend swatches and text readable. FLAG: same Y-axis title / "50%" tick label overlap as the light render, in the same location.
-      Data: Colors are identical to the light render (brand green #009E73 and the lavender Imprint tone) — only the chrome (background, text, grid) flipped, as required. No dark-on-dark or light-on-light failures elsewhere; the one legibility issue is the axis-title/tick-label overlap noted above, which is a layout collision rather than a color-contrast problem.
-      Legibility verdict: FAIL (same overlap issue as light render; otherwise no dark-on-dark contrast failures)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light — title, subtitle, axis titles, tick labels, gridlines, legend — all rendered in light/white ink. No dark-on-dark failures: title, axis labels, tick labels, and legend text are all crisply legible against the dark background.
+      Data: Same two step curves in the identical green (#009E73) and purple hues as the light render — confirmed pixel-identical data colors, only the chrome (background, text, grid) flipped to the dark theme. CI bands and censoring circles remain clearly visible against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title, subtitle, legend, and axis titles are all readable at full
-          size in both themes; the '50%' Y-axis tick label is partially obscured by
-          the rotated axis title glyphs.
+        comment: All font sizes explicit; title/subtitle/axis labels/tick labels readable
+          in both light and dark renders, no dark-on-dark or light-on-light issues
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Rotated Y-axis title 'Survival probability' overlaps the '50%' tick
-          label in both renders — a real, localized text-on-text collision.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Step lines (3px) and censored-point circles are clearly visible against
-          both backgrounds; CI bands are subtle enough not to obscure the step lines.
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bold 3px step lines, sparse censoring circles clearly visible without
+          cluttering the curve
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender pairing is not a red-green combination and has
-          adequate contrast on both backgrounds.
+        comment: Green vs. purple hue pair is not a red-green pairing, remains distinguishable
+          under common CVD types
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall proportions and no edge clipping, but the left margin
-          (78px) is too tight for the rotated axis title, causing the tick-label collision.
+        comment: Canvas gate passed (3200x1800), title ~35% width with generous headroom,
+          balanced axis labels, no overflow/clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units ('Time in service (months)',
-          'Survival probability' as %).
+        comment: Descriptive axis labels with units ('Time in service (months)', 'Survival
+          probability' with % ticks); title follows the required format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73; second series is an Imprint
-          palette tone; backgrounds match #FAF8F1/#1A1A17; data colors identical across
-          themes.'
+        comment: First series uses t.palette[0] (#009E73 brand green), second series
+          t.palette[1]; colors identical across both renders; backgrounds match Imprint
+          light/dark tokens
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -125,22 +122,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: The stacked-area CI-band trick and per-index censoring markers show
-          real design/engineering thought beyond a default line chart.
+        comment: Custom CI-band construction, censoring marks, and intentional title/subtitle
+          hierarchy show real design thought beyond library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimal chrome, subtle horizontal-only grid, generous whitespace;
-          refinement is undercut by the axis-title/tick-label overlap.
+        comment: Horizontal-only gridlines, generous whitespace, subtle band fill
+          opacity (0.16); no chart border clutter
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear two-curve comparison with diverging bands tells the reliability
-          story, but no focal annotation (e.g. median survival) to anchor the narrative.
+        comment: Two diverging step curves make the group comparison immediately legible;
+          would score higher with a median-survival or at-risk annotation to sharpen
+          the takeaway
     spec_compliance:
       score: 15
       max: 15
@@ -150,52 +148,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Kaplan-Meier step-function survival curve.
+        comment: Correct Kaplan-Meier step-function survival plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function, 95% CI bands, censoring marks, and group comparison
-          with legend are all present.
+        comment: Step function (stepAfter), 95% CI shaded bands, censoring tick marks,
+          group comparison with distinct colors + legend all present; median/at-risk/log-rank
+          were explicitly optional in the spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: X = time in months (0-36), Y = survival probability (0-100%), full
-          data range shown.
+          range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          two groups with sample sizes.
+        comment: Title matches required format exactly; legend labels are descriptive
+          and match series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers survival curves, CI bands, censoring, and group comparison;
-          missing the optional median-survival annotation / at-risk table.
+        comment: Step function, CI bands, censoring, and two-group comparison all
+          present and coherent
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral reliability-engineering scenario (bearing failure
-          time, standard vs. reinforced design).
+        comment: Plausible, neutral reliability-engineering scenario with a sensible
+          competing-risks generative model
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 36-month observation window and n=50/group are sensible for the domain.
+        comment: n=50 per group, 36-month observation window, resulting survival range
+          (20%-100%) is realistic for the domain
     code_quality:
       score: 9
       max: 10
@@ -205,59 +205,64 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions are used, justified by the real KM/Greenwood
-          estimator complexity.
+        comment: Several helper functions (RNG, KM estimator, grid alignment, series
+          builder) are used, but each is justified by the statistical computation
+          required — no gratuitous abstraction, though it is more machinery than a
+          minimal example
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 424242) makes the data fully deterministic.
+        comment: Fixed-seed LCG (seed 424242), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, Box, Typography imported, all used.
+        comment: Only LineChart, Box, Typography imported, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-commented, no fake interactivity or UI.
+        comment: Complexity matches the task; no fake/simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized from
-          window.ANYPLOT_SIZE.'
+        comment: 'Correct harness contract: default export, skipAnimation set, sized
+          from window.ANYPLOT_SIZE, no manual save calls'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic LineChart usage with xAxis/yAxis, grid, slotProps.legend,
-          sx overrides.
+        comment: 'Correct community-only @mui/x-charts usage: stepAfter curve, stacked
+          areas, slotProps.legend, per-series sx targeting'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Stacked-area CI band technique and conditional per-index showMark
-          for censoring are genuinely MUI-X-specific solutions to a hard charting
-          problem.
-  verdict: REJECTED
+        comment: The stacked-area CI-band trick and conditional showMark for censoring
+          are genuinely distinctive uses of the library's API, though they are workarounds
+          rather than a first-class MUI X 'confidence band' feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - confidence-interval
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - survival-analysis
   styling:
   - alpha-blending
