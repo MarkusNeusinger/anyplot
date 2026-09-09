@@ -82,12 +82,7 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleLinear().domain([0, 280]).nice().range([0, iw]);
 const y = d3.scaleLinear().domain([0, d3.max(grainYield) * 1.08]).nice().range([ih, 0]);
 
-// --- Gridlines --------------------------------------------------------------
-g.append("g")
-  .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(x).ticks(7).tickSize(-ih).tickFormat(""))
-  .selectAll("line")
-  .attr("stroke", t.grid);
+// --- Gridlines (y-axis only, for a subtler chrome) ---------------------------
 g.append("g")
   .call(d3.axisLeft(y).ticks(6).tickSize(-iw).tickFormat(""))
   .selectAll("line")
@@ -122,9 +117,9 @@ g.selectAll("circle")
   .join("circle")
   .attr("cx", (i) => x(nitrogenRate[i]))
   .attr("cy", (i) => y(grainYield[i]))
-  .attr("r", 7)
+  .attr("r", 6)
   .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.6)
+  .attr("fill-opacity", 0.55)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
 
@@ -138,10 +133,30 @@ g.append("path")
   .attr("stroke-linecap", "round")
   .attr("d", line);
 
+// --- Optimal-rate annotation (data storytelling focal point) ----------------
+const peak = fitCurve.reduce((best, d) => (d.y > best.y ? d : best), fitCurve[0]);
+g.append("line")
+  .attr("x1", x(peak.x)).attr("x2", x(peak.x))
+  .attr("y1", y(peak.y)).attr("y2", ih)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "4,4");
+g.append("circle")
+  .attr("cx", x(peak.x)).attr("cy", y(peak.y))
+  .attr("r", 7)
+  .attr("fill", t.pageBg)
+  .attr("stroke", t.palette[1])
+  .attr("stroke-width", 2.5);
+g.append("text")
+  .attr("x", x(peak.x)).attr("y", y(peak.y) - 18)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink).style("font-size", "14px").style("font-weight", "600")
+  .text(`Optimal ≈ ${Math.round(peak.x)} kg/ha`);
+
 // --- Legend -----------------------------------------------------------------
 const legend = g.append("g").attr("transform", `translate(${iw - 330},0)`);
-legend.append("circle").attr("cx", 8).attr("cy", 0).attr("r", 7)
-  .attr("fill", t.palette[0]).attr("fill-opacity", 0.6).attr("stroke", t.pageBg);
+legend.append("circle").attr("cx", 8).attr("cy", 0).attr("r", 6)
+  .attr("fill", t.palette[0]).attr("fill-opacity", 0.55).attr("stroke", t.pageBg);
 legend.append("text").attr("x", 24).attr("y", 5)
   .attr("fill", t.inkSoft).style("font-size", "14px")
   .text("Field observations");
