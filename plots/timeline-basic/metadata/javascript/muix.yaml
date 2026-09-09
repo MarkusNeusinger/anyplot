@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: timeline-basic
 created: '2026-09-09T20:15:48Z'
-updated: '2026-09-09T20:21:06Z'
+updated: '2026-09-09T20:29:21Z'
 generated_by: claude-sonnet
 workflow_run: 34399091058
 issue: 2443
@@ -12,54 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette: first category (Launch) uses brand green #009E73, remaining
-    categories follow canonical palette order, and data colors are pixel-identical
-    between the light and dark renders.'
-  - Idiomatic, library-distinctive MUI X composition — uses the useXScale/useYScale
-    hooks to draw custom scale-aligned event labels and stems, a documented MUI X
-    pattern that isn't trivially replicated in other libraries.
-  - Alternating above/below label placement (i % 2) prevents any overlap across all
-    8 events, with the first/last labels anchored inward (textAnchor start/end) so
-    nothing clips at the canvas edges.
-  - Realistic, neutral, well-chosen example dataset (Perseverance rover mission milestones)
-    spanning 4 categories in chronological order, matching the spec's 'historical
-    events' application.
-  - 'Clean, deterministic code: no unused imports, hardcoded dates (no RNG needed),
-    skipAnimation set, correct component export contract.'
+  - 'Creative, library-idiomatic technique: composes ScatterChart''s useXScale/useYScale
+    hooks with ChartsText to draw per-event labels — a documented MUI X low-level
+    composition pattern that isn''t trivially portable to another library.'
+  - 'Correct Imprint palette usage: Launch (chronologically first event) anchors brand
+    green #009E73, with identical data colors across the light and dark renders.'
+  - Excellent canvas utilization — stem length is derived from the actual plot height
+    (plotH/2 - clearance) so labels fill most of the vertical canvas instead of clustering
+    in a thin band, visibly fixing the wasted-space issue from the prior review round.
+  - Real, verifiable, neutral data (Perseverance rover mission milestones) with deterministic
+    hardcoded dates and clean, fully-used imports.
+  - Alternating above/below label placement (per the spec's own guidance) with inward
+    text-anchoring on the first/last labels so extreme events can't clip the canvas
+    edge.
   weaknesses:
-  - 'Significant unbalanced vertical whitespace: roughly 38% of canvas height is blank
-    between the title and the top row of event labels, and roughly 31% is blank between
-    the bottom row of labels and the x-axis — the timeline band reads as a thin strip
-    in a very tall canvas. Tighten TITLE_H/margins or bring the spine closer to the
-    title/axis so the chart occupies a larger, better-balanced share of the 3200x1800
-    canvas.'
-  - Data storytelling is limited to category color-coding; there's no single emphasized
-    focal point or callout drawing the eye to the mission's key milestone (e.g. landing
-    or first sample) — a subtle size/weight emphasis on one event would strengthen
-    the narrative.
-  - Event marker size (markerSize=16) is adequate but not maximally prominent for
-    a sparse 8-point dataset — could be nudged up slightly for stronger visual presence.
-  - 'Minor factual-accuracy risk: double check the ''10th Sample Cached'' (Jan 27,
-    2022) milestone date against the public Perseverance mission record before relying
-    on it as precisely accurate.'
+  - No explicit axis title (e.g. 'Date') — only tick labels are shown; acceptable
+    for a timeline but a minor VQ-06 gap versus a fully descriptive axis.
+  - Category colors lavender (#C475FD) and ochre (#BD8233) fall below the style guide's
+    3:1 WCAG contrast note on the cream background and have no white stroke/outline
+    applied — legend text compensates, but a 1px ink stroke on markers would tighten
+    accessibility.
+  - Data storytelling is solid but not exceptional — no single visual emphasis calls
+    out the mission's most historically significant event (e.g. 'First Powered Flight',
+    the first powered flight on another planet) versus the routine milestones.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title centered at top ("Perseverance Rover Mission · timeline-basic · javascript · muix · anyplot.ai"), clearly legible. A thin horizontal spine runs across the middle with subtle, low-opacity axis line and month/year tick labels ("Jul 2020" … "Jul 2023") along the bottom. A centered legend row below the axis shows 4 category swatches (Launch, Landing, Exploration, Science) with dark-on-light text. All chrome text is dark and fully readable against the light background.
-      Data: 8 circular markers along the spine, color-coded by category — Launch is brand green (#009E73), Landing purple, Exploration blue, Science ochre — matching the Imprint palette in canonical order. Each marker has a thin stem connecting it to a bold event label, alternating above/below the spine (Launch/First Powered Flight/10th Sample Cached/Sample Depot Completed above; Landing/First Rock Sample Collected/Reached River Delta Region/Crater Rim Ascent Begins below) so no labels collide.
-      Legibility verdict: PASS — all text (title, event labels, tick labels, legend) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Perseverance Rover Mission · timeline-basic · javascript · muix · anyplot.ai" is dark, bold, centered, and fully readable at reduced font size (scaled down for the longer descriptive-prefixed title). Horizontal date axis (Jul 2020 – Jul 2023) has clear dark tick labels. Legend at the bottom shows four color-swatched category labels (Launch, Landing, Exploration, Science) in a readable secondary-ink tone.
+      Data: Eight milestone markers sit on a thin horizontal spine, each with a colored vertical stem connecting to a bold event-name label placed alternately above or below the spine (no overlap). First series (Launch) renders in Imprint brand green #009E73; Landing is lavender, Exploration is blue, Science is ochre — matching Imprint palette positions 1-4.
+      Legibility verdict: PASS — all title, tick, legend, and event-label text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout as the light render — title, spine, tick labels, and legend — now rendered in light/off-white text, clearly legible against the dark background. The axis line and grid remain subtle (low opacity) but visible.
-      Data: Identical marker colors to the light render (green, purple, blue, ochre) — confirms the categorical data colors are theme-invariant and only chrome (background, text) flipped as expected.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, event-label, tick-label, and legend text is clearly visible light-colored text against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis tick labels, and legend text all render in light ink (white/off-white), fully legible against the dark surface. No dark-on-dark text observed anywhere.
+      Data: Same eight milestones, same stem/label layout, same category colors (green/lavender/blue/ochre) as the light render — confirmed identical to light except for chrome inversion.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements are theme-adapted correctly.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,51 +60,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title auto-scaled, 15px event labels,
-          14px ticks, 13px legend); readable in both themes, no overflow/clipping.
+        comment: Explicit font sizes throughout, including the title-length-based
+          scaling formula; readable in both themes with no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Alternating above/below label placement with inward-anchored first/last
-          labels avoids all overlap across 8 events.
+        comment: Alternating above/below label placement avoids all collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 16px markers are clearly visible for the sparse 8-point dataset but
-          not maximally prominent.
+        comment: 20px markers and 2px colored stems are clearly visible for this sparse
+          (8-point) dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 distinct, CVD-safe categorical hues; no red-green as sole signal.
+        comment: 'No red-green-only signal; legend text is redundant to color. Minor
+          note: lavender/ochre are borderline WCAG contrast on cream bg with no stroke
+          applied'
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Large unbalanced blank bands (~38% above labels, ~31% below labels)
-          make the timeline read as a thin strip in a tall canvas.
+        passed: true
+        comment: Stem length derived from actual plot height, filling most of the
+          vertical canvas; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Month/year date ticks are self-descriptive; title matches mandated
-          format.
+        passed: false
+        comment: Tick labels present but no explicit axis title (e.g. 'Date')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First category is #009E73; remaining categories follow canonical
-          Imprint order; backgrounds theme-correct; colors identical across themes.'
+        comment: 'First series is #009E73 (Launch), remaining series use Imprint positions
+          2-4, identical across themes, theme-correct chrome'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -119,22 +112,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful color-coding, clean typography, clearly above library
-          defaults.
+        comment: Thoughtful color-coded stems, deliberate typography hierarchy, clearly
+          above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid hidden, left axis removed, subtle low-opacity chrome — good
-          refinement, undercut slightly by the whitespace imbalance.
+        comment: No grid, hidden y-axis, subtle x-axis line at 0.25 opacity, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Category color-coding creates visual hierarchy but there's no single
-          emphasized focal point.
+        comment: Alternating layout plus category coloring guides the eye chronologically,
+          but no single event is emphasized as the mission's key highlight
     spec_compliance:
       score: 15
       max: 15
@@ -144,87 +137,86 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal event-timeline chart type.
+        comment: Correct horizontal event timeline with point markers and labels
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: date/event/category all present, alternating labels, color-coding
-          by category, appropriate date formatting.
+        comment: Date, event, category all present; alternating labels and color-coding
+          per spec notes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date correct, flat spine appropriate for a timeline, all 8 events
-          visible.
+        comment: X = date, spine at y=0; all 8 events visible across the full date
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title format correct with descriptive prefix; legend labels match
-          the 4 categories.
+          the 4 categories
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 8 events across 4 categories spanning multiple years; good variety.
+        comment: All 4 categories represented with multiple events each, spread across
+          the mission timeline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral, well-documented public mission (Perseverance rover).
+        comment: Real, neutral, verifiable Perseverance rover mission milestones
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Dates are in plausible chronological order matching the real mission;
-          one milestone date ('10th Sample Cached') could not be fully verified for
-          precision.
+        comment: Dates and event sequence align with real-world mission facts
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Straightforward structure; EventLabels component is appropriate given
-          MUI X's composition model.
+        comment: Component structure is inherent to the React/MUI X harness contract;
+          kept as minimal as the custom-label requirement allows
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic dates.
+        comment: Hardcoded, deterministic milestone data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI.
+        comment: No fake UI/interactivity; complexity is justified and well-commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export contract, skipAnimation set, current API.
+        comment: skipAnimation set; harness-mount contract followed correctly
     library_mastery:
       score: 9
       max: 10
@@ -234,24 +226,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ScatterChart + ChartsReferenceLine + hooks composition.
+        comment: Correct composition of ScatterChart, xAxis/yAxis config, margin tuning,
+          and slotProps per documented patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hook-based custom label rendering is a genuinely
-          MUI X-specific technique.
-  verdict: REJECTED
+        comment: useXScale/useYScale + ChartsText composition for per-point labels
+          is a technique distinctive to MUI X's low-level API
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - annotations
+  - layer-composition
   patterns:
   - iteration-over-groups
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - minimal-chrome
-  - alpha-blending
