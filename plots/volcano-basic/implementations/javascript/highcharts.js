@@ -1,8 +1,7 @@
 // anyplot.ai
 // volcano-basic: Volcano Plot for Statistical Significance
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-09-09
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 91/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 // ANYPLOT_TOKENS has no "muted" anchor — derive it per default-style-guide.md
