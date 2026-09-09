@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: streamline-basic
 created: '2026-09-09T19:17:51Z'
-updated: '2026-09-09T19:22:00Z'
+updated: '2026-09-09T19:30:55Z'
 generated_by: claude-sonnet
 workflow_run: 34393092107
 issue: 2861
@@ -16,68 +16,69 @@ quality_score: 89
 review:
   strengths:
   - Physically accurate electric dipole field lines traced with RK4 arc-length integration
-    of the normalized field direction — a direct match for the spec's 'electromagnetic
-    field lines' application, including both closed (looping +/- to -) and open (escaping-to-infinity)
-    topology
-  - Creative, idiomatic use of MUI X's compositional API — ChartContainer plus useXScale/useYScale/useDrawingArea
-    hooks — to build a custom SVG overlay for charge markers, direction arrowheads,
-    and a manual field-strength gradient legend, which the community package has no
-    built-in primitive for
-  - Continuous field-magnitude encoding correctly uses the Imprint imprint_seq gradient
-    (not a categorical or forbidden colormap), with direction arrows reinforcing flow
-  - 'Both renders are theme-correct: identical data colors between light/dark, chrome
-    (background, ink, legend, charge-marker fill/text) flips appropriately with no
-    dark-on-dark or light-on-light failures'
-  - Clean, balanced layout — good canvas utilization, no overlap, no edge clipping,
-    legend sits near the plot rather than isolated
+    of the normalized field direction, matching the spec's electromagnetic-field-line
+    application and showing both closed (looping +/- to -) and open (escaping) topology
+  - Axis labels fixed from the previous generic 'x'/'y' to descriptive 'x (normalized
+    distance)' / 'y (normalized distance)', resolving the prior review's VQ-06 weakness
+  - Grid refined to horizontal-only with a lighter stroke, giving the field-line curves
+    a cleaner, less cluttered backdrop than the previous attempt
+  - Direction arrows increased from 2 to 3 per field line, better reinforcing flow
+    direction and the magnitude-color gradient
+  - Creative, idiomatic use of MUI X's compositional API (ChartContainer + useXScale/useYScale/useDrawingArea)
+    to build a custom SVG overlay for charge markers, direction arrowheads, and a
+    manual field-strength gradient legend
+  - 'Both renders remain theme-correct: identical data colors between light/dark,
+    chrome (background, ink, legend, charge-marker fill/text) flips appropriately
+    with no dark-on-dark or light-on-light failures'
   weaknesses:
-  - X/Y axis labels are the bare generic 'x' and 'y' with no descriptive text — even
-    a short qualifier (e.g. 'x (normalized distance)' / 'y (normalized distance)')
-    would lift this out of the generic-label bucket
-  - Grid lines (both horizontal and vertical) are still fairly prominent across the
-    whole canvas — lightening the grid or dropping the vertical gridlines would read
-    as more refined against the smooth field-line curves
-  - Direction arrows appear at only 2 points per field line — a bit more (or a subtle
-    line-width increase near the charges, which the spec calls out as optional) would
-    reinforce the flow direction and field-strength emphasis further
+  - 'New overlap regression introduced by the axis-label fix: the rotated y-axis label
+    ''y (normalized distance)'' visually crosses through the ''0.5'', ''0.0'', and
+    ''-0.5'' tick labels in BOTH renders (letters overstrike the digits) — increase
+    the left margin or shift the axis-label offset further left so the longer descriptive
+    label no longer collides with the tick-label column'
+  - Direction arrows are still only 3 per field line — a bit more density, or the
+    spec's optional field-strength-driven line-width emphasis near the charges, would
+    reinforce flow further
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-consistent), not pure white and not dark.
-      Chrome: Title "Electric Dipole Field Lines · streamline-basic · javascript · muix · anyplot.ai" is dark ink, clearly readable and centered above the plot; x/y axis titles, tick labels, and the "Field strength" gradient legend text (weak/strong) are dark-on-light and fully legible; grid lines are light gray and subtle but visible.
-      Data: Field lines run from a black "+" marker to a black "−" marker (two point charges), colored on a teal-to-blue gradient (imprint_seq) keyed to local field-strength magnitude — teal/green near the outer, weaker field lines and blue near the strong, tightly-curved lines between the charges. Small triangular arrowheads along each curve show flow direction from + to −.
-      Legibility verdict: PASS — no light-on-light or unreadable text found.
+      Chrome: Title "Electric Dipole Field Lines · streamline-basic · javascript · muix · anyplot.ai" is dark ink, centered, and clearly readable. X-axis label "x (normalized distance)" is dark-on-light and clearly readable below the x-axis ticks. Y-axis label "y (normalized distance)" is dark-on-light but rotated and positioned so its glyphs directly overstrike the "0.5", "0.0", and "-0.5" y-axis tick labels — those three tick numbers are visually crossed-out by the label text, a real (non-severe) overlap defect. All other tick labels, the "Field strength" gradient legend (weak/strong), and the title are unaffected and fully legible. Horizontal grid lines are light gray and subtle; no vertical grid lines (improved from the previous attempt).
+      Data: Field lines run from a black "+" marker to a black "−" marker (two point charges), colored on a teal-to-blue gradient (imprint_seq) keyed to local field-strength magnitude. Three small triangular arrowheads per line (up from two in the previous attempt) show flow direction from + to −.
+      Legibility verdict: PASS overall, with one localized FAIL — the y-axis label overlaps three of its own tick labels (0.5 / 0.0 / -0.5), reducing their individual legibility even though every other text element is clean.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-consistent), not pure black and not light.
-      Chrome: Title, axis titles, tick labels, and legend text all render in light ink, clearly readable against the dark background; grid lines are dark gray, subtle but visible; the charge markers flip to a light (cream) fill with dark +/− glyphs, consistent with chrome-only theme adaptation.
-      Data: The field-line gradient (teal-to-blue) is visually identical to the light render — only the chrome (background, text, marker fill) flipped, not the data-encoding colors. Arrowheads remain the same per-segment color as their parent line.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements are clearly distinguishable from the near-black background.
+      Chrome: Title, x-axis label, and tick labels all render in light ink, clearly readable against the dark background. The same y-axis label/tick-label overlap present in the light render recurs identically here — "y (normalized distance)" overstrikes "0.5", "0.0", and "-0.5". Charge markers flip to a light (cream) fill with dark +/− glyphs, consistent with chrome-only theme adaptation. Horizontal grid lines are dark gray and subtle; no vertical grid lines.
+      Data: The field-line gradient (teal-to-blue) is visually identical to the light render — only chrome (background, text, marker fill) flipped, not the data-encoding colors. Arrowheads remain the same per-segment color as their parent line.
+      Legibility verdict: PASS overall, with the same localized y-axis-label overlap FAIL as the light render — no dark-on-dark failures beyond that pre-existing overlap.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; title scales with length; all text
-          readable in both themes, no overflow
+        comment: Explicit font sizes throughout and readable in both themes, but the
+          y-axis label overstriking its own tick labels reduces legibility of those
+          three numbers
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Rotated y-axis label 'y (normalized distance)' visually overlaps
+          the 0.5 / 0.0 / -0.5 tick labels in both renders; main content elsewhere
+          is unaffected
+      - id: VQ-03
+        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axes, legend, charge markers, or field
-          lines
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: 16 field lines at 2.75px stroke read clearly without clutter; density
-          well balanced
+        comment: 16 field lines at 2.75px stroke with 3 direction arrows per line
+          read clearly without clutter; density well balanced
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -94,10 +95,11 @@ review:
           near the plot, not isolated
       - id: VQ-06
         name: Axis Labels & Title
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Axis labels are bare 'x' and 'y' with no descriptive qualifier
+        passed: true
+        comment: Axis labels now descriptive ('x (normalized distance)' / 'y (normalized
+          distance)'), fixing the prior generic 'x'/'y'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -106,7 +108,7 @@ review:
         comment: Continuous magnitude encoding uses imprint_seq; theme-correct backgrounds
           and chrome in both renders
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -114,15 +116,15 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom charge markers, gradient legend, and arrowheads — clearly
+        comment: Custom charge markers, gradient legend, and arrowheads remain clearly
           above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clean composition, generous whitespace; grid could be lighter for
-          full polish
+        comment: Grid switched to horizontal-only and lightened per prior feedback,
+          giving a cleaner, more polished composition
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -139,8 +141,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine streamline/field-line plot via numerical integration, not
-          a quiver approximation
+        comment: Genuine streamline/field-line plot via RK4 numerical integration,
+          not a quiver approximation
       - id: SC-02
         name: Required Features
         score: 4
@@ -161,7 +163,7 @@ review:
         max: 3
         passed: true
         comment: Title matches the mandated format with descriptive prefix; legend
-          labels (weak/strong) are correct
+          labels correct
     data_quality:
       score: 15
       max: 15
@@ -240,7 +242,7 @@ review:
         comment: The scale-hook-driven overlay (charge markers, arrows, manual gradient
           legend) leverages MUI X internals that aren't easily replicated in another
           library
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
