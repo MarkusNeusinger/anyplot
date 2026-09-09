@@ -52,9 +52,37 @@ const spectrum = Array.from({ length: N_BINS }, (_, i) => {
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
+// --- Distinctive feature: custom plugin calling out the fundamental ----
+const Y_MIN = -90;
+const annotateFundamental = {
+  id: "annotateFundamental",
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const xPixel = scales.x.getPixelForValue(FUNDAMENTAL);
+    const yPixel = scales.y.getPixelForValue(HARMONICS[0].amplitudeDb);
+    const bottomPixel = scales.y.getPixelForValue(Y_MIN);
+
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(xPixel, yPixel);
+    ctx.lineTo(xPixel, bottomPixel);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.fillStyle = t.ink;
+    ctx.font = "14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("440 Hz — A4 fundamental", xPixel, yPixel - 12);
+    ctx.restore();
+  },
+};
+
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
   type: "line",
+  plugins: [annotateFundamental],
   data: {
     datasets: [
       {
@@ -64,7 +92,7 @@ new Chart(canvas, {
         backgroundColor: t.palette[0] + "26",
         borderWidth: 2.5,
         pointRadius: 0,
-        fill: true,
+        fill: "start",
         tension: 0,
       },
     ],
@@ -103,6 +131,8 @@ new Chart(canvas, {
         title: { display: true, text: "Frequency (Hz)", color: t.ink, font: { size: 16 } },
       },
       y: {
+        min: Y_MIN,
+        suggestedMax: 8,
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
         title: { display: true, text: "Amplitude (dB)", color: t.ink, font: { size: 16 } },
