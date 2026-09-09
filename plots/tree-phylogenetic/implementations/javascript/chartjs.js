@@ -1,7 +1,7 @@
 // anyplot.ai
 // tree-phylogenetic: Phylogenetic Tree Diagram
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-09
+// Quality: 91/100 | Created: 2026-09-09
 
 //# anyplot-orientation: landscape
 
