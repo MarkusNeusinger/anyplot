@@ -154,6 +154,57 @@ container.appendChild(topCell);
 container.appendChild(leftCell);
 container.appendChild(matrixCell);
 
+// Mini legend explaining the intersection-bar degree gradient, placed in the
+// otherwise-empty corner cell above the set-name column.
+cornerCell.style.display = "flex";
+cornerCell.style.flexDirection = "column";
+cornerCell.style.justifyContent = "center";
+cornerCell.style.alignItems = "stretch";
+cornerCell.style.boxSizing = "border-box";
+cornerCell.style.padding = "0 20px";
+
+const legendCaption = document.createElement("div");
+legendCaption.style.color = t.inkSoft;
+legendCaption.style.fontSize = "12px";
+legendCaption.style.textAlign = "center";
+legendCaption.style.marginBottom = "8px";
+legendCaption.textContent = "Bar color = intersection degree";
+cornerCell.appendChild(legendCaption);
+
+const legendRow = document.createElement("div");
+legendRow.style.display = "flex";
+legendRow.style.alignItems = "center";
+legendRow.style.gap = "6px";
+
+const minDegreeLabel = document.createElement("span");
+minDegreeLabel.style.color = t.inkSoft;
+minDegreeLabel.style.fontSize = "12px";
+minDegreeLabel.textContent = String(minDegree);
+
+const gradientSwatch = document.createElement("div");
+gradientSwatch.style.flex = "1";
+gradientSwatch.style.height = "10px";
+gradientSwatch.style.borderRadius = "5px";
+gradientSwatch.style.background = `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})`;
+
+const maxDegreeLabel = document.createElement("span");
+maxDegreeLabel.style.color = t.inkSoft;
+maxDegreeLabel.style.fontSize = "12px";
+maxDegreeLabel.textContent = String(maxDegree);
+
+legendRow.appendChild(minDegreeLabel);
+legendRow.appendChild(gradientSwatch);
+legendRow.appendChild(maxDegreeLabel);
+cornerCell.appendChild(legendRow);
+
+const legendSub = document.createElement("div");
+legendSub.style.color = t.inkSoft;
+legendSub.style.fontSize = "11px";
+legendSub.style.textAlign = "center";
+legendSub.style.marginTop = "4px";
+legendSub.textContent = "sets combined";
+cornerCell.appendChild(legendSub);
+
 function makeCanvas(cell) {
   const canvas = document.createElement("canvas");
   cell.appendChild(canvas);
@@ -161,6 +212,12 @@ function makeCanvas(cell) {
 }
 
 // --- Top: intersection cardinality -----------------------------------------
+// The largest intersection (index 0, since topCombos is sorted descending)
+// gets a bold outline plus its exact count drawn above the bar — a small
+// storytelling touch that anchors the size hierarchy beyond color/sort alone.
+const colBorderColors = colCounts.map((_, i) => (i === 0 ? t.ink : "transparent"));
+const colBorderWidths = colCounts.map((_, i) => (i === 0 ? 2 : 0));
+
 new Chart(makeCanvas(topCell), {
   type: "bar",
   data: {
@@ -169,12 +226,30 @@ new Chart(makeCanvas(topCell), {
       {
         data: colCounts,
         backgroundColor: colColors,
-        borderWidth: 0,
+        borderColor: colBorderColors,
+        borderWidth: colBorderWidths,
         barPercentage: 0.7,
         categoryPercentage: 0.9,
       },
     ],
   },
+  plugins: [
+    {
+      id: "largestIntersectionLabel",
+      afterDatasetsDraw(chart) {
+        const bar = chart.getDatasetMeta(0).data[0];
+        if (!bar) return;
+        const { ctx } = chart;
+        ctx.save();
+        ctx.fillStyle = t.ink;
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(String(colCounts[0]), bar.x, bar.y - 6);
+        ctx.restore();
+      },
+    },
+  ],
   options: {
     responsive: true,
     maintainAspectRatio: false,
