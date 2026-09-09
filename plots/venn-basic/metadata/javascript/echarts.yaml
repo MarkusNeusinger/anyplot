@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: venn-basic
 created: '2026-09-09T21:19:52Z'
-updated: '2026-09-09T21:25:25Z'
+updated: '2026-09-09T21:35:00Z'
 generated_by: claude-sonnet
 workflow_run: 34405381151
 issue: 2444
@@ -12,56 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - Data is fully self-consistent and correctly mapped to all seven Venn regions (e.g.
-    Python-only 55 + AB-only 30 + AC-only 20 + ABC 15 = 120, matching the declared
-    Python total; JavaScript and SQL totals check out the same way).
-  - 'Excellent readability engineering: hand-tuned polar label placement radii keep
-    every count and set label inside its intended lens/petal without collisions, and
-    the theme-adaptive ink-fill + page-background stroke halo keeps counts legible
-    over any overlap tint.'
+  - 'All three previously flagged weaknesses were fixed: circle radii now scale by
+    sqrt(set total / average total) for a proportional/Euler-style hint, overlap alpha
+    was bumped to 0.55 (documented rationale: lightness alone keeps 1/2/3-way overlaps
+    distinguishable under CVD simulation), and set-name labels now carry the same
+    page-background stroke halo as region-count labels for consistent styling'
+  - New focal-point treatment on the triple-overlap region (subtle ring + larger bold
+    count) gives the diagram a clear point of emphasis instead of treating all seven
+    regions identically - directly addresses the prior data-storytelling gap
+  - 'Data is fully self-consistent across all seven regions: Python 55+30+20+15=120,
+    JavaScript 40+30+15+15=100, SQL 40+20+15+15=90, all matching the declared set
+    totals'
   - 'Correct Imprint palette usage (first series #009E73) with fully theme-correct
-    chrome (cream/near-black backgrounds, ink-colored text) and identical data colors
-    across both renders.'
+    chrome (warm off-white/near-black backgrounds, ink-colored text, page-bg circle
+    separators) and identical data colors across both renders'
   - Because ECharts has no native Venn/Euler chart type, the implementation correctly
-    builds the diagram from the `graphic.elements` API (circles + styled text) rather
-    than faking it with an unsupported chart type - idiomatic use of ECharts' most
-    flexible extension point.
+    builds the diagram from the graphic.elements API (circles + styled text) rather
+    than faking an unsupported chart type
   weaknesses:
-  - All three circles use the identical radius `r` regardless of set size (Python
-    120 vs. JavaScript 100 vs. SQL 90); the spec notes 'area proportional to size
-    when possible' - scale each circle's radius by sqrt(set_sizes[i]) (normalized
-    to the current average radius) for a closer proportional/Euler-style approximation.
-  - Overlap regions rely on alpha-blended (0.5) fills that create 2-way and 3-way
-    blended hues never explicitly verified for CVD safety - the base Imprint colors
-    are colorblind-safe individually but the blends are not part of the validated
-    palette; consider nudging the fill alpha or adding a subtle per-region border
-    tint so overlap regions stay distinguishable under color-vision deficiency simulations.
-  - 'Region-count labels use a stroke halo (`stroke: t.pageBg`, `lineWidth: 3`) while
-    the set-name labels (Python/JavaScript/SQL) use plain fill with no stroke - this
-    stylistic inconsistency between the two label types is a minor visual mismatch
-    worth aligning (either both haloed or both plain).'
-  - 'Design excellence is solid but not exceptional: the composition doesn''t add
-    a focal point or emphasis on the most notable relationship (e.g. the small 15-count
-    triple overlap) - a subtle size/weight/color emphasis on the intersection story
-    would elevate the storytelling beyond ''correctly displays all regions''.'
+  - Circle-radius scaling communicates relative set size but the overlap lens areas
+    themselves are still hand-placed rather than computed to be truly area-proportional
+    - acceptable given the spec's "when possible" qualifier and ECharts having no
+    Euler-diagram solver, but worth noting as a ceiling on SC-01 sophistication
+  - The triple-overlap focal ring is a thin, easy-to-miss stroke at default viewing
+    size - a slightly heavier stroke or subtle fill tint would strengthen the visual-hierarchy
+    payoff further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "venn-basic · javascript · echarts · anyplot.ai" is bold dark ink, centered top, fully readable. The three set labels ("Python 120", "JavaScript 100", "SQL 90") sit just outside their respective circles in bold dark text, clearly legible against the cream background. The seven region-count numbers (55, 30, 40, 20, 15, 15, 40) are rendered in dark ink with a light page-background-colored halo stroke so they stay legible against the pastel overlap tints.
-      Data: Three overlapping circles - Python in Imprint brand green (#009E73), JavaScript in Imprint lavender (#C475FD), SQL in Imprint blue (#4467A3), each at 0.5 alpha with a cream-colored stroke separating them. Overlap regions show blended tones (green+lavender, green+blue, lavender+blue, and a tri-blend at center).
-      Legibility verdict: PASS - all text (title, set labels, region counts) is clearly readable against the light background; no light-on-light issues found.
+      Background: warm off-white (#FAF8F1-style cream), not pure white.
+      Chrome: title "venn-basic · javascript · echarts · anyplot.ai" bold dark ink, centered top, fully readable; set labels (Python 120, JavaScript 100, SQL 90) bold dark ink with light stroke halo; region counts (55, 30, 40, 20, 15, 40, 15) dark ink with light stroke halo, all inside their correct lens/petal.
+      Data: three circles - Python (#009E73 green, largest, sqrt-scaled), JavaScript (lavender/purple, mid), SQL (blue, smallest) - each at 0.55 alpha with cream page-bg stroke separating them; overlap regions show alpha-blended hues distinguishable by lightness; a subtle dark ring highlights the triple-overlap (15) at the center as a focal point.
+      Legibility verdict: PASS - no light-on-light issues, all text and region counts clearly readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, set labels, and region-count numbers all render in light ink (theme-flipped from the light render), fully legible against the dark background. No dark-on-dark failures found - every text element uses the light ink token correctly.
-      Data: Same three circles in identical Imprint hues (#009E73 green, #C475FD lavender/purple, #4467A3 blue) - confirmed identical to the light render; only the chrome (background, text ink, circle border stroke color) flipped to the dark-theme tokens.
-      Legibility verdict: PASS - all text is clearly readable against the dark background; brand green remains vivid on the dark surface.
+      Background: warm near-black (#1A1A17-style), not pure black.
+      Chrome: same title, set labels, and region counts now rendered in light ink (theme flipped correctly); circle separator strokes and the triple-overlap ring flipped to dark-theme (near-black/light) tokens correctly.
+      Data: identical data colors to the light render (#009E73 green confirmed unchanged, same lavender and blue) - only chrome (background, ink, strokes) flipped; overlap blends remain distinguishable.
+      Legibility verdict: PASS - no dark-on-dark failures, brand green and all text remain clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -69,109 +62,100 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes with dynamic title scaling formula; all text
-          readable in both themes
+        comment: All text readable in both themes with stroke-halo contrast
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Hand-tuned polar label radii keep every label inside its intended
-          region with no collisions
+        comment: No text/element collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 0.5 alpha fills make overlaps clearly visible without washing out
-          the circles
+        comment: All seven regions and their counts clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Base Imprint colors are CVD-safe individually but the 2-way/3-way
-          alpha-blended overlap hues are not verified CVD-distinct
+        passed: true
+        comment: Alpha bumped to 0.55 so overlap regions stay distinguishable by lightness
+          under CVD simulation - fixes prior weakness
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Venn cluster fills a well-balanced majority of the square canvas
-          with even margins on all sides; nothing cut off
+        comment: Good proportions, nothing cut off, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Set labels are descriptive real names (Python/JavaScript/SQL) with
-          totals shown inline
+        comment: Descriptive title, correct format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for remaining sets,
-          theme-correct backgrounds and chrome in both renders'
+        comment: 'First series #009E73, Imprint palette order, theme-correct backgrounds'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful hand-built Venn geometry and color use, but composition
-          stays close to a standard textbook 3-circle Venn
+        passed: true
+        comment: Proportional radii + focal ring elevate it beyond a textbook symmetric
+          Venn
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clean cream-colored circle strokes and generous whitespace, but the
-          stroke-halo vs. plain-fill inconsistency between label types is a minor
-          rough edge
+        passed: true
+        comment: Consistent stroke-halo styling across set labels and region counts
+          - fixes prior inconsistency
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: All regions are shown with equal visual weight; no emphasis on the
-          more notable relationships (e.g. the small triple overlap)
+        passed: true
+        comment: New focal ring + bold count on the triple-overlap gives clear visual
+          hierarchy - fixes prior gap
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct 3-set Venn diagram, but circles are equal-radius rather than
-          area-proportional despite set sizes differing by up to 33% and the spec
-          calling out proportional sizing 'when possible'
+        passed: true
+        comment: Correct 3-set Venn, now with sqrt-scaled radii honoring the spec's
+          proportional note
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 3 sets, transparency on overlaps, counts in every region, and readable
-          labels via stroke halo - all spec-required features present
+        comment: Set labels, sizes, pairwise and triple overlaps, transparency all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Every region count is placed in its correct geometric region and
-          sums verify against each set's declared total
+        comment: All region counts sum correctly to each set's declared total
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; inline set labels serve as the legend and match
-          the data
+        comment: Title format correct; direct on-circle labeling substitutes for a
+          legend appropriately
     data_quality:
       score: 15
       max: 15
@@ -181,21 +165,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All seven region types populated with distinct, non-trivial values
+        comment: All seven regions shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Programming-language skills survey is a realistic, neutral business/tech
-          scenario
+        comment: Plausible, neutral programming-language skills survey
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All totals and overlap counts are internally consistent and plausible
-          for an engineering team survey
+        comment: Sensible survey-scale values (15-120)
     code_quality:
       score: 10
       max: 10
@@ -205,35 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward top-to-bottom data -> geometry -> option flow, no
-          classes
+        comment: Small geometry helper functions justified by the Venn layout math,
+          no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Fully deterministic, hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the echarts global and harness tokens are
-          used
+        comment: Only the echarts global used, no extra imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for hand-built Venn geometry; no fake UI or
-          interactivity
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: no explicit size/DPR on echarts.init,
-          animation:false set'
+        comment: echarts.init/setOption with animation:false, mount-node contract
+          respected
     library_mastery:
       score: 9
       max: 10
@@ -243,24 +223,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly falls back to the `graphic.elements` API since ECharts
-          has no native Venn chart type - the idiomatic solution for this gap
+        comment: Correct use of graphic.elements since ECharts has no native Venn
+          type
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: Leverages ECharts' custom graphic composition (circle + text shapes)
-          rather than a canned chart type, though similar shape-composition techniques
-          exist in other canvas-based libraries
-  verdict: REJECTED
+        passed: true
+        comment: Good custom graphic composition, but no ECharts-unique feature beyond
+          the graphic API itself
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
-  patterns: []
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
