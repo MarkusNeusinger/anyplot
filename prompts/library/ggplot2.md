@@ -44,6 +44,7 @@ library(dplyr)
 library(tidyr)
 library(scales)
 library(ragg)        # high-quality PNG device
+library(patchwork)   # composing multiple ggplot objects (mosaic/grid layouts)
 ```
 
 Optional dataset packages available in the CI runtime: `palmerpenguins`,
