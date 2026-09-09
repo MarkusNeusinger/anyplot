@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-regression-lowess
 created: '2026-09-09T06:54:06Z'
-updated: '2026-09-09T06:58:13Z'
+updated: '2026-09-09T07:06:35Z'
 generated_by: claude-sonnet
 workflow_run: 34320813988
 issue: 2855
@@ -12,55 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 92
 review:
   strengths:
+  - 'Directly and precisely addressed every attempt-1 weakness: removed default axis
+    lines, added a saturation marker + ad-fatigue plot band, color-coded the trend
+    line''s decline segment via zones, and increased marker radius/opacity for better
+    visibility'
   - 'Correct Imprint palette usage: first series is #009E73, identical between light
-    and dark renders'
+    and dark renders; amber accent consistent across themes'
   - Theme-adaptive chrome correctly implemented — background, title, subtitle, axis
     text, grid, and the LOWESS trend line color all flip appropriately with no dark-on-dark
     or light-on-light failures
   - LOWESS trend implemented as a genuine tricube-weighted local linear regression
-    evaluated on a dense grid, not a canned smoother — solid mathematical grounding
-    for the spec's core requirement
-  - Deterministic, reproducible data generation via a seeded LCG + Box-Muller gaussian,
-    no external RNG dependency
+    evaluated on a dense grid, not a canned smoother, with frac=0.35 in the recommended
+    0.3-0.5 range
+  - Deterministic, reproducible data generation via a seeded LCG + Box-Muller gaussian
   - Title format matches the mandated pattern exactly; axis labels are descriptive
-    and carry units ($1,000s / units)
-  - Realistic, neutral business scenario (ad spend vs. weekly sales) with a genuinely
-    non-monotonic saturation-then-fatigue shape that showcases why LOWESS is useful
-    over a simple linear fit
+    and carry units
+  - Realistic, neutral business scenario with a genuinely non-monotonic saturation-then-fatigue
+    shape that showcases why LOWESS is useful
   weaknesses:
-  - 'Design Excellence is generic: a single green scatter series plus a black/white
-    trend line with default Highcharts axis lines reads as a well-configured default
-    rather than a publication-ready design — consider removing the axis lines entirely
-    (spineless look) or adding subtle refinements to lift it above the default look.'
-  - 'No data storytelling beyond the raw curve: the LOWESS line reveals a clear saturation
-    point and mild ad-fatigue decline past ~$65k spend, but nothing calls this out
-    — a light annotation or callout near the peak/decline would turn ''shows data''
-    into ''tells a story''.'
-  - 'Library Mastery is generic: besides Highcharts.color().setOpacity() for marker
-    alpha, nothing here is distinctive to Highcharts — consider using a feature like
-    axis plotBands/zones to shade the saturation vs. fatigue regions, or series.zones
-    on the trend line to color-code the decline segment.'
-  - Scatter markers (radius 5, alpha 0.6) are on the small/light side for 200 points
-    spread across a wide value range — a slightly larger radius or higher fill opacity
-    would improve element visibility without hurting overplotting readability.
+  - The legend only labels 'Weekly observations' and 'LOWESS smoothed trend' — it
+    doesn't visually distinguish the amber decline segment, so a viewer relying solely
+    on the legend (not the plot-band label) could miss that the dashed portion means
+    something different
+  - Overall color palette is still limited to green/ink/amber; a touch more restrained
+    typographic hierarchy would push Aesthetic Sophistication further
+  - Confidence band around the LOWESS curve was not added (explicitly optional in
+    the spec, so not a deduction, but would be a nice next-level touch)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "scatter-regression-lowess · javascript · highcharts · anyplot.ai" at top center, gray subtitle "LOWESS trend, bandwidth frac = 0.35" beneath it. Dark-gray axis titles "Advertising Spend ($1,000s)" (x) and "Weekly Sales (units)" (y), gray tick labels on both axes, subtle light-gray gridlines on both axes. Legend centered below the plot with two entries: a green dot for "Weekly observations" and a black line swatch for "LOWESS smoothed trend." All chrome text is clearly legible against the light background.
-      Data: ~200 semi-transparent green (#009E73) scatter points showing a steep rise from low spend, flattening into a plateau, with a slight downward bend at high spend (ad-fatigue). A solid black LOWESS curve threads through the point cloud, clearly distinct in color and weight from the scatter cloud.
-      Legibility verdict: PASS — no dark-on-light or light-on-light issues, no clipped text at any canvas edge.
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title, subtitle, axis titles, and tick labels are dark and clearly readable. Axis lines/ticks removed (no default spines). Grid lines subtle. Legend centered below plot, readable.
+      Data: ~200 semi-transparent green (#009E73) scatter points; solid black LOWESS curve up to saturation point (~$71k) then dashed amber decline segment; dashed vertical guide line + "Saturation ~$71k" label; shaded "Ad-fatigue region" plot band with italic label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/axis-label/legend layout, now rendered in white/light-gray text, fully legible against the dark background. Gridlines are subtle light lines at low opacity. No dark-on-dark text anywhere.
-      Data: The scatter points are the same #009E73 green as the light render (confirmed identical), and the LOWESS trend line has flipped from black to white (following the theme-adaptive ink token), preserving contrast against the dark background while keeping the data color constant.
-      Legibility verdict: PASS — all chrome text reads clearly, data colors match the light render exactly, no dark-on-dark failures.
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title, subtitle, axis titles, and tick labels are white/light-gray and clearly readable against the dark background. No dark-on-dark failures. Grid lines subtle.
+      Data: Same #009E73 green scatter points and amber decline/plot-band color as light render (confirmed identical). LOWESS trend line correctly flips from black to white via the ink token, preserving contrast.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,70 +63,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes, no overflow
-          or clipping; title fits comfortably without dominating the canvas
+        comment: All text readable in both themes; small annotation labels (12px)
+          near lower bound
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker collisions in either render
+        comment: No collisions between text, data, or annotations
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers visible and appropriately sized for ~200 points, but on the
-          small/light side (radius 5, alpha 0.6) for the value spread shown
+        comment: Marker radius 6, opacity 0.7 appropriate for 200 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, single hue plus ink-colored trend line, no red-green
-          reliance
+        comment: Green/ink/amber distinguishable via hue and dash style, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins, legend sits near
-          the plot
+        comment: Canvas gate passed, no cutoffs, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive and carry units
+        comment: Descriptive axis labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 identical across themes; backgrounds and
-          chrome are theme-correct in both renders'
+        comment: 'First series #009E73, correct theme backgrounds, data colors identical
+          across themes'
     design_excellence:
-      score: 9
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        comment: Looks like a well-configured library default; no custom typography
-          or distinctive color treatment beyond the standard theming
+        passed: true
+        comment: Plot band shading, zoned decline segment, and saturation marker lift
+          this past a generic default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        comment: Subtle grid and reasonable whitespace, but default Highcharts axis
-          lines remain on both axes (no spine removal), giving a boxed-default look
+        passed: true
+        comment: Axis lines/ticks removed, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        comment: Data is displayed but the saturation/fatigue story the LOWESS curve
-          reveals is not called out or emphasized
+        passed: true
+        comment: Saturation point and ad-fatigue region explicitly called out with
+          guide line, label, and shaded band
     spec_compliance:
       score: 15
       max: 15
@@ -140,25 +134,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct scatter + regression-line chart type
+        passed: true
+        comment: Correct scatter + LOWESS line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: LOWESS curve visually distinct, frac=0.35 within recommended 0.3-0.5
-          range, marker alpha=0.6 within recommended 0.5-0.7 range, descriptive title/subtitle
-          mention LOWESS smoothing
+        passed: true
+        comment: Distinct trend line, frac=0.35, alpha=0.7, descriptive title/subtitle
+          mentioning LOWESS
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X/Y correctly assigned, full data range visible on both axes
+        passed: true
+        comment: X/Y correctly mapped, axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated format exactly; legend labels accurately describe
-          both series
+        passed: true
+        comment: Title matches mandated format exactly; legend labels descriptive
     data_quality:
       score: 14
       max: 15
@@ -167,18 +163,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Shows the full non-linear saturation-then-fatigue relationship LOWESS
-          is meant to capture, plus realistic noise
+        passed: true
+        comment: Shows scatter, trend, and annotated regions; optional confidence
+          band omitted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, comprehensible business scenario (ad spend vs. weekly sales)
+        passed: true
+        comment: Plausible, neutral ad-spend/sales scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Plausible spend and sales magnitudes with sensible relational scale
+        passed: true
+        comment: Sensible value ranges for domain
     code_quality:
       score: 10
       max: 10
@@ -187,51 +186,54 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports/data/plot flow; the tricube/lowess helper functions
-          are necessary computation, not gratuitous abstraction
+        passed: true
+        comment: Flat, procedural script with small necessary helper functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Seeded LCG PRNG, fully deterministic
+        passed: true
+        comment: Seeded LCG PRNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No unused imports; uses only the provided globals
+        passed: true
+        comment: No imports needed, none unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for a from-scratch LOWESS implementation, no
-          fake UI
+        passed: true
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: 'Mounts into #container via Highcharts.chart, animation disabled
-          everywhere'
+        passed: true
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct high-level Highcharts.chart/series usage, proper theming
-          via tokens
+        passed: true
+        comment: Idiomatic scatter+line series composition
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        comment: Uses Highcharts.color().setOpacity() but otherwise fairly generic;
-          no zones/plotBands/other Highcharts-distinctive features
-  verdict: REJECTED
+        passed: true
+        comment: plotBands, plotLines with labels, and zones/zoneAxis are distinctive
+          Highcharts capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
