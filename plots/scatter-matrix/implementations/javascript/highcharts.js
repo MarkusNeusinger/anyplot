@@ -76,6 +76,41 @@ variables.forEach((v) => {
   v.max = rawMax + pad;
 });
 
+// Identify the pairwise relationship with the clearest cultivar separation so
+// the matrix can give the viewer a "headline" cell to anchor on, rather than
+// relying purely on the viewer noticing cluster separation unaided. The score
+// is the worst-case (minimum) standardized distance between any two cultivar
+// centroids for that variable pair — the pair that maximizes this is the one
+// where every cultivar is most confidently distinguishable from every other.
+function stdDev(values) {
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  return Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length);
+}
+function pairSeparation(iKey, jKey) {
+  const si = stdDev(combined[iKey]);
+  const sj = stdDev(combined[jKey]);
+  let minDist = Infinity;
+  for (let a = 0; a < cultivars.length; a++) {
+    for (let b = a + 1; b < cultivars.length; b++) {
+      const dx = (cultivars[a].mean[iKey] - cultivars[b].mean[iKey]) / si;
+      const dy = (cultivars[a].mean[jKey] - cultivars[b].mean[jKey]) / sj;
+      minDist = Math.min(minDist, Math.hypot(dx, dy));
+    }
+  }
+  return minDist;
+}
+let bestPair = [0, 1];
+let bestScore = -Infinity;
+for (let i = 0; i < variables.length; i++) {
+  for (let j = i + 1; j < variables.length; j++) {
+    const score = pairSeparation(variables[i].key, variables[j].key);
+    if (score > bestScore) {
+      bestScore = score;
+      bestPair = [i, j];
+    }
+  }
+}
+
 function histogram(values, min, max, bins) {
   const width = (max - min) / bins;
   const counts = new Array(bins).fill(0);
@@ -109,6 +144,8 @@ for (let row = 0; row < n; row++) {
     const isDiagonal = row === col;
     const isBottomRow = row === n - 1;
     const isLeftCol = col === 0;
+    const isHeadlinePair =
+      !isDiagonal && ((row === bestPair[0] && col === bestPair[1]) || (row === bestPair[1] && col === bestPair[0]));
     const left = `${cellStart(col)}%`;
     const top = `${cellStart(row)}%`;
     const width = `${cellPct}%`;
@@ -149,10 +186,17 @@ for (let row = 0; row < n; row++) {
       lineWidth: 0,
       tickColor: t.inkSoft,
       plotLines: [{ value: colVar.min, color: t.inkSoft, width: 1, zIndex: 5 }],
+      // A faint full-height tint on the headline pair's own axis box (each
+      // mini-axis renders plotBands within its own left/top/width/height —
+      // the same isolation that keeps plotLines confined per cell) spotlights
+      // the most cleanly separated relationship without touching the others.
+      plotBands: isHeadlinePair
+        ? [{ from: colVar.min, to: colVar.max, color: Highcharts.color(t.palette[0]).setOpacity(0.08).get(), zIndex: 0 }]
+        : undefined,
       labels: {
         enabled: isBottomRow,
         formatter: tickFormatter,
-        style: { color: t.inkSoft, fontSize: "12px" },
+        style: { color: t.inkSoft, fontSize: "13px" },
       },
       title: isBottomRow
         ? { text: colVar.label, style: { color: t.inkSoft, fontSize: "13px" } }
@@ -175,10 +219,13 @@ for (let row = 0; row < n; row++) {
       lineWidth: 0,
       tickColor: t.inkSoft,
       plotLines: [{ value: yMin, color: t.inkSoft, width: 1, zIndex: 5 }],
+      plotBands: isHeadlinePair
+        ? [{ from: yMin, to: yMax, color: Highcharts.color(t.palette[0]).setOpacity(0.08).get(), zIndex: 0 }]
+        : undefined,
       labels: {
         enabled: !isDiagonal && isLeftCol,
         formatter: tickFormatter,
-        style: { color: t.inkSoft, fontSize: "12px" },
+        style: { color: t.inkSoft, fontSize: "13px" },
       },
       title:
         !isDiagonal && isLeftCol
@@ -211,7 +258,9 @@ for (let row = 0; row < n; row++) {
           xAxis: idx,
           yAxis: idx,
           color: t.palette[cIdx],
-          marker: { radius: 2.6, symbol: "circle", fillOpacity: 0.7, lineWidth: 0 },
+          marker: isHeadlinePair
+            ? { radius: 4.6, symbol: "circle", fillOpacity: 0.8, lineWidth: 0.75, lineColor: t.ink }
+            : { radius: 3.6, symbol: "circle", fillOpacity: 0.7, lineWidth: 0 },
           showInLegend: row === 1 && col === 0,
         });
       });
@@ -237,7 +286,7 @@ Highcharts.chart("container", {
     text: "scatter-matrix · javascript · highcharts · anyplot.ai",
     align: "left",
     x: 10,
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "26px", fontWeight: "600" },
   },
   subtitle: {
     text: "Rose cultivar bloom measurements · n=135, colored by cultivar",
@@ -250,7 +299,7 @@ Highcharts.chart("container", {
     verticalAlign: "top",
     layout: "vertical",
     x: -10,
-    y: 40,
+    y: 100,
     itemStyle: { color: t.inkSoft, fontSize: "13px" },
     itemHoverStyle: { color: t.ink },
     symbolRadius: 6,
