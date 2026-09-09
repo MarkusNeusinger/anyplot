@@ -68,10 +68,10 @@ p <- ggplot(milestones) +
   ) +
   geom_text(
     aes(
-      x = date, y = label_y, label = label, color = category,
+      x = date, y = label_y, label = label,
       vjust = ifelse(above, -0.15, 1.15)
     ),
-    size = 3, lineheight = 0.95, fontface = "plain"
+    color = INK, size = 3, lineheight = 0.95, fontface = "plain"
   ) +
   scale_color_manual(values = IMPRINT_PALETTE, name = "Category") +
   scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
