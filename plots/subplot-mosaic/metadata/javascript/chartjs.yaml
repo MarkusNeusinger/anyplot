@@ -1,0 +1,232 @@
+library: chartjs
+language: javascript
+specification_id: subplot-mosaic
+created: '2026-09-09T19:37:43Z'
+updated: '2026-09-09T19:49:42Z'
+generated_by: claude-sonnet
+workflow_run: 34395533487
+issue: 3002
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Fixed VQ-07: panels A, B, and C (all single-series) now consistently use the
+    canonical Imprint slot #009E73, directly addressing attempt-1 feedback.'
+  - Scatter markers in the Wind vs. Humidity panel enlarged from pointRadius 4 to
+    6.5, clearly more visible for the sparse 35-point dataset.
+  - Legend/tick fonts in the three smallest panels (D/E/F) bumped to 12px, improving
+    mobile-thumbnail legibility.
+  - Faithful mosaic-to-CSS-grid mapping with a caption narrating the design intent;
+    strong visual hierarchy from full-width dominant panel down to three small metric
+    panels.
+  - Six distinct core Chart.js chart types (line+gradient fill, bar, scatter, doughnut,
+    polarArea, horizontal bar) demonstrate library breadth without any plugin workarounds.
+  - Deterministic LCG-seeded data; clean minimal code; animation:false set correctly
+    on all six charts; theme-adaptive chrome verified correct in both renders.
+  - Traffic-light semantic exception on the Air Quality panel remains correctly documented
+    and applied.
+  weaknesses:
+  - The spec's optional empty/placeholder-cell mosaic capability (e.g. using "." as
+    a gap character) still isn't demonstrated — minor, since it's explicitly optional
+    in the spec.
+  - D/E/F legend/tick fonts at 12px are improved but still near the lower end for
+    mobile-thumbnail legibility; could go slightly larger if the panels have room.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) across the page and each of the six elevated panel cards.
+      Chrome: Title, italic caption, all six panel titles, axis titles (°C, mm, Wind (km/h), Humidity (%)), tick labels, and legends render in dark ink/soft-dark tones — all clearly readable.
+      Data: Panel A (line+gradient fill), Panel B (bar), Panel C (scatter) all now use the canonical green #009E73 (palette[0]), fixing the attempt-1 palette-compliance weakness. Panels D/E use the canonical 4-color Imprint order for categorical labels. Panel F correctly applies the traffic-light semantic exception (green/amber/red for Good/Moderate/Poor).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) across the page and panel cards.
+      Chrome: Title, caption, panel titles, axis titles, tick labels, and legends flip to light ink/soft-light tones and remain clearly readable; no dark-on-dark failures observed.
+      Data: All data colors (green line/bars/scatter, doughnut/polarArea slices, AQI traffic-light colors) are pixel-identical to the light render — only chrome changed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Readable in both themes; D/E/F fonts bumped to 12px from 10-11px
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter markers enlarged to pointRadius 6.5
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; AQI pairs color with labels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); clean proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: panels A/B/C all use canonical palette[0] green'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Elevated cards, gradient fill, clear size hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grids, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point plus narrating caption
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Faithful ASCII-art mosaic-to-CSS-grid mapping
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Optional empty/placeholder-cell capability not demonstrated
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct across all six panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Six chart types cover a wide range of encodings
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Weather-station dashboard is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values in plausible real-world ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: responsive/maintainAspectRatio/animation:false all set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct core chart types, indexAxis, tick callbacks
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Gradient-fill callback, alpha-blended polarArea, categoryPercentage
+          tuning
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending
