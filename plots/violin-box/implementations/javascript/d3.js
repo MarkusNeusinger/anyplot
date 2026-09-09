@@ -26,22 +26,22 @@ function randomNormal(rng, mean, std) {
   const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
   return mean + z * std;
 }
-const clipScore = (v) => Math.min(100, Math.max(0, v));
-
 const rng = makeRng(42);
 const pointsPerGroup = 150;
 const groupSpecs = [
-  { label: "Traditional Lecture", sample: () => clipScore(randomNormal(rng, 68, 11)) },
-  { label: "Flipped Classroom", sample: () => clipScore(randomNormal(rng, 76, 9)) },
+  { label: "Traditional Lecture", sample: () => randomNormal(rng, 68, 11) },
+  { label: "Flipped Classroom", sample: () => randomNormal(rng, 76, 9) },
   {
     label: "Blended Learning",
-    sample: () => clipScore(rng() < 0.6 ? randomNormal(rng, 85, 6) : randomNormal(rng, 65, 9)),
+    sample: () => (rng() < 0.6 ? randomNormal(rng, 85, 6) : randomNormal(rng, 65, 9)),
   },
 ];
 
 const data = [];
 for (const spec of groupSpecs) {
-  for (let i = 0; i < pointsPerGroup; i++) data.push({ group: spec.label, value: spec.sample() });
+  for (let i = 0; i < pointsPerGroup; i++) {
+    data.push({ group: spec.label, value: Math.min(100, Math.max(0, spec.sample())) });
+  }
 }
 const groups = groupSpecs.map((g) => g.label);
 
@@ -203,7 +203,7 @@ groupLayers.each(function (group, i) {
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x));
 const yAxis = g.append("g").call(d3.axisLeft(y).tickFormat((v) => `${v}`));
 for (const axis of [xAxis, yAxis]) {
-  axis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
+  axis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "18px");
   axis.selectAll("line").attr("stroke", t.inkSoft);
   axis.select(".domain").attr("stroke", t.inkSoft);
 }
@@ -214,7 +214,7 @@ g.append("text")
   .attr("y", ih + 64)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "18px")
+  .style("font-size", "20px")
   .text("Teaching Method");
 
 g.append("text")
@@ -223,7 +223,7 @@ g.append("text")
   .attr("y", -70)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "18px")
+  .style("font-size", "20px")
   .text("Test Score (%)");
 
 // --- Title -------------------------------------------------------------------
