@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: volcano-basic
 created: '2026-09-09T21:56:12Z'
-updated: '2026-09-09T22:00:18Z'
+updated: '2026-09-09T22:08:49Z'
 generated_by: claude-sonnet
 workflow_run: 34409269516
 issue: 2924
@@ -12,52 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Correct volcano-plot semantics: significance/effect-size thresholds drawn as
-    dashed guide lines at the exact spec-mandated positions (±1 log2FC, -log10(0.05)),
-    and points are color-coded by status exactly as the spec requests (gray/red/blue
-    for not-significant/up/down).'
-  - Theme-adaptive chrome is fully correct in both renders — background, title, axis
-    labels, tick labels, grid, and legend all use the right theme tokens with no dark-on-dark
-    or light-on-light failures, and no edge clipping.
-  - Clean, reproducible, KISS-structured R code (single set.seed(42), no functions/classes,
-    ragg::agg_png for the PNG device) with a title and legend that match the spec/style-guide
-    format exactly.
-  - Data is a realistic, neutral RNA-seq differential-expression scenario with a proper
-    mix of non-significant, up-regulated, and down-regulated genes at plausible fold-change/p-value
-    magnitudes.
+  - 'Directly addresses both prior weaknesses: the non-significant cluster is now
+    visibly translucent instead of a solid blob, and top-hit genes are labeled per
+    the spec''s "consider labeling" note.'
+  - New "191 down" / "187 up" annotate() callouts add a clear narrative focal point
+    without cluttering the plot.
+  - Theme-adaptive chrome remains fully correct in both renders — no dark-on-dark/light-on-light
+    failures, no edge clipping, labels well clear of the canvas border even for the
+    extreme GENE2140 point.
+  - Clean, reproducible, KISS-structured R code; the comment explaining the ggrepel-unavailable
+    workaround is exactly the kind of non-obvious rationale worth keeping in the file.
   weaknesses:
-  - The dense central cluster (~2,000 of the 2,400 points) is heavily overplotted
-    into a solid dark blob in both themes — reduce geom_point size/alpha further for
-    the non-significant class (or keep current sizing only for the colored significant
-    points) so individual points stay distinguishable.
-  - Spec says to 'consider labeling top significant features by name' — no gene labels
-    are drawn. Add ggrepel-based text labels for the handful of most extreme up/down-regulated
-    genes to sharpen data storytelling and demonstrate a distinctive ggplot2 feature.
-  - Library usage is fairly generic (geom_point + geom_vline/geom_hline + scale_color_manual
-    + theme_minimal) — it doesn't showcase anything distinctive to ggplot2 beyond
-    the plotmath y-axis expression. Consider ggrepel labels or annotate()-based count
-    callouts (e.g. 'n up / n down') to raise Library Mastery.
-  - Visual refinement leans on theme_minimal defaults with only grid-color/alpha tweaks
-    — spines are removed by the library default rather than by deliberate styling
-    choices, so Design Excellence reads as 'good' rather than 'publication-ready'.
+  - The central non-significant cloud is lighter now but still dense enough near the
+    origin to read as a soft blob — could go slightly further (e.g. size ~0.8) if
+    a future pass revisits this.
+  - The manual rank-based label nudge is a reasonable workaround, but it isn't a distinctive
+    ggplot2-specific technique — Library Mastery is capped by the missing ggrepel
+    dependency rather than the implementation's choices.
+  - Visual refinement still reads primarily as tuned theme_minimal rather than a fully
+    bespoke chrome (e.g., axis line still drawn continuously rather than a more minimal
+    treatment).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "volcano-basic · r · ggplot2 · anyplot.ai" in dark ink at top-left; "Status" legend with gray/red/blue swatches directly below the title; x-axis "Log2 Fold Change" and y-axis "-Log10 (p-value)" (plotmath rendering) in dark/soft-dark ink; subtle light gray gridlines. All text is clearly readable against the light background — no light-on-light issues.
-      Data: Dense gray cloud of "Not significant" points centered near (0, low y) forming an overplotted blob; sparser blue "Down-regulated" points scatter to the left beyond the left dashed vertical threshold line; sparser red "Up-regulated" points scatter to the right beyond the right dashed vertical threshold line; both colored groups sit above the dashed horizontal significance line. Two dashed vertical lines at approximately x=-1 and x=+1, one dashed horizontal line at y≈1.3, all in a soft ink tone.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "volcano-basic · r · ggplot2 · anyplot.ai", "Status" legend (gray/red/blue), x-axis "Log2 Fold Change", y-axis "-Log10 (p-value)" via plotmath — all clearly readable in dark ink against the light background.
+      Data: Dense translucent gray cloud (Not significant, alpha 0.22) near origin; blue down-regulated points (#4467A3) fan left past the left dashed threshold; red up-regulated points (#AE3030) fan right past the right dashed threshold; dashed threshold lines at ±1 log2FC and -log10(0.05); bold "191 down"/"187 up" count callouts; italic gene-name labels (GENE2373, GENE1044, GENE815, GENE952, GENE2157, GENE2140) on top-hit points with no overlap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis labels now rendered in light ink (off-white/light-gray) against the dark background; gridlines are a faint light gray. All chrome text is clearly legible — no dark-on-dark failures observed.
-      Data: Same spatial distribution as the light render — gray "Not significant" blob (now a lighter muted gray, adapted for dark-bg contrast), red "Up-regulated" and blue "Down-regulated" points in identical positions and identical hex colors to the light render (#AE3030 red, #4467A3 blue). Dashed threshold lines are the same relative positions, now in a light dashed tone. Data colors are confirmed identical to light render, only chrome (background, text, grid, muted-gray tone) flips as expected.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title, legend, axis labels, count callouts, and gene labels now in light ink — fully legible, no dark-on-dark failures. Grid lines faint but visible.
+      Data: Colors confirmed identical to light render (#AE3030 red, #4467A3 blue, muted gray not-significant) — only chrome flipped between themes, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,78 +57,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable at full size
-          and would scale down fine; title fits comfortably without overflow or clipping
-          in either theme
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data elements in either render
+        comment: No collisions between labels, callouts, or data
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Colored significant points are visible, but the ~2,000-point non-significant
-          cluster overplots into a solid blob — size/alpha could be tuned further
-          for that subset
+        comment: Non-significant cluster is translucent and readable, still dense
+          near origin
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue/gray combination is CVD-safe, not a red-green pairing, and
-          provides good contrast in both themes
+        comment: Red/blue/gray with adequate contrast, not sole signal (position also
+          encodes status)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the canvas well, legend sits directly above the plot,
-          balanced margins, nothing cut off
+        comment: Good proportions, nothing cut off, canvas dimension gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels are descriptive (Log2 Fold Change, -Log10 (p-value))
-          — the metrics are self-defining, no extra units needed
+        comment: Descriptive axis labels with correct units/notation
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic color assignment (red=up, blue=down, muted=not-significant)
-          matches the spec''s explicit color-coding request and draws from the Imprint
-          palette/anchors; backgrounds are theme-correct #FAF8F1/#1A1A17 and data
-          colors are identical across themes'
+        comment: Semantic red/blue/muted exception justified by spec + domain convention;
+          correct theme backgrounds both renders
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Thoughtful semantic color mapping and threshold guide lines go beyond
-          a bare default, but the overplotted core cluster and generic theme_minimal
-          base keep it short of publication-ready
+        passed: false
+        comment: Semantic colors, dual marker sizing, callout annotations show intent;
+          short of full custom design language
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Subtle grid and generous whitespace are customized, but spine removal
-          and layout come mostly from theme_minimal's defaults rather than deliberate
-          refinement
+        passed: false
+        comment: Grid/whitespace tuned but still close to theme_minimal defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Color contrast between significant and non-significant points plus
-          threshold lines create a clear visual hierarchy, though no feature labeling
-          means the viewer must still find specific genes themselves
+        passed: true
+        comment: Count callouts and top-hit gene labels create a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -145,26 +128,26 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct volcano plot (scatter of effect size vs. significance with
-          threshold lines)
+        passed: true
+        comment: Correct volcano plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Both threshold lines and three-way significance color-coding present;
-          feature labeling was only a 'consider' suggestion, not mandatory
+        passed: true
+        comment: Threshold lines, color coding, labeling all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: log2_fold_change on x, neg_log10_pvalue on y, full data range visible
+        passed: true
+        comment: log2FC on x, -log10(p) on y, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches '{spec-id} · r · ggplot2 · anyplot.ai' exactly; legend
-          labels (Not significant / Up-regulated / Down-regulated) match the data
-          semantics
+        passed: true
+        comment: Title matches mandated format exactly, legend labels match spec
     data_quality:
       score: 15
       max: 15
@@ -173,20 +156,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: 'Shows the full range of volcano-plot features: dense non-significant
-          core, clear up- and down-regulated tails, and outlier high-significance
-          points'
+        passed: true
+        comment: 'All plot-type aspects shown: thresholds, coloring, labeling, counts'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, comprehensible RNA-seq differential expression scenario
+        passed: true
+        comment: Plausible, neutral RNA-seq differential expression scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Fold-change and p-value magnitudes are plausible for real RNA-seq
-          differential expression results
+        passed: true
+        comment: Fold-change and p-value magnitudes sensible for omics data
     code_quality:
       score: 10
       max: 10
@@ -195,53 +178,59 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports → data → plot → save, no functions/classes
+        passed: true
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: ggplot2, dplyr, ragg, scales all used
+        passed: true
+        comment: Only used packages imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Clean, no over-engineering, no fake functionality
+        passed: true
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{theme}.png via ragg::agg_png, current API
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        comment: Correct, idiomatic ggplot2 usage (scale_color_manual, geom_vline/hline,
-          theme_minimal) but doesn't reach for more advanced patterns
+        passed: true
+        comment: dplyr chains, case_when, expression() plotmath axis label
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        comment: Plotmath expression() for the y-axis label is a small R/ggplot2-specific
-          touch, but overall the approach could be replicated easily in most other
-          libraries
-  verdict: REJECTED
+        passed: false
+        comment: Manual label nudge workaround rather than a distinctive native ggplot2
+          technique (ggrepel unavailable in CI)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - binning
+  - groupby-aggregation
+  dataprep: []
   styling:
   - alpha-blending
   - grid-styling
