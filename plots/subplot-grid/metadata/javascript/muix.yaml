@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: subplot-grid
 created: '2026-09-09T19:17:02Z'
-updated: '2026-09-09T19:40:41Z'
+updated: '2026-09-09T19:49:11Z'
 generated_by: claude-sonnet
 workflow_run: 34393267703
 issue: 2782
@@ -12,135 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/muix/plot-dark.html
-quality_score: 79
+quality_score: 85
 review:
   strengths:
-  - 2x2 grid genuinely mixes four distinct chart types (line, bar, scatter, donut)
-    instead of repeating one plot type across cells, exactly matching the spec's core
-    requirement
-  - Each panel has its own clear title identifying its content, with consistent spacing
-    (CELL_GAP/OUTER_GAP) and aligned margins across all four cells
-  - Closing-price line chart uses a ChartsReferenceLine to call out the 18-day peak
-    price, adding a genuine analytical touch (LM-02) beyond a bare line render
-  - Deterministic LCG-seeded data generation with a plausible, neutral financial-dashboard
-    scenario (price, volume, sector allocation) covering realistic scale and relationships
-  - 'First categorical series is the mandated #009E73 brand green across line/bar/scatter,
-    and the pie''s 4-way palette is theme-identical between light and dark renders'
-  - skipAnimation set on every chart component; both renders share exactly the same
-    layout, sizing, and data colors with only chrome (background/text/grid) flipping
+  - Correctly implements a 2x2 subplot grid combining four distinct chart types (line,
+    bar, scatter, pie) in one cohesive figure, matching the spec's core requirement
+    of combining different plot types rather than faceting the same one
+  - 'Smart use of shared vs. independent axes: line and bar charts share the day-index
+    x-axis (price/volume by trading day) while scatter (price vs. volume) and pie
+    (sector allocation) use fully independent scales, directly demonstrating the spec''s
+    ''shared or independent axes'' requirement'
+  - ChartsReferenceLine highlighting the peak closing price adds a clear analytical
+    focal point without cluttering the chart
+  - Both light and dark renders are fully legible, Imprint palette compliant (brand
+    green first series, correct pie order), and pass the canvas dimension gate
+  - Deterministic in-memory data generation via a tiny seeded LCG, consistent spacing/margins/title
+    styling across all four cells
   weaknesses:
-  - 'Bottom-right pie chart: the ''Technology 34%'' arcLabel overflows the outer radius
-    of its wedge and spills onto the page background. In plot-light.png the spilled
-    portion (the ''%'' glyph and part of ''4'') renders as white text on the #FAF8F1
-    cream background — near-invisible, a light-on-light legibility failure (the same
-    defect class the dark-on-dark check targets, mirrored in light mode). In plot-dark.png
-    the same overflow is harmless because white-on-#1A1A17 still reads fine, but VQ-01
-    fails because the render must pass in BOTH themes. Fix by keeping the label inside
-    the wedge: shrink arcLabel to just the percentage (e.g. ''34%'' without the sector
-    name, with sector names shown via the panel legend/labels elsewhere), reduce arcLabelRadius/font
-    size for the largest slice, or set arcLabelMinAngle higher combined with a shorter
-    valueFormatter so long labels never claim more angular width than the slice provides.'
-  - The same arcLabel overflow is a minor layout containment issue beyond the strict
-    legibility failure — text extends past its natural container (the donut wedge)
-    into surrounding whitespace, which a tighter label-fit would resolve.
-  - 'Design Excellence is solid but still close to a well-configured default: only
-    the price panel has an emphasis device (the peak reference line); the volume,
-    scatter, and pie panels display data without additional visual hierarchy or storytelling
-    beyond direct labeling.'
+  - 'Leftover duplicate header comment block at the top of the file (an old ''// anyplot.ai''
+    block with a stale ''Quality: 79/100'' line and prior library-version text, immediately
+    followed by the current header) -- collapse to a single header block'
+  - At the ~400px mobile thumbnail scale, cell titles and axis tick labels in the
+    2x2 grid become quite small and harder to read; consider nudging font sizes up
+    slightly, though packing four independent panels into one figure is an inherent
+    trade-off of this plot type
+  - Pie/donut arc value labels are white text on mid-tone wedge colors (teal/purple/blue/amber)
+    -- legible now, but worth double-checking contrast if the sector palette selection
+    ever changes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) across the full 3200x1800 canvas, consistent behind all four panels.
-      Chrome: Bold dark title "subplot-grid · javascript · muix · anyplot.ai" centered at top. Each of the four panel titles (Closing Price, Trading Volume, Price vs. Volume Correlation, Portfolio Sector Allocation) is dark, small, left-aligned and clearly legible. Axis titles ("Trading Day", "Price ($)", "Volume (K)", "Volume (shares)") and tick labels are dark and readable against the cream background. Grid lines are thin, light gray, subtle but visible.
-      Data: Line, bar, and scatter series all use brand green #009E73 consistently. The dashed peak-price reference line is amber with an amber label. The pie/donut uses four Imprint colors (green/amber/blue/purple) with white bold percentage+name labels inside each wedge.
-      Legibility verdict: FAIL — the "Technology 34%" arc label on the pie chart is wider than its wedge at that radius and its trailing characters ('%' and part of '4') spill past the green wedge boundary onto the cream page background. White text on #FAF8F1 there is near-invisible (light-on-light). All other text in this render (titles, axis labels, ticks, the other three pie labels) is fully readable.
+      Background: Warm off-white (#FAF8F1-range), not pure white, not dark.
+      Chrome: Figure title "subplot-grid · javascript · muix · anyplot.ai" in bold dark ink, centered at top. Each of the four cells has a dark, medium-weight cell title ("Closing Price (18 trading days)", "Trading Volume, shares (18 trading days)", "Price vs. Volume Correlation", "Portfolio Sector Allocation"). Axis labels ("Trading Day", "Price ($)", "Volume (K)", "Volume (shares)") and tick labels are dark and clearly readable against the light background. Horizontal grid lines are subtle grey, visible but not dominant.
+      Data: Top-left line chart shows an 18-day closing-price series in brand green with a dashed amber ChartsReferenceLine marking the peak ("Peak $128.91"), amber label text clearly legible. Top-right bar chart (green bars) shows trading volume per day sharing the same day-index x-axis as the line chart. Bottom-left scatter shows green markers plotting price vs. volume with fully independent axis scales. Bottom-right is a green/purple/blue/amber donut chart (Technology 34%, Healthcare 24%, Financials 22%, Energy 20%) with a custom color-swatch legend to its right; first series is brand green #009E73 as required.
+      Legibility verdict: PASS -- all titles, axis labels, tick labels, and data labels are clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) across the full canvas, matching the light render's layout exactly.
-      Chrome: Title and all panel titles/axis labels/ticks flip to light/white text, clearly readable against the dark background. Grid lines are thin and subtle, still visible without dominating.
-      Data: Line, bar, scatter, and pie colors are pixel-identical to the light render (#009E73 green, amber reference line, and the same four pie colors) — only chrome flipped as required.
-      Legibility verdict: PASS for this render specifically — the same "Technology 34%" label overflow occurs geometrically, but because the surrounding page here is dark (#1A1A17), the white overflow text still reads fine (white-on-dark has good contrast). No dark-on-dark failures observed anywhere in this render.
-
-    Overall: the pie-label overflow is a real, reproducible defect that breaks legibility specifically in the light theme; per the theme-readability rule, a defect that fails in either theme fails the render as a whole.
+      Background: Warm near-black (#1A1A17-range), not pure black, not light.
+      Chrome: Same figure title and four cell titles, now rendered in light/white ink, clearly legible against the dark background. Axis labels and tick labels are light-colored and readable. Grid lines are subtle and still visible without dominating.
+      Data: All data colors are identical to the light render -- the line, bars, scatter markers, and donut wedge colors (green/purple/blue/amber) are unchanged; only the chrome (background, title/axis/tick text, grid lines) flipped to the dark-theme tokens. The amber reference-line dash and "Peak $128.91" label remain clearly visible on the dark surface. Donut arc percentage labels (white bold text) remain legible on all four wedge colors.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; every title, axis label, tick label, and data annotation is clearly readable against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 6
         max: 8
-        passed: false
-        comment: Pie 'Technology 34%' arcLabel overflows its wedge; the spilled glyphs
-          render white-on-#FAF8F1 in the light render, making them unreadable there
-          (passes in dark render only, which still fails the render as a whole)
+        passed: true
+        comment: All text readable at full size in both themes; explicit font sizes
+          throughout. At the ~400px mobile thumbnail, the 2x2 grid's cell titles and
+          tick labels get quite small -- an inherent trade-off of packing four panels
+          into one figure, but worth a size nudge.
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: No overlap with other text/data elements; the overflowing arcLabel
-          spills into empty whitespace rather than colliding with another element
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line has no markers by design (trend emphasis), bar/scatter/pie sizing
-          all appropriate for the ~18-20 point density
+        comment: No collisions between text, data, legend, or annotation elements
+          in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers (size 9) and bars/lines are clearly visible for the sparse
+          18-point series; donut wedges well separated with padding angle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; CVD-safe Imprint palette, no red-green-only encoding
+        comment: Strong contrast in both themes; multi-hue pie palette (not red-green
+          dependent), white bold percentage labels legible on every wedge.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Balanced 2x2 grid fills the canvas well; minor deduction because
-          the pie label overflows past its wedge (its natural container)
+        comment: Canvas dimension gate passed (3200x1800). Title proportion, cell
+          spacing, and margins are well balanced; nothing clipped or overflowing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All axis labels descriptive with units: ''Price ($)'', ''Volume
-          (K)'', ''Volume (shares)'', ''Trading Day'''
+        comment: Axis labels include units ($, K, shares); figure title matches the
+          required format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in all cartesian charts; pie uses Imprint
-          palette with a defensible semantic-exception order (Energy=amber, Financials=blue);
-          backgrounds theme-correct in both renders'
+        comment: 'First series is brand green #009E73 in every chart; pie follows
+          canonical Imprint order; backgrounds are theme-correct in both renders;
+          data colors identical between themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: 'Above a bare default: reference line, custom pie arc labels, consistent
-          margins/spacing across panels, but not yet publication-level polish'
+        comment: Custom typography hierarchy, coordinated reference line, and hand-built
+          donut legend show intentional polish beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Subtle horizontal-only grid on line/bar, generous cell/outer gaps,
-          legends hidden in favor of direct labeling
+        comment: Subtle horizontal grid, no default chart chrome clutter, generous
+          whitespace between cells; donut has a clean padding angle and inner radius.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Peak-price reference line creates one clear focal point, but the
-          volume/scatter/pie panels display data without additional emphasis or hierarchy
+        comment: The peak-price reference line gives the top-left panel a clear focal
+          point, and the four-panel layout reads as a coherent mini financial dashboard
+          rather than four unrelated charts.
     spec_compliance:
       score: 15
       max: 15
@@ -151,94 +141,88 @@ review:
         max: 5
         passed: true
         comment: Genuine subplot grid combining four distinct chart types, not a faceted
-          repeat of one type
+          repeat of one chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 2x2 configurable-style grid, mixed plot types, shared day-index axis
-          (line/bar), fully independent axes (scatter), consistent per-cell titling/spacing
+        comment: Shared axis (line+bar) and independent axes (scatter, pie) both demonstrated;
+          each cell has a clear title; spacing/alignment is consistent.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned in every panel; all data points visible within
-          axis ranges
+        comment: X/Y mappings are correct and sensible in every cell; axes show the
+          full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Figure title matches the mandated 'subplot-grid · javascript · muix
-          · anyplot.ai' format; per-panel labels substitute for a legend appropriately
-          given hidden legends
+        comment: Figure title matches 'subplot-grid · javascript · muix · anyplot.ai'
+          exactly; custom pie legend labels match the data (Technology, Healthcare,
+          Financials, Energy).
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        passed: true
-        comment: Price shows a full rise/fall/rise cycle, volume varies day to day,
-          scatter shows scattered (non-trivial) correlation, pie shows four differently-sized
-          sectors
+        comment: Covers line, bar, scatter, and pie in one grid, showing the breadth
+          the spec asks for.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, comprehensible financial-dashboard scenario (stock price,
-          volume, sector allocation)
+        comment: Plausible, neutral financial-dashboard scenario (price, volume, correlation,
+          sector allocation).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Price (~$124-129), volume (~420K-780K shares), and sector percentages
-          (summing to 100%) are all realistic and internally consistent
+        comment: Price range ($124-129), volume range (420K-780K), and sector percentages
+          (summing to 100%) are all sensible for the domain.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Flat imports -> data -> Chart component structure; the only helper
-          (makeRng) is a minimal, necessary deterministic-RNG utility since the browser
-          has no seeded RNG
+        comment: Single component, no unneeded classes -- but the file has a leftover
+          duplicate header comment block that should be collapsed to one.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) produces deterministic data
+        comment: Deterministic seeded LCG (seed=42) drives all data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
         comment: Every import (LineChart, BarChart, ScatterChart, PieChart, ChartsReferenceLine,
-          Box, Typography) is used
+          Box, Typography) is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a 4-panel dashboard; no fake UI or simulated
-          interactivity
+        comment: No fake UI or simulated interactivity; complexity matches the four-chart
+          layout.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default-exported component, no manual
-          save/mount calls, skipAnimation on every chart'
+        comment: skipAnimation set on every chart; sizes derived from window.ANYPLOT_SIZE;
+          current MUI X community API used throughout.
     library_mastery:
       score: 7
       max: 10
@@ -247,23 +231,24 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correct high-level MUI X API usage across four chart components with
-          proper xAxis/yAxis/series/margin configuration
+        comment: Idiomatic use of ChartsReferenceLine, grid, margin, valueFormatter,
+          and arcLabel/arcLabelMinAngle.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses ChartsReferenceLine and custom arcLabel formatting, going beyond
-          generic chart-only usage, though not a feature unique to MUI X alone
-  verdict: REJECTED
+        comment: Combines four distinct MUI X chart components with a reference line
+          and a hand-built donut legend -- a solid but not maximal showcase of the
+          library's community surface.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
