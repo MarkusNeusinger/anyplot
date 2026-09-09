@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: waffle-basic
 created: '2026-09-09T22:01:30Z'
-updated: '2026-09-09T22:05:14Z'
+updated: '2026-09-09T22:18:08Z'
 generated_by: claude-sonnet
 workflow_run: 34409687589
 issue: 998
@@ -12,49 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 49
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order with first series #009E73, identical
-    data colors across light and dark renders'
-  - Theme-adaptive chrome correctly implemented in both renders — warm off-white/near-black
-    backgrounds, all text readable, no dark-on-dark or light-on-light failures
-  - Categories sorted largest-to-smallest (Engineering to R&D), giving the waffle
-    a natural visual hierarchy and a clear focal point at top-left
-  - Tiles separated by PAGE_BG-colored strokes with theme_void() chrome removal —
-    a clean, purpose-built waffle look with no stray axes/gridlines
-  - Legend clearly lists each category with its exact percentage, matching the underlying
-    data
-  - Canvas is exactly 2400x2400 (square), matching the canonical size gate
+  - Unused `library(dplyr)` import from attempt 1 has been removed
+  - Second legend row (Sales, R&D) now independently centered under the grid via measured
+    label widths, fixing the prior alignment asymmetry
+  - 'Correct Imprint palette in canonical order, first series #009E73, identical data
+    colors across both renders'
+  - Theme-adaptive chrome correctly implemented — both renders pass the light/dark
+    readability check with no dark-on-dark or light-on-light failures
+  - Canvas is exactly 2400×2400 (square), matching the canonical size
+  - 'Data mapping is pixel-accurate: tile counts per department (32/24/19/15/10) exactly
+    match the waffle grid and legend percentages'
   weaknesses:
-  - Unused `library(dplyr)` import — no dplyr verb is called anywhere in the script
-    (only `tibble::tibble()`, base `rep()`/`paste0()`/`round()` are used); remove
-    the import for clean imports (CQ-03).
-  - Second legend row (Sales, R&D) starts flush-left instead of being centered under
-    the grid, creating a slight visual asymmetry against the first row of three items
-    — center each legend row for better balance (DE-02/VQ-05).
-  - Design Excellence is solid but stops at 'good default' — consider a stronger focal
-    point (e.g. a subtle callout on the largest category) or extra polish to push
-    into publication-ready territory (DE-01).
-  - Library Mastery is generic — geom_tile + coord_equal is the standard, library-agnostic
-    approach to a waffle grid; consider a ggplot2-distinctive touch (custom legend
-    key glyphs, annotate() emphasis, or grob-based rounded tiles) to better leverage
-    the grammar-of-graphics strengths (LM-02).
+  - 'Critical: the new `annotate("text", x = 5.5, y = callout_row, label = paste0(budget$share[1],
+    "%"), color = "#FFFFFF", ...)` callout added this attempt to emphasize the largest
+    category (Engineering, 32%) never appears in either render — a full-image pixel
+    scan of both plot-light.png and plot-dark.png finds zero white/near-white pixels
+    anywhere in the file, confirming the text layer produces no visible output despite
+    ~15 lines of supporting position logic (`top_full_rows`, `callout_row`). This
+    was the exact feature added to address attempt 1''s DE-03/LM-02 feedback, so the
+    intended improvement was not actually delivered.'
+  - Because the callout is invisible, Design Excellence / Library Mastery gained no
+    real benefit over attempt 1 despite the added code complexity.
+  - Legend still uses a hand-rolled geom_point/geom_text construction rather than
+    ggplot2's native guide_legend — acceptable but not a distinctive ggplot2 feature.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Company Budget Allocation · waffle-basic · r · ggplot2 · anyplot.ai" in dark ink, clearly legible at the top; legend below the grid in two rows (3 items, then 2 items) with soft gray text — all legible against the light background.
-      Data: A 10x10 grid of squares forming a waffle chart, read top-to-bottom in rows of 10. Colors in order: green (#009E73, Engineering 32%), lavender (#C475FD, Marketing 24%), blue (#4467A3, Operations 19%), ochre (#BD8233, Sales 15%), red (#AE3030, R&D 10%) — this matches the canonical Imprint palette order with the first series correctly green. Squares are separated by thin background-colored strokes for a clean grid look.
-      Legibility verdict: PASS — all text (title, legend labels) is clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: title "Company Budget Allocation · waffle-basic · r · ggplot2 · anyplot.ai" in dark ink, clearly legible. Legend below the grid in two centered rows with soft-gray labels, also legible.
+      Data: 10x10 grid of squares in Imprint palette order - green #009E73 (Engineering, top 3 rows + 2), lavender #C475FD (Marketing), blue #4467A3 (Operations), ochre #BD8233 (Sales), red #AE3030 (R&D). Tile counts match legend percentages exactly. A full-image color scan found NO white/near-white pixels anywhere in the file, meaning the code's intended "32%" callout annotation (white bold text meant to sit on the green Engineering block) is completely absent from the output.
+      Legibility verdict: PASS for all rendered chrome/legend text, but FAIL for the intended callout annotation, which never renders at all (zero pixels).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
-      Chrome: Same title now rendered in light/off-white text, clearly legible against the dark background; legend text in light gray, also fully readable. No dark-on-dark failures observed.
-      Data: Identical waffle grid and identical five data colors (green, lavender, blue, ochre, red) as the light render — only the background/chrome flipped, confirming theme-adaptive color handling is correct.
-      Legibility verdict: PASS — all text readable against the dark background, brand green remains vivid and distinguishable on both surfaces.
+      Background: warm near-black, matches #1A1A17.
+      Chrome: same title and legend, now in light ink / light-gray, fully legible against the dark surface - no dark-on-dark failures.
+      Data: identical tile colors to the light render (only chrome flipped, as required). Same pixel scan of this file also found zero white/near-white pixels - the callout is equally absent here.
+      Legibility verdict: PASS for chrome/legend text, FAIL for the missing callout annotation (same defect as light render).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -62,72 +60,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and legend font sizes explicitly set (title_size computed,
-          legend.text size=10); readable in both themes, title fits without clipping
+        comment: All rendered title/legend text is readable in both themes with explicit
+          sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, grid, or legend
+        comment: No collisions between tiles, legend items, or title
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 0
         max: 6
-        passed: true
-        comment: Waffle tiles are large, evenly sized, and clearly visible with strokes
-          separating them
+        passed: false
+        comment: The intended '32%' callout annotation is completely invisible in
+          both renders - confirmed via full-image pixel scan finding zero white pixels
+          in either PNG
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Five distinct, CVD-safe Imprint hues; tile strokes help boundary
-          perception beyond hue alone
+        comment: Good contrast, CVD-safe categorical palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid + legend + title use a good share of the square canvas with
-          balanced margins
+        comment: Canvas exactly 2400x2400, no overflow or clipping, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a waffle chart; title is descriptive
+        comment: Title follows the mandated format with descriptive prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for positions 1-5,
-          theme-correct chrome in both renders'
+        comment: 'Canonical Imprint order, first series #009E73, backgrounds correct
+          in both themes'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful stroke-separated tiles and clean layout, but not yet publication-ready
+        passed: true
+        comment: Clean stroke-separated tile grid with purpose-built legend, solid
+          but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: theme_void removes chrome and whitespace is generous, but legend
-          row alignment is slightly uneven
+        passed: true
+        comment: theme_void chrome removal plus fixed, properly centered legend rows
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Descending sort order creates a clear visual hierarchy/focal point,
-          though no explicit emphasis or annotation
+        comment: Descending sort gives a natural hierarchy, but the explicit emphasis
+          annotation meant to add a real focal point never renders, so no additional
+          storytelling was actually delivered
     spec_compliance:
       score: 15
       max: 15
@@ -143,22 +141,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, legend with percentages, whole-square rounding,
-          5 categories summing to 100
+        comment: Grid, distinct colors, legend with percentages all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row/column grid positions correctly derived from cumulative category
-          shares
+        comment: Tile counts per category exactly match values (32/24/19/15/10, verified
+          pixel-accurate)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          category + percentage
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match categories and percentages
     data_quality:
       score: 15
       max: 15
@@ -168,20 +165,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 categories with varying magnitudes, including a mid-row color transition
-          demonstrating the packing behavior
+        comment: 'Shows all waffle chart aspects: grid, legend, percentages'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic business scenario (department budget allocation)
+        comment: Plausible, neutral company budget allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum to 100 and reflect a plausible department budget split
+        comment: Values sum to 100, sensible department split
     code_quality:
       score: 9
       max: 10
@@ -200,16 +196,17 @@ review:
         comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
-        score: 1
-        max: 2
-        passed: false
-        comment: library(dplyr) is imported but never used
-      - id: CQ-04
-        name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake functionality
+        comment: Unused dplyr import from attempt 1 removed
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Mostly clean, but ~15 lines (top_full_rows/callout_row/annotate)
+          implement a feature that produces zero visible output
       - id: CQ-05
         name: Output & API
         score: 1
@@ -225,24 +222,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_tile + coord_equal + scale_fill_manual + theme_void
-          grammar-of-graphics composition
+        comment: geom_tile + coord_equal + patchwork composition is correct, idiomatic
+          ggplot2
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic tile-grid approach replicable in any plotting library; no
-          ggplot2-distinctive feature used
+        comment: Attempted distinctive touch (annotate emphasis) does not actually
+          render, so no distinctive feature is delivered in the output
   verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - patchwork
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting
