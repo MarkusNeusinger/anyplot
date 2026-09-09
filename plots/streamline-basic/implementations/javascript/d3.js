@@ -99,7 +99,7 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "16px")
-  .text("X Position");
+  .text("X Position (R)");
 
 svg
   .append("text")
@@ -107,7 +107,7 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "16px")
-  .text("Y Position");
+  .text("Y Position (R)");
 
 // --- Cylinder obstacle --------------------------------------------------
 svg
@@ -115,8 +115,8 @@ svg
   .attr("cx", xScale(0))
   .attr("cy", yScale(0))
   .attr("r", pxPerUnit * cylinderRadius)
-  .attr("fill", t.muted)
-  .attr("fill-opacity", 0.35)
+  .attr("fill", t.inkSoft)
+  .attr("fill-opacity", 0.4)
   .attr("stroke", t.ink)
   .attr("stroke-width", 2);
 
@@ -179,6 +179,8 @@ svg
   .attr("y", legendY)
   .attr("width", legendWidth)
   .attr("height", legendHeight)
+  .attr("rx", 3)
+  .attr("ry", 3)
   .attr("fill", "url(#speedGradient)")
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", 1);
@@ -192,21 +194,64 @@ svg
   .style("font-size", "14px")
   .text("|v|");
 
+const legendTicks = [
+  { y: legendY, value: speedExtent[1] },
+  { y: legendY + legendHeight, value: speedExtent[0] },
+];
+for (const tick of legendTicks) {
+  svg
+    .append("line")
+    .attr("x1", legendX + legendWidth)
+    .attr("x2", legendX + legendWidth + 6)
+    .attr("y1", tick.y)
+    .attr("y2", tick.y)
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1);
+  svg
+    .append("text")
+    .attr("x", legendX + legendWidth + 10)
+    .attr("y", tick.y)
+    .attr("dominant-baseline", "middle")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "13px")
+    .text(tick.value.toFixed(2));
+}
+
+// --- Annotation: mark the peak-speed point at the cylinder's shoulder -------
+const flatPoints = streamlines.flat();
+const maxSpeedPoint = flatPoints.reduce((best, p) => (p.speed > best.speed ? p : best));
+const maxPx = xScale(maxSpeedPoint.x);
+const maxPy = yScale(maxSpeedPoint.y);
+const labelDx = 46;
+const labelDy = maxSpeedPoint.y >= 0 ? -34 : 34;
+
 svg
-  .append("text")
-  .attr("x", legendX + legendWidth + 8)
-  .attr("y", legendY + 5)
-  .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
-  .text(speedExtent[1].toFixed(2));
+  .append("line")
+  .attr("x1", maxPx)
+  .attr("y1", maxPy)
+  .attr("x2", maxPx + labelDx)
+  .attr("y2", maxPy + labelDy)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.2);
+
+svg
+  .append("circle")
+  .attr("cx", maxPx)
+  .attr("cy", maxPy)
+  .attr("r", 5)
+  .attr("fill", speedColor(maxSpeedPoint.speed))
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
 
 svg
   .append("text")
-  .attr("x", legendX + legendWidth + 8)
-  .attr("y", legendY + legendHeight)
-  .attr("fill", t.inkSoft)
+  .attr("x", maxPx + labelDx + 6)
+  .attr("y", maxPy + labelDy)
+  .attr("dominant-baseline", "middle")
+  .attr("fill", t.ink)
   .style("font-size", "13px")
-  .text(speedExtent[0].toFixed(2));
+  .style("font-weight", "600")
+  .text(`Peak speed |v| ≈ ${maxSpeedPoint.speed.toFixed(2)}`);
 
 // --- Title --------------------------------------------------------------
 svg
