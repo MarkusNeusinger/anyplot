@@ -32,8 +32,15 @@ const genes = [];
 for (let i = 0; i < GENE_COUNT; i += 1) {
   const log2FoldChange = nextGaussian() * 1.4;
   const noise = nextGaussian() * 0.8;
-  const negLog10Pvalue = Math.max(0.01, Math.abs(log2FoldChange) * 1.6 + noise + nextRandom() * 0.6);
-  genes.push({ id: i, x: Number(log2FoldChange.toFixed(3)), y: Number(negLog10Pvalue.toFixed(3)) });
+  const negLog10Pvalue = Math.max(
+    0.01,
+    Math.abs(log2FoldChange) * 1.6 + noise + nextRandom() * 0.6,
+  );
+  genes.push({
+    id: i,
+    x: Number(log2FoldChange.toFixed(3)),
+    y: Number(negLog10Pvalue.toFixed(3)),
+  });
 }
 
 const nonSignificant = [];
@@ -64,12 +71,14 @@ const withAlpha = (hex, alpha) => {
 const UP_COLOR = t.palette[4]; // matte red — semantic anchor for up-regulated
 const DOWN_COLOR = t.palette[2]; // blue — semantic anchor for down-regulated
 const MUTED = t.theme === "light" ? "#6B6A63" : "#A8A79F"; // theme-adaptive muted anchor
-const NON_SIG_COLOR = withAlpha(MUTED, 0.6);
+const NON_SIG_COLOR = withAlpha(MUTED, 0.45);
 const THRESHOLD_COLOR = t.amber; // warning/caution anchor for the cutoff lines
 
 // --- Title (fontsize scales with title length, see plot-generator.md) -------
 const TITLE = "volcano-basic · javascript · muix · anyplot.ai";
-const TITLE_FONTSIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
+const TITLE_FONTSIZE = Math.round(
+  22 * (TITLE.length > 67 ? 67 / TITLE.length : 1),
+);
 const TITLE_H = 72;
 
 const MARKER_SX = { "& circle": { stroke: t.pageBg, strokeWidth: 0.5 } };
@@ -98,7 +107,9 @@ export default function Chart() {
         skipAnimation
         grid={{ horizontal: true, vertical: true }}
         margin={{ left: 96, right: 32, top: 16, bottom: 78 }}
-        slotProps={{ legend: { position: { vertical: "top", horizontal: "right" } } }}
+        slotProps={{
+          legend: { position: { vertical: "top", horizontal: "right" } },
+        }}
         xAxis={[
           {
             min: -(xAbsMax + xPad),
@@ -118,9 +129,27 @@ export default function Chart() {
           },
         ]}
         series={[
-          { id: "non-sig", label: "Not significant", data: nonSignificant, markerSize: 7, color: NON_SIG_COLOR },
-          { id: "down", label: "Down-regulated", data: downRegulated, markerSize: 8, color: withAlpha(DOWN_COLOR, 0.85) },
-          { id: "up", label: "Up-regulated", data: upRegulated, markerSize: 8, color: withAlpha(UP_COLOR, 0.85) },
+          {
+            id: "non-sig",
+            label: "Not significant",
+            data: nonSignificant,
+            markerSize: 6,
+            color: NON_SIG_COLOR,
+          },
+          {
+            id: "down",
+            label: "Down-regulated",
+            data: downRegulated,
+            markerSize: 8,
+            color: withAlpha(DOWN_COLOR, 0.85),
+          },
+          {
+            id: "up",
+            label: "Up-regulated",
+            data: upRegulated,
+            markerSize: 8,
+            color: withAlpha(UP_COLOR, 0.85),
+          },
         ]}
         sx={MARKER_SX}
       >
@@ -128,15 +157,31 @@ export default function Chart() {
           y={P_THRESHOLD}
           label="p = 0.05"
           labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-          lineStyle={{ stroke: THRESHOLD_COLOR, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+          lineStyle={{
+            stroke: THRESHOLD_COLOR,
+            strokeDasharray: "6 4",
+            strokeWidth: 1.5,
+          }}
         />
         <ChartsReferenceLine
           x={FC_THRESHOLD}
-          lineStyle={{ stroke: THRESHOLD_COLOR, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+          label="FC = 2"
+          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+          lineStyle={{
+            stroke: THRESHOLD_COLOR,
+            strokeDasharray: "6 4",
+            strokeWidth: 1.5,
+          }}
         />
         <ChartsReferenceLine
           x={-FC_THRESHOLD}
-          lineStyle={{ stroke: THRESHOLD_COLOR, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+          label="FC = -2"
+          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+          lineStyle={{
+            stroke: THRESHOLD_COLOR,
+            strokeDasharray: "6 4",
+            strokeWidth: 1.5,
+          }}
         />
       </ScatterChart>
     </div>
