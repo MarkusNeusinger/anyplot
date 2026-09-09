@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: violin-split
 created: '2026-09-09T21:47:15Z'
-updated: '2026-09-09T21:50:56Z'
+updated: '2026-09-09T21:58:40Z'
 generated_by: claude-sonnet
 workflow_run: 34408303691
 issue: 1949
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-sp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Solved ggplot2's lack of a native split-violin geom with a correct, well-documented
-    KDE-polygon construction — outer edge traces the density curve, inner edge runs
-    straight down the category center, so both halves meet exactly on the shared axis
-    as the spec requires
-  - Imprint palette used in canonical order (brand green for Control, lavender for
-    Tutoring), identical across both themes, with a clear legend
-  - Theme-adaptive chrome is threaded correctly through every element (title, axis
-    text, grid, legend, and even the median segment color), producing two fully readable
-    renders
-  - Median markers per half satisfy the spec's 'inner quartile/box markers' suggestion
-    and add a clear point of comparison between cohorts
-  - Realistic, neutral data (exam scores across 4 subjects, Control vs Tutoring cohort,
-    180 points per group) with sensible score ranges clamped to 0-100
+  - Clean, correctly-closed split-violin geometry built from a KDE polygon per subject/cohort
+    half, with the two halves meeting exactly on the category center line as the spec
+    requires
+  - 'Both themes are fully theme-adaptive: chrome (title, axis text, grid, legend)
+    flips correctly between #FAF8F1/#1A1A17 surfaces while the Imprint data colors
+    (#009E73 Control, #C475FD Tutoring) stay identical'
+  - Storytelling callout identifies and labels the subject with the largest Tutoring-vs-Control
+    median gap, giving the chart a clear focal point instead of leaving the comparison
+    to the reader
+  - Median markers per half enable direct quantitative comparison between cohorts
+    within each violin, not just a shape comparison
+  - 'Correct output pipeline: ragg::agg_png device, linewidth (not deprecated size),
+    set.seed(42) for reproducibility, all imports (ggplot2/dplyr/ragg) actually used'
   weaknesses:
-  - The mandated title is noticeably smaller than the 50-70% width guidance (~35%
-    of plot width at fontsize 12) — not a violation per the style guide's overflow/squeeze
-    rule, but there's headroom to size it up slightly for visual weight as the first
-    thing readers see
-  - 'Design excellence is solid but standard: beyond the median segments there''s
-    no additional visual hierarchy or annotation calling out the Control→Tutoring
-    shift (e.g. a subtle arrow/callout on one category, or bolding the larger gaps)
-    to strengthen the data storytelling'
-  - The nested lapply/do.call construction for both data generation and polygon geometry
-    is denser than a typical ggplot2 script — justified by the lack of a native split-violin
-    geom, but worth a short comment block explaining the geometry trick for future
-    maintainers (partially present already)
+  - Y-axis is expanded up to 125 via expansion(mult = c(0.05, 0.15)) purely to make
+    room for the top callout, but no data or annotation reaches above ~114 — leaves
+    a visibly empty band between the callout and the 125 gridline; tighten the upper
+    expansion or move the callout closer to the violin tops.
+  - Only a median line is drawn inside each half-violin; the spec explicitly suggests
+    an inner box plot or quartile markers, and only the 50th percentile is shown with
+    no IQR/quartile indication — consider adding thin quartile ticks (Q1/Q3) alongside
+    the median for a fuller distributional summary.
+  - The manual KDE-to-polygon technique is a reasonable workaround for ggplot2's lack
+    of a native split-violin geom, but it is exactly the workaround the library prompt
+    anticipates rather than a distinctive idiomatic pattern — no deduction beyond
+    LM-01/02 defaults, just noting it isn't 'idiomatic ggplot2 grammar' in the strictest
+    sense.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white.
-      Chrome: title "violin-split · r · ggplot2 · anyplot.ai" in dark ink top-left, legend "Cohort" with "Control"/"Tutoring" swatches top-center, y-axis "Exam Score" and x-axis "Subject" labels, tick labels 40/60/80/100 in soft gray, subtle horizontal gridlines only. All chrome clearly readable against the light background.
-      Data: four split violins (Math, Science, English, History), green (Control) on the left half and lavender/purple (Tutoring) on the right half of each category, meeting exactly at the category's vertical center line. A black horizontal median segment sits inside each half. First series is Imprint brand green #009E73, second is lavender #C475FD, matching canonical palette order.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "violin-split · r · ggplot2 · anyplot.ai" in bold dark ink, clearly readable. "Cohort" legend (top center) with green/purple swatches and dark-ink labels "Control"/"Tutoring", legible. Y-axis "Exam Score" and X-axis "Subject" titles in dark ink; tick labels (25/50/75/100/125, Math/Science/English/History) in softer gray-ink, all legible. Horizontal gridlines only, thin and subtle, don't compete with data.
+      Data: Four split violins (Math, Science, English, History), left half green (#009E73, Control) and right half lavender/purple (#C475FD, Tutoring), meeting exactly on the category center line. A dark horizontal median line sits inside each half. A callout "Largest gain: English +7.0 pts" with an underline bracket sits above the English violin, in bold dark ink.
+      Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black.
-      Chrome: same title, legend, and axis labels now rendered in light ink/off-white, tick labels in soft light gray, gridlines in light color — all clearly legible against the dark background. No dark-on-dark or light-on-light failures observed.
-      Data: identical green/purple violin halves and geometry as the light render; the median segments correctly flip to a light color (white) instead of black so they remain visible against the dark violin fills. Data colors are identical to the light render — only chrome flipped, as required.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, legend text, axis titles, and tick labels all flip to light ink (white/light-gray), clearly readable against the dark surface. Gridlines flip to a faint light color, still subtle. No dark-on-dark text anywhere — median lines and the callout bracket/label also flip to light ink so they remain visible against the green/purple fills and dark background.
+      Data: Same violin shapes and layout as the light render; Control is still #009E73 green and Tutoring is still #C475FD lavender — identical hues to the light render, confirming only chrome (not data color) changed between themes.
+      Legibility verdict: PASS — all text and chrome elements are clearly visible against the dark background, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,43 +64,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes, sensible font hierarchy
+        comment: All text readable in both themes at full and mobile-scale proportions
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data
+        comment: No collisions between text, violins, median lines, or the callout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violin halves and median markers clearly visible, alpha appropriate
+        comment: Violin outlines and median lines have good contrast against fills
+          in both themes; density-appropriate sizing for 180 pts/group
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair is CVD-safe and high contrast
+        comment: 2-series green/purple pair has adequate CVD distance for n=2; no
+          red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, canvas gate passed
+        comment: Canvas gate passed and nothing clipped, but y-axis expansion to 125
+          leaves an empty band above the callout that isn't needed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Subject' / 'Exam Score' labels
+        comment: Subject / Exam Score are descriptive and self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, correct theme backgrounds both renders
+        comment: 'First series #009E73, second #C475FD (canonical order); backgrounds
+          and chrome correctly theme-adaptive in both renders'
     design_excellence:
       score: 12
       max: 20
@@ -108,131 +113,120 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Custom split-violin construction is a technical achievement; visual
-          polish is otherwise standard
+        comment: Custom KDE-polygon violin geometry plus a data-driven callout beyond
+          generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: Spines removed, subtle y-grid only, clean legend placement
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Median markers give a comparison point but no stronger emphasis/annotation
-          of the Control vs Tutoring gap
+        comment: Spines removed, subtle single-axis grid, generous whitespace, but
+          otherwise close to the standard theme_minimal template
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Callout highlights the largest Tutoring-vs-Control gap and median
+          lines give a concrete focal comparison
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correctly a split violin plot
+        comment: Correctly a split violin, not a mirrored/standard violin
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Distinct colors + legend, halves meet at center, inner median marker
-          present
+        comment: Distinct colors + legend and halves meeting at center both satisfied;
+          only a median line stands in for the suggested inner box/quartile markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X=subject, Y=score, split by cohort, all data shown
+        comment: category on x, value on y, split_group mapped to fill/side; all data
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format exact; legend labels match cohort names
+        comment: Title matches 'violin-split · r · ggplot2 · anyplot.ai'; legend labels
+          match Control/Tutoring
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: 4 subjects x 2 cohorts, full distribution shapes shown
+        comment: Shows distribution shape and median per half but no quartile/IQR
+          indication
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral exam-score scenario
+        comment: Exam scores by subject/cohort — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: 0-100 clamped scores with sensible means/sds
+        comment: 0-100 clamped exam scores, 180 pts/group within spec's 30-500 range,
+          4 categories within 2-6 range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: true
-        comment: Nested lapply/do.call adds complexity but is justified by the missing
-          native geom
+        comment: No user-defined functions/classes; idiomatic lapply/do.call composition
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: set.seed(42) used
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: ggplot2, dplyr, ragg all used
+        comment: ggplot2/dplyr/ragg all actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake functionality, appropriate complexity
+        comment: Appropriate complexity for a manual split-violin construction; no
+          fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: ggsave via ragg::agg_png to plot-{theme}.png
+        comment: ggsave with ragg::agg_png to plot-{THEME}.png; linewidth (not deprecated
+          size)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Reasonable use of geom_polygon + dplyr as a workaround for ggplot2's
-          missing split-violin geom
+        comment: Reasonable geom_polygon-based workaround for ggplot2's missing native
+          split-violin geom
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Manual KDE-based polygon construction with mirrored inner/outer edges
-          is a distinctive technique
+        comment: Density-derived custom violin polygons plus a data-driven annotation
+          callout
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   - layer-composition
   patterns:
   - data-generation
@@ -242,3 +236,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
+  - edge-highlighting
