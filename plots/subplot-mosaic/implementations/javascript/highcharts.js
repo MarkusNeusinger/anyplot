@@ -53,9 +53,20 @@ mosaic.style.cssText = [
 ].join(";");
 root.appendChild(mosaic);
 
-function makeCell(area, id) {
+// Tiered card chrome — a soft lift on the dominant overview panel, a flatter
+// and more compact treatment on the small KPI tiles — so the mosaic reads as
+// a deliberate hierarchy rather than six identically-styled boxes.
+function makeCell(area, id, tier) {
   const card = document.createElement("div");
-  card.style.cssText = `grid-area:${area}; background:${t.elevatedBg}; border-radius:12px; padding:14px 18px; min-width:0; min-height:0;`;
+  const pad = tier === "tertiary" ? "10px 16px" : "14px 18px";
+  const radius = tier === "tertiary" ? "10px" : "12px";
+  const shadow =
+    tier === "primary"
+      ? t.theme === "dark"
+        ? "0 2px 8px rgba(0,0,0,0.4)"
+        : "0 2px 8px rgba(0,0,0,0.08)"
+      : "none";
+  card.style.cssText = `grid-area:${area}; background:${t.elevatedBg}; border-radius:${radius}; padding:${pad}; min-width:0; min-height:0; box-shadow:${shadow};`;
   const mount = document.createElement("div");
   mount.id = id;
   mount.style.cssText = "width:100%; height:100%;";
@@ -64,10 +75,19 @@ function makeCell(area, id) {
   return mount;
 }
 
-const overviewMount = makeCell("overview", "cell-overview");
-const detail1Mount = makeCell("detail1", "cell-detail1");
-const detail2Mount = makeCell("detail2", "cell-detail2");
-const metricMounts = metrics.map((m, i) => makeCell(`metric${i}`, `cell-metric${i}`));
+const overviewMount = makeCell("overview", "cell-overview", "primary");
+const detail1Mount = makeCell("detail1", "cell-detail1", "secondary");
+const detail2Mount = makeCell("detail2", "cell-detail2", "secondary");
+const metricMounts = metrics.map((m, i) => makeCell(`metric${i}`, `cell-metric${i}`, "tertiary"));
+
+// The mosaic string's "." is a genuinely empty grid cell (no grid-area name,
+// so it can only be targeted by explicit line placement) — give it a faint
+// tint + dashed border so it reads as deliberate structure, not a missing
+// panel. Column 3 / row 4 matches the "." position in the template-areas
+// string above.
+const gapCell = document.createElement("div");
+gapCell.style.cssText = `grid-column:3 / 4; grid-row:4 / 5; border-radius:10px; border:1px dashed ${t.inkSoft}; background:${t.grid}; opacity:0.6;`;
+mosaic.appendChild(gapCell);
 
 // Chart instances created below, so their sizes can be reflowed once the grid
 // has actually resolved row heights (see the reflow block at the bottom of
@@ -94,7 +114,7 @@ panelCharts.push(Highcharts.chart(overviewMount.id, {
     labels: { style: { color: t.inkSoft, fontSize: "13px" } },
   },
   legend: { itemStyle: { color: t.inkSoft, fontSize: "13px" }, itemHoverStyle: { color: t.ink } },
-  plotOptions: { series: { animation: false, lineWidth: 3, marker: { radius: 4 } } },
+  plotOptions: { series: { animation: false, lineWidth: 3, marker: { radius: 6 } } },
   series: [
     { name: "North", data: revenueNorth },
     { name: "South", data: revenueSouth },
@@ -110,12 +130,13 @@ panelCharts.push(Highcharts.chart(detail1Mount.id, {
   title: { text: "Units Sold by Category", align: "left", style: { color: t.ink, fontSize: "16px", fontWeight: "600" } },
   xAxis: {
     categories,
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickLength: 0,
     labels: { style: { color: t.inkSoft, fontSize: "12px" } },
   },
   yAxis: {
     title: { text: null },
+    lineWidth: 0,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "12px" } },
   },
@@ -132,12 +153,13 @@ panelCharts.push(Highcharts.chart(detail2Mount.id, {
   title: { text: "Foot Traffic by Hour", align: "left", style: { color: t.ink, fontSize: "16px", fontWeight: "600" } },
   xAxis: {
     categories: hours,
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickLength: 0,
     labels: { style: { color: t.inkSoft, fontSize: "12px" } },
   },
   yAxis: {
     title: { text: null },
+    lineWidth: 0,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "12px" } },
   },
@@ -153,17 +175,30 @@ panelCharts.push(Highcharts.chart(detail2Mount.id, {
 metrics.forEach((m, i) => {
   const statusColor = m.good ? t.palette[0] : t.amber;
   const format = (v) => (m.suffix === "$" ? `$${v.toFixed(2)}` : `${v.toFixed(1)}%`);
+  // Explicit delta annotation so the story reads even without relying on the
+  // amber/green hue alone (percentage-point metrics report "pp", dollar
+  // metrics report the raw currency difference).
+  const delta = m.actual - m.target;
+  const deltaText =
+    m.suffix === "$"
+      ? `${delta >= 0 ? "+" : "-"}$${Math.abs(delta).toFixed(2)} vs target`
+      : `${delta >= 0 ? "+" : "-"}${Math.abs(delta).toFixed(1)}pp vs target`;
   panelCharts.push(Highcharts.chart(metricMounts[i].id, {
     chart: { type: "bar", backgroundColor: "transparent", animation: false, style: { fontFamily: "inherit" } },
     credits: { enabled: false },
     title: { text: m.title, align: "left", style: { color: t.ink, fontSize: "14px", fontWeight: "600" } },
+    subtitle: {
+      text: deltaText,
+      align: "left",
+      style: { color: statusColor, fontSize: "11px", fontWeight: "600" },
+    },
     xAxis: {
       categories: ["Actual", "Target"],
-      lineColor: t.inkSoft,
-      tickColor: t.inkSoft,
+      lineWidth: 0,
+      tickLength: 0,
       labels: { style: { color: t.inkSoft, fontSize: "12px" } },
     },
-    yAxis: { title: { text: null }, gridLineColor: t.grid, labels: { enabled: false } },
+    yAxis: { title: { text: null }, lineWidth: 0, gridLineColor: t.grid, labels: { enabled: false } },
     legend: { enabled: false },
     plotOptions: {
       series: {
