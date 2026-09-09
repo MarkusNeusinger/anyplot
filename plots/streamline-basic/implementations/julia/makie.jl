@@ -79,9 +79,14 @@ Colorbar(
     ticklabelsize = 12,
     ticklabelcolor = INK_SOFT,
     tickcolor = INK_SOFT,
+    width = 18,
 )
 
-colsize!(fig.layout, 1, Relative(0.88))
+# DataAspect() forces the axis into a square; tie the column width to the row
+# height (rather than a fixed Relative share of the figure) so the colorbar
+# hugs the axis instead of floating in leftover 16:9 whitespace.
+colsize!(fig.layout, 1, Aspect(1, 1.0))
+colgap!(fig.layout, 1, 16)
 
 # --- Save ----------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
