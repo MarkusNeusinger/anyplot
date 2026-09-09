@@ -1,7 +1,7 @@
 // anyplot.ai
 // volcano-basic: Volcano Plot for Statistical Significance
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-09
+// Quality: 90/100 | Created: 2026-09-09
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

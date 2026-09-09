@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: volcano-basic
 created: '2026-09-09T21:54:21Z'
-updated: '2026-09-09T21:58:47Z'
+updated: '2026-09-09T22:06:32Z'
 generated_by: claude-sonnet
 workflow_run: 34409046793
 issue: 2924
@@ -12,41 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
+  - Top 3 most significant genes (TP5314, TP5344, MYC32) are now labeled directly
+    on the plot, closing the attempt-1 gap and adding a clear storytelling focal point
+    on the outliers
   - Correct semantic color mapping (gray/red/blue) exactly matching the spec's domain
-    convention for volcano plots, with position (positive/negative log2FC) as a redundant
+    convention for volcano plots, with point position (sign of log2FC) as a redundant
     encoding so color is never the sole signal
   - Threshold lines (horizontal -log10(0.05) cutoff, vertical +/-1 fold-change cutoffs)
-    implemented cleanly via a single markLine block, avoiding extra series or legend
+    implemented cleanly via a single silent markLine block, avoiding extra series/legend
     clutter
-  - Deterministic LCG-based data generation with realistic gene-like names and plausible
-    fold-change/p-value distributions (650 points, correct funnel shape)
+  - Deterministic LCG-based data generation with realistic gene-like names and a plausible
+    RNA-seq-like fold-change/p-value distribution (650 points, correct funnel shape)
   - Both themes correctly thread theme-adaptive tokens through title, legend, axis
-    lines, tick labels and grid, while data colors stay identical across light/dark
-  - Alpha transparency (0.5 for non-significant, 0.75 for significant) appropriately
-    combats overplotting in the dense 650-point dataset
+    lines, tick labels, grid, and the new gene labels, while data colors stay identical
+    across light/dark
   weaknesses:
-  - 'Top significant genes are not labeled by name (spec: ''Consider labeling top
-    significant features by name'') -- a few text labels on the most extreme points
-    (e.g. the two right-side outliers near log2FC 5-6) would add storytelling value'
-  - Chrome relies on library defaults beyond the theme-token mapping -- no additional
-    emphasis (e.g. subtle shading of the significant quadrants) to push Design Excellence
-    beyond a solid baseline
-  - Dense clustering of ~650 overlapping points near the plot center could benefit
-    from slightly smaller markers or lower alpha to further reduce visual clumping
+  - Chrome still relies mostly on token mapping without an additional design flourish
+    (e.g. subtle shading of the significant quadrants) to push Design Excellence further
+  - Dense clustering of points near the origin still reads slightly busy; a touch
+    smaller marker size or slightly lower alpha in that region would further reduce
+    clumping
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "volcano-basic · javascript · echarts · anyplot.ai" centered top in dark ink, legend row below it ("Not significant" gray dot, "Up-regulated" red dot, "Down-regulated" blue dot) in soft dark gray text. Axis titles "log2(Fold Change)" and "-log10(p-value)" and numeric tick labels are dark and clearly legible. Subtle light-gray gridlines on both axes. Dashed threshold lines at y≈1.3 and x≈±1.
-      Data: ~650 scatter points forming the expected volcano funnel shape -- gray cloud near the origin (non-significant), blue cluster in the upper-left (down-regulated, negative log2FC), red cluster in the upper-right (up-regulated, positive log2FC), including two clear outlier points at the far right (~log2FC 5-6, -log10p ~9-10.4). First categorical Imprint green is not used here because the spec explicitly calls for gray/red/blue semantic coding, which is followed correctly.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "volcano-basic · javascript · echarts · anyplot.ai" centered top in dark ink; legend row below ("Not significant" gray, "Up-regulated" red, "Down-regulated" blue) all clearly readable; axis titles ("log2(Fold Change)", "-log10(p-value)") and numeric tick labels are dark and legible; subtle light-gray gridlines; dashed threshold lines at y=1.3 and x=+/-1. Three gene labels (TP5314, TP5344, MYC32) sit above their points in dark ink, fully legible and non-overlapping with other elements.
+      Data: ~650 scatter points forming the expected volcano funnel: gray non-significant cloud near origin, blue down-regulated cluster upper-left, red up-regulated cluster upper-right, with two clear red outliers at far right and one blue outlier at far left labeled by gene name.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Same title, legend, axis titles, tick labels and gridlines as the light render, but chrome is flipped to light/off-white text and lighter gridlines against the dark background. No dark-on-dark or hard-to-read text observed anywhere.
-      Data: Same gray/blue/red point cloud and same funnel shape, same outlier points at the far right -- colors are visually identical to the light render, confirming only chrome (not data colors) changed between themes.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, legend, axis titles, tick labels, gridlines and gene labels as the light render, but chrome flipped to light/off-white text and lighter gridlines against the dark background. No dark-on-dark issues observed anywhere - title, axis titles, tick labels, legend text, and gene labels all use light ink and remain fully readable.
+      Data: Point colors (gray/red/blue) are visually identical to the light render, confirming only chrome flipped between themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -58,114 +57,123 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title/legend/axis/tick text fully readable in both themes at correctly
-          scaled sizes
+        comment: All text, including new gene labels, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend collisions with other text or data
+        comment: No collisions between labels, legend, or data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Alpha and marker size handle the 650-point density reasonably; slightly
-          more clumping near origin than ideal
+        comment: Alpha blending helps but dense origin cluster still reads slightly
+          busy
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue with positional redundancy (sign of log2FC); not sole-color-dependent
+        comment: Red/blue contrast fine, position is a redundant encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing clipped, canvas gate
-          passed
+        comment: Good proportions, nothing cut off, labels stay within canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with domain-standard units
+        comment: Descriptive axis titles with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Gray/red/blue semantic mapping matches spec's domain convention (semantic
-          exception); correct theme backgrounds and identical data colors across themes
+        comment: Semantic-exception color order appropriate for volcano-plot convention;
+          backgrounds match Imprint tokens in both themes
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Solid polish (borderColor matched to page bg, dashed threshold lines)
-          but no standout custom treatment beyond token mapping
+        passed: false
+        comment: Solid polish (page-bg-matched marker borders, dashed threshold lines,
+          callout labels) but no standout custom treatment beyond token mapping
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        comment: L-shaped axis lines, subtle grid, generous whitespace; no further
-          refinement (e.g. quadrant shading)
+        passed: false
+        comment: Subtle grid and generous whitespace; no further refinement such as
+          quadrant shading
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        comment: Color-coded significance and threshold lines guide the viewer, but
-          no callouts on the top hits
+        passed: true
+        comment: Gene-name callouts on the top 3 hits plus threshold lines now give
+          the plot a clear focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct scatter-based volcano plot
+        passed: true
+        comment: Correct volcano scatter chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Threshold lines, significance color-coding, and alpha blending present;
-          optional 'label top features by name' not implemented
+        passed: true
+        comment: Threshold lines, significance color-coding, alpha blending, and top-feature
+          name labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: x = log2FoldChange, y = negLog10Pvalue, correctly mapped
+        passed: true
+        comment: log2FC on x, -log10(p) on y, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format matches exactly; legend labels match data categories
+        passed: true
+        comment: Title matches required format; legend labels match series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Covers significance thresholds, up/down/non-significant categories,
-          dense realistic point count; missing feature labels
+        passed: true
+        comment: Now covers every aspect noted in the spec, including named feature
+          labels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Real gene-name stems, plausible RNA-seq-like distribution, neutral
+        passed: true
+        comment: Plausible gene-like identifiers and RNA-seq-style distribution, neutral
+          subject
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: log2FC and -log10(p) ranges are realistic for omics data
+        passed: true
+        comment: log2FC range and -log10(p) range are realistic for omics data
     code_quality:
       score: 10
       max: 10
@@ -174,49 +182,56 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Only small RNG helper functions, no classes
+        passed: true
+        comment: Flat script, small helper functions only for RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No imports beyond the echarts global
+        passed: true
+        comment: No unused imports; uses global echarts/tokens only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI; markLine reused on one series instead of extra series
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: animation:false set; mount-node contract respected; no explicit size/devicePixelRatio
+        passed: true
+        comment: Follows mount-node contract, animation disabled
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic scatter + markLine + tooltip formatter usage
+        passed: true
+        comment: Idiomatic scatter/markLine/tooltip usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: markLine threshold overlay is a distinctive ECharts technique
+        passed: true
+        comment: markLine threshold overlay plus per-point label formatter for callouts
+          is a nice distinctive combination
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
