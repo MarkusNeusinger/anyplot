@@ -1,0 +1,229 @@
+library: highcharts
+language: javascript
+specification_id: volcano-basic
+created: '2026-09-09T22:00:41Z'
+updated: '2026-09-09T22:04:59Z'
+generated_by: claude-sonnet
+workflow_run: 34409487820
+issue: 2924
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/volcano-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Exemplary theme-adaptive palette handling with a well-justified semantic-exception
+    color mapping (gray/blue/red) that matches the universal volcano-plot convention
+    and is explicitly labeled in the legend.
+  - 'Faithful, complete coverage of every spec note: both threshold line orientations,
+    tri-state significance coloring, top-feature name labeling, and density-aware
+    alpha blending.'
+  - Clean, deterministic, dependency-free data generation via a small seeded LCG -
+    fully reproducible.
+  - Correct use of Highcharts' plotLines and per-point dataLabels features to add
+    real analytical value beyond a generic scatter.
+  weaknesses:
+  - Axis lines/tick marks are fully opaque and visually present alongside the gridlines,
+    slightly reducing the minimal-chrome feel the style guide favors - consider lightening
+    or removing xAxis.lineColor/yAxis.lineColor.
+  - The dense central 'Not significant' cluster near the origin, while spec-compliant
+    with alpha blending, could benefit from slightly smaller markers to further sharpen
+    visual hierarchy toward the labeled significant genes.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "volcano-basic · javascript · highcharts · anyplot.ai" and subtitle "RNA-seq differential expression: treatment vs. control" both dark and fully readable. Axis titles "log2 fold change" / "-log10(p-value)" and tick labels are dark ink-soft, all legible. Dashed threshold lines (2 vertical at ±1, 1 horizontal at ~1.3) render in dark ink-soft, clearly visible but subtle. Legend at bottom with three swatches (gray/blue/red) and matching text, all legible.
+      Data: ~600 semi-transparent (opacity 0.65) circular points forming a classic volcano funnel shape. Colors: muted gray for "Not significant" (center), blue (palette[2]) for "Down-regulated" (upper-left arm), matte red (palette[4]) for "Up-regulated" (upper-right arm) - this is a deliberate, spec-consistent semantic-exception color mapping (gray/blue/red), not the default canonical order, and the legend text makes the mapping unambiguous. Four gene names (CDK9, AKT456, VEGF198, VEGF58) are labeled directly next to their markers with no overlap, verified via pixel-level crops.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, subtitle, axis titles, and tick labels all render in light ink tones and remain fully legible against the dark surface. No dark-on-dark failures found anywhere, including the gene-name data labels (checked via crops of the top-left and top-right extremes). Dashed threshold lines remain visible as light-gray dashes. Legend swatches and text legible.
+      Data: Colors are pixel-identical to the light render (gray/blue/matte-red) - only chrome (background, text, grid, legend) flipped between themes, data colors held constant as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, all legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Gene-name data labels verified overlap-free via pixel crops
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius 4 + opacity 0.65 appropriate for 600-point dense scatter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Gray/blue/matte-red trio is CVD-distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles matching spec variables
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Legitimate semantic-exception mapping (gray/blue/red), theme-correct
+          backgrounds
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate semantic color coding, dual threshold lines, callout labels
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Axis lines/ticks remain fully visible, not minimal-chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded groups plus labeled standout genes create a clear focal
+          point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-based volcano plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both threshold lines, tri-color coding, top-feature labeling, alpha
+          transparency
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: log2FC on x, -log10(p) on y, correctly labeled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact required format; legend labels match data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All plot-type aspects present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic RNA-seq framing, plausible gene-name labels, neutral subject
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible log2FC and -log10(p) ranges with realistic funnel correlation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small purpose-built helper functions only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately scoped, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled, credits disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper high-level Highcharts config, theme-token-driven styles
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotLines and per-point dataLabels genuinely distinctive and well-applied
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
