@@ -15,7 +15,6 @@ const PAGE_BG      = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const ELEVATED_BG  = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK          = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT     = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const INK_MUTED    = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 const GRID_COLOR   = RGBAf(INK.r, INK.g, INK.b, 0.15)
 
 # Imprint categorical palette — first series is ALWAYS brand green
@@ -37,6 +36,9 @@ cortisol_level = Float64[]
 for (i, (mean_level, sd_level)) in enumerate(zip(group_means, group_sds))
     append!(group_index, fill(i, n_per_group))
     append!(cortisol_level, mean_level .+ sd_level .* randn(n_per_group))
+    # A couple of real physiological outliers per group (hyper- / non-responders)
+    append!(group_index, fill(i, 2))
+    append!(cortisol_level, [mean_level + 4.2 * sd_level, mean_level - 3.4 * sd_level])
 end
 violin_colors = [IMPRINT_PALETTE[i] for i in group_index]
 
@@ -48,7 +50,7 @@ fig = Figure(size = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
 ax = Axis(
     fig[1, 1];
     title             = title_text,
-    titlesize         = 17,
+    titlesize         = 21,
     titlecolor        = INK,
     xlabel            = "Stress Test Condition",
     ylabel            = "Cortisol Level (ng/mL)",
@@ -78,10 +80,12 @@ violin!(
 )
 boxplot!(
     ax, group_index, cortisol_level;
-    width = 0.12, color = ELEVATED_BG, strokecolor = INK, strokewidth = 1.2,
+    width = 0.16, color = ELEVATED_BG, strokecolor = INK, strokewidth = 1.2,
     mediancolor = INK, medianlinewidth = 2.5,
     whiskercolor = INK, whiskerwidth = 0.5, whiskerlinewidth = 1.5,
-    outliercolor = INK_MUTED, markersize = 6, show_outliers = true,
+    show_notch = true, notchwidth = 0.6,
+    outliercolor = INK, outlierstrokecolor = PAGE_BG, outlierstrokewidth = 1.2,
+    markersize = 10, show_outliers = true,
 )
 
 # --- Save -------------------------------------------------------------------
