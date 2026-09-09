@@ -48,13 +48,30 @@ hidespines!(ax)
 
 y_min, y_max = extrema(daily_active_users)
 y_range = y_max - y_min
-y_pad = y_range * 0.65
+y_pad = y_range * 1.0
 ylims!(ax, y_min - y_pad, y_max + y_pad)
-xlims!(ax, day[1], day[end])
+xlims!(ax, day[1] - 0.5, day[end] + 0.5)
 
-ribbon_width = y_range * 0.06
-band!(ax, day, daily_active_users .- ribbon_width, daily_active_users; color = (BRAND, 0.18))
+idx_min = argmin(daily_active_users)
+idx_max = argmax(daily_active_users)
+
+# True area-fill effect: shade down to the series' own minimum, not the padded canvas.
+band!(ax, day, fill(y_min, n), daily_active_users; color = (BRAND, 0.22))
 lines!(ax, day, daily_active_users; color = BRAND, linewidth = 3.5)
+
+# Optional sparkline conventions: min/max highlights + first/last reference points.
+scatter!(
+    ax, [day[idx_min]], [daily_active_users[idx_min]];
+    color = IMPRINT_PALETTE[3], markersize = 16, strokewidth = 0,
+)
+scatter!(
+    ax, [day[idx_max]], [daily_active_users[idx_max]];
+    color = IMPRINT_PALETTE[4], markersize = 16, strokewidth = 0,
+)
+scatter!(
+    ax, [day[1]], [daily_active_users[1]];
+    color = PAGE_BG, markersize = 18, strokewidth = 2, strokecolor = BRAND,
+)
 scatter!(
     ax, [day[end]], [daily_active_users[end]];
     color = BRAND, markersize = 22, strokewidth = 2, strokecolor = PAGE_BG,
