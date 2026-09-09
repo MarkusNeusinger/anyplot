@@ -1,8 +1,7 @@
 // anyplot.ai
 // upset-basic: UpSet Plot for Multi-Set Intersection Analysis
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-09
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-09-09
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
