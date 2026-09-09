@@ -14,6 +14,7 @@ THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+GRID     <- if (THEME == "light") "#CDCCC5" else "#454541"
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 BRAND <- IMPRINT_PALETTE[1]
@@ -33,7 +34,8 @@ anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid       = element_blank(),
+    panel.grid.major = element_line(color = GRID, linewidth = 0.25),
+    panel.grid.minor = element_blank(),
     axis.ticks       = element_blank()
   )
 
@@ -46,7 +48,7 @@ p_main <- ggplot(df, aes(rainfall_mm, crop_yield_t_ha)) +
   theme(
     axis.line   = element_line(color = INK_SOFT, linewidth = 0.3),
     axis.title  = element_text(color = INK, size = 11),
-    axis.text   = element_text(color = INK_SOFT, size = 9),
+    axis.text   = element_text(color = INK_SOFT, size = 10),
     plot.margin = margin(t = 4, r = 4, b = 10, l = 10)
   )
 
@@ -54,7 +56,7 @@ p_main <- ggplot(df, aes(rainfall_mm, crop_yield_t_ha)) +
 p_top <- ggplot(df, aes(rainfall_mm)) +
   geom_histogram(aes(y = after_stat(density)), bins = 30,
                   fill = BRAND, color = NA, alpha = 0.3) +
-  geom_density(color = BRAND, linewidth = 0.9) +
+  geom_density(color = BRAND, linewidth = 0.6, alpha = 0.6) +
   coord_cartesian(xlim = x_range) +
   anyplot_theme +
   theme(
@@ -67,7 +69,7 @@ p_top <- ggplot(df, aes(rainfall_mm)) +
 p_right <- ggplot(df, aes(crop_yield_t_ha)) +
   geom_histogram(aes(y = after_stat(density)), bins = 30,
                   fill = BRAND, color = NA, alpha = 0.3) +
-  geom_density(color = BRAND, linewidth = 0.9) +
+  geom_density(color = BRAND, linewidth = 0.6, alpha = 0.6) +
   coord_flip(xlim = y_range) +
   anyplot_theme +
   theme(
