@@ -1,0 +1,229 @@
+library: highcharts
+language: javascript
+specification_id: tree-phylogenetic
+created: '2026-09-09T20:47:10Z'
+updated: '2026-09-09T20:58:57Z'
+generated_by: claude-sonnet
+workflow_run: 34402362188
+issue: 3070
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Repair directly answered attempt 1''s feedback: added a second, nested visual-hierarchy
+    layer (Hominidae -> Hominini) with a bolder stroke on the inner clade, and moved
+    the clade callout from subtitle-only text into in-plot plotBands labels'
+  - Correct rectangular cladogram from core Highcharts line + scatter series, branch
+    lengths proportional to evolutionary distance
+  - 'Clean theme-adaptive chrome: transparent background, correct tokens, data colors
+    identical across themes, muted-grey token swapped per theme'
+  - Realistic ultrametric primate phylogeny with plausible branch-length values and
+    a clear scale-bar axis
+  weaknesses:
+  - Hierarchy still stops at two nested layers; a third distinguishing touch (e.g.
+    per-genus tick emphasis or a small in-plot scale-bar glyph) would push data storytelling
+    further
+  - Still relies on two recursive helper functions (assignY, collect) for hierarchical
+    layout - reasonable for tree data, but strict KISS scoring keeps this shy of full
+    marks
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Bold dark title "tree-phylogenetic · javascript · highcharts · anyplot.ai" and soft dark-grey subtitle explaining the color code, both fully readable. X-axis labeled "Evolutionary distance (substitutions per site)" with ticks 0-0.16 serving as scale bar. Two nested in-plot shaded bands ("Hominidae" and "Human / Chimpanzee / Bonobo") with green labels reinforce the clade callout in-plot.
+      Data: Muted grey branches (Marmoset, Rhesus Macaque, Gibbon) and Imprint brand green (#009E73) branches for the Hominidae clade (Orangutan, Gorilla, Bonobo, Chimpanzee, Human), with a heavier stroke on the innermost Hominini split (Human/Chimp/Bonobo). Species names sit to the right of each leaf marker, fully legible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Title/subtitle/axis chrome flip to white/light-grey, fully legible - no dark-on-dark issues. Same nested plotBand labels reproduce identically in layout.
+      Data: Muted-grey branches render lighter grey (theme-adaptive token swap); Imprint green (#009E73) branches and markers are pixel-identical to the light render. Only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, bands, or branches
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and lines clearly visible, sparse leaf count sized appropriately
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. muted grey, not red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, good proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis title with units (substitutions per site)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct theme backgrounds, both renders theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Nested clade bands add a custom, thought-out layer beyond attempt
+          1
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis chrome removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: Two-layer nested hierarchy deepens the story but stops there
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct rectangular phylogenetic tree/cladogram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Branch lengths, species names, scale axis, clade highlighting all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = evolutionary distance, Y = leaf order, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers tree structure, branch lengths, clade highlight; rectangular
+          layout only (circular not attempted, optional per spec)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral primate phylogeny
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible mtDNA substitution distances 0-0.1
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small recursive helpers for tree layout, reasonable but not flat
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic tree
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only Highcharts global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for tree data
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Highcharts.chart into #container, animation disabled, current API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Sound line+scatter composition given core bundle has no dendrogram
+          module
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotBands repurposed as nested in-plot clade annotations
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
