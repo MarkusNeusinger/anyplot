@@ -40,12 +40,11 @@ const categoryColor: Record<string, string> = {
 // useXScale/useYScale, the documented composition pattern for marks outside
 // the plain chart surface. Labels alternate above/below the spine so
 // adjacent events never collide.
-function EventLabels() {
+function EventLabels({ stemLength }: { stemLength: number }) {
   const xScale = useXScale() as any;
   const yScale = useYScale() as any;
   if (!xScale || !yScale) return null;
 
-  const stemLength = 58;
   const textGap = 10;
 
   return (
@@ -90,15 +89,28 @@ export default function Chart() {
   const H = window.ANYPLOT_SIZE.height;
   const titleSize = TITLE.length > 67 ? Math.max(14, Math.round((22 * 67) / TITLE.length)) : 22;
 
-  const TITLE_H = 70;
-  const LEGEND_H = 56;
+  // Tightened bands: the chart plot area (spine + labels) should dominate
+  // the canvas rather than leaving large blank margins above/below the
+  // label rows (prior attempt left ~38%/~31% of the height empty).
+  const TITLE_H = 56;
+  const LEGEND_H = 44;
   const chartH = H - TITLE_H - LEGEND_H;
+  const MARGIN_TOP = 28;
+  const MARGIN_BOTTOM = 56;
+
+  // Derive the stem length from the actual plot area so the label rows sit
+  // close to the title/axis edges instead of clustering in a thin strip at
+  // the vertical center — LABEL_CLEARANCE reserves room for the label text
+  // itself plus a small breathing gap from the title/axis.
+  const plotH = chartH - MARGIN_TOP - MARGIN_BOTTOM;
+  const LABEL_CLEARANCE = 48;
+  const stemLength = Math.max(40, plotH / 2 - LABEL_CLEARANCE);
 
   const series = CATEGORY_ORDER.map((cat) => ({
     id: cat,
     label: cat,
     color: categoryColor[cat],
-    markerSize: 16,
+    markerSize: 20,
     data: MILESTONES.filter((m) => m.category === cat).map((m, i) => ({
       x: m.date,
       y: 0,
@@ -138,7 +150,7 @@ export default function Chart() {
         yAxis={[{ min: -1, max: 1, domainLimit: "strict" }]}
         leftAxis={null}
         grid={{ horizontal: false, vertical: false }}
-        margin={{ top: 40, right: 60, bottom: 56, left: 60 }}
+        margin={{ top: MARGIN_TOP, right: 60, bottom: MARGIN_BOTTOM, left: 60 }}
         slotProps={{ legend: { hidden: true } }}
         sx={{
           "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.25 },
@@ -146,7 +158,7 @@ export default function Chart() {
         }}
       >
         <ChartsReferenceLine y={0} lineStyle={{ stroke: t.grid, strokeWidth: 2 }} />
-        <EventLabels />
+        <EventLabels stemLength={stemLength} />
       </ScatterChart>
 
       <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "24px" }}>
