@@ -1,7 +1,7 @@
 // anyplot.ai
 // tree-phylogenetic: Phylogenetic Tree Diagram
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-09
+// Quality: 89/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 
