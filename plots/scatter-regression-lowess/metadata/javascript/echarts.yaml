@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: scatter-regression-lowess
 created: '2026-09-09T06:48:34Z'
-updated: '2026-09-09T06:52:20Z'
+updated: '2026-09-09T07:04:07Z'
 generated_by: claude-sonnet
 workflow_run: 34320420312
 issue: 2855
@@ -12,47 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Correct LOWESS implementation: single-pass tricube-weighted local linear regression
-    with frac=0.35, matching the spec''s recommended 0.3-0.5 bandwidth range, and
-    the curve is smooth without visible overfitting or oscillation.'
+  - Confidence band around the LOWESS curve is now implemented via a stacked-area
+    trick (invisible lower base + shaded upper band from local weighted-residual RMS),
+    directly addressing the spec's optional nice-to-have and last review's weakness.
+  - 'Distinctive ECharts features added since last review: markLine calls out the
+    optimum temperature with a dashed vertical rule and label, markPoint marks the
+    exact peak, and shadowBlur/shadowColor give the LOWESS curve a subtle glow — meaningfully
+    raising design sophistication beyond token wiring.'
+  - 'LOWESS math is correct and reproducible: single-pass tricube-weighted local linear
+    regression with frac=0.35 (within the spec''s 0.3-0.5 guidance), smooth non-oscillating
+    curve, fixed-seed LCG for deterministic data.'
+  - Theme-adaptive chrome and Imprint palette are wired correctly end-to-end in both
+    renders — brand green first series, identical data colors across themes, only
+    chrome (background/text/grid) flips.
   - Data tells a compelling non-monotonic story (enzyme reaction rate rising to an
-    optimum near 38C then collapsing past denaturation), matching the spec's suggested
-    biological dose-response application.
-  - 'Theme-adaptive chrome is wired correctly end-to-end via window.ANYPLOT_TOKENS:
-    first series is Imprint brand green (#009E73), the LOWESS curve uses a clearly
-    contrasting color, and z:10 keeps the curve visibly above the point cloud in both
-    renders.'
-  - Points use alpha=0.6 (within the spec's 0.5-0.7 guidance) to show density under
-    n=160 points, and the mount-node contract is followed exactly (no explicit width/height,
-    no devicePixelRatio, animation:false).
+    optimum near 38°C then collapsing past denaturation) that plays directly to LOWESS's
+    strength versus a single polynomial fit.
   weaknesses:
-  - 'Library Mastery is generic: no ECharts-distinctive features are used (e.g. markLine/markArea
-    to flag the optimum temperature, a tooltip formatter, or an area-based confidence
-    band) that would showcase what this library specifically offers beyond a basic
-    scatter+line combo.'
-  - 'Design excellence stops at token wiring: axis lines and split lines use plain
-    default styling with no extra refinement (no subtle glow/shadow on the curve,
-    no callout on the peak) beyond correct color mapping.'
-  - The optional confidence band around the LOWESS curve (mentioned in the spec as
-    a nice-to-have) is not implemented, which would strengthen the data storytelling
-    further.
+  - 'Legend/line color mismatch (confirmed in both plot-light.png and plot-dark.png):
+    the ''LOWESS fit'' legend swatch renders as a lavender/purple circle (palette[1]),
+    but the actual curve in the chart is blue (palette[2], set via lineStyle.color).
+    Cause: the ''LOWESS fit'' series sets lineStyle.color but never itemStyle.color,
+    so ECharts falls back to the auto-assigned series color (from the top-level color
+    array, by series index) for the legend icon instead of matching the explicit line
+    color. Fix: add itemStyle: { color: t.palette[2] } to the ''LOWESS fit'' series
+    so the legend swatch matches the rendered curve.'
+  - Chart chrome (grid split lines, axis lines/ticks) still uses plain default styling
+    with no extra refinement beyond the curve-specific glow and confidence band —
+    there's room for more polish (e.g. subtler split-line opacity, refined tick styling)
+    to push Design Excellence further.
+  - Markers cluster and overlap noticeably in the dense peak region (~35-42°C, rate
+    80-95); alpha=0.6 helps but individual points are hard to distinguish there —
+    a touch more transparency or smaller symbolSize in that zone would improve readability
+    without hurting the sparse tails.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white - PASS
-      Chrome: Title "scatter-regression-lowess · javascript · echarts · anyplot.ai" centered and fully readable in dark ink; legend ("Reaction rate", "LOWESS fit") readable below title; x-axis "Temperature (°C)" and y-axis "Reaction Rate (µmol/min)" labels readable with units; tick labels legible against the light background
-      Data: Green scatter points (Imprint #009E73) at alpha~0.6 tracing a rise-peak-fall pattern from ~5C to ~50C; a solid blue LOWESS curve (t.palette[2]) of width 5 sits clearly above the point cloud (z:10), smooth with no oscillation, tracking the peak near 38C
+      Background: Warm off-white (#FAF8F1), not pure white or dark - PASS
+      Chrome: Title "scatter-regression-lowess · javascript · echarts · anyplot.ai" centered at the top, fully readable in dark ink at ~58% of plot width. Legend below the title ("Reaction rate", "LOWESS fit", "Confidence band") is readable, though the "LOWESS fit" swatch is rendered as a lavender/purple hollow circle even though the actual curve is blue (color mismatch, see Weaknesses). X-axis "Temperature (°C)" and y-axis "Reaction Rate (µmol/min)" labels are readable with units, tick labels legible, dashed split-lines subtle.
+      Data: Green scatter points (Imprint #009E73) at alpha~0.6 trace a rise-peak-fall pattern from ~5°C to ~50°C. A solid blue LOWESS curve (palette[2]) with a subtle glow sits clearly above the point cloud, smooth without oscillation, tracking the peak near 38°C. A faint shaded confidence band surrounds the curve. A dashed vertical marker line labeled "Optimum ≈ 38°C" and a small blue peak-point circle sit cleanly in open space above the data cluster, not overlapping any text or points.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), not pure black - PASS
-      Chrome: Same title, legend, and axis labels rendered in light ink/inkSoft tones, fully readable against the dark background; grid lines subtle but visible; no dark-on-dark text found
-      Data: Scatter point color and LOWESS curve color are identical to the light render (only chrome flipped, as required); the blue curve remains clearly distinguishable from the green points and dark background
+      Chrome: Same title, legend, and axis labels rendered in light ink/inkSoft tones, fully readable against the dark background; grid lines subtle but visible; no dark-on-dark text found. The same "LOWESS fit" legend color mismatch (lavender swatch vs. blue curve) is present here too, confirming it is a color-mapping bug rather than a light-theme rendering artifact.
+      Data: Scatter point color and LOWESS curve color are identical to the light render (only chrome flipped, as required). The blue curve with its glow remains clearly distinguishable from the green points and dark background; confidence band and optimum annotation are equally legible.
       Legibility verdict: PASS
 
-    Both renders pass the theme-readability checklist. Data colors are identical between themes; only background, text, and grid chrome adapt per theme. Canvas dimension gate passed (no /tmp/anyplot-canvas-gate.txt present) — no canvas drift.
+    Both renders pass the theme-readability checklist. Data colors are identical between themes; only background, text, and grid chrome adapt per theme. No canvas dimension gate file present (canvas gate passed, 3200x1800). No edge clipping observed on any title, axis label, or legend text in either render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,51 +69,56 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Fonts explicitly sized (title 22px, axis names 18px, ticks 14px),
-          all readable in both themes
+        comment: Title (dynamically scaled), axis names (18px), tick labels (14px),
+          and legend (16px) all explicitly sized and readable in both themes; title
+          comfortably fits ~58% of plot width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render
+        comment: No collisions between legend, title, axis labels, or the optimum
+          annotation and data points in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Markers sized 16px with alpha 0.6 appropriate for n=160; LOWESS line
-          at width 5 with z:10 stays clearly above the point cloud
+        comment: Markers (16px, alpha 0.6) and 5px curve are visible, but the dense
+          peak cluster (~35-42°C) shows noticeable point overlap that could use slightly
+          more transparency or smaller symbols.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green + blue combination has strong contrast, not reliant on red-green
+        comment: Green vs. blue combination has strong contrast, not reliant on red-green,
+          alpha helps overlapping markers.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good margins, nothing cut off
+        comment: Canvas gate passed (3200x1800); no clipping at any edge; balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (°C, µmol/min)
+        comment: Descriptive axis labels with units (°C, µmol/min).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series is Imprint #009E73; backgrounds match #FAF8F1/#1A1A17;
-          both renders theme-correct'
+          data colors identical across themes; both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -112,24 +126,26 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Contrasting curve color and adaptive title sizing show some thought,
-          but nothing beyond correct token wiring
+        comment: Curve glow (shadowBlur/shadowColor), confidence band, and peak annotation
+          clearly show intent beyond a basic scatter+line, but axis chrome elsewhere
+          is still fairly plain.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Grid subtle and whitespace generous, but axis lines/ticks use plain
-          defaults with no extra refinement
+        comment: Confidence-band shading and curve glow add real refinement; grid/axis
+          styling itself remains largely default.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Curve is a clear focal point and the data itself tells a bell-shaped
-          story, but no confidence band or annotation to reinforce it
+        passed: true
+        comment: markLine + markPoint annotation and confidence band create a clear
+          focal point at the optimum temperature, guiding the viewer straight to the
+          insight.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,27 +153,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter with LOWESS regression overlay
+        comment: Correct scatter plot with LOWESS regression overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct solid contrasting curve, frac=0.35, alpha=0.6, LOWESS-named
-          legend entry all present
+        comment: Distinct contrasting curve, frac=0.35 within spec range, alpha=0.6
+          within spec range, optional confidence band now implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=temperature, Y=reaction rate, full data range shown
+        comment: X=temperature, Y=reaction rate, full data range shown on both axes.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title matches mandated format exactly; legend labels are clear and
-          correct
+        passed: false
+        comment: Title format correct, but the 'LOWESS fit' legend swatch renders
+          in the wrong color (lavender instead of the actual blue curve) — a real,
+          confirmed legend/data mismatch.
     data_quality:
       score: 15
       max: 15
@@ -167,21 +184,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers baseline noise, rise, peak plateau, and post-optimum decline
+        comment: Covers baseline noise, rise, peak plateau, and post-optimum decline.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Enzyme reaction rate vs. temperature is plausible and neutral
+        comment: Enzyme reaction rate vs. temperature is plausible, neutral, and scientifically
+          grounded.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 5-50C, rate 0-120 µmol/min are sensible for the domain
+        comment: Temperature 5-50°C and rate 0-120 µmol/min are sensible values for
+          enzyme kinetics.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -189,57 +208,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; small helpers (rand, randNormal, tricube) are appropriate
-          for the LOWESS algorithm
+        comment: No classes; small helper functions (rand, randNormal, tricube, weightsAt)
+          are appropriate for the LOWESS algorithm.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, deterministic output
+        comment: Fixed-seed LCG produces deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; echarts is the pre-loaded global
+        comment: No unused imports; echarts is the pre-loaded global.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Real LOWESS computation, no fake UI or simulated interactivity
+        passed: false
+        comment: Real LOWESS computation, no fake UI, but the missing itemStyle.color
+          on the LOWESS series is a genuine styling bug (causes the legend mismatch
+          above).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: 'Correct mount-node contract: no explicit size, no devicePixelRatio,
-          animation:false'
+          animation:false.'
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic option structure: named value axes, split lines, stacked-area
+          confidence-band pattern, token-driven color array.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic option structure: named value axes, split lines, token-driven
-          color array'
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No ECharts-distinctive features used (markLine, markArea, visualMap,
-          custom tooltip) to distinguish it from a generic scatter+line
+        comment: Uses markLine, markPoint, shadowBlur/shadowColor glow, and a stacked-area
+          confidence band — features distinctive to ECharts, not trivially replicable
+          elsewhere.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - regression-line
   - scatter-plot
+  - annotations
+  - confidence-band
   patterns:
   - data-generation
   - local-weighted-regression
@@ -248,3 +272,4 @@ impl_tags:
   styling:
   - alpha-blending
   - publication-ready
+  - glow-effect
