@@ -11,7 +11,9 @@ const t = window.ANYPLOT_TOKENS;
 // psi = sin(x) sin(y): u = sin(x)cos(y), v = -cos(x)sin(y). Streamlines are
 // closed loops nested around four alternating vortex cells over [-pi, pi]^2.
 const PI = Math.PI;
-const DOMAIN = PI + 0.05;
+// Axis bounds are a clean round number (not the raw PI+margin), so ECharts'
+// boundary tick labels don't render at full float precision.
+const AXIS_LIMIT = 3.2;
 
 const velocity = (x, y) => [Math.sin(x) * Math.cos(y), -Math.cos(x) * Math.sin(y)];
 
@@ -47,7 +49,9 @@ const cellCenters = [
   [-PI / 2, -PI / 2],
   [PI / 2, -PI / 2],
 ];
-const radii = [0.3, 0.6, 0.9, 1.2];
+// A near-boundary radius is included so seeds sweep from each cell's elliptic
+// center out toward the separatrix, showing more of the field topology.
+const radii = [0.3, 0.6, 0.9, 1.2, 1.45];
 const seeds = [];
 cellCenters.forEach(([cx, cy]) => {
   radii.forEach((r) => {
@@ -61,15 +65,36 @@ const seqLo = hexToRgb(t.seq[0]);
 const seqHi = hexToRgb(t.seq[1]);
 const lerp = (a, b, f) => a + (b - a) * f;
 
-const streamlines = seeds.map(([sx, sy]) => {
-  const path = traceStreamline(sx, sy, 500, 0.025);
+// --- Directional arrowhead: a short segment at each path's midpoint, oriented
+// along the local flow direction, so circulation direction is visible per cell.
+const arrowAt = (path) => {
+  const midIdx = Math.floor(path.length / 2);
+  const aheadIdx = Math.min(midIdx + 5, path.length - 1);
+  const [mx, my] = path[midIdx];
+  const [ax, ay] = path[aheadIdx];
+  const dx = ax - mx;
+  const dy = ay - my;
+  const dist = Math.hypot(dx, dy) || 1;
+  const ux = dx / dist;
+  const uy = dy / dist;
+  const halfLen = 0.11;
+  return [
+    [mx - ux * halfLen, my - uy * halfLen],
+    [mx + ux * halfLen, my + uy * halfLen],
+  ];
+};
+
+const streamlines = [];
+const arrows = [];
+seeds.forEach(([sx, sy]) => {
+  const path = traceStreamline(sx, sy, 650, 0.025);
   const meanSpeed = path.reduce((sum, [px, py]) => sum + speedAt(px, py), 0) / path.length;
   const f = Math.max(0, Math.min(1, meanSpeed));
   const rgb = [0, 1, 2].map((i) => Math.round(lerp(seqLo[i], seqHi[i], f)));
-  return {
-    coords: path,
-    lineStyle: { color: `rgb(${rgb.join(",")})`, width: lerp(1.6, 4, f) },
-  };
+  const color = `rgb(${rgb.join(",")})`;
+  const width = lerp(1.6, 4, f);
+  streamlines.push({ coords: path, lineStyle: { color, width } });
+  arrows.push({ coords: arrowAt(path), lineStyle: { color, width } });
 });
 
 // --- Init ------------------------------------------------------------------
@@ -88,8 +113,8 @@ chart.setOption({
   grid: { left: 90, right: 60, top: 110, bottom: 80 },
   xAxis: {
     type: "value",
-    min: -DOMAIN,
-    max: DOMAIN,
+    min: -AXIS_LIMIT,
+    max: AXIS_LIMIT,
     name: "x",
     nameLocation: "middle",
     nameGap: 40,
@@ -100,8 +125,8 @@ chart.setOption({
   },
   yAxis: {
     type: "value",
-    min: -DOMAIN,
-    max: DOMAIN,
+    min: -AXIS_LIMIT,
+    max: AXIS_LIMIT,
     name: "y",
     nameLocation: "middle",
     nameGap: 50,
@@ -117,6 +142,13 @@ chart.setOption({
       polyline: true,
       symbol: ["none", "none"],
       data: streamlines,
+    },
+    {
+      type: "lines",
+      coordinateSystem: "cartesian2d",
+      symbol: ["none", "arrow"],
+      symbolSize: 14,
+      data: arrows,
     },
   ],
 });
