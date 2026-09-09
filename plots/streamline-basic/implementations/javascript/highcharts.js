@@ -93,16 +93,12 @@ const speedMin = Math.min(...speedValues);
 const speedMax = Math.max(...speedValues);
 
 // --- Imprint sequential colormap (speed → color) ----------------------------
-function hexToRgb(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
 function mixHex(hexA, hexB, ratio) {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  const [r, g, bl] = a.map((channel, i) => Math.round(channel + (b[i] - channel) * ratio));
-  return `rgb(${r}, ${g}, ${bl})`;
+  const a = parseInt(hexA.slice(1), 16);
+  const b = parseInt(hexB.slice(1), 16);
+  const channel = (shift) =>
+    Math.round(((a >> shift) & 255) + (((b >> shift) & 255) - ((a >> shift) & 255)) * ratio);
+  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
 }
 
 // --- Chart -------------------------------------------------------------------
@@ -110,6 +106,9 @@ function mixHex(hexA, hexB, ratio) {
 // "line"/"spline" series (which auto-sorts points by ascending x) would
 // scramble the path. A "scatter" series with lineWidth set draws the
 // segments in data order instead, which preserves the traced curve.
+// Markers stay hidden at rest (states.hover.enabled) so a mouse-driven HTML
+// view can reveal each streamline's local speed on hover without any marker
+// clutter in the static PNG screenshot (no pointer is ever active for it).
 const streamlineSeries = streamlines.map((line, index) => {
   const ratio = speedMax > speedMin ? (line.meanSpeed - speedMin) / (speedMax - speedMin) : 0;
   return {
@@ -118,9 +117,9 @@ const streamlineSeries = streamlines.map((line, index) => {
     data: line.points,
     color: mixHex(t.seq[0], t.seq[1], ratio),
     lineWidth: 1.6 + ratio * 1.8,
-    marker: { enabled: false },
+    meanSpeed: line.meanSpeed,
+    marker: { enabled: false, states: { hover: { enabled: true, radius: 5, lineWidth: 1 } } },
     showInLegend: false,
-    enableMouseTracking: false,
   };
 });
 
@@ -154,7 +153,7 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Wind circulation around a cyclone–anticyclone pair · color and thickness encode local speed",
+    text: "Streamlines around a counter-rotating vortex pair · color and thickness encode local speed",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
@@ -179,9 +178,19 @@ Highcharts.chart("container", {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
-  tooltip: { enabled: false },
+  tooltip: {
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    style: { color: t.ink, fontSize: "13px" },
+    formatter() {
+      const speed = this.series.userOptions.meanSpeed;
+      return speed === undefined
+        ? false
+        : `<b>${this.series.name}</b><br/>speed ≈ ${speed.toFixed(2)}<br/>(${this.x.toFixed(1)}, ${this.y.toFixed(1)}) km`;
+    },
+  },
   plotOptions: {
-    series: { animation: false, marker: { enabled: false }, enableMouseTracking: false },
+    series: { animation: false, marker: { enabled: false } },
   },
   series: [...legendKeySeries, ...streamlineSeries],
 });
