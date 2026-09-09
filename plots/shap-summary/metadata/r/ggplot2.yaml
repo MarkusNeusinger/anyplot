@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: shap-summary
 created: '2026-09-09T07:28:49Z'
-updated: '2026-09-09T07:33:34Z'
+updated: '2026-09-09T07:44:09Z'
 generated_by: claude-sonnet
 workflow_run: 34323612237
 issue: 2923
@@ -12,48 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Correct spec-mandated blue=low/red=high diverging convention, explicitly reasoned
-    in a code comment and matching the SHAP domain convention, while still drawing
-    both anchors from the Imprint palette (#4467A3 blue, #AE3030 matte red)'
-  - Features correctly sorted by mean |SHAP value| (most important at top) via dplyr
-    group_by/summarise plus factor releveling
-  - Vertical zero reference line, vertical jitter to reduce overlap, theme-adaptive
-    chrome, and correct 3200x1800 canvas are all present and correct in both renders
-  - Clean, realistic synthetic house-price dataset with plausible feature ranges and
-    directional relationships (increasing/decreasing/hump shapes per feature)
-  - 'Both renders pass the theme-readability check: no dark-on-dark or light-on-light
-    text, data colors identical between light and dark'
+  - 'Repair attempt fixed the attempt-1 VQ-03 weakness: geom_jitter now uses shape=21
+    with an INK_SOFT stroke, so mid-value points (fill ≈ PAGE_BG at the diverging
+    midpoint) stay visible as a faint ring instead of vanishing into the background'
+  - New ★ prefix on the top-driver feature's y-axis label directly addresses the attempt-1
+    DE-03 feedback and gives the chart a clear focal point without adding clutter
+  - 'Correct spec-mandated blue=low/red=high diverging convention drawn from the Imprint
+    palette (#4467A3 blue, #AE3030 matte red), with the diverging midpoint correctly
+    theme-adaptive per the imprint_div formula'
+  - Features correctly sorted by mean |SHAP value| (most important at top); realistic,
+    neutral synthetic house-price dataset with plausible per-feature shapes (increasing/decreasing/hump)
+    and a sensible $k-scaled x-axis
+  - Theme-adaptive chrome, dashed zero-reference line, vertical jitter, and the exact
+    3200×1800 canvas are all correctly implemented and pixel-consistent data colors
+    across both renders
   weaknesses:
-  - 'Mid-range feature-value points (feature_value_norm ≈ 0.5) fade nearly into the
-    page background because the diverging color scale''s midpoint literally equals
-    PAGE_BG — most visible in the ''Distance to Downtown (km)'' row in both themes,
-    where part of the sample cloud is barely distinguishable from empty space. Consider
-    a subtle non-background neutral (e.g. the muted anchor #6B6A63/#A8A79F) or a thin
-    marker edge so mid-value points stay visible without breaking the theme-adaptive
-    midpoint intent.'
-  - The make_feature() helper function generates all 8 features via a shared abstraction
-    — deviates from the 'no functions' KISS default; either inline the generation
-    per feature or keep it, but it costs a small CQ-01 deduction as written.
-  - Legend title 'Feature\nvalue' uses a manual line break; minor polish nit with
-    no legibility impact.
-  - Design execution is competent but fairly close to the conventional SHAP beeswarm
-    layout — no annotation or emphasis calls out the top driver feature, leaving DE-03
-    (data storytelling) at a moderate rather than high score.
+  - In the dark render, the diverging colorbar's mid-section renders at ~#1A1A17 (the
+    theme's PAGE_BG, per the imprint_div spec) sitting inside the elevated legend
+    card (#242420) — the two near-black tones create a visible dark 'hole' in the
+    middle of the gradient swatch that reads as a rendering glitch rather than a deliberate
+    neutral zone; consider giving the colorbar rect itself a thin INK_SOFT border/stroke
+    (independent of the data-point fix) so the gradient stays legible as a continuous
+    scale in dark mode
+  - The make_feature() helper function is reused for all 8 features — still deviates
+    from the CQ-01 'no functions, straight top-to-bottom script' KISS default from
+    attempt 1 (understandable DRY tradeoff, but unaddressed)
+  - Design Excellence is still close to a conventional SHAP beeswarm layout beyond
+    the new star callout and color reasoning — no further visual hierarchy techniques
+    (e.g. subtle row shading/emphasis band) were added on top of the label-prefix
+    fix
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
-      Chrome: Dark-ink title "shap-summary · r · ggplot2 · anyplot.ai" top-left, ~55-65% of the panel width. Eight y-axis feature labels (Living Area (sqft), Distance to Downtown (km), School Rating (1-10), House Age (years), Bathrooms, Crime Rate Index, Has Garage, Lot Size (sqft)) sorted top-to-bottom by importance, dark ink, fully legible. X-axis title "SHAP Value (Impact on Predicted Price)" and $k-formatted tick labels (-$50k...$25k) legible in soft ink. Subtle horizontal gridlines per row, dashed gray vertical line at $0k. Legend card "Feature value" (High/Low) on an elevated cream box, top right, legible.
-      Data: Jittered points per feature colored on a diverging blue(#4467A3, low)-to-red(#AE3030, high) scale via scale_color_gradient2, alpha=0.55 for overlap. First data anchor deliberately uses Imprint blue for "low" and Imprint matte-red for "high" to match SHAP's own reading convention (documented in a code comment) rather than the library-doc example order — colors are still Imprint-sourced.
-      Legibility verdict: PASS. All text readable; the only softness is that points near feature_value_norm≈0.5 approach the page-background color by design (diverging midpoint = PAGE_BG per style guide), visibly thinning the sample cloud in the "Distance to Downtown" row — a visibility nit, not a legibility failure.
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: dark-ink title "shap-summary . r . ggplot2 . anyplot.ai" top-left (~67% of the panel width, within the 50-70% guideline); eight dark-ink y-axis feature labels (top feature prefixed with a star), gray x-axis title "SHAP Value (Impact on Predicted Price)" with $k-formatted ticks, dashed gray zero line, subtle per-row horizontal gridlines, and a "Feature value" High/Low colorbar legend on an elevated cream card. All chrome text is clearly legible against the light background.
+      Data: diverging blue (#4467A3, low) to red (#AE3030, high) fill on jittered circular points with a thin gray stroke; first-series/brand green is not applicable here since this is a continuous diverging scale, not categorical. Mid-value points show as faint pale rings rather than disappearing, thanks to the shape=21 stroke.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
-      Chrome: All chrome flips correctly — off-white title and axis text, light gray gridlines, white dashed zero line, legend card flips to the dark elevated surface (#242420) with light text. No dark-on-dark failures found; every title/axis/tick/legend element remains clearly visible against the near-black surface.
-      Data: Colors are pixel-identical to the light render (#4467A3 / #AE3030 diverging scale) — only chrome changed, confirming theme-adaptive implementation is correct.
-      Legibility verdict: PASS. No dark-on-dark issues. Same mid-value fade nit as light render, symmetric by design since midpoint = PAGE_BG on each theme.
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title/axis/tick text flips to off-white/light-gray ink, gridlines and zero line flip to light tones, legend card flips to the dark elevated surface (#242420) with light text. All chrome text is clearly legible against the dark background; no dark-on-dark chrome failures.
+      Data: point fill colors are pixel-identical to light render (#4467A3 / #AE3030 diverging ends) — only chrome changed, confirming correct theme-adaptive implementation. One notable soft spot: the colorbar swatch's mid-section (fill = PAGE_BG = #1A1A17 per the imprint_div formula) sits inside the slightly-lighter dark legend card (#242420) and reads as a near-black "hole" in the middle of the gradient — harder to read as a continuous scale than the light-mode equivalent, though the scatter points themselves stay visible via their stroke ring.
+      Legibility verdict: PASS (chrome text fully legible; the colorbar-gradient softness noted above is a design/contrast nit, not a text-legibility failure).
   criteria_checklist:
     visual_quality:
       score: 27
@@ -64,73 +66,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text explicitly sized and readable in
-          both themes
+        comment: All chrome text legible in both themes at correct sizes matching
+          the style-guide table
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data collisions observed
+        comment: No text collisions; dense point clustering is expected beeswarm behavior
+          mitigated by jitter+alpha
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Markers sized/alpha-tuned reasonably for 220-sample density, but
-          mid-value points fade near-invisible against PAGE_BG (diverging midpoint
-          = background), most visible in Distance to Downtown row
+        comment: Attempt-1 fix (shape=21 + INK_SOFT stroke) keeps mid-value points
+          visible as faint rings instead of vanishing into PAGE_BG
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale is CVD-appropriate, not used as sole red-green
-          signal
+        comment: Red-blue diverging scale, not red-green; used for continuous data
+          only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no clipping, balanced margins
+        comment: Correct 3200x1800 canvas, nothing clipped, title ~67% of panel width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units ($, km, sqft, years)
+        comment: Descriptive x-axis title with units and $k-formatted ticks
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Diverging scale built from Imprint anchors #4467A3/#AE3030 with
-          theme-adaptive midpoint; backgrounds correct in both themes'
+        passed: false
+        comment: Imprint diverging endpoints and backgrounds correct, but dark-theme
+          colorbar mid-band (PAGE_BG) blends into the elevated legend card as a near-invisible
+          dark band
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Thoughtful, well-reasoned color choice and custom colorbar sizing,
-          but overall layout is close to the conventional SHAP beeswarm look
+        passed: true
+        comment: Thoughtful color reasoning and dollar-formatted ticks, but layout
+          stays close to a conventional SHAP beeswarm
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed via theme_minimal, subtle y-only gridlines, generous
-          margins
+        comment: Spines removed, subtle y-only grid, reasonable margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Zero-line and color direction provide structure, but no annotation/emphasis
-          highlights the top driver feature
+        passed: true
+        comment: New star callout on the top-driver feature plus zero-line and color
+          direction add a clear focal point, up from attempt 1
     spec_compliance:
       score: 15
       max: 15
@@ -140,26 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SHAP summary/beeswarm-style plot
+        comment: Correct jittered horizontal beeswarm scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Importance sort, diverging color, zero line, jitter all present
+        comment: Importance sort, diverging color, zero line, vertical jitter all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=shap_value, y=feature (importance-ordered), color=feature_value
+        comment: x=shap_value, y=feature (sorted), fill=normalized feature value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'shap-summary · r · ggplot2 · anyplot.ai'; legend correctly
-          labeled High/Low
+        comment: Title matches mandated format exactly; legend labeled Feature value
+          with High/Low
     data_quality:
       score: 15
       max: 15
@@ -169,20 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Importance, direction, magnitude, and distribution all represented
+        comment: Shows importance order, direction/magnitude, and per-feature distribution
+          shape
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral house-price domain with sensible feature set
+        comment: Plausible, neutral house-price features
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SHAP values in sensible $k range, feature ranges plausible (sqft,
-          years, 1-10 rating, etc.)
+        comment: SHAP values and feature ranges are realistic for real-estate pricing
     code_quality:
       score: 9
       max: 10
@@ -192,8 +195,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: make_feature() helper used to generate all 8 features; justified
-          DRY but deviates from the no-functions default
+        comment: make_feature() helper reused for all 8 features; DRY but deviates
+          from the no-functions default (unchanged from attempt 1)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,22 +208,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: dplyr, tibble, scales, ragg all actually used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: No over-engineering, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave(device=ragg::agg_png) at correct landscape dims, plot-{THEME}.png
-          naming
+        comment: Saves plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,21 +230,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_jitter, scale_color_gradient2, guide_colorbar, dplyr chain for
-          ordering — solidly idiomatic ggplot2
+        comment: Idiomatic geom_jitter, scale_fill_gradient2, guide_colorbar, label_dollar
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Custom guide_colorbar sizing and theme-tied midpoint are nice touches
-          but not deeply library-distinctive
+        passed: true
+        comment: shape=21 stroke compensation and star-prefix label substitution are
+          ggplot2-specific touches beyond generic usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - layer-composition
   patterns:
   - data-generation
   - groupby-aggregation
@@ -251,3 +251,4 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
+  - edge-highlighting
