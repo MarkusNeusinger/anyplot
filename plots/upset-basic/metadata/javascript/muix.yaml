@@ -1,0 +1,262 @@
+library: muix
+language: javascript
+specification_id: upset-basic
+created: '2026-09-09T21:14:16Z'
+updated: '2026-09-09T21:29:26Z'
+generated_by: claude-sonnet
+workflow_run: 34404922048
+issue: 5250
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/muix/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - 'Genuinely faithful UpSet plot construction: horizontal set-size bars, vertical
+    intersection-size bars, and a dot matrix with connecting lines are laid out in
+    a coordinated 2x2 grid with shared TOP_MARGIN/LEFT_MARGIN so dots stay pixel-aligned
+    under their bars.'
+  - 'Degree-based color gradient (Imprint imprint_seq: brand green to blue) is correctly
+    implemented and verified pixel-accurate against the intended interpolation formula,
+    with an explanatory ''Degree'' legend key that addresses the prior review''s SC-04
+    feedback.'
+  - 'Theme-adaptive chrome is correct in both renders, first series is #009E73, intersections
+    sorted by descending size, and the genomics dataset (decreasing per-assay hit
+    rates) produces a realistic long-tail distribution of intersection sizes.'
+  - Alternating row banding aids matrix row-tracking, and data generation uses a deterministic
+    seeded LCG.
+  weaknesses:
+  - 'Overlap bug: the rotated ''Intersection size'' y-axis title text directly crosses
+    through the ''300'', ''400'', and ''500'' tick number labels on the top bar chart
+    in BOTH light and dark renders (confirmed via pixel inspection at plot-light.png/plot-dark.png
+    around x=480-650, y=500-600). Increase TOP_MARGIN.left or add axis label spacing
+    so the rotated label clears the tick text.'
+  - 'Dead code: the ChartsReferenceLine mean-value marker (dashed line + ''Mean: XX''
+    label) added in the previous repair round does not render at all in either theme
+    -- a full-region pixel scan of the top bar chart area found zero dashed-line pixels
+    or ''Mean'' text anywhere. Either fix the ChartsReferenceLine configuration (check
+    axis-id binding and that it is supported nested inside <BarChart> for the installed
+    @mui/x-charts version) so it actually displays, or remove it to avoid shipping
+    non-functional code.'
+  - 'Minor: no alternative degree-based sort mode is offered (the spec lists it as
+    an alternative to size-sort), though a single static view is acceptable for this
+    library.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Bold centered title "upset-basic · javascript · muix · anyplot.ai" in dark ink. "Intersection size" (rotated) and "Set size" axis labels, tick labels, and annotation text ("2,000 genes / 6 assays · top 15 of 57 intersections", "Degree" legend) all render in dark/soft-grey ink and are legible against the light background. DEFECT: the rotated "Intersection size" axis title overlaps and crosses through the "300", "400", and "500" tick number labels -- confirmed by pixel inspection, not just visual impression.
+      Data: Vertical intersection-size bars and horizontal set-size bars use brand green (#009E73). Dot-matrix markers use a green-to-blue sequential ramp (imprint_seq) keyed to intersection degree -- pixel-verified to match the intended mixHex interpolation. Inactive dots are muted grey, connecting lines align exactly under their bars/dots.
+      Legibility verdict: PASS overall (all text discernible), but the axis-title/tick-label overlap noted above is a real defect, not a false alarm.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/off-white, fully legible against the dark background; row bands switch to dark-grey shading; annotation text renders in light grey. The SAME "Intersection size" / "300"/"400"/"500" overlap defect is present identically in this render (verified via matching pixel crop).
+      Data: Brand-green bars and the degree color ramp are pixel-identical to the light render -- only chrome flipped, no theme-adaptation failures.
+      Legibility verdict: PASS overall, no dark-on-dark failures, but same overlap defect as light render.
+
+    Additional pixel-level check: scanned the full top bar chart region (x=500-3190, y=180-820) in both renders for the ChartsReferenceLine mean marker (dashed line + "Mean: XX" label) that the source code adds. No dashed-line pixels or "Mean" text were found anywhere -- the reference line does not render in either theme.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable, but the y-axis title/tick-label
+          overlap reduces clarity of the 300/400/500 numbers
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Rotated 'Intersection size' axis title crosses through '300'/'400'/'500'
+          tick labels in both themes (pixel-confirmed); numbers remain roughly legible
+          so not a full failure
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars, dots (r=9 active / r=5.5 inactive), and 3px connecting lines
+          are clearly visible and well-sized for the data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe green-to-blue degree ramp with distinct endpoints
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced grid layout, good canvas utilization, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Intersection size' and 'Set size' labels; counts don't
+          strictly need units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, imprint_seq gradient for degree, correct theme-adaptive
+          chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom degree color mapping, coordinated grid layout, legend key
+          beyond defaults; undermined slightly by the overlap and dead reference-line
+          code
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle row banding, minimal chrome, generous whitespace elsewhere,
+          but the axis-label overlap is a real refinement miss
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size-sorted focal point plus degree color hierarchy and legend guide
+          the reader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct UpSet plot: set-size bars, intersection bars, and dot matrix
+          with connecting lines all present'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Size-descending sort, connected/unconnected dots, degree color coding,
+          rows=sets/columns=intersections all implemented
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Sets on matrix rows and set-size bars, intersections on matrix columns
+          and intersection-size bars, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; 'Degree' color-ramp legend now present (addresses
+          prior review feedback)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows single-set through multi-set intersections, non-membership
+          dots, and a realistic long-tail size distribution
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible genomics differential-expression scenario across
+          6 assays
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2,000 genes, decreasing per-assay hit rates producing realistic diminishing
+          intersection sizes
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No classes, single component, but layout math is fairly elaborate
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only BarChart and ChartsReferenceLine imported, both referenced
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: ChartsReferenceLine is dead code -- it is wired up but produces no
+          visible output in either render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct harness contract, skipAnimation set, no bare plot.png
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic BarChart (vertical + horizontal layout), band scales, sx
+          overrides; custom SVG overlay reasonably supplements what MUI X lacks natively
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Attempted a distinctive feature (ChartsReferenceLine) but it does
+          not render, so no credit for that attempt; otherwise fairly standard customization
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
