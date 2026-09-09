@@ -26,7 +26,7 @@ const rand = makeLCG(20260909);
 const SET_NAMES_RAW = ["RNA-seq", "ChIP-seq", "ATAC-seq", "CUT&Tag", "Hi-C", "WGBS"];
 const N_SETS = SET_NAMES_RAW.length;
 const N_CANDIDATES = 900;
-const BASE_P = [0.34, 0.3, 0.28, 0.2, 0.16, 0.12];
+const BASE_P = [0.34, 0.3, 0.28, 0.2, 0.16, 0.14];
 
 const comboCounts = new Map();
 const setSizeRaw = new Array(N_SETS).fill(0);
@@ -36,12 +36,13 @@ for (let i = 0; i < N_CANDIDATES; i++) {
   // Two correlated biological signatures create realistic, sizeable overlaps
   // instead of a flat independent-draw distribution.
   const activePromoter = rand() < 0.22; // RNA-seq + ChIP-seq + ATAC-seq co-signal
-  const chromatinLoop = rand() < 0.16; // CUT&Tag + Hi-C co-signal
+  const chromatinLoop = rand() < 0.16; // CUT&Tag + Hi-C co-signal, weakly extends to WGBS
   const members = [];
   for (let s = 0; s < N_SETS; s++) {
     let p = BASE_P[s];
     if (activePromoter && s <= 2) p += 0.42;
     if (chromatinLoop && (s === 3 || s === 4)) p += 0.4;
+    if (chromatinLoop && s === 5) p += 0.22;
     if (rand() < Math.min(p, 0.93)) members.push(s);
   }
   if (members.length === 0) continue;
@@ -128,6 +129,39 @@ function makeDiv(x, y, w, h) {
   root.appendChild(el);
   return el;
 }
+
+// Compact swatch legend decoding the top-bar degree gradient — sits in the
+// column chart's own top margin (20px), so it never overlaps the bars.
+const degreesShown = Array.from(new Set(intersections.map((iv) => iv.degree))).sort((a, b) => a - b);
+const legendW = 60 + degreesShown.length * 64;
+const legendDiv = makeDiv(chartRight - legendW, CHART_TOP + 2, legendW, 18);
+legendDiv.style.display = "flex";
+legendDiv.style.alignItems = "center";
+legendDiv.style.justifyContent = "flex-end";
+legendDiv.style.gap = "10px";
+legendDiv.style.fontSize = "12px";
+legendDiv.style.color = t.inkSoft;
+legendDiv.style.whiteSpace = "nowrap";
+const legendPrefix = document.createElement("span");
+legendPrefix.textContent = "Degree:";
+legendDiv.appendChild(legendPrefix);
+degreesShown.forEach((d) => {
+  const item = document.createElement("span");
+  item.style.display = "inline-flex";
+  item.style.alignItems = "center";
+  item.style.gap = "4px";
+  const swatch = document.createElement("span");
+  swatch.style.width = "10px";
+  swatch.style.height = "10px";
+  swatch.style.borderRadius = "50%";
+  swatch.style.backgroundColor = degreeColor(d);
+  swatch.style.display = "inline-block";
+  const label = document.createElement("span");
+  label.textContent = `${d} set${d > 1 ? "s" : ""}`;
+  item.appendChild(swatch);
+  item.appendChild(label);
+  legendDiv.appendChild(item);
+});
 
 const titleDiv = makeDiv(chartLeft, TITLE_TOP, chartAreaW, TITLE_H);
 titleDiv.style.color = t.ink;
@@ -281,7 +315,10 @@ Highcharts.chart(matrixDiv, {
     tickWidth: 0,
     gridLineWidth: 1,
     gridLineColor: t.grid,
-    labels: { style: { color: t.inkSoft, fontSize: "12px" } },
+    // Degree numbers are non-monotonic per column ("1,1,1,3,2,…") and read as a
+    // broken axis if shown as tick labels; the swatch legend above already
+    // decodes degree via color, so no numeral row is needed here.
+    labels: { enabled: false },
   },
   yAxis: {
     categories: setNames,
