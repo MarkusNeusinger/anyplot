@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: timeseries-decomposition
 created: '2026-09-09T20:29:08Z'
-updated: '2026-09-09T20:33:40Z'
+updated: '2026-09-09T20:42:22Z'
 generated_by: claude-sonnet
 workflow_run: 34400556017
 issue: 2992
@@ -12,129 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Theme-adaptive chrome is executed perfectly: both renders are fully readable
-    with only background/text/grid flipping, and the brand green #009E73 is byte-identical
-    across light and dark.'
-  - 'Statistically sound additive decomposition implemented from scratch in deterministic
-    vanilla JS: centered 2x12 moving average for trend, mean-centered monthly seasonal
-    index, and a residual computed consistently from both.'
-  - Shared time axis across all four panels is reinforced with matching vertical gridlines
-    at the same month positions in every panel, directly satisfying the spec's 'consistent
-    x-axis for easy comparison' requirement.
-  - 'Excellent canvas utilization: four panels plus title fill nearly the entire 3200x1800
-    canvas with balanced, minimal padding and no wasted whitespace.'
-  - Residual panel adds a dashed zero-reference line, a thoughtful interpretive aid
-    that helps the viewer judge whether noise is centered without needing a legend.
-  - Realistic, neutral data scenario (monthly retail sales with a holiday-season seasonal
-    bump) with plausible scale and growth rate.
+  - Four cleanly stacked panels (Original, Trend, Seasonal, Residual) share one continuous
+    time axis, with only the bottom panel showing x tick labels to avoid repetition
+    while thin dividers keep each panel legible
+  - Classical additive decomposition (centered 2x12 moving average + monthly seasonal
+    index, mean-centered) is implemented correctly and matches the spec's suggested
+    method
+  - Original panel uses an idiomatic Chart.js canvas-gradient fill (fading brand green)
+    to give the headline series visual weight, while Trend/Seasonal use plain lines
+    and Residual uses scattered points with a dashed zero-reference line - a sensible
+    per-component visual encoding
+  - 'Imprint palette compliance is perfect: brand green #009E73 identical in both
+    themes, backgrounds/text/grid correctly theme-adaptive, no clipping or overlap
+    in either render'
+  - Deterministic, self-contained data generation via a fixed-seed LCG + Box-Muller
+    gaussian, appropriate given the browser has no seeded RNG
   weaknesses:
-  - 'Mobile-scale legibility risk: stacking four panels vertically means subtitle
-    labels (17pt) and tick/axis-title text (14-16pt) shrink to a fraction of their
-    size when the 3200x1800 PNG is scaled to a ~400px-wide thumbnail. Consider nudging
-    subtitle/axis-title font sizes up slightly, or giving the ''Original'' panel a
-    taller share of vertical space, to keep small-viewport legibility comfortable.'
-  - 'Design Excellence has room to grow: the four panels are visually uniform in treatment
-    (same line weight, no depth cues). A subtle area fill (Chart.js ''fill: true''
-    with low alpha) under the Original or Trend line, or a light highlight band over
-    one notable seasonal cycle, would add visual depth and a stronger focal point
-    without any plugin dependency.'
-  - Library Mastery is generic Chart.js line/scatter usage; no distinctive Chart.js-only
-    capability (e.g. built-in fill/gradient, or scale-linked crosshair via core interaction
-    options) is demonstrated beyond the multi-instance layout trick.
+  - Series count is 96 months, just under the spec's stated 100-1000 point range (still
+    comfortably covers 8 full seasonal cycles, well above the 2-cycle minimum, so
+    this is a minor deviation only)
+  - The Residual panel's dashed zero-reference line has no visible label (legend is
+    globally disabled) - relies on the reader inferring it aligns with the y=0 gridline
+  - Helper functions (uniformRandom, gaussianNoise, hexToRgba) push the script slightly
+    past a flat KISS Imports->Data->Plot structure, though this is largely unavoidable
+    for LCG-based randomness and gradient color math in browser JS
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like), not pure white, not dark. Consistent across all four stacked panels.
-      Chrome: Centered top title "timeseries-decomposition · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Each panel has a bold dark subtitle in the top-left ("Original", "Trend", "Seasonal", "Residual"). Only the bottom panel shows x-axis tick labels (2018-01 ... 2025-05) and the "Month" axis title; all four panels show a y-axis title with units ("Sales ($k)" / "Effect ($k)") and tick labels in a softer dark gray. Thin vertical gridlines line up at the same months across all panels, and a subtle horizontal divider separates each panel. No horizontal gridlines clutter the plot area.
-      Data: Single green (#009E73) line/point series per panel — solid line for Original/Trend/Seasonal, discrete points for Residual, plus a dark dashed zero-reference line in the Residual panel. All data clearly visible against the light background.
-      Legibility verdict: PASS — all title, subtitle, axis, and tick text is fully legible against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "timeseries-decomposition · javascript · chartjs · anyplot.ai" in dark ink at top, fully visible, not clipped. Each of the four panels (Original, Trend, Seasonal, Residual) has a bold dark subtitle top-left. Y-axis titles ("Sales ($k)", "Effect ($k)") and the shared "Month" x-axis title (bottom panel only) are dark and legible. Tick labels are a slightly softer dark gray, clearly readable. Thin light-gray vertical gridlines run through all four panels at the same x positions, aiding cross-panel comparison.
+      Data: All four series render in brand green #009E73. Original panel has a green line with a fading gradient area fill beneath it (denser near the line, near-transparent near the bottom) showing steady growth with an annual holiday-season bump. Trend panel is a smooth green line rising steadily from ~130 to ~225. Seasonal panel is a repeating green sawtooth cycle (peak ~+15 in Dec, trough ~-12 in Jan) identical every year. Residual panel shows small green dots scattered around a black dashed zero-reference line, with no obvious pattern - consistent with white noise.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no dark-on-light or light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black, not light. Consistent across all four panels.
-      Chrome: Same title and per-panel subtitles now rendered in light/white text, fully legible against the dark background. Axis titles and tick labels are in a lighter soft-gray tone, and the zero-reference dashed line in the Residual panel is rendered in a light color instead of dark ink so it remains visible. Vertical gridlines and panel dividers are still present but subtle.
-      Data: The green data line/points are pixel-identical in hue to the light render (#009E73) — only the chrome (background, text, grid, reference-line color) adapted to the dark theme.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and the dashed reference line are clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title and subtitle text, now rendered in light/off-white color, fully legible against the dark background. Axis titles and tick labels are also light-colored (primary vs. slightly dimmer secondary tone), matching the theme-adaptive chrome rules. Gridlines are faint light lines, subtle but visible. The zero-reference dashed line in the Residual panel is rendered in light ink (not black), remaining visible against the dark background.
+      Data: The green line/fill/points are pixel-identical in hue to the light render (#009E73) - only the chrome (background, text, grid, dashed reference line color) flips. Gradient fill in the Original panel is still visible and reads well against the dark background.
+      Legibility verdict: PASS - no dark-on-dark failures; all titles, subtitles, axis labels, and tick labels are clearly legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicit and readable at full size in both themes, but
-          four stacked panels compress subtitle/tick text significantly at ~400px
-          mobile thumbnail scale.
+        comment: All font sizes explicitly set (title 22, subtitle 19, ticks 15, axis
+          titles 17); readable in both themes; well-proportioned given the four-panel
+          layout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data anywhere in either render.
+        comment: No overlap between panel subtitles, ticks, or data in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weight (3px) and residual point radius (4px, ~96 points) are
-          well matched to data density.
+        comment: 3px lines for line panels, 4px points for the noisy Residual panel
+          - appropriate for 96 monthly points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue series distinguished from the dashed reference line by
-          style, not hue; good contrast in both themes.
+        comment: Single-hue series against theme-adaptive ink; no red/green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Panels plus title fill nearly the whole 3200x1800 canvas with balanced,
-          minimal margins.
+        comment: Four panels fill the canvas with balanced margins; Original panel
+          given extra flex weight as the focal panel; no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axis labels include units: ''Sales ($k)'', ''Effect ($k)''.'
+        comment: Axis titles include units ($k) and a clear 'Month' x-axis label
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in both renders; backgrounds are theme-correct
-          #FAF8F1/#1A1A17; all chrome flips correctly.'
+        comment: 'Brand green #009E73 identical across themes; backgrounds/text/grid
+          correctly theme-adaptive in both renders'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Minimalist, intentional single-accent-color design clearly above
-          library defaults, but not yet publication-tier.
+        comment: Canvas-gradient fill on the Original panel plus differentiated per-component
+          encoding (line vs. dashed reference vs. points) is clearly above a well-configured
+          default
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Horizontal gridlines removed, only subtle shared vertical gridlines
-          remain, thin panel dividers, no clutter.
+        comment: Subtle single-axis gridlines, hairline panel dividers, generous whitespace;
+          no bold borders or clutter
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Decomposition into four panels plus the dashed zero-reference line
-          in Residual create hierarchy, but there is no explicit callout of a specific
-          insight or anomaly.
+        comment: Extra flex weight and gradient fill on the Original panel create
+          a clear focal point; the repeating seasonal sawtooth and noise-like residual
+          visually reinforce the decomposition narrative
     spec_compliance:
       score: 15
       max: 15
@@ -144,30 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct four-panel time series decomposition (Original/Trend/Seasonal/Residual).
+        comment: Four vertically stacked component subplots as required
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Shared time axis, clear per-panel labels, and light gridlines all
-          present as required by the spec notes.
+        comment: Shared time axis, clearly labeled components, light gridlines, additive
+          decomposition all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X is time (month) throughout, Y is the correct component value per
-          panel, full range shown.
+        comment: X = month, Y = component value in each panel; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; single-series panels use
-          subtitles instead of legends, which is appropriate.
+        comment: Title matches the exact mandated format; no legend needed for the
+          single-series-per-panel layout
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -175,79 +169,77 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four decomposition components are shown, including a visible
-          multi-year growth trend and a recurring holiday-season seasonal shape.
+        comment: Shows growth trend, a repeating holiday seasonal cycle, and noise-like
+          residuals - all key decomposition aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly retail sales 2018-2025 with a holiday peak is a real, neutral,
-          comprehensible scenario.
+        comment: Neutral, plausible retail-sales scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Growth, seasonal amplitude (~$18k), and noise (~$3.5k std) are all
-          proportionally plausible for the domain.
+        comment: Sensible $k sales magnitudes and growth rate; series length (96 months)
+          is slightly under the spec's suggested 100-point minimum despite covering
+          8 full seasonal cycles
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: data generation, decomposition math, panel-building
-          loop; small helper functions are only for the LCG/gaussian RNG, not over-structured.'
+        comment: A few small helper functions (LCG RNG, gaussian noise, hex-to-rgba)
+          beyond a flat script, largely unavoidable in browser JS
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) makes the data fully deterministic.
+        comment: Fixed-seed LCG makes the data fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only, as required for chartjs
-          entries.
+        comment: No imports; uses only the global Chart and provided tokens
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or fake interactivity; complexity matches the decomposition
-          task.
+        comment: Decomposition math is appropriately complex for the task; no fake
+          UI or functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no deprecated API.
+        comment: Follows the mount-node contract exactly; animation disabled
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct per-panel Chart instances, subtitle plugin for panel labels,
-          proper scale/tick configuration.
+        comment: Idiomatic use of the Chart.js canvas-gradient callback, title/subtitle
+          plugins, and per-dataset showLine/points configuration
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multi-instance mini-multiples layout with a mixed line+scatter dataset
-          for the residual panel goes beyond generic single-chart usage, but doesn't
-          push further into fill/gradient or interaction-driven distinctiveness.
-  verdict: REJECTED
+        comment: Canvas-context gradient fill and the subtitle plugin are reasonably
+          distinctive Chart.js features, though not maximally unique to the library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -259,5 +251,4 @@ impl_tags:
   - time-series
   - rolling-window
   styling:
-  - grid-styling
-  - minimal-chrome
+  - gradient-fill
