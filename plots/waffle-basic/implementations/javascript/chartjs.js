@@ -63,17 +63,20 @@ const wafflePlugin = {
 
     // --- Legend: swatch + label + percentage, vertically centered ------------
     const legendX = gridLeft + gridSize + gutter;
-    const rowH = Math.min(areaH / categories.length, cell * 1.6);
+    const rowH = Math.min(areaH / categories.length, cell * 1.3);
     const legendH = rowH * categories.length;
     const legendTop = chartArea.top + (areaH - legendH) / 2;
     const swatch = rowH * 0.42;
 
     ctx.textBaseline = "middle";
-    ctx.font = `600 ${Math.round(swatch * 0.62)}px sans-serif`;
     categories.forEach((c, idx) => {
       const y = legendTop + idx * rowH + rowH / 2;
       ctx.fillStyle = c.color;
       ctx.fillRect(legendX, y - swatch / 2, swatch, swatch);
+      // Largest category (first, since data is sorted descending) gets a
+      // heavier weight + slightly larger size to anchor the reading order.
+      const isFocal = idx === 0;
+      ctx.font = `${isFocal ? 700 : 500} ${Math.round(swatch * (isFocal ? 0.68 : 0.6))}px sans-serif`;
       ctx.fillStyle = t.ink;
       ctx.fillText(`${c.label} — ${c.value}%`, legendX + swatch * 1.4, y);
     });
@@ -101,6 +104,15 @@ new Chart(canvas, {
       },
       legend: { display: false },
       tooltip: { enabled: false },
+    },
+    // The dummy bar-chart host would otherwise auto-generate default x/y
+    // cartesian scales (even with empty labels/datasets), whose reserved
+    // tick space shrinks chart.chartArea and confines the plugin's drawing
+    // to the upper portion of the canvas. Hiding both scales lets
+    // chartArea span the full area below the title.
+    scales: {
+      x: { display: false },
+      y: { display: false },
     },
   },
 });
