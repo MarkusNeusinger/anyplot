@@ -49,7 +49,7 @@ function status(d) {
   return d.logFc > 0 ? "up" : "down";
 }
 
-const colorFor = { ns: t.muted, up: t.palette[4], down: t.palette[2] };
+const colorFor = { ns: t.inkSoft, up: t.palette[4], down: t.palette[2] };
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3
@@ -126,8 +126,8 @@ g.selectAll(".hit-label")
   .data(topHits)
   .join("text")
   .attr("class", "hit-label")
-  .attr("x", (d) => x(d.logFc) + (d.logFc > 0 ? 14 : -14))
-  .attr("y", (d) => y(d.negLogP) - 10)
+  .attr("x", (d) => x(d.logFc) + (d.logFc > 0 ? 20 : -20))
+  .attr("y", (d) => y(d.negLogP) - 18)
   .attr("text-anchor", (d) => (d.logFc > 0 ? "start" : "end"))
   .attr("fill", t.ink)
   .style("font-size", "16px")
