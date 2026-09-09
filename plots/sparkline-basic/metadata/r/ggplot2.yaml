@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: sparkline-basic
 created: '2026-09-09T18:18:09Z'
-updated: '2026-09-09T18:23:23Z'
+updated: '2026-09-09T18:32:33Z'
 generated_by: claude-sonnet
 workflow_run: 34387632725
 issue: 1011
@@ -12,130 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sparkline
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sparkline-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - Correctly strips all chrome via theme_void() — no axes, ticks, or gridlines, matching
-    the spec's 'extreme minimalism' requirement exactly
-  - Colored dots correctly highlight the series minimum (matte red) and maximum (blue),
-    plus the latest value (brand green), giving the line a clear focal hierarchy
-  - geom_ribbon fills down to the series minimum for the classic sparkline 'area'
-    look, satisfying the spec's optional fill-under-line feature
-  - Both light and dark renders keep the brand green line and highlight-dot colors
-    identical — only chrome (background, title ink) flips between themes
-  - 'Realistic, neutral data: 90-day stock closing-price series with a plausible $130-$165
-    range and an organic-looking sine + random-walk trend'
-  - 'Clean, reproducible KISS-structured code: set.seed(42), only the two necessary
-    imports (ggplot2, ragg), no functions/classes, correct ggsave()/agg_png output'
+  - Canvas utilization substantially improved from the rejected attempt 1 (VQ-05 0/4)
+    by tightening side margins from 140pt to 40pt, roughly doubling the visible mark
+    size
+  - First/last/min/max highlight dots (hollow ring, matte red, blue, brand green)
+    create a clear visual narrative of the trend's full journey
+  - Chrome fully stripped via theme_void() -- no axes, ticks, or gridlines, matching
+    the spec's extreme-minimalism requirement exactly
+  - Palette-compliant and theme-correct in both renders; data colors (line, fill,
+    all four dots) are identical between light and dark, only chrome flips
+  - Clean, reproducible, KISS-structured R code with correct ragg::agg_png/ggsave
+    output
   weaknesses:
-  - 'Canvas utilization is severe: the visible sparkline mark (line+fill+dots) is
-    only ~50% of canvas width but just ~12% of canvas height, centered in the 3200x1800
-    canvas — even including the title block, total content spans well under 30% of
-    the canvas height. Per VQ-05, this triggers the ''tiny plot in a huge canvas''
-    automatic-0 condition. Fix by raising `aspect.ratio` from 0.16 to roughly 0.35-0.45
-    (and/or tightening `scale_y_continuous` expansion and top/bottom plot margins)
-    so the sparkline band reaches ~35-40% of the canvas height while still reading
-    as compact/wide relative to a normal chart.'
-  - Title occupies only ~40% of plot width, below the ~50-70% target for a short custom-length
-    mandated title (this specific title is only ~43 characters, shorter than the ~67-char
-    reference case) — consider a slightly larger plot.title size now that vertical
-    space is being reclaimed from the canvas-utilization fix.
-  - Only the last point is highlighted as a reference marker; the spec's optional
-    'highlight first/last points' suggestion is only half-applied — adding a subtle
-    marker at the first point would complete the pattern (low priority, feature is
-    optional).
-  - Library Mastery usage is fairly generic (geom_ribbon + geom_line + geom_point
-    layering) — nothing distinctive to ggplot2 specifically is leveraged beyond the
-    standard grammar-of-graphics layer composition.
+  - Canvas utilization is now in the 'minor issues' tier (title+mark span roughly
+    40-45% of canvas height) rather than the 50-80% 'perfect' range -- aspect.ratio
+    only moved 0.16 to 0.18; most of the visible gain came from narrower side margins
+    widening the panel. Raising aspect.ratio further toward ~0.25-0.30 would push
+    the mark itself taller without relying solely on margin changes.
+  - Library Mastery remains generic layer composition (geom_ribbon + geom_line + geom_point);
+    no ggplot2-distinctive technique beyond standard grammar layering
+  - Aesthetic composition still reads as well-configured layering rather than genuinely
+    distinctive publication-level design (DE-01/DE-02)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Only the centered title "sparkline-basic · r · ggplot2 · anyplot.ai" is present in dark ink (#1A1A17) — no axes, tick labels, gridlines, or spines, per the sparkline spec's extreme-minimalism requirement. Title is clearly readable against the light background.
-      Data: A single brand-green (#009E73) line traces a two-hump trend (rise, dip near the middle, rise again, small pullback at the end) with a soft green ribbon fill underneath down to the series minimum. A matte-red dot (#AE3030) marks the series minimum, a blue dot (#4467A3) marks the series maximum, and a green dot marks the final value. Colors match the Imprint palette; first series is the brand green.
-      Legibility verdict: PASS — title and data are both clearly legible; however the sparkline mark itself is very small relative to the overall canvas (thin horizontal band centered vertically, large empty space above/below).
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Only the centered title "sparkline-basic · r · ggplot2 · anyplot.ai" in dark ink is present. No axes, tick labels, gridlines, or spines -- matches the spec's extreme-minimalism requirement. Title reads clearly against the light background and occupies ~50% of the panel width, within the 50-70% target for a short mandated title.
+      Data: A single brand-green (#009E73) line traces a rise -> dip -> rise -> small pullback shape, with a soft green ribbon fill underneath. A hollow ring (ink-colored outline, background-colored fill) marks the first point, a matte-red dot marks the series minimum, a blue dot marks the series maximum, and a filled brand-green dot marks the last value. The mark spans nearly the full canvas width with tight, balanced side margins.
+      Legibility verdict: PASS -- title fully readable, no dark-on-light or clipping issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title renders in light ink (#F0EFE8/near-white), clearly readable against the dark background — no dark-on-dark failures observed.
-      Data: Same brand-green line, same red/blue/green highlight dots, same shape and proportions as the light render — data colors are identical between themes, confirming only chrome flipped.
-      Legibility verdict: PASS — all text and data elements are readable in the dark theme; same canvas-utilization concern as the light render (mark occupies a small fraction of the total canvas).
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title renders in light ink, clearly readable against the dark background -- no dark-on-dark issue.
+      Data: All data colors (green line/fill, hollow first-point ring, red min dot, blue max dot, green last dot) are pixel-identical to the light render -- only the page background and title ink flipped, exactly as required.
+      Legibility verdict: PASS -- title fully readable, brand green and highlight colors remain vivid on the dark surface.
+
+    Canvas utilization check: the title-plus-mark content spans roughly 40-45% of the total canvas height (up from ~12-30% in the rejected attempt 1), with reasonably balanced whitespace above and below. This is a real improvement but still falls short of the 50-80% "perfect" VQ-05 band, so a partial deduction remains.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title readable in both themes but occupies only ~40% of plot width,
-          under the ~50-70% target for this short mandated title
+        comment: Only the title is text; explicit size=15, ~50-51% of plot width,
+          readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Line, fill, and highlight dots clearly visible and appropriately
-          sized for the data density
+          sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette colors are distinguishable and CVD-safe
+        comment: Green/red/blue combined with position context, not hue-only
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 2
         max: 4
         passed: false
-        comment: 'Severe: the visible sparkline mark plus title span well under 30%
-          of the 3200x1800 canvas height, centered with large unused whitespace above/below
-          — triggers the ''tiny plot in huge canvas'' automatic-0 rule'
+        comment: Title+mark now occupy ~40-45% of canvas height (up from attempt 1's
+          <30%), but still below the 50-80% perfect band
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design (spec requires none); title format is fully correct
+        comment: No axes by design; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, highlight dots use canonical Imprint positions,
-          backgrounds are theme-correct in both renders'
+        comment: 'First series #009E73, semantic highlight colors from Imprint palette,
+          theme-correct chrome in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Thoughtful color-coded min/max/last highlights and area fill go beyond
-          a bare default line, but overall composition stays simple
+        passed: false
+        comment: Thoughtful highlight coloring, ribbon fill, and hollow-ring marker,
+          but overall composition stays fairly simple
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: All chrome removed via theme_void, subtle ribbon alpha, generous
-          whitespace around the mark itself
+        passed: false
+        comment: All chrome removed via theme_void, subtle ribbon alpha, tightened
+          margins improve whitespace balance
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: true
-        comment: Colored dots create a visual hierarchy (low/high/latest) but the
-          small scale of the mark within the canvas dilutes the impact
+        passed: false
+        comment: Hollow start marker plus colored min/max/last dots narrate the full
+          trend journey, creating clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -145,52 +135,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly a minimal single-line sparkline
+        comment: Correct sparkline chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: No axes/labels/gridlines, compact mark aspect ratio (~8:1), min/max
-          highlights, and area fill are all present
+        comment: No chrome, compact ~5.5:1 aspect, min/max AND first/last highlights,
+          area fill -- all optional features implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Day index vs. closing price, full 90-point series shown
+        comment: Day-indexed closing price correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches spec-id · language · library · anyplot.ai;
-          no legend needed for single series
+        comment: Title format correct; no legend needed for annotation dots by sparkline
+          convention
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows a rise-dip-rise-pullback shape with distinct min/max, good
-          trend variety for a sparkline
+        comment: Shows rise/dip/rise shape plus all four highlight features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly stock closing price is a real, neutral, comprehensible
-          scenario
+        comment: Quarterly stock closing price, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range (~$130-$165) and day count (90 trading days ≈ one quarter)
-          are realistic
+        comment: Price range and daily volatility are realistic
     code_quality:
       score: 10
       max: 10
@@ -200,7 +187,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → plot → save, no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,19 +199,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg, both used
+        comment: Only ggplot2 and ragg
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png via ragg::agg_png at the correct dimensions
+        comment: Correct plot-{theme}.png via ragg::agg_png
     library_mastery:
       score: 6
       max: 10
@@ -234,16 +221,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic grammar-of-graphics layering (geom_ribbon + geom_line +
-          geom_point) and theme_void for minimal chrome
+        comment: Standard idiomatic ggplot2 layer composition, correctly used
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Generic layer composition — nothing uniquely ggplot2 beyond standard
-          geoms
-  verdict: REJECTED
+        comment: shape=21 hollow-ring trick is a nice touch but layering remains fairly
+          generic overall
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:

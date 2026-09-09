@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' sparkline-basic: Basic Sparkline
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 80/100 | Updated: 2026-09-09
+#' Quality: 87/100 | Created: 2026-09-09
 
 library(ggplot2)
 library(ragg)
