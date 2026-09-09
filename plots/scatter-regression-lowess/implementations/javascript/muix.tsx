@@ -10,6 +10,7 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -91,19 +92,45 @@ function lowess(xs: number[], ys: number[], frac: number, gridSize: number) {
     const denom = sw * swxx - swx * swx;
     const slope = denom !== 0 ? (sw * swxy - swx * swy) / denom : 0;
     const intercept = sw !== 0 ? (swy - slope * swx) / sw : 0;
-    return { x: x0, y: intercept + slope * x0 };
+
+    // Local residual spread — the weighted RMS deviation of the raw points
+    // from this window's line, reused as a ±1 SD confidence band around the fit.
+    let swResidSq = 0;
+    for (let i = 0; i < n; i += 1) {
+      const resid = ys[i] - (intercept + slope * xs[i]);
+      swResidSq += weights[i] * resid * resid;
+    }
+    const band = sw !== 0 ? Math.sqrt(swResidSq / sw) : 0;
+
+    return { x: x0, y: intercept + slope * x0, band };
   });
 }
 
 const smoothed = lowess(vehicleSpeed, fuelEfficiency, 0.4, 120);
 const smoothedX = smoothed.map((point) => point.x);
 const smoothedY = smoothed.map((point) => point.y);
+const smoothedUpper = smoothed.map((point) => point.y + point.band);
+const smoothedLower = smoothed.map((point) => point.y - point.band);
 
 const scatterData = vehicleSpeed.map((speed, i) => ({
   x: speed,
   y: fuelEfficiency[i],
   id: i,
 }));
+
+// A shaded ±1 SD band behind the fit line, drawn from the chart's own scales
+// (community `useXScale`/`useYScale` hooks) rather than as a legend series —
+// it should read as context for the fit, not compete with it for attention.
+function ConfidenceBand({ x, upper, lower, fill }: { x: number[]; upper: number[]; lower: number[]; fill: string }) {
+  const xScale = useXScale("speed");
+  const yScale = useYScale();
+  const topEdge = x.map((xi, i) => `${i === 0 ? "M" : "L"}${xScale(xi)},${yScale(upper[i])}`);
+  const bottomEdge = [...x]
+    .map((xi, i) => ({ xi, y: lower[i] }))
+    .reverse()
+    .map((point) => `L${xScale(point.xi)},${yScale(point.y)}`);
+  return <path d={`${topEdge.join(" ")} ${bottomEdge.join(" ")} Z`} fill={fill} stroke="none" />;
+}
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
@@ -113,6 +140,11 @@ export default function Chart() {
 
   const title = "scatter-regression-lowess · javascript · muix · anyplot.ai";
   const titleSize = title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
+
+  // "muted" semantic anchor (adaptive, outside the categorical pool) — used at
+  // low alpha for the confidence-band fill so it sits behind the data.
+  const mutedHex = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
+  const bandFill = hexToRgba(mutedHex, 0.18);
 
   return (
     <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
@@ -137,7 +169,7 @@ export default function Chart() {
               type: "line",
               data: smoothedY,
               xAxisId: "speed",
-              color: t.palette[2],
+              color: t.palette[1],
               curve: "natural",
               showMark: false,
               label: "LOWESS fit",
@@ -166,8 +198,9 @@ export default function Chart() {
           }}
         >
           <ChartsGrid horizontal vertical />
-          <LinePlot />
+          <ConfidenceBand x={smoothedX} upper={smoothedUpper} lower={smoothedLower} fill={bandFill} />
           <ScatterPlot />
+          <LinePlot />
           <ChartsXAxis />
           <ChartsYAxis />
           <ChartsLegend direction="row" position={{ horizontal: "right", vertical: "top" }} slotProps={{ legend: { labelStyle: { fontSize: 14 } } }} />
