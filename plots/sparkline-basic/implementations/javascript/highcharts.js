@@ -26,6 +26,7 @@ for (let i = 0; i < days; i++) {
 const minIndex = values.indexOf(Math.min(...values));
 const maxIndex = values.indexOf(Math.max(...values));
 const lastIndex = values.length - 1;
+const dataRange = values[maxIndex] - values[minIndex];
 
 const referenceMarker = {
   enabled: true,
@@ -82,8 +83,11 @@ Highcharts.chart("container", {
     visible: false,
     startOnTick: false,
     endOnTick: false,
-    min: Math.floor(Math.min(...values) - 3),
-    max: Math.ceil(Math.max(...values) + 3),
+    // Pad by a full data-range width on each side so the trend line occupies
+    // roughly the middle third of the plot area — a compact sparkline band
+    // rather than a full-bleed area chart.
+    min: Math.floor(Math.min(...values) - dataRange),
+    max: Math.ceil(Math.max(...values) + dataRange),
   },
   legend: { enabled: false },
   tooltip: {
@@ -97,6 +101,10 @@ Highcharts.chart("container", {
     areaspline: {
       lineWidth: 2.5,
       color: t.palette[0],
+      // Cap the fill's baseline close to the data minimum instead of the
+      // default 0 (which sits far below the padded yAxis min and would
+      // otherwise render the fill all the way to the bottom of the canvas).
+      threshold: Math.floor(Math.min(...values) - dataRange * 0.15),
       fillColor: {
         linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
         stops: [
