@@ -1,0 +1,253 @@
+library: highcharts
+language: javascript
+specification_id: spectrum-basic
+created: '2026-09-09T18:26:10Z'
+updated: '2026-09-09T18:38:21Z'
+generated_by: claude-sonnet
+workflow_run: 34388238298
+issue: 2926
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Directly resolves the prior review''s key weakness: the 440 Hz fundamental now
+    carries a dataLabel (''Fundamental (440 Hz)'') plus a highlighted per-point marker,
+    so the viewer no longer has to infer which peak is the fundamental from position
+    alone'
+  - Added noise-floor plotLine with an inline label gives an explicit signal-vs-noise
+    reference, strengthening data storytelling per the spec's Notes section
+  - 'Correct plot type: single-series area/line spectrum with logarithmic frequency
+    axis spanning the full audible range (20 Hz-20 kHz)'
+  - 'Realistic, neutral dataset: synthetic FFT magnitude spectrum of a sustained A4
+    (440 Hz) note with five decaying harmonics riding on a plausible -70 dB noise
+    floor, deterministic via a fixed-seed LCG'
+  - 'Clean theme-adaptive chrome throughout (title, axis titles, tick labels, plotLine
+    label, dataLabel) with identical Imprint brand green #009E73 data color in both
+    renders'
+  - Both axis titles descriptive with units ('Frequency (Hz)', 'Amplitude (dB)');
+    legend correctly omitted for a single-series chart; animation disabled and credits
+    removed per the mount-node contract
+  weaknesses:
+  - The new 'Noise floor' plotLine label sits directly on top of the noisy data line
+    in both themes -- the green trace crosses through the 'i', 'l', 'o', 'o', 'r'
+    letters, a genuine text/data overlap (visible around the 8k-20k Hz region). Reposition
+    the label to a clear stretch of the noise floor (e.g. anchor it near the left
+    edge around 20-30 Hz, or add a small opaque background/halo behind the label text)
+    so it never collides with the wiggling trace.
+  - Aesthetic is a well-executed but still fairly conventional area-chart treatment;
+    beyond the fundamental dataLabel and noise-floor plotLine, there is no further
+    distinctive Highcharts feature (e.g. plotBands shading the harmonic octave regions)
+    that would push it past a competent default look.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "spectrum-basic · javascript · highcharts · anyplot.ai" centered at top, clearly readable. Dark-gray "Amplitude (dB)" y-axis title (rotated) and "Frequency (Hz)" x-axis title, both descriptive with units. Tick labels (0 to -75 on Y in steps of 5; logarithmic 20/40/60/80/100/200/400/600/800/1k/2k/4k/6k/8k/10k/20k on X) all legible dark-gray text against the light background. Subtle horizontal-only gridlines. A dashed "Noise floor" plotLine crosses the plot near -70 dB with an inline label near the right side, but the label text visually overlaps the noisy data trace beneath it (letters partially crossed by the green line, though still decipherable).
+      Data: Single Imprint brand-green (#009E73) line with a light semi-transparent green area fill beneath it, tracing a noisy floor around -70 dB with five sharp decaying peaks (fundamental near 440 Hz reaching about -5 dB, four harmonics of decreasing height up to ~2.2 kHz). The fundamental peak now carries a highlighted marker and a "Fundamental (440 Hz)" dataLabel above it.
+      Legibility verdict: PASS - all chrome text is readable against the light background; the "Noise floor" label is legible despite overlapping the data line (an overlap/refinement issue, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/white text, clearly legible against the dark background. Same subtle horizontal gridlines, adapted to a light, low-opacity tone. Same dashed "Noise floor" plotLine and label, same overlap with the data trace as in the light render.
+      Data: The line, area fill, marker, and dataLabel use the identical Imprint brand-green (#009E73) as the light render - same hue, same peak shapes and positions, same "Fundamental (440 Hz)" annotation - confirming only chrome (background, text, grid) flipped between themes.
+      Legibility verdict: PASS - no dark-on-dark failures; all title, axis, tick, and annotation text is clearly visible against the near-black background; the "Noise floor" label has the same data-line overlap noted in the light render but remains readable.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (22/16/14px) via tokens, all chrome text readable
+          in both themes; the 'Noise floor' label is crossed by the data line, a minor
+          legibility ding
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: '''Noise floor'' plotLine label overlaps the noisy data trace beneath
+          it in both themes -- readable but a genuine text/data collision'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width 2.5 and fillOpacity 0.15 well-suited to the 300-point
+          spectrum with sharp harmonic peaks; fundamental marker clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green on neutral background, good contrast, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; plot area uses most of the canvas with
+          balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Frequency (Hz)'' and ''Amplitude (dB)'' both descriptive with
+          units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint brand green #009E73, identical across themes;
+          backgrounds are theme-correct #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fundamental dataLabel + marker and noise-floor plotLine add real
+          polish beyond the prior generic area-fill treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Horizontal-only grid and generous whitespace, but the noise-floor
+          label collision with the data line undercuts the refined feel
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit fundamental annotation plus noise-floor reference line now
+          makes the signal-vs-noise story immediate, directly addressing the prior
+          review's gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct frequency spectrum plot with logarithmic frequency axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log frequency axis, dB amplitude, and now explicit peak-frequency
+          highlighting/annotation as the spec's Notes suggest
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = frequency, Y = amplitude, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend correctly omitted for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows fundamental peak, four decaying harmonics, and broadband noise
+          floor
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral audio-engineering scenario (A4 = 440 Hz with harmonics)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20 Hz-20 kHz full audible range, -75 to 0 dB range, monotonically
+          decaying harmonic amplitudes all physically plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data-generation-then-chart structure, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals/imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; animation disabled; current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point marker/dataLabels override and plotLines with an inline
+          label are idiomatic, well-configured Highcharts usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotLines-with-label and per-point dataLabels/marker override are
+          genuinely Highcharts-specific techniques, not generic area-chart styling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
