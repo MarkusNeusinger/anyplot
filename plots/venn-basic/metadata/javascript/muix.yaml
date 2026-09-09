@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: venn-basic
 created: '2026-09-09T21:32:50Z'
-updated: '2026-09-09T21:36:18Z'
+updated: '2026-09-09T21:43:31Z'
 generated_by: claude-sonnet
 workflow_run: 34406849927
 issue: 2444
@@ -12,44 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Correct set-theory arithmetic: onlyA/onlyB/onlyC and pairwise-minus-triple values
-    are computed programmatically from setSizes/pairAB/pairAC/pairBC/tripleABC and
-    match the displayed regions exactly (55/38/30 solo, 27/20/12 pairwise, 18 triple).'
-  - Follows MUI X's documented ChartContainer + useDrawingArea composition pattern
-    for a chart type the community package has no native primitive for — a legitimate,
-    idiomatic escape hatch rather than a hack.
-  - Area-proportional circle sizing via sqrt(size) scaling gives the diagram real
-    information value beyond a schematic three-equal-circle Venn.
-  - Text uses a paintOrder stroke halo (fill=t.ink, stroke=t.pageBg) so every count/label
-    stays readable regardless of which colored region or overlap it sits on, in both
-    themes.
-  - 'First series (Python) correctly uses brand green #009E73; data colors are identical
-    between light/dark renders — only chrome (background, text halo) flips as required.'
+  - Triple-overlap callout badge (new this attempt) creates a clear visual focal point
+    that directly addresses the prior review's 'no visual emphasis' weakness — the
+    pageBg-filled circle with an ink stroke isolates the '18' from the darker blended
+    region behind it, in both themes.
+  - Varied circle stroke widths (3 / 2.25 / 1.5 for Python / SQL / Statistics) add
+    a subtle layered depth cue that replaces the previously flat, uniform circle styling
+    — directly fixes the prior 'flat uniform styling' weakness.
+  - Larger title (fontSize 22→26) gives the header more visual presence on the 2400×2400
+    canvas without overflowing or crowding the plot area.
+  - 'Correct set-theory arithmetic carried over unchanged: onlyA/onlyB/onlyC and pairwise-minus-triple
+    values are computed programmatically and match the displayed regions exactly (55/38/30
+    solo, 27/20/12 pairwise, 18 triple).'
+  - 'First series (Python) uses brand green #009E73; data colors are pixel-identical
+    between light/dark renders; page background samples exactly #FAF8F1 (light) and
+    #1A1A17 (dark).'
   weaknesses:
-  - Title occupies only ~30% of the canvas width at fontSize=22 — comfortably legible
-    but visually light as an anchor on a 2400x2400 square canvas; a slightly larger
-    fontSize (~26-28) would give it more presence without risking overflow.
-  - No visual emphasis differentiates the most meaningful intersection (e.g. the full
-    triple-overlap '18') from the other regions — bolding, a subtle outline, or a
-    callout on the triple-overlap would strengthen the data storytelling.
-  - Circle styling is flat semi-transparent fill only; a slightly heavier or varied
-    stroke weight between the three circles could add a touch more visual refinement,
-    though current styling is already clean and uncluttered.
+  - 'Title still comparatively small relative to canvas: at fontSize 26 it spans roughly
+    ~38% of the 2400px width, below the style guide''s 50–70% target. This is a short,
+    un-prefixed title (44 chars, no descriptive prefix), so there''s headroom to push
+    fontSize to ~32-34 without risking overflow or crowding.'
+  - 'LM-02 Distinctive Features remains generic: the implementation leans entirely
+    on the documented ChartContainer + useDrawingArea escape hatch for hand-placed
+    SVG, without reaching for any other MUI X-distinctive capability (e.g. a coordinated
+    tooltip/legend layer) to add value beyond the static overlay.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "venn-basic · javascript · muix · anyplot.ai" is centered at top in dark ink, fully legible. No axes (not applicable to a Venn diagram). No legend box — set names are labeled in place inside each circle instead.
-      Data: Three overlapping circles — Python (top, brand green #009E73), SQL (bottom-left, purple), Statistics (bottom-right, steel-blue). Solo-region counts (55/38/30) and set labels are shown inside each circle; pairwise-overlap counts (27, 20, 12) and the triple-overlap count (18) are placed in their respective lens/core regions. All counts use a white-fill/light-stroke halo so they stay readable against every fill color and overlap blend. Fills use ~0.55 opacity so overlaps visibly darken/blend.
-      Legibility verdict: PASS — every title, set-label, and count is clearly readable against its background; no light-on-light text found.
+      Background: Sampled pixel (250,248,241) = #FAF8F1 exactly — warm off-white, not pure white, not dark.
+      Chrome: Title "venn-basic · javascript · muix · anyplot.ai" centered at top in dark ink (fontSize 26, up from 22 in the prior attempt), fully legible. No axes (not applicable to a Venn diagram). No legend box — set names are labeled in place inside each circle instead.
+      Data: Three overlapping circles — Python (top, brand green #009E73, heaviest 3px stroke), SQL (bottom-left, lavender/purple, 2.25px stroke), Statistics (bottom-right, blue, 1.5px stroke) — the new per-circle stroke-width variation replaces the previous uniform 2px stroke. Solo-region counts (55/38/30) and set labels sit inside each circle; pairwise-overlap counts (27, 20, 12) sit in their lens regions; the triple-overlap count (18) now sits inside a new pageBg-filled, ink-stroked callout circle that pops it out from the darkest blended core region as a clear focal point. All text uses a white-fill/light-stroke halo so it stays readable against every fill color and overlap blend. Fills use ~0.55 opacity so overlaps visibly darken.
+      Legibility verdict: PASS — every title, set-label, and count is clearly readable; no light-on-light text found; the "27"/"20"/"18" cluster near the callout badge has clean spacing with no overlap (verified via a cropped close-up).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, now in light ink, fully legible against the dark background. Same in-circle labeling scheme as the light render, no separate legend.
-      Data: Same three circles in the same hues (green/purple/steel-blue) and same solo/pairwise/triple counts (55/38/30, 27/20/12, 18) — data colors are identical to the light render, confirming only chrome flipped. Text halo now uses a dark stroke against the light fill so counts remain legible over the lighter overlap blends.
-      Legibility verdict: PASS — no dark-on-dark failures; all text (title, set labels, region counts) is clearly visible against both the page background and the circle fills.
+      Background: Sampled pixel (26,26,23) = #1A1A17 exactly — warm near-black, not pure black, not light.
+      Chrome: Same title, now in light ink, fully legible against the dark background at the larger fontSize 26. Same in-circle labeling scheme, no separate legend.
+      Data: Same three circles in the same hues and same stroke-width hierarchy (green/purple/blue, 3/2.25/1.5px) and same solo/pairwise/triple counts (55/38/30, 27/20/12, 18) — data colors are pixel-identical to the light render, confirming only chrome flipped. The triple-overlap callout badge now renders as a near-black fill with a light ink stroke, still popping the "18" out from the lighter blended overlap region behind it.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, set labels, region counts, callout badge count) is clearly visible against both the page background and the circle fills; close-up crop confirms no overlap around the callout badge.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,14 +62,16 @@ review:
         max: 8
         passed: true
         comment: Stroke-halo text readable against every fill/overlap in both themes;
-          title slightly small but fully legible.
+          title larger than the prior attempt (26 vs 22) but still on the smaller
+          side proportionally.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data collisions; region counts and labels are
-          well spaced.
+        comment: No text/text or text/data collisions; new callout badge for the triple
+          overlap sits cleanly clear of the adjacent pairwise counts (verified via
+          close-up crop).
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -81,15 +84,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Adequate contrast via text halo; not reliant on red-green as sole
-          signal.
+        comment: Adequate contrast via text halo and the new callout badge; not reliant
+          on red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circles fit well within the square canvas, no overflow or clipping;
-          balanced composition.
+        comment: Circles and new callout badge fit well within the square canvas,
+          no overflow or clipping; balanced composition.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,32 +106,33 @@ review:
         max: 2
         passed: true
         comment: 'First series is brand green #009E73; identical data colors across
-          themes; correct light/dark backgrounds.'
+          themes; backgrounds sample exactly #FAF8F1 / #1A1A17.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean and intentional, but a fairly standard three-circle Venn treatment
-          without extra polish.
+        passed: true
+        comment: The new triple-overlap callout badge and per-circle stroke-weight
+          hierarchy add deliberate polish beyond the prior flat treatment.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Generous whitespace and clean strokes, but flat uniform styling across
-          all three circles.
+        passed: true
+        comment: Varied stroke widths (3/2.25/1.5) directly fix the prior 'flat uniform
+          styling' weakness; whitespace and strokes remain clean.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Area-proportional sizing conveys magnitude, but no emphasis singles
-          out the most notable intersection.
+        passed: true
+        comment: The callout badge gives the diagram a clear focal point on the most
+          meaningful (triple) intersection, on top of the existing area-proportional
+          sizing.
     spec_compliance:
       score: 15
       max: 15
@@ -193,7 +197,7 @@ review:
         max: 3
         passed: true
         comment: One small helper component (VennMarks) required by the composition
-          pattern; no unnecessary abstraction.
+          pattern; the new badge/stroke logic stays inline, no unnecessary abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -236,8 +240,8 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Good use of theme tokens and drawing-area geometry, but doesn't reach
-          for other MUI X-distinctive capabilities.
+        comment: Good use of theme tokens and drawing-area geometry, but still doesn't
+          reach for other MUI X-distinctive capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -251,3 +255,4 @@ impl_tags:
   styling:
   - alpha-blending
   - text-halo
+  - edge-highlighting
