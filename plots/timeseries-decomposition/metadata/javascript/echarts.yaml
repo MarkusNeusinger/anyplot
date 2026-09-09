@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: timeseries-decomposition
 created: '2026-09-09T20:33:19Z'
-updated: '2026-09-09T20:37:45Z'
+updated: '2026-09-09T20:46:41Z'
 generated_by: claude-sonnet
 workflow_run: 34401070274
 issue: 2992
@@ -12,48 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-decomposition/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct classical additive decomposition (centered 12-month moving average for
-    trend, seasonal-index averaging, residual = original - trend - seasonal) implemented
-    from scratch and deterministically via a fixed-seed LCG.
-  - Multi-grid ECharts layout with axisPointer link produces a synced crosshair/tooltip
-    across all four stacked panels — a genuinely distinctive ECharts capability that
-    would be hard to replicate cleanly in most other libraries.
-  - 'Correct Imprint palette usage: brand green (#009E73) for Original, canonical
-    palette order for Trend/Seasonal/Residual, identical data colors across light/dark,
-    and theme-correct chrome (ink/inkSoft/grid tokens) in both renders.'
-  - Currency-formatted y-axis ticks and a dashed zero-reference markLine in the Residual
-    panel aid interpretation of the decomposition.
+  - 'Both attempt-1 weaknesses fully resolved: explicit unit-labeled y-axis titles
+    on every panel, and two storytelling annotations ("Peak season", "Largest outlier")
+    giving clear visual focal points'
+  - Correct classical additive decomposition (centered 12-month moving average trend,
+    seasonal-index averaging, residual) implemented from scratch and deterministically
+    via a fixed-seed LCG
+  - Multi-grid ECharts layout with linked axisPointer produces a synced crosshair/tooltip
+    across all four stacked panels - a genuinely distinctive ECharts capability
+  - Correct Imprint palette in canonical order (green/lavender/blue/ochre), identical
+    across light/dark, with theme-correct chrome in both renders
   weaknesses:
-  - No explicit axis-title text (e.g. 'Revenue (USD)' or 'Year') — only the bold panel
-    labels ('Original', 'Trend', 'Seasonal', 'Residual') and $-formatted ticks stand
-    in for axis labels; add a dedicated y-axis title per panel (or a shared one) to
-    fully satisfy descriptive-axis-labels-with-units.
-  - Design Excellence sits at 'well-configured default' level — consider a design
-    touch that visually foregrounds an insight (e.g. annotate the strongest holiday-season
-    peak in the Seasonal panel, or callout the largest Residual outlier) to push Data
-    Storytelling beyond a plain 4-panel display.
-  - Code relies on several small helper functions (makeXAxis, makeYAxis, makePanelLabel,
-    dollarFormatter) rather than a flat Imports -> Data -> Plot script; understandable
-    for 4-panel DRY reuse, but a more KISS-aligned structure would inline more of
-    this.
+  - Aesthetic sophistication is solid/professional but not yet visually distinctive
+    beyond currency formatting and per-panel color coding
+  - Still relies on several small helper functions (makeXAxis, makeYAxis, makePanelLabel,
+    dollarFormatter) rather than a fully flat script, though reasonably justified
+    by 4-panel DRY reuse
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "timeseries-decomposition · javascript · echarts · anyplot.ai" centered top in dark ink, clearly readable. Four bold dark panel labels ("Original", "Trend", "Seasonal", "Residual") sit top-left of each subplot, not overlapping the $-formatted y-axis ticks below them. X-axis year ticks (2014-2023) appear only under the bottom (Residual) panel; light gray vertical/horizontal grid lines are subtle but visible across all four panels.
-      Data: First series (Original) renders in Imprint brand green #009E73; Trend in lavender/purple (#C475FD); Seasonal in blue (#4467A3); Residual in ochre/brown (#BD8233) with a dashed dark zero-reference line. All colors match Imprint canonical order.
-      Legibility verdict: PASS — all text (title, panel labels, tick labels) is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - PASS
+      Chrome: Title centered at top in dark ink; four panel labels (Original, Trend, Seasonal, Residual) bold dark text top-left of each panel; explicit y-axis titles with units (Revenue (USD), Deviation (USD), Residual (USD)); dollar-formatted y-axis ticks; year ticks (2014-2023) only under bottom panel; "Peak season" and "Largest outlier" annotation labels in dark ink - all clearly readable
+      Data: Original = brand green #009E73, Trend = lavender, Seasonal = blue, Residual = ochre - matches Imprint canonical order, first series is #009E73
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title and all four panel labels render in light/white text, clearly readable. Tick labels are light gray (inkSoft token), grid lines are faint light gray, appropriately subtle on the dark surface.
-      Data: Data colors are identical to the light render — same brand green, lavender, blue, and ochre lines; the dashed zero-reference line in Residual is rendered in the dark-theme ink token (light color), consistent with the theme.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, panel label, and tick label is clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 - PASS
+      Chrome: Title, panel labels, axis titles, tick labels, and both annotation callouts render in light/white text, fully legible against the dark background - no dark-on-dark issues found
+      Data: Colors identical to light render (green/lavender/blue/ochre) - confirms only chrome flips between themes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -61,77 +53,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, panel labels 16px bold,
-          ticks/axis labels 14px), well-proportioned, readable in both themes, no
-          overflow
+        comment: All text readable in both themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Panel labels, tick labels, and title do not collide anywhere in either
-          render
+        comment: No collisions between text, annotations, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths (3px Original/Trend/Seasonal, 2px Residual) are appropriately
-          visible for 120 monthly points
+        comment: Line widths appropriate for 120-point monthly series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Each panel uses a single distinct series color; no red-green-only
-          reliance
+        comment: Distinguishable hues, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Four panels use ~86-91% of canvas height/width with balanced gaps,
-          nothing cut off
+        comment: Canvas gate passed, proportions clean, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No explicit axis-title text; panel labels + $-formatted ticks partially
-          substitute but lack a true 'Revenue (USD)' / 'Year' label
+        passed: true
+        comment: Explicit y-axis titles with units now present on every panel (fixed
+          from attempt 1)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, canonical Imprint order for remaining series,
-          theme-correct chrome and backgrounds in both renders
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct backgrounds'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: 'Well-configured default: currency-formatted ticks and per-panel
-          color coding, but not exceptional beyond that'
+        comment: Solid and professional but not visually distinctive beyond currency
+          formatting and color coding
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle grid, minimal-chrome axis lines (only shown on last panel),
-          balanced whitespace — good but not exhaustively polished
+        comment: Minimal chrome (axis line only on shared bottom axis), subtle grid,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Decomposition components are displayed but not further interpreted;
-          no annotation or emphasis calling out a specific insight (e.g. peak season,
-          outlier)
+        passed: true
+        comment: Peak season and largest outlier markPoint annotations create clear
+          focal points (fixed from attempt 1)
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +125,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct four vertically-stacked-subplot decomposition
+        comment: Four vertically stacked subplots as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Original/Trend/Seasonal/Residual present, shared x-axis via axisPointer
-          link, labeled subplots, light grid lines
+        comment: Original, Trend, Seasonal, Residual all present with shared time
+          axis and grid lines
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, value on y across all four panels
+        comment: X/Y correctly mapped, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; no legend needed since each panel has a single
-          labeled series
+        comment: Title format correct; panel labels substitute for legend (single
+          series per panel)
     data_quality:
       score: 15
       max: 15
@@ -171,22 +155,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows growth trend, clear annual seasonality, and residual noise
-          together
+        comment: 120 monthly points, 10 full seasonal cycles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible e-commerce monthly revenue scenario with holiday-season
-          lift
+        comment: Plausible, neutral e-commerce revenue growth with holiday seasonality
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue magnitudes, linear growth rate, and seasonal swing are all
-          realistic for the domain
+        comment: Revenue values ($24k-$66k) sensible for the domain
     code_quality:
       score: 9
       max: 10
@@ -196,34 +177,32 @@ review:
         score: 2
         max: 3
         passed: false
-        comment: Uses several small helper functions (makeXAxis, makeYAxis, makePanelLabel,
-          dollarFormatter) rather than a flat script; justified by 4-panel DRY reuse
-          but not pure KISS
+        comment: Several small helper functions instead of a flat script, though justified
+          by 4-panel DRY reuse
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42) for deterministic noise
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global echarts only
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a from-scratch decomposition, no fake
-          UI
+        comment: No fake functionality, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct chart.setOption(...) mount-node contract, animation disabled
+        comment: 'Mount-node contract respected, animation: false set'
     library_mastery:
       score: 9
       max: 10
@@ -233,24 +212,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic multi-grid ECharts pattern with per-panel xAxis/yAxis arrays
+        comment: Idiomatic multi-grid layout for stacked panels
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: axisPointer link (synced cross-panel crosshair) and markLine zero-reference
-          are genuinely ECharts-distinctive
-  verdict: REJECTED
+        comment: Linked axisPointer, markLine, and markPoint annotations are genuinely
+          ECharts-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - hover-tooltips
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
+  - time-series
   dataprep:
   - time-series
   - rolling-window
   styling:
-  - grid-styling
+  - minimal-chrome
+  - publication-ready
