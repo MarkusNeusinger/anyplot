@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: subplot-mosaic
 created: '2026-09-09T19:44:18Z'
-updated: '2026-09-09T19:49:09Z'
+updated: '2026-09-09T19:59:19Z'
 generated_by: claude-sonnet
 workflow_run: 34396038678
 issue: 3002
@@ -12,134 +12,110 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Mosaic layout (AAAA / BBCC / DEF pattern) exactly mirrors the spec''s own suggested
-    example: a dominant wide overview panel, two medium detail panels, and three small
-    metric tiles, achieved via six manually percent-positioned grid/xAxis/yAxis triples
-    — the correct idiomatic workaround for ECharts, which has no native subplot_mosaic
-    API.'
-  - 'Clear size-based visual hierarchy: the eye lands on the full-year traffic trend
-    first, then the two medium panels, then the three small quarterly tiles — matching
-    the spec''s ''clear visual hierarchy with larger cells for primary data'' requirement.'
-  - Each cell uses a different, well-matched chart type (line+area, bar, scatter,
-    bar, line, bar) per the spec's 'each cell can contain a different plot type' note.
-  - 'First categorical series (dominant panel A) is the brand green #009E73, with
-    the remaining panels cycling through the rest of the Imprint palette in canonical
-    order via `color: t.palette`.'
-  - Minimal-chrome tile styling on the three small metric panels (axisLine/axisTick
-    hidden, no split lines) keeps them clean and appropriately understated relative
-    to the two larger detail panels.
-  - Deterministic LCG(42) generates all synthetic data in-memory; realistic, neutral
-    web-analytics context (traffic, device share, session duration, bounce/conversion
-    rates) with plausible scales.
-  - 'Both renders are theme-correct: identical data colors between light/dark, warm
-    off-white / near-black backgrounds, fully legible chrome in both themes, no clipped
-    elements at any canvas edge.'
+  - 'Repair attempt directly addressed all three weaknesses from the previous review:
+    added a distinctive ECharts markLine/markPoint pair on the hero panel, and reduced
+    opacity on the three supporting quarterly tiles to reinforce the existing size-based
+    hierarchy instead of competing with it.'
+  - Mosaic layout (AAAA / BBCC / DEF) still exactly mirrors the spec's own suggested
+    example via six manually percent-positioned grid/xAxis/yAxis triples — the correct
+    idiomatic workaround since ECharts has no native subplot_mosaic API.
+  - 'Both renders remain fully theme-correct: identical data colors, correct #FAF8F1/#1A1A17
+    backgrounds, no clipping, no dark-on-dark/light-on-light failures.'
+  - Deterministic LCG(42), realistic and neutral web-analytics dataset with plausible
+    scales across all six panels.
   weaknesses:
-  - Panel colors are assigned purely by series-index cycling through the full palette
-    (green, purple, blue, orange, red, cyan) rather than a more deliberate scheme
-    (e.g. muted/desaturated tones for the supporting tiles) — the six saturated hues
-    compete for attention and slightly undercut the size-based focal hierarchy the
-    layout otherwise establishes.
-  - Beyond the manual grid layout itself, no distinctive ECharts-only features are
-    used (no dataZoom, visualMap, graphic elements, markLine, or custom tooltip formatter)
-    — the individual series are fairly basic line/bar/scatter configurations.
-  - Small-tile axis label fontsize (11px) and x-axis label interval on panel A leave
-    limited margin for further data density; fine at current scale but worth watching
-    if this layout is reused with longer labels.
+  - The dimmed supporting tiles now use a single flat opacity (0.6) rather than distinct
+    desaturated tones per role, leaving some room for an even more deliberate color
+    system.
+  - No visualMap or dataZoom used; Library Mastery is strong but not maxed since only
+    two of ECharts' many distinctive decorators are exercised.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), consistent across the full canvas including behind all six panels.
-      Chrome: Main title "subplot-mosaic · javascript · echarts · anyplot.ai" in bold dark ink, centered top. Each of the six panels has its own left-aligned descriptive title (dark ink for the two large/medium panels, softer ink for the three small tiles). Axis tick labels and axis names are in soft dark gray, all clearly legible against the light background. Grid lines are faint warm-gray, visible but unobtrusive.
-      Data: Panel A (Weekly Website Traffic) uses the brand green #009E73 line with a light green area fill. Panel B (Traffic Share by Device) uses purple bars. Panel C (Session Duration vs Pages Viewed) uses navy/blue scatter points. Panel D (Bounce Rate) uses ochre/orange bars. Panel E (Avg. Session) uses a red line with circle markers. Panel F (Conversion Rate) uses cyan bars. All six colors are distinct Imprint-palette hues, first series = brand green.
-      Legibility verdict: PASS — no text overlaps, nothing clipped, all titles/labels/ticks readable.
+      Background: warm off-white, matches #FAF8F1
+      Chrome: main title, six panel titles, all axis labels and tick labels are dark and clearly readable against the light background
+      Data: first (hero) series is brand green #009E73 with a dashed "avg 9,534" markLine and a labeled "12,144" peak markPoint; middle row is purple bars + navy scatter at full opacity; bottom row is ochre/red/cyan tiles at reduced (~0.6) opacity
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), consistent across the canvas.
-      Chrome: Same title and per-panel titles now rendered in light ink/soft-white, clearly legible against the dark background. Axis labels and tick text are light gray, no dark-on-dark text anywhere. Grid lines are faint light-gray, still subtle but visible.
-      Data: Colors are identical to the light render — brand green line/area (panel A), purple bars (B), navy scatter (C), ochre bars (D), red line (E), cyan bars (F) — confirming only chrome flipped between themes, not data colors.
-      Legibility verdict: PASS — all text reads clearly against the dark background, no dark-on-dark or contrast failures observed.
+      Background: warm near-black, matches #1A1A17
+      Chrome: main title, panel titles, axis labels and ticks are light/soft-white and clearly readable against the dark background; no dark-on-dark text found
+      Data: identical colors and opacity treatment to the light render (green hero series with markLine/markPoint, purple/navy full-opacity middle row, ochre/red/cyan dimmed bottom row)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All titles/labels/ticks readable in both themes; small-tile ticks
-          at 11px are on the small side but still legible.
+        comment: All fontsizes explicit, well-proportioned in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions anywhere across the mosaic.
+        comment: No overlap in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker/line/bar sizing appropriate to each panel's data density (12px
-          scatter markers for 45 points, 3px lines, sensible bar widths).
+        comment: Markers/lines well adapted to each panel's data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues per panel, no red/green used as a sole signal within
-          the same comparison context.
+        comment: Good contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned mosaic grid, consistent spacing, nothing cut off,
-          canvas gate passed.
+        comment: Balanced mosaic layout, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive titles with units (Duration (min), Pages / Session, %)
-          on every panel.
+        comment: Descriptive labels with units (%, min)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining panels cycle the Imprint palette
-          in canonical order; backgrounds correct in both themes.'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Deliberate size-based hierarchy and minimal-chrome tiles show polish,
-          but the six fully-saturated palette colors read a bit 'rainbow dashboard'
-          rather than a tightly curated system.
+        comment: Bold hero panel vs. dimmed supporting tiles reads as an intentional
+          color system
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axis lines/ticks hidden on the small tiles, subtle grid lines, generous
-          whitespace between panels.
+        comment: Hidden axis lines/ticks on tiles, subtle dashed average line, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size hierarchy (large → medium → small) guides the viewer toward
-          the annual trend first, though color choice doesn't reinforce that hierarchy.
+        comment: Peak markPoint + average markLine plus dimmed tiles create a clear
+          focal point and reading order
     spec_compliance:
       score: 15
       max: 15
@@ -149,28 +125,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mosaic layout with varying subplot sizes, matching the spec's core
-          concept.
+        comment: Correct mosaic subplot layout with varying sizes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Non-uniform sizes, distinct chart types per cell, consistent spacing,
-          clear hierarchy — all present.
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y correctly mapped per panel, full data range shown on each axis.
+        comment: X/Y correctly assigned in every panel
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; per-panel titles substitute
-          appropriately for a shared legend.
+        comment: Title format correct, panel titles/labels match data
     data_quality:
       score: 15
       max: 15
@@ -180,21 +153,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers spanning/varying sizes, mixed plot types, and gap-free mosaic
-          tiling — the spec's full feature set.
+        comment: Six distinct chart types across the mosaic cells
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible web-analytics dataset across all six panels.
+        comment: Neutral, realistic web-analytics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (traffic counts, device split, bounce/conversion percentages)
-          are sensible for the domain.
+        comment: Plausible values and proportions across all panels
     code_quality:
       score: 10
       max: 10
@@ -204,58 +175,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, only a tiny LCG helper function.
+        comment: Linear imports/data/option structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG(42) for all random data.
+        comment: Deterministic LCG(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only the provided globals.
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for six coordinated panels; no fake interactivity.
+        comment: Clean, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: echarts.init(#container), animation:false,
-          no explicit size/devicePixelRatio.'
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid layout plus idiomatic markLine/markPoint
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct multi-grid/xAxis/yAxis-index pattern — the recommended ECharts
-          approach for coordinated multi-panel layouts.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Creative percent-based grid geometry, but no distinctive ECharts-only
-          features (visualMap, dataZoom, graphic, markLine) beyond basic series types.
+        comment: markLine (average) and markPoint (peak) are genuine ECharts-distinctive
+          features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
