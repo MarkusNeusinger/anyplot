@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: violin-split
 created: '2026-09-09T21:46:34Z'
-updated: '2026-09-09T21:50:54Z'
+updated: '2026-09-09T21:59:12Z'
 generated_by: claude-sonnet
 workflow_run: 34408076782
 issue: 1949
@@ -12,98 +12,87 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-sp
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-split/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
+  - 'All three weaknesses from attempt 1 were fixed: quartile ticks added (DQ-01),
+    x/y tick-label fonts balanced (VQ-01), and KDE local range headroom fixed so tails
+    taper smoothly instead of flattening at the axis boundary (VQ-05)'
   - Correct split-violin structure via two ECharts custom series rendering left/right
     halves per category, meeting cleanly at the center line
   - 'Statistically careful: each half''s KDE is evaluated over its own local data-driven
-    range (not the full axis span), avoiding the ''stretched needle'' artifact seen
-    when a tight distribution shares the taller group''s range'
-  - Axis range derived from the 1st/99th percentile with padding, so a rare outlier
-    draw doesn't shrink every well-behaved violin
-  - Deterministic in-memory data generation via a seeded LCG normal sampler, no external
-    RNG or network calls
-  - Theme-adaptive chrome (title, legend, axis, median-tick color) correctly threaded
-    through window.ANYPLOT_TOKENS — legible in both light and dark renders
-  - Imprint palette used in canonical order (brand green then lavender), identical
-    data colors across both themes
-  - Per-half median tick lines add a quantile reference without cluttering the density
-    shapes
+    range, avoiding the "stretched needle" artifact, while the axis padding now guarantees
+    every local range clears without clipping'
+  - Deterministic in-memory data generation via a seeded LCG, no external RNG or network
+    calls
+  - Theme-adaptive chrome correctly threaded through window.ANYPLOT_TOKENS, legible
+    in both renders with identical data colors
   weaknesses:
-  - Spec's 'consider adding inner box plot or quartile markers' is only partially
-    addressed — a single median tick is shown per half, with no IQR/box overlay
-  - 'Minor tick-label size imbalance: x-axis category labels are 16px vs y-axis value
-    ticks at 14px'
-  - Local KDE range is capped at axisMin/axisMax, which can flatten a violin's tail
-    right at the axis boundary instead of tapering to zero density (visible at the
-    top of the Teens/Young Adults weekend violins near y=11) — mostly cosmetic but
-    worth a slightly wider padding or a visible taper
-  - Overall styling follows the library skeleton fairly closely (standard grid/legend
-    placement) rather than a distinctly bespoke visual treatment
+  - Styling still stays fairly close to a standard violin layout - no distinctly bespoke
+    treatment (e.g. varied opacity by density, annotation callouts) to lift aesthetic
+    sophistication further
+  - Visual hierarchy is even across categories; nothing draws the eye to the most
+    notable comparison (e.g. Teens showing the largest weekday/weekend shift)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Sleep Duration: Weekday vs Weekend · violin-split · javascript · echarts · anyplot.ai" in dark ink, centered at top; legend below it with "Weekday" (green swatch) and "Weekend" (lavender swatch); x-axis shows four category labels (Teens, Young Adults, Adults, Seniors) in soft dark gray; y-axis shows "Sleep Duration (hours)" plus numeric ticks 4-11; subtle horizontal gridlines only.
-      Data: Four split violins, each with a green left half (Weekday) and lavender right half (Weekend), meeting at a vertical center line per category. A dark horizontal median tick sits inside each half. Weekend halves are visibly shifted higher (later/longer sleep) and slightly wider than Weekday halves, with the effect shrinking from Teens to Seniors.
-      Legibility verdict: PASS — all text (title, legend, axis label, ticks) is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "Sleep Duration: Weekday vs Weekend · violin-split · javascript · echarts · anyplot.ai" centered in dark ink; rounded-swatch legend ("Weekday" green, "Weekend" lavender); x-axis category labels and y-axis "Sleep Duration (hours)" title all clearly visible; subtle horizontal gridlines.
+      Data: Green (#009E73) left halves and lavender (#C475FD) right halves per category, meeting at the center line. Each half shows a bold median tick plus thinner Q1/Q3 ticks. Tails taper smoothly to zero density inside the axis bounds (no flattening at the edge). First categorical series is the brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis structure as the light render, now rendered in light ink/gray text against the dark surface; gridlines are faint light lines.
-      Data: Same green (Weekday) / lavender (Weekend) violins with the same shapes, positions, and proportions as the light render — data colors are identical between themes, only the chrome (background, text, grid) flipped. Median tick lines are rendered in light ink and remain clearly visible against the dark fills and background.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light issues; all title/axis/tick/legend text is clearly visible against the dark background.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title/legend/axis structure rendered in light ink/gray text; faint light gridlines. All text clearly legible against the dark surface, no dark-on-dark issues.
+      Data: Colors are pixel-identical to the light render (green/lavender fills, median/quartile tick positions and tapering) - only chrome (background, text, grid) flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; minor x/y tick-label size imbalance
-          (16px vs 14px)
+        comment: x/y tick-label fonts now balanced at 15px/15px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements
+        comment: Quartile ticks close to median tick but distinct, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violin fills and median ticks clearly visible at this data density
-          (180 pts/half)
+        comment: Violin fills and ticks clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair is CVD-safe; no red-green-only encoding
+        comment: Green/lavender split has adequate contrast, not red-green
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions, no overflow or
-          clipping
+        comment: Canvas gate passed; KDE tails taper smoothly, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units; x-axis categories are self-explanatory
+        comment: Descriptive y-axis label with units, correct title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series canonical lavender, both themes
-          correct backgrounds'
+        comment: Brand green first, lavender second, identical across themes, correct
+          chrome backgrounds
     design_excellence:
       score: 13
       max: 20
@@ -112,22 +101,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Custom render pipeline with median ticks and considered opacity;
-          overall look stays close to standard defaults
+        passed: false
+        comment: Custom render with quartile ticks and refined legend, but still reads
+          close to a conventional violin layout
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal spines (y-axis line hidden), subtle gridlines, generous margins
+        comment: Minimal spines, subtle gridlines, generous margins, refined legend
+          icon
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: 'Clear narrative: weekend distributions shift up and widen, with
-          the effect shrinking by age group; median ticks reinforce the comparison'
+        passed: false
+        comment: Clear narrative, quartile ticks add secondary read, but no single
+          focal point emphasized
     spec_compliance:
       score: 15
       max: 15
@@ -143,45 +133,42 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors with legend, halves meet at center line, alpha used
-          for overlap; median tick as light-touch quantile marker
+        comment: Distinct colors + legend, halves meet at center, alpha transparency
+          used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, value on y, split_group encoded as left/right half
-          + color
+        comment: Category on x, value distribution on y, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          match split groups
+        comment: Title matches required format, legend labels match split_group values
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows distribution shape, comparison, and median; no full quartile/box
-          overlay (spec lists this as optional)
+        comment: Inner quartile markers now added alongside median tick
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sleep duration by age group, weekday vs weekend — plausible and neutral
+        comment: Plausible sleep-duration-by-age-group scenario, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in a realistic 4-11 hour range with sensible per-group means/spreads
+        comment: Sensible hour ranges (4-14h) for domain
     code_quality:
       score: 9
       max: 10
@@ -191,8 +178,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions, but justified by the custom KDE/render-item
-          approach required for a split violin in ECharts
+        comment: Several helper functions, justified by custom KDE/render-item approach
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,19 +190,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global echarts
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity matches the task; no fake functionality
+        comment: No fake UI, appropriate complexity for custom-series KDE rendering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no explicit sizing/devicePixelRatio
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
       score: 8
       max: 10
@@ -226,19 +212,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of custom series API contract (api.coord, api.size)
+        comment: Correct custom-series API contract (api.coord, api.size)
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses ECharts' custom renderItem series — the distinctive mechanism
-          needed to build a shape ECharts has no native chart type for
+        comment: ECharts custom renderItem series, the right mechanism absent a native
+          violin chart
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - custom-series-rendering
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
@@ -246,4 +233,3 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - minimal-chrome
