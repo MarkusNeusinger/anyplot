@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: spectrogram-basic
 created: '2026-09-09T18:15:41Z'
-updated: '2026-09-09T18:22:05Z'
+updated: '2026-09-09T18:30:46Z'
 generated_by: claude-sonnet
 workflow_run: 34387301082
 issue: 2927
@@ -12,125 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-basic/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
+  - 'The attempt-1 fix (sub-pixel cell overlap + shape-rendering: crispEdges) fully
+    eliminated the hairline seam artifact - verified by pixel-level zoomed crops of
+    both renders at native 3200x1800 resolution; the heatmap now reads as a smooth,
+    continuous color field.'
   - Real from-scratch STFT pipeline (Hann window, radix-2 FFT, dB conversion relative
-    to peak) rather than a canned/faked spectrogram — demonstrates genuine library
-    and DSP mastery.
-  - Y-axis correctly spans the full Nyquist range (0-2000 Hz for a 4000 Hz sample
-    rate) and the x-axis matches the actual analyzed duration, so no data is hidden
-    or cropped.
-  - Colorbar is properly labeled with units ("Power (dB)") and its gradient/scale
-    direction matches the data scale (0 dB at top, -70 dB floor at bottom) exactly.
-  - Deterministic LCG-seeded noise makes the chirp signal fully reproducible with
-    no external dependencies, in line with the offline-browser constraint.
-  - Uses only Imprint sequential tokens (t.seq) for the continuous color scale and
-    correct theme-adaptive chrome (ink/inkSoft/grid) — palette compliant in both themes.
+    to peak) rather than a canned/faked spectrogram.
+  - Y-axis correctly spans the full Nyquist range (0-2,000 Hz for a 4,000 Hz sample
+    rate); x-axis matches the actual analyzed duration.
+  - Colorbar is properly labeled with units (Power (dB)) and its scale direction matches
+    the data (0 dB at top, -70 dB floor at bottom).
+  - Deterministic LCG-seeded noise makes the signal fully reproducible with no external
+    dependencies.
+  - Correct theme-adaptive chrome and Imprint sequential palette in both themes -
+    no clipping at any canvas edge.
   weaknesses:
-  - 'Visible seam/mesh artifact between every single heatmap cell in BOTH renders
-    — thin lighter/darker hairlines outline each rect across the entire plot area,
-    giving the whole spectrogram a distracting ''graph paper'' look instead of a smooth
-    continuous color field. This is the classic D3 adjacent-rect anti-aliasing seam.
-    Fix: give each cell a small sub-pixel overlap (e.g. `.attr(''width'', cellWidth
-    + 0.5).attr(''height'', cellHeight + 0.5)`) or set `shape-rendering: crispEdges`
-    on the heatmap group, and verify at full 3200x1800 resolution that no hairlines
-    remain between cells.'
-  - 'Element Visibility (VQ-03) and Visual Refinement (DE-02) are both held back by
-    this seam pattern: the actual signal (the diagonal chirp trace) has to compete
-    visually with a uniform noise-flecked grid texture covering the whole canvas,
-    which is a real quality regression from an otherwise clean implementation.'
-  - Consider a log-frequency axis (spec explicitly suggests it for signals spanning
-    multiple octaves) or slightly larger colorbar tick labels (currently 13px) for
-    a bit more polish, though neither is a hard requirement here.
+  - Chrome stays close to the library-skeleton defaults (standard D3 axis domain lines,
+    no extra visual-refinement flourishes) - a bit more restraint/polish on axis styling
+    could lift DE-02 further.
+  - Log-frequency axis (spec's "consider" suggestion, given the chirp spans ~3 octaves)
+    was not used - not a hard requirement, but would improve DQ-01/feature coverage.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), correct light-theme surface.
-      Chrome: Title "spectrogram-basic · javascript · d3 · anyplot.ai" centered top in dark bold text; "Time (s)" x-axis label and "Frequency (Hz)" y-axis label in dark ink; tick labels (0-2,000 Hz on y, 0.0-2.5 s on x) rendered in soft dark gray. A right-side colorbar is labeled "Power (dB)" with ticks from "0 dB" (top) to "-70 dB" (bottom). All chrome text is clearly readable against the light background.
-      Data: A diagonal band of purple/blue cells rising from ~200 Hz at t=0 to ~1500 Hz at t≈2.9s (the linear chirp) stands out against a teal/green noise-floor background, matching the two-stop Imprint sequential palette. However, a fine grid-like seam pattern (thin hairlines) is visible between every adjacent heatmap cell across the whole plot area — a rendering anti-aliasing artifact, not part of the data.
-      Legibility verdict: PASS (all text readable; the seam artifact is a visual-quality issue, not a legibility one).
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "spectrogram-basic · javascript · d3 · anyplot.ai" centered top in dark bold text; "Time (s)" and "Frequency (Hz)" axis labels and tick labels (0-2,000 Hz, 0.0-2.5+ s) in dark/soft-dark ink; colorbar labeled "Power (dB)" with ticks 0 dB to -70 dB. All readable, no clipping at any edge (checked via zoomed crops of title, colorbar, bottom axis, left axis).
+      Data: Diagonal band of blue-violet cells rising from ~200 Hz to ~1,500 Hz across the signal duration (the linear chirp) against a teal/green noise floor, using the Imprint seq (2-stop) sequential scale. Zoomed native-resolution crops confirm no hairline seams between adjacent heatmap cells (the attempt-1 defect is fixed) - color field reads as smooth and continuous.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), correct dark-theme surface.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/soft-white ink against the dark background — all clearly legible, no dark-on-dark issues. Colorbar labels and ticks are equally legible.
-      Data: Same diagonal chirp trace, same teal/green-to-blue/purple sequential colors as the light render — data colors are confirmed identical between themes, only chrome (background/text/grid) flipped as required. The same cell-seam mesh artifact from the light render is present here too (visible as slightly darker hairlines outlining each cell), confirming it is a rendering issue independent of theme.
-      Legibility verdict: PASS (no dark-on-dark text; the seam artifact is the same visual-quality issue noted in the light render).
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Same title, axis labels, tick labels, and colorbar now in light ink - all clearly legible. No dark-on-dark issues found.
+      Data: Same diagonal chirp trace, identical teal-to-blue-violet data colors as light render (only chrome flipped, as required). Zoomed crops confirm no seam artifact here either.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All titles, axis labels, ticks, and colorbar text are readable in
-          both themes at explicit font sizes
+        comment: All text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-to-text or text-to-data collisions
+        comment: No collisions between text, data, or legend elements
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Chirp trace is visible, but cell-seam mesh artifact reduces clarity
-          of the continuous color field
+        comment: Seam artifact from attempt 1 fully resolved; chirp reads as a smooth
+          continuous band. Slight blockiness remains from the inherent STFT bin/frame
+          resolution, an authentic trade-off not a defect
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue-ish Imprint sequential scale, CVD-safe, no red-green reliance
+        comment: Sequential palette, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas gate passed (3200x1800) and proportions are good, but pervasive
-          rendering seams between heatmap cells hurt overall layout cleanliness
+        passed: true
+        comment: Canvas gate passed (3200x1800), no clipping at any edge, seam artifact
+          gone
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) / Frequency (Hz) / Power (dB) all descriptive with units
+        comment: Descriptive labels with units (Time (s), Frequency (Hz), Power (dB))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq used exclusively for continuous data; correct #FAF8F1/#1A1A17
-          backgrounds in both themes'
+        comment: Imprint seq tokens used for continuous scale; correct theme backgrounds
+          in both renders
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Custom colorbar, well-chosen margins, thoughtful FFT-driven data,
-          but polish undercut by the seam artifact
+        comment: Custom colorbar, well-chosen margins, real FFT-driven data; no longer
+          undercut by the seam artifact
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Pervasive cell-to-cell seam/mesh artifact across the entire heatmap
-          in both renders is a clear refinement failure
+        passed: true
+        comment: Smooth unified color field now that the mesh artifact is fixed; chrome
+          stays close to D3 skeleton defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Diagonal chirp trace provides a clear, easy-to-follow focal point
-          against the noise floor
+        comment: Diagonal chirp trace gives a clear, easy-to-follow focal point
     spec_compliance:
       score: 15
       max: 15
@@ -146,20 +137,19 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Colorbar with dB units, clearly labeled time/frequency axes
+        comment: Colorbar with dB units, clearly labeled axes, real STFT
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=time, y=frequency (full Nyquist range), color=power; all data shown
+        comment: Time on x, frequency on y (full Nyquist range), correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; colorbar serves as legend
-          with correct labels
+        comment: Title matches required format; colorbar legend correct
     data_quality:
       score: 14
       max: 15
@@ -169,21 +159,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers magnitude-over-time-and-frequency; log-frequency axis (spec's
-          'consider') not used
+        comment: Log-frequency axis (spec's optional suggestion) not used
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible chirp signal with realistic sample rate/duration, neutral
-          topic
+        comment: Linear chirp signal is a realistic, neutral example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible 4 kHz sample rate, 200-1500 Hz sweep, -70 to 0 dB range
+        comment: Sample rate, duration, frequency range all sensible
     code_quality:
       score: 9
       max: 10
@@ -193,33 +181,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A couple of small helper functions (fft, noise) needed for genuine
-          signal processing, otherwise flat script
+        comment: fft/noise helpers justified for genuine from-scratch DSP
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG noise
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global used, no unused imports
+        comment: No imports beyond the d3 global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity justified by actual STFT computation; no fake interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract; current d3 v7 API (scaleSequential,
-          join)
+        comment: Correct mount-node contract, no animation
     library_mastery:
       score: 9
       max: 10
@@ -229,15 +215,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic d3 scales, axis generators, selection.join()
+        comment: Idiomatic D3 scales, axes, join, gradient defs
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: From-scratch radix-2 FFT and Hann windowing go well beyond basic
+        comment: From-scratch radix-2 FFT + Hann windowing goes well beyond basic
           D3 usage
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -246,6 +232,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - custom-colormap
