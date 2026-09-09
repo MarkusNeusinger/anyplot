@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-matrix
 created: '2026-09-09T06:59:32Z'
-updated: '2026-09-09T07:04:04Z'
+updated: '2026-09-09T07:11:29Z'
 generated_by: claude-sonnet
 workflow_run: 34321064072
 issue: 2035
@@ -12,129 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order — Setosa is #009E73 (brand green,
-    always first), Versicolor #C475FD, Virginica #4467A3 — identical across both themes'
-  - Shared per-variable domains keep every row and column aligned across the whole
-    4x4 matrix, a correctness detail many SPLOM implementations miss
-  - Diagonal univariate histograms correctly use the theme-adaptive 'muted' semantic
-    anchor instead of a categorical color, distinguishing the aggregate distribution
-    from the per-species scatter data
-  - Deterministic LCG/Box-Muller synthetic iris-like data with genuine within-species
-    correlation between petal length and width (not just cluster separation)
-  - Edge-only axis labeling (left column, bottom row) keeps the dense 4x4 grid uncluttered
-    while satisfying the spec's 'variable names along the edges' requirement
-  - 'Theme-correct chrome in both renders — no dark-on-dark or light-on-light failures,
-    backgrounds match #FAF8F1/#1A1A17'
+  - Custom SPLOM grid composed cleanly from ScatterChart + BarChart, with correct
+    per-edge axis handling — only the outermost row/column show axis lines, ticks,
+    and labels, avoiding clutter in interior cells
+  - Deterministic Box-Muller LCG generates realistic Iris-like data with genuine within-species
+    petal length/width correlation, not just cluster separation
+  - Petal-length/petal-width cells are subtly highlighted with a tinted border, giving
+    the matrix a clear focal point without hiding the other 14 panels — good data
+    storytelling
+  - 'Full palette/theme compliance: canonical Imprint order for the three species,
+    correct light/dark backgrounds, and the theme-adaptive MUTED semantic anchor is
+    used appropriately for the univariate diagonal histograms'
+  - Symmetric matrix with consistent shared per-variable domains across rows and columns,
+    matching the spec's explicit symmetry requirement
   weaknesses:
-  - Axis tick labels (11px CSS / ~22 source-px) are legible at full desktop resolution
-    but are on the small side for a chart this data-dense — likely to fall below readable
-    size once the PNG is scaled down to a ~400px mobile width. Consider bumping EDGE_TICK
-    to 12-13 if it doesn't cause overlap with the histogram/scatter tick counts.
-  - The 16 cells touch each other with only a 1px border and no inter-cell gap, giving
-    the matrix a slightly spreadsheet/grid-like look rather than the generous whitespace
-    the style guide favors — consider a few px of gap between cells or a lighter border
-    color to soften the boxed appearance.
-  - Species-color clustering is the only storytelling device; the matrix relies entirely
-    on the reader scanning 16 panels to notice which variable pairs separate species
-    best (e.g., petal length vs. petal width) — a subtle visual cue (e.g., slightly
-    larger/more opaque markers on the most-informative cells) could reinforce the
-    strongest pairwise story without adding clutter.
+  - Edge tick labels (12px) are noticeably smaller than the 22px title — a small bump
+    (13-14px) would improve legibility at thumbnail/mobile scale without crowding
+    the small matrix cells
+  - 'LM-02 is only moderately distinctive: the composition is clever but leans on
+    generic ScatterChart/BarChart defaults per cell — a small per-species touch (e.g.
+    distinct marker shapes) would showcase more of MUI X''s community surface'
+  - No inline comment explains why Box-Muller normal sampling was chosen over simpler
+    uniform noise for the synthetic data — a one-line rationale would help future
+    readers
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-matrix · javascript · muix · anyplot.ai" top-left in bold dark ink; legend (Setosa/Versicolor/Virginica swatches + labels) top-right in dark/soft-dark ink; axis labels ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)") along the left column and bottom row in dark ink; tick labels in a softer dark gray. All text is clearly readable against the light background.
-      Data: 4x4 grid — diagonal cells show gray/muted histograms of each variable's overall distribution; off-diagonal cells show scatter plots colored by species (Setosa green #009E73, Versicolor lavender #C475FD, Virginica blue #4467A3), each with ~50 points per species and semi-transparent markers. Setosa clearly separates from the other two species on petal measurements; Versicolor and Virginica overlap more, especially on sepal width.
+      Background: Warm off-white (~#FAF8F1), not pure white — matches spec.
+      Chrome: Title "scatter-matrix · javascript · muix · anyplot.ai" in bold dark ink, top-right legend (Setosa/Versicolor/Virginica) in secondary-ink text, axis titles ("Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)") along the bottom/left edges, tick labels in soft gray. All clearly legible against the light background.
+      Data: 4x4 matrix. Diagonal cells show gray (muted-anchor) histograms of each variable's univariate distribution. Off-diagonal cells show scatter plots colored by species — Setosa green (#009E73), Versicolor lavender/purple, Virginica blue — matching canonical Imprint order. The petal-length × petal-width pair (both directions) is subtly highlighted with a thin green-tinted cell border, drawing the eye to the clearest species separation. Matrix is symmetric (same variable pair appears transposed in both triangles).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/legend/axis-label layout, now rendered in light ink (near-white) and soft light-gray for tick labels and legend text. No dark-on-dark instances found — all chrome elements are clearly visible against the dark background.
-      Data: Data colors are identical to the light render — Setosa green, Versicolor lavender, Virginica blue at the same positions and same species pattern. Diagonal histograms use a lighter muted gray appropriate for the dark surface.
+      Background: Warm near-black (~#1A1A17), not pure black — matches spec.
+      Chrome: Title and legend text switch to light ink/soft-light gray, axis titles and tick labels flip to light tones, grid/cell borders flip to the dark-theme rule color. All text remains clearly legible against the dark background — no dark-on-dark failures observed.
+      Data: Colors are visually identical to the light render (same green/lavender/blue hues for Setosa/Versicolor/Virginica, same muted-gray histogram bars) — only chrome flipped, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly set (title 22px, axis labels 15px, ticks 11px) and
-          readable at full resolution in both themes, but tick labels are small enough
-          to risk illegibility at ~400px mobile width for a matrix this dense.
+        comment: All text readable in both themes; edge tick labels slightly small
+          relative to title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between labels, ticks, legend, or data across either render;
-          tickLabelInterval thinning avoids crowding.
+        comment: No text/data collisions observed
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 150 points/cell (50 per species) at markerSize 4 with alpha 0.72
-          are visible; some clusters (e.g. Setosa) overlap tightly but that reflects
-          real data density, not poor sizing.
+        comment: Marker size (4-5px) and alpha (0.72-0.85) appropriate for 150-point
+          overplotting
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue trio is CVD-safe, no red-green reliance, adequate
-          contrast with 0.72 alpha.
+        comment: Green/lavender/blue are distinct; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Matrix fills the vast majority of the square canvas below a compact
-          header; balanced margins, nothing cut off, legend sits next to the title.
+        comment: Canvas gate passed, no cutoffs, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units, e.g. 'Sepal Length (cm)'.
+        comment: Descriptive labels with units (cm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Setosa is #009E73, remaining species follow canonical
-          Imprint order (#C475FD, #4467A3); identical across themes; correct #FAF8F1/#1A1A17
-          backgrounds; theme-correct chrome in both renders.'
+        comment: Canonical Imprint order, correct theme backgrounds, correct MUTED
+          semantic anchor use
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Clearly above a library default — custom facet-grid construction,
-          shared domains, muted-anchor histograms — but not yet publication/FiveThirtyEight-level
-          polish.
+        passed: true
+        comment: Custom legend header, muted diagonal, intentional highlight cells
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Spines mostly hidden except at edges, subtle grid-color cell borders;
-          cells touch with no inter-cell whitespace, giving a slightly boxed/grid-like
-          feel.
+        passed: true
+        comment: Subtle cell borders, generous grid gap, clean spacing
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Species color-coding creates a clear visual hierarchy (Setosa separates
-          cleanly on petal traits) — visible without annotations, but the reader must
-          still scan all 16 panels to find the story.
+        passed: true
+        comment: Highlighted petal-length/petal-width cells create a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -144,109 +131,105 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot matrix (SPLOM) with diagonal distributions and
-          off-diagonal scatter.
+        comment: Correct scatter plot matrix / SPLOM
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal histograms, off-diagonal scatter, edge-only variable labels,
-          categorical color grouping, small semi-transparent markers, symmetric upper/lower
-          triangles — all present.
+        comment: Diagonal histograms, off-diagonal scatter, edge labels, color encoding,
+          symmetry all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each cell's x/y axis correctly maps to its column/row variable; shared
-          domains keep axes consistent.
+        comment: Row/column variable mapping correct across the grid
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'scatter-matrix · javascript · muix · anyplot.ai';
-          legend labels match species names exactly.
+        comment: Title matches mandated format exactly; legend labels match species
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Shows distinct distributions (uni/bimodal aggregate histograms),
-          correlated pairs (petal length/width), and weakly-correlated pairs (sepal
-          width) — good coverage of matrix behavior.
+        passed: true
+        comment: 'All spec aspects shown: pairwise scatter, univariate diagonal, symmetry,
+          color grouping'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Real, neutral iris-flower-measurement scenario with plausible species-level
-          summary statistics.
+        passed: true
+        comment: Iris-like flower measurements, real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Sepal/petal cm ranges and per-species means/stds align with real-world
-          iris measurements.
+        passed: true
+        comment: Sensible cm-scale values per species
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        comment: Straightforward data setup then a single exported component; small
-          helpers (LCG, normal, hexToRgba, axisTextStyle) are appropriate for the
-          React/harness contract.
+        passed: true
+        comment: Helper functions justified by RNG/hex-conversion needs, but adds
+          structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic fixed-seed LCG (20260909), no Math.random().
+        passed: true
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only ScatterChart, BarChart, Box, Typography imported and used.
+        passed: true
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI, no over-engineering; margin/axis logic is appropriately
-          parameterized per cell.
+        passed: true
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Sizes to window.ANYPLOT_SIZE, skipAnimation set on every chart, tooltip
-          disabled for the static harness.
+        passed: true
+        comment: skipAnimation set, correct harness contract, no manual mount
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        comment: Correct high-level ScatterChart/BarChart usage with per-axis margin,
-          disableLine/disableTicks, tickLabelInterval, disableVoronoi — all community-surface
-          APIs used as intended.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
-        comment: Manually composing 16 independent MUI X chart instances into a shared-domain
-          facet grid is a resourceful use of per-axis customization to work around
-          MUI X having no native small-multiples/SPLOM component.
-  verdict: REJECTED
+        passed: true
+        comment: Proper ScatterChart/BarChart config, per-edge axis/margin handling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Clever composition of two chart types into a custom SPLOM grid, but
+          otherwise fairly generic per-cell config
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - faceting
   - subplots
   - custom-legend
   patterns:
