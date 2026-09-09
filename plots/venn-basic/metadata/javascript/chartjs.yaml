@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: venn-basic
 created: '2026-09-09T21:22:15Z'
-updated: '2026-09-09T21:27:03Z'
+updated: '2026-09-09T21:40:14Z'
 generated_by: claude-sonnet
 workflow_run: 34404886816
 issue: 2444
@@ -12,45 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Correct Imprint palette: fiction circle uses brand green #009E73, nonfiction
-    uses palette position 2 purple, and backgrounds are theme-correct #FAF8F1 (light)
-    / #1A1A17 (dark) in both renders'
-  - 'Clever, idiomatic solution to Chart.js''s lack of native Venn geometry: uses
-    the native afterDatasetsDraw plugin hook to draw circles sized from chart.chartArea
-    instead of reaching for an external/community plugin, exactly per the chartjs
-    library rules'
-  - Circle areas are proportionally sized to the real set totals (sqrt-scaled radius),
-    and the alpha-blended overlap clearly shows the shared region
-  - All text (title, subtitle, set names, region counts) is legible in both light
-    and dark renders with explicit font sizes, no clipping and no overlap
-  - Realistic, neutral survey data with sensible scale (500 respondents, plausible
-    fiction/nonfiction overlap of 95)
+  - 'Overlap geometry is now genuinely data-derived: solveDistanceForArea binary-searches
+    the center distance so each pairwise lens area matches the real intersection count
+    (fixing attempt 1''s fixed 0.42 factor), and the third circle is trilaterated
+    so all three pairwise overlaps hold simultaneously'
+  - Full 3-set Venn with all 7 regions (3 exclusive, 3 pairwise, 1 triple) shown with
+    correct, internally-consistent counts derived via inclusion-exclusion from the
+    raw totals
+  - Correct Imprint palette order across all three circles (green/lavender/blue) with
+    identical data colors between light and dark renders; only chrome flips
+  - Thinner, matched-opacity strokes (1.5px) address attempt 1's heavy-stroke feedback
+    and read as more refined against the alpha-blended fills
+  - Idiomatic, well-justified use of Chart.js's native afterDatasetsDraw plugin hook
+    to render custom canvas geometry, with a clear code comment explaining why a bubble-dataset
+    approach was rejected (auto-reserved radius padding) — no unsupported community
+    plugin or workaround
+  - All text legible in both themes, including at the 400px thumbnail scale; layout
+    auto-fits the triangle+circles into the chart area with margin reserved for the
+    outward-radiating set-name labels
+  - Realistic, neutral survey data (reading-habit genres) at a sensible scale, fully
+    deterministic with no RNG
   weaknesses:
-  - The overlap ('Both') region is positioned using a fixed geometric factor (centerDist
-    = (rA + rB) * 0.42) rather than one derived from the actual intersection count
-    (95) — so while circle *areas* are proportional to set totals, the *overlap area*
-    does not scale with the intersection size. A true proportional Venn diagram should
-    derive the center distance from the desired lens area based on bothGenres relative
-    to each circle's area.
-  - Only 2 sets are shown; the spec explicitly supports 2-3 sets and calls out triple-overlap
-    regions as a feature. A 3-set variant would better demonstrate full Venn-diagram
-    feature coverage (pairwise AND triple intersections).
-  - The circle stroke (lineWidth 3) is fairly bold relative to the soft alpha fills
-    — a thinner or matched-opacity stroke would read as more refined.
+  - Region caption text (13px, e.g. 'Fiction & Memoir', 'Nonfiction & Memoir') is
+    tight at the 400px thumbnail scale — legible but small; consider bumping to 14-15px
+    for more comfortable mobile reading
+  - The overlap counts stack fairly densely in the triple-overlap zone (three number+caption
+    pairs within a small lens) — slightly more vertical spacing between the 'Fiction
+    & Memoir' / 'Nonfiction & Memoir' pair and the 'All three' label beneath would
+    ease visual scanning
+  - No explicit callout or color emphasis on the most interesting figure (e.g. the
+    35-reader triple-overlap) — the plot presents all regions with equal visual weight
+    rather than guiding the eye to a specific insight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "venn-basic · javascript · chartjs · anyplot.ai" in bold dark ink, subtitle "Reading habits of 500 surveyed adults" in softer gray beneath it — both clearly readable. "Fiction readers" and "Nonfiction readers" labels sit above their respective circles in bold dark text, fully legible against the light background.
-      Data: Left circle (Fiction) filled in translucent brand green (#009E73 at ~55% alpha) with a solid green stroke; right circle (Nonfiction) filled in translucent light purple with a solid purple stroke. The overlap region blends into a muted blue-violet. Region counts "185" (Fiction only), "95" (Both), "115" (Nonfiction only) are bold dark numbers with smaller gray captions beneath, all clearly legible against their respective fills.
+      Background: warm off-white, matches #FAF8F1 — correct light chrome.
+      Chrome: title "venn-basic · javascript · chartjs · anyplot.ai" and subtitle "Reading habits of 500 surveyed adults" render in bold dark ink / softer gray, both fully readable. Three set-name labels ("Fiction readers", "Nonfiction readers", "Memoir readers") in bold dark text radiate outward from the cluster, clear of the circles.
+      Data: three overlapping circles — Fiction (brand green #009E73, bottom-left), Nonfiction (lavender, bottom-right), Memoir (blue, top) — sized proportionally to their totals (280/210/150). Overlap regions blend into darker teal/violet/slate tones. Seven region labels show counts (160, 80, 55, 60, 25, 35, 35) with smaller gray captions beneath, all legible against their fills, confirmed readable at both full size and the 400px thumbnail.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title and subtitle render in light/off-white text, fully legible against the dark background. "Fiction readers" and "Nonfiction readers" labels are light-colored and clearly readable above their circles. No dark-on-dark failures observed.
-      Data: Same green (#009E73) and purple hues as the light render, now filled over darker green/purple tones with the overlap showing a deeper violet blend — data colors are identical to the light render, only chrome (background, text) flips as expected. Region counts "185", "95", "115" are bold light text with slightly dimmer gray captions beneath; all remain clearly legible against the darker circle fills.
+      Background: warm near-black, matches #1A1A17 — correct dark chrome.
+      Chrome: title, subtitle, and set-name labels render in light/off-white text, fully legible against the dark surface — no dark-on-dark failures observed on any element.
+      Data: identical green/lavender/blue circle colors to the light render (only chrome flipped, as required); overlap fills read as muted teal/purple/slate against the dark background. Region count numbers (white/light) and captions (light gray) remain clearly legible over the semi-transparent overlap fills, including in the darkest triple-overlap zone.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,46 +68,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes, no overflow
-          or clipping
+        comment: All text readable in both themes and at 400px thumbnail; small region
+          captions (13px) are tight at extreme scale-down
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with other text or with data
+        comment: No text/text or text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles and overlap clearly visible at this scale
+        comment: Circles and alpha-blended overlaps clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing is CVD-safe, not red-green
+        comment: Green/lavender/blue hues are CVD-distinct; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Circles fill most of the canvas with balanced margins, nothing cut
-          off
+        comment: Correct 2400x2400 square canvas, nothing cut off, labels fit with
+          margin
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A axes for a Venn diagram; title format is correct and descriptive
+        comment: N/A axes for a Venn diagram; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second series Imprint palette position 2,
-          theme-correct backgrounds in both renders'
+        comment: Correct Imprint order (green/lavender/blue); identical data colors
+          across themes; correct backgrounds
     design_excellence:
       score: 15
       max: 20
@@ -111,24 +117,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom-drawn Venn with proportional sizing and alpha-blended overlap;
-          clearly above library defaults
+        comment: Genuine geometric solver (lens-area bisection + trilateration) drives
+          the layout, not a fixed constant
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No grid/spines (fully custom canvas draw), generous whitespace; stroke
-          could be thinner
+        comment: No axes/grid/legend chrome, generous whitespace, thinner matched-opacity
+          strokes than attempt 1
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Circle size variation conveys relative set size and creates a focal
-          point at the overlap
+        passed: false
+        comment: Circle size and central triple-overlap create a natural focal hierarchy,
+          but no explicit emphasis on a specific insight
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,51 +142,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2-set Venn diagram
+        comment: Correct 3-set proportional Venn diagram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Counts, transparency, and readable labels all present; overlap area
-          isn't truly proportional to intersection size
+        comment: 3 sets, area-proportional circles and overlaps, counts per region,
+          alpha transparency, readable labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All three regions (Fiction only, Both, Nonfiction only) correctly
-          sum to the set totals
+        comment: Set sizes and intersection sizes correctly mapped to circle/lens
+          areas
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; set-name labels above circles correctly substitute
-          for a legend
+        comment: Title format correct; direct circle labeling substitutes for a separate
+          legend appropriately
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Covers the 2-set pairwise-overlap case fully but not the 3-set triple-overlap
-          case the spec also describes
+        comment: Now covers full 3-set case including triple overlap, addressing attempt
+          1's gap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible reading-habits survey
+        comment: Neutral, plausible reading-habit survey data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Totals and overlap arithmetic are internally consistent and plausible
+        comment: 500 respondents with internally-consistent, sensible subset sizes
     code_quality:
       score: 9
       max: 10
@@ -190,35 +196,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Necessarily uses a helper function and a plugin object since Chart.js
-          has no native Venn geometry, well-commented as intentional
+        comment: Helper functions needed for real geometry (lens area, bisection,
+          trilateration); complexity is justified and well-commented
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic in-memory data
+        comment: Fully deterministic in-memory data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports, only the Chart global
+        comment: No imports beyond the provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; tooltip disabled deliberately since placeholder
-          points carry no meaningful hover data
+        comment: No fake UI; complexity matches the genuine geometric problem
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled
+        comment: 'Correct mount-node contract, animation: false set'
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -226,16 +231,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses the native plugin API (afterDatasetsDraw) exactly as the library
-          rules recommend instead of an unsupported community plugin
+        comment: Native afterDatasetsDraw plugin hook used exactly as the library
+          rules recommend for unsupported chart types
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Creative use of Chart.js's plugin/draw-hook architecture to render
-          custom geometry sized from chartArea
-  verdict: REJECTED
+        comment: Genuine proportional-Venn geometry solver (lens-area equations +
+          trilateration) built entirely on Chart.js's plugin/draw-hook architecture
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -243,7 +248,8 @@ impl_tags:
   - patches
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
