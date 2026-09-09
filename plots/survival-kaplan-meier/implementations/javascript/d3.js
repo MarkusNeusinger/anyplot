@@ -24,7 +24,8 @@ function simulatePatients(n, hazardRate, dropoutProb) {
   const patients = [];
   for (let i = 0; i < n; i++) {
     const eventTime = -Math.log(rand()) / hazardRate;
-    const dropoutTime = rand() < dropoutProb ? rand() * FOLLOW_UP_MONTHS : Infinity;
+    const dropoutTime =
+      rand() < dropoutProb ? rand() * FOLLOW_UP_MONTHS : Infinity;
     const censorTime = Math.min(dropoutTime, FOLLOW_UP_MONTHS);
     const time = Math.min(eventTime, censorTime);
     patients.push({ time, event: eventTime <= censorTime ? 1 : 0 });
@@ -32,10 +33,59 @@ function simulatePatients(n, hazardRate, dropoutProb) {
   return patients;
 }
 
+function medianSurvivalTime(steps) {
+  for (const s of steps) if (s.survival <= 0.5) return s.time;
+  return null;
+}
+
+function normalCdf(z) {
+  // Abramowitz-Stegun erf approximation
+  const sign = z < 0 ? -1 : 1;
+  const x = Math.abs(z) / Math.SQRT2;
+  const a1 = 0.254829592,
+    a2 = -0.284496736,
+    a3 = 1.421413741,
+    a4 = -1.453152027,
+    a5 = 1.061405429,
+    p = 0.3275911;
+  const tt = 1 / (1 + p * x);
+  const erf =
+    1 -
+    ((((a5 * tt + a4) * tt + a3) * tt + a2) * tt + a1) * tt * Math.exp(-x * x);
+  return 0.5 * (1 + sign * erf);
+}
+
+function logRankTest(group1, group2) {
+  const eventTimes = Array.from(
+    new Set(
+      [...group1, ...group2].filter((d) => d.event === 1).map((d) => d.time),
+    ),
+  ).sort((a, b) => a - b);
+
+  let observed1 = 0;
+  let expected1 = 0;
+  let variance = 0;
+  for (const time of eventTimes) {
+    const n1 = group1.filter((d) => d.time >= time).length;
+    const n2 = group2.filter((d) => d.time >= time).length;
+    const d1 = group1.filter((d) => d.time === time && d.event === 1).length;
+    const d2 = group2.filter((d) => d.time === time && d.event === 1).length;
+    const n = n1 + n2;
+    const d = d1 + d2;
+    if (n <= 1) continue;
+    observed1 += d1;
+    expected1 += (d * n1) / n;
+    variance += (d * (n - d) * n1 * n2) / (n * n * (n - 1));
+  }
+  const chiSquare = variance > 0 ? (observed1 - expected1) ** 2 / variance : 0;
+  const pValue = 2 * (1 - normalCdf(Math.sqrt(chiSquare)));
+  return { chiSquare, pValue };
+}
+
 function kaplanMeier(patients) {
-  const eventTimes = Array.from(new Set(patients.filter((d) => d.event === 1).map((d) => d.time))).sort(
-    (a, b) => a - b,
-  );
+  const eventTimes = Array.from(
+    new Set(patients.filter((d) => d.event === 1).map((d) => d.time)),
+  ).sort((a, b) => a - b);
 
   let survival = 1;
   let varianceSum = 0;
@@ -43,7 +93,9 @@ function kaplanMeier(patients) {
 
   for (const time of eventTimes) {
     const atRisk = patients.filter((d) => d.time >= time).length;
-    const deaths = patients.filter((d) => d.time === time && d.event === 1).length;
+    const deaths = patients.filter(
+      (d) => d.time === time && d.event === 1,
+    ).length;
     survival *= 1 - deaths / atRisk;
     if (atRisk > deaths) varianceSum += deaths / (atRisk * (atRisk - deaths));
     const se = survival * Math.sqrt(varianceSum);
@@ -71,11 +123,24 @@ const groups = [
   { name: "Standard Therapy", n: 95, hazardRate: 0.05, dropoutProb: 0.18 },
   { name: "Novel Therapy", n: 95, hazardRate: 0.027, dropoutProb: 0.18 },
 ];
-const curves = groups.map((group) => ({ ...group, ...kaplanMeier(simulatePatients(group.n, group.hazardRate, group.dropoutProb)) }));
+const patientSets = groups.map((group) =>
+  simulatePatients(group.n, group.hazardRate, group.dropoutProb),
+);
+const curves = groups.map((group, i) => ({
+  ...group,
+  ...kaplanMeier(patientSets[i]),
+}));
+const logRank = logRankTest(patientSets[0], patientSets[1]);
 
 // --- SVG mount ----------------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
+const g = svg
+  .append("g")
+  .attr("transform", `translate(${margin.left},${margin.top})`);
 
 // --- Scales ---------------------------------------------------------------
 const x = d3.scaleLinear().domain([0, FOLLOW_UP_MONTHS]).range([0, iw]);
@@ -102,7 +167,14 @@ const band = d3
   .curve(d3.curveStepAfter);
 
 curves.forEach((c, i) => {
-  g.append("path").datum(c.steps).attr("d", band).attr("fill", t.palette[i]).attr("fill-opacity", 0.15);
+  g.append("path")
+    .datum(c.steps)
+    .attr("d", band)
+    .attr("fill", t.palette[i])
+    .attr("fill-opacity", 0.12)
+    .attr("stroke", t.palette[i])
+    .attr("stroke-width", 1)
+    .attr("stroke-opacity", 0.45);
 });
 
 // --- Survival step curves -----------------------------------------------------
@@ -122,7 +194,7 @@ curves.forEach((c, i) => {
 });
 
 // --- Censoring tick marks -------------------------------------------------
-const tickHalf = 7;
+const tickHalf = 10;
 curves.forEach((c, i) => {
   g.append("g")
     .selectAll("line")
@@ -133,7 +205,44 @@ curves.forEach((c, i) => {
     .attr("y1", (d) => y(d.survival) - tickHalf)
     .attr("y2", (d) => y(d.survival) + tickHalf)
     .attr("stroke", t.palette[i])
-    .attr("stroke-width", 2);
+    .attr("stroke-width", 2.75);
+});
+
+// --- Median survival annotations --------------------------------------------
+const y50 = y(0.5);
+g.append("line")
+  .attr("x1", 0)
+  .attr("x2", iw)
+  .attr("y1", y50)
+  .attr("y2", y50)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "6,5");
+
+curves.forEach((c, i) => {
+  const medianTime = medianSurvivalTime(c.steps);
+  if (medianTime == null) return;
+  const mx = x(medianTime);
+  g.append("line")
+    .attr("x1", mx)
+    .attr("x2", mx)
+    .attr("y1", y50)
+    .attr("y2", ih)
+    .attr("stroke", t.palette[i])
+    .attr("stroke-width", 1.5)
+    .attr("stroke-dasharray", "6,5");
+  g.append("text")
+    .attr("x", mx)
+    .attr("y", y50 - 20)
+    .attr("text-anchor", "middle")
+    .attr("fill", t.palette[i])
+    .style("font-size", "15px")
+    .style("font-weight", "600")
+    .style("paint-order", "stroke")
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 5)
+    .attr("stroke-linejoin", "round")
+    .text(`Median: ${medianTime.toFixed(1)}mo`);
 });
 
 // --- Axes -------------------------------------------------------------------
@@ -143,12 +252,20 @@ const xAxis = g
   .call(d3.axisBottom(x).ticks(9).tickSize(0).tickPadding(14));
 const yAxis = g
   .append("g")
-  .call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".0%")).tickSize(0).tickPadding(14));
+  .call(
+    d3
+      .axisLeft(y)
+      .ticks(5)
+      .tickFormat(d3.format(".0%"))
+      .tickSize(0)
+      .tickPadding(14),
+  );
 
 for (const axisG of [xAxis, yAxis]) {
   axisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
-  axisG.select(".domain").attr("stroke", t.inkSoft);
 }
+xAxis.select(".domain").attr("stroke", t.inkSoft);
+yAxis.select(".domain").attr("stroke", "none");
 
 // --- Axis labels --------------------------------------------------------------
 g.append("text")
@@ -188,6 +305,17 @@ curves.forEach((c, i) => {
     .style("font-size", "16px")
     .text(`${c.name} (n=${c.n})`);
 });
+
+const pValueText =
+  logRank.pValue < 0.001 ? "p < 0.001" : `p = ${logRank.pValue.toFixed(3)}`;
+legend
+  .append("text")
+  .attr("x", 0)
+  .attr("y", groups.length * 34 + 18)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-style", "italic")
+  .text(`Log-rank test: ${pValueText}`);
 
 // --- Title --------------------------------------------------------------------
 svg
