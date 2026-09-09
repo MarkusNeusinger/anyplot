@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: waffle-basic
 created: '2026-09-09T22:13:46Z'
-updated: '2026-09-09T22:17:40Z'
+updated: '2026-09-09T22:28:07Z'
 generated_by: claude-sonnet
 workflow_run: 34410130151
 issue: 998
@@ -12,43 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - 'Data mapping is exact: percentages (32/22/18/16/12) sum to 100, and every one
-    of the 100 squares is assigned to the correct category with a clean row-major
-    fill order.'
-  - 'Both renders are theme-correct: #FAF8F1/#1A1A17 backgrounds, ink/ink-soft chrome
-    tokens threaded through title and legend, and data colors (Imprint palette, brand
-    green first) identical between themes.'
-  - 'Canvas discipline is exemplary: explicit rowsize!/colsize!/Fixed layout allocation
-    guarantees the 2400x2400 square target with no overflow or clipping, and holds
-    up at 400px thumbnail scale.'
-  - 'Idiomatic Makie layout usage: DataAspect(), hidespines!/hidedecorations! for
-    a clean waffle surface, poly! with a per-cell color vector, and a manually constructed
-    Legend with PolyElement swatches.'
+  - Correct 10x10 = 100-square waffle grid with squares assigned to categories in
+    exact proportion to their percentages (32+22+18+16+12 = 100)
+  - 'Imprint palette used correctly: Housing is brand green #009E73 (first series),
+    remaining categories follow the canonical order (lavender, blue, ochre, matte
+    red)'
+  - 'Both renders are theme-correct: warm off-white (#FAF8F1) / warm near-black (#1A1A17)
+    backgrounds, ink text flips appropriately, data colors are pixel-identical between
+    light and dark'
+  - Clean horizontal legend below the grid with category + percentage labels ("Housing
+    (32%)", etc.), no frame, centered
+  - Square grid built from first-principles Rect2 polygons with DataAspect() and a
+    small inter-square gap (square_gap = 0.12) rather than a bar-chart hack — an idiomatic,
+    low-level use of Makie's poly! for a technique that doesn't have a built-in Makie
+    recipe
+  - Canvas lands exactly on the 2400x2400 square target with no gate failure
+  - Deterministic script (hardcoded category/percentage data, no randomness needed)
+    and clean imports (only CairoMakie + Colors, both used)
   weaknesses:
-  - Title occupies only ~30% of the plot width at fontsize=26 — well under the ~50-70%
-    guideline for a square canvas; bump titlesize a few points for stronger visual
-    hierarchy against the 2400px canvas.
-  - No storytelling emphasis beyond the descending fill order — e.g. no annotation
-    calling out the largest or a goal-relevant category, so Data Storytelling stays
-    close to baseline.
-  - 'Square-grid styling is competent but plain: uniform stroke gaps and flat fills
-    with no additional refinement (e.g. subtle corner rounding or a highlighted focal
-    category) to lift it above a generic waffle chart.'
+  - The subtitle Label at fig[2,1] ("Housing leads the budget at 32%") never actually
+    renders — the allocated 40pt row between the title and the grid is completely
+    blank in both plot-light.png and plot-dark.png. The intended data-storytelling
+    callout is invisible; only an unexplained gap remains. Verify the Label call actually
+    draws (e.g. check tellwidth/tellheight interaction with the Fixed() row size,
+    or whether it's being clipped) and either fix the rendering or remove the dead
+    code and reclaim the vertical space for the grid/legend.
+  - The focal-square 'anchor' highlight described in the code comment (squares_focal
+    drawn with strokewidth=5, strokecolor=INK to visually call out the largest category)
+    is not visible in either render — the Housing squares have the same thin background-colored
+    gap stroke as every other square. The poly! call for squares_focal is not producing
+    a distinguishable outline; either the stroke needs to be more prominent to survive
+    antialiasing at this square size, or the second poly! call isn't overdrawing as
+    intended.
+  - Because neither the subtitle nor the focal outline render, the chart currently
+    has no explicit visual hierarchy or focal point beyond the implicit grid ordering
+    — Design Excellence (data storytelling) suffers even though the code clearly intended
+    one.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "waffle-basic · julia · makie · anyplot.ai" in bold dark ink, centered top; horizontal legend below the grid with five colored swatches and "Category (NN%)" labels in dark ink. All fully readable.
-      Data: 10x10 grid of 100 squares with small uniform gaps. Colors top-to-bottom/left-to-right: green (#009E73, Housing 32%), lavender (#C475FD, Food 22%), blue (#4467A3, Transportation 18%), ochre (#BD8233, Savings 16%), red (#AE3030, Entertainment 12%) — first series is brand green as required, order matches the canonical Imprint sequence.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "waffle-basic · julia · makie · anyplot.ai" centered at top, clearly readable dark-on-light. Below the title there is a blank band where a subtitle ("Housing leads the budget at 32%") was intended but does not actually render — no text is visible there, just empty background. The horizontal legend below the grid (5 swatches + "Category (XX%)" labels) is fully readable in dark ink.
+      Data: 10x10 grid of gapped squares. First 32 squares (top-left, reading row-major) are brand green (#009E73, Housing), followed by 22 lavender (#C475FD, Food), 18 blue (#4467A3, Transportation), 16 ochre (#BD8233, Savings), and 12 matte red (#AE3030, Entertainment) — matches the legend and sums to 100. No visible thicker outline on the Housing squares despite the code intending one.
+      Legibility verdict: PASS for the title and legend; the intended subtitle text is simply absent (not a legibility failure, but a rendering failure — nothing to misread, nothing there).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title now in light ink, fully legible against the dark surface; legend labels flip to light-colored text, swatches unchanged. No dark-on-dark issues anywhere.
-      Data: Identical square colors and fill pattern to the light render — only the page background, title, and legend text color flipped, confirming chrome-only theme adaptation.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title now in light ink, clearly readable light-on-dark. Same blank band where the subtitle should be — confirmed missing in this theme too, so it's a rendering bug rather than a light-theme-only glitch. Legend text renders in light ink, fully readable against the dark background.
+      Data: Identical square-for-square color assignment and grid layout as the light render — data colors (green/lavender/blue/ochre/red) are pixel-identical between themes, only the chrome (background, title/legend ink color) flipped, as required. No dark-on-dark or light-on-light failures found; no focal-square outline visible here either.
+      Legibility verdict: PASS — all rendered text (title, legend) is legible; no dark-on-dark issue. The missing subtitle/outline is a functional bug, not a theme-contrast bug.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -56,74 +70,75 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title/legend readable in both themes and at 400px thumbnail scale;
-          title fontsize is on the small side for a 2400px canvas.
+        comment: Title and legend text are explicitly sized and clearly readable in
+          both themes; no dark-on-dark or light-on-light issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, grid, or legend.
+        comment: No collisions between title, grid, and legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Squares clearly separated by gap/stroke, colors distinct.
+        comment: Squares are large, evenly gapped, and clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, no red-green-only signal, category also encoded
-          via legend text.
+        comment: Distinct hues with adequate contrast; no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Exact 2400x2400 canvas, nothing clipped, but title spans only ~30%
-          of width vs the ~50-70% guideline.
+        comment: Correct 2400x2400 canvas, nothing clipped, but the un-rendered subtitle
+          leaves an unexplained blank band between title and grid
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a waffle chart; title format matches convention.
+        comment: Title matches the mandated format; no axes needed for a waffle grid
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first, canonical Imprint order, correct theme backgrounds
-          in both renders.
+        comment: 'First series is #009E73, remaining series follow canonical Imprint
+          order, backgrounds match spec in both themes'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean gap/stroke treatment lifts it slightly above generic defaults,
-          but no distinctive design flourish.
+        comment: Clean grid + legend, but intended polish (subtitle callout, focal
+          outline) doesn't actually render, so what ships is closer to a plain default
+          grid
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines/decorations hidden, frameless legend, subtle uniform gaps.
+        comment: Gapped squares, hidden spines/decorations on the axis, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Descending fill order gives implicit ranking, but no explicit focal
-          emphasis or annotation.
+        comment: Code clearly intends a focal-point narrative (subtitle callout +
+          outlined largest category) but neither renders, so there is no visible hierarchy
+          beyond grid order
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +148,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct waffle/square-grid chart.
+        comment: Correct waffle/square-pie chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 10x10 grid, distinct colors, legend with percentages, whole-square
-          rounding all present.
+        comment: 10x10 grid, distinct colors per category, legend with percentages,
+          whole-square rounding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Percentages sum to 100 and map exactly to square counts.
+        comment: Each square = 1%, category-to-square counts match percentages exactly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai';
-          legend labels match category names + percentages.
+        comment: Title matches mandated format; legend labels match categories and
+          percentages
     data_quality:
       score: 15
       max: 15
@@ -163,21 +178,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Grid, distinct colors, legend, percentage labels all shown.
+        comment: Grid, legend, percentages, and 100-square total all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Household budget allocation is plausible and neutral.
+        comment: Household budget allocation across 5 categories — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages (32/22/18/16/12) are realistic and sum to 100.
+        comment: Percentages sum to exactly 100 with sensible individual values
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -185,58 +200,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat top-to-bottom script.
+        comment: No unnecessary functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is fully deterministic (no randomness), no seed needed.
+        comment: Fully deterministic hardcoded data, no randomness needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors imported, both used.
+        comment: Only CairoMakie and Colors, both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity for the task, no fake interactivity.
+        passed: false
+        comment: Contains two non-functional code paths (subtitle Label, focal poly!
+          stroke) that don't produce the intended visual output
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png; uses current Figure(size=...) API.
+        comment: Saves plot-$(THEME).png via current save() API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: DataAspect, hidespines!/hidedecorations!, poly! with per-cell colors,
-          layout-based Legend — all idiomatic Makie.
+        comment: Figure/GridLayout with Fixed() row sizing, Axis + DataAspect, Legend
+          with PolyElement handles — all idiomatic Makie
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Precise rowsize!/colsize!/Fixed layout control for exact canvas allocation
-          is a distinctive touch beyond basic usage.
+        comment: Hand-built Rect2 polygon grid via poly! is a genuinely Makie-specific
+          technique (no built-in waffle recipe), though the stroke/highlight feature
+          doesn't land
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - colors
+  dependencies: []
   techniques:
   - custom-legend
   - patches
   patterns:
-  - data-generation
   - matrix-construction
   dataprep: []
   styling:
