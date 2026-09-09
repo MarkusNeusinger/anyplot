@@ -38,7 +38,7 @@ fig = Figure(
 )
 
 main_ax = Axis(
-    fig[2, 1];
+    fig[3, 1];
     xlabel            = "Trunk Diameter (cm)",
     ylabel            = "Tree Height (m)",
     xlabelcolor       = INK,
@@ -63,29 +63,32 @@ main_ax = Axis(
 )
 
 top_ax = Axis(
-    fig[1, 1];
-    title           = title_str,
-    titlesize       = 20,
-    titlecolor      = INK,
+    fig[2, 1];
     backgroundcolor = PAGE_BG,
 )
 
 right_ax = Axis(
-    fig[2, 2];
+    fig[3, 2];
     backgroundcolor = PAGE_BG,
+)
+
+Label(
+    fig[1, 1:2], title_str;
+    fontsize = 20, color = INK, font = :bold,
 )
 
 linkxaxes!(main_ax, top_ax)
 linkyaxes!(main_ax, right_ax)
 
-rowsize!(fig.layout, 1, Relative(0.22))
+rowsize!(fig.layout, 1, Fixed(36))
+rowsize!(fig.layout, 2, Relative(0.22))
 colsize!(fig.layout, 2, Relative(0.22))
 rowgap!(fig.layout, 8)
 colgap!(fig.layout, 8)
 
 scatter!(
     main_ax, trunk_diameter_cm, tree_height_m;
-    color = (BRAND, 0.65), markersize = 10, strokewidth = 0,
+    color = (BRAND, 0.55), markersize = 8, strokewidth = 0,
 )
 
 hist!(top_ax, trunk_diameter_cm; bins = 30, color = (BRAND, 0.35), strokewidth = 0)
