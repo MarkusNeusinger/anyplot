@@ -1,7 +1,7 @@
 // anyplot.ai
 // waffle-basic: Basic Waffle Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-09
+// Quality: 90/100 | Created: 2026-09-09
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;

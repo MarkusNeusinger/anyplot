@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: waffle-basic
 created: '2026-09-09T22:05:36Z'
-updated: '2026-09-09T22:10:30Z'
+updated: '2026-09-09T22:18:44Z'
 generated_by: claude-sonnet
 workflow_run: 34409899156
 issue: 998
@@ -12,52 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waffle-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waffle-basic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
+  - 'Repair loop directly addressed the prior review: a custom squareRounded SVG symbol
+    replaces the plain scatter square, giving the grid a deliberate tile-like depth
+    in both themes'
+  - New point-level dataLabels stamp each department's percentage onto its leading
+    square using Highcharts' dataLabels API — a genuine Highcharts-specific touch
+    that also adds a redundant (non-hue) cue for colorblind readers
   - 'Correct Imprint palette use: first series is brand green #009E73, remaining 4
     departments follow canonical positions 2-5 (lavender, blue, ochre, matte red),
     identical across light and dark renders'
   - 'Theme chrome fully threaded through tokens: title/subtitle/legend text and page
     background are correct and readable in both #FAF8F1 and #1A1A17 renders, no dark-on-dark
     or light-on-light failures'
-  - Data sums exactly to 100 (34+22+18+15+11) and is rendered as a clean 10x10 grid
-    of 100 equal squares, matching the spec's core requirement
+  - Data sums exactly to 100 (34+22+18+15+11) and renders as a clean 10x10 grid of
+    100 equal squares, matching the spec's core requirement
   - Legend labels bake in category name and percentage ("Engineering — 34%") directly
-    into the series name, satisfying the spec's "legend identifying categories with
-    their percentages" requirement without extra chart junk
-  - Departments ordered largest-to-smallest, creating a clear reading hierarchy from
-    the top-left block down to the smallest at bottom-right
+    into the series name, and legend swatch radius now matches the rounded square
+    markers for visual consistency
   - Clean, deterministic, KISS-structured code with no fake interactivity and explicit
     font sizes for every text element
   weaknesses:
-  - 'DE-01/DE-02: The grid reads as flat, well-configured default styling — 100 solid-color
-    squares with a thin page-bg gap between them and no additional polish (no subtle
-    rounding, depth, or texture). Consider a small refinement like symbolRadius rounding
-    on the squares, a subtle inner highlight/shadow, or slightly refined spacing to
-    lift it above a generic scatter-as-waffle look.'
-  - 'LM-02: Using scatter markers with symbol:''square'' to fake a waffle grid is
-    a generic cross-library trick, not something distinctive to Highcharts. Consider
-    leveraging a Highcharts-specific strength — e.g. dataLabels rendering the percentage
-    inside each department''s first square, or a tooltip/point-level interaction that
-    showcases the library''s interactivity in the HTML output — to make the implementation
-    feel more idiomatically Highcharts.'
-  - Legend items currently only differentiate departments by hue; with 5 categories
-    sitting at the borderline of CVD distinguishability (ΔE_CVD ~13.7-10.7 per the
-    style guide), a redundant cue (e.g. small pattern or the percentage value directly
-    on the largest square of each block) would make the mapping more robust for colorblind
-    readers even though the legend text already labels each block.
+  - 'DE-01/DE-02: The rounded-square refinement and dataLabels are real but modest
+    improvements — the grid still reads mostly as well-configured default styling
+    rather than a fully bespoke, publication-grade composition. Consider a subtle
+    inner highlight/shadow on the squares or a touch more breathing room between blocks
+    for a more polished, less generic feel.'
+  - 'LM-02: The dataLabels touch is Highcharts-specific but still fairly restrained.
+    A tooltip or point-level interaction detail visible in the HTML output (called
+    out honestly in review notes, not required for the PNG) would showcase more of
+    the library''s distinctive strengths.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "waffle-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Annual budget allocation by department — each square = 1%" in softer grey, both clearly legible. Legend sits centered below the grid with 5 entries ("Engineering — 34%", "Marketing — 22%", "Operations — 18%", "Sales — 15%", "Support — 11%") in dark-grey text with small square swatches.
-      Data: A 10x10 grid of 100 equal square cells, filled contiguously in blocks by department in descending size order (34 green, 22 lavender, 18 blue, 15 ochre, 11 red). First series renders in brand green #009E73. Squares have a thin page-background gap between them giving a tile-mosaic look.
+      Chrome: Title "waffle-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Annual budget allocation by department — each square = 1%" in softer grey, both clearly legible. Legend sits centered below the grid with 5 entries ("Engineering — 34%", "Marketing — 22%", "Operations — 18%", "Sales — 15%", "Support — 11%") in dark-grey text with small rounded-square swatches matching the grid markers.
+      Data: A 10x10 grid of 100 equal, gently rounded square cells, filled contiguously in blocks by department in descending size order (34 green, 22 lavender, 18 blue, 15 ochre, 11 red). The leading square of each block now carries a white, dark-outlined percentage label ("34%", "22%", "18%", "15%", "11%") readable against every fill color. First series renders in brand green #009E73. Squares have a thin page-background gap between them giving a tile-mosaic look.
       Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Title and subtitle flip to light ink/grey and remain fully readable against the dark surface; legend text is light grey, swatches unchanged.
-      Data: Same 100-square grid in the same block layout and order; the five data colors (green, lavender, blue, ochre, red) are pixel-identical to the light render — only the surrounding chrome (background, text) flipped as expected.
+      Data: Same 100-square rounded grid in the same block layout, order, and percentage-label placement; the five data colors (green, lavender, blue, ochre, red) and the white outlined percentage labels are pixel-identical to the light render — only the surrounding chrome (background, text) flipped as expected.
       Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed in either render.
   criteria_checklist:
     visual_quality:
@@ -69,14 +66,15 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title/subtitle/legend all use explicit font sizes and are readable
-          in both themes with no overflow
+        comment: Title/subtitle/legend/dataLabels all use explicit font sizes and
+          are readable in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or square overlap in either render
+        comment: No text or square overlap in either render; new dataLabels sit cleanly
+          inside their squares
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -89,8 +87,9 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Contiguous color blocks plus text-labeled legend keep categories
-          identifiable even at borderline n=5 CVD distance
+        comment: Percentage dataLabels on lead squares now give a redundant non-hue
+          cue on top of the text-labeled legend, addressing the borderline n=5 CVD-distance
+          concern
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -113,23 +112,24 @@ review:
         comment: 'First series is #009E73, remaining series follow canonical Imprint
           order, backgrounds and chrome are theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured but flat default look — solid squares with no additional
-          polish
+        comment: Custom squareRounded SVG symbol and lead-square dataLabels are a
+          real, deliberate refinement over the prior flat scatter-square look, but
+          still short of full publication-grade polish
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Axes/spines removed out of necessity for the scatter-as-waffle trick
-          rather than deliberate refinement; minimal customization beyond that
+        comment: Rounded squares plus matching rounded legend swatches show intentional
+          refinement; still modest overall — no additional depth/shadow treatment
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -218,7 +218,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or over-engineering
+        comment: Appropriately simple, no fake UI or over-engineering; new dataLabels/symbol
+          additions are small and purposeful
       - id: CQ-05
         name: Output & API
         score: 1
@@ -227,7 +228,7 @@ review:
         comment: Correct mount-node contract, animation disabled, current Highcharts
           API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -235,24 +236,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct, idiomatic use of Highcharts.chart with a scatter series
-          and square markers — the standard technique given no native waffle series
-          in the core bundle
+        comment: Correct, idiomatic use of Highcharts.chart with a scatter series,
+          custom SVG symbol, and dataLabels
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Scatter-as-squares is a generic technique portable to any library;
-          no Highcharts-specific feature (e.g. dataLabels, point-level interaction)
-          is leveraged
-  verdict: REJECTED
+        comment: Point-level dataLabels stamping percentages is a genuine Highcharts-specific
+          feature now leveraged, though a more ambitious interactive touch in the
+          HTML output would push this further
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting
