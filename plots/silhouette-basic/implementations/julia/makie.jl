@@ -65,6 +65,7 @@ bar_values = Float64[]
 bar_colors = RGB[]
 cluster_center_y = Float64[]
 cluster_avg_silhouette = Float64[]
+cluster_max_silhouette = Float64[]
 
 y_cursor = cluster_gap
 for c in 0:(n_clusters - 1)
@@ -79,9 +80,12 @@ for c in 0:(n_clusters - 1)
 
     push!(cluster_center_y, y_cursor + size_c / 2 - 0.5)
     push!(cluster_avg_silhouette, mean(sorted_vals))
+    push!(cluster_max_silhouette, maximum(sorted_vals))
 
     y_cursor += size_c + cluster_gap
 end
+
+x_upper = maximum(cluster_max_silhouette) + 0.18
 
 # --- Plot ---------------------------------------------------------------------
 fig = Figure(
@@ -123,7 +127,7 @@ barplot!(ax, y_positions, bar_values;
 vlines!(ax, [avg_silhouette]; color = INK_SOFT, linestyle = :dash, linewidth = 2)
 
 for c in 0:(n_clusters - 1)
-    text!(ax, 1.05, cluster_center_y[c + 1];
+    text!(ax, cluster_max_silhouette[c + 1] + 0.03, cluster_center_y[c + 1];
         text = "avg = $(round(cluster_avg_silhouette[c + 1], digits = 2))",
         align = (:left, :center),
         color = INK,
@@ -131,7 +135,7 @@ for c in 0:(n_clusters - 1)
     )
 end
 
-xlims!(ax, min(-0.15, minimum(bar_values) - 0.05), 1.3)
+xlims!(ax, min(-0.15, minimum(bar_values) - 0.05), x_upper)
 ylims!(ax, 0, y_cursor)
 
 # --- Save -------------------------------------------------------------------
