@@ -62,7 +62,10 @@ const segmentData = segments.map((segment) => {
 
 const overallAvg = allScores.reduce((sum, v) => sum + v, 0) / allScores.length;
 const totalSamples = segmentData.reduce((sum, s) => sum + s.count, 0);
-const categories = Array.from({ length: totalSamples }, (_, i) => `customer-${i}`);
+const categories = Array.from(
+  { length: totalSamples },
+  (_, i) => `customer-${i}`,
+);
 
 // One series per segment, stacked on the same axis positions — each series
 // only has a non-null value at the index range that belongs to it, so every
@@ -97,16 +100,38 @@ export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
   const CHART_TOP = 64;
+  const theme = window.ANYPLOT_THEME;
 
   const title = "silhouette-basic · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
+  const titleSize =
+    title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
+
+  // Light theme puts lavender/ochre annotation text directly on the cream
+  // background, below WCAG 3:1 contrast for those two hues. A thin ink-color
+  // halo (paintOrder "stroke" draws the stroke behind the fill) keeps the
+  // segment-colored fill intact while restoring crisp edges. Dark theme
+  // already reads cleanly (light hues on near-black), so skip it there.
+  const labelHalo =
+    theme === "light"
+      ? { stroke: t.ink, strokeWidth: 3, paintOrder: "stroke" as const }
+      : {};
 
   return (
     <Box sx={{ position: "relative", width: W, height: H, bgcolor: t.pageBg }}>
       <Box sx={{ position: "absolute", top: 20, left: 56, right: 56 }}>
-        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500 }}>{title}</Typography>
+        <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 500 }}>
+          {title}
+        </Typography>
       </Box>
-      <Box sx={{ position: "absolute", top: CHART_TOP, left: 0, right: 0, bottom: 0 }}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: CHART_TOP,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }}
+      >
         <BarChart
           width={W}
           height={H - CHART_TOP}
@@ -120,7 +145,7 @@ export default function Chart() {
               data: categories,
               label: "Customers (by segment)",
               labelStyle: { fontSize: 16, fill: t.ink },
-              categoryGapRatio: 0.1,
+              categoryGapRatio: 0.04,
               disableTicks: true,
               disableLine: true,
               tickLabelInterval: () => false,
@@ -137,14 +162,23 @@ export default function Chart() {
             },
           ]}
           grid={{ vertical: true }}
-          slotProps={{ legend: { labelStyle: { fontSize: 14 } } }}
+          slotProps={{
+            legend: {
+              labelStyle: { fontSize: 14, fontWeight: 500 },
+              itemGap: 20,
+            },
+          }}
         >
           <ChartsReferenceLine
             x={overallAvg}
             label={`Overall avg ${overallAvg.toFixed(2)}`}
             labelAlign="end"
             labelStyle={{ fontSize: 15, fill: t.ink, fontWeight: 600 }}
-            lineStyle={{ stroke: t.ink, strokeDasharray: "6 4", strokeWidth: 2 }}
+            lineStyle={{
+              stroke: t.ink,
+              strokeDasharray: "6 4",
+              strokeWidth: 2,
+            }}
           />
           {segmentData.map((segment, i) => (
             <ChartsReferenceLine
@@ -152,8 +186,17 @@ export default function Chart() {
               y={segmentMidpoints[i]}
               label={`${segment.name} · avg ${segment.avgScore.toFixed(2)}`}
               labelAlign="start"
-              labelStyle={{ fontSize: 14, fill: segmentColors[i], fontWeight: 600 }}
-              lineStyle={{ stroke: t.grid, strokeDasharray: "3 5", strokeWidth: 1 }}
+              labelStyle={{
+                fontSize: 14,
+                fill: segmentColors[i],
+                fontWeight: 600,
+                ...labelHalo,
+              }}
+              lineStyle={{
+                stroke: t.grid,
+                strokeDasharray: "3 5",
+                strokeWidth: 1,
+              }}
             />
           ))}
         </BarChart>
