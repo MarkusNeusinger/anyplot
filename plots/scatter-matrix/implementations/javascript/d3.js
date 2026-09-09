@@ -84,35 +84,54 @@ for (let r = 0; r < n; r++) {
       .attr("height", cell)
       .attr("fill", "none")
       .attr("stroke", t.grid)
-      .attr("stroke-width", 1);
+      .attr("stroke-width", 1)
+      .attr("stroke-opacity", 0.35);
 
     if (r === c) {
-      const values = data.map((d) => d[variables[c].key]);
-      const bins = d3.bin().domain(colScales[c].domain()).thresholds(10)(values);
+      // Stacked per-species histogram: shared bin boundaries across species so
+      // the diagonal carries the same categorical story as the off-diagonal scatters.
+      const domain = colScales[c].domain();
+      const overallBins = d3.bin().domain(domain).thresholds(10)(data.map((d) => d[variables[c].key]));
+      const thresholds = overallBins.slice(1).map((b) => b.x0);
+      const perSpeciesBins = species.map((sp) => {
+        const values = data.filter((d) => d.species === sp.name).map((d) => d[variables[c].key]);
+        return d3.bin().domain(domain).thresholds(thresholds)(values);
+      });
+      const segments = [];
+      overallBins.forEach((b, i) => {
+        let cum = 0;
+        species.forEach((sp, si) => {
+          const count = perSpeciesBins[si][i].length;
+          if (count > 0) {
+            segments.push({ x0: b.x0, x1: b.x1, y0: cum, y1: cum + count, name: sp.name });
+          }
+          cum += count;
+        });
+      });
       const yCount = d3
         .scaleLinear()
-        .domain([0, d3.max(bins, (b) => b.length)])
+        .domain([0, d3.max(segments, (s) => s.y1) || 1])
         .nice()
         .range([cell - inset, inset]);
       g.selectAll("rect.bar")
-        .data(bins)
+        .data(segments)
         .join("rect")
         .attr("class", "bar")
-        .attr("x", (b) => colScales[c](b.x0) + 1)
-        .attr("y", (b) => yCount(b.length))
-        .attr("width", (b) => Math.max(colScales[c](b.x1) - colScales[c](b.x0) - 2, 0))
-        .attr("height", (b) => yCount(0) - yCount(b.length))
-        .attr("fill", t.inkSoft)
-        .attr("fill-opacity", 0.55);
+        .attr("x", (s) => colScales[c](s.x0) + 1)
+        .attr("y", (s) => yCount(s.y1))
+        .attr("width", (s) => Math.max(colScales[c](s.x1) - colScales[c](s.x0) - 2, 0))
+        .attr("height", (s) => yCount(s.y0) - yCount(s.y1))
+        .attr("fill", (s) => color(s.name))
+        .attr("fill-opacity", 0.75);
     } else {
       g.selectAll("circle")
         .data(data)
         .join("circle")
         .attr("cx", (d) => colScales[c](d[variables[c].key]))
         .attr("cy", (d) => rowScales[r](d[variables[r].key]))
-        .attr("r", 2.6)
+        .attr("r", 2.3)
         .attr("fill", (d) => color(d.species))
-        .attr("fill-opacity", 0.6);
+        .attr("fill-opacity", 0.55);
     }
 
     if (r === n - 1) {
@@ -135,6 +154,17 @@ for (let r = 0; r < n; r++) {
     }
   }
 }
+
+// --- Outer boundary: single crisp frame around the whole matrix ------------
+svg
+  .append("rect")
+  .attr("x", offsetX)
+  .attr("y", offsetY)
+  .attr("width", cell * n)
+  .attr("height", cell * n)
+  .attr("fill", "none")
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1.5);
 
 // --- Edge labels: variable names along the bottom row and left column ------
 variables.forEach((v, c) => {
