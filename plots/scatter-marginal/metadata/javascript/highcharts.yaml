@@ -1,0 +1,244 @@
+library: highcharts
+language: javascript
+specification_id: scatter-marginal
+created: '2026-09-09T06:53:01Z'
+updated: '2026-09-09T07:07:29Z'
+generated_by: claude-sonnet
+workflow_run: 34320523898
+issue: 2005
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Genuinely elegant seaborn-jointplot-style composition built from three independently-instantiated
+    Highcharts charts, with pixel-perfect axis alignment achieved via carefully matched
+    marginLeft/marginRight/marginTop/marginBottom values.
+  - KDE overlay computed from scratch (Silverman bandwidth) and scaled to align visually
+    with the histogram bar heights — a thoughtful touch beyond the spec's minimum
+    bar.
+  - Restrained, theme-correct monochrome palette that keeps the marginal panels subordinate
+    to the main scatter, exactly matching the spec's design guidance.
+  - Realistic, well-scaled agricultural dataset with genuine noise/outliers rather
+    than an artificially clean synthetic distribution.
+  weaknesses:
+  - 'Duplicate/conflicting header comment block: lines 1-5 of the file are immediately
+    followed by a second, different header block at lines 6-10 with self-contradictory
+    metadata (Quality: 85/100 vs Quality: pending, differing Library: line, added
+    License: line). Remove the stale first block and keep a single header with the
+    //# anyplot-orientation: square directive as the very first line.'
+  - Scatter alpha (0.6) is at the top of the spec's recommended 0.6-0.7 range but
+    slightly above the general 300+ point / alpha<0.5 density heuristic — consider
+    ~0.5 for clearer density reading in the densest cluster region.
+  - The blank top-right corner where the top and right marginal panels don't meet
+    is inherent to this layout style but could be tightened slightly for marginally
+    better canvas utilization.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-marginal · javascript · highcharts · anyplot.ai" is dark, bold, centered above the composite. Axis titles ("Annual Rainfall (mm)", "Crop Yield (tons/hectare)") and tick labels are dark/soft-ink, all clearly readable. Subtle horizontal gridlines on scatter and histogram panels.
+      Data: Scatter points are brand green (#009E73) at ~0.6 alpha; marginal histograms use a subtle pale-green fill with a solid-green KDE spline overlay. First series confirmed #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels have flipped to light/soft tones and remain clearly legible against the dark background. No dark-on-dark failures — every text element is visibly light-colored.
+      Data: Scatter, histogram fill, and KDE line colors are identical to the light render (confirmed pixel-equivalent hues) — only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set, readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker radius well chosen; alpha 0.6 slightly above the 300+ point
+          density heuristic
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochrome scheme with marker stroke, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Main scatter fills ~53% of canvas, balanced margins, empty corner
+          is layout-inherent
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles carry units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes, theme-correct backgrounds/chrome'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Restrained monochrome palette, careful pixel-aligned composition,
+          above configured-default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, aligned margins; blank corner keeps
+          it from perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Intentional hierarchy — main scatter as bright focal point, subdued
+          marginals
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-with-marginals, lower-left main + top/right marginals
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Histograms AND KDE overlaid, subtle marginal colors, alpha 0.6 matches
+          spec, aligned axes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Rainfall on x, yield on y, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no legend needed for effectively single-series
+          panels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Realistic noise, visible outliers, non-perfectly-smooth histogram
+          shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Rainfall vs. crop yield — real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible rainfall/yield ranges, correct correlation direction
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Flat script but with justified helper functions (histogram, KDE,
+          LCG)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Duplicated/conflicting header comment block
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, credits disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct chart types, idiomatic per-chart options, well-executed multi-instance
+          workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative synchronized multi-panel grid technique, though a general
+          workaround rather than a built-in feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
