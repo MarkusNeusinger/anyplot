@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-marginal: Scatter Plot with Marginal Distributions
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-09
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-09-09
 
 //# anyplot-orientation: square
 
