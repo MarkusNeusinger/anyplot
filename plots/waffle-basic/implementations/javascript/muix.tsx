@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 86/100 | Created: 2026-09-09
 //# anyplot-orientation: square
-// anyplot.ai
-// waffle-basic: Basic Waffle Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-09
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
@@ -88,25 +83,28 @@ export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
 
-  // Reserve space for the title (top) and the legend (right), then size the
-  // waffle grid to the largest square that fits the remaining area so every
-  // one of the 100 cells is a true square.
-  const TITLE_SPACE = 80;
+  // Reserve width for the legend (right), then size the waffle grid to the
+  // largest square that fits — width is the binding constraint since the
+  // legend column eats more width than the title eats height — so every one
+  // of the 100 cells is a true square.
+  const TITLE_SPACE = 80; // minimum clearance the grid must leave below the title
   const PAD = 28;
   const LEGEND_WIDTH = 320;
 
   const availW = W - PAD * 2 - LEGEND_WIDTH;
-  const availH = H - TITLE_SPACE - PAD * 2;
+  const availH = H - PAD * 2;
   const grid = Math.min(availW, availH);
 
-  // Top-align the grid right below the title (instead of centering it in the
-  // full available height) so the composition doesn't carry a dead gap above
-  // the squares purely because the width, not the height, is the constraint.
+  // Center the grid+legend block vertically in the full canvas (instead of
+  // top-aligning it against the title) so leftover height doesn't collect as
+  // dead space below. Clamp so the grid never rises above the title's
+  // reserved band.
+  const vPad = Math.max(TITLE_SPACE, (H - grid) / 2);
   const margin = {
     left: PAD + (availW - grid) / 2,
     right: W - PAD - (availW - grid) / 2 - grid,
-    top: TITLE_SPACE + PAD,
-    bottom: H - TITLE_SPACE - PAD - grid,
+    top: vPad,
+    bottom: H - vPad - grid,
   };
   const gridCenterY = margin.top + grid / 2;
 
@@ -145,8 +143,8 @@ export default function Chart() {
         markGap={14}
         itemGap={22}
         // "middle" centers within [padding.top, H - padding.bottom] — bias the
-        // padding so that band's midpoint lands on the grid's vertical center
-        // instead of the full canvas center (which sits above the top-aligned grid).
+        // padding so that band's midpoint lands on the grid's true vertical
+        // center (which sits below the title, not the full canvas center).
         padding={{ top: 0, right: 24, bottom: Math.max(0, H - 2 * gridCenterY), left: 0 }}
         labelStyle={{ fontSize: 20, fill: t.ink, fontFamily: FONT }}
       />
