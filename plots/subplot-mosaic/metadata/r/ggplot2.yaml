@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: subplot-mosaic
 created: '2026-09-09T19:43:41Z'
-updated: '2026-09-09T20:17:40Z'
+updated: '2026-09-09T20:27:48Z'
 generated_by: claude-sonnet
 workflow_run: 34396290808
 issue: 3002
@@ -12,75 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 66
+quality_score: 88
 review:
   strengths:
-  - Mosaic layout matrix (1 wide top panel, 2 medium middle panels, 3 small bottom
-    panels) directly mirrors the spec's own "AAA;BBC;DEF" example, giving a clear,
-    deliberate visual hierarchy
-  - 'Theme-adaptive chrome is correct and consistent: backgrounds, ink colors, and
-    grid lines flip correctly between light and dark while all data colors stay identical'
-  - Good diversity of plot types across the six cells (area+line, bar, bubble scatter,
-    three line trends), satisfying the spec's "each cell can contain a different plot
-    type" note
-  - Realistic, neutral website-analytics dataset with plausible value ranges (page
-    views, device split, session/bounce/conversion metrics)
-  - 'Mandated title format is exactly correct: "subplot-mosaic · r · ggplot2 · anyplot.ai",
-    rendered with no clipping at the canvas edge in either theme'
+  - Patchwork design-string mosaic ("AAA\nBBC\nDEF") directly matches the spec's ASCII-art
+    layout requirement, with genuine cell spanning and asymmetric panel sizes
+  - Consistent single-hue Imprint green across all six panels reads as a coherent
+    analytics dashboard rather than six unrelated charts, and data colors are pixel-identical
+    between light and dark renders
+  - 'Good plot-type variety across cells: area+line trend, labeled bar chart, size-encoded
+    bubble scatter, and three small-multiple trend lines'
+  - Peak annotation ("2.8%") on the conversion-rate panel and the bubble-size legend
+    add a second data dimension and a clear focal point without any fake-interactivity
+    tricks
+  - Realistic, internally consistent web-analytics dataset (page views, device split,
+    bounce/session/conversion trends) with plausible relative magnitudes
+  - Explicit font sizing throughout (per-panel theme overrides) and clean KISS-ish
+    structure with set.seed(42) for reproducibility
   weaknesses:
-  - 'The attempt-2 fix (adding coord_cartesian(clip = "off") to panels B/C/F and widening
-    scale_y_continuous(expand=...)) did NOT resolve anything: pixel-level inspection
-    of the newly rendered plot-light.png/plot-dark.png shows the exact same three
-    defects flagged in the previous review, byte-for-byte unchanged in appearance.
-    Root-cause correction for the repair loop: coord_cartesian(clip = "off") only
-    disables clipping to a panel''s own plot area within that single ggplot''s own
-    gtable; once panels are combined with gridExtra::arrangeGrob(), each subplot is
-    still confined to its allotted grid-layout cell, so any geom or label that overflows
-    the panel is still cut at the cell boundary regardless of clip="off". Fix by keeping
-    all drawn content strictly inside each panel''s own coordinate range (e.g. explicit
-    ylim()/coord_cartesian(ylim=...) sized to include label/marker extents) instead
-    of relying on off-panel overflow, or switch the composition mechanism to patchwork::plot_layout(design
-    = "AAA\nBBC\nDEF") which composites full plot grobs (including legends and any
-    intentional overflow) correctly and even matches the spec''s own ASCII-art layout-string
-    syntax more directly than a numeric layout_matrix.'
-  - 'Panel C ("Page engagement"): the "Pageviews" size legend (scale_size_area(name
-    = "Pageviews", ...), legend.position = "right") never appears anywhere on the
-    canvas in either theme — confirmed by scanning the full right edge of both renders.
-    Without it, the size-encoded z-variable (the spec''s optional "z (numeric) - tertiary
-    variable for color or size encoding") is completely undecodable to a viewer. This
-    is a gridExtra::arrangeGrob() limitation: it does not preserve per-panel legends
-    when arranging raw ggplot objects (unlike patchwork, which collects/keeps legends
-    automatically).'
-  - 'Panel B ("Traffic by device"): the geom_text(aes(label = scales::comma(visits)),
-    vjust = -0.4, ...) value labels above the three bars are completely invisible
-    in both renders — verified with a zoomed crop showing only blank space between
-    the bar tops and the panel title, with no "12,500 / 8,700 / 2,100" text anywhere.'
-  - 'Panel C: the two leftmost bubbles (~46-47% bounce, the "Product" and "Pricing"
-    pages) are visibly clipped at the top edge of the panel in both themes, rendering
-    as flat-topped semicircles instead of full circles — part of the encoded data
-    is literally missing from the image.'
-  - 'Panel F ("Conversion rate"): the enlarged peak point''s sprintf("%.1f%%", value)
-    callout label never renders in either theme, so the intended "highlight the peak"
-    storytelling device has no visible effect.'
-  - 'CQ-04 docked to 0: across two consecutive fix attempts, the geom_text()/legend
-    code for panels B, C, and F produces zero visible effect in the actual saved PNGs
-    — functionally dead code that looks purposeful in the source but does nothing
-    in the shipped artifact.'
+  - Bubble-legend text in the "Page engagement" panel is set at ~6pt, and the small-multiple
+    panel titles at ~8.5pt — both are readable at native 3200x1800 but will be the
+    first elements to blur out once the PNG is scaled down to a ~400px mobile thumbnail;
+    consider nudging legend text up to ~7-7.5pt
+  - '"Daily page views" panel (top row) has generous unused vertical headroom above
+    the area fill relative to its cell height, and the bubble-chart legend sits with
+    a visible gap from the data rather than tight against it — minor layout balance
+    deduction, not a hard overflow'
+  - peak_label() introduces a tiny helper function; strict KISS (no functions/classes)
+    would inline the which.max lookup directly since it's used only once
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white, not dark.
-      Chrome: Bold dark title "subplot-mosaic · r · ggplot2 · anyplot.ai" fully visible with no edge clipping; dark ink axis titles/tick labels on all six panels, all clearly readable against the light background; subtle horizontal (and light vertical, in Panel C) gridlines.
-      Data: All series use brand green #009E73 (area fill, line, bars, bubbles) — Panel A: area+line chart of daily page views; Panel B: bar chart of visits by device (Desktop/Mobile/Tablet); Panel C: bubble scatter of avg session vs. bounce rate, sized by pageviews; Panels D/E/F: small line-trend charts (bounce rate, avg session, conversion rate).
-      Legibility verdict: PASS for all chrome text that is actually rendered. FAIL for three content defects verified by zoomed crops: (1) the two leftmost bubbles in Panel C are clipped at the top of the panel (flat-topped semicircles, not full circles); (2) the "Pageviews" size legend for Panel C is entirely absent from the canvas; (3) the geom_text value labels above the Panel B bars and the peak-percentage callout on Panel F never render at all.
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Title "subplot-mosaic · r · ggplot2 · anyplot.ai" bold black top-left, fully visible with no top-edge clipping. Six panel titles ("Daily page views", "Traffic by device", "Page engagement", "Bounce rate (%)", "Avg session (s)", "Conversion rate (%)") all dark ink, clearly legible. Axis tick labels dark gray, readable. Grid lines subtle horizontal-only major lines.
+      Data: All series render in Imprint green (#009E73) with alpha-blended fills/points; bar labels ("12,500", "8,700", "2,100") in dark ink; bubble-size legend ("Pageviews": 2,000/5,000/9,000) fully inside the canvas, not clipped; "2.8%" peak annotation in bold dark text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black, not light.
-      Chrome: Title and all axis/tick text switch to light ink and remain clearly readable; no dark-on-dark failures observed.
-      Data: Colors identical to the light render (brand green #009E73 throughout); only chrome (background, text, grid) inverted, as expected.
-      Legibility verdict: PASS for chrome text. FAIL for the same three content defects as the light render — Panel C bubble clipping, the missing Panel C legend, and the missing Panel B/F text labels reproduce identically in dark mode, confirming the root cause is a compositing/clipping bug independent of theme.
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Same title and panel titles now in light/white text, clearly legible against the dark background — no dark-on-dark failures observed. Axis tick labels light gray, readable. Grid lines subtle.
+      Data: Data colors identical to light render (#009E73 green, area fill alpha unchanged) — only chrome flipped as required. Bar value labels and the "2.8%" annotation now render in light ink, correctly readable against dark fill/background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -88,191 +62,180 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All chrome text that renders is legible in both themes; docked because
-          Panel B/F annotation labels never render at all
+        comment: All sizes explicit and readable at full res; legend text (~6pt) and
+          small-panel titles (~8.5pt) are the first to risk blur at mobile thumbnail
+          scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between rendered text/data elements
+        comment: No overlapping text or data across any of the six panels in either
+          theme
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Two Panel C bubbles are half-invisible (top-clipped); size encoding
-          is undecodable with no legend
+        passed: true
+        comment: Markers/lines/bars sized appropriately for each panel's data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue green, adequate contrast, no red-green reliance
+        comment: Single-hue monochromatic scheme, no red-green reliance, good contrast
+          in both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 3
         max: 4
-        passed: false
-        comment: Panel C bubble markers literally cut off by the internal panel boundary
-          in both themes; legend area missing entirely
+        passed: true
+        comment: Mosaic fills canvas well; minor unused headroom in the top panel
+          and a small gap between the bubble legend and its data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive, unit-bearing labels throughout
+        comment: Descriptive labels with units (Bounce %, Avg session (s), Conversion
+          rate (%))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/only series is #009E73; backgrounds correct in both themes'
+        comment: 'First/only series is #009E73 in both renders, identical data color,
+          correct theme-adaptive chrome and backgrounds'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: true
-        comment: Deliberate mosaic hierarchy, but broken elements undercut overall
-          polish
+        comment: Cohesive monochromatic dashboard aesthetic across six distinct panel
+          types, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        passed: true
-        comment: theme_minimal, no spines, subtle gridlines, generous margins
+        comment: Spines removed via theme_minimal, subtle horizontal-only grid, generous
+          margins, no legend clutter on most panels
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Both intended storytelling devices (bar value labels, peak-highlight
-          callout) fail to render, and the size-legend that explains Panel C is missing
-          entirely
+        comment: Panel-size hierarchy (large overview, medium detail, small metric
+          trio) plus peak annotation and bubble-size encoding guide the viewer to
+          the key insight
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Mosaic layout directly matches spec's AAA;BBC;DEF example
+        comment: patchwork design-string mosaic matches spec's ASCII-art layout requirement
+          exactly
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Varying sizes/asymmetric layout present, but the z-variable size
-          encoding in Panel C is undecodable without its legend, and labels never
-          render
+        comment: Varying sizes, asymmetric arrangement, mixed plot types (line/area,
+          bar, scatter/bubble) all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: x/y correctly mapped in every panel
+        comment: X/Y correctly assigned in every panel, full data range visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title matches mandated format, but the Panel C size legend is completely
-          absent from the canvas in both themes
+        comment: Title format exactly matches mandated pattern; legend labels (Pageviews,
+          device names) match data
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Broad range of mosaic-relevant chart types, but the size-encoding
-          feature is not functionally realized
+        comment: Good variety of trend shapes and magnitudes across panels; device/page
+          breakdowns show real spread
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral website-analytics dashboard
+        comment: Neutral, plausible web-analytics dashboard scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: All values at realistic magnitudes
+        comment: Page views, device split, bounce/session/conversion values all realistic
+          and internally consistent
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Mostly flat script; one small peak_label() helper
+        comment: Mostly flat imports->data->plot->save, but includes a small peak_label()
+          helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
         comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: ggplot2, gridExtra, grid, ragg all used
+        comment: ggplot2, patchwork, ragg all used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: geom_text() layers on Panels B/F and the Panel C legend never manifest
-          in either rendered PNG across two consecutive fix attempts
+        comment: Appropriate complexity for a 6-panel dashboard, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dimensions
+        comment: ggsave with ragg::agg_png device, plot-{theme}.png naming
     library_mastery:
-      score: 2
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: gridExtra::arrangeGrob() drops per-panel legends and re-clips clip="off"
-          overflow at each grid cell boundary; patchwork::plot_layout(design=...)
-          would avoid both bugs and matches the spec's own ASCII-art layout syntax
+        comment: Idiomatic ggplot2 geoms combined with patchwork composition, the
+          standard R approach to mosaic layouts
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: The one genuinely distinctive feature attempted (scale_size_area
-          bubble encoding with a legend) does not actually work in the shipped output
-  verdict: REJECTED
+        comment: patchwork's design-string cell-spanning API is distinctive to the
+          R ecosystem and directly implements the spec's mosaic-string concept
+  verdict: APPROVED
 impl_tags:
   dependencies:
-  - gridextra
+  - patchwork
   techniques:
   - subplots
   - annotations
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
-  - minimal-chrome
   - alpha-blending
+  - grid-styling
+  - minimal-chrome
