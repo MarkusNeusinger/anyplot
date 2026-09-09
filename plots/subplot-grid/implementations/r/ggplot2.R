@@ -44,15 +44,24 @@ station <- tibble::tibble(
 
 weekly_precip <- station %>%
   group_by(week) %>%
-  summarise(total_precip_mm = sum(precip_mm), .groups = "drop")
+  summarise(total_precip_mm = sum(precip_mm), week_start = min(date), .groups = "drop")
+
+# Shared x-axis range (date) for the top row: temperature and rainfall come
+# from the same 12-week station log, so aligning them on one time axis lets
+# the two panels be compared directly -- the spec's "shared axes" mode,
+# alongside the independent y-scales used by every other panel. Padded by
+# half the rainfall bar width so the first/last bars aren't clipped by the
+# shared limits.
+date_range <- range(station$date) + c(-2.5, 2.5)
 
 # --- Title ---------------------------------------------------------------
 title_text <- "subplot-grid · r · ggplot2 · anyplot.ai"
 title_fontsize <- if (nchar(title_text) > 67) round(12 * 67 / nchar(title_text)) else 12
 title_fontsize <- max(title_fontsize, 8)
+FONT_FAMILY <- "sans"
 
 # --- Shared chrome ---------------------------------------------------------
-anyplot_theme <- theme_minimal(base_size = 7) +
+anyplot_theme <- theme_minimal(base_size = 7, base_family = FONT_FAMILY) +
   theme(
     plot.background     = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background    = element_rect(fill = PAGE_BG, color = NA),
@@ -64,20 +73,23 @@ anyplot_theme <- theme_minimal(base_size = 7) +
     axis.title          = element_text(color = INK, size = 9),
     axis.text           = element_text(color = INK_SOFT, size = 7),
     plot.title          = element_text(color = INK, size = 10, face = "plain"),
-    plot.margin         = margin(t = 8, r = 12, b = 6, l = 8)
+    plot.margin         = margin(t = 14, r = 16, b = 10, l = 12)
   )
 
-# --- Panel 1: daily temperature (line) -------------------------------------
+# --- Panel 1: daily temperature (line) -- shared date axis with panel 2 ----
 p_temp <- ggplot(station, aes(x = date, y = temp_c)) +
   geom_line(color = IMPRINT_PALETTE[1], linewidth = 1.0) +
+  scale_x_date(limits = date_range, date_labels = "%b") +
   labs(title = "Daily Temperature", x = "Date", y = "Temp (°C)") +
   anyplot_theme
 
-# --- Panel 2: weekly rainfall (bar) — blue for the water association ------
-p_precip <- ggplot(weekly_precip, aes(x = week, y = total_precip_mm)) +
-  geom_col(fill = IMPRINT_PALETTE[3], width = 0.7) +
-  scale_x_continuous(breaks = seq(2, 12, by = 2)) +
-  labs(title = "Weekly Rainfall", x = "Week", y = "Rain (mm)") +
+# --- Panel 2: weekly rainfall (bar) -- shared date axis with panel 1 ------
+# blue for the water association; x uses the same date range/scale as panel 1
+# so the two time series line up for direct visual comparison.
+p_precip <- ggplot(weekly_precip, aes(x = week_start, y = total_precip_mm)) +
+  geom_col(fill = IMPRINT_PALETTE[3], width = 5) +
+  scale_x_date(limits = date_range, date_labels = "%b") +
+  labs(title = "Weekly Rainfall", x = "Date", y = "Rain (mm)") +
   anyplot_theme
 
 # --- Panel 3: humidity distribution (histogram) -----------------------------
@@ -98,7 +110,11 @@ p_scatter <- ggplot(station, aes(x = temp_c, y = humidity_pct)) +
 combined <- arrangeGrob(
   p_temp, p_precip, p_humidity, p_scatter,
   ncol = 2, nrow = 2,
-  top = grid::textGrob(title_text, gp = grid::gpar(col = INK, fontsize = title_fontsize))
+  top = grid::textGrob(
+    title_text,
+    gp = grid::gpar(col = INK, fontsize = title_fontsize, fontfamily = FONT_FAMILY)
+  ),
+  padding = grid::unit(10, "pt")
 )
 
 # --- Save --------------------------------------------------------------------
