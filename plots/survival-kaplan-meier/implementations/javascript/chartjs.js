@@ -1,7 +1,7 @@
 // anyplot.ai
 // survival-kaplan-meier: Kaplan-Meier Survival Plot
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-09
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 
