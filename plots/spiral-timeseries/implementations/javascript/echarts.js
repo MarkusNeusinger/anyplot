@@ -7,8 +7,9 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// Daily solar-farm energy output over 3 years. Each full spiral revolution is
-// one year, so the same calendar day in different years lines up radially.
+// Daily rooftop solar-panel energy output over 3 years. Each full spiral
+// revolution is one year, so the same calendar day in different years lines
+// up radially.
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const cyclesCount = 3;
 const daysPerCycle = 365;
@@ -43,6 +44,44 @@ const outputValues = spiralData.map((d) => d[2]);
 const valueMin = Math.min(...outputValues);
 const valueMax = Math.max(...outputValues);
 
+// ECharts' visualMap does not recolor a polar-coordinate line series (it only
+// drives itemStyle on symbols/points, which are hidden here). To make the
+// color-encodes-value requirement actually render, split the spiral into one
+// tiny line segment per consecutive pair of points and color each segment
+// explicitly by interpolating the Imprint sequential gradient (t.seq).
+const seqStart = hexToRgb(t.seq[0]);
+const seqEnd = hexToRgb(t.seq[1]);
+function hexToRgb(hex) {
+  const clean = hex.replace("#", "");
+  return [parseInt(clean.slice(0, 2), 16), parseInt(clean.slice(2, 4), 16), parseInt(clean.slice(4, 6), 16)];
+}
+function lerpColor(a, b, ratio) {
+  const r = Math.round(a[0] + (b[0] - a[0]) * ratio);
+  const g = Math.round(a[1] + (b[1] - a[1]) * ratio);
+  const bl = Math.round(a[2] + (b[2] - a[2]) * ratio);
+  return `rgb(${r}, ${g}, ${bl})`;
+}
+
+const spiralSegments = [];
+for (let i = 0; i < spiralData.length - 1; i += 1) {
+  const [r1, a1, v1] = spiralData[i];
+  const [r2, a2, v2] = spiralData[i + 1];
+  const ratio = ((v1 + v2) / 2 - valueMin) / (valueMax - valueMin);
+  spiralSegments.push({
+    type: "line",
+    coordinateSystem: "polar",
+    data: [
+      [r1, a1],
+      [r2, a2],
+    ],
+    encode: { radius: 0, angle: 1 },
+    showSymbol: false,
+    smooth: false,
+    silent: true,
+    lineStyle: { width: 3.5, color: lerpColor(seqStart, seqEnd, ratio) },
+  });
+}
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -52,7 +91,7 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "spiral-timeseries · javascript · echarts · anyplot.ai",
-    subtext: "Daily solar-farm output (kWh) · each revolution = 1 year",
+    subtext: "Daily rooftop solar-panel output (kWh) · each revolution = 1 year",
     left: "center",
     top: 24,
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
@@ -87,26 +126,17 @@ chart.setOption({
       color: t.inkSoft,
       fontSize: 14,
       formatter: (value) => (value < cyclesCount ? `Year ${Math.round(value) + 1}` : ""),
+      backgroundColor: t.pageBg,
+      padding: [2, 4],
     },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
-  series: [
-    {
-      type: "line",
-      coordinateSystem: "polar",
-      data: spiralData,
-      encode: { radius: 0, angle: 1 },
-      showSymbol: false,
-      smooth: false,
-      lineStyle: { width: 3.5 },
-    },
-  ],
+  series: spiralSegments,
   visualMap: {
     type: "continuous",
-    dimension: 2,
-    seriesIndex: 0,
+    seriesIndex: [],
     min: valueMin,
     max: valueMax,
     orient: "vertical",
