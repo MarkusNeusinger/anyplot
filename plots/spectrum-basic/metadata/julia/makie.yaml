@@ -1,0 +1,231 @@
+library: makie
+language: julia
+specification_id: spectrum-basic
+created: '2026-09-09T18:25:26Z'
+updated: '2026-09-09T18:35:04Z'
+generated_by: claude-sonnet
+workflow_run: 34388497442
+issue: 2926
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Log-scale frequency axis correctly avoids compressing low-frequency detail, per
+    the spec's explicit note
+  - Peak markers + text annotations for shaft/gear-mesh/bearing-fault harmonics turn
+    a raw noisy spectrum into a guided, story-driven read matching the vibration-analysis
+    application from the spec
+  - Theme-adaptive chrome (INK/INK_SOFT tokens) threaded correctly through title,
+    axis labels, ticks, and spines; both renders legible with identical data color
+  - Canvas lands exactly at the canonical 3200x1800 landscape target
+  weaknesses:
+  - Single-color presentation throughout - no secondary accent (e.g. a noise-floor
+    threshold line) to further deepen the data story
+  - Only basic Makie primitives used (lines!, scatter!, text!) - nothing distinctive
+    to Makie; consider vlines! harmonic guide lines to raise Library Mastery
+  - 'Minor KISS deviation: the nearest_peak_index helper function could be inlined
+    as a vectorized top-level expression instead of a function block'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "spectrum-basic · julia · makie · anyplot.ai" in bold dark text; "Frequency (Hz)" / "Amplitude (dB)" axis labels and tick labels in dark/soft-dark tones; subtle horizontal-only gridlines. All readable.
+      Data: Single green (#009E73) spectrum line with dense noise floor; three highlighted peaks (42 Hz shaft, 126 Hz gear mesh, 310 Hz bearing fault) with matching green markers and dark text labels.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title and axis labels/ticks flipped to light/off-white tones; gridlines faint light gray, distinguishable from black background. No dark-on-dark issues found.
+      Data: Same green (#009E73) line and peak markers/labels as light render - confirmed unchanged.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at sensible sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak labels staggered vertically with descending amplitudes, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin line for dense noisy spectrum, larger stroked markers for sparse
+          highlighted peaks
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast single green on both warm-neutral backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint #009E73, correct theme backgrounds, identical
+          data color across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean single-accent presentation with intentional peak highlighting,
+          visually simple overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Spines removed, horizontal-only subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker + label annotations on named harmonics give an explicit guided
+          read
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct frequency-domain line plot with log-scale axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log frequency axis, dB scale, and annotated peaks all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=frequency, Y=amplitude dB, full band shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated pattern; per-peak labels substitute
+          for legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full spectrum shape, noise floor, and three harmonic/fault tones
+          shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral rotating-machine vibration signal
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible frequencies and dB magnitudes for vibration analysis
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly flat script but defines one small helper function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; reasonable vectorized DFT workaround
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current CairoMakie API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/lines!/scatter!/text! usage, xscale = log10 native
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Only basic Makie primitives, nothing library-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - fourier-transform
+  styling:
+  - edge-highlighting
