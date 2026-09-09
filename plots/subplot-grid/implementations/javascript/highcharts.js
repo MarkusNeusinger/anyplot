@@ -20,10 +20,13 @@ function randNormal(mean, sd) {
   return mean + sd * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-// --- Panel 1 data: monthly website visits, a seasonal trend (line) -----------------
+// --- Panel 1 data: monthly website visits & new signups, a seasonal trend (combo) --
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const seasonal = [1, 0, -1, -2, -2, -1, 1, 2, 1, 0, 1, 3];
 const visitsThousands = seasonal.map((s, i) => Math.round(48 + s * 4 + i * 1.4 + randNormal(0, 1.6)));
+// Second series on the SAME month axis (a different, smaller-scale count) so panel 1
+// can demonstrate a shared x-axis with independent y-axes for comparison at different scales.
+const newSignups = seasonal.map((s, i) => Math.round(180 + s * 12 + i * 3 + randNormal(0, 8)));
 
 // --- Panel 2 data: quarterly revenue by product category (bar) ---------------------
 const categories = ["Electronics", "Apparel", "Home & Garden", "Sporting Goods", "Books"];
@@ -74,17 +77,46 @@ function baseOptions(type, panelTitle, xTitle, yTitle) {
   };
 }
 
-// Panel 1 — Monthly Website Visits (line): a time series with independent axes -------
-const panel1 = baseOptions("spline", "Monthly Website Visits", "Month", "Visits (thousands)");
+// Panel 1 — Monthly Visits & New Signups (spline + column combo): SHARED x-axis (both
+// series plot against the same month categories, directly comparable month-to-month)
+// paired with INDEPENDENT y-axes (thousands of visits vs. raw signup counts live on very
+// different scales). Panels 2-4 keep fully independent axes since each visualizes an
+// unrelated variable at its own scale — together the grid demonstrates both modes the
+// spec calls for.
+const panel1 = baseOptions("spline", "Monthly Visits & New Signups", "Month", null);
 panel1.xAxis.categories = months;
-panel1.tooltip = { formatter: function () { return `${this.x}: ${this.y}k visits`; } };
-panel1.series = [{
-  name: "Visits",
-  data: visitsThousands,
-  color: t.palette[0],
-  lineWidth: 2.5,
-  marker: { radius: 4, fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 1 },
-}];
+panel1.yAxis = [
+  { title: { text: "Visits (thousands)", style: { color: t.inkSoft, fontSize: "13px" } },
+    gridLineColor: t.grid, lineColor: t.inkSoft, tickColor: t.inkSoft, tickWidth: 1,
+    labels: { style: { color: t.inkSoft, fontSize: "12px" } } },
+  { title: { text: "New signups", style: { color: t.inkSoft, fontSize: "13px" } },
+    gridLineColor: "transparent", lineColor: t.inkSoft, tickColor: t.inkSoft, tickWidth: 1,
+    labels: { style: { color: t.inkSoft, fontSize: "12px" } }, opposite: true },
+];
+panel1.legend = { enabled: true, itemStyle: { color: t.inkSoft, fontSize: "12px" }, itemHoverStyle: { color: t.ink } };
+panel1.tooltip = {
+  shared: true,
+  formatter: function () {
+    const lines = this.points.map((p) => `${p.series.name}: ${p.y}${p.series.name === "Visits" ? "k" : ""}`);
+    return `<b>${this.x}</b><br/>${lines.join("<br/>")}`;
+  },
+};
+panel1.series = [
+  {
+    name: "Visits", type: "spline", yAxis: 0,
+    data: visitsThousands,
+    color: t.palette[0],
+    lineWidth: 2.5,
+    marker: { radius: 4, fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 1 },
+  },
+  {
+    name: "New signups", type: "column", yAxis: 1,
+    data: newSignups,
+    color: t.palette[1],
+    opacity: 0.85,
+    pointPadding: 0.2, groupPadding: 0.15, borderWidth: 0,
+  },
+];
 
 // Panel 2 — Revenue by Product Category (bar): categorical comparison ---------------
 const panel2 = baseOptions("bar", "Revenue by Category", "Revenue (thousand $)", null);
@@ -113,7 +145,7 @@ panel4.plotOptions.column = { pointPadding: 0, groupPadding: 0.04, borderWidth: 
 panel4.tooltip = { formatter: function () { return `$${this.point.category}: ${this.y} orders`; } };
 panel4.series = [{ name: "Orders", data: binCounts, color: t.palette[0] }];
 
-// --- Layout: shared header + a configurable 2x2 grid of independently-mounted panels ---
+// --- Layout: shared header + a configurable, asymmetric grid of independently-mounted panels ---
 const root = document.getElementById("container");
 
 const header = document.createElement("div");
@@ -121,18 +153,26 @@ header.style.cssText = `padding:18px 24px 4px; font-size:22px; font-weight:600; 
 header.textContent = "subplot-grid · javascript · highcharts · anyplot.ai";
 root.appendChild(header);
 
-const gridRows = 2;
-const gridCols = 2;
+// Asymmetric 3-col x 2-row grid: panel 1 (the combo trend chart) spans the full top row
+// as the featured panel, giving the dashboard a clear focal point instead of four
+// equally-weighted cells; the remaining three panels sit side by side below it.
+const gridCols = 3;
 const grid = document.createElement("div");
 grid.style.cssText =
-  `display:grid; grid-template-columns:repeat(${gridCols}, 1fr); grid-template-rows:repeat(${gridRows}, 1fr); ` +
+  `display:grid; grid-template-columns:repeat(${gridCols}, 1fr); grid-template-rows:1fr 1fr; ` +
   "gap:16px; margin:4px 20px 20px; height:calc(100% - 62px);";
 root.appendChild(grid);
 
-const panelIds = ["panel-visits", "panel-revenue", "panel-price-rating", "panel-order-dist"];
-panelIds.forEach((id) => {
+const panelSpecs = [
+  { id: "panel-visits", column: "1 / -1", row: "1" },
+  { id: "panel-revenue", column: "1", row: "2" },
+  { id: "panel-price-rating", column: "2", row: "2" },
+  { id: "panel-order-dist", column: "3", row: "2" },
+];
+panelSpecs.forEach(({ id, column, row }) => {
   const cell = document.createElement("div");
   cell.id = id;
+  cell.style.cssText = `grid-column:${column}; grid-row:${row};`;
   grid.appendChild(cell);
 });
 
