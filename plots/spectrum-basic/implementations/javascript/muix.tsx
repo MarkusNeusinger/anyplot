@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-09
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
@@ -82,9 +83,13 @@ export default function Chart() {
             color: t.palette[0],
             showMark: false,
             curve: "linear",
+            area: true,
           },
         ]}
-        sx={{ "& .MuiLineElement-root": { strokeWidth: 2.5 } }}
+        sx={{
+          "& .MuiLineElement-root": { strokeWidth: 2.5 },
+          "& .MuiAreaElement-root": { fillOpacity: 0.12 },
+        }}
         xAxis={[
           {
             data: frequency,
@@ -106,7 +111,15 @@ export default function Chart() {
         grid={{ horizontal: true }}
         margin={{ left: 130, right: 40, top: 20, bottom: 70 }}
         slotProps={{ legend: { hidden: true } }}
-      />
+      >
+        <ChartsReferenceLine
+          x={FUNDAMENTAL_HZ}
+          label={`Fundamental · ${FUNDAMENTAL_HZ} Hz`}
+          labelAlign="end"
+          lineStyle={{ stroke: t.amber, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+          labelStyle={{ fill: t.amber, fontSize: 13 }}
+        />
+      </LineChart>
     </div>
   );
 }
