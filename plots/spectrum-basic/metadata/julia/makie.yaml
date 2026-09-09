@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: spectrum-basic
 created: '2026-09-09T18:25:26Z'
-updated: '2026-09-09T18:28:43Z'
+updated: '2026-09-09T18:35:04Z'
 generated_by: claude-sonnet
 workflow_run: 34388497442
 issue: 2926
@@ -12,47 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrum-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrum-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Correctly implements a logarithmic frequency axis (xscale = log10) matching the
-    spec's guidance for wide frequency ranges
-  - Manual DFT via a vectorized cos/sin matrix-vector product is a well-executed workaround
-    for the missing FFTW package in this runtime, staying true to the 'no workarounds
-    outside Makie' rule instead of falling back to another library
-  - Realistic, neutral vibration-analysis scenario with three physically meaningful
-    harmonics (42 Hz shaft, 126 Hz gear-mesh, 310 Hz bearing fault) sitting above
-    a plausible noise floor
-  - 'Theme-adaptive chrome is correctly threaded through: identical brand-green data
-    line in both renders, correct #FAF8F1/#1A1A17 backgrounds, all text legible in
-    both themes'
-  - Canvas lands exactly on the 3200x1800 target with no clipped or overlapping elements
+  - Log-scale frequency axis correctly avoids compressing low-frequency detail, per
+    the spec's explicit note
+  - Peak markers + text annotations for shaft/gear-mesh/bearing-fault harmonics turn
+    a raw noisy spectrum into a guided, story-driven read matching the vibration-analysis
+    application from the spec
+  - Theme-adaptive chrome (INK/INK_SOFT tokens) threaded correctly through title,
+    axis labels, ticks, and spines; both renders legible with identical data color
+  - Canvas lands exactly at the canonical 3200x1800 landscape target
   weaknesses:
-  - No peak highlighting or annotation of the three dominant frequency components
-    — the spec explicitly suggests this ('Consider highlighting peak frequencies or
-    annotating dominant components') and the data has an obvious, meaningful story
-    (shaft/gear-mesh/bearing harmonics) that goes untold. Add text!() labels or scatter
-    markers at 42/126/310 Hz to turn a flat line into a guided read.
-  - Styling is competent but generic beyond style-guide compliance — no distinguishing
-    visual choice (e.g. subtle fill-under-curve, or peak markers) that would elevate
-    it past a default rendering.
-  - Only uses baseline Axis/lines! API — no Makie-distinctive feature (e.g. text!/scatter!
-    annotation layer, custom tick formatting for the log axis) is demonstrated.
+  - Single-color presentation throughout - no secondary accent (e.g. a noise-floor
+    threshold line) to further deepen the data story
+  - Only basic Makie primitives used (lines!, scatter!, text!) - nothing distinctive
+    to Makie; consider vlines! harmonic guide lines to raise Library Mastery
+  - 'Minor KISS deviation: the nearest_peak_index helper function could be inlined
+    as a vectorized top-level expression instead of a function block'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "spectrum-basic · julia · makie · anyplot.ai" in dark ink, clearly legible; "Frequency (Hz)" and "Amplitude (dB)" axis labels in dark ink; tick labels (10^0, 10^1, 10^2, 10^3 on x; -25/-50/-75 on y) in soft grey, all readable; subtle horizontal gridlines only, top/right spines removed.
-      Data: Single line series in Imprint brand green (#009E73), plotted on a log10 x-axis. Three sharp, tall peaks are clearly visible around 42 Hz, 126 Hz, and 310 Hz rising well above a jagged noise floor that gets denser toward higher frequencies (expected FFT bin-count behavior on a log axis).
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "spectrum-basic · julia · makie · anyplot.ai" in bold dark text; "Frequency (Hz)" / "Amplitude (dB)" axis labels and tick labels in dark/soft-dark tones; subtle horizontal-only gridlines. All readable.
+      Data: Single green (#009E73) spectrum line with dense noise floor; three highlighted peaks (42 Hz shaft, 126 Hz gear mesh, 310 Hz bearing fault) with matching green markers and dark text labels.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis labels rendered in light ink (near-white), clearly legible against the dark background; tick labels in a lighter soft grey, readable; gridlines subtle and visible; no dark-on-dark issues detected anywhere.
-      Data: Same brand-green (#009E73) line, identical shape and peak positions to the light render — confirms data colors are unchanged between themes, only chrome flipped.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title and axis labels/ticks flipped to light/off-white tones; gridlines faint light gray, distinguishable from black background. No dark-on-dark issues found.
+      Data: Same green (#009E73) line and peak markers/labels as light render - confirmed unchanged.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,78 +52,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are explicitly sized and clearly
-          readable in both themes; no dark-on-dark or light-on-light issues
+        comment: All text readable in both themes at sensible sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, ticks, or data elements
+        comment: Peak labels staggered vertically with descending amplitudes, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Single-series line at linewidth=2.5 reads clearly; noise floor is
-          dense toward high frequencies but that density is inherent to real spectrum
-          data, not a styling defect
+        comment: Thin line for dense noisy spectrum, larger stroked markers for sparse
+          highlighted peaks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High-contrast brand green against both light and dark backgrounds;
-          single series, no red-green reliance
+        comment: High-contrast single green on both warm-neutral backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800, gate passed; good margins, nothing cut
-          off, no overflow
+        comment: Canvas exactly 3200x1800, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis labels with units: ''Frequency (Hz)'' and ''Amplitude
-          (dB)'''
+        comment: Descriptive axis labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73; backgrounds match #FAF8F1/#1A1A17
-          exactly; both renders theme-correct'
+        comment: 'First series is Imprint #009E73, correct theme backgrounds, identical
+          data color across themes'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean but generic style-guide-compliant rendering; no custom polish
-          beyond the baseline
+        passed: true
+        comment: Clean single-accent presentation with intentional peak highlighting,
+          visually simple overall
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Top/right spines removed, subtle single-axis grid, generous whitespace
-          — a modest refinement above bare defaults
+        passed: true
+        comment: Spines removed, horizontal-only subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: No visual hierarchy or focal-point treatment; the three physically
-          meaningful harmonic peaks are visible but not called out despite the spec's
-          suggestion to annotate dominant components
+        passed: true
+        comment: Marker + label annotations on named harmonics give an explicit guided
+          read
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,87 +124,83 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency-spectrum line plot
+        comment: Correct frequency-domain line plot with log-scale axis
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Log-scale frequency axis and dB amplitude present with units; optional
-          peak highlighting/annotation from the spec notes is missing
+        comment: Log frequency axis, dB scale, and annotated peaks all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=frequency, Y=amplitude correct; full computed spectrum range shown
+        comment: X=frequency, Y=amplitude dB, full band shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'spectrum-basic · julia · makie · anyplot.ai';
-          no legend needed for single series
+        comment: Title exactly matches mandated pattern; per-peak labels substitute
+          for legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows a realistic FFT-derived spectrum with harmonics and noise floor
-          across a wide log-scale frequency range
+        comment: Full spectrum shape, noise floor, and three harmonic/fault tones
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral rotating-machinery vibration scenario with named,
-          physically sensible frequency components
+        comment: Plausible, neutral rotating-machine vibration signal
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2048 samples / 1024 positive-frequency bins within the spec's 256-4096
-          range; frequencies and dB amplitudes are domain-sensible
+        comment: Sensible frequencies and dB magnitudes for vibration analysis
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Mostly flat script but defines one small helper function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set before data generation
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual DFT is an appropriate, well-justified workaround for the missing
-          FFTW dependency; no fake functionality
+        comment: No fake UI; reasonable vectorized DFT workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2 per the canonical pattern
+        comment: Saves plot-$(THEME).png via current CairoMakie API
     library_mastery:
       score: 5
       max: 10
@@ -229,22 +210,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard, correct use of Figure/Axis/lines! with xscale=log10 and
-          theme-token chrome mapping
+        comment: Idiomatic Axis/lines!/scatter!/text! usage, xscale = log10 native
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No Makie-distinctive feature demonstrated (e.g. text!/scatter! annotation
-          layer for peaks, custom tick formatting)
+        comment: Only basic Makie primitives, nothing library-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - fourier-transform
   styling:
-  - grid-styling
+  - edge-highlighting

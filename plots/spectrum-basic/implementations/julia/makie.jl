@@ -1,7 +1,7 @@
 # anyplot.ai
 # spectrum-basic: Frequency Spectrum Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 80/100 | Created: 2026-09-09
+# Quality: 86/100 | Created: 2026-09-09
 
 using CairoMakie
 using Colors
