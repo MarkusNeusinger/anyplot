@@ -26,11 +26,12 @@ BRAND <- IMPRINT_PALETTE[1]
 n  <- 4096   # FFT size (samples)
 fs <- 8000   # sampling rate, Hz
 t  <- (0:(n - 1)) / fs
+peak_freqs <- c(440, 880, 1320, 2150)
 
-signal <- 1.00 * sin(2 * pi * 440  * t) +
-          0.55 * sin(2 * pi * 880  * t) +
-          0.30 * sin(2 * pi * 1320 * t) +
-          0.15 * sin(2 * pi * 2150 * t) +
+signal <- 1.00 * sin(2 * pi * peak_freqs[1] * t) +
+          0.55 * sin(2 * pi * peak_freqs[2] * t) +
+          0.30 * sin(2 * pi * peak_freqs[3] * t) +
+          0.15 * sin(2 * pi * peak_freqs[4] * t) +
           rnorm(n, mean = 0, sd = 0.05)
 
 spectrum <- fft(signal)
@@ -41,14 +42,44 @@ df <- tibble::tibble(frequency = frequency, magnitude = magnitude) %>%
   filter(frequency > 0) %>%
   mutate(amplitude_db = 20 * log10(magnitude + 1e-6))
 
+# Noise floor: median amplitude across all bins. Used both as a reference
+# line and as the ribbon baseline so the fill emphasizes height *above* the
+# floor at each peak instead of washing every bin down to 0 dB.
+noise_floor <- median(df$amplitude_db)
+
+df <- df %>%
+  mutate(fill_min = pmin(amplitude_db, noise_floor),
+         fill_max = pmax(amplitude_db, noise_floor))
+
+# Callout labels for the fundamental + harmonics, using the nearest FFT bin's
+# actual recovered amplitude.
+peak_labels <- lapply(peak_freqs, function(target) {
+  idx <- which.min(abs(df$frequency - target))
+  tibble::tibble(
+    frequency    = df$frequency[idx],
+    amplitude_db = df$amplitude_db[idx],
+    label        = paste0(target, " Hz")
+  )
+}) %>% bind_rows()
+
 # --- Plot ---------------------------------------------------------------------
 p <- ggplot(df, aes(x = frequency, y = amplitude_db)) +
-  geom_area(fill = BRAND, alpha = 0.25) +
+  geom_ribbon(aes(ymin = fill_min, ymax = fill_max), fill = BRAND, alpha = 0.25) +
+  geom_hline(yintercept = noise_floor, color = INK_SOFT, linewidth = 0.4, linetype = "dashed") +
   geom_line(color = BRAND, linewidth = 0.7, alpha = 0.9) +
+  geom_point(
+    data = peak_labels, aes(x = frequency, y = amplitude_db),
+    color = BRAND, size = 2.5, inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = peak_labels, aes(x = frequency, y = amplitude_db, label = label),
+    color = INK, size = 3, vjust = -0.9, inherit.aes = FALSE
+  ) +
   scale_x_log10(
     breaks = c(20, 50, 100, 200, 500, 1000, 2000, 4000),
     labels = label_comma()
   ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
   labs(
     x     = "Frequency (Hz)",
     y     = "Amplitude (dB)",
