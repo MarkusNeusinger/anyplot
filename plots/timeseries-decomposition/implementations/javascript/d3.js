@@ -36,7 +36,7 @@ const SEASONAL_SHAPE = [
 for (let i = 0; i < N; i += 1) {
   const d = new Date(Date.UTC(2015, i, 1));
   dates.push(d);
-  const trendComponent = 42000 + 380 * i + 0.9 * i * i;
+  const trendComponent = 42000 + 9500 * Math.log1p(i); // decelerating, saturating growth
   const seasonalComponent = SEASONAL_SHAPE[d.getUTCMonth()];
   const noiseComponent = 900 * approxNormal(rand);
   sales.push(trendComponent + seasonalComponent + noiseComponent);
@@ -73,7 +73,7 @@ const residual = sales.map((v, i) =>
 );
 
 // --- Layout -------------------------------------------------------------
-const margin = { top: 100, right: 60, bottom: 70, left: 110 };
+const margin = { top: 100, right: 60, bottom: 70, left: 130 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 const panelGap = 28;
@@ -89,32 +89,48 @@ const panelHeight = (ih - panelGap * (panels.length - 1)) / panels.length;
 const x = d3.scaleUtc().domain(d3.extent(dates)).range([0, iw]);
 const xTicks = d3.utcYear.every(1).range(dates[0], dates[N - 1]);
 
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height);
 
 // --- Title ----------------------------------------------------------------
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 46)
+  .attr("y", 50)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
-  .style("font-weight", "600")
+  .style("font-size", "27px")
+  .style("font-weight", "700")
   .text("timeseries-decomposition · javascript · d3 · anyplot.ai");
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 74)
+  .attr("y", 78)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "15px")
-  .text("Monthly retail sales, decomposed into trend, seasonal, and residual components");
+  .text(
+    "Monthly retail sales, decomposed into trend, seasonal, and residual components",
+  );
 
 // --- Panels -----------------------------------------------------------------
-panels.forEach((panel, i) => {
+const panelGroups = svg
+  .selectAll(".panel")
+  .data(panels)
+  .join("g")
+  .attr("class", "panel")
+  .attr(
+    "transform",
+    (panel, i) =>
+      `translate(${margin.left},${margin.top + i * (panelHeight + panelGap)})`,
+  );
+
+panelGroups.each(function (panel, i) {
   const isLast = i === panels.length - 1;
-  const panelTop = margin.top + i * (panelHeight + panelGap);
-  const g = svg.append("g").attr("transform", `translate(${margin.left},${panelTop})`);
+  const g = d3.select(this);
 
   const points = dates.map((d, j) => ({ date: d, value: panel.values[j] }));
   const defined = points.filter((p) => p.value !== null);
@@ -181,6 +197,28 @@ panels.forEach((panel, i) => {
       .attr("stroke", panel.color)
       .attr("stroke-width", panel.key === "original" ? 3 : 2.5)
       .attr("d", line);
+
+    if (panel.key === "seasonal") {
+      // Callout on a representative holiday peak to sharpen the data story
+      const peakIndex = 4 * PERIOD + 11; // December, mid-series (avoids edge crowding)
+      const peakDate = dates[peakIndex];
+      const peakValue = seasonal[peakIndex];
+      g.append("circle")
+        .attr("cx", x(peakDate))
+        .attr("cy", y(peakValue))
+        .attr("r", 5)
+        .attr("fill", "none")
+        .attr("stroke", t.amber)
+        .attr("stroke-width", 2);
+      g.append("text")
+        .attr("x", x(peakDate))
+        .attr("y", y(peakValue) - 12)
+        .attr("text-anchor", "middle")
+        .attr("fill", t.amber)
+        .style("font-size", "12px")
+        .style("font-weight", "600")
+        .text("Holiday peak");
+    }
   }
 
   // Y axis
@@ -223,3 +261,14 @@ svg
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
   .text("Date");
+
+// --- Shared y-axis unit label -------------------------------------------------
+svg
+  .append("text")
+  .attr("transform", "rotate(-90)")
+  .attr("x", -(margin.top + ih / 2))
+  .attr("y", 30)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text("Sales ($)");
