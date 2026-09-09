@@ -82,6 +82,7 @@ panel_b <- ggplot(device_df, aes(device, visits)) +
   ) +
   labs(title = "Traffic by device", x = NULL, y = "Visits") +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.3))) +
+  coord_cartesian(clip = "off") +
   base_chrome +
   theme(
     panel.grid.major.x = element_blank(),
@@ -96,6 +97,8 @@ panel_c <- ggplot(pages_df, aes(avg_session_sec, bounce_rate_pct)) +
     name = "Pageviews", max_size = 8,
     breaks = c(2000, 5000, 9000), labels = scales::comma
   ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  coord_cartesian(clip = "off") +
   base_chrome +
   theme(
     axis.title         = element_text(size = 8),
@@ -144,7 +147,8 @@ panel_f <- ggplot(conversion_df, aes(date, value)) +
     vjust = 2.4, size = 2.4, color = INK, fontface = "bold"
   ) +
   labs(title = "Conversion rate (%)") +
-  scale_y_continuous(expand = expansion(mult = c(0.1, 0.15))) +
+  scale_y_continuous(expand = expansion(mult = c(0.1, 0.2))) +
+  coord_cartesian(clip = "off") +
   small_chrome
 
 # --- Mosaic assembly -----------------------------------------------------
