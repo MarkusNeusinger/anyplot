@@ -1,0 +1,278 @@
+library: highcharts
+language: javascript
+specification_id: shap-waterfall
+created: '2026-09-09T07:49:11Z'
+updated: '2026-09-09T07:55:49Z'
+generated_by: claude-sonnet
+workflow_run: 34324743856
+issue: 5237
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-waterfall/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Implements a genuine waterfall chart using only the core Highcharts bundle (no
+    highcharts-more/waterfall module) via an invisible-spacer stacked-bar technique
+    plus hand-drawn connector lines through chart.renderer.path() — exactly respects
+    the library's constraint that add-on modules aren't loaded, and is a creative,
+    correct workaround.
+  - 'Data is fully realistic and internally consistent: the ten SHAP contributions
+    sum exactly from the stated base value (18.0%) to the stated final prediction
+    (13.8%), and features are correctly ordered by descending absolute magnitude (largest
+    contribution at top, as required by the spec).'
+  - Both base-value and prediction reference lines are clearly labeled and visually
+    distinguished (dashed vs. solid, muted vs. bold), giving the viewer an immediate
+    anchor for the waterfall's start and end points.
+  - Legend uses domain-meaningful labels ('Increases risk' / 'Decreases risk') rather
+    than generic terms, making the semantic red/blue color mapping self-explanatory
+    and satisfying the spec's explicit 'red for positive, blue for negative' requirement.
+  - Clean theme-token usage throughout (ink/inkSoft/grid) with correct light/dark
+    chrome in both renders — no dark-on-dark or light-on-light failures, and no edge
+    clipping on either render.
+  weaknesses:
+  - 'Data labels (''+X.X pp'') and the two reference-line labels (''Base value: 18.0%'',
+    ''Prediction: 13.8%'') are set to 13px, smaller than the 14px baseline used for
+    tick/legend text elsewhere on the chart. Verified against the generated 400px
+    mobile thumbnail: these are the first text elements to blur into illegibility
+    at mobile scale. Bump to 14-15px to match the rest of the type scale.'
+  - 'Design Excellence / storytelling could go further: nothing visually calls out
+    which single feature (Credit Score, -8.6pp) is the dominant driver of the prediction;
+    a subtle emphasis (bolder label weight, or slight color-intensity variation by
+    magnitude) on the largest-magnitude segment would sharpen the immediate insight.'
+  - The value-axis grid lines are drawn at every 1% increment across the full chart
+    width, which is slightly busier than necessary for a 10-category horizontal layout
+    — consider thinning to major ticks only (every 2-5%) for a cleaner background.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface — not pure white.
+      Chrome: Title "shap-waterfall · javascript · highcharts · anyplot.ai" in bold dark ink, clearly readable. Ten feature-name category labels on the left (Credit Score down to Age of Credit History) in dark ink, all legible. X-axis (value axis) percentage ticks 0%-19% in soft dark gray, legend "Increases risk" (red swatch) / "Decreases risk" (blue swatch) at the bottom, all readable. Y-axis title "Contribution to Predicted Default Probability" clearly visible below the tick row.
+      Data: First (top, largest-magnitude) segment is Credit Score at -8.6pp in blue (decreases risk); Debt-to-Income Ratio +5.2pp in matte red (increases risk); segments alternate color by sign down to Age of Credit History at -0.9pp. Dashed connector lines link the end of each segment to the start of the next, visually confirming the cumulative flow. A dashed reference line labeled "Base value: 18.0%" sits at the right edge; a solid black reference line labeled "Prediction: 13.8%" sits near the chart's horizontal center, matching the final cumulative value.
+      Legibility verdict: PASS for all primary chrome (title, category labels, axis, legend). Minor exception: the small 13px per-segment "pp" data labels and the two reference-line labels are noticeably smaller than the rest of the type scale and become hard to read once the image is scaled down to mobile width (see Weaknesses).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface — not pure black.
+      Chrome: Title and category labels render in light off-white ink, tick labels and axis title in a softer light gray — all clearly legible against the dark background, no dark-on-dark failures observed anywhere (title, category names, tick labels, legend, reference-line labels, and pp data labels are all rendered in light-colored text).
+      Data: Colors are pixel-identical to the light render — same matte red (#AE3030) for "Increases risk" segments and same blue (#4467A3) for "Decreases risk" segments; only the chrome (background, text, grid, reference lines) flipped to the dark palette. The dashed base-value line and solid prediction line are still clearly visible (light-colored strokes against dark background) with their labels legible.
+      Legibility verdict: PASS for all primary chrome; same minor small-label caveat as the light render (13px pp/reference labels), which is a legibility issue equally present in both themes rather than a theme-specific defect.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, category labels, axis, and
+          legend all read well in both themes and hold up reasonably at mobile scale.
+          The 13px per-segment pp labels and reference-line labels are noticeably
+          smaller than the 14px baseline and become illegible at ~400px width (verified
+          against the generated mobile thumbnail).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render; data labels,
+          category names, and reference-line labels all have clear separation.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 bar segments with generous height and padding (pointPadding 0.15,
+          groupPadding 0) are clearly visible and appropriately sized for the category
+          count.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Matte red vs. blue is distinguishable under CVD simulation and is
+          redundantly encoded via per-segment numeric labels, not color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift). Plot area uses a large, balanced portion
+          of the canvas with generous but not wasted margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Value-axis title 'Contribution to Predicted Default Probability'
+          is descriptive with an implicit unit via % tick formatting.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Colors are Imprint palette members (#AE3030, #4467A3). First series
+          isn''t #009E73, but this qualifies for the documented semantic exception:
+          the legend literally reads ''Increases risk'' / ''Decreases risk'' (a status/polarity
+          pair), and the spec explicitly mandates red-for-positive/blue-for-negative.
+          Backgrounds and all chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping tied to the domain, clean typography
+          hierarchy, and a genuinely custom waterfall construction — clearly above
+          a configured default, short of top-tier publication polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle theme-token grid/lines, no default black chrome, generous
+          whitespace, minimal legend styling. Close to perfect but not every micro-detail
+          (e.g. label sizing) is fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed/solid reference lines plus red/blue segment coloring create
+          real visual hierarchy guiding base-to-prediction flow, but nothing calls
+          special attention to the single dominant driver (Credit Score).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal cumulative waterfall, faithfully reconstructed
+          via stacked bars + connectors within the core-bundle constraint.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: magnitude ordering, cumulative flow,
+          red/blue polarity coloring, labeled base/final reference lines, numeric
+          SHAP labels, horizontal layout, connector lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Feature names on the category axis, cumulative contribution on the
+          value axis; all 10 features visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels ('Increases
+          risk' / 'Decreases risk') accurately describe the data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both positive and negative contributions across a full magnitude
+          range (-8.6 to +5.2 pp), plus base/final reference points and connectors
+          — all waterfall aspects represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit-risk scoring scenario is realistic, neutral, and comprehensible
+          (finance/ML explainability domain).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Contributions sum exactly from base (18.0%) to final prediction (13.8%);
+          all magnitudes are plausible for a credit-risk model.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straight-line Data -> Chart script, no custom functions/classes;
+          array methods are simple data transforms.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed beyond the global Highcharts object; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The spacer-series/connector-line complexity is justified necessity
+          (core bundle has no native waterfall type), not over-engineering; no fake
+          UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set on both chart and series; correct mount-node
+          contract; no deprecated API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Highcharts stacking order semantics, plotLines, custom
+          dataLabels formatter, and renderer API — textbook idiomatic Highcharts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.renderer.path() direct SVG drawing for connectors and dummy
+          legend-only series are genuinely Highcharts-specific techniques, not easily
+          replicated in another library with minor syntax changes.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
+  - grid-styling

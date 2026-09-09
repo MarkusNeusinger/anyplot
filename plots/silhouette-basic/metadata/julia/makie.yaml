@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: silhouette-basic
+created: '2026-09-09T07:46:09Z'
+updated: '2026-09-09T07:57:42Z'
+generated_by: claude-sonnet
+workflow_run: 34325127897
+issue: 2334
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Right-side dead space from attempt 1 is fixed: xlims now derive from max(cluster_max_silhouette)
+    + 0.18 instead of a fixed 1.3, so the plot area is tightly proportioned to the
+    data with no wasted canvas'
+  - 'Correct silhouette-plot semantics: samples sorted ascending within each cluster,
+    grouped by cluster, dashed reference line at the overall average, and per-cluster
+    average annotated to the right'
+  - Manual silhouette coefficient computation (a(i)/b(i)) is mathematically correct
+    and an appropriate substitute for sklearn.metrics.silhouette_samples given no
+    equivalent in the Julia ecosystem
+  - Theme-adaptive chrome correctly implemented — data colors (green/lavender/blue)
+    are pixel-identical between light and dark renders, only chrome flips; no dark-on-dark
+    or light-on-light failures in either render
+  - 'Imprint palette correctly applied in canonical order with Cluster 0 mapped to
+    brand green #009E73'
+  - 'Clean minimalist styling: top/right/left spines hidden, y-ticks hidden in favor
+    of direct cluster labels, subtle single-axis gridlines, no legend clutter since
+    color-to-cluster mapping is direct'
+  - Realistic, plausible synthetic data — mix of strong (avg 0.52, 0.47) and weaker/borderline
+    (avg 0.25, with a few negative values) cluster scores matches the spec's request
+    for a realistic mix
+  weaknesses:
+  - Design polish is functional but fairly plain/generic — no additional visual anchor
+    (e.g. subtle per-cluster row shading, sample-count callouts) to lift it above
+    baseline aesthetic sophistication
+  - Minimal use of Makie-distinctive features beyond barplot!/vlines!/text! — no Legend,
+    Colorbar, or Label-grid composition to showcase deeper library mastery
+  - Y-axis label 'Cluster' plus tick labels 'Cluster 0/1/2' is slightly redundant
+    — consider dropping the axis label since the tick labels already say 'Cluster
+    N'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "silhouette-basic · julia · makie · anyplot.ai" in bold dark text, clearly readable, centered near top (occupies ~27.5% of canvas width, appropriate for this shorter title without a descriptive prefix). Y-axis shows "Cluster 0/1/2" labels in soft dark gray, x-axis shows "Silhouette Coefficient" label in dark ink with tick labels (-0.25, 0.00, 0.25, 0.50, 0.75) in soft gray. Subtle vertical gridlines at those tick positions. Top/right/left spines hidden; only a bottom axis line is visible.
+      Data: Three horizontal bar bands, bottom-to-top: Cluster 0 (brand green #009E73, avg = 0.52), Cluster 1 (lavender #C475FD, avg = 0.47), Cluster 2 (blue #4467A3, avg = 0.25). Each band is composed of many thin stacked horizontal bars sorted ascending within the cluster, most extending from 0 rightward with a handful of bars per cluster dipping slightly below 0 (negative silhouette scores). A dark dashed vertical line marks the overall average silhouette score (~0.41). "avg = X.XX" text annotations sit just past the end of each cluster's longest bar, well within the canvas (rightmost content ~91% of width, no clipping, no leftover dead margin like attempt 1).
+      Legibility verdict: PASS — all title, axis, tick, and annotation text is clearly readable against the light background; first categorical series is #009E73 as required.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title in white/light text, clearly readable. Y-axis "Cluster 0/1/2" labels and x-axis "Silhouette Coefficient" label plus tick labels rendered in light gray/off-white, all legible against the dark background. Gridlines are faint light vertical lines. Same spine treatment as the light render (top/right/left hidden, bottom visible).
+      Data: Identical bar layout and identical data colors to the light render — green (Cluster 0, avg 0.52), lavender (Cluster 1, avg 0.47), blue (Cluster 2, avg 0.25) — confirming only chrome flipped between themes, not data colors. Dashed average-reference line rendered in light gray/white, clearly visible against the dark surface. "avg = X.XX" annotations rendered in light ink, clearly legible.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text and data elements are clearly distinguishable from the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes with explicit font sizes; small
+          but legible at 400px thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thin packed bars are the correct density choice for 150 stacked samples
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue combination is CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Attempt-1 dead-space weakness fixed: xlims now derive from max(cluster_max_silhouette)+0.18,
+          content fills the canvas well, nothing clipped at any edge'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with clear units ('Silhouette Coefficient',
+          'Cluster')
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean and now well-proportioned after the xlims fix, but still fairly
+          plain — no extra visual anchor
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, grid subtle, whitespace now generous rather than
+          excessive
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted bars + avg line + per-cluster annotations create clear hierarchy
+          and focal points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct silhouette plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted-within-cluster, grouped colors, avg reference line, per-cluster
+          avg annotation all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = silhouette coefficient, Y = cluster grouping, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; no legend needed since color
+          maps directly to labeled cluster rows
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Sorting, grouping, avg line, and annotations all demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible synthetic clustering scenario, neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Silhouette values in a realistic range (-0.35 to 0.7) with a believable
+          mix of strong/borderline clusters
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current Figure/Axis API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of barplot!, vlines!, text!, custom yticks tuple
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No Makie-distinctive features beyond baseline primitives (default)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
