@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' spectrogram-basic: Spectrogram Time-Frequency Heatmap
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 88/100 | Created: 2026-09-09
 
 library(ggplot2)
 library(ragg)
@@ -44,23 +43,51 @@ for (i in seq_len(n_windows)) {
   spectrum <- fft(segment)[1:n_freq_bins]
   power_db[i, ] <- 20 * log10(Mod(spectrum) + 1e-6)
 }
-power_db <- pmax(power_db, max(power_db) - 60) # 60 dB dynamic range
 
-spec_df <- data.frame(
-  time = rep(times, times = n_freq_bins),
-  frequency = rep(freqs, each = n_windows),
-  power = as.vector(power_db)
-)
+# Light separable 3-tap smoothing (time then frequency) quiets salt-and-pepper
+# noise-floor speckle without blurring the ridge, which spans many bins.
+smooth_1d <- function(v) {
+  n <- length(v)
+  c(v[1], (v[1:(n - 2)] + v[2:(n - 1)] + v[3:n]) / 3, v[n])
+}
+power_db <- t(apply(power_db, 1, smooth_1d))
+power_db <- apply(power_db, 2, smooth_1d)
+
+dynamic_range_db <- 48
+power_db <- pmax(power_db, max(power_db) - dynamic_range_db)
 
 max_freq_display <- 1000
-spec_df <- spec_df[spec_df$frequency <= max_freq_display, ]
+freq_display_idx <- which(freqs <= max_freq_display)
+
+spec_df <- data.frame(
+  time = rep(times, times = length(freq_display_idx)),
+  frequency = rep(freqs[freq_display_idx], each = n_windows),
+  power = as.vector(power_db[, freq_display_idx])
+)
+
+# Ridge trace: the peak-power frequency at each time step, from the real STFT
+# data (not a fitted curve) — a second ggplot2 layer beyond the raster.
+ridge_df <- data.frame(
+  time = times,
+  frequency = freqs[freq_display_idx][apply(power_db[, freq_display_idx, drop = FALSE], 1, which.max)]
+)
+
+overlap_pct <- round((window_size - hop) / window_size * 100)
 
 # --- Plot ---------------------------------------------------------------
 title_str <- "spectrogram-basic · r · ggplot2 · anyplot.ai"
 title_fontsize <- round(12 * min(1.0, 67 / nchar(title_str)))
+subtitle_str <- sprintf(
+  "Hann window, %d samples · %d-sample hop (%d%% overlap) · %d dB dynamic range",
+  window_size, hop, overlap_pct, dynamic_range_db
+)
 
 p <- ggplot(spec_df, aes(x = time, y = frequency, fill = power)) +
   geom_raster() +
+  geom_line(
+    data = ridge_df, aes(x = time, y = frequency),
+    inherit.aes = FALSE, color = INK, linewidth = 0.35, alpha = 0.55
+  ) +
   scale_fill_gradient(
     low = "#009E73", high = "#4467A3",
     name = "Power (dB)",
@@ -68,7 +95,7 @@ p <- ggplot(spec_df, aes(x = time, y = frequency, fill = power)) +
   ) +
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, duration, 1)) +
   scale_y_continuous(expand = c(0, 0), breaks = seq(0, max_freq_display, 200)) +
-  labs(x = "Time (s)", y = "Frequency (Hz)", title = title_str) +
+  labs(x = "Time (s)", y = "Frequency (Hz)", title = title_str, subtitle = subtitle_str) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
@@ -78,6 +105,7 @@ p <- ggplot(spec_df, aes(x = time, y = frequency, fill = power)) +
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK, size = title_fontsize),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK, size = 10),
