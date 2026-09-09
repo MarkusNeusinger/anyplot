@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: tree-phylogenetic
 created: '2026-09-09T20:54:24Z'
-updated: '2026-09-09T20:58:15Z'
+updated: '2026-09-09T21:10:41Z'
 generated_by: claude-sonnet
 workflow_run: 34402624082
 issue: 3070
@@ -12,53 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phyl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Clean, correct rectangular phylogram: x-axis is cumulative branch length from
-    the root, y is leaf rank with internal nodes at the mean of their children — the
-    standard cladogram/phylogram convention, giving genuinely proportional branch
-    lengths as the spec requires'
-  - Pure-clade color propagation (a node is highlighted only if every descendant leaf
-    is a great ape) cleanly stops the Hominidae highlight exactly at its stem branch,
-    with a matching callout label near the stem
-  - Scale bar with tick caps and '0.02 substitutions / site' label follows the standard
-    phylogenetic-tree convention called out in the spec notes
-  - 'Fully theme-correct: identical brand-green data color in both renders, INK/INK_SOFT
-    chrome correctly flipped, warm off-white/near-black backgrounds match the spec
-    exactly'
-  - Minimal, refined chrome — spines and axis decorations fully hidden, no grid, generous
-    whitespace, clear focal point on the highlighted clade
-  - No fake interactivity, no workaround backend — tree geometry built entirely with
-    native CairoMakie primitives (lines!, scatter!, text!) since Makie has no built-in
-    tree/dendrogram recipe
+  - Clean, publication-quality cladogram with branch lengths proportional to evolutionary
+    distance and a clear Hominidae (great-ape) clade highlighted in Imprint brand
+    green, giving the chart a strong focal point.
+  - 'Theme-adaptive chrome is implemented correctly: the highlighted clade stays identical
+    #009E73 across both renders, while background, ink, and scale-bar colors flip
+    cleanly between light and dark.'
+  - Scale bar with explicit units ("0.02 substitutions / site") is used in place of
+    a numeric x-axis, matching the standard phylogenetic-tree convention called out
+    in the spec's Notes.
+  - All labels (species names, clade callout, scale-bar caption) use explicitly set
+    font sizes and remain legible in both themes with no overlap or clipping.
+  - Realistic primate mitochondrial-DNA divergence data with a correctly grouped great-ape
+    clade and plausible branch-length magnitudes.
   weaknesses:
-  - Tree structure is hard-coded via id-keyed adjacency dicts rather than built from
-    an actual Newick string, which is the data format the spec names explicitly —
-    the code comment explains no Newick parser is available in the Julia CI runtime,
-    but the visualization never demonstrates parsing/consuming the spec's stated 'newick_string'
-    data field
-  - Non-highlighted species labels and branches use only INK_SOFT (soft gray) rather
-    than full INK — a deliberate de-emphasis choice for the backbone lineages, but
-    it flattens contrast for 4 of the 8 leaf labels compared to the highlighted clade
-  - Only the rectangular layout is used; the spec suggests considering a circular/radial
-    layout too (not mandatory, but would have shown more library range for a tree
-    with only 8 leaves)
-  - Relies entirely on basic Makie primitives (lines!, scatter!, text!) with no distinctive
-    Makie-specific feature (e.g. GridLayout panels, Colorbar, recipes) — understandable
-    since Makie has no tree recipe, but it caps Library Mastery
+  - 'Layout is left-weighted: the tree + labels end at roughly 63% of canvas width,
+    leaving a large, unbalanced right margin — extend the x-limits/label offset or
+    center the tree horizontally so whitespace is distributed more evenly.'
+  - 'LM-02: uses only generic lines!/scatter!/text! primitives — nothing distinctive
+    to Makie is showcased; consider a Makie-specific feature (e.g. a custom Legend
+    for the clade color, or a Makie recipe) to raise Library Mastery.'
+  - 'DQ-01: the tree is hard-coded as an id/adjacency Dict rather than an actual Newick
+    string as listed in the spec''s Data section — a reasonable workaround given no
+    Newick parser is available in the Julia CI runtime (documented in the code comments),
+    but it narrows literal feature coverage of the spec''s data format.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "tree-phylogenetic · julia · makie · anyplot.ai" in bold dark ink, centered top, clearly legible. No axis labels/ticks (hidden by design, appropriate for a tree diagram). Scale bar with "0.02 substitutions / site" caption at bottom-left, legible dark-gray text.
-      Data: Rectangular phylogram with 8 species leaves (Human, Chimpanzee, Gorilla, Orangutan, Gibbon, Rhesus Macaque, Common Marmoset, Mouse Lemur). Hominidae clade (Human/Chimp/Gorilla/Orangutan) rendered in brand green (#009E73) with a "Hominidae (great apes)" callout label in the same green; remaining backbone lineages and labels rendered in soft dark gray (INK_SOFT). Leaf tips are small circular markers with a light stroke. All species names right of their tips, fully readable.
-      Legibility verdict: PASS — all text (title, species labels, clade callout, scale caption) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "tree-phylogenetic · julia · makie · anyplot.ai" in bold dark ink, centered at top. Species labels (Human, Chimpanzee, Gorilla, Orangutan, Gibbon, Rhesus Macaque, Common Marmoset, Mouse Lemur) in dark/soft-dark ink to the right of each leaf tip. Scale bar ("0.02 substitutions / site") in soft-dark ink at bottom left. All text is clearly readable against the light background.
+      Data: Cladogram branches drawn as right-angle (rectangular) connectors, x-position proportional to cumulative branch length, y-position by leaf order. The Human/Chimpanzee/Gorilla/Orangutan clade (Hominidae) and its stem branches are rendered in Imprint brand green (#009E73) with a green "Hominidae (great apes)" callout label; all other branches and leaf tips (Gibbon, Rhesus Macaque, Common Marmoset, Mouse Lemur) are rendered in a muted dark-gray ink tone. Leaf tips are filled circles with a light stroke for definition.
+      Legibility verdict: PASS — no overlapping or clipped text, all labels and the scale-bar caption are crisp.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title now rendered in light off-white ink, clearly legible against the dark background. Scale bar and its caption rendered in light gray, clearly legible.
-      Data: Identical brand-green (#009E73) highlight for the Hominidae clade and identical tree geometry/branch lengths as the light render — only the chrome (background, ink colors for text/branches/markers) flipped to light tones on dark. Non-highlighted species labels and branches use a light gray (INK_SOFT for dark theme), clearly distinguishable from the near-black background.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, labels, callout, scale caption) reads clearly against the near-black surface, and the brand green remains equally vivid on both surfaces.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, species labels, and scale-bar caption, now rendered in light ink (title/labels bright off-white, scale bar/secondary text in a lighter soft-gray) so everything reads clearly against the dark surface. No dark-on-dark text was found.
+      Data: Data colors are identical to the light render — the same #009E73 green marks the Hominidae clade and stem branches; non-highlighted branches/leaf tips use a light muted-gray tone (the theme-adaptive INK_SOFT token) instead of the light render's dark-gray, which is the expected chrome flip, not a data-color change.
+      Legibility verdict: PASS — title, species labels, clade callout, and scale-bar text are all clearly visible against the dark background; no dark-on-dark or contrast failures observed.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,54 +58,51 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; non-highlighted labels use a softer
-          ink for de-emphasis, which is a deliberate hierarchy choice rather than
-          a legibility failure
+        comment: All font sizes explicitly set (titlesize=20, fontsize=14/12); readable
+          in both themes, no overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, branches, or the callout/scale-bar
-          text
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse 8-leaf tree with prominent markers (size 14) and clear 2.5px
-          line width, well suited to the low data density
+        comment: Markersize=14 and linewidth=2.5 are well-suited to this sparse (8-leaf)
+          tree.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-vs-gray contrast, not red-green as sole signal; both hues distinguishable
-          for common CVD types
+        comment: Two-tone green/gray encoding is CVD-safe and high contrast, not red-green.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Nothing cut off, balanced margins, clean vertical/horizontal distribution
-          of the tree within the canvas
+        comment: Vertical space is used well, but tree+labels stop at ~63% of canvas
+          width leaving an unbalanced right margin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Decorations correctly hidden for a tree diagram; title format matches
-          SC-04, scale bar substitutes for a numeric axis
+        comment: Scale bar caption gives explicit units (substitutions/site) in place
+          of a numeric x-axis, per phylogenetic-tree convention.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/only categorical highlight is #009E73, identical between themes;
-          backgrounds are exactly #FAF8F1 / #1A1A17'
+        comment: 'Highlighted clade is exactly #009E73 in both themes; theme-correct
+          backgrounds and chrome.'
     design_excellence:
       score: 16
       max: 20
@@ -123,23 +112,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Pure-clade color propagation and matching callout show real design
-          intent beyond a generic tree render
+        comment: Thoughtful clade-highlighting design, clean typography, above-default
+          polish.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines and default decorations fully removed, no grid, generous whitespace
+        comment: No spines/grid, generous whitespace vertically; minor deduction for
+          the unbalanced horizontal margin.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear focal point on the Hominidae divergence via color + label,
-          guiding the viewer to the key evolutionary story
+        comment: Color singles out the Hominidae clade as a clear focal point with
+          a labeled callout.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,29 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rectangular phylogenetic tree with proportional branch lengths
+        comment: Correct rectangular phylogenetic tree / cladogram layout.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Branch-length proportionality, species labels, scale bar, and clade
-          highlighting all present; the newick_string data field itself is never parsed/consumed
-          (hard-coded adjacency instead)
+        comment: Branch lengths proportional to distance, species labels, scale bar,
+          and clade highlighting all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = cumulative evolutionary distance from root, Y = leaf rank — correct
-          and complete
+        comment: X = cumulative branch length, Y = leaf rank; all 8 leaves visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; clade callout functions as the
-          legend
+        comment: Title exactly matches 'tree-phylogenetic · julia · makie · anyplot.ai';
+          clade callout serves as the legend.
     data_quality:
       score: 14
       max: 15
@@ -179,22 +167,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers topology, proportional branch lengths, scale bar, and clade
-          highlighting; only the literal Newick-format data field is skipped
+        comment: Shows clade structure, varying branch lengths, and highlighted lineage;
+          tree is expressed as an id/adjacency Dict rather than a literal Newick string.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, taxonomically correct primate phylogeny (Human/Chimp/Gorilla/Orangutan/Gibbon/Macaque/Marmoset/Mouse
-          Lemur) in the correct divergence order; neutral topic
+        comment: Real, neutral primate mtDNA-divergence scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Branch-length values (0.006–0.078 substitutions/site) are realistic
-          for primate mtDNA divergence
+        comment: Branch-length magnitudes (0.006-0.078 substitutions/site) are plausible
+          for primate mtDNA divergence.
     code_quality:
       score: 10
       max: 10
@@ -204,32 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Imports -> data -> layout -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no randomness used, so no seed needed
+        comment: Fully deterministic hard-coded data, no randomness needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors, both used
+        comment: Only CairoMakie and Colors, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-commented rationale for the manual tree construction, no fake
-          UI/interactivity
+        comment: Layout math (cumulative x, mean-y, clade purity) is clean and well-commented,
+          no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current CairoMakie API
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API.
     library_mastery:
       score: 5
       max: 10
@@ -239,24 +226,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of hidedecorations!/hidespines!/limits! and the Figure/Axis
-          pattern
+        comment: Idiomatic use of Axis/lines!/scatter!/text!/hidedecorations!/hidespines!.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Built only from basic primitives (lines!, scatter!, text!) with no
-          distinctive Makie-specific feature — necessary given no tree recipe exists,
-          but doesn't showcase library-unique capability
+        comment: Generic primitives only; nothing distinctive to Makie is leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  patterns: []
-  dataprep:
-  - cumulative-sum
+  patterns:
+  - data-generation
+  dataprep: []
   styling:
   - minimal-chrome
   - edge-highlighting
