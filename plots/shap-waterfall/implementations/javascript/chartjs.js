@@ -1,7 +1,7 @@
 // anyplot.ai
 // shap-waterfall: SHAP Waterfall Plot for Feature Attribution
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-09
+// Quality: 91/100 | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 const POSITIVE_COLOR = t.palette[4]; // #AE3030 matte red (Imprint) — SHAP convention: pushes prediction up
