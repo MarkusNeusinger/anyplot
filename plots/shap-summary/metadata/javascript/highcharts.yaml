@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: shap-summary
 created: '2026-09-09T07:35:38Z'
-updated: '2026-09-09T07:39:56Z'
+updated: '2026-09-09T07:47:53Z'
 generated_by: claude-sonnet
 workflow_run: 34323825916
 issue: 2923
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/shap-summ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/shap-summary/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
   - Correctly implements a SHAP beeswarm summary sorted by mean |SHAP| importance
@@ -20,115 +20,121 @@ review:
   - Builds a hand-rolled colorbar via chart.renderer SVG primitives to work around
     the missing coloraxis module, with clear code comments documenting the constraint
     and the workaround
+  - Marker radius increased to 5px per the attempt-1 feedback, improving beeswarm
+    dot visibility at 180 samples/row
+  - New plotBand on the top-importance feature row (Living Area) adds a clear focal
+    point, directly addressing the attempt-1 storytelling feedback
   - Dashed zero-reference vertical line cleanly separates positive/negative impact
     as the spec requests
-  - Models 'House Age' as a non-linear (quadratic) SHAP contribution, directly illustrating
-    the spec's 'non-linear relationships' application with both low and high values
-    pushing predictions the same direction
+  - Models House Age as a non-linear (quadratic) SHAP contribution, illustrating the
+    spec's 'non-linear relationships' application
   - Theme-correct chrome in both renders with identical data colors between light/dark,
-    and no clipping at either canvas edge (verified colorbar label and y-axis category
-    labels both sit comfortably inside the frame)
+    and no clipping at either canvas edge
+  - Correctly chooses imprint_seq (sequential) over a diverging colormap since feature-value
+    color has no meaningful zero-midpoint, just a low-to-high ordering
   weaknesses:
-  - Design excellence is fairly generic beyond the manual colorbar workaround — no
-    additional focal-point styling (e.g. emphasizing the top feature row, or subtly
-    shading the positive/negative half-planes) to strengthen the data story
-  - Marker radius (4px) with fillOpacity 0.78 is on the conservative side for a beeswarm
-    carrying 180 samples per row — bumping to ~5-6px would improve dot visibility
-    per the data-density sizing guideline without materially increasing overplotting
-    given the jitter spread
-  - The four small helper functions (zscore, minMaxNorm, hexToRgb, valueColor) are
-    reasonable given the custom color-mapping requirement, but push slightly past
-    a minimal KISS structure
+  - 'Header block is missing the required ''// License: Highcharts — commercial license,
+    free for non-commercial use (highcharts.com/license)'' line that prompts/library/highcharts.md
+    mandates keeping visible in every generated snippet — every other highcharts.js
+    implementation in the repo carries this line'
+  - The four small helper functions (rand, randNormal, zscore, minMaxNorm, hexToRgb,
+    valueColor) are justified by the custom color-mapping workaround but still push
+    past a minimal KISS structure
+  - Living Area (sqft) row is dense enough that dots overlap significantly even after
+    the jitter/opacity tuning — a slightly wider jitter band or smaller marker radius
+    specifically for the top row would improve readability without losing the sparser
+    rows' visibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like cream), not pure white.
-      Chrome: Title "shap-summary · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Gradient-boosted house-price model · 180 samples" in soft gray, both clearly readable. Seven y-axis feature category labels (Living Area (sqft), Bathrooms, Distance to Downtown (km), House Age (years), Garage Spaces, Walk Score, Lot Size (acres)) in dark ink, fully visible with no clipping at the left edge. X-axis title "SHAP value (impact on predicted price, $1,000s)" and numeric tick labels (-70 to 90) in soft gray, all legible. Thin horizontal separators between feature rows and a dashed vertical zero-reference line in dark ink.
-      Data: Beeswarm scatter dots colored by a green-to-blue sequential gradient (imprint_seq) representing low-to-high feature value, matching a hand-drawn colorbar on the right with "High"/"Low" labels and a rotated "Feature value" title — all fully inside the canvas, no clipping.
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "shap-summary · javascript · highcharts · anyplot.ai" and subtitle "Gradient-boosted house-price model · 180 samples" render in dark ink / soft gray, both clearly legible. Seven y-axis feature labels (Living Area (sqft), Bathrooms, Distance to Downtown (km), House Age (years), Garage Spaces, Walk Score, Lot Size (acres)) are fully visible with no clipping at the left edge. X-axis title "SHAP value (impact on predicted price, $1,000s)" and numeric ticks (-70 to 90) are legible in soft gray. A dashed vertical zero-reference line separates positive/negative impact. A faint plotBand highlights the top-importance row (Living Area).
+      Data: Beeswarm dots colored on a green-to-blue sequential gradient (imprint_seq) for low-to-high feature value, matched by a hand-drawn colorbar with "High"/"Low" labels and a "Feature value" axis label on the right, fully inside the canvas.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black.
-      Chrome: Title and subtitle rendered in light ink/soft-gray text, clearly readable against the dark surface. Y-axis feature labels and x-axis tick/title text switch to light gray, fully legible — no dark-on-dark failures observed. Dashed zero line rendered in light ink, still visible against the dark background.
-      Data: Same green-to-blue sequential dot colors and colorbar gradient as the light render — confirmed identical; only the chrome (background, text, gridlines) flipped between themes.
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Title, subtitle, axis labels, tick labels, and colorbar labels all flip to light ink / soft-gray and remain clearly legible — no dark-on-dark failures found. The dashed zero line and the focal-point plotBand remain visible against the dark surface.
+      Data: Dot colors and the colorbar gradient are pixel-identical to the light render; only chrome flipped, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes, explicit font sizes per library
-          defaults, no clipping
+        comment: All font sizes explicitly set (title 22px, subtitle/labels 14-16px);
+          readable in both themes; title fits comfortably without overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions; minor inherent marker overlap in dense beeswarm
-          rows, mitigated by jitter
+        comment: No text overlap; y-axis feature labels, colorbar labels, and axis
+          titles are all clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker radius 4px with 0.78 opacity is slightly conservative for
-          180 samples/row
+        comment: Marker radius 5px with 0.75 fill opacity is visible for 180 samples/row,
+          though the densest row (Living Area) still shows notable dot overlap
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is a CVD-safe perceptually-uniform gradient; no red-green
-          as sole signal
+        comment: Sequential green-to-blue gradient with adequate contrast and CVD-safe
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, generous margins, no cut-off elements
+        comment: Plot area fills most of the canvas, balanced margins, colorbar integrated
+          on the right, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive x-axis title with units; clear feature category labels
+        comment: X-axis label descriptive with units ($1,000s); colorbar labeled 'Feature
+          value' with High/Low anchors
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses imprint_seq (correct choice for single-polarity feature-value
-          magnitude, not a diverging quantity); theme-correct backgrounds in both
-          renders
+        comment: Uses imprint_seq (t.seq[0] to t.seq[1]) correctly for single-polarity
+          continuous feature-value data; theme-correct chrome in both renders
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom hand-built colorbar shows polish, but overall styling is otherwise
-          fairly standard
+        passed: true
+        comment: Hand-built colorbar and focal-point plotBand show thoughtful polish
+          clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle horizontal-only grid and generous margins; no spine removal
-          customization
+        passed: true
+        comment: Subtle grid, generous whitespace, faint row highlight; some refinement
+          visible beyond defaults
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Importance sort + zero-reference line create some hierarchy, but
-          no additional focal-point emphasis
+        passed: true
+        comment: Importance sort, zero line, and the new top-row plotBand create a
+          visual hierarchy that guides the reader to the most important feature
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SHAP beeswarm summary scatter
+        comment: Correct beeswarm/scatter SHAP summary form
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted by importance, continuous color scale, zero line, jittering,
-          all features shown
+        comment: Importance sort, low-to-high color scale, zero line, and vertical
+          jitter all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = SHAP value, Y = feature category, all data represented
+        comment: X=SHAP value, Y=feature (importance-sorted), color=feature value
+          — correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend correctly omitted in favor
-          of colorbar
+        comment: Title format exactly matches spec; legend correctly omitted in favor
+          of the colorbar for the single continuous-colored series
     data_quality:
       score: 15
       max: 15
@@ -168,22 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distribution, direction, magnitude, and feature-value coloring
-          together
+        comment: Shows importance ranking, spread per feature, non-linear (quadratic)
+          House Age effect, and color-coded direction
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral gradient-boosted house-price domain
+        comment: Real-world, neutral gradient-boosted house-price model scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: SHAP value and feature magnitudes are realistic for the domain
+        comment: SHAP values in plausible $1,000s range; feature ranges (sqft, bathrooms,
+          age, etc.) all realistic
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -191,8 +199,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: No classes; several small helper functions are reasonable given the
-          custom color-mapping need
+        comment: Several small helper functions beyond pure Imports->Data->Plot->Save,
+          justified by the color-mapping workaround
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,38 +212,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on the provided globals
+        comment: No unused imports; only globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, workaround well explained
+        comment: Clean, well-commented, no fake functionality
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Correct mount-node contract, animation disabled in both required
-          places
+        passed: false
+        comment: Missing the required '// License:' header line for Highcharts (present
+          in every other highcharts.js implementation in the repo)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Standard core scatter series and per-point coloring, idiomatic but
-          not exceptional
+        comment: Correct use of plotBands, plotLines, tickPositions, and core scatter
+          series options
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hand-built SVG-renderer colorbar to compensate for the unavailable
-          coloraxis module demonstrates distinctive, deep library knowledge
+        comment: Hand-built SVG colorbar via chart.renderer to compensate for the
+          unavailable coloraxis module is a genuinely Highcharts-specific technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
