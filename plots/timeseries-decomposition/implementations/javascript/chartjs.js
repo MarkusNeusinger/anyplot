@@ -26,6 +26,13 @@ function gaussianNoise(std) {
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2) * std;
 }
 
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Underlying growth (steady) + holiday-season seasonality (Jan=0 .. Dec=11)
 const GROWTH_BASE = 120;
 const GROWTH_SLOPE = 1.15;
@@ -68,15 +75,15 @@ container.style.padding = "10px 22px 4px";
 container.style.backgroundColor = t.pageBg;
 
 const PANELS = [
-  { key: "original", title: "Original", axisLabel: "Sales ($k)", data: salesKUsd, kind: "line", showMainTitle: true },
-  { key: "trend", title: "Trend", axisLabel: "Sales ($k)", data: trend, kind: "line", showMainTitle: false },
-  { key: "seasonal", title: "Seasonal", axisLabel: "Effect ($k)", data: seasonal, kind: "line", showMainTitle: false },
-  { key: "residual", title: "Residual", axisLabel: "Sales ($k)", data: residual, kind: "points", showMainTitle: false },
+  { key: "original", title: "Original", axisLabel: "Sales ($k)", data: salesKUsd, kind: "line", showMainTitle: true, flex: 1.2 },
+  { key: "trend", title: "Trend", axisLabel: "Sales ($k)", data: trend, kind: "line", showMainTitle: false, flex: 1 },
+  { key: "seasonal", title: "Seasonal", axisLabel: "Effect ($k)", data: seasonal, kind: "line", showMainTitle: false, flex: 1 },
+  { key: "residual", title: "Residual", axisLabel: "Sales ($k)", data: residual, kind: "points", showMainTitle: false, flex: 1 },
 ];
 
 PANELS.forEach((panel, idx) => {
   const row = document.createElement("div");
-  row.style.flex = "1 1 0";
+  row.style.flex = `${panel.flex} 1 0`;
   row.style.minHeight = "0";
   row.style.position = "relative";
   row.style.borderBottom = idx < PANELS.length - 1 ? `1px solid ${t.grid}` : "none";
@@ -87,18 +94,29 @@ PANELS.forEach((panel, idx) => {
   row.appendChild(canvas);
 
   const isBottom = idx === PANELS.length - 1;
+  const isOriginal = panel.key === "original";
   const datasets = [
     {
       label: panel.title,
       data: panel.data,
       borderColor: t.palette[0],
-      backgroundColor: t.palette[0],
+      backgroundColor: isOriginal
+        ? (context) => {
+            const { chartArea, ctx } = context.chart;
+            if (!chartArea) return hexToRgba(t.palette[0], 0.2);
+            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, hexToRgba(t.palette[0], 0.3));
+            gradient.addColorStop(1, hexToRgba(t.palette[0], 0.02));
+            return gradient;
+          }
+        : t.palette[0],
       borderWidth: panel.kind === "line" ? 3 : 0,
       showLine: panel.kind === "line",
       pointRadius: panel.kind === "line" ? 0 : 4,
       pointHoverRadius: 0,
       spanGaps: false,
       tension: 0.15,
+      fill: isOriginal,
     },
   ];
   if (panel.key === "residual") {
@@ -133,7 +151,7 @@ PANELS.forEach((panel, idx) => {
           text: panel.title,
           color: t.ink,
           align: "start",
-          font: { size: 17, weight: "600" },
+          font: { size: 19, weight: "600" },
           padding: { bottom: 6 },
         },
         legend: { display: false },
@@ -143,18 +161,18 @@ PANELS.forEach((panel, idx) => {
           ticks: {
             display: isBottom,
             color: t.inkSoft,
-            font: { size: 14 },
+            font: { size: 15 },
             maxRotation: 0,
             autoSkip: true,
             maxTicksLimit: 12,
           },
           grid: { color: t.grid, drawTicks: false },
-          title: { display: isBottom, text: "Month", color: t.ink, font: { size: 16 } },
+          title: { display: isBottom, text: "Month", color: t.ink, font: { size: 17 } },
         },
         y: {
-          ticks: { color: t.inkSoft, font: { size: 14 } },
+          ticks: { color: t.inkSoft, font: { size: 15 } },
           grid: { display: false },
-          title: { display: true, text: panel.axisLabel, color: t.ink, font: { size: 16 } },
+          title: { display: true, text: panel.axisLabel, color: t.ink, font: { size: 17 } },
         },
       },
     },
