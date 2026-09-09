@@ -10,6 +10,8 @@
 // Quality: pending | Created: 2026-09-09
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsText } from "@mui/x-charts/ChartsText";
+import { ScatterPlot } from "@mui/x-charts/ScatterChart";
+import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -123,7 +125,11 @@ function CycleGrid() {
     <g>
       {MONTH_LABELS.map((label, m) => {
         const angle = Math.PI / 2 - (m / 12) * 2 * Math.PI;
-        const outerPx = toPx(R_MAX * 1.02 * Math.cos(angle), R_MAX * 1.02 * Math.sin(angle));
+        // Short tick near the outer rim (not a full-radius spoke) so the
+        // grid marks the month position without cutting across all 5
+        // spiral revolutions.
+        const tickInnerPx = toPx(R_MAX * 0.96 * Math.cos(angle), R_MAX * 0.96 * Math.sin(angle));
+        const tickOuterPx = toPx(R_MAX * 1.03 * Math.cos(angle), R_MAX * 1.03 * Math.sin(angle));
         const labelPx = toPx(R_MAX * 1.1 * Math.cos(angle), R_MAX * 1.1 * Math.sin(angle));
         const dx = labelPx.x - originPx.x;
         const dy = labelPx.y - originPx.y;
@@ -132,7 +138,7 @@ function CycleGrid() {
         const uy = dy / dist;
         return (
           <g key={label}>
-            <line x1={originPx.x} y1={originPx.y} x2={outerPx.x} y2={outerPx.y} stroke={t.grid} strokeWidth={1} />
+            <line x1={tickInnerPx.x} y1={tickInnerPx.y} x2={tickOuterPx.x} y2={tickOuterPx.y} stroke={t.grid} strokeWidth={1} />
             <ChartsText
               x={labelPx.x}
               y={labelPx.y}
@@ -151,7 +157,31 @@ function CycleGrid() {
   );
 }
 
+// --- Cycle-start (year) markers, as a real MUI X scatter series -------------
+// Routed through the library's own scatter series/plugin (rendered by
+// <ScatterPlot/> below) rather than hand-drawn <circle> elements, so the
+// component exercises actual MUI X charting machinery — including its
+// built-in item tooltip — not just the coordinate-scale hooks.
+const cycleStartPoints = Array.from({ length: NUM_YEARS }, (_, k) => ({
+  x: 0,
+  y: R_INNER + REV_GAP * k, // angle = top spoke, where every cycle begins
+  id: k,
+  year: START_YEAR + k,
+}));
+const cycleStartSeries = [
+  {
+    type: "scatter",
+    id: "cycle-start",
+    label: "Cycle start (year)",
+    color: t.ink,
+    markerSize: 6,
+    data: cycleStartPoints,
+    valueFormatter: (point) => `${point.year}`,
+  },
+];
+
 // --- Overlay: label the start of each cycle (year) for orientation ----------
+// The scatter series above draws the marker dot; this only adds the year text.
 function CycleStartLabels() {
   const xScale = useXScale();
   const yScale = useYScale();
@@ -159,19 +189,16 @@ function CycleStartLabels() {
 
   return (
     <g>
-      {Array.from({ length: NUM_YEARS }, (_, k) => {
-        const radius = R_INNER + REV_GAP * k;
-        const pointPx = toPx(0, radius); // angle = top spoke, where every cycle begins
+      {cycleStartPoints.map((point) => {
+        const pointPx = toPx(point.x, point.y);
         return (
-          <g key={k}>
-            <circle cx={pointPx.x} cy={pointPx.y} r={5} fill={t.ink} />
-            <ChartsText
-              x={pointPx.x + 16}
-              y={pointPx.y}
-              text={String(START_YEAR + k)}
-              style={{ fontSize: 15, fontWeight: 500, fill: t.ink, dominantBaseline: "central" }}
-            />
-          </g>
+          <ChartsText
+            key={point.id}
+            x={pointPx.x + 16}
+            y={pointPx.y}
+            text={String(point.year)}
+            style={{ fontSize: 15, fontWeight: 500, fill: t.ink, dominantBaseline: "central" }}
+          />
         );
       })}
     </g>
@@ -265,16 +292,18 @@ export default function Chart() {
         width={window.ANYPLOT_SIZE.width}
         height={CHART_HEIGHT}
         margin={MARGIN}
-        series={[]}
+        series={cycleStartSeries}
         skipAnimation
-        disableAxisListener
+        disableVoronoi
         xAxis={[{ scaleType: "linear", min: -R_MAX * 1.2, max: R_MAX * 1.2 }]}
         yAxis={[{ scaleType: "linear", min: -R_MAX * 1.2, max: R_MAX * 1.2 }]}
       >
         <CycleGrid />
         <SpiralPath />
+        <ScatterPlot />
         <CycleStartLabels />
         <ColorLegend />
+        <ChartsTooltip trigger="item" />
       </ChartContainer>
     </div>
   );
