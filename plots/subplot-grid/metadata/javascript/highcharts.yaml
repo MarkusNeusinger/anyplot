@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: subplot-grid
 created: '2026-09-09T19:08:33Z'
-updated: '2026-09-09T19:13:45Z'
+updated: '2026-09-09T19:24:55Z'
 generated_by: claude-sonnet
 workflow_run: 34392755320
 issue: 2782
@@ -12,58 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-grid/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette usage: first series is brand green #009E73, and the Revenue-by-Category
-    bars cycle through the canonical Imprint order (green/lavender/blue/ochre/red)
-    rather than a default or arbitrary palette.'
-  - Theme-adaptive chrome is fully correct in both renders — warm off-white/near-black
-    backgrounds, no dark-on-dark or light-on-light failures anywhere, data colors
-    identical between themes.
-  - Four genuinely distinct plot types (spline trend, horizontal bar comparison, scatter
-    correlation, binned column histogram) satisfy the spec's core requirement of combining
-    different visualizations rather than faceting the same one.
-  - Deterministic, dependency-free data generation via a fixed-seed LCG + Box-Muller
-    normal sampler; each panel's synthetic data is realistic and domain-appropriate
-    (seasonal visits trend, right-skewed order-value distribution, plausible price-rating
-    correlation).
-  - No AR-09 clipping anywhere and the canvas gate passed cleanly (3200×1800); margins
-    and spacing are consistent across all four panels via a shared baseOptions() factory.
-  - 'Sensible library workaround for the missing core-bundle histogram type: manual
-    binning rendered via a column series with zero point padding, which is the idiomatic
-    Highcharts approach given no highcharts-more/modules access.'
+  - 'Well-executed asymmetric dashboard layout: a full-width hero combo chart (spline
+    + column, dual y-axis, shared tooltip) spans the top row above three independently-scaled
+    panels, giving the grid a genuine focal point instead of four equally-weighted
+    cells.'
+  - 'Correct Imprint palette compliance across all four panels: first series is consistently
+    #009E73, the colorByPoint bar chart follows the canonical palette order (green/lavender/blue/ochre/red),
+    and data colors are identical between the light and dark renders.'
+  - 'Theme-adaptive chrome (title, axis labels, gridlines, legend) reads clearly in
+    both renders with correct #FAF8F1/#1A1A17 backgrounds — no dark-on-dark or light-on-light
+    failures.'
+  - Deterministic, seeded data generation (fixed-seed LCG) producing realistic, varied
+    datasets across four distinct chart types (combo/dual-axis, horizontal bar, scatter,
+    histogram) — strong feature-coverage demonstration for the spec's 'different plot
+    type per cell' requirement.
+  - 'Clean multi-chart mount handling for a grid spec: a custom DOM grid is built
+    inside #container and four independent Highcharts.chart() calls render into it,
+    with animation disabled everywhere so the harness never screenshots mid-animation.'
   weaknesses:
-  - Spec explicitly asks the grid to 'support both shared axes (for comparison) and
-    independent axes (for different scales)', but all four panels use fully independent
-    axes with no example of axis linking/sharing — even a conceptual nod (e.g. two
-    panels sharing an x-domain) would better demonstrate this capability.
-  - At the ~400px mobile thumbnail size, per-panel titles and axis tick labels shrink
-    to the point of being hard to read — an inherent tension of packing four independently-titled
-    panels into one small preview; if this file is revisited, nudging panel-title
-    fontsize down slightly relative to tick labels could help the hierarchy read better
-    at small sizes.
-  - All four panels carry equal visual weight with no single focal point or emphasis,
-    giving the dashboard a flat, catalog-style feel rather than guiding the viewer
-    toward one primary insight.
-  - Distinctive Highcharts features are present but modest (manual histogram binning
-    workaround, per-panel tooltip formatters) — nothing beyond typical dashboard composition
-    patterns.
+  - The 'Revenue by Category' panel's value axis (bottom, ticks 0-350) has no axis
+    title/unit label — the 'Revenue (thousand $)' string is set in baseOptions() but
+    then explicitly nulled on xAxis.title and never applied to yAxis (the true value
+    axis for a 'bar' type), so the unit is only discoverable via tooltip. Set panel2.yAxis.title.text
+    to a units label instead of leaving both axis titles null.
+  - The scatter panel ('Price vs. Customer Rating') only renders horizontal gridlines
+    — the style guide recommends grid on both axes for scatter plots so precise x-values
+    are easier to read. panel3's xAxis never gets a gridLineWidth, only baseOptions()'s
+    yAxis grid applies; add a subtle vertical gridLineColor/gridLineWidth to panel3.xAxis.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), consistent across the full canvas and all four panel plot areas.
-      Chrome: Bold header "subplot-grid · javascript · highcharts · anyplot.ai" top-left in dark ink; each of the four panels has its own bold dark-ink title ("Monthly Website Visits", "Revenue by Category", "Price vs. Customer Rating", "Order Value Distribution"); axis titles and tick labels are medium-gray (inkSoft) and clearly legible; subtle light-gray gridlines visible but unobtrusive.
-      Data: Panel 1 (top-left) is a green spline line with circular markers showing a seasonal-plus-growth monthly trend, Jan–Dec. Panel 2 (top-right) is a horizontal bar chart with five bars in canonical Imprint order (green, lavender, blue, ochre, red) for Electronics/Apparel/Home & Garden/Sporting Goods/Books. Panel 3 (bottom-left) is a green scatter plot of ~48 points showing price vs. rating with a mild positive trend and realistic scatter/noise. Panel 4 (bottom-right) is a green column histogram of order values, right-skewed with a peak in the 20-40 bin, x-tick labels rotated -45°. First series color is #009E73 everywhere it's a single-series panel, matching the palette rule.
-      Legibility verdict: PASS — all titles, axis labels, and tick labels are dark-on-light and fully readable; no overlaps; no clipped text at any canvas edge (verified top, left, right, bottom crops).
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Top-left custom header "subplot-grid · javascript · highcharts · anyplot.ai" in bold dark ink. Four panel titles ("Monthly Visits & New Signups", "Revenue by Category", "Price vs. Customer Rating", "Order Value Distribution") are dark, bold, centered, and clearly legible. Axis titles and tick labels render in a softer dark-gray ink, all readable against the light surface. Gridlines are faint horizontal lines, subtle and non-competing.
+      Data: First/primary series (Visits line, Electronics bar, scatter dots, histogram bars) is the Imprint brand green #009E73. Second series (New signups columns, Apparel bar) is lavender. Home & Garden bar is blue, Sporting Goods is ochre, Books is matte red — canonical Imprint order. All colors read clearly against the cream background.
+      Legibility verdict: PASS — every title, axis label, and tick label is legible; no light-on-light text found. One exception (not a legibility issue): the Revenue panel's value axis has no title text at all (see weaknesses), but the numbers themselves are still fully readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) uniformly across canvas and all four panel plot areas.
-      Chrome: Same header and per-panel titles now rendered in light/white text, fully legible against the dark background; axis titles/ticks in a lighter soft-gray tone, clearly distinguishable from the background; gridlines are subtle dark-gray, visible but not dominant.
-      Data: Identical data and marks to the light render — same green spline, same five-color canonical-order bars (green/lavender/blue/ochre/red), same green scatter cloud, same green histogram — confirming data colors are unchanged between themes, only chrome (background/text/grid) flipped. Bars show a subtle light outline that reads fine against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures anywhere; all text (header, panel titles, axis titles, tick labels) is light-colored and clearly visible against the near-black surface; brand green remains vivid and readable on the dark background.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same header and four panel titles now render in light/off-white ink, clearly legible against the dark surface. Axis titles and tick labels use a lighter soft-gray tone that stays readable. Gridlines are faint light-colored horizontal lines, subtle against the dark background.
+      Data: Colors are pixel-identical to the light render — brand green, lavender, blue, ochre, matte red all unchanged, confirming only chrome (not data hues) flips between themes.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (header, panel titles, axis titles, tick labels, legend) is clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -71,8 +64,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Readable in both themes at full size; per-panel titles/ticks shrink
-          hard at the 400px mobile thumbnail, an inherent tension of a 4-panel grid.
+        comment: All titles, axis labels, tick labels legible in both themes at explicit
+          CSS-px sizes.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -84,62 +77,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Markers and line widths appropriately sized for each panel's data
-          density (sparse monthly line vs. denser scatter).
+        comment: Markers/lines/bars sized appropriately for each panel's data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; categorical bar colors are hue-distinct, not red-green
-          reliant.
+        comment: Good contrast; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Consistent spacing/alignment across panels, nothing cut off, canvas
-          gate passed at 3200x1800.
+        comment: Canvas gate passed; generous, well-balanced grid gaps; nothing cut
+          off.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All axis labels descriptive with units (thousands, $, 1-5).
+        passed: false
+        comment: Revenue by Category panel's value axis has no unit label — 'Revenue
+          (thousand $)' is set then nulled and never reapplied to the correct axis.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green everywhere; bar chart follows canonical
-          Imprint order; backgrounds theme-correct in both renders.
+        comment: 'First series always #009E73; canonical palette order; correct theme
+          backgrounds in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Consistent shared chrome via a baseOptions() factory and a unified
-          header; solid but not exceptional polish.
+        passed: true
+        comment: Custom asymmetric dashboard grid with a deliberate featured/hero
+          panel, not generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle gridlines, generous gaps, no unnecessary legends on single-series
-          panels.
+        comment: Subtle grid, generous whitespace, L-shaped implicit spines; scatter
+          panel missing vertical gridlines is a minor gap.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Complementary panel views form a coherent dashboard, but all four
-          carry equal visual weight with no focal point or emphasis.
+        passed: true
+        comment: Full-width hero panel creates a clear focal point and visual hierarchy
+          across the grid, documented intentionally in code comments.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,28 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine subplot grid combining four distinct plot types, correctly
-          distinguished from a faceted small-multiples plot.
+        comment: Genuine multi-panel subplot grid with distinct plot types per cell.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Grid dimensions and per-cell plot type vary as required, but no panel
-          demonstrates shared/linked axes, which the spec explicitly calls for supporting.
+        passed: true
+        comment: Configurable asymmetric grid, shared-x/independent-y demonstrated
+          in panel 1, distinct plot types, consistent spacing, clear per-panel titles.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped in every panel; axes show full data ranges.
+        comment: X/Y correctly mapped in every panel.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legends correctly omitted
-          for single-series panels.
+        comment: Exact mandated title format; legend labels ('Visits', 'New signups')
+          match series names.
     data_quality:
       score: 14
       max: 15
@@ -178,32 +169,32 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers trend, categorical comparison, correlation, and distribution
-          — a strong spread of the spec's example use cases.
+        comment: Four genuinely different chart types (dual-axis combo, bar, scatter,
+          histogram) covering diverse subplot-grid use cases.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral e-commerce/analytics data across all four panels.
+        comment: Plausible, neutral business-dashboard data (traffic, revenue, price/rating,
+          order values).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible for each domain (visits in thousands, revenue in
-          $k, prices $8-300, order values up to ~$240).
+        comment: All value ranges are sensible for their domain.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Small shared helpers (lcg, randNormal, baseOptions) avoid duplication
-          across four panels without over-engineering.
+        comment: Three small helper functions (lcg, randNormal, baseOptions) — justified
+          for 4-panel reuse but not strictly function-free.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,22 +206,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports; browser globals only, as required.
+        comment: No imports; only the Highcharts global and tokens.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: No fake UI; well-organized, well-commented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly follows the mount-node contract with four independently-mounted
-          Highcharts.chart() calls into sub-containers; animation disabled throughout.
+        comment: Correct mount-node contract adapted sensibly for a multi-chart grid
+          spec; animation disabled everywhere.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -238,24 +229,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: The CSS-grid-of-independent-charts pattern is the correct idiomatic
-          approach since Highcharts core has no native subplot/facet support.
+        comment: Dual y-axis combo, shared tooltip formatter, colorByPoint, categories
+          — solid idiomatic Highcharts usage.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Manual histogram binning workaround and per-panel tooltip formatters
-          are sensible but modest; nothing pushes further beyond typical dashboard
-          composition.
+        passed: true
+        comment: Shared/opposite-axis combo chart and per-panel custom tooltip formatters
+          go beyond generic usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - twin-axes
   - subplots
+  - hover-tooltips
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - binning
-  styling: []
+  styling:
+  - alpha-blending
