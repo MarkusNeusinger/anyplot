@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: upset-basic
 created: '2026-09-09T21:09:17Z'
-updated: '2026-09-09T21:14:21Z'
+updated: '2026-09-09T21:25:15Z'
 generated_by: claude-sonnet
 workflow_run: 34404670830
 issue: 5250
@@ -12,110 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 96
 review:
   strengths:
-  - 'Correct UpSet anatomy: horizontal set-size bars (left), vertical intersection-cardinality
-    bars (top), dot-matrix with connecting lines (center), and a degree colorbar —
-    every structural element the specification calls for is present.'
-  - Smart use of the sequential Imprint colormap (imprint_seq, brand green → blue)
-    to encode intersection degree, directly answering the spec's suggestion to 'use
-    color or shading to distinguish intersection degree.'
-  - 'Clean theme-adaptive chrome: correct light/dark backgrounds, INK/INK_SOFT/INK_MUTED
-    tokens threaded through every axis, alternating row bands for readability, and
-    identical data colors between the light and dark renders.'
-  - 'Idiomatic Makie composition: linkxaxes!/linkyaxes! keep the bar charts and matrix
-    aligned, and the grid-based Figure layout (colsize!/rowsize!) cleanly separates
-    the four panels.'
+  - 'All three attempt-1 weaknesses are cleanly fixed: explicit per-axis font sizes
+    (ylabelsize/xlabelsize/yticklabelsize/xticklabelsize) replace the flat Figure-level
+    cascade, the unused `using ColorSchemes` import is gone, and the membership model
+    now surfaces a degree-5 intersection (visible as the distinct blue bar) among
+    the top 15.'
+  - 'Correct, complete UpSet anatomy: horizontal set-size bars (brand green, reversed
+    x-axis), vertical intersection-cardinality bars colored by degree via imprint_seq,
+    dot-matrix with connecting lines, alternating row bands, and a degree colorbar.'
+  - Callout label on the single largest intersection ("365") sharpens the story's
+    focal point without faking interactivity.
+  - 'Theme-adaptive chrome is fully correct in both renders: identical brand-green/imprint_seq
+    data colors, correct FAF8F1/1A1A17 backgrounds, all text legible with no dark-on-dark
+    or light-on-light failures.'
+  - 'Idiomatic Makie composition: linkxaxes!/linkyaxes! keep panels aligned, colsize!/rowsize!
+    with Relative() cleanly partitions the four-panel grid layout.'
   weaknesses:
-  - 'Font-size hierarchy is flat: only the title gets an explicit fontsize (22); the
-    y-axis label ''Intersection size'', x-axis label ''Set size'', the matrix row
-    labels (set names), and all tick labels fall back to the Figure-level fontsize=14
-    cascade with no per-element ylabelsize/xlabelsize/yticklabelsize/xticklabelsize
-    override, so axis labels and tick labels render at the same size instead of stepping
-    down per the typography hierarchy.'
-  - '`using ColorSchemes` is imported but never referenced — `cgrad` used to build
-    IMPRINT_SEQ is Makie''s own re-export, not a ColorSchemes call. Remove the unused
-    import.'
-  - Among the top-15 intersections shown, the largest degree present is 3 even though
-    5 sets are defined — no degree-4 or degree-5 combination is visible, so the plot
-    doesn't fully demonstrate the higher-order overlaps an UpSet plot is meant to
-    surface for a 5-set example. Nudge the membership-probability model (or the element
-    count) so at least one higher-order intersection survives into the top 15.
-  - Degree-colored bars and the descending sort establish ranking, but there's no
-    direct callout (e.g. a value label on the largest bar) to sharpen the 'aha' —
-    consider a light annotation on the single most striking bar to strengthen data
-    storytelling.
+  - Title occupies only ~24% of canvas width — noticeably narrower than the ~70-85%
+    typical for the mandated title string on a landscape canvas this wide, though
+    per style-guide 5d rules this is a design choice (not overflow/clipping/squeezing)
+    and is not penalized.
+  - 'LM-02 (Distinctive Features) is unchanged from attempt 1: the grid-layout composition
+    and Colorbar usage are solid but not pushed further into more distinctive Makie-only
+    territory (e.g. custom Legend layoutable, interactive-style linked selections
+    would be out of scope, but a more elaborate degree-legend or custom tick formatting
+    could differentiate further).'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "upset-basic · julia · makie · anyplot.ai" centered at top; y-axis label "Intersection size" (top bar panel) and x-axis label "Set size" (bottom-left bar panel) in dark ink; tick labels and the five row category labels (RNA-seq, ChIP-seq, ATAC-seq, Proteomics, Methylation) in a softer dark gray. All text is clearly legible against the light background.
-      Data: Set-size bars (single series) render in brand green #009E73. Intersection-size bars are colored along the imprint_seq gradient (green → blue) keyed to intersection degree (1–3), matching the colorbar labeled "Sets in intersection." Member dots in the matrix are near-black/filled; non-member dots are faded gray at low alpha; connecting lines between member dots in the same column are a solid dark gray. Alternating light-gray row bands aid row tracking.
-      Legibility verdict: PASS.
+      Chrome: Bold dark title "upset-basic · julia · makie · anyplot.ai" centered at top. Axis labels ("Intersection size", "Set size") in dark ink with explicit ylabelsize/xlabelsize=14; tick labels and the five row category labels (RNA-seq, ChIP-seq, ATAC-seq, Proteomics, Methylation) in a softer dark gray at explicit size=12. All clearly readable against the light background.
+      Data: Set-size bars render in brand green #009E73. Intersection bars follow the imprint_seq gradient (green → blue) keyed to intersection degree (1 through 5, including one clearly blue degree-5 bar), matching the "Sets in intersection" colorbar. Member dots are near-black/filled, non-member dots faded gray (alpha), connecting lines solid dark gray, alternating light-gray row bands for readability. A callout "365" labels the single largest intersection bar.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, tick labels, and row category labels now render in light ink (white/light-gray), fully legible against the dark background. No dark-on-dark text observed anywhere — title, labels, and ticks are all light-colored.
-      Data: Set-size bars remain the identical brand green #009E73; intersection bars use the identical imprint_seq gradient and colorbar as the light render — confirmed no data-color drift between themes. Member dots render as bright near-white/off-white fills against the dark matrix background, with the same faded low-alpha treatment for non-member dots; connecting lines are a light gray, clearly visible against the dark row bands.
-      Legibility verdict: PASS.
+      Chrome: Same title, axis labels, tick labels, and row labels now render in light ink (white/light-gray) — fully legible, no dark-on-dark failures anywhere.
+      Data: Identical to light render — set-size bars stay brand green #009E73, intersection bars use the same imprint_seq gradient and colorbar range/ticks. Member dots render bright/near-white against the dark matrix, non-member dots faded at low alpha, connecting lines light gray — clearly visible against the dark row bands. The "365" callout is present and readable.
+      Legibility verdict: PASS
+
+    Both renders pass legibility; only chrome flips between themes as expected, and all data colors (categorical and continuous) are pixel-identical between the two renders.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both themes, but only the title has an explicit fontsize;
-          axis labels, tick labels, and row-category labels all fall back to the Figure-level
-          fontsize=14 cascade rather than per-element sizes, flattening the label/tick
-          hierarchy.
+        comment: Explicit fontsize/titlesize/labelsize/ticklabelsize set on every
+          axis; readable in both themes; title fits without clipping or squeezing.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render.
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dot markers (24px member / 16px faded non-member) and bar widths
-          are well-sized for 15 columns x 5 rows.
+        comment: Member dots (markersize=24) and absent dots (markersize=16, alpha=0.3)
+          are well differentiated; bars appropriately sized.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; member vs. non-member dots are distinguishable
-          via both fill and alpha, not color alone.
+        comment: Degree encoding uses green-blue sequential gradient, not red-green;
+          membership uses lightness/alpha, not hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Chart content fills the large majority
-          of the canvas with balanced margins; nothing cut off.
+        comment: Content fills the large majority of the 3200x1800 canvas with balanced
+          margins; canvas dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Intersection size'' and ''Set size'' are descriptive; count metrics
-          don''t require units.'
+        comment: Descriptive labels (Intersection size, Set size, Sets in intersection).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/single series uses #009E73; intersection degree correctly
-          uses imprint_seq (single-polarity ordinal data); backgrounds and chrome
-          are theme-correct in both renders; data colors identical across themes.'
+        comment: 'First series (set-size bars) is #009E73; degree encoding uses imprint_seq;
+          theme-correct chrome in both renders; data colors identical between themes.'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
@@ -123,23 +115,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful use of the degree gradient, brand green for set bars,
-          and alternating row bands goes clearly beyond default styling.
+        comment: Degree gradient, brand-green set bars, alternating row bands clearly
+          above defaults; not yet at fully bespoke publication-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Spines removed per panel role, subtle grid, generous whitespace;
-          the flat label/tick font hierarchy (see VQ-01) keeps this just short of
-          perfect.
+        comment: Spines removed per panel role, subtle grid, generous whitespace,
+          now-tuned per-element font hierarchy.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Descending sort plus degree-color gradient creates clear visual hierarchy;
-          no direct annotation/callout sharpens the single biggest insight.
+        comment: Descending sort + degree-color gradient + callout on the single largest
+          intersection gives the viewer an immediate, clear insight.
     spec_compliance:
       score: 15
       max: 15
@@ -149,7 +140,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Full UpSet anatomy present: set-size bars, intersection bars, dot-matrix,
+        comment: 'Full UpSet anatomy: set-size bars, intersection bars, dot-matrix,
           connecting lines.'
       - id: SC-02
         name: Required Features
@@ -157,48 +148,47 @@ review:
         max: 4
         passed: true
         comment: Descending sort, connected/unconnected dots, degree color encoding,
-          correct row/column semantics — all present.
+          correct row/column semantics all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows=sets, columns=intersections, bar values match underlying counts,
-          linked axes keep alignment exact.
+        comment: Rows=sets, columns=intersections, axes show all data via linked axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; colorbar is clearly
-          labeled as the degree legend.
+        comment: Title format correct; colorbar functions correctly as the degree
+          legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows single-set through degree-3 intersections; no degree-4/5 intersection
-          survives into the top 15 despite 5 defined sets.
+        comment: Top-15 intersections now span degree 1 through degree 5, fully demonstrating
+          the plot type for a 5-set example.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible genomics scenario (RNA-seq/ChIP-seq/ATAC-seq/Proteomics/Methylation
-          gene sets) matching the spec's own example.
+        comment: Neutral genomics scenario (RNA-seq/ChIP-seq/ATAC-seq/Proteomics/Methylation)
+          matching the spec's own example.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Membership probabilities and gene counts are plausible and internally
-          consistent.
+        comment: Set sizes and intersection counts are plausible for a 3000-gene multi-omics
+          study.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -206,43 +196,44 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> figure -> save, no functions/classes.
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set.
+        comment: Random.seed!(42).
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '`using ColorSchemes` is imported but never referenced; `cgrad` comes
-          from Makie''s own re-export.'
+        passed: true
+        comment: Unused `using ColorSchemes` removed; only CairoMakie/Colors/Random
+          remain, all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a 4-panel composite plot, no fake functionality.
+        comment: Appropriate complexity for an UpSet plot; no fake UI or simulated
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2, landing exactly on 3200x1800.
+        comment: Saves plot-$(THEME).png via save() with px_per_unit=2.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of linkxaxes!/linkyaxes! and the Figure grid-layout system,
-          though tick/label sizing wasn't tuned per-axis.
+        comment: linkxaxes!/linkyaxes!, colsize!/rowsize! with Relative(), hspan!,
+          and Colorbar as first-class layoutables; per-axis sizing now fully tuned.
       - id: LM-02
         name: Distinctive Features
         score: 3
@@ -250,19 +241,20 @@ review:
         passed: true
         comment: Grid-based multi-panel Figure composition with linked axes and a
           custom cgrad-driven Colorbar leverages Makie-specific machinery beyond generic
-          plotting calls.
-  verdict: REJECTED
+          plotting calls, but does not push further into more unique territory.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - manual-ticks
-  - subplots
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
+  - groupby-aggregation
   dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
+  - publication-ready
