@@ -100,10 +100,35 @@ const svg = d3.select("#container").append("svg").attr("width", width).attr("hei
 function stylePanelAxis(sel) {
   sel.selectAll(".tick text").attr("fill", t.inkSoft).style("font-size", "12px");
   sel.selectAll(".tick line").attr("stroke", t.grid);
-  sel.select(".domain").attr("stroke", t.inkSoft);
+  sel.select(".domain").remove();
 }
 
-function panel(key, title) {
+// Small axis-unit label, rotated for the y axis, so panels where the panel
+// title alone doesn't convey units (e.g. duration, visits) stay unambiguous.
+function axisTitle(cg, text, axis, iw, ih, offset) {
+  if (axis === "y") {
+    cg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -(ih / 2))
+      .attr("y", -offset)
+      .attr("text-anchor", "middle")
+      .attr("fill", t.inkSoft)
+      .style("font-size", "10px")
+      .style("font-weight", "600")
+      .text(text);
+  } else {
+    cg.append("text")
+      .attr("x", iw / 2)
+      .attr("y", ih + offset)
+      .attr("text-anchor", "middle")
+      .attr("fill", t.inkSoft)
+      .style("font-size", "10px")
+      .style("font-weight", "600")
+      .text(text);
+  }
+}
+
+function panel(key, title, titleSize = "16px") {
   const { x, y, w, h } = cellRect(key);
   const g = svg.append("g").attr("transform", `translate(${x},${y})`);
   g.append("rect").attr("width", w).attr("height", h).attr("rx", 10).attr("fill", t.elevatedBg);
@@ -111,7 +136,7 @@ function panel(key, title) {
     .attr("x", 18)
     .attr("y", 28)
     .attr("fill", t.ink)
-    .style("font-size", "16px")
+    .style("font-size", titleSize)
     .style("font-weight", "600")
     .text(title);
   return { g, w, h };
@@ -119,8 +144,8 @@ function panel(key, title) {
 
 // --- Panel A: wide overview area+line chart ----------------------------------
 {
-  const { g, w, h } = panel("A", "Daily Page Views — Last 90 Days");
-  const m = { top: 48, right: 24, bottom: 34, left: 68 };
+  const { g, w, h } = panel("A", "Daily Page Views — Last 90 Days", "18px");
+  const m = { top: 48, right: 24, bottom: 34, left: 86 };
   const iw = w - m.left - m.right;
   const ih = h - m.top - m.bottom;
   const cg = g.append("g").attr("transform", `translate(${m.left},${m.top})`);
@@ -136,6 +161,7 @@ function panel(key, title) {
     .call(d3.axisLeft(y).ticks(5).tickSize(-iw).tickFormat(d3.format("~s")))
     .call((sel) => sel.selectAll("line").attr("stroke", t.grid))
     .call(stylePanelAxis);
+  axisTitle(cg, "Page Views", "y", iw, ih, 60);
 
   const area = d3
     .area()
@@ -155,7 +181,7 @@ function panel(key, title) {
     .attr("d", line)
     .attr("fill", "none")
     .attr("stroke", t.palette[0])
-    .attr("stroke-width", 3);
+    .attr("stroke-width", 3.5);
 
   const xAxis = cg
     .append("g")
@@ -172,7 +198,7 @@ function panel(key, title) {
 // --- Panel B: traffic by channel (vertical bar) ------------------------------
 {
   const { g, w, h } = panel("B", "Traffic by Channel");
-  const m = { top: 44, right: 20, bottom: 32, left: 58 };
+  const m = { top: 44, right: 20, bottom: 32, left: 76 };
   const iw = w - m.left - m.right;
   const ih = h - m.top - m.bottom;
   const cg = g.append("g").attr("transform", `translate(${m.left},${m.top})`);
@@ -193,6 +219,7 @@ function panel(key, title) {
     .call(d3.axisLeft(y).ticks(4).tickSize(-iw).tickFormat(d3.format("~s")))
     .call((sel) => sel.selectAll("line").attr("stroke", t.grid))
     .call(stylePanelAxis);
+  axisTitle(cg, "Visits", "y", iw, ih, 54);
 
   cg.selectAll("rect.bar")
     .data(channels)
@@ -212,7 +239,7 @@ function panel(key, title) {
 // --- Panel C: session duration vs. pages viewed (scatter) --------------------
 {
   const { g, w, h } = panel("C", "Session Duration vs. Pages Viewed");
-  const m = { top: 44, right: 24, bottom: 34, left: 58 };
+  const m = { top: 44, right: 24, bottom: 50, left: 76 };
   const iw = w - m.left - m.right;
   const ih = h - m.top - m.bottom;
   const cg = g.append("g").attr("transform", `translate(${m.left},${m.top})`);
@@ -237,6 +264,8 @@ function panel(key, title) {
     .attr("transform", `translate(0,${ih})`)
     .call((sel) => sel.selectAll("line").attr("stroke", t.grid))
     .call(stylePanelAxis);
+  axisTitle(cg, "Pages", "y", iw, ih, 54);
+  axisTitle(cg, "Duration (min)", "x", iw, ih, 40);
 
   cg.selectAll("circle")
     .data(sessions)
@@ -394,14 +423,21 @@ function panel(key, title) {
 }
 
 // --- Title --------------------------------------------------------------------
+// Measure the actual rendered width (real browser layout engine) instead of a
+// char-count heuristic, so the title reliably fills ~60% of the canvas width
+// without guessing at font metrics.
 const title = "Website Analytics Dashboard · subplot-mosaic · javascript · d3 · anyplot.ai";
-const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
-svg
+const baseFontSize = 28;
+const titleEl = svg
   .append("text")
   .attr("x", width / 2)
   .attr("y", 44)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", `${titleFontSize}px`)
+  .style("font-size", `${baseFontSize}px`)
   .style("font-weight", "600")
   .text(title);
+const measuredWidth = titleEl.node().getBBox().width;
+const targetWidth = width * 0.62;
+const scale = Math.max(0.55, Math.min(1.25, targetWidth / measuredWidth));
+titleEl.style("font-size", `${Math.round(baseFontSize * scale)}px`);
