@@ -1,7 +1,7 @@
 // anyplot.ai
 // sparkline-basic: Basic Sparkline
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-09
+// Quality: 88/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
