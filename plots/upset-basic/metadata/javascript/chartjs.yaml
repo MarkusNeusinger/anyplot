@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: upset-basic
 created: '2026-09-09T21:01:08Z'
-updated: '2026-09-09T21:06:28Z'
+updated: '2026-09-09T21:16:06Z'
 generated_by: claude-sonnet
 workflow_run: 34403433540
 issue: 5250
@@ -12,54 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/upset-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/upset-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - Faithful multi-panel UpSet composition — horizontal set-size bars, vertical intersection-cardinality
-    bars, and a dot-matrix with connector lines, pixel-aligned across three independent
-    Chart.js instances via a shared reserve-width technique
-  - 'Correct Imprint palette: brand green (#009E73) for the single-series set-size
-    bars; continuous imprint_seq gradient correctly used to encode intersection degree'
-  - 'Theme-correct chrome in both renders — #FAF8F1/#1A1A17 backgrounds, all text
-    and grid tokens flip correctly, data colors identical across themes'
-  - 'Realistic, biologically plausible synthetic data: five correlated differential-expression
-    assays with Methylation intentionally anti-correlated with the shared activity
-    signal'
-  - 'Distinctive engineering: afterFit-driven axis-reserve syncing plus mixed line+scatter
-    dataset types to draw connector segments — a technique not trivially portable
-    to another library'
-  - Deterministic seeded LCG for reproducibility; member/non-member dots use redundant
-    size+shade encoding, not hue alone
+  - 'Perfectly synchronized triple-canvas layout: the top intersection-cardinality
+    bar chart, left set-size bar chart, and dot matrix each reserve pixel-identical
+    axis widths/heights (Y_AXIS_RESERVE, X_AXIS_RESERVE, LEFT_LABEL_WIDTH), so all
+    three panels line up exactly, including column-to-dot and row-to-label alignment.'
+  - 'Verified data-mapping fidelity: re-running the LCG data generation independently
+    confirms the rendered bar values (122, 94, 22, 22, 19, 15...) and dot patterns
+    (00001, 11110, 00100...) exactly match the chart''s computed intersections, degree
+    colors, and connector spans.'
+  - 'Genuine data storytelling: the single largest intersection gets a bold outline
+    plus an exact-count callout, and bars are colored along the Imprint sequential
+    ramp by degree (sets combined), adding a second meaningful data dimension beyond
+    bar height.'
+  - 'Clean, theme-correct chrome in both renders: light (#FAF8F1) and dark (#1A1A17)
+    backgrounds are correct, data colors (green-to-blue degree gradient, brand green
+    set-size bars) are identical across themes, and all text is legible.'
+  - Realistic, neutral dataset directly reflecting the spec's own suggested use case
+    (RNA-seq/ChIP-seq/ATAC-seq/Proteomics/Methylation gene sets), with a correlated
+    'activity' latent variable producing plausible, unevenly sized overlaps rather
+    than uniform random noise.
   weaknesses:
-  - No legend or caption explains what the intersection-bar color gradient encodes
-    (degree) — a first-time viewer cannot decode it without reading the source; add
-    a small caption or 2-3-stop mini color-scale near the top-right of the intersection
-    panel
-  - Mid-range degrees (2, 3, 4) render as visually similar teal/green-blue tones under
-    the 2-stop imprint_seq gradient, making exact degree hard to distinguish by color
-    alone without the missing legend
-  - The empty top-left corner cell (~6% of canvas) is standard for UpSet plots but
-    is otherwise wasted space that could host the missing degree-color legend
-  - Design polish is technically correct but reads as scientific/utilitarian rather
-    than editorial — consider one added touch of visual hierarchy (e.g. highlighting
-    or annotating the single largest intersection) to push Data Storytelling further
+  - The dot matrix has no on-chart legend distinguishing the large dark 'in intersection'
+    dots from the small faint 'not in intersection' dots — a viewer unfamiliar with
+    UpSet plots has no explicit cue for this encoding. Add a short caption (e.g. below
+    the existing degree-gradient legend in the corner cell) naming the two dot states.
+  - Set sizes across the five sets (RNA-seq 172, ChIP-seq 170, ATAC-seq 169, Proteomics
+    142, Methylation 130) vary only modestly, so the left 'Set Size' bar panel reads
+    as fairly uniform bars. Widening the per-set LCG thresholds slightly would make
+    that panel visually earn its place in the story.
+  - The corner-cell legend captions ('Bar color = intersection degree', 'sets combined')
+    are set at 11-12px, noticeably smaller than the rest of the chrome (13-16px elsewhere)
+    — bump them up a point or two for visual consistency.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "upset-basic · javascript · chartjs · anyplot.ai" centered at top in dark bold text, clearly readable. "Intersection Size" y-axis title/ticks (top panel) and "Set Size" x-axis title/ticks (left panel, reversed 200→0 scale) and set-name labels (RNA-seq, ChIP-seq, ATAC-seq, Proteomics, Methylation) all render in dark ink/soft-ink tones, fully legible against the light background. Subtle horizontal gridlines visible on the intersection-size axis.
-      Data: Left bar chart (set sizes) uses brand green #009E73 throughout. Top bar chart (12 intersections, sorted descending from ~122 to ~5) uses a green-to-blue gradient keyed to intersection degree — single-set bars are green, the 5-way intersection is blue, in-between combinations are teal. Matrix below shows large dark dots for set membership, small faint grey dots for non-membership, connected by bold dark vertical line segments spanning each intersection's member rows.
-      Legibility verdict: PASS — no light-on-light text, no clipped or overlapping elements observed.
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
+      Chrome: Bold serif title "upset-basic · javascript · chartjs · anyplot.ai" centered at top, dark ink text. "Intersection Size" y-axis title (top bar chart, 0-140) and "Set Size" x-axis title (left bar chart, reversed 200-0 scale) both dark ink, clearly readable. Set-name row labels (RNA-seq, ChIP-seq, ATAC-seq, Proteomics, Methylation) in dark ink to the right of the horizontal bars. A small corner legend reads "Bar color = intersection degree" with a green-to-blue gradient swatch labeled 1 and 4, and "sets combined" beneath it.
+      Data: Left horizontal bars are solid Imprint brand green (#009E73). Top vertical bars are colored along a green-to-blue sequential ramp by intersection degree; the largest bar (Methylation-only, 122 elements) has a black outline and an exact count "122" drawn above it. The dot matrix shows large dark dots for set membership, small faint gray dots for non-membership, and black connector lines joining member dots within each column.
+      Legibility verdict: PASS — all titles, axis labels, tick labels, row labels, and legend text are clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, tick labels, and set-name labels now render in light/off-white ink tones (INK / INK_SOFT flipped), fully legible against the dark background. Gridlines are still subtly visible.
-      Data: Data colors are identical to the light render — set-size bars still brand green #009E73, intersection bars still the same green-to-blue degree gradient. Matrix dots flip to light/near-white fills (member dots bright white, non-member dots soft grey) with white connector lines, correctly contrasting against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark text, all chrome and data elements clearly distinguishable from the background.
-
-    Both renders confirm data colors (brand green, and the imprint_seq degree gradient) are pixel-identical between themes; only background, text, grid, and dot fill/connector colors flip as expected.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
+      Chrome: Same title, axis titles, row labels, and corner legend, all now rendered in light/off-white ink for contrast against the dark background. Grid lines remain subtle.
+      Data: Data colors are identical to the light render — the same brand-green set-size bars, the same green-to-blue degree gradient on the intersection bars (including the "122" count and black-outlined top bar), and the same dot/connector encoding, now rendered with off-white non-member dots and member dots for contrast on dark.
+      Legibility verdict: PASS — all text is light-colored against the near-black background with no dark-on-dark failures; tick labels, row labels, and legend captions are all clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,75 +68,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (26px title, 16px axis titles, 13-15px
-          labels/ticks); readable in both themes; well-proportioned, no overflow
+        comment: All text readable in both themes; corner-legend captions (11-12px)
+          are smaller than the rest of the chrome (13-16px)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dot markers (7px/10px radius) and bar widths well suited to the ~60-dot
-          matrix / 12-column layout
+        comment: Member dots (r=10) vs. non-member dots (r=7) clearly differentiated;
+          connector lines visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Member/non-member dots redundantly encoded via size+shade, not hue
-          alone; degree gradient uses CVD-safe imprint_seq
+        comment: Green-to-blue sequential ramp, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Balanced overall layout and generous canvas use; minor dead space
-          in the empty top-left corner cell
+        comment: Three panels pixel-aligned via shared axis reserves; nothing clipped;
+          canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Set Size'' / ''Intersection Size'' axis labels are descriptive
-          for the plot type'
+        comment: '''Intersection Size'' and ''Set Size'' both descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; continuous imprint_seq gradient for degree;
-          theme-correct #FAF8F1/#1A1A17 backgrounds and chrome in both renders'
+        comment: 'First series #009E73; degree ramp uses imprint_seq; backgrounds
+          correct both themes'
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful degree-color encoding and precise cross-panel alignment
-          go beyond a library default, though the result reads as scientific/technical
-          rather than editorial polish
+        comment: Custom degree-gradient legend, count callout, outlined top bar go
+          well beyond generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Hidden borders/ticks on shared axes, subtle single-axis grid, generous
-          whitespace; corner cell left unused
+        comment: Spines/grids hidden on matching axes, subtle grid on visible axes,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Descending sort plus degree-color creates a clear size hierarchy,
-          but the color's meaning is not explained anywhere on the chart
+        comment: Clear focal point (largest intersection highlighted + labeled); degree
+          color adds a second data dimension
     spec_compliance:
       score: 14
       max: 15
@@ -145,114 +143,112 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct 3-panel UpSet composition: set-size bars, intersection bars,
-          dot matrix'
+        comment: 'Correct UpSet plot: matrix + top bars + left bars'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Descending sort, connected/unconnected dots, degree color-coding
-          — all spec notes implemented
+        comment: Sorted-by-size intersections, connected dots, horizontal/vertical
+          bars, degree shading all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sets on matrix rows, intersections as matrix columns, all three linked
-          panels correctly mapped
+        comment: Rows=sets, columns=intersections, verified against independently
+          recomputed data
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
         passed: true
-        comment: Title format exactly correct; no legend/caption explains the degree
-          color gradient
+        comment: Title format correct; degree legend present but no legend for member/non-member
+          dot encoding
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 5 sets, 12 intersections spanning size 122 down to ~5 and degree
-          1-5
+        comment: Shows all UpSet aspects; set-size variance is modest, slightly undercutting
+          the left panel's story
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genomics differential-expression scenario, realistic and neutral
+        comment: Genomics use case directly from spec, neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Set sizes and the correlated/anti-correlated (Methylation) overlaps
-          are biologically plausible
+        comment: 400 genes, 5 sets, within spec's 100-10,000 / 4-15 ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly linear structure but adds 3 small helpers (lcgRandom, lerpColor,
-          makeCanvas) for necessary reuse across 3 charts
+        comment: Helper functions (lcgRandom, lerpColor, makeCanvas) justified by
+          multi-canvas synchronization needs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports/globals
+        comment: No imports; nothing unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; complexity matches the multi-panel composition
-          task
+        comment: Appropriate complexity for a 3-panel synchronized layout, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false set on all 3 charts; correct mount-node contract
+        comment: Correct mount-node contract, animation:false on all three Chart instances
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct core bar/scatter/line usage and afterFit scale hooks, though
-          the cross-chart axis-reserve sync is a manual workaround rather than a first-class
-          API
+        comment: Composes bar/scatter/line core types to express a plot type Chart.js
+          has no native support for
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: afterFit-driven axis-reserve syncing plus mixed line+scatter connector
-          datasets is a distinctive technique not trivially ported to another library
-  verdict: REJECTED
+        comment: Custom afterDatasetsDraw plugin for count callout, offset category
+          axes, hidden matching axes for alignment
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - layer-composition
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
@@ -260,4 +256,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - minimal-chrome
+  - edge-highlighting
