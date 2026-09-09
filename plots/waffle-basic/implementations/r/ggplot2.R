@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' waffle-basic: Basic Waffle Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 49/100 | Created: 2026-09-09
+#' Quality: 92/100 | Created: 2026-09-09
 
 library(ggplot2)
 library(patchwork)
