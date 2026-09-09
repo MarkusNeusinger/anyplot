@@ -133,6 +133,8 @@ Highcharts.chart("container", {
   yAxis: {
     min: -0.6,
     max: clinics.length - 1 + 0.6,
+    startOnTick: false,
+    endOnTick: false,
     tickPositions: clinics.map((_, i) => i),
     gridLineWidth: 0,
     lineColor: t.inkSoft,
