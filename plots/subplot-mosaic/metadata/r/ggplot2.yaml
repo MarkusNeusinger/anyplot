@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: subplot-mosaic
 created: '2026-09-09T19:43:41Z'
-updated: '2026-09-09T20:03:34Z'
+updated: '2026-09-09T20:17:40Z'
 generated_by: claude-sonnet
 workflow_run: 34396290808
 issue: 3002
@@ -12,53 +12,75 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 66
 review:
   strengths:
-  - 'Deliberate visual hierarchy: wide overview panel on top, two medium detail panels
-    in the middle, three small trend panels at the bottom, closely mirroring the spec''s
-    own "AAA;BBC;DEF" example layout'
-  - 'Correct, consistent theme-adaptive chrome: backgrounds, ink colors, and grid
-    all flip correctly between light and dark with identical data colors'
-  - Good variety of plot types across cells (area+line, bar, bubble scatter, three
-    line trends) satisfying the spec's "each cell can contain a different plot type"
-    note
-  - Realistic, neutral analytics-dashboard dataset with sensible value ranges
-  - Correct title format and legend labeling
+  - Mosaic layout matrix (1 wide top panel, 2 medium middle panels, 3 small bottom
+    panels) directly mirrors the spec's own "AAA;BBC;DEF" example, giving a clear,
+    deliberate visual hierarchy
+  - 'Theme-adaptive chrome is correct and consistent: backgrounds, ink colors, and
+    grid lines flip correctly between light and dark while all data colors stay identical'
+  - Good diversity of plot types across the six cells (area+line, bar, bubble scatter,
+    three line trends), satisfying the spec's "each cell can contain a different plot
+    type" note
+  - Realistic, neutral website-analytics dataset with plausible value ranges (page
+    views, device split, session/bounce/conversion metrics)
+  - 'Mandated title format is exactly correct: "subplot-mosaic · r · ggplot2 · anyplot.ai",
+    rendered with no clipping at the canvas edge in either theme'
   weaknesses:
-  - 'Panel C bubble clipping (both themes): the two leftmost bubbles in "Page engagement"
-    (Home ~47% bounce, Blog ~46% bounce) are visibly cut off at the top of the panel,
-    rendering as flat-topped semicircles instead of full circles. Root cause: scale_size_area(max_size
-    = 8) produces large point radii for these bounce values, but the y-scale has no
-    top expansion / coord_cartesian(clip = "off"), so ggplot2''s default panel clipping
-    (clip = "on") chops the tops of the circles. Add scale_y_continuous(expand = expansion(mult
-    = c(0.05, 0.15))) (top-biased expansion) to Panel C, or set coord_cartesian(clip
-    = "off").'
-  - 'Panel B bar-value labels never render: geom_text(aes(label = scales::comma(visits)),
-    vjust = -0.4, ...) is present in the code but no "12,500 / 8,700 / 2,100" text
-    appears above the bars in either rendered PNG. Same clipping root cause as above.'
-  - 'Panel F peak-percentage label never renders: the enlarged peak point on "Conversion
-    rate (%)" shows, but its sprintf("%.1f%%", value) label above it does not appear
-    in either render. Increase top expansion / clip="off" for panel F, and re-verify
-    the actual saved PNG before submission.'
-  - Mosaic assembled via gridExtra::arrangeGrob() + manual layout matrix rather than
-    a ggplot2-native mosaic mechanism; consider patchwork::plot_layout(design = "AAA\nBBC\nDEF")
-    if available in the CI image, since it matches the spec's ASCII-art syntax directly.
+  - 'The attempt-2 fix (adding coord_cartesian(clip = "off") to panels B/C/F and widening
+    scale_y_continuous(expand=...)) did NOT resolve anything: pixel-level inspection
+    of the newly rendered plot-light.png/plot-dark.png shows the exact same three
+    defects flagged in the previous review, byte-for-byte unchanged in appearance.
+    Root-cause correction for the repair loop: coord_cartesian(clip = "off") only
+    disables clipping to a panel''s own plot area within that single ggplot''s own
+    gtable; once panels are combined with gridExtra::arrangeGrob(), each subplot is
+    still confined to its allotted grid-layout cell, so any geom or label that overflows
+    the panel is still cut at the cell boundary regardless of clip="off". Fix by keeping
+    all drawn content strictly inside each panel''s own coordinate range (e.g. explicit
+    ylim()/coord_cartesian(ylim=...) sized to include label/marker extents) instead
+    of relying on off-panel overflow, or switch the composition mechanism to patchwork::plot_layout(design
+    = "AAA\nBBC\nDEF") which composites full plot grobs (including legends and any
+    intentional overflow) correctly and even matches the spec''s own ASCII-art layout-string
+    syntax more directly than a numeric layout_matrix.'
+  - 'Panel C ("Page engagement"): the "Pageviews" size legend (scale_size_area(name
+    = "Pageviews", ...), legend.position = "right") never appears anywhere on the
+    canvas in either theme — confirmed by scanning the full right edge of both renders.
+    Without it, the size-encoded z-variable (the spec''s optional "z (numeric) - tertiary
+    variable for color or size encoding") is completely undecodable to a viewer. This
+    is a gridExtra::arrangeGrob() limitation: it does not preserve per-panel legends
+    when arranging raw ggplot objects (unlike patchwork, which collects/keeps legends
+    automatically).'
+  - 'Panel B ("Traffic by device"): the geom_text(aes(label = scales::comma(visits)),
+    vjust = -0.4, ...) value labels above the three bars are completely invisible
+    in both renders — verified with a zoomed crop showing only blank space between
+    the bar tops and the panel title, with no "12,500 / 8,700 / 2,100" text anywhere.'
+  - 'Panel C: the two leftmost bubbles (~46-47% bounce, the "Product" and "Pricing"
+    pages) are visibly clipped at the top edge of the panel in both themes, rendering
+    as flat-topped semicircles instead of full circles — part of the encoded data
+    is literally missing from the image.'
+  - 'Panel F ("Conversion rate"): the enlarged peak point''s sprintf("%.1f%%", value)
+    callout label never renders in either theme, so the intended "highlight the peak"
+    storytelling device has no visible effect.'
+  - 'CQ-04 docked to 0: across two consecutive fix attempts, the geom_text()/legend
+    code for panels B, C, and F produces zero visible effect in the actual saved PNGs
+    — functionally dead code that looks purposeful in the source but does nothing
+    in the shipped artifact.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1, not pure white, not dark.
-      Chrome: Bold dark title "subplot-mosaic · r · ggplot2 · anyplot.ai" (~45% of width); dark ink axis titles/tick labels on all six panels; all clearly readable against the light background.
-      Data: All series use brand green #009E73 (area fill, line, bars, bubbles). Panel A: area+line chart of daily page views. Panel B: bar chart of visits by device. Panel C: bubble scatter (avg session vs. bounce rate, size = pageviews) with a "Pageviews" size legend. Panels D/E/F: small line-trend charts (bounce rate, avg session, conversion rate).
-      Legibility verdict: PASS for chrome text. FAIL for two content defects: (1) the two leftmost bubbles in Panel C are clipped at the top of the panel (flat-topped semicircles, not full circles); (2) the intended geom_text value labels above the Panel B bars and the peak-percentage label on Panel F never render at all.
+      Chrome: Bold dark title "subplot-mosaic · r · ggplot2 · anyplot.ai" fully visible with no edge clipping; dark ink axis titles/tick labels on all six panels, all clearly readable against the light background; subtle horizontal (and light vertical, in Panel C) gridlines.
+      Data: All series use brand green #009E73 (area fill, line, bars, bubbles) — Panel A: area+line chart of daily page views; Panel B: bar chart of visits by device (Desktop/Mobile/Tablet); Panel C: bubble scatter of avg session vs. bounce rate, sized by pageviews; Panels D/E/F: small line-trend charts (bounce rate, avg session, conversion rate).
+      Legibility verdict: PASS for all chrome text that is actually rendered. FAIL for three content defects verified by zoomed crops: (1) the two leftmost bubbles in Panel C are clipped at the top of the panel (flat-topped semicircles, not full circles); (2) the "Pageviews" size legend for Panel C is entirely absent from the canvas; (3) the geom_text value labels above the Panel B bars and the peak-percentage callout on Panel F never render at all.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17, not pure black, not light.
       Chrome: Title and all axis/tick text switch to light ink and remain clearly readable; no dark-on-dark failures observed.
       Data: Colors identical to the light render (brand green #009E73 throughout); only chrome (background, text, grid) inverted, as expected.
-      Legibility verdict: PASS for chrome text. FAIL for the same two content defects as the light render — Panel C bubble clipping and missing Panel B / Panel F text labels reproduce identically in dark mode, confirming the root cause is a clipping/expansion bug independent of theme.
+      Legibility verdict: PASS for chrome text. FAIL for the same three content defects as the light render — Panel C bubble clipping, the missing Panel C legend, and the missing Panel B/F text labels reproduce identically in dark mode, confirming the root cause is a compositing/clipping bug independent of theme.
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 21
       max: 30
       items:
       - id: VQ-01
@@ -66,22 +88,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All chrome text readable in both themes; docked because two annotation
-          labels never render at all
+        comment: All chrome text that renders is legible in both themes; docked because
+          Panel B/F annotation labels never render at all
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Two Panel C bubbles are chopped by the panel's top edge (flat-topped
-          semicircles)
+        passed: true
+        comment: No collisions between rendered text/data elements
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clipped bubbles corrupt size-encodes-pageviews reading; Panel B/F
-          geom_text labels invisible
+        comment: Two Panel C bubbles are half-invisible (top-clipped); size encoding
+          is undecodable with no legend
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -90,11 +111,11 @@ review:
         comment: Single-hue green, adequate contrast, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 1
         max: 4
         passed: false
-        comment: Panel C bubble markers cut off by internal panel boundary (canvas
-          itself is correctly sized)
+        comment: Panel C bubble markers literally cut off by the internal panel boundary
+          in both themes; legend area missing entirely
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,15 +129,16 @@ review:
         passed: true
         comment: 'First/only series is #009E73; backgrounds correct in both themes'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Deliberate mosaic hierarchy mirroring the spec's own layout example
+        comment: Deliberate mosaic hierarchy, but broken elements undercut overall
+          polish
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -125,12 +147,14 @@ review:
         comment: theme_minimal, no spines, subtle gridlines, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Intended peak-highlight callout on Panel F undercut by missing label
+        comment: Both intended storytelling devices (bar value labels, peak-highlight
+          callout) fail to render, and the size-legend that explains Panel C is missing
+          entirely
     spec_compliance:
-      score: 14
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -138,14 +162,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mosaic layout matrix directly matches spec's AAA;BBC;DEF example
+        comment: Mosaic layout directly matches spec's AAA;BBC;DEF example
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Varying sizes, asymmetric layout, multiple plot types present; docked
-          for non-rendering labels
+        passed: false
+        comment: Varying sizes/asymmetric layout present, but the z-variable size
+          encoding in Panel C is undecodable without its legend, and labels never
+          render
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -154,20 +179,22 @@ review:
         comment: x/y correctly mapped in every panel
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title matches mandated format; legend labels match
+        passed: false
+        comment: Title matches mandated format, but the Panel C size legend is completely
+          absent from the canvas in both themes
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Good range of mosaic-relevant features
+        comment: Broad range of mosaic-relevant chart types, but the size-encoding
+          feature is not functionally realized
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -181,7 +208,7 @@ review:
         passed: true
         comment: All values at realistic magnitudes
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -204,11 +231,11 @@ review:
         comment: ggplot2, gridExtra, grid, ragg all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: geom_text() layers on Panels B and F never appear in either rendered
-          PNG
+        comment: geom_text() layers on Panels B/F and the Panel C legend never manifest
+          in either rendered PNG across two consecutive fix attempts
       - id: CQ-05
         name: Output & API
         score: 1
@@ -216,23 +243,24 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png via ragg::agg_png at correct dimensions
     library_mastery:
-      score: 4
+      score: 2
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: gridExtra::arrangeGrob() + manual matrix works but is not ggplot2-native;
-          patchwork's ASCII-art design string would be more idiomatic
+        comment: gridExtra::arrangeGrob() drops per-panel legends and re-clips clip="off"
+          overflow at each grid cell boundary; patchwork::plot_layout(design=...)
+          would avoid both bugs and matches the spec's own ASCII-art layout syntax
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic layered-geom usage; no ggplot2-distinctive technique beyond
-          basics
+        comment: The one genuinely distinctive feature attempted (scale_size_area
+          bubble encoding with a legend) does not actually work in the shipped output
   verdict: REJECTED
 impl_tags:
   dependencies:
