@@ -22,6 +22,7 @@ const IMPRINT_PALETTE = [
 # --- Data: household budget allocation, 100 squares = 100% -------------------
 categories = ["Housing", "Food", "Transportation", "Savings", "Entertainment"]
 percentages = [32, 22, 18, 16, 12]
+focal_idx = argmax(percentages)
 
 grid_size = 10
 cell_categories = Vector{Int}(undef, grid_size^2)
@@ -44,14 +45,22 @@ for i in 1:(grid_size^2)
     cell_colors[i] = IMPRINT_PALETTE[cell_categories[i]]
 end
 
-# --- Plot ----------------------------------------------------------------
-title_text = "waffle-basic · julia · makie · anyplot.ai"
+focal_mask    = cell_categories .== focal_idx
+squares_rest  = squares[.!focal_mask]
+colors_rest   = cell_colors[.!focal_mask]
+squares_focal = squares[focal_mask]
+colors_focal  = cell_colors[focal_mask]
 
-canvas_side  = 1200
-title_height = 80
-legend_height = 70
-row_gap      = 20
-square_side_px = canvas_side - title_height - legend_height - 2 * row_gap
+# --- Plot ----------------------------------------------------------------
+title_text    = "waffle-basic · julia · makie · anyplot.ai"
+subtitle_text = "$(categories[focal_idx]) leads the budget at $(percentages[focal_idx])%"
+
+canvas_side     = 1200
+title_height    = 92
+subtitle_height = 40
+legend_height   = 70
+row_gap         = 16
+square_side_px  = canvas_side - title_height - subtitle_height - legend_height - 3 * row_gap
 
 fig = Figure(
     size            = (canvas_side, canvas_side),
@@ -61,25 +70,34 @@ fig = Figure(
 
 Label(
     fig[1, 1], title_text;
-    fontsize = 26, color = INK, font = :bold, halign = :center,
+    fontsize = 38, color = INK, font = :bold, halign = :center,
+)
+
+Label(
+    fig[2, 1], subtitle_text;
+    fontsize = 18, color = INK_SOFT, halign = :center,
 )
 
 ax = Axis(
-    fig[2, 1];
+    fig[3, 1];
     aspect          = DataAspect(),
     backgroundcolor = PAGE_BG,
 )
 hidespines!(ax)
 hidedecorations!(ax)
 
-poly!(ax, squares; color = cell_colors, strokewidth = 3, strokecolor = PAGE_BG)
+# Focal category (largest share) gets an ink-colored outline to anchor the
+# eye and reinforce the storytelling callout above; every other square keeps
+# the neutral background-colored gap stroke.
+poly!(ax, squares_rest; color = colors_rest, strokewidth = 3, strokecolor = PAGE_BG)
+poly!(ax, squares_focal; color = colors_focal, strokewidth = 5, strokecolor = INK)
 xlims!(ax, 0, grid_size)
 ylims!(ax, 0, grid_size)
 
 legend_labels = ["$(categories[i]) ($(percentages[i])%)" for i in eachindex(categories)]
 legend_elements = [PolyElement(color = IMPRINT_PALETTE[i], strokewidth = 0) for i in eachindex(categories)]
 Legend(
-    fig[3, 1], legend_elements, legend_labels;
+    fig[4, 1], legend_elements, legend_labels;
     orientation     = :horizontal,
     framevisible    = false,
     backgroundcolor = :transparent,
@@ -91,8 +109,9 @@ Legend(
 )
 
 rowsize!(fig.layout, 1, Fixed(title_height))
-rowsize!(fig.layout, 2, Fixed(square_side_px))
-rowsize!(fig.layout, 3, Fixed(legend_height))
+rowsize!(fig.layout, 2, Fixed(subtitle_height))
+rowsize!(fig.layout, 3, Fixed(square_side_px))
+rowsize!(fig.layout, 4, Fixed(legend_height))
 colsize!(fig.layout, 1, Fixed(square_side_px))
 rowgap!(fig.layout, row_gap)
 
