@@ -121,6 +121,18 @@ g.selectAll("circle")
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 0.6);
 
+// --- Top-hit emphasis rings ---------------------------------------------------
+g.selectAll(".hit-ring")
+  .data(topHits)
+  .join("circle")
+  .attr("class", "hit-ring")
+  .attr("cx", (d) => x(d.logFc))
+  .attr("cy", (d) => y(d.negLogP))
+  .attr("r", 10)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
+
 // --- Top-hit labels ----------------------------------------------------------
 g.selectAll(".hit-label")
   .data(topHits)
@@ -130,6 +142,10 @@ g.selectAll(".hit-label")
   .attr("y", (d) => y(d.negLogP) - 18)
   .attr("text-anchor", (d) => (d.logFc > 0 ? "start" : "end"))
   .attr("fill", t.ink)
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 3)
+  .attr("stroke-linejoin", "round")
+  .style("paint-order", "stroke")
   .style("font-size", "16px")
   .style("font-weight", "600")
   .text((d) => d.label);
