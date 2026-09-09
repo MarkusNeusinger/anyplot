@@ -4,8 +4,7 @@
 #' Quality: 66/100 | Created: 2026-09-09
 
 library(ggplot2)
-library(gridExtra)
-library(grid)
+library(patchwork)
 library(ragg)
 
 set.seed(42)
@@ -155,34 +154,34 @@ panel_f <- ggplot(conversion_df, aes(date, value)) +
 # Layout string:  "AAA
 #                  BBC
 #                  DEF"
-layout_matrix <- rbind(
-  c(1, 1, 1),
-  c(2, 2, 3),
-  c(4, 5, 6)
-)
-
+# patchwork::wrap_plots() composites full plot grobs (including each panel's
+# own legend, and any coord_cartesian(clip = "off") overflow) instead of
+# gridExtra::arrangeGrob(), which drops per-panel legends and re-clips
+# overflow at each fixed grid-cell boundary.
 title_text <- "subplot-mosaic · r · ggplot2 · anyplot.ai"
-title_grob <- textGrob(
-  title_text,
-  gp = gpar(fontsize = 12, fontface = "bold", col = INK)
-)
 
-mosaic <- arrangeGrob(
-  panel_a, panel_b, panel_c, panel_d, panel_e, panel_f,
-  layout_matrix = layout_matrix,
-  heights = c(1.8, 1.3, 1),
-  top = title_grob
-)
+mosaic <- wrap_plots(
+  A = panel_a, B = panel_b, C = panel_c,
+  D = panel_d, E = panel_e, F = panel_f,
+  design = "AAA\nBBC\nDEF",
+  heights = c(1.8, 1.3, 1)
+) +
+  plot_annotation(
+    title = title_text,
+    theme = theme(
+      plot.title      = element_text(size = 12, face = "bold", color = INK, hjust = 0),
+      plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG)
+    )
+  )
 
 # --- Save ----------------------------------------------------------------
-agg_png(
-  filename   = sprintf("plot-%s.png", THEME),
-  width      = 8,
-  height     = 4.5,
-  units      = "in",
-  res        = 400,
-  background = PAGE_BG
+ggsave(
+  filename = sprintf("plot-%s.png", THEME),
+  plot     = mosaic,
+  device   = ragg::agg_png,
+  width    = 8,
+  height   = 4.5,
+  units    = "in",
+  dpi      = 400,
+  bg       = PAGE_BG
 )
-grid.draw(rectGrob(gp = gpar(fill = PAGE_BG, col = PAGE_BG)))
-grid.draw(mosaic)
-dev.off()
