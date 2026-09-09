@@ -63,6 +63,17 @@ const residualData = revenue.map((v, idx) =>
   trendRaw[idx] === null ? null : Math.round(v - trendRaw[idx] - seasonalIndex[idx % PERIOD])
 );
 
+// --- Storytelling annotations: peak season + largest residual outlier --------
+const seasonalPeakIdx = seasonalData.indexOf(Math.max(...seasonalData));
+let residualPeakIdx = 0;
+let residualPeakAbs = -Infinity;
+residualData.forEach((v, idx) => {
+  if (v !== null && Math.abs(v) > residualPeakAbs) {
+    residualPeakAbs = Math.abs(v);
+    residualPeakIdx = idx;
+  }
+});
+
 // --- Init ---------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -85,10 +96,15 @@ const makeXAxis = (gridIndex, showLabels) => ({
   splitLine: { show: true, lineStyle: { color: t.grid } },
 });
 
-const makeYAxis = (gridIndex) => ({
+const makeYAxis = (gridIndex, name) => ({
   type: "value",
   gridIndex,
   scale: true,
+  name,
+  nameLocation: "middle",
+  nameGap: 46,
+  nameRotate: 90,
+  nameTextStyle: { color: t.inkSoft, fontSize: 13 },
   axisLine: { show: true, lineStyle: { color: t.inkSoft } },
   axisTick: { show: false },
   axisLabel: { color: t.inkSoft, fontSize: 14, formatter: dollarFormatter },
@@ -97,7 +113,7 @@ const makeYAxis = (gridIndex) => ({
 
 const makePanelLabel = (top, text) => ({
   text,
-  left: 90,
+  left: 116,
   top,
   textStyle: { color: t.ink, fontSize: 16, fontWeight: 600 },
 });
@@ -122,13 +138,18 @@ chart.setOption({
     makePanelLabel(682, "Residual"),
   ],
   grid: [
-    { left: 90, right: 50, top: 94, height: 160 },
-    { left: 90, right: 50, top: 298, height: 160 },
-    { left: 90, right: 50, top: 502, height: 160 },
-    { left: 90, right: 50, top: 706, height: 160 },
+    { left: 116, right: 50, top: 94, height: 160 },
+    { left: 116, right: 50, top: 298, height: 160 },
+    { left: 116, right: 50, top: 502, height: 160 },
+    { left: 116, right: 50, top: 706, height: 160 },
   ],
   xAxis: [makeXAxis(0, false), makeXAxis(1, false), makeXAxis(2, false), makeXAxis(3, true)],
-  yAxis: [makeYAxis(0), makeYAxis(1), makeYAxis(2), makeYAxis(3)],
+  yAxis: [
+    makeYAxis(0, "Revenue (USD)"),
+    makeYAxis(1, "Revenue (USD)"),
+    makeYAxis(2, "Deviation (USD)"),
+    makeYAxis(3, "Residual (USD)"),
+  ],
   series: [
     {
       name: "Original",
@@ -160,6 +181,12 @@ chart.setOption({
       symbol: "none",
       lineStyle: { width: 3, color: t.palette[2] },
       itemStyle: { color: t.palette[2] },
+      markPoint: {
+        symbolSize: 10,
+        itemStyle: { color: t.palette[2], borderColor: t.pageBg, borderWidth: 2 },
+        label: { show: true, position: "top", color: t.ink, fontSize: 12, fontWeight: 600, formatter: "Peak season" },
+        data: [{ coord: [dateLabels[seasonalPeakIdx], seasonalData[seasonalPeakIdx]] }],
+      },
     },
     {
       name: "Residual",
@@ -177,6 +204,19 @@ chart.setOption({
         label: { show: false },
         lineStyle: { color: t.ink, type: "dashed", width: 1 },
         data: [{ yAxis: 0 }],
+      },
+      markPoint: {
+        symbolSize: 10,
+        itemStyle: { color: t.palette[3], borderColor: t.pageBg, borderWidth: 2 },
+        label: {
+          show: true,
+          position: "top",
+          color: t.ink,
+          fontSize: 12,
+          fontWeight: 600,
+          formatter: "Largest outlier",
+        },
+        data: [{ coord: [dateLabels[residualPeakIdx], residualData[residualPeakIdx]] }],
       },
     },
   ],
