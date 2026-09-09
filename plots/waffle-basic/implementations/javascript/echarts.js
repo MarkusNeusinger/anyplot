@@ -17,8 +17,8 @@ const categories = [
   { name: "Research & Development", value: 12 },
 ];
 
-// Fill a 10x10 grid bottom-to-top, left-to-right, one cell per percentage
-// point, in category order — the standard waffle-chart reading order.
+// Fill a 10x10 grid top-to-bottom, left-to-right, one cell per percentage
+// point, in category order — the largest category anchors the top row.
 const GRID = 10;
 let cursor = 0;
 const series = categories.map((cat, i) => {
@@ -29,7 +29,7 @@ const series = categories.map((cat, i) => {
     points.push([col, row]);
     cursor += 1;
   }
-  return {
+  const s = {
     name: `${cat.name} — ${cat.value}%`,
     type: "scatter",
     symbol: "rect",
@@ -41,6 +41,26 @@ const series = categories.map((cat, i) => {
       borderWidth: 3,
     },
   };
+  // Callout on the largest category's corner square, anchored via markPoint
+  // so echarts positions it in data space rather than hand-computed pixels.
+  if (i === 0) {
+    s.markPoint = {
+      symbol: "circle",
+      symbolSize: 1,
+      itemStyle: { color: "transparent", borderColor: "transparent" },
+      label: {
+        show: true,
+        position: "top",
+        distance: 50,
+        color: t.ink,
+        fontSize: 13,
+        fontWeight: 600,
+        formatter: `Largest share — ${cat.value}%`,
+      },
+      data: [{ coord: [0, GRID - 1] }],
+    };
+  }
+  return s;
 });
 
 // --- Init --------------------------------------------------------------------
