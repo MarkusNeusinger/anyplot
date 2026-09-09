@@ -28,8 +28,8 @@ for (let day = 0; day < TOTAL_DAYS; day++) {
   const dayOfYear = day % DAYS_PER_CYCLE;
   const yearIndex = Math.floor(day / DAYS_PER_CYCLE);
   const seasonal = 12 - 10 * Math.cos((2 * Math.PI * dayOfYear) / DAYS_PER_CYCLE);
-  const warmingTrend = yearIndex * 0.5;
-  temperatures.push(seasonal + warmingTrend + lcgNoise() * 1.4);
+  const warmingTrend = yearIndex * 3;
+  temperatures.push(seasonal + warmingTrend + lcgNoise() * 0.8);
 }
 const minTemp = Math.min(...temperatures);
 const maxTemp = Math.max(...temperatures);
@@ -166,11 +166,11 @@ const spiralAnnotationsPlugin = {
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     for (let k = 0; k < NUM_CYCLES; k++) {
-      const r = R0 + RING * k + RING * 0.18;
-      const angle = -Math.PI / 2 - 0.22;
+      const r = R0 + RING * k + RING * 0.4;
+      const angle = -Math.PI / 2 - 0.4;
       const px = xScale.getPixelForValue(r * Math.cos(angle));
       const py = yScale.getPixelForValue(r * Math.sin(angle));
-      ctx.fillText(String(START_YEAR + k), px + 4, py);
+      ctx.fillText(String(START_YEAR + k), px + 6, py);
     }
 
     // Color-bar legend in the empty corner outside the circular spiral.
