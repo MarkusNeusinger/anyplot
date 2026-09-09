@@ -1,0 +1,226 @@
+library: makie
+language: julia
+specification_id: violin-box
+created: '2026-09-09T21:31:21Z'
+updated: '2026-09-09T21:48:05Z'
+generated_by: claude-sonnet
+workflow_run: 34406850994
+issue: 2646
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-box/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-box/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Outlier visibility fix works well: larger markersize (10) with explicit stroke
+    ring makes outliers clearly readable in both themes'
+  - Notched box plot (show_notch = true) adds a genuine statistical touch and distinguishes
+    this from a plain box overlay
+  - Title enlarged (17→ 21) and now comfortably readable without looking squeezed
+  - Theme-adaptive chrome remains correct — data colors identical between light/dark,
+    only chrome tokens flip
+  - Canvas exactly 3200×1800 with nothing clipped or overflowing
+  weaknesses:
+  - No deliberate visual hierarchy or annotation calling out the escalating Control→Mild→High
+    Stress trend — the story is present in the data but not emphasized
+  - Title still spans under half the plot width; further growth is optional, not required
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Title "Cortisol Response by Stress Condition · violin-box · julia · makie · anyplot.ai" in dark ink, visibly larger than attempt 1 (titlesize 17->21), fully legible. Axis labels dark ink, tick labels softer dark gray. Subtle horizontal-only gridlines. Top/right spines removed.
+      Data: Three violins in canonical Imprint order (green/lavender/blue) each with a cream notched box plot (median, IQR, whiskers) centered inside. Outlier dots now clearly visible (dark dots, light stroke ring) above/below whiskers on all three groups - fixed from attempt 1.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Title now off-white at the same enlarged size, fully legible. Axis labels off-white, tick labels lighter warm gray. Gridlines subtle but visible.
+      Data: Violin fill colors identical to light render (green/lavender/blue) - confirmed unchanged, only chrome flipped. Box fill is dark elevated tone with light stroke/median/notch line, clearly separable from page background. Outlier points now light dots with dark rings, clearly visible against dark violin fill - real improvement over attempt 1 where they were invisible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title size increased 17->21, all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Outlier points now clearly visible - fixed from attempt 1 (markersize
+          6->10, added stroke ring)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Not red-green-only, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct theme backgrounds, data colors identical
+          across themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Notched box plot and refined outlier stroke styling add polish beyond
+          attempt 1's flat box
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Escalating trend visible from data alone but no deliberate emphasis
+          or annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct violin+box combination
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median, quartiles, box, whiskers, KDE shape, outliers all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Groups on x, value on y, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Density shape, box, quartiles, median, whiskers, outliers all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Physiologically plausible cortisol values, neutral framing
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ng/mL values for domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Makie violin!/boxplot! API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: show_notch/notchwidth is a genuine Makie-specific statistical feature
+          beyond a plain overlay
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
