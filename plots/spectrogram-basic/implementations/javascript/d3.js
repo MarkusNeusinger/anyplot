@@ -121,13 +121,17 @@ const svg = d3.select("#container").append("svg").attr("width", width).attr("hei
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
 // --- Heatmap cells ----------------------------------------------------------
-g.selectAll("rect")
+// A small sub-pixel overlap (plus crispEdges) avoids the anti-aliasing seam
+// that otherwise appears as hairlines between adjacent rects.
+const heatmap = g.append("g").attr("shape-rendering", "crispEdges");
+heatmap
+  .selectAll("rect")
   .data(cells)
   .join("rect")
   .attr("x", (d) => xScale(d.frame * dt))
   .attr("y", (d) => yScale((d.bin + 1) * df))
-  .attr("width", cellWidth)
-  .attr("height", cellHeight)
+  .attr("width", cellWidth + 0.75)
+  .attr("height", cellHeight + 0.75)
   .attr("fill", (d) => color(d.db));
 
 // --- Axes ---------------------------------------------------------------------
@@ -177,7 +181,7 @@ const barAxis = bar
   .append("g")
   .attr("transform", `translate(${barWidth},0)`)
   .call(d3.axisRight(barScale).ticks(5).tickFormat((d) => `${d} dB`));
-barAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "13px");
+barAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
 barAxis.selectAll("line").attr("stroke", t.grid);
 barAxis.select(".domain").attr("stroke", t.inkSoft);
 
