@@ -24,13 +24,59 @@ const events = [
   { date: Date.UTC(2024, 11, 1), name: "Version 1.1 Planning", category: "Planning" },
 ];
 
-// Alternate label sides in chronological order so neighboring events never
-// compete for the same vertical space, regardless of category.
-const ABOVE = { y: -18, verticalAlign: "bottom" };
-const BELOW = { y: 18, verticalAlign: "top" };
+// The two pivotal milestones get a larger, ink-outlined marker and a bolder
+// label so the timeline has a focal point instead of reading as 14 uniform dots.
+const EMPHASIZED = new Set(["Beta Release", "General Availability"]);
+
+// Alternate marker/label sides in chronological order so neighboring events
+// never compete for the same vertical space, regardless of category. Markers
+// sit off the axis line (not on it) and a thin connector stem bridges the gap
+// so the timeline band uses the full canvas height instead of a thin strip.
+const ABOVE = { markerY: 1.1, labelY: -16, verticalAlign: "bottom" };
+const BELOW = { markerY: -1.1, labelY: 16, verticalAlign: "top" };
 events.forEach((event, index) => {
   event.side = index % 2 === 0 ? ABOVE : BELOW;
 });
+
+// Quarterly plot bands give the timeline a Highcharts-distinctive backdrop
+// (instead of a generic scatter+line) and fill the vertical whitespace with
+// intentional structure rather than empty margins.
+const quarterBg = Highcharts.color(t.ink).setOpacity(0.05).get();
+const plotBands = [
+  { from: Date.UTC(2024, 0, 1), to: Date.UTC(2024, 3, 1), label: "Q1" },
+  { from: Date.UTC(2024, 3, 1), to: Date.UTC(2024, 6, 1), label: "Q2" },
+  { from: Date.UTC(2024, 6, 1), to: Date.UTC(2024, 9, 1), label: "Q3" },
+  { from: Date.UTC(2024, 9, 1), to: Date.UTC(2024, 11, 31), label: "Q4" },
+].map((quarter, index) => ({
+  from: quarter.from,
+  to: quarter.to,
+  color: index % 2 === 0 ? quarterBg : "transparent",
+  label: {
+    text: quarter.label,
+    verticalAlign: "top",
+    align: "left",
+    x: 6,
+    y: 6,
+    style: { color: t.inkSoft, fontSize: "12px", fontWeight: "600" },
+  },
+}));
+
+// Thin stems connecting the axis to each marker — the visual weight that
+// fills the band instead of leaving markers floating in blank space.
+const stems = events.map((event) => ({
+  type: "line",
+  data: [
+    [event.date, 0],
+    [event.date, event.side.markerY],
+  ],
+  color: t.inkSoft,
+  opacity: 0.5,
+  lineWidth: 1,
+  marker: { enabled: false },
+  enableMouseTracking: false,
+  showInLegend: false,
+  dataLabels: { enabled: false },
+}));
 
 const categories = ["Planning", "Development", "Release"];
 const categoryColors = { Planning: t.palette[0], Development: t.palette[1], Release: t.palette[2] };
@@ -38,14 +84,21 @@ const series = categories.map((category) => ({
   name: category,
   type: "scatter",
   color: categoryColors[category],
-  marker: { radius: 10, lineColor: t.pageBg, lineWidth: 2 },
+  marker: { radius: 8, lineColor: t.pageBg, lineWidth: 2 },
   data: events
     .filter((event) => event.category === category)
     .map((event) => ({
       x: event.date,
-      y: 0,
+      y: event.side.markerY,
       name: event.name,
-      dataLabels: { y: event.side.y, verticalAlign: event.side.verticalAlign },
+      marker: EMPHASIZED.has(event.name)
+        ? { radius: 15, lineColor: t.ink, lineWidth: 3 }
+        : undefined,
+      dataLabels: {
+        y: event.side.labelY,
+        verticalAlign: event.side.verticalAlign,
+        style: EMPHASIZED.has(event.name) ? { fontSize: "16px", fontWeight: "700" } : undefined,
+      },
     })),
   dataLabels: {
     enabled: true,
@@ -74,11 +127,12 @@ Highcharts.chart("container", {
     gridLineWidth: 0,
     dateTimeLabelFormats: { month: "%b" },
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands,
   },
   yAxis: {
     visible: false,
-    min: -1.6,
-    max: 1.6,
+    min: -1.75,
+    max: 1.75,
   },
   legend: {
     align: "center",
@@ -107,6 +161,7 @@ Highcharts.chart("container", {
       showInLegend: false,
       dataLabels: { enabled: false },
     },
+    ...stems,
     ...series,
   ],
 });
