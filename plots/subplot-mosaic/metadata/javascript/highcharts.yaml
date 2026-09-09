@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: subplot-mosaic
 created: '2026-09-09T19:51:41Z'
-updated: '2026-09-09T19:56:40Z'
+updated: '2026-09-09T20:05:37Z'
 generated_by: claude-sonnet
 workflow_run: 34396538702
 issue: 3002
@@ -12,132 +12,132 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/subplot-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/subplot-mosaic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Faithful, creative CSS-grid-template-areas implementation of the mosaic-layout
-    concept, including a genuine "." gap cell exactly as the spec calls for (grid-template-areas
-    "metric0 metric0 . metric1 metric1 metric2")
-  - Six independent Highcharts instances with four distinct chart types (spline, column,
-    area, bar) demonstrate real per-cell type flexibility, matching the spec's 'each
-    cell can contain a different plot type' requirement
-  - Thoughtful semantic color use on the KPI panels — brand green for above-target
-    metrics, amber for the below-target Conversion Rate — creates a real signal instead
-    of arbitrary decoration
-  - Theme-adaptive tokens (t.ink, t.inkSoft, t.grid, t.palette) are threaded consistently
-    through every one of the six charts; both light and dark renders are fully legible
-    and correctly themed
-  - The percentage-height mount reflow workaround (double requestAnimationFrame +
-    chart.setSize from getBoundingClientRect) is a real, non-obvious Highcharts/CSS-grid
-    timing gotcha and is documented clearly in the code comments
-  weaknesses:
-  - The bottom KPI row leaves a visually heavy blank gap between the 'Conversion Rate'
-    and 'Avg. Basket Size' cards (the mosaic's '.' placeholder column) — it currently
-    reads as an empty hole rather than deliberate grid structure; consider a faint
-    background tint/border on that cell, or narrowing the gap column, so it registers
-    as intentional.
-  - Spline markers (radius 4) on the sparse 12-point weekly revenue trend are on the
-    small side for the sparse-data sizing heuristic (<50 points should get prominent
-    markers) — bump marker.radius to ~5-6 for a bit more presence.
-  - 'Panel chrome (axis lines via lineColor: t.inkSoft, standard rounded elevated
-    cards) is clean but still close to a well-configured default look — pushing further
-    on visual refinement (e.g. removing axis lines entirely on the small KPI/detail
-    panels, adding a touch more differentiation between card tiers) would raise the
-    aesthetic sophistication above ''strong but standard dashboard''.'
-  - Data storytelling relies solely on the amber-vs-green status color; consider reinforcing
-    the focal insight with a small explicit delta value or directional indicator (e.g.
-    '-0.7pp vs target') on the KPI panels so the story reads even without relying
+  - 'Mosaic layout faithfully translated from matplotlib''s ASCII-string concept into
+    a CSS grid-template-areas equivalent: a dominant wide overview panel spans the
+    top two rows, two medium detail panels split the third row, and three small KPI
+    tiles occupy the last row.'
+  - The spec's placeholder-character requirement ("." for gaps) is explicitly implemented
+    as its own dashed, tinted grid cell rather than being silently dropped, which
+    is a detail most mosaic implementations miss.
+  - 'Clear tiered visual hierarchy: the primary panel gets a soft shadow and larger
+    padding, secondary panels are flatter, and tertiary KPI tiles are the most compact
+    — the mosaic reads as an intentional dashboard rather than six identically styled
+    boxes.'
+  - KPI tiles pair the green/amber good-vs-bad color coding with explicit signed delta
+    text (e.g. "-0.7pp vs target", "+$3.50 vs target"), so the story doesn't rely
     on hue alone.
+  - Correctly diagnoses and works around a real CSS Grid + Highcharts timing bug (percentage-height
+    mounts reading back as 0 at chart-creation time) with a documented double-rAF
+    reflow + explicit setSize, verified in the renders — every panel is sized correctly
+    rather than falling back to Highcharts' 400px default.
+  - Data colors are pixel-identical between the light and dark renders; only chrome
+    (background, ink, grid) adapts, and the first categorical series is the brand
+    green.
+  weaknesses:
+  - At the ~400px mobile thumbnail scale, the KPI tile subtitle/delta text and bar
+    category labels (Actual/Target) shrink to the point of being difficult to read
+    — consider bumping those font sizes slightly or simplifying the tertiary tiles
+    for small-viewport legibility.
+  - The `makeCell` helper is a reasonable way to avoid repeating six near-identical
+    DOM-creation blocks, but it is the one departure from a fully flat KISS script
+    — worth a comment justifying it as duplication-avoidance rather than premature
+    abstraction (already implied by context, but not stated directly).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matching the required light-theme surface — not pure white.
-      Chrome: Header "subplot-mosaic · javascript · highcharts · anyplot.ai" in bold dark ink, fully visible top-left. Each of the six card panels (elevated slightly lighter background, rounded corners) has a dark bold sub-title ("Weekly Revenue by Region", "Units Sold by Category", "Foot Traffic by Hour", "Conversion Rate", "Avg. Basket Size", "Return Rate"). Axis tick labels and legend text render in a soft dark gray, clearly readable against the light card backgrounds. Grid lines in the top chart are thin and subtle.
-      Data: Weekly revenue trend shows three lines — North in brand green (#009E73), South in lavender, West in blue — matching Imprint palette order 1/2/3. Units-sold bars use five Imprint colors in canonical order (green, lavender, blue, ochre, matte red). Foot-traffic area chart is green with a soft fill. KPI bars use green (on-target) or amber (below-target) for "Actual" and a neutral gray for "Target", with $/% data labels overlaid in dark ink.
-      Legibility verdict: PASS — all titles, axis labels, tick labels, legend entries, and data labels are clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white surface consistent with the #FAF8F1 token — clearly not pure white, not dark.
+      Chrome: Header title "subplot-mosaic · javascript · highcharts · anyplot.ai" in bold dark ink at the top. Each of the six mosaic cards sits on a very slightly elevated warm-white card background with rounded corners; the top-left "overview" card carries a subtle drop shadow to mark it as the primary panel. Titles ("Weekly Revenue by Region", "Units Sold by Category", "Foot Traffic by Hour", "Conversion Rate", "Avg. Basket Size", "Return Rate"), axis labels, tick labels, and legend entries are all dark/soft-ink text, clearly readable against the light card backgrounds. The "." gap cell (row 4, column 3) renders as a light dashed-border tinted rectangle, clearly distinguishable as an intentional empty slot rather than a missing chart.
+      Data: Weekly Revenue spline chart — North in brand green (#009E73) with circle markers, South in violet/purple with diamond markers, West in blue with square markers. Units Sold column chart uses green/purple/blue/amber/red colorByPoint bars matching the Imprint cycle. Foot Traffic area chart uses a green fill/line. KPI tiles show green ("good") or amber ("needs attention") Actual bars against a neutral gray Target bar, each annotated with a signed delta string.
+      Legibility verdict: PASS — no light-on-light text found; even the smallest subtitle/delta text on the KPI tiles remains legible at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matching the required dark-theme surface — not pure black.
-      Chrome: Same header and six card panels, now with light off-white text (title, sub-titles, axis/tick labels, legend) rendering clearly against the dark card backgrounds. Grid lines remain thin and subtle, visible but non-competing.
-      Data: All data colors are pixel-identical to the light render — North green, South lavender, West blue, the five category bars in the same canonical Imprint order, the foot-traffic area in green, and the same green/amber status coding on the KPI panels. Only the chrome (background, card fill, text, grid) flipped to the dark palette.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, tick label, legend entry, and KPI data label is clearly legible against the dark surface.
+      Background: Warm near-black surface consistent with the #1A1A17 token — clearly not pure black, not light.
+      Chrome: Same layout and card structure as the light render, now on dark elevated card backgrounds. Title, axis labels, tick labels, and legend text have all flipped to light/off-white ink, remaining clearly legible against the dark cards. The gap-cell placeholder now renders as a subtly lighter dashed rectangle against the dark background, still readable as an intentional void.
+      Data: North/South/West line colors, the categorical column colors, the area fill/line color, and the green/amber KPI accent colors are pixel-identical to the light render — only the chrome (backgrounds, ink, grid lines) has flipped, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all titles, ticks, legend entries, and KPI delta text remain clearly visible against the dark card surfaces.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set per panel; readable in both themes,
-          no overflow or clipping
+        comment: All text readable at full size in both themes; KPI tile subtitle/delta
+          text and bar category labels get quite small at the ~400px mobile thumbnail
+          scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data anywhere across the six panels
+        comment: No collisions between text, data, or legend across any of the six
+          panels.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers/lines/bars all visible; spline markers (radius 4) slightly
-          small for the sparse 12-point series
+        comment: Marker sizes, line widths, and area fill opacity are all well-matched
+          to each panel's data density (sparse 12-point lines get radius-6 markers;
+          the area chart uses fillOpacity 0.18 with no markers).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint palette, amber/green status coding
-          also carries text labels
+        comment: Good contrast throughout; the KPI good/bad signal is reinforced with
+          explicit signed delta text, not color alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Strong canvas utilization overall, but the intentional '.' gap cell
-          in the bottom row reads as a visually heavy blank hole
+        comment: Canvas dimension gate passed; proportions, title width, and card
+          spacing all read cleanly with no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Main revenue axis has units ($k); other panels rely on descriptive
-          card titles + labeled data labels instead of redundant axis titles
+        comment: Descriptive titles with units (e.g. 'Revenue ($k)').
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order elsewhere, theme-correct
-          backgrounds and chrome in both renders'
+        comment: 'First categorical series is #009E73 in every panel; palette order
+          consistent across charts; data colors identical between light/dark; backgrounds
+          match the theme tokens.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Rounded elevated cards, thoughtful status colors — clearly above
-          defaults but not yet publication-tier
+        comment: Deliberate tiered card system (shadowed primary panel, flatter secondary/tertiary
+          tiles) well beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous card padding; the blank gap cell and standard
-          axis lines keep it from full polish
+        comment: Rounded cards, subtle grid, generous whitespace; the empty gap-cell
+          treatment is a nice restrained touch.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Amber/green KPI status coding and size hierarchy (dominant overview
-          vs. small KPI tiles) guide the reader
+        comment: 'Clear top-to-bottom narrative: wide trend overview, medium breakdown
+          panels, compact KPI-vs-target tiles with explicit deltas.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,53 +147,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine mosaic layout via CSS grid-template-areas, directly analogous
-          to matplotlib subplot_mosaic ASCII strings
+        comment: Genuine mosaic layout with varying panel sizes via CSS grid-template-areas.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Varying panel sizes, distinct plot type per cell, explicit '.' gap
-          placeholder, consistent spacing — all present
+        comment: Repeated-character spanning, explicit '.' gap cell, consistent spacing,
+          clear hierarchy, and a different chart type per cell are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned in every panel; all data visible on-axis
+        comment: X/Y correct and complete in every panel.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'subplot-mosaic · javascript · highcharts ·
-          anyplot.ai'; legend labels (North/South/West) match data
+        comment: Header title matches the mandated format exactly; legend labels match
+          series names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Good variety across panels: rising/varying revenue trends, differentiated
-          category volumes, a realistic hourly traffic curve, and both above/below-target
-          KPIs'
+        comment: Demonstrates varying sizes, gaps, per-cell chart-type variety, and
+          hierarchy in one figure.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible retail-operations scenario
+        comment: Plausible, neutral retail-operations dashboard scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue, foot-traffic, conversion/basket/return values are all realistic
-          for a retail business
+        comment: Revenue, unit, traffic, and KPI values are all sensible for the domain.
     code_quality:
       score: 9
       max: 10
@@ -203,34 +200,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses a small makeCell() helper and forEach loop for the six panels
-          — justified for a multi-instance dashboard but deviates slightly from a
-          flat script
+        comment: One small `makeCell` helper avoids repeating six near-identical DOM
+          blocks — pragmatic, though not a fully flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic
+        comment: Fully deterministic, hard-coded in-memory data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the global Highcharts/window tokens are used
+        comment: No imports; uses only the Highcharts global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake functionality; the reflow workaround is non-trivial
-          but clearly documented and necessary
+        comment: Appropriate complexity for a 6-panel dashboard; comments explain
+          the non-obvious reflow workaround.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no deprecated calls
+        comment: animation:false set on all charts; no explicit width/height on the
+          top-level mount; the nested setSize() calls are a justified, documented
+          exception for the sub-mounts.
     library_mastery:
       score: 7
       max: 10
@@ -240,23 +238,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Highcharts.chart() config objects across six instances, correct
-          plotOptions/series patterns
+        comment: Idiomatic use of colors/token mapping, plotOptions, dataLabels formatter,
+          and per-axis styling.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses colorByPoint, per-point color overrides, and a custom dataLabels
-          formatter — some genuine library-specific touches
-  verdict: REJECTED
+        comment: colorByPoint, custom dataLabels formatter, and correctly diagnosing/working
+          around the CSS-grid mount-sizing timing issue show real library depth.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending

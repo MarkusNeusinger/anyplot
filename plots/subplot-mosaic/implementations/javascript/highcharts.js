@@ -1,7 +1,7 @@
 // anyplot.ai
 // subplot-mosaic: Mosaic Subplot Layout with Varying Sizes
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-09
+// Quality: 90/100 | Created: 2026-09-09
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
