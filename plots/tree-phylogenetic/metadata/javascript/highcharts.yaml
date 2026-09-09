@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: tree-phylogenetic
 created: '2026-09-09T20:47:10Z'
-updated: '2026-09-09T20:50:47Z'
+updated: '2026-09-09T20:58:57Z'
 generated_by: claude-sonnet
 workflow_run: 34402362188
 issue: 3070
@@ -12,127 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-phyl
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-phylogenetic/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Correct rectangular cladogram/phylogram built from core Highcharts line + scatter
-    series, with branch lengths proportional to evolutionary distance as required
-    by the spec
-  - 'Clade highlighting (Hominidae in Imprint green #009E73, remaining primates in
-    muted grey) directly satisfies the spec''s ''color-code clades or highlight specific
-    lineages for emphasis'''
-  - Realistic ultrametric primate phylogeny topology (Human/Chimp/Bonobo/Gorilla/Orangutan/Gibbon/Macaque/Marmoset)
-    with plausible branch-length values (~0.02-0.1 substitutions per site)
-  - 'Clean theme-adaptive chrome: transparent background, correct light/dark tokens,
-    data colors identical across themes, minimal chrome (no y-axis line/ticks, gridlines
-    off)'
-  - Species dataLabels tuned with crop:false/overflow:allow/spacingRight so labels
-    stay fully legible without clipping at the right edge
-  - 'Tooltip usefully surfaces ''Distance from root'' per species; marker ring (lineColor:
-    pageBg) adds subtle edge definition'
+  - 'Repair directly answered attempt 1''s feedback: added a second, nested visual-hierarchy
+    layer (Hominidae -> Hominini) with a bolder stroke on the inner clade, and moved
+    the clade callout from subtitle-only text into in-plot plotBands labels'
+  - Correct rectangular cladogram from core Highcharts line + scatter series, branch
+    lengths proportional to evolutionary distance
+  - 'Clean theme-adaptive chrome: transparent background, correct tokens, data colors
+    identical across themes, muted-grey token swapped per theme'
+  - Realistic ultrametric primate phylogeny with plausible branch-length values and
+    a clear scale-bar axis
   weaknesses:
-  - Only a single binary color distinction (hominid vs. other); no further visual
-    hierarchy (e.g. emphasizing the tighter Human/Chimp/Bonobo split) to deepen data
-    storytelling — DE-03
-  - Relies solely on the subtitle text to explain the green/grey color coding; an
-    in-plot annotation near the Hominidae branch would make the clade highlight scannable
-    without reading the subtitle — LM-02
-  - Uses two custom recursive helper functions (assignY, collect) to build the tree
-    layout — a reasonable trade-off for hierarchical data, but strict KISS scoring
-    favors flatter code — CQ-01
-  - Leans on generic line/scatter series rather than any distinctive Highcharts feature,
-    since the core bundle has no dedicated tree/dendrogram module — a necessary workaround
-    given the constraint, but leaves limited room to showcase library-specific mastery
-    — LM-01
+  - Hierarchy still stops at two nested layers; a third distinguishing touch (e.g.
+    per-genus tick emphasis or a small in-plot scale-bar glyph) would push data storytelling
+    further
+  - Still relies on two recursive helper functions (assignY, collect) for hierarchical
+    layout - reasonable for tree data, but strict KISS scoring keeps this shy of full
+    marks
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "tree-phylogenetic · javascript · highcharts · anyplot.ai" in bold dark text, subtitle explaining the color code in a softer dark grey, x-axis title "Evolutionary distance (substitutions per site)" with tick labels 0-0.16 in soft grey, species names (Marmoset, Rhesus Macaque, Gibbon, Orangutan, Gorilla, Bonobo, Chimpanzee, Human) in dark text to the right of each leaf marker. All fully legible against the light background.
-      Data: Rectangular (elbow-style) tree branches. The Hominidae clade (Orangutan, Gorilla, Bonobo, Chimpanzee, Human) is drawn in Imprint brand green (#009E73); the remaining primates (Marmoset, Rhesus Macaque, Gibbon) are drawn in muted grey. Leaf markers are small filled circles matching branch color with a thin light-background ring. Branch lengths visibly proportional to the x-axis (evolutionary distance) scale.
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Bold dark title "tree-phylogenetic · javascript · highcharts · anyplot.ai" and soft dark-grey subtitle explaining the color code, both fully readable. X-axis labeled "Evolutionary distance (substitutions per site)" with ticks 0-0.16 serving as scale bar. Two nested in-plot shaded bands ("Hominidae" and "Human / Chimpanzee / Bonobo") with green labels reinforce the clade callout in-plot.
+      Data: Muted grey branches (Marmoset, Rhesus Macaque, Gibbon) and Imprint brand green (#009E73) branches for the Hominidae clade (Orangutan, Gorilla, Bonobo, Chimpanzee, Human), with a heavier stroke on the innermost Hominini split (Human/Chimp/Bonobo). Species names sit to the right of each leaf marker, fully legible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and subtitle rendered in white/light-grey, axis title and tick labels in light grey, species names in white — all clearly visible against the dark background. No dark-on-dark text found anywhere.
-      Data: Same tree topology and branch-length proportions as the light render. Hominidae clade retains the identical Imprint green (#009E73); other primates retain the identical muted grey hue (adjusted lightness for the dark chrome per the theme-adaptive muted token, as expected — only chrome flips, data hue is unchanged).
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Title/subtitle/axis chrome flip to white/light-grey, fully legible - no dark-on-dark issues. Same nested plotBand labels reproduce identically in layout.
+      Data: Muted-grey branches render lighter grey (theme-adaptive token swap); Imprint green (#009E73) branches and markers are pixel-identical to the light render. Only chrome flipped, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/subtitle/axis/tick/species text readable in both themes;
-          sizes explicit (14-22px CSS)
+        comment: All text readable in both themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No collisions between labels, bands, or branches
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse tree (8 leaves), markers radius 5 and lineWidth 2.5 are clearly
-          visible
+        comment: Markers and lines clearly visible, sparse leaf count sized appropriately
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Two-color scheme (brand green vs. muted grey) has strong contrast
-          and is not red/green reliant
+        comment: Green vs. muted grey, not red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; generous margins, nothing clipped, balanced spacing
+        comment: Canvas gate passed, good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled with units (substitutions per site); species names
-          serve as the categorical y-axis labels
+        comment: Descriptive axis title with units (substitutions per site)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical color is #009E73; backgrounds correct in both
-          themes; data hue identical across themes'
+        comment: 'First series #009E73, correct theme backgrounds, both renders theme-correct'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful clade-based color highlight and transparent chrome beyond
-          generic defaults
+        comment: Nested clade bands add a custom, thought-out layer beyond attempt
+          1
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Y-axis line/ticks/gridlines removed, subtle x-axis grid, generous
-          whitespace
+        comment: Y-axis chrome removed, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Color draws the eye to the Hominidae clade, but hierarchy stops at
-          one binary split
+        passed: false
+        comment: Two-layer nested hierarchy deepens the story but stops there
     spec_compliance:
       score: 15
       max: 15
@@ -142,27 +122,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Rectangular phylogenetic tree/cladogram as requested
+        comment: Correct rectangular phylogenetic tree/cladogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Proportional branch lengths, clade color-coding, continuous axis
-          conveys scale/units
+        comment: Branch lengths, species names, scale axis, clade highlighting all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = evolutionary distance, Y = leaf order; all 8 species shown
+        comment: X = evolutionary distance, Y = leaf order, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed given subtitle
-          explanation
+        comment: Title matches required format exactly
     data_quality:
       score: 14
       max: 15
@@ -172,21 +151,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Topology, branch lengths, clade highlight, and per-species tooltip
-          distance all present
+        comment: Covers tree structure, branch lengths, clade highlight; rectangular
+          layout only (circular not attempted, optional per spec)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral primate mtDNA phylogeny
+        comment: Real, neutral primate phylogeny
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Branch lengths (0.02-0.1) are plausible substitutions-per-site values
-          for primates
+        comment: Plausible mtDNA substitution distances 0-0.1
     code_quality:
       score: 9
       max: 10
@@ -196,34 +174,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small recursive helpers (assignY, collect) needed for hierarchical
-          layout
+        comment: Two small recursive helpers for tree layout, reasonable but not flat
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded tree, no randomness
+        comment: Hard-coded deterministic tree
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals
+        comment: Only Highcharts global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for tree layout, no fake interactivity
+        comment: No fake UI, appropriate complexity for tree data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract, animation disabled on chart and series
+        comment: 'Highcharts.chart into #container, animation disabled, current API'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,22 +208,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Sound line+scatter composition to approximate a tree given the core
-          bundle has no dendrogram/networkgraph module
+        comment: Sound line+scatter composition given core bundle has no dendrogram
+          module
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom tooltip pointFormat, tuned dataLabels, disabled mouse tracking
-          on branch lines; no standout library-specific feature beyond that
+        comment: plotBands repurposed as nested in-plot clade annotations
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting
+  - alpha-blending
