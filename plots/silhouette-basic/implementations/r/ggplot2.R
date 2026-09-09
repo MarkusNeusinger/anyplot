@@ -6,6 +6,7 @@
 library(ggplot2)
 library(dplyr)
 library(cluster)
+library(scales)
 library(ragg)
 
 set.seed(42)
@@ -59,7 +60,7 @@ p <- ggplot(sil_df, aes(x = sample_order, y = sil_width, fill = cluster)) +
   ) +
   annotate(
     "text", x = mean_label_x, y = avg_sil, label = sprintf("mean = %.2f", avg_sil),
-    hjust = -0.1, vjust = -0.6, size = 2.8, color = INK_SOFT
+    hjust = -0.1, vjust = -0.6, size = 3.3, color = INK_SOFT
   ) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
   scale_color_manual(values = IMPRINT_PALETTE) +
@@ -74,7 +75,7 @@ p <- ggplot(sil_df, aes(x = sample_order, y = sil_width, fill = cluster)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.x = element_line(color = INK, linewidth = 0.3),
+    panel.grid.major.x = element_line(color = scales::alpha(INK, 0.15), linewidth = 0.3),
     panel.grid.major.y = element_blank(),
     panel.grid.minor  = element_blank(),
     axis.title.x      = element_text(color = INK, size = 10),
