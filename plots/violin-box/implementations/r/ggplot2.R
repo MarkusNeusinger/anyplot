@@ -30,10 +30,12 @@ title_text <- "violin-box · r · ggplot2 · anyplot.ai"
 
 # --- Plot -----------------------------------------------------------------
 p <- ggplot(df, aes(x = group, y = value, fill = group)) +
-  geom_violin(color = NA, alpha = 0.55, width = 0.9, trim = FALSE) +
+  geom_violin(color = INK_SOFT, linewidth = 0.35, width = 0.9, trim = FALSE) +
   geom_boxplot(width = 0.14, color = INK, fill = PAGE_BG,
-               outlier.color = INK_SOFT, outlier.size = 1.6,
+               outlier.color = INK_SOFT, outlier.size = 3.2,
                linewidth = 0.5) +
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3,
+               color = INK, fill = PAGE_BG, stroke = 0.6) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
   labs(
     title = title_text,
