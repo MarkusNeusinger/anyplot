@@ -1,7 +1,3 @@
-// anyplot.ai
-// sparkline-basic: Basic Sparkline
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
 // anyplot.ai
 // sparkline-basic: Basic Sparkline
@@ -77,10 +73,10 @@ function formatValue(metric) {
 }
 
 const TITLE = "sparkline-basic · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 70;
+const TITLE_HEIGHT = 90;
 const OUTER_PADDING = 40;
 const ROW_GAP = 22;
-const LABEL_COLUMN_WIDTH = 300;
+const LABEL_COLUMN_WIDTH = 330;
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
@@ -89,7 +85,7 @@ export default function Chart() {
   const bodyHeight = height - TITLE_HEIGHT - OUTER_PADDING * 2;
   const rowHeight = (bodyHeight - ROW_GAP * (metrics.length - 1)) / metrics.length;
   const sparkWidth = width - OUTER_PADDING * 2 - LABEL_COLUMN_WIDTH - 32;
-  const sparkHeight = rowHeight - 44;
+  const sparkHeight = rowHeight - 12;
 
   return (
     <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
@@ -102,7 +98,7 @@ export default function Chart() {
           flexShrink: 0,
         }}
       >
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 500 }}>
+        <Typography sx={{ color: t.ink, fontSize: 42, fontWeight: 600 }}>
           {TITLE}
         </Typography>
       </Box>
@@ -145,6 +141,7 @@ export default function Chart() {
               height={sparkHeight}
               colors={[metric.color]}
               curve="monotoneX"
+              area
               skipAnimation
               margin={{ top: 10, bottom: 10, left: 4, right: 4 }}
               sx={{
@@ -152,6 +149,9 @@ export default function Chart() {
                   strokeWidth: 3.5,
                   strokeLinecap: "round",
                   strokeLinejoin: "round",
+                },
+                "& .MuiAreaElement-root": {
+                  fillOpacity: 0.18,
                 },
               }}
             />
