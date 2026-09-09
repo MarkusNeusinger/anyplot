@@ -80,7 +80,10 @@ for (let ti = 0; ti < numTimeBins; ti++) {
   powerDb.push(row);
 }
 
-const dynamicRangeDb = 60; // display range below the loudest bin
+// Narrowed from a wider range so the fainter 2x bearing-fault harmonic reads
+// more clearly against the noise floor (the noise floor sits well below this
+// range and gets pushed toward the darker end of the gradient).
+const dynamicRangeDb = 45; // display range below the loudest bin
 
 function mixHex(hexA, hexB, ratio) {
   const a = parseInt(hexA.slice(1), 16);
