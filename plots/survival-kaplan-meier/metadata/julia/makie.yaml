@@ -1,0 +1,268 @@
+library: makie
+language: julia
+specification_id: survival-kaplan-meier
+created: '2026-09-09T19:57:13Z'
+updated: '2026-09-09T20:17:19Z'
+generated_by: claude-sonnet
+workflow_run: 34397161003
+issue: 2441
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/survival-kaplan-meier/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Full spec-note coverage in one figure: step-function KM curves, shaded 95% Greenwood
+    confidence bands, vline censoring tick marks, group comparison with legend, median-survival
+    reference lines with annotated values, log-rank p-value, and a ''Number at risk''
+    table below the main axis.'
+  - Custom Kaplan-Meier estimator, Greenwood standard error, and a Mantel-Haenszel
+    log-rank test implemented from first principles (no SpecialFunctions dependency
+    for the normal CDF) — statistically correct and genuinely idiomatic Julia.
+  - 'Theme-adaptive chrome is threaded through every element including the secondary
+    at-risk-table Axis, and both renders (light #FAF8F1 / dark #1A1A17) are clean,
+    legible, and free of clipping or overlap.'
+  - Title fontsize scales down correctly for the longer descriptive-prefixed title
+    via the linear formula, staying well within canvas bounds in both renders.
+  - Realistic, neutral scenario (subscription free-vs-premium churn) with plausible
+    sample sizes (220/arm) and a sensible 36-month time scale.
+  weaknesses:
+  - 'PIPELINE FLAG (not a code defect): the rendered plot-light.png/plot-dark.png
+    in this review still show the Premium Tier series in IMPRINT_PALETTE[3] (#4467A3,
+    blue) — verified by direct pixel sampling of the line and confidence-band tint,
+    which matches the pre-fix code exactly. The current source (commit 84bf9071e,
+    ''fix(makie): address review feedback'') already corrects every one of these 8
+    usages to IMPRINT_PALETTE[2] (#C475FD, lavender), the canonical position-2 color.
+    The images appear to be stale renders from before that fix landed. Recommend re-rendering
+    from the current commit before the next scoring pass — the repair loop should
+    NOT attempt to ''re-fix'' the palette assignment, since the source already targets
+    position 2 correctly.'
+  - Because of the stale render above, VQ-07 can only be scored against what the pipeline
+    actually produced (#4467A3, still a valid on-palette Imprint hue, just the wrong
+    ordinal position) rather than the corrected source — docked one point pending
+    a fresh render.
+  - At-risk table row labels ('Premium'/'Free' on the y-axis, and the per-timepoint
+    counts at fontsize=12) are the smallest text elements in the figure; still legible
+    at full resolution in both themes, but worth a fontsize bump if this spec-id's
+    mobile (400px) rendering is ever spot-checked.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-family), not pure white — matches the light-theme spec.
+      Chrome: Title "Subscription Retention · survival-kaplan-meier · julia · makie · anyplot.ai" is bold dark text, comfortably sized and fully within the canvas. Y-axis "Survival Probability" and x-axis "Time Since Signup (months)" labels are dark ink, tick labels are a lighter soft-ink gray — both clearly readable. Grid lines are faint horizontal/vertical hairlines. A legend box (top-right, off-white "elevated" fill with a thin border) lists "Free Tier" / "Premium Tier". A two-line annotation ("Median survival — Free: 9.6 mo · Premium: 18.5 mo" / "Log-rank test: p < 0.001") sits below the legend, right-aligned, no overlap with the legend or curves. Below the main axis, a "Number at risk" mini-table shows Free/Premium counts at 0/10/20/30-month gridlines.
+      Data: First series (Free Tier) is anyplot brand green (#009E73) — correct per the palette hard rule. Second series (Premium Tier) renders as a muted slate blue, confirmed by pixel sampling to be #4467A3 (Imprint position 3) rather than the #C475FD lavender (position 2) that the current source code specifies — see weaknesses; this is a stale-render pipeline issue, not a source-code bug. Both curves are clean step functions with shaded 95% CI bands and small vertical censoring ticks; dashed vertical/horizontal reference lines mark each group's median survival time.
+      Legibility verdict: PASS (all text readable; the only issue is a palette-position mismatch, not a legibility failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-family), not pure black — matches the dark-theme spec.
+      Chrome: Title, axis labels, and tick labels flip to light cream/gray tones and remain fully legible against the dark background — no dark-on-dark failures anywhere (title, ticks, at-risk-table labels, annotation text, legend text all clearly visible). Grid lines are faint and unobtrusive. Legend box uses the dark "elevated" fill (#242420-family) with light text, clearly distinguishable from the main plot background.
+      Data: Colors are identical to the light render — same green (#009E73) for Free Tier and the same slate-blue (#4467A3, position-3 stale-render artifact) for Premium Tier — confirming only chrome flipped between themes, as required. Confidence bands, censoring ticks, and median reference lines all reproduce cleanly on the dark surface.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title fontsize correctly scaled
+          down for the longer descriptive-prefixed title.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between legend, annotation text, curves, or at-risk
+          table.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width (3.0) and censoring tick markers well-sized for n=220/group;
+          CI bands visible but not overpowering.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. blue contrast is CVD-safe; not a red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, at-risk table well-integrated
+          via rowsize! layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (months); title matches mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly #009E73. Rendered Premium Tier is IMPRINT_PALETTE[3]
+          (#4467A3) — an on-palette but wrong ordinal position; current source already
+          fixes this to position 2, images appear stale (pipeline flag, not a code
+          defect).'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Confidence bands, censoring marks, median annotation, log-rank p-value,
+          and at-risk table together form a genuinely publication-style KM plot.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle 12% grid opacity, generous whitespace,
+          clean legend framing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Diverging curves plus median dashed reference lines and the at-risk
+          table below give a clear, guided narrative of the retention gap.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kaplan-Meier step-function survival curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function, 95% CI bands, censoring ticks, group comparison +
+          legend, median annotation, at-risk table, and log-rank p-value — every spec
+          note is present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time since signup, Y = survival probability, both axes show full
+          data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · {spec-id} · julia · makie ·
+          anyplot.ai'; legend labels ('Free Tier'/'Premium Tier') match the groups.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows every aspect of a KM plot: curve, CI, censoring, group comparison,
+          median, at-risk table, significance test.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Subscription free-vs-premium churn is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=220/arm within 50-1000 range; 36-month study window is sensible
+          for subscription churn.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small helper functions (kaplan_meier, km_step, normal_cdf) are justified
+          by reuse across two groups, not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random — the unused Statistics import from
+          attempt 1 was removed.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the statistics involved; no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2), current CairoMakie
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic band!/lines!/scatter!/axislegend usage and theme-token
+          threading.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Two-row GridLayout (fig[1,1]/fig[2,1]) with rowsize!(Relative(...))
+          and Label(Top()) for the at-risk sub-panel showcases Makie's layout system
+          beyond a single Axis.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - survival-analysis
+  styling:
+  - publication-ready
+  - alpha-blending

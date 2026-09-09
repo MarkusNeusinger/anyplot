@@ -1,0 +1,255 @@
+library: ggplot2
+language: r
+specification_id: timeline-basic
+created: '2026-09-09T20:03:19Z'
+updated: '2026-09-09T20:14:54Z'
+generated_by: claude-sonnet
+workflow_run: 34398324412
+issue: 2443
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Classic horizontal stem-and-leaf timeline with alternating above/below label tiers
+    that avoids crowding across 13 events
+  - geom_hline baseline plus geom_segment stems plus geom_point markers plus geom_text
+    labels compose cleanly via coord_cartesian(clip = "off") so labels can extend
+    past the panel without being clipped
+  - 'Imprint palette correctly applied: Team gets brand green #009E73 as the first
+    series, Product/Funding/Expansion follow the canonical order, identical across
+    both themes'
+  - Theme tokens (PAGE_BG/INK/INK_SOFT) correctly thread through plot/panel background,
+    title, axis text, and legend so both light and dark renders are fully legible
+    with no dark-on-dark or light-on-light failures
+  - Realistic, neutral startup-milestone dataset (funding rounds, product launches,
+    hiring, expansion) spanning 2018-2024, well within the 5-50 event guidance
+  - Title follows the mandated '{Descriptive Title} · {spec-id} · {lang} · {lib} ·
+    anyplot.ai' format and canvas is exactly 3200×1800 (8×4.5in @ 400dpi)
+  weaknesses:
+  - The panel.grid.major.x year gridlines (drawn in full INK color) cut straight through
+    two event labels — 'Employee' in the '10th Employee / Apr 2020' text (near the
+    2020 line) and 'sia-Pacific...Feb 2023' text (near the 2023 line) — in both light
+    and dark renders. Either offset labels whose date falls within ~2 months of a
+    year boundary further from the gridline, or switch the year gridline color to
+    INK_SOFT / thinner alpha-equivalent so it reads as background structure rather
+    than crossing foreground text.
+  - panel.grid.major.x uses full-strength INK rather than the softer INK_SOFT token
+    typical for grid chrome elsewhere in the style guide, making the year lines slightly
+    more prominent than 'subtle' — a minor visual-refinement nit tied to the overlap
+    issue above.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent across the full canvas — matches spec.
+      Chrome: Title "Company Milestones · timeline-basic · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly readable. X-axis "Year" title and 2018-2024 tick labels in soft ink below the baseline, all legible. Bottom legend "Category" with 4 swatches (Team/Product/Funding/Expansion) in dark/soft ink, fully readable. Thin vertical year gridlines and a horizontal baseline line in dark ink.
+      Data: 13 milestone events plotted as colored dots on the horizontal baseline, with colored stems running up (odd-indexed events) or down (even-indexed events) to a three-tier label position, and each stem terminating in a two-line black-text label (event name + "Mon YYYY"). First category (Team) uses brand green #009E73; Product uses lavender #C475FD; Funding uses blue #4467A3; Expansion uses ochre #BD8233.
+      Legibility verdict: PASS overall, with one legibility nit — the vertical year gridlines pass directly through the label text for "10th Employee / Apr 2020" (near the 2020 line) and "Asia-Pacific Expansion / Feb 2023" (near the 2023 line). Text remains readable (gridline is thin) but visually crosses letters in both cases.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent across the full canvas — matches spec.
+      Chrome: Title and all axis/legend text render in light ink (#F0EFE8) / soft light ink (#B8B7B0), clearly readable against the dark background — no dark-on-dark failures found. Gridlines now render as a soft light line against the dark background, same crossing issue as light render (through "10th Employee" and "Asia-Pacific Expansion" labels).
+      Data: Identical marker/stem colors to the light render (Team green #009E73, Product lavender #C475FD, Funding blue #4467A3, Expansion ochre #BD8233) — confirms only chrome flips between themes, not data colors.
+      Legibility verdict: PASS overall, same minor gridline/text-crossing nit as the light render; no dark-on-dark or unreadable elements.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text sized explicitly and readable in both themes; minor deduction
+          ties to the gridline crossing labels below
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Year gridlines cross directly through '10th Employee' and 'Asia-Pacific
+          Expansion' label text in both renders — text stays legible but the crossing
+          is a real, reproducible overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size 3.2) and stems clearly visible for a sparse 13-event
+          timeline
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4-category Imprint palette is distinct and CVD-reasonable; no red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800; nothing clipped; title well-proportioned;
+          canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Year'' x-axis label descriptive; y-axis intentionally hidden (spacer
+          only)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Team = #009E73; canonical Imprint order; backgrounds
+          match #FAF8F1/#1A1A17; identical data colors across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom stem-and-leaf timeline composition, coherent palette, professional
+          polish beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/y-axis removed, generous whitespace, but grid uses full-strength
+          INK rather than a softer token, contributing to the label-crossing issue
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear chronological flow with alternating tiers and category color-coding
+          guiding the eye left-to-right
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal event timeline
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Points/markers with labels, horizontal orientation, alternating above/below
+          labels, category color-coding, date formatting all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date drives all placement; all 13 events shown and labeled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match category names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Dates, event names, and categories all present and shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral startup milestone narrative
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13 events across 6 years, within the 5-50 event spec guidance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat dplyr pipeline, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data itself is fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; tibble accessed via explicit namespace
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at correct dims
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic layered grammar: geom_segment/geom_point/geom_text combined
+          with coord_cartesian(clip=''off'')'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Tier-based label-stacking via group_by/row_number is a thoughtful
+          ggplot2-idiomatic solution, though not exercising more unique ggplot2 features
+          (e.g. ggrepel, annotate)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - time-series
+  styling:
+  - minimal-chrome
+  - grid-styling
