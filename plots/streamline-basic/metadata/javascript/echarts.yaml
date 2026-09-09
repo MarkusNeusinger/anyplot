@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: streamline-basic
 created: '2026-09-09T19:04:53Z'
-updated: '2026-09-09T19:10:15Z'
+updated: '2026-09-09T19:22:28Z'
 generated_by: claude-sonnet
 workflow_run: 34392068443
 issue: 2861
@@ -12,82 +12,74 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamlin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/javascript/echarts/plot-dark.html
-quality_score: 77
+quality_score: 89
 review:
   strengths:
   - 'Physically accurate streamlines: paths are traced with RK4 integration of the
-    actual Taylor-Green velocity field (u = sin(x)cos(y), v = -cos(x)sin(y)) rather
-    than pre-baked shapes, so the closed loops are a genuine numerical solution, not
-    decoration.'
+    actual Taylor-Green velocity field (u = sin(x)cos(y), v = -cos(x)sin(y)), so the
+    closed loops are a genuine numerical solution, not decoration.'
+  - 'Directional arrowheads now added (second `lines` series with symbol: [''none'',''arrow''])
+    at each path''s midpoint, oriented along the local flow direction — directly fixes
+    the prior review''s missing-directionality weakness and makes circulation direction
+    (CW vs CCW per cell) visible.'
+  - 'Y-axis float-precision defect from the previous attempt is fully resolved: AXIS_LIMIT
+    is now a clean round constant (3.2) instead of the raw PI+margin, so boundary
+    ticks render as ''3.2''/''-3.2'' instead of 16-digit floats.'
+  - 'Field coverage improved: an additional near-boundary seed radius (1.45) was added
+    per cell, sweeping streamlines closer to the separatrix and showing more of the
+    field topology than the previous mid-radius-only seeding.'
   - 'Velocity is encoded twice, redundantly and correctly: line color interpolates
-    along `imprint_seq` (brand green -> blue) by mean speed, and line width scales
-    from 1.6 to 4 px by the same value — exactly the two optional encodings the spec''s
-    Notes section calls out.'
-  - Theme-adaptive chrome is correctly threaded through every element (title, axis
-    names, tick labels, axis line, split lines) via `window.ANYPLOT_TOKENS`, and both
-    renders share identical data colors with only chrome flipping.
-  - Taylor-Green cellular flow is a well-known, neutral, textbook CFD test case —
-    realistic and appropriate data for a 'basic streamline plot' spec.
+    along `imprint_seq` by mean speed and line width scales from 1.6-4px by the same
+    value, matching the spec''s optional encodings.'
+  - Theme-adaptive chrome correctly threaded through every element via `window.ANYPLOT_TOKENS`;
+    both renders share identical data colors with only chrome flipping, and text is
+    legible in both themes.
   - 'Clean, dependency-free, deterministic code: no imports beyond the `echarts` global,
-    no randomness, small pure helper functions (`velocity`, `speedAt`, `traceStreamline`)
-    instead of unnecessary classes.'
+    no randomness, small pure helper functions instead of unnecessary classes.'
   weaknesses:
-  - 'Y-axis shows a redundant, unformatted boundary tick at full float precision —
-    ''3.191592653589793'' stacked directly above the ''3'' tick (and ''-3.191592653589793''
-    above ''-3'' at the bottom) in BOTH themes. This comes from setting yAxis.min/max
-    to the raw constant `DOMAIN = PI + 0.05` instead of a round number, and ECharts
-    labeling the exact boundary value. Fix: either round DOMAIN to a clean value (e.g.
-    3.2), add `axisLabel: { formatter: (v) => v.toFixed(1) }` to the yAxis, or set
-    `axisLabel: { showMaxLabel: false, showMinLabel: false }` to suppress the boundary
-    tick. The x-axis does not show this artifact (its boundary label happens to get
-    collision-hidden against ''-3''/''3''), so the fix only needs to target the yAxis
-    config.'
-  - 'No directional indicators (arrowheads or directional markers) along the streamlines
-    — a defining visual feature of streamline plots that distinguishes them from plain
-    closed-curve/contour drawings and is needed to show circulation direction (clockwise
-    vs. counterclockwise) per cell. Consider adding a small arrow symbol at the midpoint
-    of each path (e.g. via a second `lines` series with `symbol: [''none'',''arrow'']`
-    and `symbolSize` at intervals, or `effect: { show: true, symbol: ''arrow'' }`).'
-  - 'Field coverage is incomplete: streamlines are only seeded at four mid-radius
-    offsets (0.3-1.2) per vortex cell, leaving large blank cross-shaped regions along
-    the separatrices (x=0, y=0 axes) and near the cell boundaries where saddle points
-    sit — an important part of the field topology described in the spec (''revealing
-    flow patterns, circulation, and field topology'') is not represented. A few additional
-    seeds nearer the cell boundary (e.g. radius ~1.4-1.5) would show the topology
-    more completely without cluttering the interior.'
-  - The four vortex cells are visually identical (same shape/size/coloring, just mirrored),
-    so despite the correct physics the composition reads as one repeated tile rather
-    than a single unified story — DE-03 data storytelling suffers from this mechanical
-    symmetry.
-  - 'Library mastery is somewhat generic: per-line color/width is computed manually
-    in JS rather than leveraging any ECharts-native continuous-color machinery (e.g.
-    `visualMap` piecewise/continuous mapping, or `effectScatter`/`lines` special effects),
-    so the implementation doesn''t show off anything distinctive to ECharts beyond
-    the basic `lines` series.'
+  - 'Each axis still shows a slightly redundant boundary tick right next to the rounded
+    interval tick (''3.2'' directly above ''3'', ''-3.2'' directly below ''-3'') on
+    all four edges. It is now cleanly formatted and fully legible (not a repeat of
+    the prior float-precision defect), but a formatter-suppressed boundary label (axisLabel.showMaxLabel/showMinLabel:
+    false) or a slightly larger nameGap would give a cleaner edge.'
+  - 'Field coverage is still incomplete near the separatrices: even with the added
+    radius=1.45 seed, blank cross-shaped regions remain along x=0/y=0 and near the
+    saddle points at the cell corners, understating part of the field topology the
+    spec calls out.'
+  - The four vortex cells remain visually identical/mirrored copies of each other
+    (same shape, coloring, and seed pattern), so despite correct physics the composition
+    still reads as one repeated tile rather than a single unified story — this is
+    an inherent property of the symmetric Taylor-Green field rather than an implementation
+    bug.
+  - 'Library mastery is still somewhat generic: per-line color/width is computed manually
+    in JS rather than via ECharts-native continuous-color machinery (e.g. `visualMap`
+    piecewise/continuous mapping), so beyond the new arrow series the implementation
+    doesn''t showcase ECharts-distinctive features.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "streamline-basic · javascript · echarts · anyplot.ai" centered at top in dark bold text, clearly readable. Axis names "x" and "y" in soft gray, tick labels in soft gray on the light background, all readable. Subtle light-gray gridlines at integer intervals, plus a slightly darker axis line through x=0/y=0. The one defect: the y-axis top and bottom boundary ticks show full float precision ("3.191592653589793" / "-3.191592653589793") stacked right next to the rounded "3" / "-3" ticks — visually cluttered but still legible.
-      Data: Four square-ish groups of four nested closed loops, one per quadrant (Taylor-Green vortex cells), symmetric about the origin. Innermost loops are brand-green (#009E73-ish), transitioning to a muted blue-gray for the outer loops, consistent with the imprint_seq ramp; line width also increases from inner to outer loop. No arrowheads or other directionality markers on the paths.
-      Legibility verdict: PASS (all text readable; the float-precision tick is a formatting/polish defect, not a legibility failure).
+      Chrome: Title "streamline-basic · javascript · echarts · anyplot.ai" centered at top in dark bold text, clearly readable. Axis names "x" and "y" in soft gray, tick labels in soft gray, all readable. Subtle light-gray gridlines at integer intervals, plus a slightly darker axis line through x=0/y=0. Each axis shows a rounded "3.2"/"-3.2" boundary tick right next to the "3"/"-3" interval tick — cleanly formatted (fixed from the previous attempt's 16-digit float defect) and fully legible, just a touch redundant.
+      Data: Four square-ish groups of five nested closed loops, one per quadrant (Taylor-Green vortex cells), symmetric about the origin. Innermost loops are brand-green (#009E73-ish), transitioning to a muted blue-gray for the outer loops, consistent with the imprint_seq ramp; line width also increases from inner to outer loop. Small triangular arrowheads sit at each loop's midpoint, oriented tangent to the flow, clearly showing circulation direction per cell (new since the last attempt).
+      Legibility verdict: PASS (all text readable; no overlap, no clipping at any edge).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in white/light text, clearly readable against the dark background. Axis names and tick labels in light gray, all readable — no dark-on-dark failures observed. Gridlines are subtle but visible; the x=0/y=0 axis line is a brighter light color for contrast. The same y-axis float-precision boundary-tick clutter reproduces here identically.
-      Data: Colors are visually identical to the light render (green-to-blue-gray gradient by loop, same widths) — confirms data colors are theme-invariant and only chrome flipped.
-      Legibility verdict: PASS (all text readable in both themes; same tick-formatting defect as the light render).
+      Chrome: Same title, now in white/light text, clearly readable against the dark background. Axis names and tick labels in light gray, all readable — no dark-on-dark failures observed. Gridlines are subtle but visible; the x=0/y=0 axis line is a brighter light color for contrast.
+      Data: Colors are visually identical to the light render (green-to-blue-gray gradient by loop, same widths, same arrowhead placement/orientation) — confirms data colors are theme-invariant and only chrome flipped.
+      Legibility verdict: PASS (all text readable in both themes; no clipping observed at canvas edges).
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title/axis names/ticks readable in both themes; docked for the cluttered
-          full-float-precision y-axis boundary tick.
+        comment: 'Prior float-precision boundary-tick defect fully fixed via a rounded
+          3.2 domain constant; all text readable in both themes. Minor deduction:
+          the 3.2 boundary tick still sits redundantly close to the 3 interval tick.'
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -96,31 +88,32 @@ review:
         comment: No text-on-text or text-on-data collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Streamlines clearly visible with width/color variation; innermost
-          loops in adjacent cells are close but not touching.
+        comment: Streamlines and new arrowheads clearly visible with width/color variation;
+          nested loops distinguishable, no crowding.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green->blue ramp, not red-green dependent, adequate contrast.
+        comment: Sequential green->blue-gray ramp, not red-green dependent, adequate
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas, good proportions; the redundant
-          y-axis tick text adds visual noise to the left margin.
+        comment: Correct 2400x2400 square canvas, good proportions; the previous tick-clutter
+          margin noise is resolved.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Axis names present but the y-axis boundary tick renders 16 digits
-          of float precision ('3.191592653589793') — an unformatted-value defect.
+        passed: true
+        comment: Axis names present; boundary tick now renders a clean rounded value
+          (3.2) instead of raw float precision.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -129,33 +122,33 @@ review:
         comment: imprint_seq used correctly for continuous speed encoding; theme-correct
           backgrounds in both renders.
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
         comment: Physically accurate RK4-integrated paths with dual velocity encoding
-          (color + width) beyond generic defaults.
+          (color + width) plus new directional arrowheads, well beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Minimal chrome, subtle grid, generous whitespace, but refinement
-          is undercut by the axis tick clutter.
+        comment: Minimal chrome, subtle grid, generous whitespace; refinement no longer
+          undercut by axis tick clutter.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Symmetric vortex structure is a clear focal point, but the four cells
-          are visually identical/repetitive, and the missing directionality removes
-          part of the flow story.
+        comment: New arrowheads add a circulation-direction narrative, but the four
+          cells are still visually identical/mirrored copies, so composition still
+          reads somewhat as a repeated tile.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -167,17 +160,17 @@ review:
           curves.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Both optional encodings (color by speed, width by speed) present;
-          missing directional indicators, which are a defining streamline-plot feature.
+        comment: Both optional encodings (color and width by speed) present, and directional
+          indicators are now included — all spec-called-out features covered.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axis ranges correctly bound the field domain [-pi-.05, pi+.05].
+        comment: Axis ranges correctly bound the field domain.
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -186,17 +179,17 @@ review:
         comment: Title matches the exact mandated format; no legend needed for a single
           continuous field.
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Only mid-radius seeds per cell are traced; separatrices/saddle regions
-          and near-boundary structure are left blank, understating the full field
-          topology.
+        comment: Added a near-boundary seed radius improves topology coverage vs.
+          the previous attempt, but blank cross-shaped regions near the separatrices/saddle
+          points remain.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -230,7 +223,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided `echarts` global.
+        comment: No imports beyond the provided echarts global.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -242,9 +235,9 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: 'Correct init/setOption mount-node contract, `animation: false` set.'
+        comment: 'Correct init/setOption mount-node contract, animation: false set.'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -252,16 +245,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of the `lines` series with `polyline` and per-line `lineStyle`
-          for path styling.
+        comment: Correct use of the lines series with polyline and per-line lineStyle
+          for path styling, plus a second lines series with arrow symbol for directionality.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Color/width interpolation is computed manually in JS rather than
-          via ECharts-native visualMap or effect features.
-  verdict: REJECTED
+        comment: New arrow-symbol series is a nice idiomatic touch, but color/width
+          interpolation is still computed manually in JS rather than via ECharts-native
+          visualMap or effect features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
