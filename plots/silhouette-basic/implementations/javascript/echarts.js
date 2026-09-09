@@ -68,7 +68,16 @@ clusters.forEach((cluster, ci) => {
   }
 });
 
-const barData = barValues.map((v, i) => ({ value: v, itemStyle: { color: barColors[i] } }));
+const barData = barValues.map((v, i) => ({ value: v, itemStyle: { color: barColors[i], borderRadius: 3 } }));
+
+// --- Layout (shared so the graphic overlays never drift from the grid) ------
+const size = window.ANYPLOT_SIZE;
+const margin = { left: 190, right: 60, top: 90, bottom: 70 };
+const plotWidth = size.width - margin.left - margin.right;
+const plotHeight = size.height - margin.top - margin.bottom;
+const xMin = -0.4;
+const xMax = 1;
+const xToPixel = (x) => margin.left + ((x - xMin) / (xMax - xMin)) * plotWidth;
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -83,15 +92,15 @@ chart.setOption({
     left: "center",
     textStyle: { color: t.ink, fontSize: 22 },
   },
-  grid: { left: 190, right: 60, top: 90, bottom: 70 },
+  grid: { left: margin.left, right: margin.right, top: margin.top, bottom: margin.bottom },
   xAxis: {
     type: "value",
     name: "Silhouette coefficient",
     nameLocation: "middle",
     nameGap: 36,
     nameTextStyle: { color: t.ink, fontSize: 16 },
-    min: -0.4,
-    max: 1,
+    min: xMin,
+    max: xMax,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
@@ -114,7 +123,7 @@ chart.setOption({
         symbol: "none",
         silent: true,
         label: { show: false },
-        lineStyle: { color: t.ink, type: "dashed", width: 2 },
+        lineStyle: { color: t.ink, type: "dashed", width: 2.5 },
         data: [{ xAxis: avgSilhouette }],
       },
     },
@@ -123,23 +132,25 @@ chart.setOption({
     .map((c) => ({
       type: "text",
       left: 20,
-      top: 90 + (c.mid / cursor) * (900 - 90 - 70) - 12,
+      top: margin.top + (c.mid / cursor) * plotHeight - 12,
       style: {
-        text: `${c.name}\navg ${c.avg.toFixed(2)}`,
-        fill: t.inkSoft,
-        fontSize: 14,
-        lineHeight: 18,
+        text: `{name|${c.name}}\n{avg|avg ${c.avg.toFixed(2)}}`,
+        rich: {
+          name: { fill: t.inkSoft, fontSize: 14, fontWeight: 600, lineHeight: 18 },
+          avg: { fill: t.inkSoft, fontSize: 13, lineHeight: 17 },
+        },
       },
     }))
     .concat([
       {
         type: "text",
-        left: 190 + ((avgSilhouette + 0.4) / 1.4) * (1600 - 190 - 60) + 8,
-        top: 68,
+        left: xToPixel(avgSilhouette) + 8,
+        top: margin.top - 22,
         style: {
           text: `avg = ${avgSilhouette.toFixed(2)}`,
           fill: t.ink,
           fontSize: 14,
+          fontWeight: 600,
         },
       },
     ]),
