@@ -32,9 +32,13 @@ const only = {
 const cx = width / 2;
 const titleClearance = height * 0.092;
 const legendClearance = height * 0.1;
-const r = Math.min(width, height) * 0.265; // circle radius
-const R = r * 0.68; // circumradius of the triangle formed by the 3 centers
-const cy = titleClearance + R + r; // pins the top circle's top edge below the title
+const rMax = Math.min(width, height) * 0.265; // radius of the largest set
+// Area-proportional radii: r ~ sqrt(size), per the spec's "area proportional
+// to size when possible" note.
+const sizeScale = d3.scaleSqrt().domain([0, d3.max(sets, (d) => d.size)]).range([0, rMax]);
+const rad = Object.fromEntries(sets.map((d) => [d.key, sizeScale(d.size)]));
+const R = rMax * 0.68; // circumradius of the triangle formed by the 3 centers
+const cy = titleClearance + R + rMax; // pins the top circle's top edge below the title
 
 const centroid = { x: cx, y: cy };
 const centers = {
@@ -54,12 +58,12 @@ function midpoint(p, q) {
 }
 
 const labelPos = {
-  A: pushFrom(centers.A, centroid, r * 0.55),
-  B: pushFrom(centers.B, centroid, r * 0.55),
-  C: pushFrom(centers.C, centroid, r * 0.55),
-  AB: pushFrom(midpoint(centers.A, centers.B), centers.C, r * 0.32),
-  AC: pushFrom(midpoint(centers.A, centers.C), centers.B, r * 0.32),
-  BC: pushFrom(midpoint(centers.B, centers.C), centers.A, r * 0.32),
+  A: pushFrom(centers.A, centroid, rad.A * 0.55),
+  B: pushFrom(centers.B, centroid, rad.B * 0.55),
+  C: pushFrom(centers.C, centroid, rad.C * 0.55),
+  AB: pushFrom(midpoint(centers.A, centers.B), centers.C, ((rad.A + rad.B) / 2) * 0.32),
+  AC: pushFrom(midpoint(centers.A, centers.C), centers.B, ((rad.A + rad.C) / 2) * 0.32),
+  BC: pushFrom(midpoint(centers.B, centers.C), centers.A, ((rad.B + rad.C) / 2) * 0.32),
   ABC: centroid,
 };
 
@@ -67,17 +71,21 @@ const labelPos = {
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
 // --- Circles --------------------------------------------------------------
+// Stroke weight also scales with set size, giving the dominant set (Python) a
+// visibly heavier outline as a deliberate focal point.
+const strokeScale = d3.scaleLinear().domain(d3.extent(sets, (d) => d.size)).range([2, 4]);
+
 svg
   .selectAll("circle")
   .data(sets)
   .join("circle")
   .attr("cx", (d) => centers[d.key].x)
   .attr("cy", (d) => centers[d.key].y)
-  .attr("r", r)
+  .attr("r", (d) => rad[d.key])
   .attr("fill", (d) => d.color)
   .attr("fill-opacity", 0.6)
   .attr("stroke", (d) => d.color)
-  .attr("stroke-width", 2.5)
+  .attr("stroke-width", (d) => strokeScale(d.size))
   .attr("stroke-opacity", 0.95);
 
 // --- Region counts (halo-stroked text reads over any fill) -----------------
@@ -91,6 +99,8 @@ const regions = [
   { key: "ABC", value: only.ABC },
 ];
 
+// The triple overlap (all three sets) is the most interesting relationship in
+// a Venn diagram, so its count is rendered larger as a deliberate focal point.
 svg
   .selectAll("text.region")
   .data(regions)
@@ -100,11 +110,11 @@ svg
   .attr("y", (d) => labelPos[d.key].y)
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "middle")
-  .style("font-size", "26px")
-  .style("font-weight", "600")
+  .style("font-size", (d) => (d.key === "ABC" ? "32px" : "26px"))
+  .style("font-weight", (d) => (d.key === "ABC" ? "700" : "600"))
   .style("paint-order", "stroke")
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 5)
+  .attr("stroke-width", (d) => (d.key === "ABC" ? 6 : 5))
   .attr("fill", t.ink)
   .text((d) => d.value);
 
