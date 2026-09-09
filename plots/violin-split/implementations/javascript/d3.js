@@ -3,10 +3,6 @@
 // Library: d3 7.9.0 | JavaScript 22.23.2
 // Quality: 86/100 | Created: 2026-09-09
 //# anyplot-orientation: landscape
-// anyplot.ai
-// violin-split: Split Violin Plot
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-09
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -49,17 +45,22 @@ const courses = COURSES.map((c) => ({
 }));
 
 // --- Kernel density estimate (Gaussian kernel, Silverman bandwidth) ---------
+// Boundary-corrected via the reflection method: samples are mirrored across
+// the [0, 100] data bounds so the estimate does not taper artificially near
+// the edges (courses with means close to 0 or 100 would otherwise show a
+// biased, abruptly-cut density there).
 const GRID = d3.range(0, 100.001, 100 / 140);
 function kde(sample) {
   const std = d3.deviation(sample);
   const bw = 1.06 * std * Math.pow(sample.length, -0.2);
-  return GRID.map((x) => ({
-    x,
-    density: d3.mean(sample, (v) => {
-      const u = (x - v) / bw;
-      return Math.exp(-0.5 * u * u) / (bw * Math.sqrt(2 * Math.PI));
-    }),
-  }));
+  const gauss = (u) => Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI);
+  return GRID.map((x) => {
+    let sum = 0;
+    for (const v of sample) {
+      sum += gauss((x - v) / bw) + gauss((x + v) / bw) + gauss((x - (200 - v)) / bw);
+    }
+    return { x, density: sum / (sample.length * bw) };
+  });
 }
 for (const c of courses) {
   c.midtermKde = kde(c.midterm);
@@ -76,6 +77,10 @@ function quartiles(sample) {
     median: d3.quantileSorted(sorted, 0.5),
     q3: d3.quantileSorted(sorted, 0.75),
   };
+}
+for (const c of courses) {
+  c.midtermStats = quartiles(c.midterm);
+  c.finalStats = quartiles(c.final);
 }
 
 // --- Scales -------------------------------------------------------------
@@ -147,8 +152,8 @@ violin
   .attr("stroke-width", 2);
 
 // --- Inner quartile markers (median tick + IQR ticks) per half --------------
-function drawQuartiles(sel, sample, sign) {
-  const { q1, median, q3 } = quartiles(sample);
+function drawQuartiles(sel, stats, sign) {
+  const { q1, median, q3 } = stats;
   sel
     .append("line")
     .attr("x1", 0)
@@ -156,7 +161,7 @@ function drawQuartiles(sel, sample, sign) {
     .attr("y1", y(q1))
     .attr("y2", y(q1))
     .attr("stroke", t.pageBg)
-    .attr("stroke-width", 1.5);
+    .attr("stroke-width", 2);
   sel
     .append("line")
     .attr("x1", 0)
@@ -164,7 +169,7 @@ function drawQuartiles(sel, sample, sign) {
     .attr("y1", y(q3))
     .attr("y2", y(q3))
     .attr("stroke", t.pageBg)
-    .attr("stroke-width", 1.5);
+    .attr("stroke-width", 2);
   sel
     .append("line")
     .attr("x1", 0)
@@ -172,13 +177,49 @@ function drawQuartiles(sel, sample, sign) {
     .attr("y1", y(median))
     .attr("y2", y(median))
     .attr("stroke", t.pageBg)
-    .attr("stroke-width", 2.5);
+    .attr("stroke-width", 3);
 }
 violin.each(function (d) {
   const sel = d3.select(this);
-  drawQuartiles(sel, d.midterm, -1);
-  drawQuartiles(sel, d.final, 1);
+  drawQuartiles(sel, d.midtermStats, -1);
+  drawQuartiles(sel, d.finalStats, 1);
 });
+
+// --- Storytelling annotation: call out the course with the largest --------
+// midterm -> final median gain
+let bestCourse = courses[0];
+let bestGain = -Infinity;
+for (const c of courses) {
+  const gain = c.finalStats.median - c.midtermStats.median;
+  if (gain > bestGain) {
+    bestGain = gain;
+    bestCourse = c;
+  }
+}
+const calloutX = x(bestCourse.name) + x.bandwidth() / 2;
+const calloutTopY = Math.max(
+  20,
+  Math.min(y(bestCourse.midtermStats.q3), y(bestCourse.finalStats.q3)) - 34
+);
+const callout = g.append("g").attr("class", "callout");
+callout
+  .append("line")
+  .attr("x1", calloutX)
+  .attr("x2", calloutX)
+  .attr("y1", calloutTopY + 18)
+  .attr("y2", calloutTopY + 32)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "2,2");
+callout
+  .append("text")
+  .attr("x", calloutX)
+  .attr("y", calloutTopY)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text(`Largest gain: ${bestCourse.name} +${bestGain.toFixed(1)} pts`);
 
 // --- Legend -------------------------------------------------------------
 const legendData = [
