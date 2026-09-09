@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: scatter-regression-lowess
 created: '2026-09-09T06:50:14Z'
-updated: '2026-09-09T06:55:50Z'
+updated: '2026-09-09T07:04:07Z'
 generated_by: claude-sonnet
 workflow_run: 34320620076
 issue: 2855
@@ -12,54 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-regression-lowess/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
+  - 'All three weaknesses from the previous review were fixed: the unused library(dplyr)
+    import is gone, panel.grid now uses a faded blend_toward_bg(INK, PAGE_BG, 0.2)
+    tone instead of full-opacity ink, and axis.line is split into an L-shaped frame
+    (axis.line.x.top / axis.line.y.right = element_blank()) instead of drawing a full
+    box'
   - 'Idiomatic, canonical ggplot2 LOWESS pattern: geom_point() + geom_smooth(method
     = "loess", span = 0.4, se = TRUE) is exactly the library''s recommended high-level
     API for this spec'
   - Well-chosen enzyme-activity-vs-temperature dataset that is genuinely non-monotonic
-    (rise then fall around an optimum), the exact case LOWESS is built for and the
-    spec asks for
+    (rise then fall around an optimum) — exactly the case LOWESS is built for and
+    the spec asks for
   - Confidence ribbon (se = TRUE) fulfills the spec's optional 'show confidence band'
-    request and renders as a clean, correctly-alpha'd violet band around the fit line
+    request and renders as a clean, correctly-alpha'd lavender band around the fit
+    line
   - 'Correct Imprint palette usage: scatter points use brand green #009E73 (first
     series) and the LOWESS curve uses palette position 2 (#C475FD lavender) for strong,
-    contrasting distinction from the data points'
+    contrasting distinction from the data points, identical across both themes'
   - 'Theme-adaptive chrome is implemented correctly and verified in both renders:
     text/background flip properly, no dark-on-dark or light-on-light legibility failures'
   - Explicit font sizing (title 12pt / axis titles 10pt / tick labels 8pt) matching
     style-guide defaults, well-proportioned given the short spec-id-based title
-  - Point alpha (0.55) and size (2.5) match the spec's 'moderate transparency ~0.5-0.7'
-    guidance for a ~220-point scatter
   weaknesses:
-  - library(dplyr) is imported but never used anywhere in the script (only tibble::tibble()
-    is used for the data frame) — remove the unused import
-  - theme(axis.line = element_line(color = INK_SOFT)) draws a full box around the
-    panel because ggplot2 applies this shorthand to all four sides (top/bottom/left/right)
-    equally — the style guide's default is an L-shaped frame (left+bottom only, top/right
-    removed); blank the top/right sides explicitly (e.g. axis.line.x.top / axis.line.y.right
-    = element_blank(), or split axis.line.x / axis.line.y and only draw the wanted
-    sides)
-  - panel.grid.major/minor use the full-opacity INK color, making the gridlines read
-    more prominently than the style guide's 'subtle, 15-25% opacity' target; since
-    ggplot2 doesn't expose an alpha channel for grid line color directly, blend a
-    faded chrome tone toward PAGE_BG (rather than reusing the primary-text INK token)
-    so the grid recedes behind the scatter/curve
   - 'No feature in the implementation is distinctive to ggplot2 specifically beyond
-    the default geom_smooth(loess) call — LM-02 stays at generic-usage level; consider
-    a ggplot2-specific touch (e.g. annotate() marking the optimum, or scales:: formatting)
-    to raise Library Mastery, though this is optional polish'
+    the default geom_smooth(loess) call — LM-02 stays below max; consider a ggplot2-specific
+    touch (e.g. annotate() marking the optimum temperature, or scales:: formatting)
+    to raise Library Mastery further, though this is optional polish'
+  - DE-01 aesthetic sophistication still reads as a well-configured default (correct
+    brand colors, no extra design flourish beyond the palette) — an intentional touch
+    like a subtitle or a marked focal point would push this higher, though not required
+    for approval
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "scatter-regression-lowess · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible, not clipped. Axis titles "Incubation Temperature (°C)" (x) and "Enzyme Activity (% of maximum)" (y) in dark ink, both readable with units. Tick labels (0/20/40/60 on x; 0/30/60/90/120 on y) in softer grey-ink, all legible. Grid lines (major + minor, both axes) render in a fairly dark, full-opacity ink tone rather than a faint tone — visible but thin, do not obscure data. A full box frame (all four sides) is visible around the panel, not the L-shaped left+bottom frame the style guide defaults to.
+      Chrome: Title "scatter-regression-lowess · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible, not clipped. Axis titles "Incubation Temperature (°C)" (x) and "Enzyme Activity (% of maximum)" (y) in dark ink, both readable with units. Tick labels (20/40/60 on x; 0/30/60/90/120 on y) in softer grey-ink, all legible and balanced in size between axes. Grid lines are now a faded, low-opacity tone (blend_toward_bg fix) that recedes behind the scatter/curve. Only the bottom and left axis lines are drawn (L-shaped frame) — the previous full box-frame issue is resolved.
       Data: ~220 green (#009E73) scatter points with alpha ~0.55 tracing a rise from near 0 (~10°C) up to a peak near 100 (~40-45°C) then falling back toward 0 (~70°C) — a clean non-monotonic dose-response shape. A solid lavender (#C475FD) LOWESS curve with a matching translucent confidence ribbon follows the trend smoothly through the peak without oscillating.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light ink (near-white / soft grey), fully legible against the dark background. Grid lines flip to a light ink tone at the same low opacity/linewidth as the light render — visible but not dominant. Same full box-frame spine issue is present in this render too (all four sides drawn, not just left+bottom).
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink (near-white / soft grey), fully legible against the dark background. Grid lines flip to a light, low-opacity tone at the same faded intensity as the light render. Same L-shaped axis-line frame (bottom+left only) is present in this render too.
       Data: Data colors are identical to the light render — the same #009E73 green points and #C475FD lavender curve/ribbon, confirming only chrome (not data color) flips between themes.
       Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick text is clearly light-colored against the dark surface.
   criteria_checklist:
@@ -114,7 +109,7 @@ review:
         comment: 'First series #009E73, curve uses palette position 2, backgrounds
           theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -126,11 +121,12 @@ review:
           design flourish beyond that'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Grid uses full-opacity ink instead of a faded tone, and axis.line
-          draws a full box frame instead of the default L-shape
+        passed: true
+        comment: 'Fixed: grid now uses a faded blend_toward_bg tone instead of full-opacity
+          ink, and axis.line is split into an L-shaped frame (top/right blanked) instead
+          of a full box'
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -194,7 +190,7 @@ review:
         comment: Temperature range and optimum/denaturation shape are biologically
           plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -202,7 +198,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save, no functions/classes
+        comment: Imports -> theme tokens -> data -> plot -> save; the small blend_toward_bg
+          color helper is a justified utility, not a design/data function
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,10 +208,11 @@ review:
         comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) is imported but never used
+        passed: true
+        comment: 'Fixed: unused library(dplyr) import removed; only ggplot2 and ragg
+          remain, both used'
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -246,7 +244,7 @@ review:
         comment: Built-in stat_smooth confidence-ribbon computation/rendering is a
           convenience distinctive to ggplot2 versus manually computing+drawing a CI
           band in most other libraries
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -258,3 +256,4 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
+  - grid-styling
