@@ -1,0 +1,241 @@
+library: makie
+language: julia
+specification_id: scatter-marginal
+created: '2026-09-09T06:52:30Z'
+updated: '2026-09-09T07:05:13Z'
+generated_by: claude-sonnet
+workflow_run: 34320718837
+issue: 2005
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-marginal/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Title now spans the full canvas via Label(fig[1, 1:2]) and reads correctly centered
+    on the whole 3200px canvas, cleanly fixing the attempt-1 off-center title.
+  - Marker size (10→8) and scatter alpha (0.65→0.55) were trimmed exactly as requested,
+    visibly reducing overplotting in the dense diagonal band while keeping the density
+    gradient readable.
+  - 'Idiomatic Makie composite layout: three linked Axis panels built via fig[row,col]
+    mosaic with linkxaxes!/linkyaxes!, plus hidedecorations!/hidespines! fully de-chroming
+    the marginal axes.'
+  - Theme-adaptive chrome is precise in both renders — PAGE_BG/INK/INK_SOFT flip correctly,
+    and the brand green data color is pixel-identical between light and dark.
+  - Realistic, neutral forestry dataset (trunk diameter vs. tree height) with a genuinely
+    right-skewed diameter distribution visible in the top marginal histogram and a
+    clear positive correlation in the main scatter.
+  weaknesses:
+  - The densest diagonal band (trunk diameter ~25-35cm) still shows moderate marker
+    overlap even at markersize=8/alpha=0.55 — a further trim (e.g. markersize~6-7)
+    would sharpen the density gradient in that region.
+  - Design Excellence remains minimal (single hue at two alpha levels) — a subtle
+    secondary touch such as a faint trend line in the main scatter or a KDE overlay
+    on the marginal histograms would raise the storytelling above the current 'clear
+    but plain' composition.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "scatter-marginal · julia · makie · anyplot.ai" is bold dark ink at the top, now spanning the full canvas width via Label(fig[1,1:2]) and reading centered on the whole figure (fixed from attempt 1's off-center title). Axis titles "Trunk Diameter (cm)" / "Tree Height (m)" and tick labels are dark/soft-grey ink, all clearly legible. Grid lines are faint but visible.
+      Data: Main scatter uses brand green (#009E73) at ~0.55 alpha with markersize 8; top and right marginal histograms use the same green at a lighter ~0.35 alpha, subtle and non-distracting. First (only) series is correctly #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title, axis titles, and tick labels all flip to light/soft-white ink and remain fully legible against the dark background — no dark-on-dark failures anywhere. Title remains centered on the full canvas.
+      Data: Scatter and both marginal histograms render in the identical brand green as the light render — only chrome (background, text, grid) flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 20, axis labels 14, ticks 12); readable
+          in both themes, well proportioned
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize 8 / alpha 0.55 (reduced from 10/0.65) reveals density
+          gradient well for n=400
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green, no CVD concern
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title now spans full canvas and reads centered; balanced panel proportions,
+          no wasted space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (cm, m)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, chrome theme-correct
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Composite layout shows intent, but styling is minimal (single hue,
+          two alpha levels)
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Spines removed on main axis, marginal axes fully de-chromed, subtle
+          grid, sensible gaps
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear focal point and joint/marginal context, but no extra emphasis
+          technique (e.g. trend line)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-with-marginals composite
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Main scatter lower-left, marginals top/right, linked axes, subtle
+          marginal colors, near-spec point alpha
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows joint correlation plus both marginal shapes, including right-skewed
+          diameter
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible forestry scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Trunk diameter and tree height ranges are realistic and proportionate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: GridLayout mosaic, linkxaxes!/linkyaxes! are idiomatic Makie patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: linkxaxes!/linkyaxes!, rowsize!/colsize! with Relative, hist! with
+          direction=:x
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - minimal-chrome
