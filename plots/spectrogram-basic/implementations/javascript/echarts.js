@@ -115,10 +115,15 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "spectrogram-basic · javascript · echarts · anyplot.ai",
+    subtext: "Linear chirp 200 Hz → 3000 Hz rising through a broadband noise floor",
     left: "center",
     textStyle: { color: t.ink, fontSize: 22 },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
-  grid: { left: 100, right: 40, top: 90, bottom: 90 },
+  tooltip: {
+    formatter: (params) => `${params.value[2]} dB`,
+  },
+  grid: { left: 100, right: 110, top: 110, bottom: 90 },
   xAxis: {
     type: "category",
     data: timeLabels,
@@ -148,7 +153,9 @@ chart.setOption({
     max: 0,
     calculable: false,
     orient: "vertical",
-    right: 10,
+    itemWidth: 16,
+    itemHeight: 220,
+    right: 20,
     top: "middle",
     text: ["0 dB", "-80 dB"],
     textStyle: { color: t.inkSoft, fontSize: 13 },
