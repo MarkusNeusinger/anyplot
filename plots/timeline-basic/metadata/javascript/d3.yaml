@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: timeline-basic
 created: '2026-09-09T20:02:32Z'
-updated: '2026-09-09T20:36:20Z'
+updated: '2026-09-09T20:46:51Z'
 generated_by: claude-sonnet
 workflow_run: 34397827702
 issue: 2443
@@ -12,63 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeline-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeline-basic/javascript/d3/plot-dark.html
-quality_score: 49
+quality_score: 91
 review:
   strengths:
-  - Major vs. minor milestone hierarchy (diamond vs. circle markers, bolder/larger
-    labels, longer stems, +majorBonus) gives the timeline a clear focal point instead
-    of a uniform run of same-weight events
-  - Theme-adaptive chrome is correctly threaded through every element (spine, ticks,
-    labels, legend, title) via window.ANYPLOT_TOKENS — both renders are legible with
-    no dark-on-dark or light-on-light failures
-  - 'First categorical series correctly uses Imprint #009E73 and the 4-category palette
-    assignment is stable and identical between light and dark'
-  - Deterministic, self-contained in-memory data (no fetch/CSV), matching the D3 reproducibility
-    rule
-  - Title follows the exact mandated format with a sensible descriptive prefix ('Product
-    Roadmap · timeline-basic · javascript · d3 · anyplot.ai')
-  - Centered bottom legend and month-tick spine are clean, minimal, and uncluttered
-    when the visible events are considered in isolation
+  - All 14 events from the data array now render correctly with a visible marker,
+    stem, and both labels in both themes — the correctness bug from Attempt 3 (4/14
+    missing events) is fully fixed.
+  - 'Theme-adaptive chrome is threaded through every element: backgrounds match #FAF8F1/#1A1A17,
+    and all text/ticks flip to the correct ink token with no dark-on-dark or light-on-light
+    failures.'
+  - 'Categorical data colors are pixel-identical between light and dark renders, with
+    the first category (Platform) correctly mapped to Imprint #009E73 and the remaining
+    three categories following canonical palette order.'
+  - Major/minor milestone hierarchy (diamond vs. circle markers via d3.symbol, bolder
+    labels, longer stems) gives the timeline a genuine focal point and visual storytelling
+    device.
+  - Deterministic per-side tier cycling replaces the earlier over-engineered collision-avoidance
+    system with a simpler, provably-safe layout that guarantees no two same-side neighbors
+    share a vertical level.
+  - Title follows the exact mandated format with a sensible descriptive prefix; legend
+    order matches category color order.
   weaknesses:
-  - 'CRITICAL — only 10 of the 14 events defined in the `events` array actually appear
-    (with a marker + label) in BOTH the light and dark renders. Reading the marker-color
-    sequence left to right along the spine gives G,P,B,O,G,P,B,O,G,P (10 dots) instead
-    of the full 14-event sequence G,G,P,B,O,G,G,P,B,B,O,G,P,O implied by the data.
-    The events that do not appear to render are the ones that immediately follow another
-    event of the same category in the array: ''Design System v1'' (Feb 3, Platform,
-    right after ''Platform Beta Launch'' Jan 15), ''Webhook Support'' (Jun 2, Platform,
-    right after ''API v2 Release'' May 18), ''Custom Reports'' (Aug 28, Analytics,
-    right after ''Predictive Insights'' Aug 12), and ''Zero-Trust Rollout'' (Dec 15,
-    Security). Verify every entry in `laidOut`/`events` actually receives a rendered
-    <g class="event"> with a visible marker, stem, and both text labels — audit the
-    alternating-side + collision-avoidance logic and the d3 join/each loop for a case
-    where consecutive same-category (or otherwise adjacent) events silently overwrite
-    or hide one another. A timeline that drops ~29% of its milestones fails the core
-    purpose of the plot type.'
-  - The hand-rolled `estimateHalfWidth` + tier collision-avoidance system adds real
-    code complexity (character-count heuristic, per-side tier/end tracking) but still
-    lets events disappear — either simplify to a more robust layout (e.g. always alternate
-    above/below AND stagger stem length by index parity so same-side neighbors never
-    share a tier) or fix the specific defect; don't ship a 'collision-avoidance' system
-    that doesn't actually guarantee every event is drawn.
-  - With missing events, the timeline under-represents the full 14-milestone roadmap
-    the code intends to show, weakening the data storytelling and feature-coverage
-    aspects of an otherwise well laid-out chart.
+  - 'Design excellence is good but not exceptional: the alternating tiered-stem layout
+    is a well-executed but still fairly standard timeline treatment — a subtler design
+    flourish (e.g. a connecting curve, or emphasis beyond size/weight for major milestones)
+    could push this further.'
+  - 'Library mastery is solid but not deeply distinctive: d3.symbol() diamond/circle
+    differentiation is a nice touch, but the implementation otherwise relies on common
+    scaleTime/scaleOrdinal/selection.join patterns without a more advanced D3-specific
+    technique (e.g. d3-force for label collision avoidance, or a custom axis).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Product Roadmap · timeline-basic · javascript · d3 · anyplot.ai" is bold, dark, centered at top and fully legible. A thin horizontal spine runs across the middle with small tick marks at month boundaries. Above and below the spine, 10 event entries alternate: each has a colored stem, a colored marker (diamond for major milestones, circle for minor), a bold event name, and a lighter date label (e.g. "Jan 2025"). A centered legend at the bottom shows 4 category swatches (Platform=green, Mobile=lavender, Analytics=blue, Security=ochre).
-      Data: First series color is #009E73 (Platform). All chrome text (title, event names, dates, legend) is dark ink on the light background and clearly readable.
-      Legibility verdict: PASS for the elements that are rendered — but only 10 of the 14 events defined in the source data actually have a visible marker/label; 4 events (Design System v1, Webhook Support, Custom Reports, Zero-Trust Rollout) do not appear anywhere in the render.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Product Roadmap · timeline-basic · javascript · d3 · anyplot.ai" in bold dark ink at top center; horizontal dark spine with subtle grey monthly tick marks running across the middle; bold dark-ink event-name labels and lighter soft-ink "Mon YYYY" date sub-labels alternating above/below the spine; centered bottom legend with 4 category swatches (Platform/Mobile/Analytics/Security). All chrome text is clearly readable against the light background.
+      Data: All 14 events render with a colored stem + marker (diamond for the 4 "major" milestones — Platform Beta Launch, API v2 Release, Predictive Insights, Platform GA Release — circle for the other 10). First category (Platform) uses Imprint #009E73 green; Mobile uses lavender, Analytics uses blue, Security uses ochre — matching canonical Imprint palette order.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render — title, spine, month ticks, alternating above/below event entries, bottom legend. Title and labels are rendered in light ink (#F0EFE8-equivalent) and are clearly readable against the dark background; no dark-on-dark failures observed.
-      Data: Marker/stem colors are identical to the light render (green/lavender/blue/ochre), confirming data colors are theme-independent — only chrome flipped.
-      Legibility verdict: PASS for legibility of what's rendered — but the SAME 4 events (Design System v1, Webhook Support, Custom Reports, Zero-Trust Rollout) are missing from this render too, confirming this is a deterministic code defect and not a rendering/compression artifact (it reproduces identically across both theme passes).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout, spine, tick marks, and legend, with all chrome (title, event names, dates, legend text, spine, ticks) recolored to light-ink tones. No dark-on-dark failures observed anywhere.
+      Data: All 14 events render identically to the light render; marker/stem colors are pixel-identical between the two renders — confirming only chrome flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -76,51 +63,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All rendered text (title, event names, dates, legend) is readable
-          in both themes with explicit font sizes
+        comment: All text readable in both themes; sizes appropriate for major/minor
+          hierarchy
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions among the elements that do render
+        comment: Deterministic per-side tiering keeps all 14 labels clear of each
+          other
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: 4 of 14 events (~29%) never render a marker or label in either theme
-          — Design System v1, Webhook Support, Custom Reports, Zero-Trust Rollout
-          are entirely absent from both plot-light.png and plot-dark.png
+        passed: true
+        comment: All 14 markers render with clear diamond/circle distinction — the
+          Attempt 3 missing-events bug is fixed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Categorical colors are distinguishable, no red-green-only encoding
+        comment: Four perceptually distinct hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, generous margins, nothing clipped at the canvas
-          edge
+        comment: Canvas gate passed (3200x1800); no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches the mandated format with descriptive prefix; dates
-          serve as the temporal axis label
+        comment: Title matches mandated format exactly; date labels are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; Imprint categorical order used for the
-          4 categories; correct theme-adaptive backgrounds in both renders'
+        comment: 'Canonical Imprint order; first series #009E73; backgrounds theme-correct
+          in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -128,23 +113,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Diamond/circle major-minor distinction and varied stem length show
-          design intent
+        comment: Diamond/circle major-minor hierarchy and stroke-ringed markers show
+          real design intent
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Clean spine, subtle grid-like month ticks, generous whitespace
+        comment: Clean spine, subtle month ticks, generous whitespace, no clutter
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Major-milestone hierarchy is a good storytelling device, but missing
-          29% of the events undercuts the narrative of a complete roadmap
+        passed: true
+        comment: Complete 14-event roadmap with major-milestone emphasis now tells
+          the full story; layout is still fairly standard for the genre
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,37 +137,36 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal event timeline
+        comment: Correct event-timeline chart
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Alternating above/below labels and category color-coding are implemented
-          per spec notes, but not all events are actually shown
+        passed: true
+        comment: Alternating labels, category color-coding, appropriate date formatting
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dates correctly mapped to a time scale on the horizontal axis
+        comment: Dates correctly mapped along time scale; all events shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match the 4 categories
+        comment: Title matches mandated format; legend labels match category names
     data_quality:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 1
+        score: 6
         max: 6
-        passed: false
-        comment: Only 10 of the 14 defined events are visible — the chart does not
-          show all the data it claims to
+        passed: true
+        comment: All 14 defined events now visible in both renders
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -194,10 +178,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 14 events is within the spec's 5-50 range and a sensible density
-          for a year-long roadmap
+        comment: 14 events across a 1-year span is well within the spec's 5-50 range
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -205,7 +188,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; one small helper function is reasonable
+        comment: No classes; simple map/each loops
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,21 +200,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used
+        comment: Only the d3 global is used, no unused imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The custom collision-avoidance layout is over-engineered relative
-          to its result — it still drops events
+        passed: true
+        comment: Simplified deterministic tier-cycling layout replaced the earlier
+          over-engineered collision logic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts into #container per the harness contract, no savefig-style
-          calls'
+        comment: 'Mounts into #container per the harness contract, no animation'
     library_mastery:
       score: 7
       max: 10
@@ -241,26 +223,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of scaleTime, scaleOrdinal, d3-shape symbols, and the
-          join pattern
+        comment: Idiomatic selection.join, scaleTime, scaleOrdinal usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: d3-shape symbol generator for diamond/circle markers and a bespoke
-          collision-avoidance layout show library-specific technique, undercut by
-          the correctness bug
-  verdict: REJECTED
+        comment: d3.symbol() diamond/circle hierarchy is a real distinctive technique,
+          but overall usage stays close to common D3 patterns
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
-  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling:
-  - minimal-chrome
+  styling: []
