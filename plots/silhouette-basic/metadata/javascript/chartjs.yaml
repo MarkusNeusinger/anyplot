@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: silhouette-basic
 created: '2026-09-09T07:33:52Z'
-updated: '2026-09-09T07:38:48Z'
+updated: '2026-09-09T07:46:39Z'
 generated_by: claude-sonnet
 workflow_run: 34324032951
 issue: 2334
@@ -12,70 +12,68 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/silhouett
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/silhouette-basic/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Silhouette coefficient is computed with the correct a/b formula (mean intra-cluster
+  - Silhouette coefficient computed with the correct a/b formula (mean intra-cluster
     distance vs. minimum mean inter-cluster distance), matching sklearn's algorithm
-    despite having no sklearn available in the browser
-  - 'Custom Chart.js plugin (afterDatasetsDraw) faithfully implements both spec requirements
-    that have no native chart-type support: a dashed vertical line at the overall
-    average silhouette score, and per-cluster average annotations'
+    despite no sklearn in the browser
+  - 'Addressed attempt-1 feedback directly: the overall-average reference line now
+    carries a visible ''avg 0.58'' text label, the separate distance() helper was
+    inlined into the O(n^2) loop, and the title fontsize was bumped from 22px to 25px'
+  - 'Custom Chart.js afterDatasetsDraw plugin cleanly implements two features with
+    no native chart-type support: the dashed average line with label, and per-cluster
+    average annotations in matching hues'
   - Deterministic LCG-based PRNG with fixed seed (42) avoids seeded Math.random()
     pitfalls per the chartjs library gotchas
   - 'Categorical colors follow the canonical Imprint palette order (green #009E73
-    for cluster 0, lavender for cluster 1, blue for cluster 2), identical between
-    light and dark renders'
-  - Samples are sorted descending within each cluster and separated by transparent
-    spacer rows, giving the classic silhouette-plot 'staircase' shape even with the
-    y-axis hidden
-  - Theme chrome (background, ink, inkSoft, grid) is correctly threaded through title/axis/ticks;
-    both renders are legible with no dark-on-dark or light-on-light issues
+    cluster 0, lavender cluster 1, blue cluster 2), pixel-identical between light
+    and dark renders'
+  - Samples sorted descending within each cluster with transparent spacer rows, producing
+    the classic silhouette-plot staircase shape even with the y-axis hidden
+  - Theme chrome (background, ink, inkSoft, grid) correctly threaded through title/axis/ticks;
+    both renders legible with no dark-on-dark or light-on-light failures
   - 'animation: false is set and exactly one canvas is appended to #container per
     the mount-node contract'
   weaknesses:
-  - Title occupies only ~33% of the plot width at fontsize 22 on the 3200px-wide canvas
-    — bump to ~24-26px for a more commanding presence without risking overflow
-  - Three small helper functions (makeLcg, gaussian, distance) reduce KISS simplicity;
-    they are justified by the need to compute silhouette scores without sklearn, but
-    consider whether the distance() closure can be inlined into the O(n^2) loop to
-    reduce indirection
-  - The overall-average reference line has no numeric label anywhere on the chart
-    (only the per-cluster averages are annotated) — add a small text label near the
-    dashed line (e.g. 'avg 0.58') so the reference value is legible without inspecting
-    code
-  - Cluster average annotations are placed at a fixed x offset (chartArea.left + 14)
-    without measuring text width or checking for collisions against bar edges — currently
-    fine on this dataset but fragile if a future regeneration shifts cluster sizes;
-    consider using ctx.measureText or anchoring against a guaranteed-empty region
+  - Cluster average annotations are still placed at a fixed x offset (chartArea.left
+    + 14) without measuring text width or checking for bar-edge collisions — fine
+    on this dataset but fragile if a future regeneration shifts cluster sizes; consider
+    ctx.measureText or anchoring against a guaranteed-empty region
   - 'legend: { display: false } means cluster identity relies entirely on the inline
-    colored annotation text — consider whether a compact legend or larger color swatches
-    next to each annotation would make cluster identity more robust at small preview
-    sizes (400px)'
+    colored annotation text — a compact legend or larger color swatches next to each
+    annotation would make cluster identity more robust at small preview sizes (400px)'
+  - Clusters are drawn top-to-bottom in cluster-index order (0.92, 0.43, 0.40) rather
+    than sorted by descending average — the near-monotonic ordering here is coincidental,
+    not an explicit sort-by-avg, so data storytelling isn't guaranteed on future data
+    regenerations
+  - Two small helper functions (makeLcg, gaussian) remain for the RNG — necessary
+    given no seeded Math.random() in the browser, but still a minor KISS deduction
+    versus a flat script
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "silhouette-basic · javascript · chartjs · anyplot.ai" is dark and centered at the top, fully visible with no clipping. X-axis title "Silhouette Coefficient" and tick labels (-0.5 to 1.0) are dark gray/black and clearly legible. Y-axis is intentionally hidden (no ticks). A single subtle vertical gridline set is visible at 0.2 intervals.
-      Data: Three horizontal cluster bands, each a staircase of sorted bars. Cluster 0 is brand green (#009E73, matches palette[0]), Cluster 1 is lavender/purple, Cluster 2 is blue — matching Imprint palette canonical order. Each band has an inline colored annotation ("Cluster N · avg X.XX") in the same hue as its bars, positioned at the left of the plot area on the off-white background, not overlapping any bar fill. A dashed amber vertical line marks the overall average silhouette score, crossing all three bands. Clusters 1 and 2 both show a short run of negative-valued bars at the bottom of their bands, correctly representing potentially misclassified samples.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no overlaps observed.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "silhouette-basic · javascript · chartjs · anyplot.ai" is dark, bold, centered at top, fully visible with no clipping. X-axis title "Silhouette Coefficient" and tick labels (-0.5 to 1.0) are dark gray and clearly legible. Y-axis is intentionally hidden (no ticks, no axis line). Subtle vertical gridlines are visible at 0.2 intervals, not competing with the data.
+      Data: Three horizontal cluster bands, each a staircase of sorted bars. Cluster 0 is brand green (#009E73, matches palette[0]), Cluster 1 is lavender/purple (palette[1]), Cluster 2 is blue (palette[2]) — matching Imprint canonical order. Each band has an inline colored annotation ("Cluster N · avg X.XX") in the same hue as its bars, positioned at the left edge of the plot area, not overlapping any bar fill. A dashed amber vertical line marks the overall average silhouette score (0.58) and now carries a visible "avg 0.58" text label near its top, addressing the prior review's feedback. Clusters 1 and 2 both show a short run of negative-valued bars at the bottom of their bands, correctly representing potentially misclassified samples.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no overlaps observed, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
       Chrome: Title, axis title, and tick labels have flipped to light/white text and remain fully legible against the dark background. Gridlines are still subtle but visible. No text is dark-on-dark.
-      Data: The three cluster bar colors (green, lavender, blue) and the amber dashed reference line are pixel-identical to the light render — only the chrome (background, text, grid) has flipped, exactly as required. The per-cluster colored annotation text remains legible against the dark background since each cluster's own hue is already saturated enough to read on both surfaces.
+      Data: The three cluster bar colors (green, lavender, blue) and the amber dashed reference line with its "avg 0.58" label are pixel-identical to the light render — only the chrome (background, text, grid) has flipped, exactly as required. The per-cluster colored annotation text remains legible against the dark background since each cluster's own hue is saturated enough to read on both surfaces.
       Legibility verdict: PASS — all text and data elements are clearly readable against the dark background, no dark-on-dark failures found.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes with explicit font sizes, but title
-          occupies only ~33% of plot width — could be sized up for a 3200px canvas
+        comment: Title fontsize bumped from 22px to 25px per prior feedback; all text
+          has explicit sizes and is readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -88,21 +86,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Bar density and spacer gaps give clear separation; reference line
-          is thin (2px) but visible in both themes
+        comment: Bar density and spacer gaps give clear cluster separation; the 2px
+          dashed reference line is thin but clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three CVD-distinguishable hues (green/purple/blue), no red-green
+        comment: Three CVD-distinguishable hues (green/lavender/blue), no red-green
           sole encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No clipping or overflow observed; canvas gate passed
+        comment: No clipping or overflow observed; canvas dimension gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -118,7 +116,7 @@ review:
         comment: 'Cluster 0 uses #009E73 first, subsequent clusters follow canonical
           Imprint order; backgrounds correctly theme-adaptive'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -130,19 +128,19 @@ review:
           shows above-default polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Hidden y-axis and subtle single-direction gridlines are refined,
-          but overall average value has no numeric label near the reference line
+        comment: Hidden y-axis and subtle single-direction gridlines are refined;
+          the average line now carries a numeric label, fixing the prior gap
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
         comment: Clusters read top-to-bottom roughly by descending quality with the
-          average line as a clear benchmark, but this ordering is coincidental (by
-          cluster index, not by explicit sort-by-avg)
+          average line as a clear benchmark, but this ordering is by cluster index,
+          not an explicit sort-by-avg
     spec_compliance:
       score: 15
       max: 15
@@ -158,8 +156,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Sorted bars within cluster, distinct cluster colors, overall average
-          line, per-cluster average annotation — all present
+        comment: Sorted bars within cluster, distinct cluster colors, labeled overall
+          average line, per-cluster average annotation — all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -173,7 +171,7 @@ review:
         max: 3
         passed: true
         comment: Title matches required format exactly; legend replaced by inline
-          colored annotations, which is an acceptable equivalent
+          colored annotations, an acceptable equivalent
     data_quality:
       score: 14
       max: 15
@@ -199,16 +197,16 @@ review:
         passed: true
         comment: Silhouette values span a realistic -0.45 to ~0.95 range
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Defines several helper functions (makeLcg, gaussian, distance) —
-          necessary given the manual silhouette computation, but not a flat script
+        passed: true
+        comment: distance() helper was inlined into the main loop per prior feedback;
+          makeLcg/gaussian remain as necessary RNG helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -250,9 +248,10 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom afterDatasetsDraw plugin to render features with no native
-          Chart.js chart-type equivalent is a genuinely distinctive technique
-  verdict: REJECTED
+        comment: Custom afterDatasetsDraw plugin rendering both a labeled reference
+          line and per-cluster annotations is a genuinely distinctive technique with
+          no native chart-type equivalent
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
