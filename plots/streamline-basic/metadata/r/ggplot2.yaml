@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: streamline-basic
 created: '2026-09-09T19:06:06Z'
-updated: '2026-09-09T19:09:41Z'
+updated: '2026-09-09T19:17:01Z'
 generated_by: claude-sonnet
 workflow_run: 34392314867
 issue: 2861
@@ -12,43 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/streamlin
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/streamline-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Physically accurate electric dipole field, computed and integrated via RK4 rather
-    than faked - a strong structural solution to ggplot2's missing native streamplot
-  - 'Continuous Imprint-sequential color gradient (#009E73 -> #4467A3) correctly encodes
-    field strength and is identical across both themes'
-  - Clean, well-balanced streamline density (40 seeded lines) that clearly reveals
-    the dipole topology without clutter
-  - Theme-adaptive chrome (charge markers, text, legend) flips correctly with no legibility
-    issues in either render
+  - 'Both attempt-1 weaknesses are fully resolved: a faint theme-adaptive grid is
+    back (panel.grid.major with low-alpha INK) and streamline linewidth now scales
+    with local field strength (0.5-1.3 range), adding real visual emphasis near the
+    charges'
+  - Physically accurate electric dipole field, integrated via custom RK4 path tracing
+    rather than faked — a strong structural solution to ggplot2's missing native streamplot
+    geometry
+  - 'Continuous Imprint-sequential color gradient (#009E73 → #4467A3) correctly encodes
+    field strength and is pixel-identical across both themes; only chrome (background,
+    text, charge-marker color) flips'
+  - Clean, well-balanced streamline density (40 seeded lines from both charges) that
+    reveals the dipole topology without clutter
+  - Theme-adaptive chrome (charge markers, text, legend, grid) flips correctly with
+    no legibility issues in either render
   - Title format and legend labeling exactly match spec requirements
   weaknesses:
-  - Grid lines are fully removed (panel.grid = element_blank()) rather than kept subtle
-    - add a faint panel.grid (low-alpha INK color) so the plot retains a positional
-    reference per the style guide, without competing visually with the streamlines
-  - Line width is constant (linewidth = 0.9) - consider modestly varying line width
-    with local field strength for extra visual emphasis near the charges, as suggested
-    by the spec's optional note
-  - Custom RK4-integration functions (field_vec, rk4_step, trace_streamline) are necessary
-    for this plot type in ggplot2, but consider inlining/simplifying where possible
-    to move closer to the KISS ideal
+  - Custom RK4-integration helper functions (field_vec, unit_field, rk4_step, trace_streamline)
+    remain necessary for this plot type in ggplot2 but still stray from the KISS default
+    — acceptable given there is no native streamplot geom, but worth noting for CQ-01
+  - 'Data-quality feature coverage stays slightly incomplete: only the traced streamlines
+    and the two charge markers are shown, with no raw vector-field cue (e.g. a light
+    quiver overlay) alongside them for readers who want to cross-check the integration'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 exactly.
-      Chrome: Title "Electric Field Around a Dipole · streamline-basic · r · ggplot2 · anyplot.ai" in dark ink, clearly legible. Axis titles "X Position"/"Y Position" and tick labels (-2 to 2) in dark ink, all readable. "Field strength" legend title and tick labels readable.
-      Data: ~40 curved streamlines tracing an electric dipole field between two point charges (black dots at x=-1.2 and x=1.2), colored on a continuous green-to-blue gradient (#009E73 low -> #4467A3 high) encoding field strength.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Electric Field Around a Dipole · streamline-basic · r · ggplot2 · anyplot.ai" renders in dark ink at the top, clearly legible and comfortably within canvas bounds (no clipping). Axis titles "X Position" / "Y Position" and tick labels (-2 to 2) are dark and legible against the light background. A faint light-gray grid is visible at the major ticks (0, ±1, ±2) — subtle, not competing with the data. Legend "Field strength" with a vertical gradient bar and numeric ticks (0.0-2.0) sits clearly to the right, fully inside the canvas.
+      Data: ~40 streamlines trace the electric dipole field between two point charges (dark dots at x=-1.2 and x=1.2). Color runs on the green-to-blue continuous gradient (#009E73 low → #4467A3 high) encoding field strength, and line width visibly thickens near the charges (high field strength) and thins toward the plot edges (low field strength) — the linewidth-by-speed mapping is clearly legible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 exactly.
-      Chrome: Title, axis titles, and tick labels render in light ink, clearly legible against the dark background. No dark-on-dark issues. Charge markers correctly flip from black to a light cream/white dot. Legend background and text flip correctly.
-      Data: Streamline colors (green-to-blue gradient) are identical to the light render - only chrome (background, text, markers) flipped, as required.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels render in light ink, clearly legible against the dark background — no dark-on-dark failures. The faint grid is still visible at the major ticks in a lighter tone appropriate for the dark surface. The two charge markers correctly flip from dark ink to a light cream/white dot, keeping strong contrast against the new background. Legend background and text flip correctly and stay fully legible.
+      Data: Streamline colors (green-to-blue gradient) and the linewidth-by-field-strength taper are identical to the light render — only chrome (background, text, charge-marker color, grid tone) flipped, exactly as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,70 +59,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes
+        comment: Title, axis titles, tick labels, and legend all readable at appropriate
+          sizes in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data
+        comment: No collisions between text, legend, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Streamline density well-balanced, charge markers clearly visible
+        comment: Streamline density (~40 lines) is well-balanced; linewidth-by-field-strength
+          taper keeps near-charge lines prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-blue continuous scale, no red-green-only signal
+        comment: Green-to-blue Imprint sequential gradient, good contrast, no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, but grid fully removed rather
-          than subtle
+        comment: Faint grid restored for positional reference (fixes attempt-1 finding),
+          good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive X Position / Y Position labels
+        comment: Descriptive 'X Position' / 'Y Position' axis labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_seq stops, correct theme backgrounds, both renders
-          theme-correct
+        comment: 'Correct imprint_seq stops (#009E73 low -> #4467A3 high); backgrounds
+          match #FAF8F1/#1A1A17 exactly; both renders theme-correct'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Physically-motivated dipole field, elegant RK4-integrated curves,
-          sequential color mapping
+        comment: Physically-motivated dipole field, RK4-integrated curves, sequential
+          color + linewidth encoding of field intensity
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Minimal chrome, generous whitespace; grid removal reduces refinement
-          slightly
+        comment: Faint restored grid, minimal chrome, generous whitespace, subtle
+          theme
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Streamlines converge/diverge naturally at charges, color reinforces
-          field-strength intuition
+        comment: Streamlines converge/diverge naturally at the two charges; color
+          and width gradients reinforce field-strength intuition
     spec_compliance:
       score: 15
       max: 15
@@ -129,13 +135,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct streamline visualization via RK4 path integration
+        comment: Correct streamline visualization via continuous integrated field
+          lines; RK4 path integration is the right structural workaround for ggplot2's
+          missing streamplot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distributed seeds, color encodes magnitude, balanced density
+        comment: Streamlines seeded from both charges, color encodes field magnitude,
+          linewidth now varies with field strength as the spec's optional note suggests
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -147,7 +156,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly, legend clearly labeled
+        comment: Title matches '{Descriptive Title} · streamline-basic · r · ggplot2
+          · anyplot.ai' format exactly; legend clearly labeled 'Field strength'
     data_quality:
       score: 14
       max: 15
@@ -157,8 +167,8 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows full field topology via 40 seeded streamlines; no raw quiver/grid
-          overlay shown
+        comment: Shows full field topology (convergence, divergence, curvature) via
+          seeded streamlines; no raw quiver/grid overlay shown alongside
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -170,7 +180,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Sensible coordinate range and capped field-strength scale
+        comment: Sensible coordinate range and capped field-strength scale for a clean,
+          readable gradient
     code_quality:
       score: 9
       max: 10
@@ -180,8 +191,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses several small functions, justified by RK4 integration needs
-          but strays from no-functions default
+        comment: Several small functions (field_vec, unit_field, rk4_step, trace_streamline)
+          are justified by RK4 integration but stray from the no-functions default
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -193,21 +204,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2/dplyr/ragg + namespaced tibble, all used
+        comment: Only ggplot2/dplyr/ragg plus namespaced tibble, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity for the technique, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -215,27 +226,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_path + scale_color_gradient + coord_equal, correct
-          workaround for missing streamplot
+        comment: Idiomatic geom_path + scale_color_gradient + coord_equal usage; correct
+          workaround for ggplot2's missing streamplot primitive
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom RK4 field integration is distinctive; line width could vary
-          with field strength for extra polish
-  verdict: REJECTED
+        comment: Custom RK4 field integration combined with linewidth-by-field-strength
+          mapping is a genuinely distinctive, well-executed technique
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - dplyr
+  - tibble
   techniques:
   - colorbar
-  - manual-ticks
+  - layer-composition
+  - rk4-integration
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
