@@ -33,6 +33,12 @@ daily_return = diff(price) ./ price[1:(end - 1)] .* 100
 volume = 1.2e6 .+ 4.5e6 .* abs.(daily_pct_change) .+ 3e5 .* randn(n_days)
 volume = max.(volume, 2e5)
 
+# Focal points for the dashboard's two linked panels — highlighted via color/size
+# emphasis rather than text callouts (the spec doesn't request annotations).
+peak_day    = argmax(price)
+spike_day   = argmax(volume)
+price_floor = minimum(price) * 0.985
+
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
     resolution      = (1600, 900),
@@ -43,7 +49,7 @@ fig = Figure(
 Label(
     fig[0, 1:2],
     "subplot-grid · julia · makie · anyplot.ai";
-    fontsize = 20,
+    fontsize = 22,
     color    = INK,
     font     = :bold,
     padding  = (0, 0, 8, 0),
@@ -69,7 +75,7 @@ chrome = (;
 ax_price = Axis(
     fig[1, 1];
     title               = "Price Trend",
-    titlesize           = 16,
+    titlesize           = 15,
     ylabel              = "Price (USD)",
     ylabelsize          = 14,
     xticklabelsvisible  = false,
@@ -81,7 +87,7 @@ ax_price = Axis(
 ax_hist = Axis(
     fig[1, 2];
     title        = "Return Distribution",
-    titlesize    = 16,
+    titlesize    = 15,
     xlabel       = "Daily Return (%)",
     ylabel       = "Trading Days",
     xlabelsize   = 14,
@@ -94,7 +100,7 @@ ax_hist = Axis(
 ax_volume = Axis(
     fig[2, 1];
     title        = "Trading Volume",
-    titlesize    = 16,
+    titlesize    = 15,
     xlabel       = "Trading Day",
     ylabel       = "Volume (shares)",
     xlabelsize   = 14,
@@ -107,7 +113,7 @@ ax_volume = Axis(
 ax_scatter = Axis(
     fig[2, 2];
     title         = "Volume vs. Return",
-    titlesize     = 16,
+    titlesize     = 15,
     xlabel        = "Daily Return (%)",
     ylabel        = "Volume (shares)",
     xlabelsize    = 14,
@@ -120,7 +126,16 @@ ax_scatter = Axis(
 # Price and volume share the trading-day axis — a real dashboard comparison.
 linkxaxes!(ax_price, ax_volume)
 
+band!(
+    ax_price, trading_day, fill(price_floor, n_days), price;
+    color = (IMPRINT_PALETTE[1], 0.12),
+)
 lines!(ax_price, trading_day, price; color = IMPRINT_PALETTE[1], linewidth = 2.5)
+scatter!(
+    ax_price, [peak_day], [price[peak_day]];
+    color = IMPRINT_PALETTE[1], markersize = 15,
+    strokewidth = 2, strokecolor = PAGE_BG,
+)
 
 hist!(
     ax_hist, daily_return;
@@ -128,7 +143,15 @@ hist!(
     strokewidth = 1, strokecolor = PAGE_BG,
 )
 
-barplot!(ax_volume, trading_day, volume; color = IMPRINT_PALETTE[3], strokewidth = 0)
+volume_colors = [
+    d == spike_day ? IMPRINT_PALETTE[3] : RGBAf(IMPRINT_PALETTE[3].r, IMPRINT_PALETTE[3].g, IMPRINT_PALETTE[3].b, 0.6)
+    for d in trading_day
+]
+barplot!(
+    ax_volume, trading_day, volume;
+    color = volume_colors, width = 0.8,
+    strokewidth = 0.5, strokecolor = PAGE_BG,
+)
 
 scatter!(
     ax_scatter, daily_return, volume[2:end];
